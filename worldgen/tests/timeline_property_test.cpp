@@ -4,6 +4,12 @@
 //
 // Written from the spec only. Every expected value below is computed from the HistoryTables and
 // HistoryView rows with the definitions of section 4, never from the timeline's own index.
+//
+// P4-03 11.1 item 9 (docs/specs/p4-03-history-view.md 8.2, 9.2): on the worlds with layers, every cell of
+// TerritoryBase (kind, factor, region, E and S neighbour values) and every pixel of render_territory with
+// the holders are recomputed here from the layers (the cells drawn by steps 3 and 4 of the composite map
+// included) and the year state; item 4 (territory_holders) and item 6 (no holders, all free) on the same
+// worlds; the colours are race_civilization_colour's (7.4).
 
 #include <doctest/doctest.h>
 
@@ -82,6 +88,159 @@ std::int64_t stat(const wh::HistoryDigest& d, const std::string& key) {
     }
     FAIL("no [stats] key " << key);
     return 0;
+}
+
+// The cells drawn by steps 3 and 4 of the composite map (P1-00 10.2, as render.hpp states them), recomputed
+// here from the layers: water 2 (step 3); without river every water-1 cell; with river every cell an
+// entry of the paint list lands on (inside the map, water 0 or 1). Direction codes of P1-00 2.3.
+std::vector<bool> drawn_cells(const WorldLayers& l) {
+    const std::uint32_t w = l.elevation.width, hh = l.elevation.height;
+    const std::size_t n = std::size_t{w} * hh;
+    std::vector<bool> drawn(n, false);
+    if (!l.water) return drawn;
+    const auto* water = l.water->get_if<std::uint8_t>();
+    REQUIRE(water != nullptr);
+    for (std::size_t i = 0; i < n; ++i) {
+        if ((*water)[i] == 2) drawn[i] = true;
+    }
+    if (!l.river) {
+        for (std::size_t i = 0; i < n; ++i) {
+            if ((*water)[i] == 1) drawn[i] = true;
+        }
+        return drawn;
+    }
+    const auto* river = l.river->get_if<std::uint8_t>();
+    REQUIRE(river != nullptr);
+    const std::vector<std::uint8_t>* flow = l.flow_dir ? l.flow_dir->get_if<std::uint8_t>() : nullptr;
+    constexpr std::int64_t DX[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+    const auto paint = [&](std::int64_t x, std::int64_t y) {
+        if (x < 0 || y < 0 || x >= std::int64_t{w} || y >= std::int64_t{hh}) return;
+        const std::size_t j = static_cast<std::size_t>(y) * w + static_cast<std::size_t>(x);
+        if ((*water)[j] <= 1) drawn[j] = true;
+    };
+    for (std::uint32_t y = 0; y < hh; ++y) {
+        for (std::uint32_t x = 0; x < w; ++x) {
+            const std::size_t i = std::size_t{y} * w + x;
+            if ((*water)[i] != 1 || (*river)[i] == 0) continue;
+            paint(x, y);
+            if (flow != nullptr) {
+                const std::uint8_t d = (*flow)[i];
+                if (d <= 7 && d % 2 == 1) paint(std::int64_t{x} + DX[d], y);
+            }
+            if ((*river)[i] >= 4) {
+                paint(std::int64_t{x} + 1, y);
+                paint(x, std::int64_t{y} + 1);
+            }
+        }
+    }
+    return drawn;
+}
+
+wi::Rgb dim(wi::Rgb c) {
+    return wi::Rgb{static_cast<std::uint8_t>(c.r * 12 / 16), static_cast<std::uint8_t>(c.g * 12 / 16),
+                   static_cast<std::uint8_t>(c.b * 12 / 16)};
+}
+
+// P4-03 11.1 items 4, 6 and 9 on a world: territory_holders against the year state; TerritoryBase's cells
+// (kind, factor, region, east, south) recomputed from the layers; every pixel of render_territory at
+// floor(E / 2) and E by rule 8.2 computed here; no holders or all free gives the regions composite.
+void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
+    const wh::Timeline& t = h.timeline;
+    const std::int64_t E = h.tables.end_year;
+    const WorldLayers layers = read_layers(r);
+    const wi::TerritoryBase base = territory_base(layers);
+    const std::vector<std::uint8_t> b1 = regions_composite(layers, 1);
+    CHECK(wi::render_territory(base, {}, {}, 1) == b1);
+    const std::vector<wi::Rgb> colours = wi::civilization_colours(h.tables);
+    const auto* elev = layers.elevation.get_if<std::int16_t>();
+    const auto* reg = layers.region.get_if<std::uint16_t>();
+    REQUIRE(elev != nullptr);
+    REQUIRE(reg != nullptr);
+    const std::uint32_t w = layers.elevation.width, hh = layers.elevation.height;
+    REQUIRE(base.width() == w);
+    REQUIRE(base.height() == hh);
+    const std::size_t n = std::size_t{w} * hh;
+    REQUIRE(base.cells().size() == n);
+    const std::vector<bool> drawn = drawn_cells(layers);
+    // the cells, independent of the year
+    std::int64_t bad_cells = 0;
+    std::vector<std::uint8_t> kind(n, 0);
+    std::vector<std::uint16_t> east(n, 0), south(n, 0);
+    for (std::uint32_t cy = 0; cy < hh; ++cy) {
+        for (std::uint32_t cx = 0; cx < w; ++cx) {
+            const std::size_t i = std::size_t{cy} * w + cx;
+            const std::uint16_t v = (*reg)[i];
+            std::uint16_t e = 0, s = 0;
+            if (v > 0 && cx + 1 < w && (*reg)[i + 1] > 0 && (*reg)[i + 1] != v) e = (*reg)[i + 1];
+            if (v > 0 && cy + 1 < hh && (*reg)[i + w] > 0 && (*reg)[i + w] != v) s = (*reg)[i + w];
+            const bool cand = v > 0 && (*elev)[i] >= 0 && !drawn[i];
+            kind[i] = cand ? ((e != 0 || s != 0) ? 2 : 1) : 0;
+            east[i] = kind[i] == 2 ? e : 0;
+            south[i] = kind[i] == 2 ? s : 0;
+            const wi::TerritoryBase::Cell& c = base.cells()[i];
+            const wi::Rgb b{b1[3 * i], b1[3 * i + 1], b1[3 * i + 2]};
+            const std::uint32_t f = kind[i] != 0 ? wi::hillshade_factor(*elev, w, hh, cx, cy) : 0U;
+            const bool ok = c.base == b && c.kind == kind[i] && std::uint32_t{c.factor} == f && c.region == (kind[i] != 0 ? v : 0) &&
+                            c.east == east[i] && c.south == south[i];
+            if (!ok && ++bad_cells <= 5) {
+                FAIL_CHECK("TerritoryBase cell (" << cx << ", " << cy << "): kind " << int{c.kind} << " want "
+                                                  << int{kind[i]} << ", region " << c.region << ", east " << c.east
+                                                  << " want " << east[i] << ", south " << c.south << " want "
+                                                  << south[i] << ", factor " << c.factor << " want " << f);
+            }
+        }
+    }
+    CHECK(bad_cells == 0);
+    for (const std::int64_t y : {E / 2, E}) {
+        CAPTURE(y);
+        const std::vector<std::int64_t> holders = wi::territory_holders(t, y);
+        const auto fill = wi::territory_fill(t, colours, y);
+        // item 4: the size and id rules of territory_fill; entries the year state's holders
+        REQUIRE(holders.size() == fill.size());
+        CHECK(holders[0] == 0);
+        std::vector<std::int64_t> want_holders(holders.size(), 0);
+        for (const wh::RegionHolding& x : t.year_state(y).regions) {
+            if (x.region >= 1 && static_cast<std::size_t>(x.region) < want_holders.size()) {
+                want_holders[static_cast<std::size_t>(x.region)] = x.civ;
+            }
+        }
+        CHECK(holders == want_holders);
+        const auto hold = [&](std::uint16_t v) { return v < holders.size() ? holders[v] : std::int64_t{0}; };
+        const std::vector<std::uint8_t> img = wi::render_territory(base, fill, holders, 1);
+        REQUIRE(img.size() == b1.size());
+        std::int64_t bad = 0, dimmed = 0;
+        for (std::uint32_t cy = 0; cy < hh; ++cy) {
+            for (std::uint32_t cx = 0; cx < w; ++cx) {
+                const std::size_t i = std::size_t{cy} * w + cx;
+                const std::uint16_t v = (*reg)[i];
+                wi::Rgb want{b1[3 * i], b1[3 * i + 1], b1[3 * i + 2]};
+                const bool has_fill = v < fill.size() && fill[v].has_value();
+                if (kind[i] == 1 && has_fill) {
+                    want = wi::shade_colour(*fill[v], wi::hillshade_factor(*elev, w, hh, cx, cy));
+                } else if (kind[i] == 2 && has_fill && hold(v) != 0 && (east[i] == 0 || hold(east[i]) == hold(v)) &&
+                           (south[i] == 0 || hold(south[i]) == hold(v))) {
+                    want = wi::shade_colour(dim(*fill[v]), wi::hillshade_factor(*elev, w, hh, cx, cy));
+                    ++dimmed;
+                }
+                const wi::Rgb got{img[3 * i], img[3 * i + 1], img[3 * i + 2]};
+                if (!(got == want) && ++bad <= 5) {
+                    FAIL_CHECK("pixel (" << cx << ", " << cy << ") region " << v << " kind " << int{kind[i]});
+                }
+            }
+        }
+        CHECK(bad == 0);
+        MESSAGE("dimmed inner-border cells at " << y << ": " << dimmed);
+        // item 6: all free with all-zero holders is the regions composite; no holders draws every border black
+        const std::vector<std::optional<wi::Rgb>> none(fill.size());
+        const std::vector<std::int64_t> zeros(holders.size(), 0);
+        CHECK(wi::render_territory(base, none, zeros, 1) == b1);
+        const std::vector<std::uint8_t> p401 = wi::render_territory(base, fill, {}, 1);
+        std::int64_t not_black = 0;
+        for (std::size_t i = 0; i < n; ++i) {
+            if (kind[i] == 2 && !(p401[3 * i] == 0 && p401[3 * i + 1] == 0 && p401[3 * i + 2] == 0)) ++not_black;
+        }
+        CHECK(not_black == 0);
+    }
 }
 
 void check_invariants(const std::string& name, const std::string& path, bool territory) {
@@ -292,7 +451,8 @@ void check_invariants(const std::string& name, const std::string& path, bool ter
             CHECK(V(got.begin(), got.end()) == want[e.row.id]);
         }
     }
-    // invariant 8: a colour is the shade of (race key, ordinal); ordinals below 4 of one race distinct
+    // invariant 8 (P4-03 7.4): a colour is race_civilization_colour(race key, ordinal); ordinals below 4 of
+    // one race distinct
     {
         const std::vector<wi::Rgb> colours = wi::civilization_colours(tb);
         REQUIRE(colours.size() == tb.civilizations.size());
@@ -304,7 +464,7 @@ void check_invariants(const std::string& name, const std::string& path, bool ter
                                            [&](const db::RaceRow& x) { return x.id == c.race; });
             REQUIRE(race != tb.races.end());
             const std::int64_t k = ordinal[c.race]++;
-            CHECK(colours[i] == wi::civilization_shade(wi::race_base_colour(race->key), k));
+            CHECK(colours[i] == wi::race_civilization_colour(race->key, k));
             if (k < 4) {
                 for (const wi::Rgb& o : by_race[c.race]) CHECK_FALSE(o == colours[i]);
                 by_race[c.race].push_back(colours[i]);
@@ -330,45 +490,8 @@ void check_invariants(const std::string& name, const std::string& path, bool ter
             CHECK(year_dump(reused) == by_year[static_cast<std::size_t>(y)]);
         }
     }
-    // invariant 9 on the world's own layers, when it has them
-    if (territory) {
-        const WorldLayers layers = read_layers(r);
-        const wi::TerritoryBase base = territory_base(layers);
-        const std::vector<std::uint8_t> b1 = regions_composite(layers, 1);
-        CHECK(wi::render_territory(base, {}, 1) == b1);
-        const std::vector<wi::Rgb> colours = wi::civilization_colours(tb);
-        const auto* elev = layers.elevation.get_if<std::int16_t>();
-        const auto* reg = layers.region.get_if<std::uint16_t>();
-        REQUIRE(elev != nullptr);
-        REQUIRE(reg != nullptr);
-        const std::uint32_t w = layers.elevation.width, hh = layers.elevation.height;
-        for (const std::int64_t y : {E / 2, E}) {
-            CAPTURE(y);
-            std::map<std::int64_t, std::int64_t> holder;
-            for (const wh::RegionHolding& x : t.year_state(y).regions) holder[x.region] = x.civ;
-            const std::vector<std::uint8_t> img = wi::render_territory(base, wi::territory_fill(t, colours, y), 1);
-            REQUIRE(img.size() == b1.size());
-            std::int64_t bad = 0;
-            for (std::uint32_t cy = 0; cy < hh; ++cy) {
-                for (std::uint32_t cx = 0; cx < w; ++cx) {
-                    const std::size_t i = std::size_t{cy} * w + cx;
-                    const wi::Rgb got{img[3 * i], img[3 * i + 1], img[3 * i + 2]};
-                    const wi::Rgb b{b1[3 * i], b1[3 * i + 1], b1[3 * i + 2]};
-                    const auto it = holder.find((*reg)[i]);
-                    const std::int64_t civ = it == holder.end() ? 0 : it->second;
-                    if (got == b) continue;
-                    if (civ == 0) {
-                        ++bad;
-                        continue;
-                    }
-                    const wi::Rgb c = wi::shade_colour(colours[static_cast<std::size_t>(civ - 1)],
-                                                       wi::hillshade_factor(*elev, w, hh, cx, cy));
-                    if (!(got == c)) ++bad;
-                }
-            }
-            CHECK(bad == 0);
-        }
-    }
+    // invariant 9 on the world's own layers, when it has them (P4-03 11.1 item 9: rule 8.2 cell by cell)
+    if (territory) check_territory(r, h);
 }
 
 }  // namespace

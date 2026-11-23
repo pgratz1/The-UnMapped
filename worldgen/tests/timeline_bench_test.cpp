@@ -80,8 +80,9 @@ TEST_CASE("P4-01 13.5 item 9: load_history, year_state and render_territory at 1
     double render_max = 0;
     for (const std::int64_t y : years) {
         const auto fill = wi::territory_fill(h.timeline, colours, y);
+        const auto holders = wi::territory_holders(h.timeline, y);
         t0 = Clock::now();
-        wi::render_territory(base, fill, 1, img);
+        wi::render_territory(base, fill, holders, 1, img);
         const double ms = ms_since(t0);
         render_max = ms > render_max ? ms : render_max;
         sink += img[0];
@@ -97,7 +98,7 @@ TEST_CASE("P4-01 13.5 item 9: load_history, year_state and render_territory at 1
               << "timeline-bench: worst single year_state call (3 passes): " << worst << " ms at year " << worst_year
               << " (budget 2 ms)\n"
               << "timeline-bench: TerritoryBase::build " << base_ms << " ms (once per open)\n"
-              << "timeline-bench: render_territory, worst of 5 years: " << render_max << " ms (budget 40 ms)\n"
+              << "timeline-bench: render_territory with holders (P4-03 9.2), worst of 5 years: " << render_max << " ms (budget 40 ms)\n"
               << "timeline-bench: (checksum " << sink << ")\n";
 #ifndef NDEBUG
     std::cout << "timeline-bench: a build without NDEBUG; the budgets of P4-00 8 apply to release builds\n";

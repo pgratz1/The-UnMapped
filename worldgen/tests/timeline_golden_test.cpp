@@ -5,6 +5,9 @@
 // years of item 4. Cases: the P3-07 fixtures and T1, the 512 world cases of tools/ci/world-hashes.sh with
 // history (default suite), and the 1024 cases with sample-42-1024 (suite "timeline-slow").
 //
+// P4-03 9.6: the colours and the territory image are those of P4-03 7 and 8, render_territory with the
+// holders of territory_holders (the CLI's call, 9.2); the file was re-recorded at generator 0.21.0.
+//
 // Written from the spec only.
 
 #include <doctest/doctest.h>
@@ -52,12 +55,13 @@ void check_world(const WorldSpec& c) {
     const std::vector<wi::Rgb> colours = wi::civilization_colours(h.tables);
     std::vector<std::pair<std::int64_t, std::string>> got;
     for (const std::int64_t y : territory_years(h)) {
-        const std::vector<std::uint8_t> img = wi::render_territory(base, wi::territory_fill(h.timeline, colours, y), 1);
+        const std::vector<std::uint8_t> img = wi::render_territory(base, wi::territory_fill(h.timeline, colours, y),
+                                                                   wi::territory_holders(h.timeline, y), 1);
         got.emplace_back(y, worldgen::sha256_hex(img));
     }
     CHECK(got == g.territory);
     // invariant 9 on a real world: an empty fill is the regions composite
-    CHECK(wi::render_territory(base, {}, 1) == regions_composite(layers, 1));
+    CHECK(wi::render_territory(base, {}, {}, 1) == regions_composite(layers, 1));
 }
 
 }  // namespace

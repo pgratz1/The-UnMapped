@@ -359,37 +359,6 @@ std::size_t buffer_size(std::uint32_t w, std::uint32_t h, std::uint32_t scale, c
     return static_cast<std::size_t>(bytes);
 }
 
-// Fills rgb (of buffer_size bytes) with colour_of(index) for each cell,
-// each cell a scale x scale block, in index order. Every byte is written.
-template <class ColourOf>
-void fill_buffer(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_t height, std::uint32_t scale,
-                 const ColourOf& colour_of) {
-    const std::size_t w = width;
-    const std::size_t h = height;
-    const std::size_t s = scale;
-    const std::size_t row_bytes = w * s * 3U;
-    for (std::size_t y = 0; y < h; ++y) {
-        // Fill the first pixel row of this cell row, then copy it to the
-        // other scale - 1 rows.
-        std::uint8_t* row = rgb.data() + (y * s) * row_bytes;
-        for (std::size_t x = 0; x < w; ++x) {
-            const Rgb c = colour_of(y * w + x);
-            std::uint8_t* px = row + x * s * 3U;
-            for (std::size_t i = 0; i < s; ++i) {
-                px[3U * i] = c.r;
-                px[3U * i + 1U] = c.g;
-                px[3U * i + 2U] = c.b;
-            }
-        }
-        for (std::size_t j = 1; j < s; ++j) {
-            std::uint8_t* dst = row + j * row_bytes;
-            for (std::size_t b = 0; b < row_bytes; ++b) {
-                dst[b] = row[b];
-            }
-        }
-    }
-}
-
 // A cell value as uint64 for the per-value palettes (unsigned types only).
 template <class T>
 std::uint64_t as_u64(T v) noexcept {
@@ -467,7 +436,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                     T hi{};
                     min_max(cells, lo, hi);
                     const std::uint64_t r = distance(hi, lo);
-                    fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                    detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                         const std::uint8_t g = gray_level(distance(cells[i], lo), r);
                         return Rgb{g, g, g};
                     });
@@ -476,7 +445,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                 case Palette::signed_distance: {
                     if constexpr (std::is_signed_v<T>) {
                         const SignedScale s = signed_scale(grid);
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return signed_colour(static_cast<std::int64_t>(cells[i]), s);
                         });
                     }
@@ -484,7 +453,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                 }
                 case Palette::hypsometric: {
                     if constexpr (std::is_signed_v<T>) {
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return hypsometric_colour(static_cast<std::int64_t>(cells[i]));
                         });
                     }
@@ -492,7 +461,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                 }
                 case Palette::temperature: {
                     if constexpr (std::is_signed_v<T>) {
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return temperature_colour(static_cast<std::int64_t>(cells[i]));
                         });
                     }
@@ -500,7 +469,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                 }
                 case Palette::rainfall: {
                     if constexpr (!std::is_signed_v<T>) {
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return rainfall_colour(static_cast<std::int64_t>(cells[i]));
                         });
                     }
@@ -513,7 +482,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                         for (std::size_t v = 0; v < colours.size(); ++v) {
                             colours[v] = score_colour(static_cast<std::int64_t>(v));
                         }
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             const std::uint64_t v = as_u64(cells[i]);
                             return v < colours.size() ? colours[v] : MAGENTA;
                         });
@@ -527,7 +496,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                         for (std::size_t v = 0; v < colours.size(); ++v) {
                             colours[v] = biome_colour(biome_table, v);
                         }
-                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             const std::uint64_t v = as_u64(cells[i]);
                             return v < colours.size() ? colours[v] : MAGENTA;
                         });
@@ -552,7 +521,7 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                                 default: return water_colour(v);
                             }
                         };
-                        fill_buffer(rgb, grid.width, grid.height, scale,
+                        detail::fill_buffer(rgb, grid.width, grid.height, scale,
                                     [&](std::size_t i) { return colour(as_u64(cells[i])); });
                     }
                     return;
@@ -807,7 +776,7 @@ std::vector<std::uint8_t> render_shaded(const db::LayerGrid& elevation, const db
                                         const LandColour& land_colour, const char* scale_problem) {
     std::vector<std::uint8_t> rgb(buffer_size(elevation.width, elevation.height, scale, scale_problem));
     const std::vector<Rgb> colour = shaded_colours(elevation, water, river, flow_dir, land_colour);
-    fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return colour[i]; });
+    detail::fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return colour[i]; });
     return rgb;
 }
 
@@ -889,6 +858,8 @@ RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::L
         elevation, water, river, flow_dir, [&](std::size_t i, std::int64_t) { return colours[codes[i]]; },
         &out.drawn);
     out.border.assign(out.colour.size(), 0U);
+    out.east.assign(out.colour.size(), 0U);
+    out.south.assign(out.colour.size(), 0U);
     // P0-04 amendment 18 (e): a cell with region v > 0 whose E or S
     // neighbour has a region w > 0, w != v, becomes black.
     const std::vector<std::uint16_t>& ids = *region.get_if<std::uint16_t>();
@@ -906,6 +877,9 @@ RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::L
             if (east || south) {
                 out.colour[i] = Rgb{0, 0, 0};
                 out.border[i] = 1U;
+                // P4-03 8.2: the neighbour values that made it a border.
+                out.east[i] = east ? ids[i + 1U] : std::uint16_t{0};
+                out.south[i] = south ? ids[i + w] : std::uint16_t{0};
             }
         }
     }
@@ -925,7 +899,7 @@ std::vector<std::uint8_t> render_composite_regions(const db::LayerGrid& elevatio
         buffer_size(elevation.width, elevation.height, scale, "render_composite_regions: scale must be 1 to 16"));
     const detail::RegionsCells cells =
         detail::regions_composite_cells(elevation, water, river, flow_dir, biome, region, biome_table);
-    fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return cells.colour[i]; });
+    detail::fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return cells.colour[i]; });
     return rgb;
 }
 

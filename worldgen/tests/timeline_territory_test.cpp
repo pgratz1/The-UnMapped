@@ -6,6 +6,12 @@
 // render_composite_regions for an empty fill and an all-empty fill (k = 1, 3; with and without water,
 // river and flow_dir); territory_fill; 5.6's 4 x 1 example; and the FatalErrors of render_territory.
 //
+// P4-03 (docs/specs/p4-03-history-view.md): the colours are those of its table 7.2 (c1 elf 0 (40, 190, 70),
+// c2 dwarf 0 (220, 105, 25), c3 elf 1 (150, 230, 150), c4 dwarf 1 (245, 165, 105)), and render_territory
+// takes the holders (9.2; the overloads without them are removed). T1 has no border between two regions of
+// one holder in any year, so its pixels are P4-01's but for the colours; the inner borders of 8.2 are in
+// timeline_borders_test.cpp.
+//
 // Written from the spec only. Shading: shade_colour(c, f) = min(255, (c f + 128) >> 8) per channel
 // (P1-00 10.2 step 2), so factor 256 leaves a colour unchanged; T1's factor at (0, 4) and (5, 1) is 251
 // (gy = 0 - 10 and gx = 0 - 10 respectively, floor_div(-10, 2) = -5).
@@ -74,19 +80,20 @@ TEST_CASE("P4-01 5.6: the 4 x 1 example") {
     const wi::TerritoryBase base = wi::TerritoryBase::build(elevation, nullptr, nullptr, nullptr, biome, region, table);
     CHECK(base.width() == 4U);
     CHECK(base.height() == 1U);
-    const Rgb elf0 = wi::civilization_shade(wi::race_base_colour("elf"), 0);
+    const Rgb elf0 = wi::race_civilization_colour("elf", 0);
     std::vector<std::optional<Rgb>> fill(3);
     fill[1] = elf0;
-    const std::vector<std::uint8_t> img = wi::render_territory(base, fill, 1);
+    const std::vector<std::int64_t> holders = {0, 1, 0};
+    const std::vector<std::uint8_t> img = wi::render_territory(base, fill, holders, 1);
     REQUIRE(img.size() == 12U);
-    CHECK(pixel(img, 4, 0, 0) == Rgb{52, 150, 70});   // fillable, factor 256
+    CHECK(pixel(img, 4, 0, 0) == Rgb{40, 190, 70});   // fillable, factor 256
     CHECK(pixel(img, 4, 1, 0) == Rgb{0, 0, 0});       // border: E neighbour 2
     CHECK(pixel(img, 4, 2, 0) == Rgb{128, 128, 0});   // free: B
     CHECK(pixel(img, 4, 3, 0) == Rgb{128, 128, 0});   // v = 0: never fillable, B
     // v = 0 stays B even if a fill entry [0] were set
     std::vector<std::optional<Rgb>> f0(3);
     f0[0] = Rgb{1, 2, 3};
-    CHECK(wi::render_territory(base, f0, 1) == wi::render_composite_regions(elevation, nullptr, nullptr, nullptr,
+    CHECK(wi::render_territory(base, f0, {}, 1) == wi::render_composite_regions(elevation, nullptr, nullptr, nullptr,
                                                                             biome, region, 1, table));
 }
 
@@ -102,13 +109,15 @@ TEST_CASE("P4-01 13.2 item 7: territory pixels on T1's layers at year 1500") {
     const std::vector<std::optional<Rgb>> fill = wi::territory_fill(h.timeline, colours, 1500);
     REQUIRE(fill.size() == 7U);  // largest region id 6, plus 1
     CHECK_FALSE(fill[0].has_value());
-    CHECK(fill[1] == std::optional<Rgb>(Rgb{52, 150, 70}));
-    CHECK(fill[2] == std::optional<Rgb>(Rgb{153, 202, 162}));
-    CHECK(fill[3] == std::optional<Rgb>(Rgb{160, 82, 45}));
-    CHECK(fill[4] == std::optional<Rgb>(Rgb{207, 168, 150}));
+    CHECK(fill[1] == std::optional<Rgb>(Rgb{40, 190, 70}));
+    CHECK(fill[2] == std::optional<Rgb>(Rgb{150, 230, 150}));
+    CHECK(fill[3] == std::optional<Rgb>(Rgb{220, 105, 25}));
+    CHECK(fill[4] == std::optional<Rgb>(Rgb{245, 165, 105}));
     CHECK_FALSE(fill[5].has_value());  // no region row 5
     CHECK_FALSE(fill[6].has_value());  // never held
-    const std::vector<std::uint8_t> img = wi::render_territory(base, fill, 1);
+    const std::vector<std::int64_t> holders = wi::territory_holders(h.timeline, 1500);
+    CHECK(holders == std::vector<std::int64_t>{0, 1, 3, 2, 4, 0, 0});
+    const std::vector<std::uint8_t> img = wi::render_territory(base, fill, holders, 1);
     REQUIRE(img.size() == 3U * 8U * 6U);
     struct P {
         std::uint32_t x, y;
@@ -116,18 +125,18 @@ TEST_CASE("P4-01 13.2 item 7: territory pixels on T1's layers at year 1500") {
         const char* what;
     };
     const P expected[] = {
-        {0, 0, {52, 150, 70}, "r1 held by c1 (elf s0), factor 256"},
+        {0, 0, {40, 190, 70}, "r1 held by c1 (elf 0), factor 256"},
         {1, 0, {0, 0, 0}, "border cell (E neighbour region 2)"},
         {0, 1, {64, 128, 204}, "lake cell (step 3) of a held region"},
-        {2, 1, {153, 202, 162}, "water 1 of river class 0: no paint entry, so filled with c3 (elf s1)"},
+        {2, 1, {150, 230, 150}, "water 1 of river class 0: no paint entry, so filled with c3 (elf 1)"},
         {4, 0, {70, 125, 215}, "river cell, class 1"},
         {5, 0, {70, 125, 215}, "dry cell painted by the diagonal closing of (4, 0), unfilled"},
         {1, 3, {30, 80, 190}, "river cell, class 4"},
         {1, 4, {30, 80, 190}, "dry cell painted by the widening (x, y + 1), unfilled"},
         {2, 3, {0, 0, 0}, "painted by the widening (x + 1, y) but a border cell"},
-        {0, 4, {203, 165, 147}, "c4 (dwarf s1) shaded by factor 251"},
-        {0, 5, {207, 168, 150}, "elevation 0 is land: filled, factor 256"},
-        {5, 1, {157, 80, 44}, "c2 (dwarf s0) shaded by factor 251"},
+        {0, 4, {240, 162, 103}, "c4 (dwarf 1) shaded by factor 251"},
+        {0, 5, {245, 165, 105}, "elevation 0 is land: filled, factor 256"},
+        {5, 1, {216, 103, 25}, "c2 (dwarf 0) shaded by factor 251"},
         {6, 1, {119, 169, 205}, "region 3 but elevation -5: the ocean colour of depth 5, unfilled"},
         {7, 0, {112, 163, 201}, "ocean of depth 50, region 0"},
         {6, 3, {96, 160, 64}, "r6 never held: B, the biome colour at factor 256"},
@@ -141,7 +150,7 @@ TEST_CASE("P4-01 13.2 item 7: territory pixels on T1's layers at year 1500") {
         CHECK(pixel(img, 8, p.x, p.y) == p.rgb);
     }
     // scale 2: each cell's colour fills its 2 x 2 block
-    const std::vector<std::uint8_t> img2 = wi::render_territory(base, fill, 2);
+    const std::vector<std::uint8_t> img2 = wi::render_territory(base, fill, holders, 2);
     REQUIRE(img2.size() == 3U * 16U * 12U);
     for (const P& p : expected) {
         CAPTURE(std::string(p.what));
@@ -151,8 +160,10 @@ TEST_CASE("P4-01 13.2 item 7: territory pixels on T1's layers at year 1500") {
     }
     // the caller-buffer overload writes the same bytes
     std::vector<std::uint8_t> out(img2.size(), 0xAB);
-    wi::render_territory(base, fill, 2, out);
+    wi::render_territory(base, fill, holders, 2, out);
     CHECK(out == img2);
+    // T1 has no border cell both of whose sides one civilization holds: without holders the same image
+    CHECK(wi::render_territory(base, fill, {}, 2) == img2);
 }
 
 TEST_CASE("P4-01 5.6 and invariant 9: free land is the regions composite, at several years") {
@@ -164,11 +175,13 @@ TEST_CASE("P4-01 5.6 and invariant 9: free land is the regions composite, at sev
         wi::render_composite_regions(L.elevation, &L.water, &L.river, &L.flow_dir, L.biome, L.region, 1, L.table);
     const std::vector<Rgb> colours = wi::civilization_colours(h.tables);
     // at 1250 r2 is free: (2, 1) shows B, the shaded grassland colour
-    const std::vector<std::uint8_t> y1250 = wi::render_territory(base, wi::territory_fill(h.timeline, colours, 1250), 1);
+    const std::vector<std::uint8_t> y1250 = wi::render_territory(
+        base, wi::territory_fill(h.timeline, colours, 1250), wi::territory_holders(h.timeline, 1250), 1);
     CHECK(pixel(y1250, 8, 2, 1) == Rgb{96, 160, 64});
     CHECK(pixel(y1250, 8, 2, 1) == pixel(regions1, 8, 2, 1));
     // at 299 only r1 is held
-    const std::vector<std::uint8_t> y299 = wi::render_territory(base, wi::territory_fill(h.timeline, colours, 299), 1);
+    const std::vector<std::uint8_t> y299 = wi::render_territory(
+        base, wi::territory_fill(h.timeline, colours, 299), wi::territory_holders(h.timeline, 299), 1);
     for (std::uint32_t y = 0; y < 6; ++y) {
         for (std::uint32_t x = 0; x < 8; ++x) {
             const std::uint16_t v = std::get<std::vector<std::uint16_t>>(L.region.values)[y * 8U + x];
@@ -180,7 +193,7 @@ TEST_CASE("P4-01 5.6 and invariant 9: free land is the regions composite, at sev
     for (const std::int64_t year : {0, 300, 1000, 1200, 1300, 1600, 1800, 2000}) {
         CAPTURE(year);
         const auto fill = wi::territory_fill(h.timeline, colours, year);
-        const std::vector<std::uint8_t> img = wi::render_territory(base, fill, 1);
+        const std::vector<std::uint8_t> img = wi::render_territory(base, fill, wi::territory_holders(h.timeline, year), 1);
         for (std::uint32_t y = 0; y < 6; ++y) {
             for (std::uint32_t x = 0; x < 8; ++x) {
                 const Rgb b = pixel(regions1, 8, x, y);
@@ -223,13 +236,16 @@ TEST_CASE("P4-01 13.2 item 7, invariant 9: an empty fill equals render_composite
             CAPTURE(k);
             const std::vector<std::uint8_t> want =
                 wi::render_composite_regions(L.elevation, v.water, v.river, v.flow_dir, L.biome, L.region, k, L.table);
-            CHECK(wi::render_territory(base, {}, k) == want);
+            CHECK(wi::render_territory(base, {}, {}, k) == want);
             const std::vector<std::optional<Rgb>> none(7);
-            CHECK(wi::render_territory(base, none, k) == want);
+            CHECK(wi::render_territory(base, none, {}, k) == want);
+            // P4-03 11.1 item 6: all free, with an all-zero holder vector
+            const std::vector<std::int64_t> zeros(7, 0);
+            CHECK(wi::render_territory(base, none, zeros, k) == want);
             // a short fill: values at or above its size are unfilled
             std::vector<std::optional<Rgb>> short_fill(2);
             short_fill[1] = Rgb{1, 2, 3};
-            const std::vector<std::uint8_t> s = wi::render_territory(base, short_fill, k);
+            const std::vector<std::uint8_t> s = wi::render_territory(base, short_fill, {}, k);
             CHECK(s.size() == want.size());
         }
     }
@@ -240,16 +256,17 @@ TEST_CASE("P4-01 13.2 item 7, invariant 9: an empty fill equals render_composite
         const auto fill = wi::territory_fill(h.timeline, colours, 1500);
         const wi::TerritoryBase nr =
             wi::TerritoryBase::build(L.elevation, &L.water, nullptr, &L.flow_dir, L.biome, L.region, L.table);
-        const std::vector<std::uint8_t> img = wi::render_territory(nr, fill, 1);
+        const auto holders = wi::territory_holders(h.timeline, 1500);
+        const std::vector<std::uint8_t> img = wi::render_territory(nr, fill, holders, 1);
         CHECK(pixel(img, 8, 2, 1) == Rgb{52, 100, 200});
         CHECK(pixel(img, 8, 4, 0) == Rgb{52, 100, 200});
-        CHECK(pixel(img, 8, 5, 0) == Rgb{157, 80, 44});   // c2 at factor 251
-        CHECK(pixel(img, 8, 1, 4) == Rgb{207, 168, 150});  // c4 at factor 256
+        CHECK(pixel(img, 8, 5, 0) == Rgb{216, 103, 25});   // c2 at factor 251
+        CHECK(pixel(img, 8, 1, 4) == Rgb{245, 165, 105});  // c4 at factor 256
         const wi::TerritoryBase nw =
             wi::TerritoryBase::build(L.elevation, nullptr, nullptr, nullptr, L.biome, L.region, L.table);
-        const std::vector<std::uint8_t> img2 = wi::render_territory(nw, fill, 1);
-        CHECK(pixel(img2, 8, 0, 1) == Rgb{52, 150, 70});    // the lake cell is plain held land
-        CHECK(pixel(img2, 8, 1, 3) == Rgb{207, 168, 150});  // the river cell too, factor 256
+        const std::vector<std::uint8_t> img2 = wi::render_territory(nw, fill, holders, 1);
+        CHECK(pixel(img2, 8, 0, 1) == Rgb{40, 190, 70});    // the lake cell is plain held land
+        CHECK(pixel(img2, 8, 1, 3) == Rgb{245, 165, 105});  // the river cell too, factor 256
     }
 }
 
@@ -257,13 +274,16 @@ TEST_CASE("P4-01 5.3: render_territory and TerritoryBase::build refuse what they
     const T1Layers L;
     const wi::TerritoryBase base =
         wi::TerritoryBase::build(L.elevation, &L.water, &L.river, &L.flow_dir, L.biome, L.region, L.table);
-    CHECK_FALSE(fatal_text([&] { (void)wi::render_territory(base, {}, 0); }).empty());
-    CHECK_FALSE(fatal_text([&] { (void)wi::render_territory(base, {}, 17); }).empty());
-    CHECK(fatal_text([&] { (void)wi::render_territory(base, {}, 16); }).empty());
+    CHECK_FALSE(fatal_text([&] { (void)wi::render_territory(base, {}, {}, 0); }).empty());
+    CHECK_FALSE(fatal_text([&] { (void)wi::render_territory(base, {}, {}, 17); }).empty());
+    CHECK(fatal_text([&] { (void)wi::render_territory(base, {}, {}, 16); }).empty());
     std::vector<std::uint8_t> wrong(3U * 8U * 6U - 1U);
-    CHECK_FALSE(fatal_text([&] { wi::render_territory(base, {}, 1, wrong); }).empty());
+    CHECK_FALSE(fatal_text([&] { wi::render_territory(base, {}, {}, 1, wrong); }).empty());
     std::vector<std::uint8_t> right(3U * 8U * 6U);
-    CHECK(fatal_text([&] { wi::render_territory(base, {}, 1, right); }).empty());
+    CHECK(fatal_text([&] { wi::render_territory(base, {}, {}, 1, right); }).empty());
+    // holders of any length are accepted (8.2: a region at or past the end counts as free)
+    const std::vector<std::int64_t> long_holders(100, 1);
+    CHECK(fatal_text([&] { (void)wi::render_territory(base, {}, long_holders, 1); }).empty());
     // composite_regions_problem reports a problem: region of type u8
     db::LayerGrid bad = db::make_layer_grid(db::ElementType::u8, 8, 6);
     REQUIRE(wi::composite_regions_problem(L.elevation, &L.water, &L.river, &L.flow_dir, L.biome, bad).has_value());
@@ -291,7 +311,8 @@ TEST_CASE("P4-01 13.2 item 7: the T1 world's stored layers are the fixture's, an
         wi::TerritoryBase::build(L.elevation, &L.water, &L.river, &L.flow_dir, L.biome, L.region, L.table);
     const wh::LoadedHistory& h = t1_history();
     const auto fill = wi::territory_fill(h.timeline, wi::civilization_colours(h.tables), 1600);
-    CHECK(wi::render_territory(a, fill, 1) == wi::render_territory(b, fill, 1));
+    const auto holders = wi::territory_holders(h.timeline, 1600);
+    CHECK(wi::render_territory(a, fill, holders, 1) == wi::render_territory(b, fill, holders, 1));
 }
 
 }  // TEST_SUITE

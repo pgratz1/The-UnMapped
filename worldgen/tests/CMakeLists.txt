@@ -443,9 +443,14 @@ target_compile_definitions(worldgen-tests PRIVATE
 # worlds (seeds 0 to 19) and the golden dumps of 13.4 (reference
 # reference/p4_timeline_reference.py). The 1024 cases are in the skipped
 # suite "timeline-slow"; the bench is the skipped suite "timeline-bench".
+# P4-03 (docs/specs/p4-03-history-view.md 11.1): the colour table of 7.2 and
+# the distance rule of 7.3, territory_holders, the inner borders of 8.2, the
+# control-run check of Timeline::build (9.4) and phase_kind_word, in
+# timeline_borders_test.cpp; the other files carry P4-03's colours and calls.
 target_sources(worldgen-tests PRIVATE
     timeline_unit_test.cpp
     timeline_territory_test.cpp
+    timeline_borders_test.cpp
     timeline_golden_test.cpp
     timeline_property_test.cpp
     timeline_bench_test.cpp
@@ -453,6 +458,11 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P4_01_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/timeline"
     UNMAPPED_P4_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-01-timeline.txt"
+)
+# The generator engineer's checks of spec P4-03 (the 8.2 example, the colour
+# table of 7.2, phase_kind_word); the stage's tests are the timeline files.
+target_sources(worldgen-tests PRIVATE
+    p4_03_engineer_test.cpp
 )
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every

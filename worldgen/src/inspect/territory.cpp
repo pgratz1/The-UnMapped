@@ -1,4 +1,5 @@
-// Civilization colours and the territory image (spec P4-01 5.5, 5.6).
+// Civilization colours and the territory image (spec P4-01 5.5, 5.6; P4-03
+// 7, 8 and 9.2).
 
 #include "worldgen/inspect/territory.hpp"
 
@@ -21,20 +22,30 @@ namespace worldgen::inspect {
 
 namespace {
 
-struct KeyColour {
+// The four colours of each shipped race key (P4-03 7.2), entry k mod 4 for
+// the civilization of ordinal k; entry 0 is the race's base colour.
+struct KeyColours {
     std::string_view key;
-    Rgb colour;
+    std::array<Rgb, 4> colours;
 };
-
-// The six bases of 5.5 (interim, P4-01 14 item 1).
-constexpr std::array<KeyColour, 6> BASES = {{
-    {"elf", {52, 150, 70}},
-    {"goblin", {190, 160, 50}},
-    {"dwarf", {160, 82, 45}},
-    {"faerie", {150, 90, 200}},
-    {"human", {50, 105, 200}},
-    {"orc", {200, 40, 35}},
+constexpr std::array<KeyColours, 6> RACE_COLOURS = {{
+    {"elf", {{{40, 190, 70}, {150, 230, 150}, {0, 140, 40}, {130, 205, 40}}}},
+    {"goblin", {{{230, 195, 20}, {250, 235, 110}, {170, 125, 0}, {205, 160, 60}}}},
+    {"dwarf", {{{220, 105, 25}, {245, 165, 105}, {150, 65, 15}, {195, 80, 55}}}},
+    {"faerie", {{{175, 70, 225}, {215, 160, 250}, {115, 35, 165}, {200, 110, 200}}}},
+    {"human", {{{0, 190, 195}, {125, 235, 230}, {0, 120, 130}, {50, 215, 175}}}},
+    {"orc", {{{205, 30, 30}, {240, 120, 110}, {135, 15, 20}, {230, 50, 80}}}},
 }};
+
+// The row of a race key, compared as bytes (no locale), or null.
+const KeyColours* race_row(std::string_view race_key) noexcept {
+    for (const KeyColours& k : RACE_COLOURS) {
+        if (k.key == race_key) {
+            return &k;
+        }
+    }
+    return nullptr;
+}
 
 // The largest region value the u16 layer region can hold.
 constexpr std::int64_t MAX_LAYER_REGION = 65535;
@@ -55,17 +66,69 @@ std::uint8_t deep(std::uint8_t c) noexcept {
     return static_cast<std::uint8_t>(static_cast<unsigned>(c) * 7U / 16U);
 }
 
-}  // namespace
+// dim(C) of P4-03 8.2: each channel times 12 / 16, floored.
+Rgb dim(Rgb c) noexcept {
+    const auto d = [](std::uint8_t v) { return static_cast<std::uint8_t>(static_cast<unsigned>(v) * 12U / 16U); };
+    return Rgb{d(c.r), d(c.g), d(c.b)};
+}
 
-Rgb race_base_colour(std::string_view race_key) {
-    for (const KeyColour& k : BASES) {
-        if (k.key == race_key) {  // byte comparison, no locale
-            return k.colour;
-        }
-    }
+// P4-01 5.5: the base colour of a key without a row.
+Rgb hashed_base(std::string_view race_key) {
     const std::vector<std::uint64_t> words = encode_bytes(race_key);
     const std::uint64_t h = hash_words(TAG_COLOUR, words);
     return Rgb{hashed_channel(h, 0U), hashed_channel(h, 1U), hashed_channel(h, 2U)};
+}
+
+// The size of the fill and holder vectors (P4-01 5.3): min(largest region
+// id, 65535) + 1, after the year check with the timeline's message.
+std::size_t region_vector_size(const history::Timeline& timeline, std::int64_t year) {
+    if (!timeline.valid_year(year)) {  // also with no regions; the timeline's message
+        throw FatalError("timeline: year " + db::format_i64(year) + " outside 0 to " +
+                         db::format_i64(timeline.end_year()));
+    }
+    std::int64_t largest = 0;
+    for (const std::int64_t r : timeline.region_ids()) {
+        if (r > largest && r <= MAX_LAYER_REGION) {
+            largest = r;
+        }
+    }
+    return static_cast<std::size_t>(largest) + 1U;
+}
+
+// holders[v], 0 when v is past the end (P4-03 8.2).
+std::int64_t holder_of(std::span<const std::int64_t> holders, std::uint16_t v) noexcept {
+    return v < holders.size() ? holders[v] : 0;
+}
+
+// The pixel of one cell (P4-01 5.6, P4-03 8.2).
+Rgb territory_pixel(const TerritoryBase::Cell& cell, std::span<const std::optional<Rgb>> fill,
+                    std::span<const std::int64_t> holders) noexcept {
+    if (cell.kind == TerritoryBase::KIND_PLAIN || cell.region >= fill.size()) {
+        return cell.base;
+    }
+    const std::optional<Rgb>& colour = fill[cell.region];
+    if (!colour) {
+        return cell.base;
+    }
+    if (cell.kind == TerritoryBase::KIND_FILLABLE) {
+        return shade_colour(*colour, cell.factor);
+    }
+    // Inner border candidate: every side held by the same civilization.
+    const std::int64_t c = holder_of(holders, cell.region);
+    if (c == 0 || (cell.east != 0U && holder_of(holders, cell.east) != c) ||
+        (cell.south != 0U && holder_of(holders, cell.south) != c)) {
+        return cell.base;
+    }
+    return shade_colour(dim(*colour), cell.factor);
+}
+
+}  // namespace
+
+Rgb race_base_colour(std::string_view race_key) {
+    if (const KeyColours* row = race_row(race_key)) {
+        return row->colours[0];
+    }
+    return hashed_base(race_key);
 }
 
 Rgb civilization_shade(Rgb base, std::int64_t ordinal) {
@@ -78,6 +141,16 @@ Rgb civilization_shade(Rgb base, std::int64_t ordinal) {
         case 3: return Rgb{deep(base.r), deep(base.g), deep(base.b)};
         default: return base;
     }
+}
+
+Rgb race_civilization_colour(std::string_view race_key, std::int64_t ordinal) {
+    if (ordinal < 0) {
+        fatal("race_civilization_colour: negative ordinal");
+    }
+    if (const KeyColours* row = race_row(race_key)) {
+        return row->colours[static_cast<std::size_t>(ordinal % 4)];
+    }
+    return civilization_shade(hashed_base(race_key), ordinal);
 }
 
 std::vector<Rgb> civilization_colours(const history::HistoryTables& tables) {
@@ -97,7 +170,7 @@ std::vector<Rgb> civilization_colours(const history::HistoryTables& tables) {
                              db::format_i64(c.race) + " is not a race");
         }
         std::int64_t& k = seen[c.race];
-        out.push_back(civilization_shade(race_base_colour(race->key), k));
+        out.push_back(race_civilization_colour(race->key, k));
         ++k;
     }
     return out;
@@ -105,17 +178,7 @@ std::vector<Rgb> civilization_colours(const history::HistoryTables& tables) {
 
 std::vector<std::optional<Rgb>> territory_fill(const history::Timeline& timeline, std::span<const Rgb> colours,
                                                std::int64_t year) {
-    if (!timeline.valid_year(year)) {  // also with no regions; the timeline's message
-        throw FatalError("timeline: year " + db::format_i64(year) + " outside 0 to " +
-                         db::format_i64(timeline.end_year()));
-    }
-    std::int64_t largest = 0;
-    for (const std::int64_t r : timeline.region_ids()) {
-        if (r > largest && r <= MAX_LAYER_REGION) {
-            largest = r;
-        }
-    }
-    std::vector<std::optional<Rgb>> fill(static_cast<std::size_t>(largest) + 1U);
+    std::vector<std::optional<Rgb>> fill(region_vector_size(timeline, year));
     for (const std::int64_t r : timeline.region_ids()) {
         const history::RegionHolding h = timeline.region_holder(r, year);
         if (h.civ == 0 || r < 1 || r > MAX_LAYER_REGION) {
@@ -127,6 +190,17 @@ std::vector<std::optional<Rgb>> territory_fill(const history::Timeline& timeline
         fill[static_cast<std::size_t>(r)] = colours[static_cast<std::size_t>(h.civ - 1)];
     }
     return fill;
+}
+
+std::vector<std::int64_t> territory_holders(const history::Timeline& timeline, std::int64_t year) {
+    std::vector<std::int64_t> holders(region_vector_size(timeline, year), 0);
+    for (const std::int64_t r : timeline.region_ids()) {
+        if (r < 1 || r > MAX_LAYER_REGION) {
+            continue;
+        }
+        holders[static_cast<std::size_t>(r)] = timeline.region_holder(r, year).civ;
+    }
+    return holders;
 }
 
 TerritoryBase TerritoryBase::build(const db::LayerGrid& elevation, const db::LayerGrid* water,
@@ -148,14 +222,22 @@ TerritoryBase TerritoryBase::build(const db::LayerGrid& elevation, const db::Lay
     for (std::size_t i = 0; i < e.size(); ++i) {
         Cell& c = base.cells_[i];
         c.base = cells.colour[i];
-        // 5.6 item 1: v > 0, e >= 0 (shaded land), not drawn by step 3 or 4,
-        // not a border cell.
-        const bool fillable = ids[i] > 0U && e[i] >= 0 && cells.drawn[i] == 0U && cells.border[i] == 0U;
-        if (fillable) {
-            const auto x = static_cast<std::uint32_t>(i % w);
-            const auto y = static_cast<std::uint32_t>(i / w);
-            c.factor = static_cast<std::uint16_t>(hillshade_factor(e, w, elevation.height, x, y));
-            c.region = ids[i];
+        // P4-01 5.6 item 1 and P4-03 8.2: v > 0, e >= 0 (shaded land), not
+        // drawn by step 3 or 4; fillable when not a border cell, an inner
+        // border candidate when it is one.
+        if (ids[i] == 0U || e[i] < 0 || cells.drawn[i] != 0U) {
+            continue;
+        }
+        const auto x = static_cast<std::uint32_t>(i % w);
+        const auto y = static_cast<std::uint32_t>(i / w);
+        c.factor = static_cast<std::uint16_t>(hillshade_factor(e, w, elevation.height, x, y));
+        c.region = ids[i];
+        if (cells.border[i] == 0U) {
+            c.kind = KIND_FILLABLE;
+        } else {
+            c.kind = KIND_INNER_BORDER;
+            c.east = cells.east[i];
+            c.south = cells.south[i];
         }
     }
     return base;
@@ -166,46 +248,20 @@ std::size_t territory_rgb_size(const TerritoryBase& base, std::uint32_t scale) {
                                          "render_territory: scale must be 1 to 16");
 }
 
-void render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill, std::uint32_t scale,
-                      std::span<std::uint8_t> out) {
+void render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill,
+                      std::span<const std::int64_t> holders, std::uint32_t scale, std::span<std::uint8_t> out) {
     if (out.size() != territory_rgb_size(base, scale)) {
         fatal("render_territory: output buffer of the wrong size");
     }
     const std::span<const TerritoryBase::Cell> cells = base.cells();
-    const std::size_t w = base.width();
-    const std::size_t h = base.height();
-    const std::size_t s = scale;
-    const std::size_t row_bytes = w * s * 3U;
-    for (std::size_t y = 0; y < h; ++y) {
-        std::uint8_t* row = out.data() + (y * s) * row_bytes;
-        for (std::size_t x = 0; x < w; ++x) {
-            const TerritoryBase::Cell& cell = cells[y * w + x];
-            Rgb c = cell.base;
-            if (cell.region != 0U && cell.region < fill.size()) {
-                if (const std::optional<Rgb>& holder = fill[cell.region]) {
-                    c = shade_colour(*holder, cell.factor);
-                }
-            }
-            std::uint8_t* px = row + x * s * 3U;
-            for (std::size_t i = 0; i < s; ++i) {
-                px[3U * i] = c.r;
-                px[3U * i + 1U] = c.g;
-                px[3U * i + 2U] = c.b;
-            }
-        }
-        for (std::size_t j = 1; j < s; ++j) {
-            std::uint8_t* dst = row + j * row_bytes;
-            for (std::size_t b = 0; b < row_bytes; ++b) {
-                dst[b] = row[b];
-            }
-        }
-    }
+    detail::fill_buffer(out, base.width(), base.height(), scale,
+                        [&](std::size_t i) { return territory_pixel(cells[i], fill, holders); });
 }
 
 std::vector<std::uint8_t> render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill,
-                                           std::uint32_t scale) {
+                                           std::span<const std::int64_t> holders, std::uint32_t scale) {
     std::vector<std::uint8_t> out(territory_rgb_size(base, scale));
-    render_territory(base, fill, scale, out);
+    render_territory(base, fill, holders, scale, out);
     return out;
 }
 
