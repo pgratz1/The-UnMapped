@@ -3,7 +3,9 @@
 // LayerMapView: a Control that shows one layer image with pan and zoom.
 //
 // Presentation only. It is given an Image (from ViewerModel) and draws it
-// one texel per cell with nearest filtering. A new image is fitted to the
+// one texel per cell with nearest filtering, as tiles of 128 x 128 cells,
+// each its own texture; the same image redrawn in place uploads only the
+// tiles whose pixels changed. A new image is fitted to the
 // view and kept fitted as the view resizes, until the user zooms (mouse
 // wheel, about the cursor) or pans (drag with the left or middle button);
 // double click fits again. Zoom and offset are floats on the Godot side only.
@@ -12,11 +14,12 @@
 // Markers (spec P4-04 8.4, 8.5): set_markers hands it the model's marker
 // list (get_markers()) and the glyphs it names; they are drawn after the
 // image, in list order, at screen size: each glyph cell is a g x g square
-// of screen pixels (g = 1 below zoom 4, 2 below zoom 10, else 3), centred on
-// the marker's cell; below zoom 0.5 the entries marked small are neither
-// drawn nor hit. Each distinct (glyph, fill, g) is one cached ImageTexture
-// (dropped by clear_markers). Hover hit-tests the drawn glyphs in reverse
-// draw order (a glyph cell of any class but 0) and emits
+// of screen pixels (g = 1 below zoom 0.5, 2 below zoom 10, else 3; P4-05
+// 12.1 F1), centred on the marker's cell; below zoom 0.5 the entries marked
+// small are neither drawn nor hit. Each distinct (glyph, fill, g) is one
+// cached ImageTexture (dropped by clear_markers). Hover hit-tests the drawn
+// glyphs in reverse draw order (a glyph cell of any class but 0; for small
+// entries and passes also a glyph cell within one cell of one, F6) and emits
 // marker_hovered(index), -1 when none, after cell_hovered.
 
 #include <cstdint>
@@ -33,6 +36,7 @@
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/rect2.hpp>
+#include <godot_cpp/variant/rect2i.hpp>
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
@@ -83,6 +87,13 @@ public:
     [[nodiscard]] int64_t last_marker_draw_usec() const noexcept { return last_marker_draw_usec_; }
     [[nodiscard]] int64_t marker_draws() const noexcept { return marker_draws_; }
     [[nodiscard]] std::size_t marker_texture_count() const noexcept { return textures_.size(); }
+    // Tile textures created or updated since the view was made (P4-05 12.3).
+    [[nodiscard]] int64_t tiles_uploaded() const noexcept { return tiles_uploaded_; }
+    [[nodiscard]] std::size_t tile_count() const noexcept { return tiles_.size(); }
+    // The glyph cell size g at a zoom (P4-04 8.4, P4-05 12.1 F1), and at the
+    // current zoom.
+    [[nodiscard]] static int32_t glyph_cell_size_at(double zoom) noexcept;
+    [[nodiscard]] int32_t glyph_cell_size() const;
 
 protected:
     static void _bind_methods();
@@ -102,10 +113,9 @@ private:
         std::string glyph;
         int64_t fill = -1;
         bool small = false;
+        bool margin = false;  // hit one glyph cell beyond the glyph (F6)
         const GlyphCells* cells = nullptr;  // into glyphs_; null: glyph unknown
     };
-    // The glyph cell size in screen pixels at the current zoom (8.4).
-    [[nodiscard]] int32_t glyph_cell_size() const;
     [[nodiscard]] bool marker_drawn(const Marker& marker) const;
     [[nodiscard]] godot::Vector2i marker_centre(const Marker& marker) const;
     godot::Ref<godot::ImageTexture> glyph_texture(const Marker& marker, int32_t g);
@@ -121,7 +131,18 @@ private:
     int64_t marker_draws_ = 0;
 
     godot::Ref<godot::Image> image_;
-    godot::Ref<godot::ImageTexture> texture_;
+    // The image as tiles (P4-05 12.3): each a TILE x TILE cell rectangle
+    // (smaller at the right and bottom edges) with its RGBA8 texture, and
+    // the RGB8 bytes the tiles show, to find the tiles a redraw changed.
+    struct Tile {
+        godot::Rect2i rect;
+        godot::Ref<godot::ImageTexture> texture;
+    };
+    void upload_tiles(bool changed_only);
+    [[nodiscard]] godot::Ref<godot::Image> tile_image(const godot::Rect2i& rect) const;
+    std::vector<Tile> tiles_;
+    std::vector<uint8_t> shown_;
+    int64_t tiles_uploaded_ = 0;
     godot::Vector2i image_size_;
     godot::Vector2 offset_;
     double zoom_ = 1.0;

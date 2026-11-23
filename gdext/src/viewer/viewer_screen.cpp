@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <string_view>
 #include <utility>
@@ -11,6 +12,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
@@ -36,6 +38,12 @@
 namespace unmapped {
 
 namespace {
+
+int64_t now_nsec() {
+    return static_cast<int64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+}
 
 bool is_composite(const godot::Dictionary& info) {
     return info.get("kind", "") == godot::Variant("composite");
@@ -87,22 +95,26 @@ godot::Ref<godot::ImageTexture> legend_icon(const godot::PackedInt32Array& colou
     return godot::ImageTexture::create_from_image(image);
 }
 
-// The key list's icons (P4-04 8.6): the glyph at one screen pixel per glyph
-// cell, centred on a MARKER_ICON x MARKER_ICON canvas (the ring's size).
+// The key list's icons (P4-04 8.6, P4-05 12.1 F7): the glyph at g screen
+// pixels per glyph cell, g = 2 except the ring rows (g = 1: a ring at 2
+// would be 46 px), centred on a MARKER_ICON x MARKER_ICON canvas (the ring's
+// size at 1; the largest other glyph, a city of 11 cells, is 22 px at 2).
 constexpr int32_t MARKER_ICON = 23;
+constexpr int64_t MARKER_ICON_G = 2;
+constexpr int64_t MARKER_ICON_RING_G = 1;
 
-godot::Ref<godot::ImageTexture> marker_icon(const godot::Dictionary& glyph, int64_t fill) {
+godot::Ref<godot::ImageTexture> marker_icon(const godot::Dictionary& glyph, int64_t fill, int64_t g) {
     const int64_t radius = glyph.get("radius", int64_t{-1});
     const godot::PackedByteArray cells = glyph.get("cells", godot::PackedByteArray());
     const int64_t side = 2 * radius + 1;
-    if (radius < 0 || side > MARKER_ICON || cells.size() != side * side) {
+    if (radius < 0 || g < 1 || side * g > MARKER_ICON || cells.size() != side * side) {
         return {};
     }
     godot::PackedByteArray data;
     data.resize(static_cast<int64_t>(MARKER_ICON) * MARKER_ICON * 4);
     data.fill(0);
     uint8_t* out = data.ptrw();
-    const int64_t pad = (MARKER_ICON - side) / 2;
+    const int64_t pad = (MARKER_ICON - side * g) / 2;
     for (int64_t row = 0; row < side; ++row) {
         for (int64_t col = 0; col < side; ++col) {
             const uint8_t cls = cells[row * side + col];
@@ -117,11 +129,15 @@ godot::Ref<godot::ImageTexture> marker_icon(const godot::Dictionary& glyph, int6
             if (rgb < 0) {
                 continue;
             }
-            uint8_t* px = out + ((row + pad) * MARKER_ICON + col + pad) * 4;
-            px[0] = static_cast<uint8_t>((rgb >> 16) & 0xFF);
-            px[1] = static_cast<uint8_t>((rgb >> 8) & 0xFF);
-            px[2] = static_cast<uint8_t>(rgb & 0xFF);
-            px[3] = 255;
+            for (int64_t sy = 0; sy < g; ++sy) {
+                for (int64_t sx = 0; sx < g; ++sx) {
+                    uint8_t* px = out + ((row * g + sy + pad) * MARKER_ICON + col * g + sx + pad) * 4;
+                    px[0] = static_cast<uint8_t>((rgb >> 16) & 0xFF);
+                    px[1] = static_cast<uint8_t>((rgb >> 8) & 0xFF);
+                    px[2] = static_cast<uint8_t>(rgb & 0xFF);
+                    px[3] = 255;
+                }
+            }
         }
     }
     const godot::Ref<godot::Image> image =
@@ -492,9 +508,11 @@ void ViewerScreen::push_markers() {
 }
 
 void ViewerScreen::on_markers_changed() {
+    const int64_t start = now_nsec();
     push_markers();
     update_marker_controls();
     show_hover_text();
+    year_steps_.markers = now_nsec() - start;
 }
 
 void ViewerScreen::on_markers_toggled(bool on) {
@@ -534,7 +552,9 @@ void ViewerScreen::update_marker_controls() {
         const godot::Dictionary row = legend[i];
         const godot::PackedInt32Array colours = row["colours"];
         const int64_t fill = colours.is_empty() ? ViewerModel::marker_legend_grey() : int64_t{colours[0]} & 0xFFFFFF;
-        const godot::Ref<godot::Texture2D> icon = marker_icon(model_->get_marker_glyph(row["glyph"]), fill);
+        const godot::String glyph = row["glyph"];
+        const godot::Ref<godot::Texture2D> icon = marker_icon(model_->get_marker_glyph(glyph), fill,
+                                                              glyph == "ring" ? MARKER_ICON_RING_G : MARKER_ICON_G);
         const int32_t item = marker_legend_->add_item(row["label"], icon, false);
         marker_legend_->set_item_tooltip_enabled(item, false);
     }
@@ -629,6 +649,8 @@ void ViewerScreen::on_world_open_failed(const godot::String& path, const godot::
 }
 
 void ViewerScreen::on_world_closed() {
+    legend_rows_.clear();
+    legend_icons_.clear();
     layer_list_->clear();
     item_view_.clear();
     view_item_.clear();
@@ -666,15 +688,29 @@ void ViewerScreen::on_view_selected(int64_t index) {
 }
 
 void ViewerScreen::show_legend() {
-    legend_list_->clear();
     legend_title_->set_text(model_->get_legend_title());
     const godot::Array legend = model_->get_legend();
+    // P4-05 12.3: rebuilt only when its rows differ from those shown (an
+    // answer compared, not cached); most year changes leave them alone.
+    if (legend == legend_rows_ && legend_list_->get_item_count() == legend.size()) {
+        return;
+    }
+    legend_rows_ = legend.duplicate(true);
+    legend_list_->clear();
     for (int64_t i = 0; i < legend.size(); ++i) {
         const godot::Dictionary entry = legend[i];
         const godot::PackedInt32Array colours = entry["colours"];
-        // A row without colours is a heading: no swatch (P4-03 6.4).
-        const godot::Ref<godot::Texture2D> icon =
-            colours.is_empty() ? godot::Ref<godot::Texture2D>() : godot::Ref<godot::Texture2D>(legend_icon(colours));
+        // A row without colours is a heading: no swatch (P4-03 6.4). One
+        // icon texture per distinct colour list, kept while the world is open.
+        godot::Ref<godot::Texture2D> icon;
+        if (!colours.is_empty()) {
+            std::vector<int32_t> key(colours.ptr(), colours.ptr() + colours.size());
+            auto found = legend_icons_.find(key);
+            if (found == legend_icons_.end()) {
+                found = legend_icons_.emplace(std::move(key), legend_icon(colours)).first;
+            }
+            icon = found->second;
+        }
         const int32_t item = legend_list_->add_item(entry["label"], icon, false);
         const godot::String tooltip = entry.get("tooltip", godot::String());
         if (tooltip.is_empty()) {
@@ -748,7 +784,7 @@ godot::String ViewerScreen::year_counts_text() const {
            count("events", "event", "events") + " this year";
 }
 
-void ViewerScreen::update_year_bar() {
+void ViewerScreen::update_year_bar(bool marks) {
     if (!wired_) {
         return;
     }
@@ -775,23 +811,34 @@ void ViewerScreen::update_year_bar() {
     year_next_change_->set_disabled(!model_->has_next_change());
     year_label_->set_text(year_label_text());
     year_counts_->set_text(year_counts_text());
-    year_marks_->set_marks(model_->get_year_marks(), history ? end : 0);
+    if (marks) {
+        // The marks do not depend on the year: set when a world opens or closes.
+        year_marks_->set_marks(model_->get_year_marks(), history ? end : 0);
+    }
 }
 
 void ViewerScreen::on_year_changed(int64_t /*year*/) {
-    update_year_bar();
+    const int64_t start = now_nsec();
+    update_year_bar(false);
+    const int64_t bar = now_nsec();
+    year_steps_.year_bar = bar - start;
     if (model_->get_selected_view() >= 0 && model_->get_selected_view() == model_->get_territory_view()) {
         show_legend();  // rebuilt by the model for the new year
     }
+    const int64_t legend = now_nsec();
+    year_steps_.legend = legend - bar;
     if (hover_x_ >= 0 && hover_y_ >= 0) {
         on_cell_hovered(hover_x_, hover_y_);  // its text depends on the year
     }
+    year_steps_.hover = now_nsec() - legend;
 }
 
 void ViewerScreen::on_view_image_changed(int64_t index) {
+    const int64_t start = now_nsec();
     if (index == model_->get_selected_view()) {
         map_view_->set_image(model_->get_view_image(index));  // same size: texture updated, place kept
     }
+    year_steps_.image = now_nsec() - start;
 }
 
 void ViewerScreen::on_year_slider_changed(double value) {
@@ -916,21 +963,45 @@ void ViewerScreen::run_bench() {
                                    ms(timings.first_image_usec));
     const int64_t redraws_before = timings.redraws;
     const ViewerModel::MarkerTimings markers_before = model_->marker_timings();
+    const int64_t tiles_before = map_view_->tiles_uploaded();
     const int64_t end = model_->get_end_year();
+    // P4-05 12.3: each step of a year change, its maximum (and the year of
+    // it) and mean over 0..E and back.
+    struct Stat {
+        const char* name;
+        int64_t max = 0;
+        int64_t max_year = -1;
+        int64_t total = 0;
+    };
+    std::array<Stat, 11> stats{{{"(a) year_state and holders"},
+                                {"(b) render_territory into the image"},
+                                {"(c) view_image_changed: texture update"},
+                                {"(d) marker step (markers_at, compare, order)"},
+                                {"(d) markers_changed handler (map view, key list)"},
+                                {"(e) model legend (legend, legend_array)"},
+                                {"(f) screen legend rebuild (show_legend)"},
+                                {"(g) year bar (labels, buttons)"},
+                                {"(h) other year_changed work (hover text)"},
+                                {"model part (a + b + d + e)"},
+                                {"whole set_year"}}};
     int64_t changes = 0;
-    int64_t total = 0;
-    int64_t slowest = 0;
-    int64_t slowest_year = -1;
     const auto change = [&](int64_t year) {
-        const int64_t t = usec();
+        year_steps_ = {};
         model_->set_year(year);
-        const int64_t took = usec() - t;
-        ++changes;
-        total += took;
-        if (took > slowest) {
-            slowest = took;
-            slowest_year = year;
+        const ViewerModel::YearChangeSteps& m = model_->last_year_change();
+        const YearSteps& v = year_steps_;
+        const int64_t other = std::max<int64_t>(0, m.year_signal - v.legend - v.year_bar);
+        const std::array<int64_t, 11> values{m.state,   m.draw,   v.image,    m.markers,
+                                             v.markers, m.legend, v.legend,   v.year_bar,
+                                             other,     m.state + m.draw + m.markers + m.legend, m.total};
+        for (std::size_t i = 0; i < stats.size(); ++i) {
+            stats[i].total += values[i];
+            if (values[i] > stats[i].max) {
+                stats[i].max = values[i];
+                stats[i].max_year = year;
+            }
         }
+        ++changes;
     };
     for (int64_t y = 0; y <= end; ++y) {
         change(y);
@@ -938,15 +1009,25 @@ void ViewerScreen::run_bench() {
     for (int64_t y = end; y >= 0; --y) {
         change(y);
     }
+    const auto nms = [](int64_t nsec, int digits) {
+        return godot::String::num(static_cast<double>(nsec) / 1000000.0, digits) + " ms";
+    };
     const auto change_years =
         static_cast<int64_t>(model_->history_state().history().timeline.holder_change_years().size());
+    const Stat& whole = stats[10];
     godot::UtilityFunctions::print("UNMAPPED-BENCH: year changes 0..", end, " and back: ", changes, ", mean ",
-                                   godot::String::num(static_cast<double>(total) / static_cast<double>(changes) / 1000.0,
-                                                      3),
-                                   " ms, slowest ", ms(slowest), " (to year ", slowest_year, ")");
+                                   nms(whole.total / std::max<int64_t>(changes, 1), 3), ", slowest ",
+                                   nms(whole.max, 2), " (to year ", whole.max_year, ")");
+    for (const Stat& stat : stats) {
+        godot::UtilityFunctions::print("UNMAPPED-BENCH:   step ", stat.name, ": max ", nms(stat.max, 3),
+                                       " (to year ", stat.max_year, "), mean ",
+                                       nms(stat.total / std::max<int64_t>(changes, 1), 4));
+    }
     godot::UtilityFunctions::print("UNMAPPED-BENCH: territory redraws ", timings.redraws - redraws_before,
                                    " (holder change years: ", change_years, " per pass), slowest redraw ",
-                                   ms(timings.slowest_redraw_usec));
+                                   ms(timings.slowest_redraw_usec), "; map tiles uploaded ",
+                                   map_view_->tiles_uploaded() - tiles_before, " of ",
+                                   static_cast<int64_t>(map_view_->tile_count()), " per image");
     // P4-04 8.4: the marker step of each year change, and markers_changed.
     const ViewerModel::MarkerTimings& markers = model_->marker_timings();
     const int64_t steps = markers.steps - markers_before.steps;
@@ -960,12 +1041,110 @@ void ViewerScreen::run_bench() {
         " ms; markers_changed ", markers.changes - markers_before.changes, " over 0..", end, " and back");
     model_->set_year(end);
     godot::UtilityFunctions::print("UNMAPPED-BENCH: markers at the present: ", model_->get_markers().size());
-    // One marker draw: the next frame's _draw of the map view.
-    map_view_->queue_redraw();
-    get_tree()->create_timer(0.3)->connect("timeout", callable_mp(this, &ViewerScreen::finish_bench));
+    if (godot::DisplayServer::get_singleton()->get_name() == "headless") {
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: frame times: headless, no frame is drawn");
+        get_tree()->create_timer(0.3)->connect("timeout", callable_mp(this, &ViewerScreen::finish_bench));
+        return;
+    }
+    // The windowed pass: one year change per frame, timed from set_year to
+    // the next frame_post_draw, with vsync off so that no frame is held back:
+    // each step's slowest year (arriving from the year before), every 25th
+    // year, and each holder change year and the year after it.
+    godot::DisplayServer::get_singleton()->window_set_vsync_mode(godot::DisplayServer::VSYNC_DISABLED);
+    godot::Engine::get_singleton()->set_max_fps(0);
+    godot::OS::get_singleton()->set_low_processor_usage_mode(false);
+    bench_frame_years_.clear();
+    for (const Stat& stat : stats) {
+        if (stat.max_year >= 0) {
+            bench_frame_years_.push_back(stat.max_year > 0 ? stat.max_year - 1 : 1);
+            bench_frame_years_.push_back(stat.max_year);
+        }
+    }
+    for (int64_t y = 0; y <= end; y += 25) {
+        bench_frame_years_.push_back(y);
+    }
+    for (const int64_t y : model_->history_state().history().timeline.holder_change_years()) {
+        bench_frame_years_.push_back(y);
+        if (y + 1 <= end) {
+            bench_frame_years_.push_back(y + 1);
+        }
+    }
+    bench_frame_next_ = 0;
+    bench_frame_start_ = -1;
+    bench_frame_idle_ = 30;
+    bench_frame_times_.clear();
+    godot::RenderingServer::get_singleton()->connect("frame_post_draw",
+                                                     callable_mp(this, &ViewerScreen::bench_frame_step));
+}
+
+void ViewerScreen::bench_frame_step() {
+    const int64_t now = now_nsec();
+    if (bench_frame_start_ >= 0) {
+        bench_frame_times_.emplace_back(bench_frame_year_, now - bench_frame_start_);
+    }
+    // First some frames without a year change, for the frame's own cost.
+    if (bench_frame_idle_ > 0) {
+        --bench_frame_idle_;
+        bench_frame_year_ = -1;
+        bench_frame_start_ = now_nsec();
+        map_view_->queue_redraw();
+        return;
+    }
+    if (bench_frame_next_ >= bench_frame_years_.size()) {
+        godot::RenderingServer::get_singleton()->disconnect("frame_post_draw",
+                                                            callable_mp(this, &ViewerScreen::bench_frame_step));
+        bench_frame_start_ = -1;
+        finish_bench();
+        return;
+    }
+    bench_frame_year_ = bench_frame_years_[bench_frame_next_++];
+    if (bench_frame_year_ == model_->get_year()) {
+        model_->set_year(bench_frame_year_ == 0 ? 1 : bench_frame_year_ - 1);  // untimed: a change must happen
+    }
+    bench_frame_start_ = now_nsec();
+    model_->set_year(bench_frame_year_);
 }
 
 void ViewerScreen::finish_bench() {
+    if (!bench_frame_times_.empty()) {
+        int64_t idle_max = 0;
+        int64_t idle_total = 0;
+        int64_t idle_n = 0;
+        int64_t max = 0;
+        int64_t max_year = -1;
+        int64_t total = 0;
+        int64_t n = 0;
+        int64_t over = 0;
+        bool first_idle = true;
+        for (const auto& [year, nsec] : bench_frame_times_) {
+            if (year < 0) {
+                // The first frame follows the synchronous pass: left out.
+                if (!first_idle) {
+                    ++idle_n;
+                    idle_total += nsec;
+                    idle_max = std::max(idle_max, nsec);
+                }
+                first_idle = false;
+                continue;
+            }
+            ++n;
+            total += nsec;
+            over += nsec > 50000000 ? 1 : 0;
+            if (nsec > max) {
+                max = nsec;
+                max_year = year;
+            }
+        }
+        const auto nms = [](int64_t nsec) {
+            return godot::String::num(static_cast<double>(nsec) / 1000000.0, 2) + " ms";
+        };
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: frame without a year change: mean ",
+                                       nms(idle_total / std::max<int64_t>(idle_n, 1)), ", max ", nms(idle_max), " (",
+                                       idle_n, " frames)");
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: set_year to the next frame_post_draw: ", n,
+                                       " year changes, mean ", nms(total / std::max<int64_t>(n, 1)), ", max ",
+                                       nms(max), " (to year ", max_year, "), over 50 ms: ", over);
+    }
     if (map_view_->marker_draws() > 0) {
         godot::UtilityFunctions::print("UNMAPPED-BENCH: marker draw (", model_->get_markers().size(), " markers, ",
                                        static_cast<int64_t>(map_view_->marker_texture_count()), " textures): ",
