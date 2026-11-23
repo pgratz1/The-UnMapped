@@ -1,7 +1,11 @@
 #include "viewer/viewer_check.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdint>
+#include <optional>
+#include <span>
 #include <exception>
 #include <map>
 #include <regex>
@@ -16,6 +20,11 @@
 #include <godot_cpp/classes/h_slider.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/input_event_mouse_motion.hpp>
+#include <godot_cpp/classes/check_box.hpp>
+#include <godot_cpp/classes/check_button.hpp>
+#include <godot_cpp/classes/item_list.hpp>
+#include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/spin_box.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
@@ -33,7 +42,10 @@
 
 #include "viewer/viewer_screen.hpp"
 #include "world_file.hpp"
+#include "worldgen/db/reader.hpp"
+#include "worldgen/history/digest.hpp"
 #include "worldgen/history/timeline.hpp"
+#include "worldgen/inspect/markers.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
 #include "worldgen/inspect/territory.hpp"
 
@@ -165,8 +177,21 @@ struct ReportCiv {
     int64_t id = 0, race = 0, founded = -1, ended = -1;
     std::string name;
 };
+// A settlement line of [present] (P4-04 9.2 M2).
+struct ReportSettlement {
+    int64_t id = 0, population = 0, owner = 0, x = 0, y = 0, founded = -1, ruined = -1, ruin_event = 0;
+    std::string name, kind, status;
+};
+// A chronicle line (P4-04 9.2 M3, M4, M7).
+struct ReportEvent {
+    int64_t id = 0, start = 0, end = 0, settlement = 0, region = 0;
+    std::string kind, sentence;
+};
 struct HistoryReport {
     std::string problem;  // empty when read
+    std::vector<ReportSettlement> settlements;  // [present], ascending id
+    std::vector<ReportEvent> events;            // [chronicle], ascending id
+    std::map<int64_t, int64_t> capitals;        // civ -> settlement ([civilizations] capital lines)
     int64_t end_year = -1;
     int64_t last_event_year = -1;
     int64_t first_ceded = -1;  // F: the start year of the first region_ceded event
@@ -210,6 +235,14 @@ HistoryReport read_history_report(const godot::String& path) {
     static const std::regex ended_re(R"(^  fate: ended in ([0-9]+))");
     static const std::regex present_re(R"(^c([0-9]+) .*: ([0-9]+) regions?, )");
     static const std::regex end_re(R"(^end_year = ([0-9]+)$)");
+    static const std::regex full_event_re(
+        R"(^([0-9]+)(?:-([0-9]+))? e([0-9]+) ([a-z_]+)/[0-9]+: (.*) \{([^{}]*)\}( \[causes [^\]]*\])?$)");
+    static const std::regex tag_s_re(R"((?:^| )@s([0-9]+)(?: |$))");
+    static const std::regex tag_rg_re(R"((?:^| )@rg([0-9]+)(?: |$))");
+    static const std::regex capital_re(R"(^  capital: .* \(s([0-9]+)\)$)");
+    static const std::regex settlement_re(
+        R"(^  s([0-9]+) (.+?): ([a-z]+), ([a-z]+), population ([0-9]+), (?:no owner|.+? \(c([0-9]+)\)), at ([0-9]+) ([0-9]+) .*, founded ([0-9]+) by)");
+    static const std::regex ruined_re(R"(, ruined ([0-9]+)(?:, e([0-9]+))?,)");
     std::string section;
     std::size_t start = 0;
     try {
@@ -233,6 +266,24 @@ HistoryReport read_history_report(const godot::String& path) {
                 if (report.first_ceded < 0 && m[3] == "region_ceded") {
                     report.first_ceded = to_i64(m[1]);
                 }
+                std::smatch f;
+                if (std::regex_match(line, f, full_event_re)) {
+                    ReportEvent e;
+                    e.start = to_i64(f[1]);
+                    e.end = f[2].matched ? to_i64(f[2]) : e.start;
+                    e.id = to_i64(f[3]);
+                    e.kind = f[4];
+                    e.sentence = f[5];
+                    const std::string tags = f[6];
+                    std::smatch t;
+                    if (std::regex_search(tags, t, tag_s_re)) {
+                        e.settlement = to_i64(t[1]);
+                    }
+                    if (std::regex_search(tags, t, tag_rg_re)) {
+                        e.region = to_i64(t[1]);
+                    }
+                    report.events.push_back(std::move(e));
+                }
             } else if (section == "civilizations") {
                 if (std::regex_match(line, m, civ_re)) {
                     report.civs.push_back(ReportCiv{to_i64(m[1]), 0, -1, -1, m[2]});
@@ -242,9 +293,28 @@ HistoryReport read_history_report(const godot::String& path) {
                     report.civs.back().founded = to_i64(m[1]);
                 } else if (!report.civs.empty() && std::regex_search(line, m, ended_re)) {
                     report.civs.back().ended = to_i64(m[1]);
+                } else if (!report.civs.empty() && std::regex_match(line, m, capital_re)) {
+                    report.capitals[report.civs.back().id] = to_i64(m[1]);
                 }
             } else if (section == "present" && std::regex_search(line, m, present_re)) {
                 report.present.emplace_back(to_i64(m[1]), to_i64(m[2]));
+            } else if (section == "present" && std::regex_search(line, m, settlement_re)) {
+                ReportSettlement r;
+                r.id = to_i64(m[1]);
+                r.name = m[2];
+                r.kind = m[3];
+                r.status = m[4];
+                r.population = to_i64(m[5]);
+                r.owner = m[6].matched ? to_i64(m[6]) : 0;
+                r.x = to_i64(m[7]);
+                r.y = to_i64(m[8]);
+                r.founded = to_i64(m[9]);
+                std::smatch ruin;
+                if (std::regex_search(line, ruin, ruined_re)) {
+                    r.ruined = to_i64(ruin[1]);
+                    r.ruin_event = ruin[2].matched ? to_i64(ruin[2]) : 0;
+                }
+                report.settlements.push_back(std::move(r));
             } else if (section == "stats" && std::regex_match(line, m, end_re)) {
                 report.end_year = to_i64(m[1]);
             }
@@ -746,6 +816,692 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
                                    num(slowest_year), ")");
 }
 
+// --- M0 to M9 (P4-04 9.2) -------------------------------------------------------
+
+int64_t g_markers_changed = 0;
+void count_markers_changed() {
+    ++g_markers_changed;
+}
+
+// The labels of the key list of 8.6 for the given options.
+std::vector<std::string> expected_marker_legend(bool faded, bool events, bool passes) {
+    std::vector<std::string> rows = {"hamlet", "village", "town", "city", "fortress", "capital", "declining", "ruin"};
+    if (faded) {
+        rows.emplace_back("faded ruin");
+    }
+    if (events) {
+        for (const char* label : {"sack or capture", "siege", "battle", "plague", "other event"}) {
+            rows.emplace_back(label);
+        }
+    }
+    if (passes) {
+        rows.emplace_back("pass");
+    }
+    return rows;
+}
+
+std::vector<std::string> legend_labels(const godot::Array& legend) {
+    std::vector<std::string> out;
+    for (int64_t i = 0; i < legend.size(); ++i) {
+        out.push_back(to_utf8(godot::Dictionary(legend[i])["label"]));
+    }
+    return out;
+}
+
+// The index in get_markers() of the entry of a type and id; -1 when absent.
+int64_t marker_index_of(const godot::Array& markers, const char* type, int64_t id) {
+    for (int64_t i = 0; i < markers.size(); ++i) {
+        const godot::Dictionary m = markers[i];
+        if (godot::String(m["type"]) == type && int64_t(m["id"]) == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// The settlement entry of the model's current set, or null.
+const worldgen::inspect::SettlementMarker* model_settlement(const ViewerModel& model, int64_t id) {
+    for (const auto& s : model.history_state().markers().settlements) {
+        if (s.settlement == id) {
+            return &s;
+        }
+    }
+    return nullptr;
+}
+
+bool same_marker_lists(const worldgen::inspect::YearMarkers& a, const worldgen::inspect::YearMarkers& b) {
+    return a.settlements == b.settlements && a.places == b.places && a.passes == b.passes;
+}
+
+godot::String type_word(const worldgen::inspect::SettlementMarker& s) {
+    return s.status == 4 ? "faded" : s.status == 3 ? "ruin" : "standing";
+}
+
+// The model's YearMarkers in the order of 6.1 as (type, id, x, y, glyph,
+// fill, capital, small), for comparison with get_markers().
+std::vector<std::string> expected_marker_rows(const ViewerModel& model) {
+    const auto& m = model.history_state().markers();
+    std::vector<std::string> rows;
+    const auto rgb = [](worldgen::inspect::Rgb c) {
+        return (int64_t{c.r} << 16) | (int64_t{c.g} << 8) | int64_t{c.b};
+    };
+    const auto row = [&rows](const std::string& type, int64_t id, int64_t x, int64_t y, const std::string& glyph,
+                             int64_t fill, bool capital, bool small) {
+        rows.push_back(type + " " + std::to_string(id) + " " + std::to_string(x) + " " + std::to_string(y) + " " +
+                       glyph + " " + std::to_string(fill) + " " + (capital ? "1" : "0") + " " + (small ? "1" : "0"));
+    };
+    for (const auto& p : m.passes) {
+        row("pass", p.pass, p.x, p.y, "pass", -1, false, false);
+    }
+    for (const auto& p : m.places) {
+        row("place", p.events.front(), p.x, p.y, "ring", rgb(worldgen::inspect::event_symbol_colour(p.symbol)), false,
+            false);
+    }
+    const auto colours = model.history_state().colours();
+    for (int pass = 3; pass <= 6; ++pass) {
+        for (const auto& s : m.settlements) {
+            const int p = s.status == 4 ? 3 : s.status == 3 ? 4 : s.capital ? 6 : 5;
+            if (p != pass) {
+                continue;
+            }
+            int64_t fill = -1;
+            if (p == 3) {
+                fill = rgb(worldgen::inspect::MARKER_FADED);
+            } else if (p >= 5) {
+                fill = s.owner == 0 ? rgb(worldgen::inspect::MARKER_NO_OWNER)
+                                    : rgb(colours[static_cast<std::size_t>(s.owner - 1)]);
+            }
+            const bool small = p <= 4 || (!s.capital && (s.kind == 1 || s.kind == 2));
+            row(to_utf8(type_word(s)), s.settlement, s.x, s.y, marker_glyph_name(worldgen::inspect::glyph_of(s)), fill,
+                s.capital, small);
+        }
+    }
+    return rows;
+}
+
+std::vector<std::string> actual_marker_rows(const godot::Array& markers) {
+    std::vector<std::string> rows;
+    for (int64_t i = 0; i < markers.size(); ++i) {
+        const godot::Dictionary m = markers[i];
+        rows.push_back(to_utf8(m["type"]) + " " + std::to_string(int64_t(m["id"])) + " " +
+                       std::to_string(int64_t(m["x"])) + " " + std::to_string(int64_t(m["y"])) + " " +
+                       to_utf8(m["glyph"]) + " " + std::to_string(int64_t(m["fill"])) + " " +
+                       (bool(m["capital"]) ? "1" : "0") + " " + (bool(m["small"]) ? "1" : "0"));
+    }
+    return rows;
+}
+
+// The view image with the model's markers drawn by worldgen at scale 1.
+godot::Ref<godot::Image> image_with_markers(const godot::Ref<godot::Image>& view, const ViewerModel& model,
+                                            godot::String& problem) {
+    if (view.is_null() || view->get_format() != godot::Image::FORMAT_RGB8) {
+        problem = "the map view has no RGB8 image";
+        return {};
+    }
+    godot::PackedByteArray data = view->get_data();
+    try {
+        worldgen::inspect::draw_markers(std::span<std::uint8_t>(data.ptrw(), static_cast<std::size_t>(data.size())),
+                                        static_cast<std::uint32_t>(view->get_width()),
+                                        static_cast<std::uint32_t>(view->get_height()), 1U,
+                                        model.history_state().markers(), model.history_state().colours());
+    } catch (const std::exception& e) {
+        problem = godot::String("draw_markers: ") + e.what();
+        return {};
+    }
+    return godot::Image::create_from_data(view->get_width(), view->get_height(), false, godot::Image::FORMAT_RGB8,
+                                          data);
+}
+
+void send_motion(ViewerScreen& screen, godot::Vector2 position) {
+    godot::Ref<godot::InputEventMouseMotion> motion;
+    motion.instantiate();
+    motion->set_position(position);
+    motion->set_global_position(position);
+    screen.map_view()->_gui_input(motion);
+}
+
+// The check's own read of the world: reader, history and marker index.
+struct LibraryWorld {
+    std::optional<worldgen::db::WorldReader> reader;
+    std::optional<worldgen::history::LoadedHistory> history;
+    std::optional<worldgen::inspect::MarkerIndex> index;
+    std::vector<worldgen::db::RegionRow> regions;
+    std::string problem;
+};
+
+LibraryWorld open_library_world(const godot::String& path) {
+    LibraryWorld w;
+    try {
+        auto reader = worldgen::db::WorldReader::open(to_utf8(path));
+        if (!reader.ok()) {
+            w.problem = reader.error().message;
+            return w;
+        }
+        w.reader.emplace(std::move(reader).value());
+        auto loaded = worldgen::history::load_history(*w.reader);
+        if (!loaded.ok()) {
+            w.problem = loaded.error().message;
+            return w;
+        }
+        w.history.emplace(std::move(loaded).value());
+        auto index = worldgen::inspect::MarkerIndex::load(*w.reader, *w.history);
+        if (!index.ok()) {
+            w.problem = index.error().message;
+            return w;
+        }
+        w.index.emplace(std::move(index).value());
+        auto regions = worldgen::db::read_region_rows(*w.reader);
+        if (!regions.ok()) {
+            w.problem = regions.error().message;
+            return w;
+        }
+        w.regions = std::move(regions).value();
+    } catch (const std::exception& e) {
+        w.problem = e.what();
+    }
+    return w;
+}
+
+// M0: a world without history.
+void check_markers_without_history(Checker& check, ViewerScreen& screen) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    check.expect(!model->get_markers_available() && model->get_markers().is_empty() &&
+                     model->get_marker_legend().is_empty() && screen.marker_legend()->get_item_count() == 0,
+                 "M0 no markers without history: available false, no entries, no key list");
+    check.expect(screen.markers_toggle()->is_disabled() && screen.mark_faded()->is_disabled() &&
+                     screen.mark_events()->is_disabled() && screen.mark_passes()->is_disabled(),
+                 "M0 every control of the Markers group is disabled");
+    const bool enabled = model->get_markers_enabled();
+    const bool set = model->set_markers_enabled(!enabled);
+    screen.get_viewport()->gui_release_focus();
+    send_key(screen, godot::KEY_M, false);
+    check.expect(!set && model->get_markers_enabled() == enabled && model->get_markers().is_empty() &&
+                     !model->set_marker_option("faded", true) && !model->get_marker_option("faded"),
+                 "M0 set_markers_enabled, set_marker_option and key M change nothing");
+}
+
+// M1: at open, before any other history check changes the year.
+void check_markers_at_open(Checker& check, ViewerScreen& screen) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    check.expect(model->get_markers_available() && model->get_markers_enabled() && model->get_markers().size() > 0,
+                 "M1 markers available and on at open (" + num(model->get_markers().size()) + " entries)" +
+                     (model->get_markers_available() ? godot::String()
+                                                     : ": " + model->get_markers_error_code() + ": " +
+                                                           model->get_markers_error_message()));
+    const bool options = !model->get_marker_option("faded") && model->get_marker_option("events") &&
+                         model->get_marker_option("passes") && !model->get_marker_option("other");
+    const bool boxes = screen.markers_toggle()->is_pressed() && !screen.mark_faded()->is_pressed() &&
+                       screen.mark_events()->is_pressed() && screen.mark_passes()->is_pressed() &&
+                       !screen.markers_toggle()->is_disabled() && !screen.mark_faded()->is_disabled();
+    check.expect(options && boxes, "M1 options faded off, events on, passes on, in the model and the boxes");
+    const auto labels = legend_labels(model->get_marker_legend());
+    check.expect(labels == expected_marker_legend(false, true, true) &&
+                     screen.marker_legend()->get_item_count() == static_cast<int64_t>(labels.size()),
+                 "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'faded ruin'");
+}
+
+void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
+                   const HistoryReport& report) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    if (!model->get_markers_available()) {
+        check.expect(false, "M markers not available");
+        return;
+    }
+    const int64_t end = model->get_end_year();
+    const int64_t territory = model->get_territory_view();
+    const godot::Callable counter = callable_mp_static(&count_markers_changed);
+    model->connect("markers_changed", counter);
+    LibraryWorld lib = open_library_world(model->get_world_path());
+    check.expect(lib.problem.empty(), "M the check's own read of the world and its marker index" +
+                                          (lib.problem.empty() ? godot::String() : ": " + to_godot(lib.problem)));
+    if (!lib.problem.empty()) {
+        model->disconnect("markers_changed", counter);
+        return;
+    }
+    std::map<int64_t, const ReportSettlement*> by_id;
+    for (const auto& s : report.settlements) {
+        by_id[s.id] = &s;
+    }
+    int64_t r0 = -1;
+    for (const auto& s : report.settlements) {
+        if (s.ruined >= 0 && (r0 < 0 || s.ruined < r0)) {
+            r0 = s.ruined;
+        }
+    }
+    int64_t d0 = -1;
+    for (const auto& e : report.events) {
+        if (e.kind == "ruin_faded" && (d0 < 0 || e.start < d0)) {
+            d0 = e.start;
+        }
+    }
+    check.expect(r0 >= 0 && d0 >= 0 && !report.settlements.empty(),
+                 "M the report has settlements (" + num(static_cast<int64_t>(report.settlements.size())) +
+                     "), a ruin R0 = " + num(r0) + " and a ruin_faded D0 = " + num(d0));
+
+    // M2: at E with faded on, the entries against [present].
+    model->set_year(end);
+    model->set_marker_option("faded", true);
+    {
+        std::vector<std::string> got;
+        std::vector<std::string> want;
+        std::vector<std::string> got_off;
+        std::vector<std::string> want_off;
+        auto entries = model->history_state().markers().settlements;
+        std::sort(entries.begin(), entries.end(),
+                  [](const auto& a, const auto& b) { return a.settlement < b.settlement; });
+        for (const auto& s : entries) {
+            got.push_back(std::to_string(s.settlement) + " " +
+                          std::string(worldgen::history::settlement_kind_word(s.kind)) + " " +
+                          std::string(worldgen::history::settlement_status_word(s.status)) + " " +
+                          std::to_string(s.population) + " " + std::to_string(s.owner) + " " + std::to_string(s.x) +
+                          " " + std::to_string(s.y));
+        }
+        for (const auto& s : report.settlements) {
+            want.push_back(std::to_string(s.id) + " " + s.kind + " " + s.status + " " + std::to_string(s.population) +
+                           " " + std::to_string(s.owner) + " " + std::to_string(s.x) + " " + std::to_string(s.y));
+            if (s.status != "faded") {
+                want_off.push_back(want.back());
+            }
+        }
+        std::string first_diff;
+        for (std::size_t i = 0; i < std::max(got.size(), want.size()) && first_diff.empty(); ++i) {
+            if (i >= got.size() || i >= want.size() || got[i] != want[i]) {
+                first_diff = ": entry " + std::to_string(i) + " '" + (i < got.size() ? got[i] : "none") +
+                             "', [present] '" + (i < want.size() ? want[i] : "none") + "'";
+            }
+        }
+        check.expect(first_diff.empty(), "M2 at " + num(end) + " with faded ruins: " +
+                                             num(static_cast<int64_t>(got.size())) +
+                                             " settlement entries equal the [present] lines" + to_godot(first_diff));
+        std::set<int64_t> capitals;
+        for (const auto& s : entries) {
+            if (s.capital) {
+                capitals.insert(s.settlement);
+            }
+        }
+        std::set<int64_t> want_capitals;
+        for (const auto& c : report.civs) {
+            const auto it = report.capitals.find(c.id);
+            if (report.alive(c, end) && it != report.capitals.end()) {
+                want_capitals.insert(it->second);
+            }
+        }
+        check.expect(!capitals.empty() && capitals == want_capitals,
+                     "M2 the " + num(static_cast<int64_t>(capitals.size())) +
+                         " capital entries are the capitals of the civilizations alive at the present (" +
+                         num(static_cast<int64_t>(want_capitals.size())) + ")");
+        model->set_marker_option("faded", false);
+        for (const auto& s : model->history_state().markers().settlements) {
+            const auto it = by_id.find(s.settlement);
+            if (it != by_id.end()) {
+                got_off.push_back(std::to_string(s.settlement));
+            }
+        }
+        std::vector<std::string> want_off_ids;
+        for (const auto& s : report.settlements) {
+            if (s.status != "faded") {
+                want_off_ids.push_back(std::to_string(s.id));
+            }
+        }
+        check.expect(got_off == want_off_ids && model->history_state().markers().settlements.size() == want_off.size(),
+                     "M2 without faded ruins: the " + num(static_cast<int64_t>(want_off.size())) +
+                         " lines that are not faded");
+    }
+
+    // M3: ruins and faded ruins.
+    {
+        std::string problem;
+        int64_t ruins = 0;
+        for (const auto& s : report.settlements) {
+            if (s.ruined < 1) {
+                continue;
+            }
+            ++ruins;
+            model->set_year(s.ruined - 1);
+            const auto* before = model_settlement(*model.ptr(), s.id);
+            const bool standing = before != nullptr && (before->status == 1 || before->status == 2);
+            model->set_year(s.ruined);
+            const auto* after = model_settlement(*model.ptr(), s.id);
+            if (!standing || after == nullptr || after->status != 3 || after->ruined_year != s.ruined) {
+                problem = "s" + std::to_string(s.id) + " ruined " + std::to_string(s.ruined);
+                break;
+            }
+        }
+        check.expect(problem.empty() && ruins > 0, "M3 " + num(ruins) +
+                                                       " ruins: standing the year before, a ruin in their year" +
+                                                       (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+        problem.clear();
+        int64_t faded = 0;
+        for (const auto& e : report.events) {
+            if (e.kind != "ruin_faded" || e.settlement == 0) {
+                continue;
+            }
+            ++faded;
+            model->set_year(e.start - 1);
+            const auto* before = model_settlement(*model.ptr(), e.settlement);
+            const bool ruin = before != nullptr && before->status == 3;
+            model->set_year(e.start);
+            const bool absent = model_settlement(*model.ptr(), e.settlement) == nullptr;
+            model->set_marker_option("faded", true);
+            const auto* shown = model_settlement(*model.ptr(), e.settlement);
+            const bool faded_entry = shown != nullptr && shown->status == 4;
+            model->set_marker_option("faded", false);
+            if (!ruin || !absent || !faded_entry) {
+                problem = "e" + std::to_string(e.id) + " s" + std::to_string(e.settlement) + " in " +
+                          std::to_string(e.start);
+                break;
+            }
+        }
+        check.expect(problem.empty() && faded > 0,
+                     "M3 " + num(faded) +
+                         " ruin_faded events: a ruin the year before, then absent, or faded with the option" +
+                         (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+    }
+
+    // M4: event places.
+    {
+        std::map<int64_t, std::pair<int64_t, int64_t>> seeds;
+        for (const auto& r : lib.regions) {
+            seeds[r.id] = {r.seed_x, r.seed_y};
+        }
+        std::vector<int64_t> years = options.marker_years;
+        std::set<int64_t> placed_years;
+        for (const auto& e : report.events) {
+            if ((e.settlement != 0 || e.region != 0) && placed_years.size() < 20) {
+                placed_years.insert(e.start);
+            }
+        }
+        years.insert(years.end(), placed_years.begin(), placed_years.end());
+        std::string problem;
+        int64_t places = 0;
+        for (const int64_t y : years) {
+            model->set_year(y);
+            std::set<int64_t> got;
+            for (const auto& p : model->history_state().markers().places) {
+                ++places;
+                for (const int64_t e : p.events) {
+                    got.insert(e);
+                    const ReportEvent* ev = nullptr;
+                    for (const auto& r : report.events) {
+                        if (r.id == e) {
+                            ev = &r;
+                        }
+                    }
+                    std::pair<int64_t, int64_t> cell{-1, -1};
+                    if (ev != nullptr && ev->settlement != 0 && by_id.count(ev->settlement) != 0) {
+                        cell = {by_id[ev->settlement]->x, by_id[ev->settlement]->y};
+                    } else if (ev != nullptr && ev->settlement == 0 && seeds.count(ev->region) != 0) {
+                        cell = seeds[ev->region];
+                    }
+                    if (cell != std::make_pair(p.x, p.y) && problem.empty()) {
+                        problem = "year " + std::to_string(y) + ": e" + std::to_string(e) + " at " +
+                                  std::to_string(p.x) + " " + std::to_string(p.y) + ", expected " +
+                                  std::to_string(cell.first) + " " + std::to_string(cell.second);
+                    }
+                }
+            }
+            std::set<int64_t> want;
+            for (const auto& e : report.events) {
+                if (e.start <= y && y <= e.end && (e.settlement != 0 || e.region != 0)) {
+                    want.insert(e.id);
+                }
+            }
+            if (got != want && problem.empty()) {
+                problem = "year " + std::to_string(y) + ": " + std::to_string(got.size()) + " events in places, " +
+                          std::to_string(want.size()) + " placed events in the chronicle";
+            }
+        }
+        check.expect(problem.empty() && places > 0,
+                     "M4 " + num(static_cast<int64_t>(years.size())) + " years, " + num(places) +
+                         " places: their events are the placed chronicle events of the year, at the settlement's or "
+                         "the region seed's cell" +
+                         (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+        model->set_marker_option("events", false);
+        const bool none = model->history_state().markers().places.empty();
+        model->set_marker_option("events", true);
+        check.expect(none, "M4 with event places off there are no place entries");
+    }
+
+    // M5: passes.
+    {
+        const auto& passes = model->history_state().markers().passes;
+        const auto rows = lib.index->passes();
+        bool same = passes.size() == rows.size() && options.expect_passes == static_cast<int64_t>(passes.size());
+        for (std::size_t i = 0; same && i < passes.size(); ++i) {
+            same = passes[i].pass == rows[i].id && passes[i].x == rows[i].col_x && passes[i].y == rows[i].col_y;
+        }
+        check.expect(same && !passes.empty(), "M5 " + num(static_cast<int64_t>(passes.size())) +
+                                                  " pass entries at the col cells, report: " +
+                                                  num(options.expect_passes));
+        model->set_marker_option("passes", false);
+        const bool none = model->history_state().markers().passes.empty();
+        model->set_marker_option("passes", true);
+        check.expect(none, "M5 with passes off there are no pass entries");
+    }
+
+    // M6: pixels against worldgen-cli render --markers.
+    {
+        screen.choose_view(territory);
+        const auto compare_at = [&](int64_t year, const godot::String& file, const godot::String& what) {
+            screen.year_slider()->set_value(static_cast<double>(year));
+            godot::String problem;
+            const godot::Ref<godot::Image> drawn = image_with_markers(screen.map_view()->get_image(), *model.ptr(),
+                                                                      problem);
+            if (problem.is_empty()) {
+                problem = compare_images(drawn, options.reference_dir.path_join(file));
+            }
+            const bool order = actual_marker_rows(model->get_markers()) == expected_marker_rows(*model.ptr());
+            check.expect(model->get_year() == year && problem.is_empty() && order,
+                         "M6 " + what + " in " + num(year) + " with the model's markers equals " + file +
+                             (order ? godot::String() : godot::String(", get_markers() not in the order of 6.1")) +
+                             (problem.is_empty() ? godot::String() : ": " + problem));
+        };
+        for (const int64_t year : options.marker_years) {
+            compare_at(year, "markers-" + num(year) + ".png", "territory");
+        }
+        model->set_marker_option("faded", true);
+        for (const int64_t year : {end, d0}) {
+            compare_at(year, "markers-faded-" + num(year) + ".png", "territory with faded ruins");
+        }
+        model->set_marker_option("faded", false);
+        const godot::Ref<WorldFile> world = model->get_world();
+        const int64_t elevation = world->find_layer("elevation");
+        screen.choose_view(elevation);
+        compare_at(r0, "elevation-markers-" + num(r0) + ".png", "elevation");
+        screen.choose_view(territory);
+    }
+
+    // M7: hover texts.
+    {
+        model->set_year(end);
+        const godot::Array markers = model->get_markers();
+        const auto& sets = model->history_state().markers().settlements;
+        int64_t standing = -1;
+        int64_t capital = -1;
+        int64_t ruin = -1;
+        for (const auto& s : sets) {
+            // The first standing entry that is not a capital (the first
+            // standing one may be a capital, which the next case covers).
+            if ((s.status == 1 || s.status == 2) && !s.capital && standing < 0) {
+                standing = s.settlement;
+            }
+            if (s.capital && capital < 0) {
+                capital = s.settlement;
+            }
+            if (s.status == 3 && ruin < 0) {
+                ruin = s.settlement;
+            }
+        }
+        const auto civ_name = [&report](int64_t id) {
+            const ReportCiv* c = report.civ(id);
+            return c != nullptr ? c->name : std::string("?");
+        };
+        const auto sentence = [&report](int64_t id) {
+            for (const auto& e : report.events) {
+                if (e.id == id) {
+                    return e.sentence;
+                }
+            }
+            return std::string("?");
+        };
+        const auto expected_text = [&](int64_t id) -> std::string {
+            const auto it = by_id.find(id);
+            const auto* m = model_settlement(*model.ptr(), id);
+            if (it == by_id.end() || m == nullptr) {
+                return "?";
+            }
+            const ReportSettlement& r = *it->second;
+            if (r.status == "ruined") {
+                return r.name + ", ruin of a " + r.kind + ", ruined in " + std::to_string(r.ruined) +
+                       (r.ruin_event != 0 ? ": " + sentence(r.ruin_event) : std::string());
+            }
+            const bool is_capital = m->capital;
+            return r.name + ", " + r.kind + (is_capital ? " (capital)" : "") + " of " + civ_name(r.owner) + ", " +
+                   r.status + ", population " + std::to_string(r.population) + " recorded in " +
+                   std::to_string(m->since) + ", founded in " + std::to_string(r.founded);
+        };
+        const std::array<std::pair<const char*, int64_t>, 3> cases{
+            {{"standing", standing}, {"standing", capital}, {"ruin", ruin}}};
+        for (const auto& [type, id] : cases) {
+            const int64_t index = marker_index_of(markers, type, id);
+            const std::string want = expected_text(id);
+            const godot::String text = model->describe_marker(index);
+            check.expect(index >= 0 && to_utf8(text) == want,
+                         "M7 describe_marker of s" + num(id) + ": " + text +
+                             (to_utf8(text) == want ? godot::String() : ", expected " + to_godot(want)));
+            const godot::Vector2i at = screen.map_view()->get_marker_screen_position(index);
+            send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
+            check.expect(at.x >= 0 && screen.cell_label()->get_text() == text,
+                         "M7 the mouse over s" + num(id) + " at " + godot::String(godot::Variant(at)) +
+                             " shows it: " + screen.cell_label()->get_text());
+        }
+        // A ring around a drawn settlement: the first year, from E down,
+        // whose places share a cell with a drawn settlement entry.
+        int64_t ring_year = -1;
+        int64_t ring_settlement = -1;
+        for (int64_t y = end; y >= 0 && ring_year < 0; --y) {
+            const auto ym = lib.index->markers_at(*lib.history, y, worldgen::inspect::MarkerOptions{});
+            for (const auto& p : ym.places) {
+                for (const auto& s : ym.settlements) {
+                    if (s.x == p.x && s.y == p.y && ring_year < 0) {
+                        ring_year = y;
+                        ring_settlement = s.settlement;
+                    }
+                }
+            }
+        }
+        if (ring_year >= 0) {
+            model->set_year(ring_year);
+            const godot::Array at_year = model->get_markers();
+            const auto* s = model_settlement(*model.ptr(), ring_settlement);
+            const int64_t index =
+                s == nullptr ? -1 : marker_index_of(at_year, to_utf8(type_word(*s)).c_str(), ring_settlement);
+            const godot::Vector2i at = screen.map_view()->get_marker_screen_position(index);
+            send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
+            check.expect(index >= 0 && screen.cell_label()->get_text() == model->describe_marker(index),
+                         "M7 the mouse at the centre of a ring in " + num(ring_year) + " shows the settlement s" +
+                             num(ring_settlement) + " inside: " + screen.cell_label()->get_text());
+        } else {
+            check.expect(false, "M7 no ring around a settlement in any year");
+        }
+        // Away from every marker: the cell description again.
+        godot::Vector2 away(-1.0F, -1.0F);
+        const godot::Rect2 shown = screen.map_view()->get_shown_rect();
+        for (float y = shown.position.y + 2.0F; y < shown.position.y + shown.size.y && away.x < 0.0F; y += 7.0F) {
+            for (float x = shown.position.x + 2.0F; x < shown.position.x + shown.size.x && away.x < 0.0F; x += 7.0F) {
+                if (screen.map_view()->marker_at(godot::Vector2(x, y)) < 0) {
+                    away = godot::Vector2(x, y);
+                }
+            }
+        }
+        send_motion(screen, away);
+        const godot::Ref<godot::Image> shown_image = screen.map_view()->get_image();
+        const float cells_x = shown_image.is_valid() ? static_cast<float>(shown_image->get_width()) : 1.0F;
+        const float cells_y = shown_image.is_valid() ? static_cast<float>(shown_image->get_height()) : 1.0F;
+        const godot::Vector2i cell(static_cast<int32_t>(std::floor((away.x - shown.position.x) / (shown.size.x / cells_x))),
+                                   static_cast<int32_t>(std::floor((away.y - shown.position.y) / (shown.size.y / cells_y))));
+        const godot::String label = screen.cell_label()->get_text();
+        check.expect(away.x >= 0.0F && screen.map_view()->get_hovered_marker() == -1 && label.begins_with("x ") &&
+                         label == model->describe_cell(cell.x, cell.y),
+                     "M7 the mouse away from every marker shows the cell again: " + label);
+        screen.hover_cell(-1, -1);
+    }
+
+    // M8: toggles.
+    {
+        model->set_year(end);
+        const godot::Array before = model->get_markers();
+        g_markers_changed = 0;
+        model->set_markers_enabled(false);
+        const bool off = model->get_markers().is_empty() && g_markers_changed == 1 &&
+                         !screen.markers_toggle()->is_pressed() && screen.mark_faded()->is_disabled() &&
+                         model->get_marker_legend().is_empty();
+        g_markers_changed = 0;
+        model->set_markers_enabled(false);
+        const bool same_off = g_markers_changed == 0;
+        screen.get_viewport()->gui_release_focus();
+        send_key(screen, godot::KEY_M, false);
+        const bool on = model->get_markers_enabled() && g_markers_changed == 1 &&
+                        actual_marker_rows(model->get_markers()) == actual_marker_rows(before) &&
+                        screen.markers_toggle()->is_pressed();
+        check.expect(off && same_off && on, "M8 markers off empties the list (one markers_changed, none again), key M "
+                                            "turns them back on (one more)");
+        g_markers_changed = 0;
+        screen.mark_faded()->set_pressed(true);  // through the box
+        const godot::Array with_faded = model->get_markers();
+        int64_t faded_entries = 0;
+        for (int64_t i = 0; i < with_faded.size(); ++i) {
+            faded_entries += godot::String(godot::Dictionary(with_faded[i])["type"]) == "faded" ? 1 : 0;
+        }
+        const bool adds = model->get_marker_option("faded") && g_markers_changed == 1 && faded_entries > 0 &&
+                          with_faded.size() == before.size() + faded_entries &&
+                          legend_labels(model->get_marker_legend()) == expected_marker_legend(true, true, true);
+        g_markers_changed = 0;
+        model->set_marker_option("faded", true);
+        const bool again = g_markers_changed == 0;
+        screen.mark_faded()->set_pressed(false);
+        const bool back = g_markers_changed == 1 && !model->get_marker_option("faded");
+        model->set_year(0);  // no faded ruin exists in year 0
+        g_markers_changed = 0;
+        model->set_marker_option("faded", true);
+        const bool nothing = g_markers_changed == 0;
+        model->set_marker_option("faded", false);
+        check.expect(adds && again && back && nothing && g_markers_changed == 0,
+                     "M8 the faded box adds exactly the " + num(faded_entries) +
+                         " faded entries (one markers_changed); a change that alters nothing emits none");
+    }
+
+    // M9: rebuilds over 0 .. E.
+    {
+        model->set_year(0);
+        std::string problem;
+        int64_t emitted = 0;
+        int64_t expected = 0;
+        worldgen::inspect::YearMarkers previous =
+            lib.index->markers_at(*lib.history, 0, worldgen::inspect::MarkerOptions{});
+        for (int64_t y = 1; y <= end; ++y) {
+            g_markers_changed = 0;
+            model->set_year(y);
+            const worldgen::inspect::YearMarkers now =
+                lib.index->markers_at(*lib.history, y, worldgen::inspect::MarkerOptions{});
+            const bool differs = !same_marker_lists(now, previous);
+            emitted += g_markers_changed;
+            expected += differs ? 1 : 0;
+            if ((g_markers_changed == 1) != differs && problem.empty()) {
+                problem = "year " + std::to_string(y) + ": " + std::to_string(g_markers_changed) +
+                          " markers_changed, the library's set " + (differs ? "differs" : "is the same");
+            }
+            previous = now;
+        }
+        check.expect(problem.empty(), "M9 stepping 0 to " + num(end) + ": " + num(emitted) +
+                                          " markers_changed, in exactly the " + num(expected) +
+                                          " years whose marker set differs from the year before" +
+                                          (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+    }
+    model->set_year(end);
+    model->disconnect("markers_changed", counter);
+}
+
 }  // namespace
 
 int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
@@ -973,8 +1729,14 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
     // History (P4-03 10.2).
     if (options.expect_history == "none") {
         check_without_history(check, screen, hover_text);
+        check_markers_without_history(check, screen);
     } else if (options.expect_history == "loaded") {
+        check_markers_at_open(check, screen);
         check_with_history(check, screen, options);
+        const HistoryReport report = read_history_report(options.history_report);
+        if (report.problem.empty()) {
+            check_markers(check, screen, options, report);
+        }
     } else if (!options.expect_history.is_empty()) {
         check.expect(false, "--expect-history " + options.expect_history + ": expected none or loaded");
     }

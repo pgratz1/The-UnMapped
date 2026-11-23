@@ -483,10 +483,38 @@ target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P4_01_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/timeline"
     UNMAPPED_P4_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-01-timeline.txt"
 )
+# Settlement and place markers (spec P4-04, Part A): the glyphs of section 5,
+# event_symbol and the word tables (markers_glyph_test.cpp), fixture T2
+# (data/markers/, written through the writer API by markers_support.hpp) and
+# MarkerIndex::load's errors (markers_t2_test.cpp), draw_markers
+# (markers_draw_test.cpp), the golden dumps and overlays of 10.3 (reference
+# reference/p4_markers_reference.py; markers_golden_test.cpp) and the
+# invariants of section 12 (markers_property_test.cpp). The 1024 cases and
+# the larger sweeps are in the skipped suite "markers-slow"; the bench is in
+# the skipped suite "timeline-bench".
+target_sources(worldgen-tests PRIVATE
+    markers_fixture_test.cpp
+    markers_glyph_test.cpp
+    markers_t2_test.cpp
+    markers_draw_test.cpp
+    markers_golden_test.cpp
+    markers_property_test.cpp
+    markers_bench_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P4_04_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/markers"
+    UNMAPPED_P4_04_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-04-markers.txt"
+)
 # The generator engineer's checks of spec P4-03 (the 8.2 example, the colour
 # table of 7.2, phase_kind_word); the stage's tests are the timeline files.
 target_sources(worldgen-tests PRIVATE
     p4_03_engineer_test.cpp
+)
+# The generator engineer's checks of spec P4-04 (the glyphs of section 5, the
+# symbols of 3.4, the settlement words, draw_markers); the stage's tests are
+# the test writer's markers_* files.
+target_sources(worldgen-tests PRIVATE
+    p4_04_engineer_test.cpp
 )
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
@@ -523,6 +551,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD timeline 40 "*timeline_*"
     SHARD renaming 30 "*history_renaming_*"
     SHARD monsters 30 "*history_monsters_*"
+    SHARD markers 30 "*markers_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -540,5 +569,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-timeline 400 "*-slow" "*timeline_*"
     SLOW slow-renaming 600 "*-slow" "*history_renaming_*"
     SLOW slow-monsters 600 "*-slow" "*history_monsters_*"
+    SLOW slow-markers 1250 "*-slow" "*markers_*"
     SLOW_REST slow-other 10 "*-slow"
 )

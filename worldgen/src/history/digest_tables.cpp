@@ -810,4 +810,25 @@ std::string_view phase_kind_word(std::int64_t kind) noexcept {
     }
 }
 
+std::string_view settlement_kind_word(std::int64_t kind) noexcept {
+    switch (kind) {
+        case 1: return "hamlet";
+        case 2: return "village";
+        case 3: return "town";
+        case 4: return "city";
+        case 5: return "fortress";
+        default: return {};
+    }
+}
+
+std::string_view settlement_status_word(std::int64_t status) noexcept {
+    switch (status) {
+        case 1: return "thriving";
+        case 2: return "declining";
+        case 3: return "ruined";
+        case 4: return "faded";
+        default: return {};
+    }
+}
+
 }  // namespace worldgen::history

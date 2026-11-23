@@ -1,5 +1,5 @@
 // worldgen-cli render --composite territory [--year Y] (spec P4-01 section 7, 13.6 items 10 to 13; P0-04
-// amendment 23): the default name <stem>.territory-<E>.png and the printed path, --year 0 and E, --scale 2,
+// amendments 23 and 24): the default name <stem>.territory-<E>.png and the printed path, --year 0 and E, --scale 2,
 // --out and an existing output without --force; the usage errors (exit 2) in their order, the year range
 // after opening the file; worlds without the layers or without history and a corrupt history (exit 3, the
 // messages of the regions composite and of report --history); the render --help lines of section 7; and the
@@ -157,12 +157,12 @@ TEST_CASE("cli P4-01 13.6 item 11: usage errors, the year range and the help tex
     const std::string path = u8(db);
     // --year without --composite territory
     check_usage(sb.cli({"render", "--db", path, "--layer", "elevation", "--year", "5"}),
-                "--year applies to --composite territory only");
+                "--year applies to --composite territory or --markers only");
     check_usage(sb.cli({"render", "--db", path, "--composite", "regions", "--year", "5"}),
-                "--year applies to --composite territory only");
+                "--year applies to --composite territory or --markers only");
     // checked before the file is opened
     check_usage(sb.cli({"render", "--db", u8(sb.file("missing.db")), "--composite", "map", "--year", "5"}),
-                "--year applies to --composite territory only");
+                "--year applies to --composite territory or --markers only");
     // malformed values: the shared integer parser's message
     for (const char* bad : {"01", "-1", "x", "+1", "1.5", "00"}) {
         CAPTURE(std::string(bad));
@@ -189,20 +189,35 @@ TEST_CASE("cli P4-01 13.6 item 11: usage errors, the year range and the help tex
     // render --help: the lines of section 7, exactly
     const ProcessResult h = sb.cli({"render", "--help"});
     CHECK(h.exit_code == EXIT_OK);
-    CHECK(contains(h.out, "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME "
-                          "[--year Y]) [--out PATH]\n"
-                          "                           [--scale N] [--force] [--verbose]\n"));
+    // P0-04 amendment 24 (P4-04 7): the synopsis, the --year line and the --out line changed; their wrapping is
+    // not given, so they are compared with whitespace folded (cli_markers_test.cpp checks the new lines)
+    auto fold = [](std::string_view t) {
+        std::string out;
+        bool space = false;
+        for (const char c : t) {
+            if (c == ' ' || c == '\n' || c == '\r') {
+                space = true;
+                continue;
+            }
+            if (space && !out.empty()) out += ' ';
+            space = false;
+            out += c;
+        }
+        return out;
+    };
+    const std::string f = fold(h.out);
+    CHECK(contains(f, "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--year Y] "
+                      "[--markers [--faded]] [--out PATH] [--scale N] [--force] [--verbose]"));
     CHECK(contains(h.out, "\n                      regions: the biomes composite with the borders of layer region "
                           "in black;\n"
                           "                      territory: the regions composite with each region held in the "
                           "year in the\n"
                           "                      colour of its holder (needs the history)\n"));
-    CHECK(contains(h.out, "\n  --year Y            with --composite territory: the year, 0 to the history's end "
-                          "year\n"
-                          "                      (default the end year, the present)\n"));
-    CHECK(contains(h.out, "\n  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
-                          "                      <db file stem>.<composite>.png for --composite, or\n"
-                          "                      <db file stem>.territory-<year>.png for territory)\n"));
+    CHECK(contains(f, "--year Y with --composite territory or --markers: the year, 0 to the history's end year "
+                      "(default the end year, the present)"));
+    CHECK(contains(f, "--out PATH output PNG (default <build root>/out/<db file stem>.<layer>.png, <db file "
+                      "stem>.<composite>.png for --composite, or <db file stem>.territory-<year>.png for territory"));
+    CHECK(contains(f, ", with -<year>.markers.png for --markers"));
 }
 
 TEST_CASE("cli P4-01 13.6 item 12: worlds without the layers or the history, and a corrupt history, exit 3") {

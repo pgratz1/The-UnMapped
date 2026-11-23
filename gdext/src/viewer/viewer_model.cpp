@@ -14,9 +14,11 @@
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/char_string.hpp>
+#include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
 
 #include "worldgen/history/digest.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
@@ -69,6 +71,9 @@ void ViewerModel::reset_views() {
     selected_ = -1;
     history_.reset();
     timings_ = {};
+    marker_timings_ = {};
+    marker_order_.clear();
+    markers_array_ = godot::Array();
 }
 
 bool ViewerModel::open_world(const godot::String& path) {
@@ -90,6 +95,7 @@ bool ViewerModel::open_world(const godot::String& path) {
     // the composites when it loaded and the composite regions is available.
     if (const worldgen::db::WorldReader* reader = world_->reader()) {
         history_.load(*reader);
+        rebuild_marker_order();  // P4-04 8.1: the markers of E, computed by load
     }
     const std::vector<worldgen::inspect::Composite> available = world_->composites();
     if (history_.loaded() &&
@@ -544,6 +550,7 @@ bool ViewerModel::set_year(int64_t year) {
     try {
         history_.set_year(year);
         redraw_territory();
+        update_markers();  // P4-04 8.1: after the image, before the legend
         if (selected_ >= 0 && selected_ == get_territory_view()) {
             legend_ = legend_array(history_.legend(world_->biome_records()), &HistoryState::legend_tooltip);
         }
@@ -703,6 +710,346 @@ godot::PackedInt64Array ViewerModel::get_civilizations_alive() const {
     return out;
 }
 
+// --- Markers (P4-04 8.1) -----------------------------------------------------
+
+namespace {
+
+using worldgen::inspect::MarkerType;
+
+constexpr int64_t FADED_FILL = 0x969696;    // MARKER_FADED
+constexpr int64_t NO_OWNER_FILL = 0x808080;  // MARKER_NO_OWNER
+constexpr int64_t LEGEND_GREY = 0xA0A0A0;    // the key list's icon fill (8.6)
+
+int64_t rgb_of(worldgen::inspect::Rgb c) {
+    return (int64_t{c.r} << 16) | (int64_t{c.g} << 8) | int64_t{c.b};
+}
+
+const char* marker_type_word(MarkerType type) {
+    switch (type) {
+        case MarkerType::pass: return "pass";
+        case MarkerType::place: return "place";
+        case MarkerType::faded: return "faded";
+        case MarkerType::ruin: return "ruin";
+        case MarkerType::standing: return "standing";
+        case MarkerType::site: return "site";
+        case MarkerType::figure: return "figure";
+    }
+    return "";
+}
+
+// The draw pass of a settlement entry (6.1: 3 faded, 4 ruin, 5 standing, 6
+// capital); 0 for a status outside 1 to 4.
+int settlement_pass(const worldgen::inspect::SettlementMarker& m) {
+    if (m.status == 4) {
+        return 3;
+    }
+    if (m.status == 3) {
+        return 4;
+    }
+    if (m.status == 1 || m.status == 2) {
+        return m.capital ? 6 : 5;
+    }
+    return 0;
+}
+
+bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& name, bool*& out) {
+    if (name == "faded") {
+        out = &options.faded;
+    } else if (name == "events") {
+        out = &options.events;
+    } else if (name == "passes") {
+        out = &options.passes;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+}  // namespace
+
+bool ViewerModel::get_markers_available() const {
+    return history_.markers_available();
+}
+
+godot::String ViewerModel::get_markers_error_code() const {
+    return to_godot(history_.markers_error_code());
+}
+
+godot::String ViewerModel::get_markers_error_message() const {
+    return to_godot(history_.markers_error_message());
+}
+
+bool ViewerModel::get_markers_enabled() const {
+    return history_.markers_enabled();
+}
+
+bool ViewerModel::set_markers_enabled(bool on) {
+    if (!history_.markers_available()) {
+        return false;
+    }
+    if (on != history_.markers_enabled()) {
+        history_.set_markers_enabled(on);
+        update_markers();
+    }
+    return true;
+}
+
+bool ViewerModel::get_marker_option(const godot::String& name) const {
+    if (!history_.markers_available()) {
+        return false;
+    }
+    worldgen::inspect::MarkerOptions options = history_.marker_options();
+    bool* value = nullptr;
+    return option_ref(options, name, value) && *value;
+}
+
+bool ViewerModel::set_marker_option(const godot::String& name, bool on) {
+    if (!history_.markers_available()) {
+        return false;
+    }
+    worldgen::inspect::MarkerOptions options = history_.marker_options();
+    bool* value = nullptr;
+    if (!option_ref(options, name, value)) {
+        return false;
+    }
+    if (*value != on) {
+        *value = on;
+        history_.set_marker_options(options);
+        update_markers();
+    }
+    return true;
+}
+
+void ViewerModel::update_markers() {
+    bool changed = false;
+    try {
+        changed = history_.update_markers();
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel: cannot compute the markers: ") + e.what());
+        return;
+    }
+    const int64_t took = history_.last_marker_step_nsec();
+    ++marker_timings_.steps;
+    marker_timings_.total_nsec += took;
+    marker_timings_.slowest_nsec = std::max(marker_timings_.slowest_nsec, took);
+    if (changed) {
+        rebuild_marker_order();
+        ++marker_timings_.changes;
+        emit_signal("markers_changed");
+    }
+}
+
+void ViewerModel::rebuild_marker_order() {
+    const worldgen::inspect::YearMarkers& m = history_.markers();
+    marker_order_.clear();
+    for (std::size_t i = 0; i < m.passes.size(); ++i) {
+        marker_order_.push_back(MarkerRef{MarkerType::pass, i});
+    }
+    for (std::size_t i = 0; i < m.places.size(); ++i) {
+        marker_order_.push_back(MarkerRef{MarkerType::place, i});
+    }
+    for (int pass = 3; pass <= 6; ++pass) {
+        for (std::size_t i = 0; i < m.settlements.size(); ++i) {
+            if (settlement_pass(m.settlements[i]) != pass) {
+                continue;
+            }
+            const MarkerType type = pass == 3 ? MarkerType::faded : pass == 4 ? MarkerType::ruin : MarkerType::standing;
+            marker_order_.push_back(MarkerRef{type, i});
+        }
+    }
+    markers_array_ = godot::Array();
+    for (const MarkerRef& ref : marker_order_) {
+        markers_array_.push_back(marker_dictionary(ref));
+    }
+}
+
+godot::Dictionary ViewerModel::marker_dictionary(const MarkerRef& ref) const {
+    const worldgen::inspect::YearMarkers& m = history_.markers();
+    godot::Dictionary out;
+    out["type"] = marker_type_word(ref.type);
+    if (ref.type == MarkerType::pass) {
+        const auto& p = m.passes[ref.index];
+        out["id"] = p.pass;
+        out["x"] = p.x;
+        out["y"] = p.y;
+        out["glyph"] = "pass";
+        out["fill"] = int64_t{-1};
+        out["capital"] = false;
+        out["small"] = false;
+        return out;
+    }
+    if (ref.type == MarkerType::place) {
+        const auto& p = m.places[ref.index];
+        out["id"] = p.events.empty() ? int64_t{0} : p.events.front();
+        out["x"] = p.x;
+        out["y"] = p.y;
+        out["glyph"] = "ring";
+        out["fill"] = rgb_of(worldgen::inspect::event_symbol_colour(p.symbol));
+        out["capital"] = false;
+        out["small"] = false;
+        godot::PackedInt64Array events;
+        for (const int64_t e : p.events) {
+            events.push_back(e);
+        }
+        out["events"] = events;
+        return out;
+    }
+    const auto& s = m.settlements[ref.index];
+    out["id"] = s.settlement;
+    out["x"] = s.x;
+    out["y"] = s.y;
+    out["glyph"] = to_godot(marker_glyph_name(worldgen::inspect::glyph_of(s)));
+    int64_t fill = -1;
+    if (ref.type == MarkerType::faded) {
+        fill = FADED_FILL;
+    } else if (ref.type == MarkerType::standing) {
+        fill = s.owner == 0 ? NO_OWNER_FILL : history_.colour_of(s.owner);
+    }
+    out["fill"] = fill;
+    out["capital"] = s.capital;
+    // 8.1 and 8.4: hamlets and villages that are not capitals, ruins and
+    // faded ruins; a capital is never small.
+    out["small"] = ref.type != MarkerType::standing || (!s.capital && (s.kind == 1 || s.kind == 2));
+    return out;
+}
+
+godot::Array ViewerModel::get_markers() const {
+    return markers_array_;
+}
+
+godot::Dictionary ViewerModel::get_marker_glyph(const godot::String& name) {
+    godot::Dictionary out;
+    const std::string key_name = to_utf8(name);
+    auto it = glyphs_.find(key_name);
+    if (it == glyphs_.end()) {
+        const auto key = marker_glyph_key(key_name);
+        if (!key) {
+            return out;
+        }
+        try {
+            it = glyphs_.emplace(key_name, worldgen::inspect::marker_glyph(*key)).first;
+        } catch (const std::exception& e) {
+            godot::UtilityFunctions::push_error(godot::String("ViewerModel: no glyph ") + name + ": " + e.what());
+            return out;
+        }
+    }
+    godot::PackedByteArray cells;
+    cells.resize(static_cast<int64_t>(it->second.cells.size()));
+    std::copy(it->second.cells.begin(), it->second.cells.end(), cells.ptrw());
+    out["radius"] = int64_t{it->second.radius};
+    out["cells"] = cells;
+    return out;
+}
+
+godot::String ViewerModel::describe_marker(int64_t index) const {
+    if (index < 0 || static_cast<std::size_t>(index) >= marker_order_.size() || !history_.loaded()) {
+        return {};
+    }
+    const MarkerRef& ref = marker_order_[static_cast<std::size_t>(index)];
+    const worldgen::inspect::YearMarkers& m = history_.markers();
+    const worldgen::history::HistoryView& view = history_.history().view;
+    using worldgen::history::EntityType;
+    const auto sentence = [&view](int64_t event) -> std::string {
+        try {
+            return worldgen::history::render_event(view, event);
+        } catch (const std::exception& e) {
+            return std::string("(") + e.what() + ")";
+        }
+    };
+    std::string text;
+    if (ref.type == MarkerType::pass) {
+        const auto& p = m.passes[ref.index];
+        const worldgen::inspect::MarkerIndex* index_ptr = history_.marker_index();
+        int64_t col_dm = 0;
+        int64_t kind = p.kind;
+        if (index_ptr != nullptr) {
+            for (const auto& row : index_ptr->passes()) {
+                if (row.id == p.pass) {
+                    col_dm = row.col_dm;
+                    kind = row.kind;
+                }
+            }
+        }
+        const int64_t magnitude = col_dm < 0 ? -col_dm : col_dm;
+        text = "pass " + std::to_string(p.pass) + ": " + (kind == 1 ? "lowered pass" : "natural gap") + ", col " +
+               (col_dm < 0 ? "-" : "") + std::to_string(magnitude / 10) + "." + std::to_string(magnitude % 10) + " m";
+    } else if (ref.type == MarkerType::place) {
+        const auto& p = m.places[ref.index];
+        text = "In " + std::to_string(history_.year()) + ":";
+        for (const int64_t e : p.events) {
+            text += " " + sentence(e);
+        }
+    } else {
+        const auto& s = m.settlements[ref.index];
+        const std::string* name = view.name(EntityType::settlement, s.settlement);
+        text = name != nullptr ? *name : "settlement " + std::to_string(s.settlement);
+        const std::string kind(worldgen::history::settlement_kind_word(s.kind));
+        if (ref.type == MarkerType::standing) {
+            text += ", " + kind + (s.capital ? " (capital)" : "");
+            if (s.owner != 0) {
+                const std::string* owner = view.name(EntityType::civilization, s.owner);
+                text += " of " + (owner != nullptr ? *owner : "civilization " + std::to_string(s.owner));
+            }
+            text += ", " + std::string(worldgen::history::settlement_status_word(s.status)) + ", population " +
+                    std::to_string(s.population) + " recorded in " + std::to_string(s.since) + ", founded in " +
+                    std::to_string(s.founded);
+        } else {
+            text += std::string(ref.type == MarkerType::faded ? ", faded ruin of a " : ", ruin of a ") + kind +
+                    ", ruined in " + std::to_string(s.ruined_year);
+            if (s.ruin_event != 0) {
+                text += ": " + sentence(s.ruin_event);
+            }
+        }
+    }
+    return to_godot(text);
+}
+
+godot::Array ViewerModel::get_marker_legend() const {
+    godot::Array out;
+    if (!history_.markers_available() || !history_.markers_enabled()) {
+        return out;
+    }
+    const auto row = [&out](const char* label, const char* glyph, int64_t colour) {
+        godot::Dictionary r;
+        r["label"] = label;
+        r["glyph"] = glyph;
+        godot::PackedInt32Array colours;
+        if (colour >= 0) {
+            colours.push_back(static_cast<int32_t>(colour));
+        }
+        r["colours"] = colours;
+        out.push_back(r);
+    };
+    for (int64_t kind = 1; kind <= 5; ++kind) {
+        const std::string word(worldgen::history::settlement_kind_word(kind));
+        row(word.c_str(), word.c_str(), -1);
+    }
+    row("capital", "town capital", -1);
+    row("declining", "village declining", -1);
+    row("ruin", "ruin", -1);
+    const worldgen::inspect::MarkerOptions& options = history_.marker_options();
+    if (options.faded) {
+        row("faded ruin", "faded", -1);
+    }
+    if (options.events) {
+        using worldgen::inspect::EventSymbol;
+        using worldgen::inspect::event_symbol_colour;
+        row("sack or capture", "ring", rgb_of(event_symbol_colour(EventSymbol::sack)));
+        row("siege", "ring", rgb_of(event_symbol_colour(EventSymbol::siege)));
+        row("battle", "ring", rgb_of(event_symbol_colour(EventSymbol::battle)));
+        row("plague", "ring", rgb_of(event_symbol_colour(EventSymbol::plague)));
+        row("other event", "ring", rgb_of(event_symbol_colour(EventSymbol::plain)));
+    }
+    if (options.passes) {
+        row("pass", "pass", -1);
+    }
+    return out;
+}
+
+int64_t ViewerModel::marker_legend_grey() {
+    return LEGEND_GREY;
+}
+
 void ViewerModel::_bind_methods() {
     using godot::ClassDB;
     using godot::D_METHOD;
@@ -750,6 +1097,17 @@ void ViewerModel::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_civilization_info", "civilization"), &ViewerModel::get_civilization_info);
     ClassDB::bind_method(D_METHOD("get_civilizations_alive"), &ViewerModel::get_civilizations_alive);
     ClassDB::bind_method(D_METHOD("get_territory_view"), &ViewerModel::get_territory_view);
+    ClassDB::bind_method(D_METHOD("get_markers_available"), &ViewerModel::get_markers_available);
+    ClassDB::bind_method(D_METHOD("get_markers_error_code"), &ViewerModel::get_markers_error_code);
+    ClassDB::bind_method(D_METHOD("get_markers_error_message"), &ViewerModel::get_markers_error_message);
+    ClassDB::bind_method(D_METHOD("get_markers_enabled"), &ViewerModel::get_markers_enabled);
+    ClassDB::bind_method(D_METHOD("set_markers_enabled", "on"), &ViewerModel::set_markers_enabled);
+    ClassDB::bind_method(D_METHOD("get_marker_option", "name"), &ViewerModel::get_marker_option);
+    ClassDB::bind_method(D_METHOD("set_marker_option", "name", "on"), &ViewerModel::set_marker_option);
+    ClassDB::bind_method(D_METHOD("get_markers"), &ViewerModel::get_markers);
+    ClassDB::bind_method(D_METHOD("get_marker_glyph", "name"), &ViewerModel::get_marker_glyph);
+    ClassDB::bind_method(D_METHOD("describe_marker", "index"), &ViewerModel::describe_marker);
+    ClassDB::bind_method(D_METHOD("get_marker_legend"), &ViewerModel::get_marker_legend);
 
     ADD_SIGNAL(MethodInfo("world_opened", PropertyInfo(Variant::STRING, "path")));
     ADD_SIGNAL(MethodInfo("world_open_failed", PropertyInfo(Variant::STRING, "path"),
@@ -760,6 +1118,7 @@ void ViewerModel::_bind_methods() {
                           PropertyInfo(Variant::STRING, "message")));
     ADD_SIGNAL(MethodInfo("year_changed", PropertyInfo(Variant::INT, "year")));
     ADD_SIGNAL(MethodInfo("view_image_changed", PropertyInfo(Variant::INT, "index")));
+    ADD_SIGNAL(MethodInfo("markers_changed"));
 }
 
 }  // namespace unmapped

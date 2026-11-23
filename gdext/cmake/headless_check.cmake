@@ -29,7 +29,9 @@
 #    <dir> --expect-layers <n> --expect-composites <m> --expect-history
 #    <none|loaded> [...]: the viewer scene opens the world, shows each layer
 #    and composite and compares its pixels with the PNGs, and checks the
-#    year bar and the territory view (gdext/src/viewer/viewer_check.hpp).
+#    year bar and the territory view (gdext/src/viewer/viewer_check.hpp),
+#    and the markers (P4-04 9: markers-<Y>.png, markers-faded-<Y>.png and
+#    elevation-markers-<R0>.png rendered by worldgen-cli render --markers).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
@@ -137,6 +139,8 @@ set(_section "")
 set(_end_year "")
 set(_age_starts "")
 set(_first_ceded "")
+set(_first_ruin "")     # R0: the smallest `ruined <year>` of the [present] settlement lines (P4-04 9.1)
+set(_first_faded "")    # D0: the year of the first ruin_faded chronicle line
 foreach(_line IN LISTS _history_lines)
     if(_line MATCHES "^\\[([a-z]+)\\]$")
         set(_section "${CMAKE_MATCH_1}")
@@ -149,6 +153,13 @@ foreach(_line IN LISTS _history_lines)
     elseif(_section STREQUAL "chronicle" AND _first_ceded STREQUAL "" AND
            _line MATCHES "^([0-9]+)(-[0-9]+)? e[0-9]+ region_ceded/")
         set(_first_ceded "${CMAKE_MATCH_1}")
+    elseif(_section STREQUAL "chronicle" AND _first_faded STREQUAL "" AND
+           _line MATCHES "^([0-9]+)(-[0-9]+)? e[0-9]+ ruin_faded/")
+        set(_first_faded "${CMAKE_MATCH_1}")
+    elseif(_section STREQUAL "present" AND _line MATCHES "^  s[0-9]+ .*, ruined ([0-9]+)")
+        if(_first_ruin STREQUAL "" OR CMAKE_MATCH_1 LESS _first_ruin)
+            set(_first_ruin "${CMAKE_MATCH_1}")
+        endif()
     endif()
 endforeach()
 foreach(_feature events_region_ceded wars settlements_ruined civilizations_ended)
@@ -176,6 +187,38 @@ foreach(_year IN LISTS _years)
         --year ${_year} --out "${_real_dir}/territory-${_year}.png")
 endforeach()
 
+# The markers (P4-04 9.1): R0, D0, the passes of `report --db`, the marker
+# years LM = {0, D0 - 1, D0, R0 - 1, R0, F, floor(E / 2), E} and their
+# images.
+run_step("report (passes)" "${WORLDGEN_CLI}" report --db "${_real_world}" QUIET)
+set(_passes "")
+if(STEP_OUTPUT MATCHES "\npasses = ([0-9]+)\n")
+    set(_passes "${CMAKE_MATCH_1}")
+endif()
+if(_first_ruin STREQUAL "" OR _first_faded STREQUAL "" OR _passes STREQUAL "" OR _passes LESS 1)
+    message(FATAL_ERROR "headless check: the 512 world needs a ruined settlement in [present], a ruin_faded event "
+        "and a pass (R0 '${_first_ruin}', D0 '${_first_faded}', passes '${_passes}'); choose another seed and record "
+        "it in gdext/README.md")
+endif()
+math(EXPR _faded_before "${_first_faded} - 1")
+math(EXPR _ruin_before "${_first_ruin} - 1")
+set(_marker_years 0 ${_faded_before} ${_first_faded} ${_ruin_before} ${_first_ruin} ${_first_ceded} ${_half}
+    ${_end_year})
+list(REMOVE_DUPLICATES _marker_years)
+list(SORT _marker_years COMPARE NATURAL)
+list(JOIN _marker_years "," _marker_years_arg)
+message("markers: R0 = ${_first_ruin}, D0 = ${_first_faded}, passes ${_passes}, years ${_marker_years_arg}")
+foreach(_year IN LISTS _marker_years)
+    run_step("render markers ${_year}" "${WORLDGEN_CLI}" render --db "${_real_world}" --composite territory
+        --year ${_year} --markers --out "${_real_dir}/markers-${_year}.png")
+endforeach()
+foreach(_year ${_end_year} ${_first_faded})
+    run_step("render markers --faded ${_year}" "${WORLDGEN_CLI}" render --db "${_real_world}" --composite territory
+        --year ${_year} --markers --faded --out "${_real_dir}/markers-faded-${_year}.png")
+endforeach()
+run_step("render elevation markers ${_first_ruin}" "${WORLDGEN_CLI}" render --db "${_real_world}" --layer elevation
+    --year ${_first_ruin} --markers --out "${_real_dir}/elevation-markers-${_first_ruin}.png")
+
 # --- 2b. Geography-only world --------------------------------------------------
 set(_geo_dir "${WORK_DIR}/geo")
 set(_geo_world "${_geo_dir}/world.db")
@@ -197,5 +240,5 @@ viewer_check("test-pattern world" "${_pattern_world}" "${_pattern_dir}" ${_patte
 viewer_check("geography-only world" "${_geo_world}" "${_geo_dir}" ${_geo_count} 3 --expect-history none)
 viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_composite_count}
     --expect-history loaded --expect-end-year ${_end_year} --expect-years ${_years_arg}
-    --history-report "${_history_report}")
+    --history-report "${_history_report}" --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes})
 message("headless check: PASS")

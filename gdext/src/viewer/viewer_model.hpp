@@ -27,8 +27,11 @@
 // whose image is redrawn in place when the holders at Y change. Every
 // history method answers without history as P4-03 3.2 states.
 
+#include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -160,6 +163,33 @@ public:
     // The view index of `territory`, or -1.
     [[nodiscard]] int64_t get_territory_view() const;
 
+    // --- Markers (P4-04 8.1) -------------------------------------------------
+    // Signal: markers_changed()   the marker set differs from the one before
+    //                             (a year, an option or the enabled flag changed)
+    // History loaded and the marker index loaded.
+    [[nodiscard]] bool get_markers_available() const;
+    [[nodiscard]] godot::String get_markers_error_code() const;
+    [[nodiscard]] godot::String get_markers_error_message() const;
+    [[nodiscard]] bool get_markers_enabled() const;
+    // False and nothing changed when the markers are not available.
+    bool set_markers_enabled(bool on);
+    // "faded", "events", "passes"; false for any other name or when not
+    // available.
+    [[nodiscard]] bool get_marker_option(const godot::String& name) const;
+    bool set_marker_option(const godot::String& name, bool on);
+    // Array of Dictionary in draw order (P4-04 6.1): {type, id, x, y, glyph,
+    // fill, capital, small, events (places only)}. Empty when disabled or not
+    // available.
+    [[nodiscard]] godot::Array get_markers() const;
+    // {radius, cells (PackedByteArray of P4-04 5)}; empty for an unknown name.
+    [[nodiscard]] godot::Dictionary get_marker_glyph(const godot::String& name);
+    // The hover text of entry index of get_markers() (8.5); empty out of range.
+    [[nodiscard]] godot::String describe_marker(int64_t index) const;
+    // Array of Dictionary {label, colours, glyph} (8.6).
+    [[nodiscard]] godot::Array get_marker_legend() const;
+    // The fill of the key list's settlement icons, 0xRRGGBB (8.6).
+    [[nodiscard]] static int64_t marker_legend_grey();
+
     // --- C++ only (timings for --bench; presentation side) ---------------------
     struct TerritoryTimings {
         int64_t first_image_usec = -1;  // building the base and the first image
@@ -168,11 +198,30 @@ public:
     };
     [[nodiscard]] const TerritoryTimings& territory_timings() const noexcept { return timings_; }
     [[nodiscard]] const HistoryState& history_state() const noexcept { return history_; }
+    struct MarkerTimings {
+        int64_t steps = 0;  // marker steps since the world opened
+        int64_t total_nsec = 0;
+        int64_t slowest_nsec = 0;
+        int64_t changes = 0;  // markers_changed emitted
+    };
+    [[nodiscard]] const MarkerTimings& marker_timings() const noexcept { return marker_timings_; }
 
 protected:
     static void _bind_methods();
 
 private:
+    // One entry of get_markers(): which list of the current YearMarkers and
+    // the index in it.
+    struct MarkerRef {
+        worldgen::inspect::MarkerType type = worldgen::inspect::MarkerType::pass;
+        std::size_t index = 0;
+    };
+    // Recomputes the marker set (HistoryState::update_markers), rebuilds the
+    // draw order and emits markers_changed when it differs.
+    void update_markers();
+    void rebuild_marker_order();
+    [[nodiscard]] godot::Dictionary marker_dictionary(const MarkerRef& ref) const;
+
     void reset_views();
     bool decode_layer(int64_t layer_index);
     bool build_image(int64_t view_index);
@@ -190,6 +239,10 @@ private:
     std::vector<std::optional<worldgen::inspect::Composite>> composites_;
     HistoryState history_;
     TerritoryTimings timings_;
+    MarkerTimings marker_timings_;
+    std::vector<MarkerRef> marker_order_;  // the current set in draw order
+    godot::Array markers_array_;           // get_markers(), rebuilt on change
+    std::map<std::string, worldgen::inspect::Glyph> glyphs_;  // by glyph name
     std::vector<godot::Ref<WorldLayer>> layers_;   // per layer
     std::vector<godot::Ref<godot::Image>> images_;  // per view
     godot::Array legend_;                           // of the selected view

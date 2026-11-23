@@ -1,6 +1,7 @@
 #include "viewer/history_state.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <exception>
 #include <new>
 #include <stdexcept>
@@ -35,7 +36,53 @@ std::string phase_text(const worldgen::db::PhaseRow& phase) {
            "-" + std::to_string(phase.end_year);
 }
 
+constexpr std::uint8_t GLYPH_RUIN = 8;
+constexpr std::uint8_t GLYPH_FADED = 9;
+constexpr std::uint8_t GLYPH_PASS = 10;
+constexpr std::uint8_t GLYPH_RING = 11;
+
 }  // namespace
+
+std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
+    switch (key.base) {
+        case GLYPH_RUIN: return key.declining || key.capital ? std::string() : std::string("ruin");
+        case GLYPH_FADED: return key.declining || key.capital ? std::string() : std::string("faded");
+        case GLYPH_PASS: return key.declining || key.capital ? std::string() : std::string("pass");
+        case GLYPH_RING: return key.declining || key.capital ? std::string() : std::string("ring");
+        default: break;
+    }
+    const std::string_view word = worldgen::history::settlement_kind_word(key.base);
+    if (word.empty()) {
+        return {};
+    }
+    std::string name(word);
+    if (key.declining) {
+        name += " declining";
+    }
+    if (key.capital) {
+        name += " capital";
+    }
+    return name;
+}
+
+std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name) {
+    for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING}) {
+        if (name == marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false})) {
+            return worldgen::inspect::GlyphKey{base, false, false};
+        }
+    }
+    for (std::uint8_t kind = 1; kind <= 5; ++kind) {
+        for (const bool declining : {false, true}) {
+            for (const bool capital : {false, true}) {
+                const worldgen::inspect::GlyphKey key{kind, declining, capital};
+                if (name == marker_glyph_name(key)) {
+                    return key;
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
 
 void HistoryState::reset() {
     status_ = HistoryStatus::none;
@@ -49,6 +96,14 @@ void HistoryState::reset() {
     holders_.clear();
     drawn_holders_.clear();
     drawn_valid_ = false;
+    markers_.reset();
+    markers_error_code_.clear();
+    markers_error_message_.clear();
+    markers_enabled_ = true;
+    marker_options_ = {};
+    markers_current_ = {};
+    markers_scratch_ = {};
+    last_marker_step_nsec_ = 0;
 }
 
 void HistoryState::load(const worldgen::db::WorldReader& reader) {
@@ -84,13 +139,74 @@ void HistoryState::load(const worldgen::db::WorldReader& reader) {
         status_ = HistoryStatus::failed;
         error_code_ = "out_of_memory";
         error_message_ = "out of memory while reading the history";
+        return;
     } catch (const std::exception& e) {
         // A FatalError of civilization_colours (P4-03 3.1 step 4).
         reset();
         status_ = HistoryStatus::failed;
         error_code_ = "corrupt_layer";
         error_message_ = e.what();
+        return;
     }
+    // P4-04 8.1: the marker index; its failure leaves the history loaded.
+    try {
+        auto index = worldgen::inspect::MarkerIndex::load(reader, *history_);
+        if (index.ok()) {
+            markers_.emplace(std::move(index).value());
+        } else {
+            markers_error_code_ = worldgen::db::error_code_name(index.error().code);
+            markers_error_message_ = index.error().message;
+        }
+    } catch (const std::bad_alloc&) {
+        markers_.reset();
+        markers_error_code_ = "out_of_memory";
+        markers_error_message_ = "out of memory while building the markers";
+    } catch (const std::exception& e) {
+        // A FatalError: the history and the index disagree (a library bug).
+        markers_.reset();
+        markers_error_code_ = "corrupt_layer";
+        markers_error_message_ = e.what();
+    }
+    try {
+        update_markers();
+    } catch (const std::exception& e) {
+        markers_.reset();
+        markers_current_ = {};
+        markers_error_code_ = "corrupt_layer";
+        markers_error_message_ = e.what();
+    }
+}
+
+namespace {
+
+// The marker sets of two years are the same when their lists are (the
+// year itself is no difference, P4-04 8.1).
+bool same_markers(const worldgen::inspect::YearMarkers& a, const worldgen::inspect::YearMarkers& b) {
+    return a.settlements == b.settlements && a.places == b.places && a.passes == b.passes;
+}
+
+}  // namespace
+
+bool HistoryState::update_markers() {
+    const auto start = std::chrono::steady_clock::now();
+    if (markers_available() && markers_enabled_) {
+        markers_->markers_at(*history_, state_, marker_options_, markers_scratch_);
+    } else {
+        markers_scratch_.year = loaded() ? year_ : 0;
+        markers_scratch_.settlements.clear();
+        markers_scratch_.places.clear();
+        markers_scratch_.passes.clear();
+    }
+    const bool changed = !same_markers(markers_scratch_, markers_current_);
+    if (changed) {
+        std::swap(markers_scratch_, markers_current_);
+    } else {
+        markers_current_.year = markers_scratch_.year;
+    }
+    last_marker_step_nsec_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                 std::chrono::steady_clock::now() - start)
+                                 .count();
+    return changed;
 }
 
 std::int64_t HistoryState::end_year() const noexcept {

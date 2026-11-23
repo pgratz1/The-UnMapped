@@ -50,8 +50,6 @@ std::string event_span(const db::EventRow& e) {
 
 constexpr std::array<std::string_view, 9> PREFIX = {"ra", "g", "c", "s", "rg", "f", "fa", "m", "si"};
 constexpr std::array<std::string_view, 3> CAMP = {"good", "neutral", "evil"};
-constexpr std::array<std::string_view, 5> SETTLEMENT_KIND = {"hamlet", "village", "town", "city", "fortress"};
-constexpr std::array<std::string_view, 4> STATUS = {"thriving", "declining", "ruined", "faded"};
 
 template <std::size_t N>
 std::string_view word(const std::array<std::string_view, N>& words, std::int64_t code, std::int64_t first) {
@@ -63,6 +61,17 @@ std::string_view word(const std::array<std::string_view, N>& words, std::int64_t
 // kind it does not know (as the other code tables here).
 std::string_view phase_word(std::int64_t kind) noexcept {
     const std::string_view w = history::phase_kind_word(kind);
+    return w.empty() ? std::string_view("?") : w;
+}
+
+// The settlement words of the report: history::settlement_kind_word and
+// settlement_status_word, "?" for a code they do not know.
+std::string_view kind_word(std::int64_t kind) noexcept {
+    const std::string_view w = history::settlement_kind_word(kind);
+    return w.empty() ? std::string_view("?") : w;
+}
+std::string_view status_word(std::int64_t status) noexcept {
+    const std::string_view w = history::settlement_status_word(status);
     return w.empty() ? std::string_view("?") : w;
 }
 
@@ -668,7 +677,7 @@ private:
 
     void settlement_line(const db::SettlementRow& s) {
         std::string l = "  s" + num(s.id) + " " + escape_history_text(s.name) + ": " +
-                        std::string(word(SETTLEMENT_KIND, s.kind, 1)) + ", " + std::string(word(STATUS, s.status, 1)) +
+                        std::string(kind_word(s.kind)) + ", " + std::string(status_word(s.status)) +
                         ", population " + num(s.population) + ", " +
                         (s.owner_civ != 0 ? civ(s.owner_civ) : std::string("no owner")) + ", at " + num(s.x) + " " +
                         num(s.y) + " in " + region(s.region) + ", founded " + num(s.founded_year) + " by " +

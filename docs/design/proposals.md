@@ -1238,6 +1238,16 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: (1) the viewer follows the timeline (the age of the present is the last age) and the check takes the last `[ages]` line at E; P4-03 4.4 and H2 should say so. (2) The year buttons, the slider and the map view have `focus_mode` none in `viewer.tscn`; the layer list and the meta tree keep their focus behaviour, and while one has focus the arrows act on it. A later screen may read the year keys in `_input`, skipping them while a text field or dialog has focus, if the focus behaviour proves annoying in the walkthrough.
 - Status: open
 
+### Viewer v1, P4-04: markers are a library answer, with a CLI overlay
+
+- Date: 2026-11-23
+- Raised by: spec writer (P4-04, `docs/specs/p4-04-markers.md`)
+- Design doc section: 10 (world viewer: "settlements and sites as markers"), 13 (P4 row)
+- Problem: P4-00 3.1 had P4-04 draw markers in the extension and add nothing to `worldgen`. But which settlement is a capital in a year, when and by what a ruin fell (cleared from the row once it fades), where an event happened and which symbol it gets are rules over the history, and without a library answer the viewer would restate them (against V3) and no marker image could be made or compared without the viewer. The design also says nothing of marker shapes, sizes or of sites before P6.
+- Proposal: `worldgen/inspect/markers.hpp` answers the markers of a year (settlements with kind, status, owner, population and capital; ruins with their year and event; event places with a symbol by kind key; passes) and defines integer glyph grids and a rasteriser; `worldgen-cli render --markers [--faded] [--year Y]` draws them over any layer or composite (P0-04 amendment 24), and `world-hashes.sh` compares the marker images across compilers. The viewer draws the same glyphs at screen size. Shape and size by kind rather than by a separate population band; one coloured ring per event place; site and figure markers reserved in the API for P5-02 and P5-06.
+- Interim choice: as proposed, in P4-04 (open questions 1 to 5 there). No world byte changes; no generator or schema version bump.
+- Status: open
+
 ### History: P5-01's T16 restated as a rate (P5-12)
 
 - Date: 2026-11-23

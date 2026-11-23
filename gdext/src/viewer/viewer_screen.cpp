@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <string_view>
+#include <utility>
 
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -12,6 +13,7 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/line_edit.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/time.hpp>
@@ -85,6 +87,48 @@ godot::Ref<godot::ImageTexture> legend_icon(const godot::PackedInt32Array& colou
     return godot::ImageTexture::create_from_image(image);
 }
 
+// The key list's icons (P4-04 8.6): the glyph at one screen pixel per glyph
+// cell, centred on a MARKER_ICON x MARKER_ICON canvas (the ring's size).
+constexpr int32_t MARKER_ICON = 23;
+
+godot::Ref<godot::ImageTexture> marker_icon(const godot::Dictionary& glyph, int64_t fill) {
+    const int64_t radius = glyph.get("radius", int64_t{-1});
+    const godot::PackedByteArray cells = glyph.get("cells", godot::PackedByteArray());
+    const int64_t side = 2 * radius + 1;
+    if (radius < 0 || side > MARKER_ICON || cells.size() != side * side) {
+        return {};
+    }
+    godot::PackedByteArray data;
+    data.resize(static_cast<int64_t>(MARKER_ICON) * MARKER_ICON * 4);
+    data.fill(0);
+    uint8_t* out = data.ptrw();
+    const int64_t pad = (MARKER_ICON - side) / 2;
+    for (int64_t row = 0; row < side; ++row) {
+        for (int64_t col = 0; col < side; ++col) {
+            const uint8_t cls = cells[row * side + col];
+            int64_t rgb = -1;
+            if (cls == 1) {
+                rgb = 0xF0F0F0;
+            } else if (cls == 2) {
+                rgb = fill;
+            } else if (cls == 3) {
+                rgb = 0x000000;
+            }
+            if (rgb < 0) {
+                continue;
+            }
+            uint8_t* px = out + ((row + pad) * MARKER_ICON + col + pad) * 4;
+            px[0] = static_cast<uint8_t>((rgb >> 16) & 0xFF);
+            px[1] = static_cast<uint8_t>((rgb >> 8) & 0xFF);
+            px[2] = static_cast<uint8_t>(rgb & 0xFF);
+            px[3] = 255;
+        }
+    }
+    const godot::Ref<godot::Image> image =
+        godot::Image::create_from_data(MARKER_ICON, MARKER_ICON, false, godot::Image::FORMAT_RGBA8, data);
+    return godot::ImageTexture::create_from_image(image);
+}
+
 godot::String view_tooltip(const godot::Dictionary& info) {
     if (is_composite(info)) {
         return godot::String("{0} (composite)\n{1} x {2} cells, built by worldgen from elevation and the layers "
@@ -138,7 +182,13 @@ void ViewerScreen::_ready() {
     year_field_ = require<godot::SpinBox>("YearField");
     year_label_ = require<godot::Label>("YearLabel");
     year_counts_ = require<godot::Label>("YearCounts");
-    wired_ = open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
+    markers_toggle_ = require<godot::CheckButton>("MarkersToggle");
+    mark_faded_ = require<godot::CheckBox>("MarkFaded");
+    mark_events_ = require<godot::CheckBox>("MarkEvents");
+    mark_passes_ = require<godot::CheckBox>("MarkPasses");
+    marker_legend_ = require<godot::ItemList>("MarkerLegend");
+    wired_ = markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
+             mark_passes_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
              meta_tree_ != nullptr && map_view_ != nullptr && status_label_ != nullptr && cell_label_ != nullptr &&
              legend_title_ != nullptr && legend_list_ != nullptr && year_slider_ != nullptr &&
              year_marks_ != nullptr && year_field_ != nullptr && year_label_ != nullptr && year_counts_ != nullptr;
@@ -161,6 +211,16 @@ void ViewerScreen::_ready() {
         model_->connect("view_failed", callable_mp(this, &ViewerScreen::on_view_failed));
         model_->connect("year_changed", callable_mp(this, &ViewerScreen::on_year_changed));
         model_->connect("view_image_changed", callable_mp(this, &ViewerScreen::on_view_image_changed));
+        model_->connect("markers_changed", callable_mp(this, &ViewerScreen::on_markers_changed));
+        map_view_->connect("marker_hovered", callable_mp(this, &ViewerScreen::on_marker_hovered));
+        markers_toggle_->connect("toggled", callable_mp(this, &ViewerScreen::on_markers_toggled));
+        mark_faded_->connect("toggled",
+                             callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("faded")));
+        mark_events_->connect("toggled",
+                              callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("events")));
+        mark_passes_->connect("toggled",
+                              callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("passes")));
+        update_marker_controls();
         year_slider_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_slider_changed));
         year_field_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_field_changed));
         year_back25_->connect("pressed", callable_mp(this, &ViewerScreen::on_step_year).bind(int64_t{-25}));
@@ -209,6 +269,20 @@ void ViewerScreen::_ready() {
             start_hover_y_ = args[++i].to_int();
         } else if (arg == "--screenshot" && i + 1 < args.size()) {
             screenshot_path_ = args[++i];
+        } else if (arg == "--zoom" && i + 1 < args.size()) {
+            start_zoom_ = args[++i].to_float();
+        } else if (arg == "--centre" && i + 2 < args.size()) {
+            start_centre_x_ = args[++i].to_int();
+            start_centre_y_ = args[++i].to_int();
+        } else if (arg == "--mouse" && i + 2 < args.size()) {
+            start_mouse_x_ = args[++i].to_int();
+            start_mouse_y_ = args[++i].to_int();
+        } else if (arg == "--faded") {
+            start_faded_ = true;
+        } else if (arg == "--expect-marker-years" && i + 1 < args.size()) {
+            check_expect_marker_years_ = args[++i];
+        } else if (arg == "--expect-passes" && i + 1 < args.size()) {
+            check_expect_passes_ = args[++i].to_int();
         } else if (!arg.begins_with("--") && world_path.is_empty()) {
             world_path = arg;
         } else {
@@ -239,6 +313,9 @@ void ViewerScreen::_ready() {
         if (opened && has_start_year) {
             apply_start_year(start_year);
         }
+        if (opened && start_faded_) {
+            model_->set_marker_option("faded", true);
+        }
         if (start_hover_x_ >= 0 && start_hover_y_ >= 0) {
             hover_cell(start_hover_x_, start_hover_y_);
         }
@@ -262,7 +339,24 @@ void ViewerScreen::_ready() {
         // After a few frames, once containers have settled the layout.
         get_tree()->create_timer(0.25)->connect("timeout", callable_mp(this, &ViewerScreen::run_check_deferred));
     } else if (!screenshot_path_.is_empty()) {
-        get_tree()->create_timer(1.0)->connect("timeout", callable_mp(this, &ViewerScreen::take_screenshot));
+        get_tree()->create_timer(0.6)->connect("timeout", callable_mp(this, &ViewerScreen::apply_view_options));
+        get_tree()->create_timer(1.2)->connect("timeout", callable_mp(this, &ViewerScreen::take_screenshot));
+    }
+}
+
+void ViewerScreen::apply_view_options() {
+    if (!wired_) {
+        return;
+    }
+    if (start_zoom_ > 0.0 && start_centre_x_ >= 0 && start_centre_y_ >= 0) {
+        map_view_->centre_on(godot::Vector2(static_cast<float>(start_centre_x_), static_cast<float>(start_centre_y_)),
+                             start_zoom_);
+    }
+    if (start_mouse_x_ >= 0 && start_mouse_y_ >= 0) {
+        godot::Ref<godot::InputEventMouseMotion> motion;
+        motion.instantiate();
+        motion->set_position(map_view_->cell_centre_position(start_mouse_x_, start_mouse_y_));
+        map_view_->_gui_input(motion);
     }
 }
 
@@ -290,6 +384,11 @@ void ViewerScreen::run_check_deferred() {
         options.expect_years.push_back(years[i].strip_edges().to_int());
     }
     options.history_report = check_history_report_;
+    const godot::PackedStringArray marker_years = check_expect_marker_years_.split(",", false);
+    for (int64_t i = 0; i < marker_years.size(); ++i) {
+        options.marker_years.push_back(marker_years[i].strip_edges().to_int());
+    }
+    options.expect_passes = check_expect_passes_;
     options.wired = wired_;
     const int exit_code = run_viewer_check(*this, options);
     get_tree()->quit(exit_code);
@@ -359,16 +458,99 @@ void ViewerScreen::on_layer_list_selected(int64_t item) {
 void ViewerScreen::on_cell_hovered(int64_t x, int64_t y) {
     hover_x_ = x;
     hover_y_ = y;
-    const godot::String text = x < 0 || y < 0 ? godot::String() : model_->describe_cell(x, y);
+    show_hover_text();
+}
+
+void ViewerScreen::show_hover_text() {
+    // P4-04 8.5: a marker under the mouse is described instead of the cell.
+    if (hovered_marker_ >= 0) {
+        const godot::String text = model_->describe_marker(hovered_marker_);
+        if (!text.is_empty()) {
+            cell_label_->set_text(text);
+            return;
+        }
+    }
+    const godot::String text =
+        hover_x_ < 0 || hover_y_ < 0 ? godot::String() : model_->describe_cell(hover_x_, hover_y_);
     cell_label_->set_text(text.is_empty() ? godot::String("Point at the map to inspect a cell.") : text);
+}
+
+void ViewerScreen::on_marker_hovered(int64_t index) {
+    hovered_marker_ = index;
+    show_hover_text();
+}
+
+void ViewerScreen::push_markers() {
+    const godot::Array markers = model_->get_markers();
+    for (int64_t i = 0; i < markers.size(); ++i) {
+        const godot::String name = godot::Dictionary(markers[i])["glyph"];
+        if (!marker_glyphs_.has(name)) {
+            marker_glyphs_[name] = model_->get_marker_glyph(name);
+        }
+    }
+    map_view_->set_markers(markers, marker_glyphs_);
+}
+
+void ViewerScreen::on_markers_changed() {
+    push_markers();
+    update_marker_controls();
+    show_hover_text();
+}
+
+void ViewerScreen::on_markers_toggled(bool on) {
+    model_->set_markers_enabled(on);
+    update_marker_controls();
+}
+
+void ViewerScreen::on_marker_option_toggled(bool on, const godot::String& name) {
+    model_->set_marker_option(name, on);
+    update_marker_controls();
+}
+
+void ViewerScreen::update_marker_controls() {
+    if (!wired_) {
+        return;
+    }
+    const bool available = model_->get_markers_available();
+    const bool enabled = available && model_->get_markers_enabled();
+    markers_toggle_->set_pressed_no_signal(enabled);
+    markers_toggle_->set_disabled(!available);
+    const std::array<std::pair<godot::CheckBox*, const char*>, 3> boxes{
+        {{mark_faded_, "faded"}, {mark_events_, "events"}, {mark_passes_, "passes"}}};
+    for (const auto& [box, name] : boxes) {
+        // Without markers the boxes show the defaults (8.2: faded off).
+        box->set_pressed_no_signal(available ? model_->get_marker_option(name) : godot::String(name) != "faded");
+        box->set_disabled(!enabled);
+    }
+    const godot::Array legend = model_->get_marker_legend();
+    // The key list changes only with the options and the flag: rebuilt
+    // (icons and all) only when its rows differ.
+    if (legend == marker_legend_rows_ && marker_legend_->get_item_count() == legend.size()) {
+        return;
+    }
+    marker_legend_rows_ = legend.duplicate(true);
+    marker_legend_->clear();
+    for (int64_t i = 0; i < legend.size(); ++i) {
+        const godot::Dictionary row = legend[i];
+        const godot::PackedInt32Array colours = row["colours"];
+        const int64_t fill = colours.is_empty() ? ViewerModel::marker_legend_grey() : int64_t{colours[0]} & 0xFFFFFF;
+        const godot::Ref<godot::Texture2D> icon = marker_icon(model_->get_marker_glyph(row["glyph"]), fill);
+        const int32_t item = marker_legend_->add_item(row["label"], icon, false);
+        marker_legend_->set_item_tooltip_enabled(item, false);
+    }
 }
 
 void ViewerScreen::on_world_opened(const godot::String& path) {
     // P4-03 4.6: a history that could not be read is named under the path.
-    const godot::String file_text =
+    godot::String file_text =
         model_->get_history_status() == "failed"
             ? path + godot::String("\nhistory: ") + model_->get_history_error_code() + godot::String(": ") + model_->get_history_error_message()
             : path;
+    // P4-04 8.1: markers that could not be built likewise.
+    if (model_->has_history() && !model_->get_markers_available()) {
+        file_text += godot::String("\nmarkers: ") + model_->get_markers_error_code() + godot::String(": ") +
+                     model_->get_markers_error_message();
+    }
     file_label_->set_text(file_text);
     file_label_->set_tooltip_text(file_text);
     hover_x_ = -1;
@@ -416,6 +598,8 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
     }
 
     cell_label_->set_text("Point at the map to inspect a cell.");
+    hovered_marker_ = -1;
+    update_marker_controls();
     if (count == 0) {
         map_view_->clear_image();
         show_status("This world has no layers.", false);
@@ -453,9 +637,12 @@ void ViewerScreen::on_world_closed() {
     cell_label_->set_text(" ");
     meta_tree_->clear();
     map_view_->clear_image();
+    map_view_->clear_markers();
     hover_x_ = -1;
     hover_y_ = -1;
+    hovered_marker_ = -1;
     update_year_bar();
+    update_marker_controls();
 }
 
 void ViewerScreen::on_view_selected(int64_t index) {
@@ -473,6 +660,7 @@ void ViewerScreen::on_view_selected(int64_t index) {
         layer_list_->set_item_tooltip(item, view_tooltip(info));  // palette now known
     }
     map_view_->set_image(model_->get_view_image(index));
+    push_markers();  // P4-04 8.4: over every view
     show_status(view_tooltip(info).replace("\n", "   "), false);
     show_legend();
 }
@@ -632,8 +820,20 @@ void ViewerScreen::on_step_change(int64_t direction) {
 
 void ViewerScreen::_unhandled_key_input(const godot::Ref<godot::InputEvent>& event) {
     const godot::Ref<godot::InputEventKey> key = event;
-    if (!wired_ || key.is_null() || !key->is_pressed() || !model_->has_history() || key->is_ctrl_pressed() ||
-        key->is_alt_pressed() || key->is_meta_pressed()) {
+    if (!wired_ || key.is_null() || !key->is_pressed() || key->is_ctrl_pressed() || key->is_alt_pressed() ||
+        key->is_meta_pressed()) {
+        return;
+    }
+    // P4-04 8.2: M toggles the markers (nothing happens when there are none).
+    if (key->get_keycode() == godot::KEY_M && !key->is_shift_pressed() && !key->is_echo()) {
+        if (model_->get_markers_available()) {
+            model_->set_markers_enabled(!model_->get_markers_enabled());
+            update_marker_controls();
+            get_viewport()->set_input_as_handled();
+        }
+        return;
+    }
+    if (!model_->has_history()) {
         return;
     }
     const godot::Key code = key->get_keycode();
@@ -715,6 +915,7 @@ void ViewerScreen::run_bench() {
     godot::UtilityFunctions::print("UNMAPPED-BENCH: first territory image (base and image): ",
                                    ms(timings.first_image_usec));
     const int64_t redraws_before = timings.redraws;
+    const ViewerModel::MarkerTimings markers_before = model_->marker_timings();
     const int64_t end = model_->get_end_year();
     int64_t changes = 0;
     int64_t total = 0;
@@ -746,6 +947,35 @@ void ViewerScreen::run_bench() {
     godot::UtilityFunctions::print("UNMAPPED-BENCH: territory redraws ", timings.redraws - redraws_before,
                                    " (holder change years: ", change_years, " per pass), slowest redraw ",
                                    ms(timings.slowest_redraw_usec));
+    // P4-04 8.4: the marker step of each year change, and markers_changed.
+    const ViewerModel::MarkerTimings& markers = model_->marker_timings();
+    const int64_t steps = markers.steps - markers_before.steps;
+    godot::UtilityFunctions::print(
+        "UNMAPPED-BENCH: marker steps ", steps, ", mean ",
+        godot::String::num(steps > 0 ? static_cast<double>(markers.total_nsec - markers_before.total_nsec) / 1000.0 /
+                                           static_cast<double>(steps) / 1000.0
+                                     : 0.0,
+                           4),
+        " ms, slowest ", godot::String::num(static_cast<double>(markers.slowest_nsec) / 1000000.0, 3),
+        " ms; markers_changed ", markers.changes - markers_before.changes, " over 0..", end, " and back");
+    model_->set_year(end);
+    godot::UtilityFunctions::print("UNMAPPED-BENCH: markers at the present: ", model_->get_markers().size());
+    // One marker draw: the next frame's _draw of the map view.
+    map_view_->queue_redraw();
+    get_tree()->create_timer(0.3)->connect("timeout", callable_mp(this, &ViewerScreen::finish_bench));
+}
+
+void ViewerScreen::finish_bench() {
+    if (map_view_->marker_draws() > 0) {
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: marker draw (", model_->get_markers().size(), " markers, ",
+                                       static_cast<int64_t>(map_view_->marker_texture_count()), " textures): ",
+                                       godot::String::num(static_cast<double>(map_view_->last_marker_draw_usec()) /
+                                                              1000.0,
+                                                          3),
+                                       " ms (", map_view_->marker_draws(), " draws)");
+    } else {
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: marker draw: the map view was not drawn (headless)");
+    }
     get_tree()->quit(0);
 }
 
