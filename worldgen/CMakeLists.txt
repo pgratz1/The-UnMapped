@@ -45,6 +45,7 @@ add_library(worldgen STATIC
     src/generate.cpp
     src/stages/test_pattern.cpp
     src/inspect/hashes.cpp
+    src/inspect/layer_catalogue.cpp
     src/inspect/render.cpp
     src/inspect/report.cpp
     # P1 foundation (P1-00): parallel blocks (P0-01 4.2 as amended), the
@@ -93,6 +94,9 @@ add_library(worldgen STATIC
     src/stages/history.cpp
     src/inspect/history.cpp
     src/inspect/history_report.cpp
+    # P4-01: the timeline, the civilization colours and the territory image.
+    src/history/timeline.cpp
+    src/inspect/territory.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen

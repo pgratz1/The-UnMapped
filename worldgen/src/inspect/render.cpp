@@ -2,6 +2,8 @@
 
 #include "worldgen/inspect/render.hpp"
 
+#include "worldgen/inspect/layer_catalogue.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -14,6 +16,7 @@
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/math.hpp"
 #include "worldgen/core/wide.hpp"
+#include "render_internal.hpp"
 
 namespace worldgen::inspect {
 
@@ -58,23 +61,9 @@ std::optional<Palette> palette_from_name(std::string_view name) noexcept {
 }
 
 Palette registered_palette(std::string_view layer_name) noexcept {
-    if (layer_name == "elevation") return Palette::hypsometric;
-    if (layer_name == "water") return Palette::water;
-    if (layer_name == "river") return Palette::river;
-    if (layer_name == "flow_accum") return Palette::log2;
-    if (layer_name == "flow_dir") return Palette::direction;
-    if (layer_name == "lake") return Palette::ids;
-    if (layer_name == "coast_dist") return Palette::signed_distance;
-    if (layer_name == "temperature") return Palette::temperature;  // P1-03 9
-    if (layer_name == "rainfall") return Palette::rainfall;        // P1-03 9
-    if (layer_name == "biome") return Palette::biome;              // P1-04 9
-    if (layer_name == "fertility" || layer_name == "ore" || layer_name == "timber" || layer_name == "fresh_water" ||
-        layer_name == "forage" || layer_name == "habitability") {
-        return Palette::score;  // P1-05 9
-    }
-    if (layer_name == "walk_area") return Palette::ids;  // P1-05 9
-    if (layer_name == "region") return Palette::ids;     // P1-06 9
-    return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
+    // One source: the catalogue of P4-02 4.2 (layer_catalogue.cpp).
+    const LayerSpec* spec = find_layer_spec(layer_name);
+    return spec != nullptr ? spec->palette : Palette::gray;
 }
 
 bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {
@@ -705,8 +694,10 @@ constexpr std::int64_t RIVER_D8_DX[8] = {1, 1, 0, -1, -1, -1, 0, 1};
 
 // Step 4 of the composite map: rivers drawn over the cell colours of steps
 // 1 to 3.
+// When drawn is given, each painted cell is marked 1 in it.
 void paint_rivers(std::vector<Rgb>& colour, std::uint32_t w, std::uint32_t h, const std::vector<std::uint8_t>& wc,
-                  const std::vector<std::uint8_t>& rc, const std::vector<std::uint8_t>* fd) {
+                  const std::vector<std::uint8_t>& rc, const std::vector<std::uint8_t>* fd,
+                  std::vector<std::uint8_t>* drawn) {
     // The paint list, built by scanning the river cells in index order.
     std::vector<RiverPaint> list;
     for (std::size_t i = 0; i < wc.size(); ++i) {
@@ -746,6 +737,9 @@ void paint_rivers(std::vector<Rgb>& colour, std::uint32_t w, std::uint32_t h, co
             continue;  // never over a lake or ocean cell
         }
         colour[j] = composite_river_colour(p.k);
+        if (drawn != nullptr) {
+            (*drawn)[j] = 1U;
+        }
     }
 }
 
@@ -760,11 +754,13 @@ namespace {
 
 // Steps 1 to 4 of the composite map (P1-00 10.2), with the land colour of
 // step 2 given by land_colour(i, e) before shading (hypsometric for the
-// composite map, the biome colour for the composite biomes, P1-04 9).
+// composite map, the biome colour for the composite biomes, P1-04 9). When
+// drawn is given it is resized to the cell count and marks 1 every cell that
+// step 3 or step 4 drew (P4-01 5.6 item 1), 0 every other cell.
 template <class LandColour>
 std::vector<Rgb> shaded_colours(const db::LayerGrid& elevation, const db::LayerGrid* water,
                                 const db::LayerGrid* river, const db::LayerGrid* flow_dir,
-                                const LandColour& land_colour) {
+                                const LandColour& land_colour, std::vector<std::uint8_t>* drawn = nullptr) {
     const std::vector<std::int16_t>& e = *elevation.get_if<std::int16_t>();
     const std::vector<std::uint8_t>* wcells = water == nullptr ? nullptr : water->get_if<std::uint8_t>();
     const std::vector<std::uint8_t>* rcells = river == nullptr ? nullptr : river->get_if<std::uint8_t>();
@@ -773,15 +769,20 @@ std::vector<Rgb> shaded_colours(const db::LayerGrid& elevation, const db::LayerG
     const std::uint32_t h = elevation.height;
     // Steps 1 to 3 per cell (and step 4 without `river`), then step 4.
     std::vector<Rgb> colour(e.size());
+    if (drawn != nullptr) {
+        drawn->assign(e.size(), 0U);
+    }
     for (std::size_t i = 0; i < e.size(); ++i) {
         if (wcells != nullptr) {
             const std::uint8_t cat = (*wcells)[i];
             if (cat == 2U) {
                 colour[i] = Rgb{64, 128, 204};
+                if (drawn != nullptr) (*drawn)[i] = 1U;
                 continue;
             }
             if (cat == 1U && rcells == nullptr) {
                 colour[i] = Rgb{52, 100, 200};
+                if (drawn != nullptr) (*drawn)[i] = 1U;
                 continue;
             }
         }
@@ -795,7 +796,7 @@ std::vector<Rgb> shaded_colours(const db::LayerGrid& elevation, const db::LayerG
         colour[i] = shade_colour(land_colour(i, v), hillshade_factor(e, w, h, x, y));
     }
     if (wcells != nullptr && rcells != nullptr) {
-        paint_rivers(colour, w, h, *wcells, *rcells, fcells);
+        paint_rivers(colour, w, h, *wcells, *rcells, fcells, drawn);
     }
     return colour;
 }
@@ -868,22 +869,26 @@ std::optional<std::string> composite_regions_problem(const db::LayerGrid& elevat
     return std::nullopt;
 }
 
-std::vector<std::uint8_t> render_composite_regions(const db::LayerGrid& elevation, const db::LayerGrid* water,
-                                                   const db::LayerGrid* river, const db::LayerGrid* flow_dir,
-                                                   const db::LayerGrid& biome, const db::LayerGrid& region,
-                                                   std::uint32_t scale, std::span<const BiomeColour> biome_table) {
-    if (composite_regions_problem(elevation, water, river, flow_dir, biome, region)) {
-        fatal("render_composite_regions: unsuitable layers");
-    }
-    std::vector<std::uint8_t> rgb(
-        buffer_size(elevation.width, elevation.height, scale, "render_composite_regions: scale must be 1 to 16"));
+namespace detail {
+
+std::size_t composite_buffer_size(std::uint32_t w, std::uint32_t h, std::uint32_t scale, const char* what) {
+    return buffer_size(w, h, scale, what);
+}
+
+RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                     const db::LayerGrid* river, const db::LayerGrid* flow_dir,
+                                     const db::LayerGrid& biome, const db::LayerGrid& region,
+                                     std::span<const BiomeColour> biome_table) {
     std::array<Rgb, 256> colours{};
     for (std::size_t v = 0; v < colours.size(); ++v) {
         colours[v] = biome_colour(biome_table, v);
     }
     const std::vector<std::uint8_t>& codes = *biome.get_if<std::uint8_t>();
-    std::vector<Rgb> colour = shaded_colours(elevation, water, river, flow_dir,
-                                             [&](std::size_t i, std::int64_t) { return colours[codes[i]]; });
+    RegionsCells out;
+    out.colour = shaded_colours(
+        elevation, water, river, flow_dir, [&](std::size_t i, std::int64_t) { return colours[codes[i]]; },
+        &out.drawn);
+    out.border.assign(out.colour.size(), 0U);
     // P0-04 amendment 18 (e): a cell with region v > 0 whose E or S
     // neighbour has a region w > 0, w != v, becomes black.
     const std::vector<std::uint16_t>& ids = *region.get_if<std::uint16_t>();
@@ -899,11 +904,28 @@ std::vector<std::uint8_t> render_composite_regions(const db::LayerGrid& elevatio
             const bool east = x + 1U < w && ids[i + 1U] != 0U && ids[i + 1U] != v;
             const bool south = y + 1U < h && ids[i + w] != 0U && ids[i + w] != v;
             if (east || south) {
-                colour[i] = Rgb{0, 0, 0};
+                out.colour[i] = Rgb{0, 0, 0};
+                out.border[i] = 1U;
             }
         }
     }
-    fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return colour[i]; });
+    return out;
+}
+
+}  // namespace detail
+
+std::vector<std::uint8_t> render_composite_regions(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                   const db::LayerGrid* river, const db::LayerGrid* flow_dir,
+                                                   const db::LayerGrid& biome, const db::LayerGrid& region,
+                                                   std::uint32_t scale, std::span<const BiomeColour> biome_table) {
+    if (composite_regions_problem(elevation, water, river, flow_dir, biome, region)) {
+        fatal("render_composite_regions: unsuitable layers");
+    }
+    std::vector<std::uint8_t> rgb(
+        buffer_size(elevation.width, elevation.height, scale, "render_composite_regions: scale must be 1 to 16"));
+    const detail::RegionsCells cells =
+        detail::regions_composite_cells(elevation, water, river, flow_dir, biome, region, biome_table);
+    fill_buffer(rgb, elevation.width, elevation.height, scale, [&](std::size_t i) { return cells.colour[i]; });
     return rgb;
 }
 

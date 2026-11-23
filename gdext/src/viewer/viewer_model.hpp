@@ -13,7 +13,7 @@
 // world's table `biome`), then every composite worldgen can build from those
 // layers ("map", "biomes", "regions"; WorldFile::get_composite_names). It
 // lists whatever the file holds, so layers added by later phases appear
-// without changes here. Each view has a group (layer_catalogue.hpp:
+// without changes here. Each view has a group (worldgen/inspect/layer_catalogue.hpp:
 // "Composites", "Terrain", "Water", ...) for the list to be grouped by; the
 // order of views is not the order a view shows them in.
 //

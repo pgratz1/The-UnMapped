@@ -70,22 +70,6 @@ bool upland(const history::RegionInfo& r) noexcept {
     return r.walk_cells < r.cells / 4 + (r.cells % 4 != 0 ? 1 : 0);
 }
 
-// The two reads of the file (read_history_tables, then HistoryView::load)
-// are separate snapshots. Everything the digest and the report index in one
-// by a value of the other is checked here, so that a file changed between
-// the reads is a corrupt-table error and never an out-of-range index.
-std::optional<std::string> reads_disagree(const HistoryView& view, const history::HistoryTables& t) {
-    if (static_cast<std::int64_t>(view.events().size()) != t.event_rows) {
-        return std::string("corrupt table 'event': the file changed while it was read");
-    }
-    for (const HistoryView::Event& e : view.events()) {
-        if (e.row.phase < 1 || static_cast<std::size_t>(e.row.phase) > t.phases.size()) {
-            return std::string("corrupt table 'event': the file changed while it was read");
-        }
-    }
-    return std::nullopt;
-}
-
 class Report {
 public:
     Report(const HistoryView& view, const history::HistoryTables& t, const history::HistoryDigest& d,
@@ -229,7 +213,7 @@ private:
         phase_events_.assign(t_.phases.size() + 1, 0);
         phase_shown_.assign(t_.phases.size() + 1, 0);
         for (const HistoryView::Event& e : v_.events()) {
-            const auto p = static_cast<std::size_t>(e.row.phase);  // a phase id (read_history_tables, reads_disagree)
+            const auto p = static_cast<std::size_t>(e.row.phase);  // a phase id (history_reads_disagree)
             ++phase_events_[p];
             phase_shown_[p] += shown(e.row.id) ? 1 : 0;
         }
@@ -724,7 +708,7 @@ db::Result<std::string> build_history_report(const db::WorldReader& world, Histo
         if (!view.ok()) {
             return view.error();
         }
-        if (const std::optional<std::string> why = reads_disagree(view.value(), tables.value())) {
+        if (const std::optional<std::string> why = history::history_reads_disagree(view.value(), tables.value())) {
             return db::Error{db::ErrorCode::corrupt_layer, *why};
         }
         const history::HistoryDigest digest = history::digest_history(view.value(), tables.value());

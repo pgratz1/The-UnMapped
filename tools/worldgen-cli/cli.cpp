@@ -46,11 +46,13 @@
 #include "worldgen/generate.hpp"
 #include "worldgen/history/data_checks.hpp"
 #include "worldgen/history/params.hpp"
+#include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/hashes.hpp"
 #include "worldgen/inspect/render.hpp"
 #include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/report.hpp"
+#include "worldgen/inspect/territory.hpp"
 #include "worldgen/stages/stage.hpp"
 #include "worldgen/version.hpp"
 
@@ -182,7 +184,7 @@ constexpr std::string_view GENERATE_USAGE =
     "Prints the absolute path of the written file.\n";
 
 constexpr std::string_view RENDER_USAGE =
-    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--out PATH]\n"
+    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME [--year Y]) [--out PATH]\n"
     "                           [--scale N] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
@@ -190,9 +192,14 @@ constexpr std::string_view RENDER_USAGE =
     "  --composite NAME    map: shaded relief from elevation, with water and river when present;\n"
     "                      biomes: shaded biome colours from layer and table biome, with water\n"
     "                      and river when present;\n"
-    "                      regions: the biomes composite with the borders of layer region in black\n"
+    "                      regions: the biomes composite with the borders of layer region in black;\n"
+    "                      territory: the regions composite with each region held in the year in the\n"
+    "                      colour of its holder (needs the history)\n"
+    "  --year Y            with --composite territory: the year, 0 to the history's end year\n"
+    "                      (default the end year, the present)\n"
     "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
-    "                      or <db file stem>.<composite>.png for --composite)\n"
+    "                      <db file stem>.<composite>.png for --composite, or\n"
+    "                      <db file stem>.territory-<year>.png for territory)\n"
     "  --palette P         auto (the layer's registered palette, default), gray, hypsometric,\n"
     "                      water, river, log2, direction, ids, signed, temperature, rainfall,\n"
     "                      biome or score; --layer only\n"
@@ -744,6 +751,7 @@ const CommandSpec RENDER{
         {"out", true},
         {"palette", true},
         {"scale", true},
+        {"year", true},
         {"force", false},
     },
 };
@@ -842,13 +850,20 @@ std::vector<inspect::BiomeColour> read_biome_colours(const db::WorldReader& worl
     return colours;
 }
 
-// The names --composite accepts, for its usage message: "map, biomes".
+// The --composite name of the territory image (P4-01 5.4, P0-04 amendment
+// 23): a CLI name only, not a Composite enumerator.
+constexpr std::string_view TERRITORY = "territory";
+
+// The names --composite accepts, for its usage message: "map, biomes,
+// regions, territory".
 std::string composite_name_list() {
     std::string names;
     for (const inspect::Composite c : inspect::ALL_COMPOSITES) {
         if (!names.empty()) names += ", ";
         names += inspect::composite_name(c);
     }
+    names += ", ";
+    names += TERRITORY;
     return names;
 }
 
@@ -862,8 +877,11 @@ Exit run_render(const Options& options) {
         usage_error("render needs exactly one of --layer and --composite");
     }
     std::optional<inspect::Composite> composite;
+    const bool territory = composite_option != nullptr && *composite_option == TERRITORY;
     if (composite_option != nullptr) {
-        composite = inspect::composite_from_name(*composite_option);
+        // territory reads the layers of the composite regions (P4-01 5.6).
+        composite = territory ? std::optional<inspect::Composite>(inspect::Composite::regions)
+                              : inspect::composite_from_name(*composite_option);
         if (!composite) {
             usage_error("invalid --composite '" + *composite_option + "'; expected " + composite_name_list());
         }
@@ -888,12 +906,23 @@ Exit run_render(const Options& options) {
         }
         scale = static_cast<std::uint32_t>(v);
     }
+    // --year (P0-04 amendment 23): territory only; its range is judged once
+    // the history is read.
+    const std::string* year_option = options.value("year");
+    std::optional<std::uint64_t> year_value;
+    if (year_option != nullptr) {
+        if (!territory) {
+            usage_error("--year applies to --composite territory only");
+        }
+        year_value = parse_integer_option("year", *year_option);
+    }
 
     const db::WorldReader world = open_world(db_path, progress);
     // The image name: the layer name, or the composite name (P0-04
     // amendment 16b: <db file stem>.map.png).
-    const std::string image_name =
-        composite ? std::string(inspect::composite_name(*composite)) : *layer_option;
+    const std::string image_name = territory   ? std::string(TERRITORY)
+                                   : composite ? std::string(inspect::composite_name(*composite))
+                                               : *layer_option;
     const db::LayerGrid grid = read_render_layer(world, composite ? std::string("elevation") : *layer_option, progress);
     std::optional<db::LayerGrid> water;
     std::optional<db::LayerGrid> river;
@@ -929,6 +958,28 @@ Exit run_render(const Options& options) {
                     std::string(inspect::palette_requirement(*palette)));
     }
 
+    // territory (P0-04 amendment 23 (b)): the history, then the year range.
+    std::optional<worldgen::history::LoadedHistory> loaded;
+    std::int64_t year = 0;
+    if (territory) {
+        progress.note("reading the history");
+        db::Result<worldgen::history::LoadedHistory> h = worldgen::history::load_history(world);
+        if (!h.ok()) {
+            fail_with(h.error());
+        }
+        loaded.emplace(std::move(h).value());
+        const std::int64_t end = loaded->timeline.end_year();
+        if (year_value) {
+            if (*year_value > static_cast<std::uint64_t>(end)) {
+                usage_error("--year " + *year_option + " is outside the history of world file '" + world.path() +
+                            "' (0 to " + db::format_i64(end) + ")");
+            }
+            year = static_cast<std::int64_t>(*year_value);
+        } else {
+            year = end;  // the present (P4-00 V6)
+        }
+    }
+
     const std::uint64_t width = static_cast<std::uint64_t>(grid.width) * scale;
     const std::uint64_t height = static_cast<std::uint64_t>(grid.height) * scale;
     if (width * height * 3U > MAX_PNG_RAW_BYTES) {
@@ -941,8 +992,9 @@ Exit run_render(const Options& options) {
         out = *path;
     } else {
         const std::string stem = db::path_to_utf8(db::path_from_utf8(db_path).stem());
+        const std::string name = territory ? image_name + "-" + db::format_i64(year) : image_name;
         out = db::path_to_utf8(db::path_from_utf8(default_output_dir()) /
-                               db::path_from_utf8(stem + "." + image_name + ".png"));
+                               db::path_from_utf8(stem + "." + name + ".png"));
     }
     const bool force = options.flag("force");
     check_output_location(out, force);  // fail before rendering
@@ -951,7 +1003,17 @@ Exit run_render(const Options& options) {
     if (composite) {
         progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, composite " +
                       image_name);
-        if (region) {
+        if (territory) {
+            const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
+            progress.note("year " + db::format_i64(year));
+            const inspect::TerritoryBase base =
+                inspect::TerritoryBase::build(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                              flow_dir ? &*flow_dir : nullptr, *biome, *region, colours);
+            const std::vector<inspect::Rgb> civ_colours = inspect::civilization_colours(loaded->tables);
+            const std::vector<std::optional<inspect::Rgb>> fill =
+                inspect::territory_fill(loaded->timeline, civ_colours, year);
+            rgb = inspect::render_territory(base, fill, scale);
+        } else if (region) {
             const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
             rgb = inspect::render_composite_regions(grid, water ? &*water : nullptr, river ? &*river : nullptr,
                                                     flow_dir ? &*flow_dir : nullptr, *biome, *region, scale,

@@ -1,0 +1,151 @@
+#pragma once
+
+// The timeline of spec P4-01: a read-only index over the history tables of a
+// world, built once, that answers what the world was like at a year Y in
+// [0, E] (section 4) and, independent of Y, the events of a civilization,
+// region or settlement and the events an event caused. Integer arithmetic
+// only; every list in ascending id or year (section 9).
+
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <string>
+#include <vector>
+
+#include "worldgen/db/reader.hpp"
+#include "worldgen/db/result.hpp"
+#include "worldgen/db/writer.hpp"
+#include "worldgen/history/digest.hpp"
+#include "worldgen/history/event_catalogue.hpp"
+
+namespace worldgen::history {
+
+// The holder of a region at a year (section 4).
+struct RegionHolding {
+    std::int64_t region = 0;
+    std::int64_t civ = 0;    // 0: free
+    std::int64_t since = 0;  // from_year of the interval; free: the largest to_year <= Y, or 0
+    std::int64_t event = 0;  // the interval's event; 0 when free
+    friend bool operator==(const RegionHolding&, const RegionHolding&) = default;
+};
+
+// The state of a settlement at a year (section 4): the census row of largest
+// year <= Y. Every field but `settlement` is 0 when it does not exist yet.
+struct SettlementState {
+    std::int64_t settlement = 0;
+    bool exists = false;
+    std::int64_t owner = 0, kind = 0, status = 0, population = 0, since = 0;
+    friend bool operator==(const SettlementState&, const SettlementState&) = default;
+};
+
+// Everything that depends on the year (section 4).
+struct YearState {
+    std::int64_t year = 0, phase = 0, age = 0;
+    std::vector<RegionHolding> regions;        // one per HistoryTables::regions row, ascending id
+    std::vector<SettlementState> settlements;  // one per settlement, index id - 1
+    std::vector<std::size_t> relations;        // indexes into Timeline::relations(), ascending
+    std::vector<std::int64_t> civilizations;   // alive at Y, ascending id
+    std::vector<std::int64_t> events;          // year <= Y <= end_year, ascending id
+    std::vector<std::int64_t> events_starting; // year == Y, ascending id
+    friend bool operator==(const YearState&, const YearState&) = default;
+};
+
+class Timeline {
+public:
+    // Preconditions: both from one world and checked (load_history). The
+    // timeline owns copies of what it indexes and keeps no reference into
+    // either argument. FatalError "timeline: <what>" if an id it indexes is
+    // out of range (a caller's bug; load_history makes sure it is not).
+    [[nodiscard]] static Timeline build(const HistoryView& view, const HistoryTables& tables);
+
+    [[nodiscard]] std::int64_t end_year() const noexcept { return end_year_; }
+    [[nodiscard]] bool valid_year(std::int64_t y) const noexcept { return y >= 0 && y <= end_year_; }
+
+    // At year Y. FatalError "timeline: year <Y> outside 0 to <E>" when
+    // !valid_year(Y); "timeline: no region <r>", "timeline: no settlement
+    // <s>", "timeline: no civilization <c>", "timeline: no event <e>" for an
+    // id the world does not have.
+    [[nodiscard]] RegionHolding region_holder(std::int64_t region, std::int64_t year) const;
+    [[nodiscard]] SettlementState settlement_state(std::int64_t settlement, std::int64_t year) const;
+    [[nodiscard]] YearState year_state(std::int64_t year) const;
+    // Reuses out's buffers; the same content as the returning overload.
+    void year_state(std::int64_t year, YearState& out) const;
+    [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
+    [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
+
+    // Independent of Y. Spans into the timeline's own storage, valid while it
+    // lives (and across a move of it).
+    [[nodiscard]] std::span<const std::int64_t> holder_change_years() const noexcept { return change_years_; }
+    [[nodiscard]] std::span<const db::RelationRow> relations() const noexcept { return relations_; }
+    [[nodiscard]] std::span<const std::int64_t> events_of_civilization(std::int64_t civ) const;
+    [[nodiscard]] std::span<const std::int64_t> events_of_region(std::int64_t region) const;
+    [[nodiscard]] std::span<const std::int64_t> events_of_settlement(std::int64_t settlement) const;
+    [[nodiscard]] std::span<const std::int64_t> effects(std::int64_t event) const;
+
+    // The region ids, ascending (one per HistoryTables::regions row).
+    [[nodiscard]] std::span<const std::int64_t> region_ids() const noexcept { return region_ids_; }
+    [[nodiscard]] std::size_t civilization_count() const noexcept { return civ_founded_.size(); }
+    [[nodiscard]] std::size_t settlement_count() const noexcept { return settlement_founded_.size(); }
+    [[nodiscard]] std::size_t event_count() const noexcept { return event_year_.size(); }
+
+private:
+    struct Span {  // a phase or age row: its years (inclusive) and id
+        std::int64_t start_year = 0, end_year = 0, id = 0;
+    };
+
+    void require_year(std::int64_t year) const;
+    [[nodiscard]] std::size_t region_position(std::int64_t region) const;
+    [[nodiscard]] RegionHolding holder_at(std::size_t position, std::int64_t year) const;
+    [[nodiscard]] SettlementState settlement_at(std::size_t index, std::int64_t year) const;
+    [[nodiscard]] std::int64_t phase_at(std::int64_t year) const;
+    [[nodiscard]] std::int64_t age_at(std::int64_t year) const;
+    void events_at(std::int64_t year, std::vector<std::int64_t>& events,
+                   std::vector<std::int64_t>& starting) const;
+
+    std::int64_t end_year_ = 0;
+    // Regions: ids ascending; region_control rows of position p are
+    // control_[control_offsets_[p]] .. control_[control_offsets_[p + 1] - 1],
+    // ascending from_year.
+    std::vector<std::int64_t> region_ids_;
+    std::vector<db::RegionControlRow> control_;
+    std::vector<std::size_t> control_offsets_;
+    std::vector<std::int64_t> change_years_;
+    // Settlements (index id - 1): founded year; census rows likewise by offsets.
+    std::vector<std::int64_t> settlement_founded_;
+    std::vector<db::SettlementCensusRow> census_;
+    std::vector<std::size_t> census_offsets_;
+    std::vector<db::RelationRow> relations_;
+    // Civilizations (index id - 1).
+    std::vector<std::int64_t> civ_founded_;
+    std::vector<std::optional<std::int64_t>> civ_ended_;
+    // Phases and ages, ascending start_year (they tile [0, E - 1]).
+    std::vector<Span> phases_;
+    std::vector<Span> ages_;
+    // Events (index id - 1): start and end year; the ids with end_year > year.
+    std::vector<std::int64_t> event_year_;
+    std::vector<std::int64_t> event_end_;
+    std::vector<std::int64_t> multi_year_;
+    // Per-entity event lists (civ and settlement index id - 1, region by
+    // position) and the effects (index event id - 1); each strictly ascending.
+    std::vector<std::vector<std::int64_t>> civ_events_;
+    std::vector<std::vector<std::int64_t>> region_events_;
+    std::vector<std::vector<std::int64_t>> settlement_events_;
+    std::vector<std::vector<std::int64_t>> effects_;
+};
+
+// Everything a reader of history needs, read once (P4-00 V3). Movable: the
+// timeline holds no reference into the other two.
+struct LoadedHistory {
+    HistoryTables tables;
+    HistoryView view;
+    Timeline timeline;
+};
+
+// P4-01 5.2, first failure returned: read_history_tables (its errors
+// unchanged), HistoryView::load (its errors unchanged), history_reads_disagree
+// (corrupt_layer), then Timeline::build. std::bad_alloc: out_of_memory, "out
+// of memory while building the timeline". Never throws for a bad file.
+[[nodiscard]] db::Result<LoadedHistory> load_history(const db::WorldReader& world);
+
+}  // namespace worldgen::history
