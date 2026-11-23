@@ -1939,15 +1939,22 @@ MONSTERS_RANGES_023 = (
     ("feed_max_permille", 0, 500), ("bold_on_permille", 1, 1000000), ("bold_off_permille", 0, 1000000),
     ("bold_permille", 0, 1000), ("bold_toll_permille", 0, 1000), ("outpost_permille", 0, 1000), ("outpost_max", 0, 16),
     ("outpost_quiet_years", 1, 100000))
-MONSTERS_023 = (("pressure", PRESSURE),) + tuple((n, INT) for n, _, _ in MONSTERS_RANGES_023)
+# (r1, 6.4.1) the raid target's tuning, appended after outpost_quiet_years.
+PREY_WEIGHT = REC(fields("hamlet:I village:I town:I city:I fortress:I"))
+PREY_RANGES_023 = (("prey_capital_permille", 0, 1000), ("prey_hop_permille", 0, 1000), ("prey_might_ref", 1, 10000000),
+                   ("prey_might_max_permille", 0, 10000))
+MONSTERS_023 = ((("pressure", PRESSURE),) + tuple((n, INT) for n, _, _ in MONSTERS_RANGES_023) +
+                (("prey_weight", PREY_WEIGHT),) + tuple((n, INT) for n, _, _ in PREY_RANGES_023))
 # 4.3, the "Shipped" column.
 MONSTERS_TUNING_023 = dict(
     pressure=dict(low=500, normal=1000, high=1600), living_permille=100, undead_min_dead=4000, undead_window_years=100,
-    hunt_hops=2, hunt_levy_permille=50, hunt_permille=150, hunt_memory_years=30, slay_max_permille=900,
+    hunt_hops=2, hunt_levy_permille=50, hunt_permille=20, hunt_memory_years=30, slay_max_permille=900,
     drive_permille=300, drive_years=100, displace_per_kpeople=100, displace_max_permille=900,
-    beast_decline_permille=200, people_floor=100, drag_k=100, drag_max_permille=200, feed_k=2, feed_max_permille=100,
+    beast_decline_permille=200, people_floor=100, drag_k=40, drag_max_permille=100, feed_k=2, feed_max_permille=100,
     bold_on_permille=1500, bold_off_permille=800, bold_permille=100, bold_toll_permille=10, outpost_permille=30,
-    outpost_max=2, outpost_quiet_years=200)
+    outpost_max=2, outpost_quiet_years=200,
+    prey_weight=dict(hamlet=1000, village=600, town=150, city=40, fortress=20), prey_capital_permille=250,
+    prey_hop_permille=500, prey_might_ref=1500, prey_might_max_permille=4000)
 # 4.1's table: id, name, plural, habitat (in the table's order), density, growth, menace, food.
 BEASTS_023 = (
     ("bear", "Bear", "bears", (("temperate_forest", 900), ("wet_woodland", 700), ("highland_moor", 400), ("alpine", 500),
@@ -1967,31 +1974,31 @@ BEASTS_023 = (
 # range, raid, toll min, toll max, kill_max, overruns, overrun, active, rewake, lifespan, max_alive, flare, hoard.
 MONSTERS_KINDS_023 = (
     ("dragon", "Dragon", "a dragon of the old world", False, "wild",
-     (("alpine", 800), ("highland_moor", 400), ("blighted_waste", 600)), 6, "elven",
+     (("alpine", 800), ("highland_moor", 400), ("blighted_waste", 600)), 60, "elven",
      ("{root} the Black", "{root} the Pale", "{root}"), ("The Lair of {root}", "{root}'s Deep"),
-     6000, 2, 30, 50, 200, 600, ("hamlet", "village", "town"), 150, 40, 2000, 0, 1, True, 40),
-    ("giant", "Giant", "a giant of the mountains", False, "wild", (("alpine", 900), ("highland_moor", 500)), 14,
+     6000, 2, 60, 50, 200, 600, ("hamlet", "village", "town"), 600, 40, 2000, 0, 1, True, 40),
+    ("giant", "Giant", "a giant of the mountains", False, "wild", (("alpine", 900), ("highland_moor", 500)), 25,
      "dwarven", ("{root} Stonehand", "{root}"), ("{root}'s Seat", "The Hall of {root}"),
-     1200, 1, 40, 30, 100, 150, ("hamlet", "village"), 60, 150, 3000, 2500, 2, True, 8),
+     1200, 1, 100, 30, 100, 150, ("hamlet", "village"), 900, 150, 3000, 2500, 2, True, 8),
     ("ogre", "Ogre", "an ogre", False, "wild", (("grassland", 400), ("heath", 600), ("steppe", 700), ("highland_moor", 300)),
-     10, "orcish", ("{root} the Glutton", "{root}"), ("{root}'s Larder", "The Pit of {root}"),
-     200, 1, 100, 20, 60, 40, ("hamlet",), 80, 80, 8000, 300, 3, False, 3),
+     40, "orcish", ("{root} the Glutton", "{root}"), ("{root}'s Larder", "The Pit of {root}"),
+     200, 1, 150, 20, 60, 40, ("hamlet",), 900, 80, 8000, 1000, 3, False, 3),
     ("troll", "Troll", "a troll of the hills", False, "wild",
-     (("highland_moor", 800), ("alpine", 600), ("temperate_forest", 400), ("heath", 300)), 17, "goblin",
+     (("highland_moor", 800), ("alpine", 600), ("temperate_forest", 400), ("heath", 300)), 50, "goblin",
      ("Old {root}", "{root}"), ("{root}'s Hollow", "The Den of {root}"),
-     300, 1, 80, 20, 80, 60, ("hamlet", "village"), 100, 120, 5000, 800, 3, False, 5),
-    ("undead", "Undead", "a host of the restless dead", True, "dead", (), 9000, "human",
+     300, 1, 150, 20, 80, 60, ("hamlet", "village"), 900, 120, 5000, 2000, 3, False, 5),
+    ("undead", "Undead", "a host of the restless dead", True, "dead", (), 15000, "human",
      ("The Host of {root}", "The Restless of {root}"), ("The Barrows of {root}", "{root}'s Howe"),
-     1500, 1, 60, 30, 120, 200, ("hamlet", "village"), 120, 200, 3000, 1000, 2, False, 5),
-    ("wyvern", "Wyvern", "a brood of wyverns", True, "wild", (("alpine", 700), ("heath", 500), ("highland_moor", 600)), 17,
+     1500, 1, 80, 30, 120, 200, ("hamlet", "village"), 900, 200, 3000, 1000, 2, False, 5),
+    ("wyvern", "Wyvern", "a brood of wyverns", True, "wild", (("alpine", 700), ("heath", 500), ("highland_moor", 600)), 50,
      "goblin", ("The {root} Brood", "The Brood of {root}"), ("The Eyrie of {root}", "{root}'s Crag"),
-     600, 2, 80, 20, 80, 50, ("hamlet",), 50, 60, 10000, 300, 2, False, 2),
+     600, 2, 120, 20, 80, 50, ("hamlet",), 900, 60, 10000, 1000, 2, False, 2),
 )
 SITE_FORMS_023 = {   # 4.4
     "dwarven": ["{root} Watch", "The Tower of {root}"], "elven": ["{root} Watch", "The Spire of {root}"],
     "faerie": ["{root} Watch", "The Thorn of {root}"], "goblin": ["{root} Lookout", "{root} Stockade"],
     "human": ["{root} Watch", "{root} Tower"], "orcish": ["{root} Stockade", "The Watch of {root}"]}
-GHOST_023 = (("ghost_permille", 0, 1000, 200), ("ghost_max_population", 0, 1000000, 300))   # 4.5
+GHOST_023 = (("ghost_permille", 0, 1000, 200), ("ghost_max_population", 0, 1000000, 600))   # 4.5 (r1: 600)
 # 10.2: kinds 44 to 55 with salience and template. Kinds 48 and 49 read {@settlement} where 10.2 has {settlement}:
 # neither kind has a role `settlement` (10.1), so 10.2's text fails template_problem (spec defect, READINGS D2).
 REPORT_ENTRIES_023 = (
@@ -2181,10 +2188,10 @@ def monster_check_messages(m, biomes=BIOME_KEYS_023, cultures=tuple(SITE_FORMS_0
     if m["naming_culture"] not in cultures:
         out.append("naming_culture '%s' is not a culture" % m["naming_culture"])
     if m["toll_min_permille"] > m["toll_max_permille"]:
-        out.append("toll_min_permille must not be above toll_max_permille")
+        out.append("toll_min_permille %d is above toll_max_permille %d" % (m["toll_min_permille"], m["toll_max_permille"]))
     for i, k in enumerate(m["overruns"]):
         if k in m["overruns"][:i]:
-            out.append("overruns[%d]: '%s' is already listed" % (i, k))
+            out.append("overruns[%d] '%s' repeats overruns[%d]" % (i, k, m["overruns"].index(k)))
     for i, f in enumerate(m["name_forms"]):
         if f == "{root}" and i != len(m["name_forms"]) - 1:
             out.append("name_forms[%d] '{root}' must be the last form" % i)
@@ -2194,7 +2201,7 @@ def monster_check_messages(m, biomes=BIOME_KEYS_023, cultures=tuple(SITE_FORMS_0
 def monsters_check_messages(t):
     """monsters_bold_ordered (4.3); the message is this reference's reading (READINGS D1)."""
     if t["bold_off_permille"] > t["bold_on_permille"]:
-        return ["bold_off_permille must not be above bold_on_permille"]
+        return ["bold_off_permille %d is above bold_on_permille %d" % (t["bold_off_permille"], t["bold_on_permille"])]
     return []
 
 
@@ -2229,12 +2236,13 @@ def check_spec_023(c, races, cultures):
     check_record(MONSTERS_023, mo, "history.monsters")
     c.eq("history.monsters fields in order (4.3)", list(mo), [n for n, _ in MONSTERS_023])
     c.eq("history.monsters shipped values (4.3)", mo, MONSTERS_TUNING_023)
-    for n, lo, hi in MONSTERS_RANGES_023:
+    for n, lo, hi in MONSTERS_RANGES_023 + PREY_RANGES_023:
         c.ok("history.monsters.%s inside int(%d, %d)" % (n, lo, hi), lo <= mo[n] <= hi)
+    c.ok("prey_weight inside int(0, 1000) (r1 4.3)", all(0 <= v <= 1000 for v in mo["prey_weight"].values()))
     c.ok("pressure factors inside int(0, 10000)", all(0 <= v <= 10000 for v in mo["pressure"].values()))
     c.eq("history.monsters passes monsters_bold_ordered", monsters_check_messages(mo), [])
     c.eq("monsters_bold_ordered at off = on + 1", monsters_check_messages(dict(mo, bold_off_permille=1501)),
-         ["bold_off_permille must not be above bold_on_permille"])
+         ["bold_off_permille 1501 is above bold_on_permille 1500"])
     c.eq("monsters_bold_ordered passes at off = on", monsters_check_messages(dict(mo, bold_off_permille=1500)), [])
     be = parsed_spec("beast")
     c.eq("beast ids in canonical order (4.1: bear 1 ... wolf 5)", sorted(be, key=lambda k: k.encode()),
@@ -2279,8 +2287,8 @@ def check_spec_023(c, races, cultures):
              ["biomes[0].biome 'sky' is not a biome"]),
             (dict(biomes=[dict(biome="heath", weight=0)]), ["a wild monster needs a biome with a weight above 0"]),
             (dict(naming_culture="trollish"), ["naming_culture 'trollish' is not a culture"]),
-            (dict(toll_min_permille=81), ["toll_min_permille must not be above toll_max_permille"]),
-            (dict(overruns=["hamlet", "hamlet"]), ["overruns[1]: 'hamlet' is already listed"]),
+            (dict(toll_min_permille=81), ["toll_min_permille 81 is above toll_max_permille 80"]),
+            (dict(overruns=["hamlet", "hamlet"]), ["overruns[1] 'hamlet' repeats overruns[0]"]),
             (dict(name_forms=["{root}", "Old {root}"]), ["name_forms[0] '{root}' must be the last form"])):
         c.eq("troll with %s" % sorted(edit), monster_check_messages(dict(d, **edit)), want)
     c.eq("a dead kind needs no habitat", monster_check_messages(mk["undead"]), [])
@@ -2294,7 +2302,7 @@ def check_spec_023(c, races, cultures):
          {k: dict(v, naming={a: b for a, b in v["naming"].items() if a != "site_forms"}) for k, v in cultures.items()}, old)
     pe = h["peoples"]
     c.eq("peoples ghost_* appended after crisis_small_salience (4.5)", list(pe.items())[-3:],
-         [("crisis_small_salience", 25), ("ghost_permille", 200), ("ghost_max_population", 300)])
+         [("crisis_small_salience", 25), ("ghost_permille", 200), ("ghost_max_population", 600)])
     rn = h["renaming"]
     c.eq("seven rules in rule order", [r["key"] for r in rn["rules"]],
          ["conquest", "capital_sack", "great_sack", "slaughter", "plague", "heartland", "ravage"])

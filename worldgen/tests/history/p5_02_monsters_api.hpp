@@ -5,25 +5,17 @@
 // set_wild, 7.4's StepContext::phase_trigger_event, 9.3's MonstersSubsystem::monster_name, 6.5's tension); the
 // rest is marked GUESS and listed in the test writer's report:
 //
-//   GUESS (11.2, 17 step 6 "HistoryResult members and writers"): stages::HistoryResult and history::HistoryResult
-//     gain `beasts`, `monster_kinds`, `beast_populations`, `monsters`, `sites` (vectors of db::BeastRow,
-//     db::MonsterKindRow, db::BeastPopulationRow, db::MonsterRow, db::SiteRow), and db::SettlementRow gains a last
-//     member `ending`; the row types' members are the columns of 11.1 in order, the nullable ones
-//     std::optional<std::int64_t> (monster.died, site.ended_year), grouped an std::int64_t (0 or 1).
-//   GUESS: db::StageWriter gains write_beast, write_monster_kind, write_beast_population, write_monster and
-//     write_site, as write_region_name (P5-12).
-//   GUESS (9.3): RenamingSubsystem's constructor takes a fourth parameter, `const MonstersSubsystem*` (null: no
-//     monster is installed; a rule naming a monster role is then never met), declared in
-//     worldgen/history/renaming.hpp; MonstersSubsystem is declared in worldgen/history/monsters.hpp (5).
-//   GUESS (3): chance_ppb is declared beside chance_pm and chance_ppm (worldgen/history/peoples.hpp) as
-//     history::chance_ppb(std::uint64_t u, std::int64_t p).
-//   GUESS (13): the Timeline's SettlementState gains `ending` (the spec's text) and the two structs are
-//     history::SiteState and history::MonsterState in worldgen/history/timeline.hpp; Timeline::monster_count()
-//     gives the number of monster rows (the dumps' loop); HistoryTables gains `sites`, `monsters` and
-//     `beast_populations`; StageContext gains write_beast ... write_site (the fixture builder).
-//   GUESS (9.1, P3-02 4.5's rule): NameKind gains `monster` and `site` after `settlement`; CultureNaming gains
-//     `site_forms` (the culture field) and `monster_forms` (no culture field: the subsystem sets it to the kind's
-//     name_forms), read by name_forms(naming, kind); name_stream and name_kind_text name them.
+//
+// Checked at integration (phase 2, against origin/p5/02-impl-r1): every guess below held as written except one.
+//   (11.2) HistoryResult gains beasts, monster_kinds, beast_populations, monsters, sites; SettlementRow::ending.
+//   db::StageWriter / StageContext gain write_beast ... write_site.
+//   (9.3) NOT a fourth constructor parameter: RenamingSubsystem::set_monsters(const MonsterNames*) installs the
+//     monsters' roots (MonsterNames, worldgen/history/renaming.hpp, implemented by MonstersSubsystem); without it
+//     a monster name_role gives no {name}.
+//   (3) history::chance_ppb is declared in worldgen/history/monsters.hpp.
+//   (13) SettlementState::ending, history::SiteState and MonsterState, Timeline::monster_count() (size_t) and
+//     site_count(); HistoryTables::sites, monsters, beast_populations.
+//   (9.1) NameKind monster and site; CultureNaming::site_forms and monster_forms.
 
 #include <cstdint>
 #include <optional>

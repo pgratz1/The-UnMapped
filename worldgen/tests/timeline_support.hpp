@@ -362,7 +362,7 @@ inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nu
         for (const std::int64_t site : t->sites_existing(st.year)) {
             if (t->site_at(site, st.year).open) out += "site " + num(site) + "\n";
         }
-        for (std::int64_t m = 1; m <= t->monster_count(); ++m) {   // GUESS Timeline::monster_count
+        for (std::int64_t m = 1; m <= static_cast<std::int64_t>(t->monster_count()); ++m) {
             const wh::MonsterState ms = t->monster_at(m, st.year);
             if (ms.alive) {
                 out += "monster " + num(m) + " " + (ms.awake ? "1" : "0") + " " + num(ms.lair_site) + " " +

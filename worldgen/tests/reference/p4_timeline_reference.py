@@ -91,7 +91,7 @@ INPUTS_P4_01 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "
 INPUTS_P4_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-03-tests", "inputs")
 INPUTS_P5_12 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-int", "inputs")
 # P5-02 (0.23.0): the report reference's reference-built worlds (p3_report_reference.py build-inputs)
-INPUTS_P5_02 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-tests", "report-inputs")
+INPUTS_P5_02 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-int", "report-inputs")
 SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3

@@ -308,7 +308,9 @@ std::map<std::int64_t, std::int64_t> derived_endings(const Tables& t) {
 // overrun at most, one slaying or death), 6 (the lairs of living monsters open, of ended monsters ended in the
 // death year; a site's settlement ruined or faded), 7 (an overrun settlement's ruin event is the overrun; overruns
 // at most a quarter of the settlements), 9 (an open outpost's founder alive) and 10 (ending) on rows.
-std::vector<std::string> violations(const Tables& t) {
+// quarter = false leaves out invariant 7's quarter bound (P5-00 8.3), a calibration target that no rule enforces:
+// the stress fixture monsters-small (overrun_permille 1000, r1's prey on small places, 26.2) exceeds it by design.
+std::vector<std::string> violations(const Tables& t, bool quarter = true) {
     std::vector<std::string> out;
     const auto k = kind_ids(t);
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> last;
@@ -385,7 +387,9 @@ std::vector<std::string> violations(const Tables& t) {
         const Row* x = stl[at(e, 6)];
         if (x != nullptr && at(*x, 10) == 3 && at(*x, 13) != at(e, 0)) out.push_back("7: overrun is not the ruin event");
     }
-    if (4 * overruns > static_cast<std::int64_t>(t.settlement.size())) out.push_back("7: overruns above a quarter");
+    if (quarter && 4 * overruns > static_cast<std::int64_t>(t.settlement.size())) {
+        out.push_back("7: overruns above a quarter");
+    }
     std::map<std::int64_t, bool> alive;
     for (const Row& c : t.civilization) alive[at(c, 0)] = c[8].type == db::ValueType::null;
     for (const Row& s : t.site) {
@@ -413,7 +417,7 @@ void check_against(const MCase& g, const Tables& t) {
     CHECK(ending_hash(t) == g.ending);
     CHECK(m_line(t) == g.M);
     CHECK(s_line(t) == g.S);
-    CHECK(violations(t) == std::vector<std::string>{});
+    CHECK(violations(t, g.data != "monsters-small") == std::vector<std::string>{});
 }
 
 std::string world_of(const MCase& g) {
@@ -529,6 +533,75 @@ TEST_CASE("P5-02 7.5 I0: with the zero tuning the history tables equal those wit
             }
         }
     }
+}
+
+// 19.1 item 3 on a world where boldness occurs (phase 1 found none on the fixtures): geo-seed-0-512 has two
+// beasts_bold events with the shipped tuning of 0.23.0 (r1). Each is checked against 6.2.3 from the rows.
+TEST_CASE("P5-02 6.2.3: beasts_bold on geo-seed-0-512: settlement, owner, beast, toll and one per region and year") {
+    const MCase& g = mcase("geo-seed-0-512");
+    const Tables t = tables_of_world(open_world(world_of(g)));
+    const auto k = kind_ids(t);
+    std::map<std::int64_t, const Row*> stl;
+    for (const Row& s : t.settlement) stl[at(s, 0)] = &s;
+    std::map<std::int64_t, std::int64_t> menace;
+    for (const Row& b : t.beast) menace[at(b, 0)] = at(b, 4);
+    std::map<std::int64_t, std::vector<const Row*>> parts, vals;
+    for (const Row& p : t.event_participant) parts[at(p, 0)].push_back(&p);
+    for (const Row& v : t.event_value) vals[at(v, 0)].push_back(&v);
+    std::map<std::int64_t, std::int64_t> phase_kind;
+    for (const Row& p : t.phase) phase_kind[at(p, 0)] = at(p, 2);
+    std::set<std::pair<std::int64_t, std::int64_t>> region_years;
+    std::int64_t n = 0;
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k.at("beasts_bold")) continue;
+        ++n;
+        const std::int64_t id = at(e, 0), year = at(e, 1), region = at(e, 5), sid = at(e, 6);
+        CAPTURE(id);
+        CHECK(phase_kind[at(e, 4)] != 2);   // quiet steps write none (6.2.3; phase kind 2 quiet)
+        CHECK(region_years.insert({region, year}).second);   // at most one per region per year
+        REQUIRE(stl.count(sid) == 1U);
+        CHECK(at(*stl[sid], 4) == region);   // t lies in r
+        std::int64_t ps = 0, pc = 0;
+        for (const Row* p : parts[id]) {
+            if (at(*p, 3) == 4) ps = at(*p, 4);
+            if (at(*p, 3) == 3) pc = at(*p, 4);
+        }
+        CHECK(ps == sid);
+        CHECK(pc >= 1);   // the owner (P3-05: every standing settlement has one)
+        REQUIRE(vals[id].size() == 2U);   // 10.1: beast, dead
+        const std::int64_t beast = at(*vals[id][0], 2), dead = at(*vals[id][1], 2);
+        REQUIRE(menace.count(beast) == 1U);
+        CHECK(menace[beast] > 0);   // the species of the largest B x menace is a predator
+        CHECK(dead >= 0);
+    }
+    CHECK(n == 2);
+}
+
+// 19.2 resume (P3-04 16.3 item 21): a world generated --until chronology and resumed through the history stage
+// equals the world generated in one run, every history table (the five of schema 9 included), on a 512 world with
+// --monster-pressure high (seed 7, the pressure of the world-hashes case), where raids, sleeps and hunts happen.
+TEST_CASE("P5-02 19.2: resume from a --until chronology world equals one run (seed 7, 512, --monster-pressure high)") {
+    chrono_api::Params p = chrono_test::params_with(6000, chrono_test::races_of_text("all"));
+    p.pressure = "high";
+    static dbtest::TempDir dir("monsters-resume");
+    const std::string part = dir.file("part.db"), full = dir.file("full.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(7, 512, p, shipped(), std::string("chronology")),
+                                     shipped(), part, db::Overwrite::refuse)
+                .ok());
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(7, 512, p, shipped()), shipped(), full,
+                                     db::Overwrite::refuse)
+                .ok());
+    const db::WorldReader r = open_world(part);
+    const Tables resumed = eng::history_stage(shipped(), eng::inputs_from_world(r, shipped()));
+    const Tables one = tables_of_world(open_world(full));
+    CHECK(!one.monster.empty());
+    CHECK(count_kind(one, kind_ids(one).at("monster_raid")) > 0);
+    for (const char* t : {"beast", "monster_kind", "beast_population", "monster", "site", "settlement", "event",
+                          "event_participant", "event_value", "event_cause", "phase"}) {
+        CAPTURE(t);
+        CHECK(resumed.of(t) == one.of(t));
+    }
+    CHECK(resumed == one);
 }
 
 TEST_CASE("P5-02 19.2: the history of a 512 world is the same with 1 and 3 threads") {

@@ -87,8 +87,8 @@ SCHEMA_MD = os.path.join(REPO, "docs", "specs", "schema.md")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-01-tests", "report-inputs")
 INPUTS_020 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-07-tests", "inputs")
 DEFAULT_INPUTS_021 = DEFAULT_INPUTS
-DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-tests",
-                                  "report-inputs")
+DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-int",
+                                  "report-inputs")   # r1 histories (6.4.1), rebuilt by build-inputs
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
 GENERATOR_VERSION = "0.23.0"
@@ -98,6 +98,19 @@ V2 = True
 V3 = True   # P3-07 r21 26 (format v3, generator 0.22.0); V3 implies V2's rules
 V4 = True   # P5-02 12 (format v4, generator 0.23.0, schema 9); V4 implies V3's rules
 SUMMARY_MONSTER_LINES = 2   # P5-02 12.4: a constant of P3-07 section 8
+# P5-02 r1 12.9: the summary line limit (constants of P3-07 section 8). SUMMARY_LINES_CAP is the lead's ruling of
+# 2026-11-23 (L = min(1390, ...)), as is the rule that at level summary with C > SUMMARY_LINES_CIVS the [monsters]
+# block prints its count line only (O is counted after that rule).
+SUMMARY_LINES_MAX, SUMMARY_LINES_PER_CIV, SUMMARY_LINES_CIVS, SUMMARY_BUDGET_MIN = 790, 40, 16, 100
+SUMMARY_LINES_CAP = 1390
+
+
+def summary_budget(C, O, A, P, lines_max=None):
+    """12.9: B = min(250, max(100, L - O - F)), L = min(1390, 790 + 40 x max(0, C - 16)), F = 4 + A + 2P."""
+    L = min(SUMMARY_LINES_CAP, (SUMMARY_LINES_MAX if lines_max is None else lines_max)
+            + SUMMARY_LINES_PER_CIV * max(0, C - SUMMARY_LINES_CIVS))
+    F = 4 + A + 2 * P
+    return min(SUMMARY_BUDGET, max(SUMMARY_BUDGET_MIN, L - O - F))
 
 READINGS = """
 R1 6.6 milestones: a milestone line carries the note of history_note(view, event, c) in the form of 21.4,
@@ -723,8 +736,9 @@ def summary_candidates(w, fr):
     return summary24(w, fr, candidates_only=True)
 
 
-def summary24(w, fr, candidates_only=False):
-    """24.3: (T, the summary set)."""
+def summary24(w, fr, candidates_only=False, budget=None):
+    """24.3: (T, the summary set); budget B of 12.9 (default SUMMARY_BUDGET)."""
+    B = SUMMARY_BUDGET if budget is None else budget
     ev = w.ev
     excl_kinds = kset(w, ("claim", "claim_settlements", "battle", "battle_at_pass", "plague_spread", "quiet_stretch"))
     quiet = w.K["quiet_stretch"]
@@ -771,7 +785,7 @@ def summary24(w, fr, candidates_only=False):
         for e in cands:
             if e[7] >= t:
                 c_t |= units[e[0]]
-        if len(floor | c_t) <= SUMMARY_BUDGET:
+        if len(floor | c_t) <= B:
             T, shown = t, floor | c_t
             break
     if shown is None:
@@ -861,6 +875,14 @@ class Digest:
         self.regions_held = {c: sum(1 for r in w.t["region_control"] if r[3] == c and r[2] is None) for c in civs}
         self.frames = Frames(w)
         self.T, self.shown = summary24(w, self.frames)
+        self.budget = SUMMARY_BUDGET
+        if V4:   # 12.9: O counted on the summary's own lines outside [chronicle], then the set chosen with B
+            pre, post = outside_lines(w, self, "summary")
+            self.O = len(pre) + len(post)
+            self.budget = summary_budget(len(w.t["civilization"]), self.O, len(w.t["age"]), len(w.t["phase"]),
+                                         lines_max=LINES_MAX_SEAM[0])
+            if self.budget != SUMMARY_BUDGET:
+                self.T, self.shown = summary24(w, self.frames, budget=self.budget)
         # 7.5
         self.N = sum(1 for r in w.t["region"] if not is_islet(r))
         self.shares = {}
@@ -873,8 +895,18 @@ class Digest:
 # The report (section 6)
 # ---------------------------------------------------------------------------
 
+LINES_MAX_SEAM = [None]   # a test seam: SUMMARY_LINES_MAX replaced (the C++ summary_budget's lines_max)
+
+
 def report(w, level):
     d = Digest(w)
+    pre, post = outside_lines(w, d, level)
+    o = pre + chronicle_lines(w, d, level) + post
+    return "".join(finish(line) + "\n" for line in o).encode("latin-1")
+
+
+def outside_lines(w, d, level):
+    """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
     o = ["# worldgen history v4" if V4 else "# worldgen history v3" if V3 else "# worldgen history v2" if V2 else
          "# worldgen history v1", "level = %s" % level]
@@ -909,7 +941,37 @@ def report(w, level):
         o.append("[phases]")
         for p in t["phase"]:
             o.append("p%d a%d %s %s" % (p[0], p[1], PHASE_WORD[p[2]], phase_text(p)))
-    o.append("[chronicle]")
+    post = []
+    post.append("[civilizations]")
+    if not t["civilization"]:
+        post.append("(none)")
+    for c in t["civilization"]:
+        post += civ_block(w, d, c, level)
+    post += present(w, d, level)
+    if V4:   # P5-02 12.4, 12.5
+        post += monster_lines(w, level)
+        post += site_lines(w, level)
+    post.append("[stats]")
+    post += ["%s = %d" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
+    return o, post
+
+
+def phase_texts(w):
+    t = w.t
+    per_phase = {}
+    for e in t["event"]:
+        per_phase[e[4]] = per_phase.get(e[4], 0) + 1
+
+    def phase_text(p):
+        trig = "; trigger e%d" % p[5] if p[5] else ""
+        return "%d-%d, %s%s; %s" % (p[3], p[4], pl(p[4] - p[3] + 1, "year"), trig, pl(per_phase.get(p[0], 0), "event"))
+    return phase_text
+
+
+def chronicle_lines(w, d, level):
+    t = w.t
+    phase_text = phase_texts(w)
+    o = ["[chronicle]"]
     T = 0 if level == "full" else d.T
     shown = None if level == "full" else d.shown
     o.append("threshold = %d" % T)
@@ -932,18 +994,7 @@ def report(w, level):
                 o.append(event_line(w, e))
             if hidden:
                 o.append("(%s not shown)" % pl(hidden, "more event"))
-    o.append("[civilizations]")
-    if not t["civilization"]:
-        o.append("(none)")
-    for c in t["civilization"]:
-        o += civ_block(w, d, c, level)
-    o += present(w, d, level)
-    if V4:   # P5-02 12.4, 12.5
-        o += monster_lines(w, level)
-        o += site_lines(w, level)
-    o.append("[stats]")
-    o += ["%s = %d" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
-    return "".join(finish(line) + "\n" for line in o).encode("latin-1")
+    return o
 
 
 def event_line(w, e):
@@ -1240,6 +1291,8 @@ def monster_lines(w, level):
     raids = monster_raids(w)
     if level == "full":
         shown, more = ms, 0
+    elif len(w.t["civilization"]) > SUMMARY_LINES_CIVS:   # 12.9 (the lead's ruling): the count line only
+        shown, more = [], 0
     else:
         alive = sorted((m for m in ms if m[9] in (1, 2)), key=lambda m: (-m[10], m[0]))
         shown, more = alive[:SUMMARY_MONSTER_LINES], max(0, len(alive) - SUMMARY_MONSTER_LINES)
@@ -2045,10 +2098,41 @@ def check_fixture_facts_v2(c):
          "The claim, since 1400, was to Corbridge in Fen Hollow.")
 
 
+def check_budget_r1(c):
+    """P5-02 r1 12.9: B at its three branches, the cap on L, and the budget chosen with O and F of a fixture."""
+    c.eq("12.9 B: the spec's seed 29 (C 15, O 557, A 6, P 31) = 161", summary_budget(15, 557, 6, 31), 161)
+    c.eq("12.9 B: SUMMARY_BUDGET when L - O - F >= 250", summary_budget(10, 400, 6, 31), 250)
+    c.eq("12.9 B: L - O - F at 250 exactly", summary_budget(10, 790 - 4 - 6 - 62 - 250, 6, 31), 250)
+    c.eq("12.9 B: SUMMARY_BUDGET_MIN when L - O - F < 100", summary_budget(10, 700, 6, 31), 100)
+    c.eq("12.9 B: L - O - F at 100 exactly", summary_budget(10, 790 - 72 - 100, 6, 31), 100)
+    c.eq("12.9 L grows by 40 a realm above 16: C 20, O 900", summary_budget(20, 900, 6, 31), 950 - 900 - 72)
+    c.eq("12.9 L capped at SUMMARY_LINES_CAP 1390: C 40, O 1200", summary_budget(40, 1200, 6, 31), 1390 - 1200 - 72)
+    if not V4:
+        return
+    w = load_world(fixture_db("h4-budget"))
+    d = Digest(w)
+    F = 4 + len(w.t["age"]) + 2 * len(w.t["phase"])
+    c.eq("H4: B = 250 at the shipped constants", d.budget, 250)
+    try:
+        LINES_MAX_SEAM[0] = d.O + F + 200 - SUMMARY_LINES_PER_CIV * max(0, len(w.t["civilization"]) - 16)
+        d2 = Digest(w)
+        c.eq("H4 with a small L (seam): B = L - O - F = 200", d2.budget, 200)
+        T2, shown2 = summary24(w, d2.frames, budget=200)
+        c.eq("H4 with B = 200: the set chosen with B", (d2.T, d2.shown), (T2, shown2))
+        c.ok("H4 with B = 200: at most 200 events shown, threshold above 77", len(d2.shown) <= 200 and d2.T > 77)
+        text = report(w, "summary").decode("latin-1").splitlines()
+        c.ok("H4 with B = 200: the summary has at most L lines", len(text) <= LINES_MAX_SEAM[0])
+        LINES_MAX_SEAM[0] = 0
+        c.eq("H4 with L = 0 (seam): B = SUMMARY_BUDGET_MIN", Digest(w).budget, SUMMARY_BUDGET_MIN)
+    finally:
+        LINES_MAX_SEAM[0] = None
+
+
 def cmd_check(argv):
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else DEFAULT_INPUTS
     c = Checker()
     check_fixture_facts(c)
+    check_budget_r1(c)
     if V2:
         check_fixture_facts_v2(c)
     for name in fixture_names():

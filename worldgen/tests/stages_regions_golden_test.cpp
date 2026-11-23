@@ -941,13 +941,13 @@ TEST_CASE("P1-06 2: the stage reads neither coast_dist, temperature, rainfall no
 
 // --- Schema 5 (P0-02 amendment 17; 10.1 test 6) ------------------------------------------------------
 
-TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 9 since P5-02: 42 pages, 172032 bytes)") {
+TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 9 since P5-02: 43 pages, 176128 bytes)") {
     CHECK(worldgen::db::SCHEMA_VERSION == 9);
     dbtest::TempDir dir("regions-schema");
     REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 172032U);   // P5-02 11.1: 42 pages
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 176128U);   // P5-02 11.1 (r1): 43 pages
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"42"}});

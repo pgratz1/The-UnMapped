@@ -23,6 +23,7 @@
 
 #include "history_report_checks.hpp"
 #include "history_report_fixture.hpp"
+#include "worldgen/history/digest.hpp"
 #include "worldgen/inspect/history_report.hpp"
 
 namespace {
@@ -160,6 +161,37 @@ TEST_CASE("P5-02 12.2, 12.7, 10.3: the chronicle names monsters and sites; the m
 TEST_CASE("P5-02 12.8: the summary grows by at most 5 lines of [monsters] and 2 of [sites]") {
     CHECK(block(text(HistoryLevel::summary), "[monsters]").size() + 1U <= 5U);   // the head line included
     CHECK(block(text(HistoryLevel::summary), "[sites]").size() + 1U <= 2U);
+}
+
+// r1 12.9 (19.1 item 15, 26.2): B = min(250, max(100, L - O - F)), L = min(1390, 790 + 40 max(0, C - 16)),
+// F = 4 + A + 2P, at each branch; the values are the spec's worked example and hand-computed ones (the reference's
+// check_budget_r1 asserts the same).
+TEST_CASE("P5-02 r1 12.9: the summary budget B at its three branches and L's cap") {
+    namespace wh = worldgen::history;
+    CHECK(wh::SUMMARY_LINES_MAX == 790);
+    CHECK(wh::SUMMARY_LINES_PER_CIV == 40);
+    CHECK(wh::SUMMARY_LINES_CIVS == 16);
+    CHECK(wh::SUMMARY_BUDGET_MIN == 100);
+    CHECK(wh::SUMMARY_LINES_CAP == 1390);
+    CHECK(wh::summary_budget(15, 557, 6, 31) == 161);                       // the spec's seed 29
+    CHECK(wh::summary_budget(10, 400, 6, 31) == 250);                       // SUMMARY_BUDGET
+    CHECK(wh::summary_budget(10, 790 - 4 - 6 - 62 - 250, 6, 31) == 250);    // L - O - F = 250 exactly
+    CHECK(wh::summary_budget(10, 790 - 72 - 251, 6, 31) == 250);
+    CHECK(wh::summary_budget(10, 790 - 72 - 249, 6, 31) == 249);
+    CHECK(wh::summary_budget(10, 700, 6, 31) == 100);                       // SUMMARY_BUDGET_MIN
+    CHECK(wh::summary_budget(10, 790 - 72 - 100, 6, 31) == 100);
+    CHECK(wh::summary_budget(10, 790 - 72 - 101, 6, 31) == 101);
+    CHECK(wh::summary_budget(20, 900, 6, 31) == 950 - 900 - 72);            // 40 lines a realm above 16
+    CHECK(wh::summary_budget(16, 600, 6, 31) == 790 - 600 - 72);            // C = 16 adds nothing
+    CHECK(wh::summary_budget(40, 1200, 6, 31) == 1390 - 1200 - 72);         // L capped at 1390 (not 1750)
+    CHECK(wh::summary_budget(10, 400, 6, 31, 500) == 500 - 400 - 72);       // the lines_max seam
+}
+
+TEST_CASE("P5-02 r1 12.9: on H13 (four realms) the summary stays within L = 790 and keeps its [monsters] lines") {
+    const std::string s = text(HistoryLevel::summary);
+    const std::vector<std::string> lines = hrtest::lines_of(s);
+    CHECK(lines.size() <= 790U);
+    CHECK(contains_line(lines, "[monsters]"));
 }
 
 }  // TEST_SUITE

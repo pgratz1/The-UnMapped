@@ -711,7 +711,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
     // P1-04 12, P0-02 amendment 15: 8 pages, root pages: sqlite_schema, meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate.
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 172032U);  // 42 pages since schema 9 (P5-02 11.1; 35 at schema 8)
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 176128U);  // 43 pages since schema 9 (P5-02 11.1 r1; 35 at schema 8)
 }
 
 TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {
