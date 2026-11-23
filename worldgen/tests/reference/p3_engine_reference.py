@@ -1641,6 +1641,27 @@ def settlement_ending(status, ruin_event, kind_key_of, causes_of):
     return 5
 
 
+def ruin_events_from_rows(res):
+    """{settlement id: the event that ruined it} for every ruined or faded settlement. A faded row's ruin_event is
+    0 (P3-04 9.2 r3: ruined_year and ruin_event hold only while ruined), so for status 4 it is the cause of the
+    settlement's ruin_faded event (READINGS of p5_02_monsters_reference E1)."""
+    key = {k[0]: k[1] for k in res["event_kind"]}
+    causes = {}
+    for e, c in res["event_cause"]:
+        causes.setdefault(e, []).append(c)
+    faded = {}
+    for e in res["event"]:
+        if key[e[3]] == "ruin_faded":
+            faded[e[6]] = min(causes[e[0]])
+    out = {}
+    for s in res["settlement"]:
+        if s[10] == 3:
+            out[s[0]] = s[13]
+        elif s[10] == 4:
+            out[s[0]] = faded[s[0]]
+    return out
+
+
 def endings_from_rows(res):
     """{settlement id: ending} by 8.3 from res's event, event_kind and event_cause rows."""
     key = {k[0]: k[1] for k in res["event_kind"]}
@@ -1648,7 +1669,8 @@ def endings_from_rows(res):
     causes = {}
     for e, c in res["event_cause"]:
         causes.setdefault(e, []).append(c)
-    return {s[0]: settlement_ending(s[10], s[13], lambda e: key[kind[e]], lambda e: causes.get(e, []))
+    ruin = ruin_events_from_rows(res)
+    return {s[0]: settlement_ending(s[10], ruin.get(s[0], 0), lambda e: key[kind[e]], lambda e: causes.get(e, []))
             for s in res["settlement"]}
 
 

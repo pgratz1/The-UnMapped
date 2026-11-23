@@ -86,7 +86,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.22.0"  # P5-12: P3-02 r19 names, kind 43 in the catalogue; no peoples rule (P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
+GENERATOR_VERSION = "0.23.0"  # P5-02: the ghost rule (8.2), the WildView seam (7.1, 7.2), settlement.ending (P5-12: P3-02 r19 names, kind 43 in the catalogue; no peoples rule (P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
 ONE = 1 << 32
 
 # ---------------------------------------------------------------------------
@@ -118,11 +118,14 @@ FLAGS = dict(
     cores=True,         # P3-02 r10 12.2: civilization and settlement names avoid near cores (K)
     # P3-05 r16 23 (generator 0.20.0, P3-11)
     awaken_pop=True,    # 23.2: the awakening settlement starts at max(founding, min(awakening_population, C(H, r)))
+    # P5-02 (generator 0.23.0)
+    ghost=True,         # P5-02 8.2: a small place struck by famine or plague may be left standing (hist.peoples.ghost)
 )
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")   # 0.21.0, 0.22.0: no peoples rule
+FLAGS_023 = ("ghost",)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def flags_for(v):
@@ -130,7 +133,7 @@ def flags_for(v):
     if v not in VERSIONS:
         raise ValueError(v)
     i = VERSIONS.index(v)
-    return {k: (i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
+    return {k: (i >= 7 if k in FLAGS_023 else i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
             for k in FLAGS}
 
 
@@ -153,7 +156,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.22.0")
+    use_version("0.16.0" if on else "0.23.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -299,7 +302,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
@@ -319,13 +322,15 @@ COMPILED_020 = COMPILED_019 + (pe.KIND_39, pe.KIND_40)
 COMPILED_021 = COMPILED_020 + (pe.KIND_41, pe.KIND_42)
 # P3-04 r21 23.2 (generator 0.22.0): kind 43 region_renamed (P5-12 7.1).
 COMPILED_022 = COMPILED_021 + (pe.KIND_43,)
-COMPILED = COMPILED_022
+# P5-02 10.1 (generator 0.23.0): kinds 44 to 55.
+COMPILED_023 = COMPILED_022 + pe.KINDS_023
+COMPILED = COMPILED_023
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
-            42: COMPILED_021, 43: COMPILED_022}[len(pe.COMPILED)]
+            42: COMPILED_021, 43: COMPILED_022, 55: COMPILED_023}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31, 38}   # 31: r6, an abandonment of 9.2 in Q1
 
@@ -384,7 +389,7 @@ def report_events_messages(report):
 # 3.3 streams and helpers
 # ---------------------------------------------------------------------------
 
-STREAMS = ("hist.peoples.home", "hist.peoples.civs", "hist.peoples.found", "hist.peoples.outward",
+STREAMS = ("hist.peoples.ghost", "hist.peoples.home", "hist.peoples.civs", "hist.peoples.found", "hist.peoples.outward",
            "hist.peoples.famine", "hist.peoples.famine_toll", "hist.peoples.plague", "hist.peoples.plague_toll",
            "hist.peoples.plague_spread", "hist.peoples.abandon", "hist.peoples.crisis", "hist.peoples.split")
 
@@ -417,6 +422,7 @@ class Data:
         content = pdr.load_root(root, kinds=("history", "race"))
         hist = dict(content["history"])
         self.peoples = hist["peoples"]
+        self.monsters = hist.get("monsters")   # P5-02 4.3 (0.23.0); an older root has none
         self.race = {}
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
@@ -829,6 +835,10 @@ class World(pe.World):
         self.intensity = self.t["intensity"][inp.params["intensity"]]
         self.race_key = {r[0]: r[1] for r in inp.races}
         self.checks = []           # in-run invariant failures (14 items 3, 4, 5)
+        # P5-02 7.1, 7.2: the WildView (set_wild; None: growth 1000, nothing shunned) and the ghost log
+        self.wild = None
+        self.ghost_log = []        # (year, settlement, strike event, abandonment event)
+        self.shun_log = []         # (year, civ, region) of every candidate left out because it is shunned
 
     # --- names (P3-02 4.3; r10 12.2 from 0.19.0: K, the cores of the history stage's names)
     def hist_name(self, naming, culture_id, kind, cnum, entity):
@@ -1141,10 +1151,23 @@ class World(pe.World):
             if recover:
                 self.recover(s)
 
+    def set_wild(self, view):
+        """P5-02 7.1: PeoplesSubsystem::set_wild(const WildView*)."""
+        self.wild = view
+
+    def wild_growth(self, rid):
+        """G of P5-02 7.1: the view's growth_permille(region), 1000 without a view."""
+        return self.wild.growth_permille(rid) if self.wild is not None else 1000
+
+    def shunned(self, rid):
+        return self.wild is not None and self.wild.shunned(rid)
+
     def grown(self, s, cs):
-        """9.1: one year of growth or decline of s with share cs (r6: the target T_s = min(C_s, kind_cap))."""
+        """9.1: one year of growth or decline of s with share cs (r6: the target T_s = min(C_s, kind_cap)).
+        P5-02 7.1: the rate times G / 1000, d = (P g G (C - P) + 500 1000 C) div (1000 1000 C)."""
         p = s["population"]
         g = self.pd.race[self.race_of(s)]["growth"]
+        G = self.wild_growth(s["region"])
         cap = self.kind_cap(s)
         if FLAGS["cap"] and p > cap:
             # 14 item 3 (r6): a settlement above its kind cap at the start of a year loses at least 1 in it
@@ -1155,7 +1178,7 @@ class World(pe.World):
         if FLAGS["cap"]:
             ts = min(cs, cap)
             if p < ts:
-                d = (p * g * (cs - p) + 500 * cs) // (1000 * cs)
+                d = (p * g * G * (cs - p) + 500 * 1000 * cs) // (1000 * 1000 * cs)
                 if g > 0:
                     d = max(1, d)
                 return min(p + d, cap)
@@ -1393,7 +1416,9 @@ class World(pe.World):
             src = max(ready, key=lambda s: (c["capital"] != s["id"], press[s["id"]], s["population"], -s["id"]))
             inside = None
             r_src = src["region"]
-            if self.owner[r_src][0] == cid:
+            if self.owner[r_src][0] == cid and self.shunned(r_src):
+                self.shun_log.append((self.year, cid, r_src))   # P5-02 7.2: no inside target in a shunned region
+            elif self.owner[r_src][0] == cid:
                 in_r = sum(1 for s in self.settlements if self.standing(s) and s["region"] == r_src)
                 if in_r < t["region_slots_max"]:
                     st = self.site(r_src, race, relaxed=False)
@@ -1409,6 +1434,9 @@ class World(pe.World):
             for r0 in held:
                 for r1, k in self.geo.nb[r0]:
                     if self.owner[r1][0] != 0 or self.geo.islet(r1):
+                        continue
+                    if self.shunned(r1):   # P5-02 7.2: no outward target R1 in a shunned region (READINGS P1)
+                        self.shun_log.append((self.year, cid, r1))
                         continue
                     if r1 not in hops or hops[r1] > reach:
                         continue
@@ -1489,7 +1517,25 @@ class World(pe.World):
         elif was_declining and p2 < t["abandon_frail_max"] and self.chance_abandon_allowed(s):
             if self.abandon_draw(s):
                 self.abandon(s["id"], e)
+        if FLAGS["ghost"] and kind in ("famine", "plague_outbreak", "plague_spread") and self.standing(s) and \
+                self.ghost_eligible(s, s["population"]) and self.ghost_draw(s):
+            a = self.abandon(s["id"], e)   # P5-02 8.2: 8.5's procedure, causes the strike and its decline start
+            self.ghost_log.append((self.year, s["id"], e, a))
         return e
+
+    def ghost_eligible(self, s, pop, gone=()):
+        """P5-02 8.2's conditions but the draw: kind hamlet or village, P < ghost_max_population, not its owner's
+        capital, its owner has another standing settlement (those of the step included; `gone` the plan's)."""
+        t = self.t
+        c = s["owner_civ"]
+        if s["kind"] not in (HAMLET, VILLAGE) or not pop < t.get("ghost_max_population", 0) or c == 0:
+            return False
+        if self.civ(c)["capital"] == s["id"]:
+            return False
+        return any(x["id"] != s["id"] and x["id"] not in gone for x in self.standing_of(c))
+
+    def ghost_draw(self, s):
+        return chance_pm(self.draw("hist.peoples.ghost", s["id"], 0, 0), self.t.get("ghost_permille", 0))
 
     def race_refuge(self, s):
         """21 item 6: s is its race's last refuge (its civilization's only standing settlement, and that
@@ -1635,6 +1681,8 @@ class World(pe.World):
         if not emptied and not self.race_refuge(s) and s["status"] == DECLINING and rest < t["abandon_frail_max"] and \
                 self.chance_abandon_allowed(s):
             emptied = self.abandon_draw(s)
+        if not emptied and FLAGS["ghost"] and FLAGS["outbreak37"] and self.ghost_eligible(s, rest):
+            emptied = self.ghost_draw(s)   # P5-02 8.2: the plan includes the ghost test with the same draw
         total = dead0
         if emptied:
             return total
@@ -1668,6 +1716,8 @@ class World(pe.World):
             left = pop[uid] < t["abandon_min"]
             if not left and u["status"] == DECLINING and pop[uid] < t["abandon_frail_max"]:
                 left = self.abandon_draw(u)
+            if not left and FLAGS["ghost"] and self.ghost_eligible(u, pop[uid], gone):
+                left = self.ghost_draw(u)   # P5-02 8.2 in the plan
             if left:
                 others = [x for x in self.standing_of(owner) if x["id"] != uid and x["id"] not in gone]
                 if others:
@@ -1856,6 +1906,10 @@ def history_stage(dat, inp, tension=None, extra_draw=False):
 
 
 def rows_of(w, cat, phases):
+    return rows_of_023(w, cat, phases)
+
+
+def rows_of_022(w, cat, phases):
     """The thirteen history tables of a world's state (P3-04 9)."""
     return dict(
         event_kind=[(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"], k["salience"], k["templ"])
@@ -1877,7 +1931,15 @@ def rows_of(w, cat, phases):
         settlement_census=sorted(w.census),
         region_control=sorted(tuple(r) for r in w.region_control),
         relation=[],
-    )
+    ) if True else None
+
+
+def rows_of_023(w, cat, phases):
+    """rows_of with P5-02's settlement.ending and the tables beast and monster_kind (11.2)."""
+    res = rows_of_022(w, cat, phases)
+    if pe.RENDER_R23:
+        res["beast"], res["monster_kind"] = pe.beast_rows(w.dat), pe.monster_kind_rows(w.dat)
+    return pe.with_ending(res)
 
 
 def entry_checks(dat, inp):
@@ -3911,7 +3973,7 @@ def cmd_check(argv):
     for k in catalogue_kinds():
         c.eq("template of %s parses" % k["key"], pe.template_problem(k, dict((e[0], e[2]) for e in dat.report)[k["key"]]),
              None)
-    c.eq("12 streams", len(STREAMS), 12)
+    c.eq("12 streams (13 from 0.23.0: hist.peoples.ghost, P5-02 3)", len(STREAMS), 13)
     check_units(c)
     check_quiet_equals_ticks(c)
     check_properties(c, SYN_SEEDS[:6] if quick else SYN_SEEDS)
