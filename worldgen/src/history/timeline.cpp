@@ -191,6 +191,7 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             timeline_fatal("settlement " + num(s.id) + " out of order");
         }
         t.settlement_founded_.push_back(s.founded_year);
+        t.settlement_ending_.push_back(s.ending);  // P5-02 13
     }
     t.census_ = tables.census;
     t.census_offsets_.assign(t.settlement_founded_.size() + 1U, 0U);
@@ -235,6 +236,83 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             timeline_fatal("age " + num(a.id) + " out of order");
         }
         t.ages_.push_back(Span{a.start_year, a.end_year, a.id});
+    }
+
+    // P5-02 13: sites, monsters and beast counts.
+    t.sites_ = tables.sites;
+    for (const db::SiteRow& x : t.sites_) {
+        if (x.id != static_cast<std::int64_t>(t.site_ids_.size()) + 1 ||
+            (!t.site_origin_.empty() && x.origin_year < t.site_origin_.back())) {
+            timeline_fatal("site " + num(x.id) + " out of order");
+        }
+        t.site_ids_.push_back(x.id);
+        t.site_origin_.push_back(x.origin_year);
+    }
+    t.monsters_ = tables.monsters;
+    t.monster_awake_.resize(t.monsters_.size());
+    t.monster_lairs_.resize(t.monsters_.size());
+    for (std::size_t i = 0; i < t.monsters_.size(); ++i) {
+        if (t.monsters_[i].id != static_cast<std::int64_t>(i) + 1) {
+            timeline_fatal("monster " + num(t.monsters_[i].id) + " out of order");
+        }
+    }
+    for (const db::SiteRow& x : t.sites_) {
+        if (x.kind == 1) {
+            const std::optional<std::size_t> m = index_of(x.monster, t.monsters_.size());
+            if (!m) {
+                timeline_fatal("site " + num(x.id) + " names no monster");
+            }
+            t.monster_lairs_[*m].push_back(x.id);
+        }
+    }
+    {
+        // By stored key (P3-07 21.2): 44, 45, 46 awake; 47, 51 asleep.
+        const EventCatalogue& cat = view.catalogue();
+        const auto id = [&cat](std::string_view key) {
+            const KindDef* k = cat.find(key);
+            return k != nullptr ? k->id : -1;
+        };
+        const std::int64_t appeared = id("monster_appeared"), rose = id("undead_rose"), woke = id("monster_woke");
+        const std::int64_t slept = id("monster_slept"), driven = id("monster_driven_off");
+        for (const HistoryView::Event& e : view.events()) {
+            const std::int64_t k = e.row.kind;
+            const bool awake = k == appeared || k == rose || k == woke;
+            if (!awake && k != slept && k != driven) {
+                continue;
+            }
+            const KindDef* kd = cat.find_id(k);
+            const RoleDef* role = kd != nullptr ? kd->find_role("monster") : nullptr;
+            for (const db::EventParticipantRow& p : e.participants) {
+                if (role != nullptr && p.role == role->seq) {
+                    const std::optional<std::size_t> m = index_of(p.entity_id, t.monsters_.size());
+                    if (!m) {
+                        timeline_fatal("event " + num(e.row.id) + " names no monster");
+                    }
+                    t.monster_awake_[*m].emplace_back(e.row.year, awake);
+                    break;
+                }
+            }
+        }
+    }
+    t.beast_rows_ = tables.beast_populations;
+    t.beast_kinds_ = tables.beasts.size();
+    {
+        const std::size_t slots = t.region_ids_.size() * t.beast_kinds_;
+        t.beast_offsets_.assign(slots + 1U, 0U);
+        std::size_t row = 0;
+        for (std::size_t slot = 0; slot < slots; ++slot) {
+            t.beast_offsets_[slot] = row;
+            const std::int64_t region = t.region_ids_[slot / t.beast_kinds_];
+            const auto beast = static_cast<std::int64_t>(slot % t.beast_kinds_) + 1;
+            while (row < t.beast_rows_.size() && t.beast_rows_[row].region == region && t.beast_rows_[row].beast == beast) {
+                ++row;
+            }
+        }
+        t.beast_offsets_[slots] = row;
+        if (row != t.beast_rows_.size()) {
+            timeline_fatal("beast_population row (" + num(t.beast_rows_[row].region) + ", " +
+                           num(t.beast_rows_[row].beast) + ") out of order");
+        }
     }
 
     // Events (index id - 1), per-entity lists and effects.
@@ -371,7 +449,71 @@ SettlementState Timeline::settlement_at(std::size_t index, std::int64_t year) co
     s.status = r.status;
     s.population = r.population;
     s.since = r.year;
+    s.ending = (r.status == 3 || r.status == 4) ? settlement_ending_[index] : 0;  // P5-02 13
     return s;
+}
+
+std::span<const std::int64_t> Timeline::sites_existing(std::int64_t year) const {
+    require_year(year);
+    const auto after = std::upper_bound(site_origin_.begin(), site_origin_.end(), year);
+    return std::span<const std::int64_t>(site_ids_.data(), static_cast<std::size_t>(after - site_origin_.begin()));
+}
+
+SiteState Timeline::site_at(std::int64_t site, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(site, sites_.size());
+    if (!i) {
+        timeline_fatal("no site " + num(site));
+    }
+    const db::SiteRow& x = sites_[*i];
+    const bool open = x.origin_year <= year && (!x.ended_year || year < *x.ended_year);
+    return SiteState{x.id,          x.kind,       x.region, x.x, x.y, x.settlement, x.monster, x.founder_civ, open,
+                     open ? 0 : (x.ended_year && year >= *x.ended_year ? x.ending : 0)};
+}
+
+MonsterState Timeline::monster_at(std::int64_t monster, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(monster, monsters_.size());
+    if (!i) {
+        timeline_fatal("no monster " + num(monster));
+    }
+    const db::MonsterRow& m = monsters_[*i];
+    MonsterState out{m.id, m.kind, false, false, m.lair_site, 0};
+    out.alive = m.born <= year && (!m.died || year < *m.died);
+    const std::vector<std::pair<std::int64_t, bool>>& tr = monster_awake_[*i];
+    const auto after = std::upper_bound(tr.begin(), tr.end(), year,
+                                        [](std::int64_t y, const std::pair<std::int64_t, bool>& x) { return y < x.first; });
+    out.awake = out.alive && after != tr.begin() && (after - 1)->second;
+    // The lair at Y: its site with origin_year <= Y < ended_year (or open);
+    // else its last lair begun by Y.
+    for (const std::int64_t s : monster_lairs_[*i]) {
+        const db::SiteRow& x = sites_[static_cast<std::size_t>(s - 1)];
+        if (x.origin_year <= year) {
+            out.lair_site = s;
+            if (!x.ended_year || year < *x.ended_year) {
+                break;
+            }
+        }
+    }
+    if (out.lair_site >= 1 && static_cast<std::size_t>(out.lair_site) <= sites_.size()) {
+        out.region = sites_[static_cast<std::size_t>(out.lair_site - 1)].region;
+    }
+    return out;
+}
+
+std::int64_t Timeline::beast_count(std::int64_t region, std::int64_t beast, std::int64_t year) const {
+    require_year(year);
+    const std::size_t p = region_position(region);
+    if (beast < 1 || static_cast<std::size_t>(beast) > beast_kinds_) {
+        timeline_fatal("no beast " + num(beast));
+    }
+    const std::size_t slot = p * beast_kinds_ + static_cast<std::size_t>(beast - 1);
+    const auto first = beast_rows_.begin() + static_cast<std::ptrdiff_t>(beast_offsets_[slot]);
+    const auto last = beast_rows_.begin() + static_cast<std::ptrdiff_t>(beast_offsets_[slot + 1U]);
+    const auto after = std::upper_bound(first, last, year, [](std::int64_t y, const db::BeastPopulationRow& r) {
+        return y < r.year;
+    });
+    return after == first ? 0 : (after - 1)->count;
 }
 
 namespace {

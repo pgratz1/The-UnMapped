@@ -1172,7 +1172,7 @@ std::optional<MonstersSubsystem::Cell> MonstersSubsystem::wild_cell(const StepCo
             taken.push_back(static_cast<std::uint32_t>(t.y * n + t.x));
         }
     }
-    std::sort(taken.begin(), taken.end());
+    std::stable_sort(taken.begin(), taken.end());
     std::optional<std::uint32_t> best;
     for (const std::uint32_t c : land_cells_[static_cast<std::size_t>(region - 1)]) {  // row-major: y, then x
         if (std::binary_search(taken.begin(), taken.end(), c)) {

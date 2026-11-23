@@ -37,6 +37,8 @@ inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800,
 
 inline constexpr std::size_t SUMMARY_CALAMITY_PER_PHASE = 2;  // 25.2
 inline constexpr std::size_t MILESTONES_ENDED = 4;            // 25.5
+// P5-02 12.4 (format v4): the living monsters listed in [monsters] at summary.
+inline constexpr std::size_t SUMMARY_MONSTER_LINES = 2;
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
 // r21 26.5 item 2 (format v3): and regions_renamed, refuges_hidden.
 inline constexpr std::array<std::string_view, 17> SUMMARY_STATS = {
@@ -77,6 +79,13 @@ struct HistoryTables {
     std::vector<db::RelationRow> relations;
     // Schema 8 (P3-07 r21 26.6): table region_name, primary-key order.
     std::vector<db::RegionNameRow> region_names;
+    // Schema 9 (P5-02 11.4): tables beast, monster_kind, beast_population,
+    // monster and site, primary-key order.
+    std::vector<db::BeastRow> beasts;
+    std::vector<db::MonsterKindRow> monster_kinds;
+    std::vector<db::BeastPopulationRow> beast_populations;
+    std::vector<db::MonsterRow> monsters;
+    std::vector<db::SiteRow> sites;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };

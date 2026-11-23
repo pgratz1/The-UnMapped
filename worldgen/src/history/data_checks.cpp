@@ -6,6 +6,7 @@
 
 #include "worldgen/data/schema.hpp"
 #include "worldgen/data/settings.hpp"
+#include "worldgen/db/schema.hpp"
 
 namespace worldgen::history {
 
@@ -117,7 +118,7 @@ void check_habitat_biomes(const data::ContentSet& content, std::string_view dire
             const std::string& b = list[i].as_record().get_string("biome");
             if (content.find(data::BIOME_KIND, b) == nullptr) {
                 out.push_back(monster_error(directory, check, kind, d.id,
-                                            std::string(field) + "[" + std::to_string(i) + "].biome '" + b +
+                                            std::string(field) + "[" + db::format_u64(i) + "].biome '" + b +
                                                 "' is not a biome"));
                 break;  // the first failure of the definition
             }

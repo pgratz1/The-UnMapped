@@ -12,6 +12,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "worldgen/db/reader.hpp"
@@ -37,7 +38,27 @@ struct SettlementState {
     std::int64_t settlement = 0;
     bool exists = false;
     std::int64_t owner = 0, kind = 0, status = 0, population = 0, since = 0;
+    // P5-02 13 (P4-01 r4): 0 while standing at Y, else settlement.ending.
+    std::int64_t ending = 0;
     friend bool operator==(const SettlementState&, const SettlementState&) = default;
+};
+
+// P5-02 13: a site at a year (open iff ended_year is NULL or Y < ended_year).
+struct SiteState {
+    std::int64_t site;
+    std::int64_t kind, region, x, y, settlement, monster, founder;
+    bool open;
+    std::int64_t ending;
+    friend bool operator==(const SiteState&, const SiteState&) = default;
+};
+
+// P5-02 13: a monster at a year (half-open: the state at the end of Y).
+struct MonsterState {
+    std::int64_t monster;
+    std::int64_t kind;
+    bool alive, awake;
+    std::int64_t lair_site, region;
+    friend bool operator==(const MonsterState&, const MonsterState&) = default;
 };
 
 // Everything that depends on the year (section 4).
@@ -76,6 +97,17 @@ public:
     [[nodiscard]] YearState year_state(std::int64_t year) const;
     // Reuses out's buffers; the same content as the returning overload.
     void year_state(std::int64_t year, YearState& out) const;
+    // P5-02 13 (P4-01 r4): the sites with origin_year <= Y, ascending id; a
+    // site, a monster and a beast count at Y (the beast_population row with
+    // the largest year <= Y, else 0). FatalError "timeline: no site <s>",
+    // "timeline: no monster <m>", "timeline: no beast <b>", "timeline: no
+    // region <r>" for an id the world does not have.
+    [[nodiscard]] std::span<const std::int64_t> sites_existing(std::int64_t year) const;
+    [[nodiscard]] SiteState site_at(std::int64_t site, std::int64_t year) const;
+    [[nodiscard]] MonsterState monster_at(std::int64_t monster, std::int64_t year) const;
+    [[nodiscard]] std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t year) const;
+    [[nodiscard]] std::size_t site_count() const noexcept { return sites_.size(); }
+    [[nodiscard]] std::size_t monster_count() const noexcept { return monsters_.size(); }
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 
@@ -143,6 +175,20 @@ private:
     std::vector<std::vector<std::int64_t>> region_events_;
     std::vector<std::vector<std::int64_t>> settlement_events_;
     std::vector<std::vector<std::int64_t>> effects_;
+    // P5-02 13: sites and monsters (index id - 1), the site ids and their
+    // origin years (ascending: creation order), per monster its awake
+    // transitions (year, awake) in event order, and the beast rows in
+    // primary-key order with per (region position, beast) offsets.
+    std::vector<db::SiteRow> sites_;
+    std::vector<std::int64_t> site_ids_;
+    std::vector<std::int64_t> site_origin_;
+    std::vector<db::MonsterRow> monsters_;
+    std::vector<std::vector<std::pair<std::int64_t, bool>>> monster_awake_;
+    std::vector<std::vector<std::int64_t>> monster_lairs_;  // per monster: its lair site ids, ascending
+    std::vector<db::BeastPopulationRow> beast_rows_;
+    std::size_t beast_kinds_ = 0;
+    std::vector<std::size_t> beast_offsets_;  // (position * beast_kinds_ + beast - 1), size + 1 entries
+    std::vector<std::int64_t> settlement_ending_;  // index id - 1
 };
 
 // Everything a reader of history needs, read once (P4-00 V3). Movable: the

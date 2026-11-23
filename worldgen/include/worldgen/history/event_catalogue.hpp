@@ -250,6 +250,38 @@ private:
                                                                   std::span<const db::EventRow> events,
                                                                   std::int64_t renamed_kind);
 
+// P5-02 11.4 (schema 9): the first problem of the tables beast,
+// monster_kind, beast_population, site and monster, of settlement.ending,
+// and of the events of kinds 44 to 55, in the order of 11.4, as
+// "corrupt table '<table>': row <key>: <reason>", or std::nullopt. Every
+// row span is in primary-key order as read; region_ids and civ_ids
+// ascending; events in id order (ids are checked to be 1, 2, ... before);
+// participants, values and causes in primary-key order; end_year E and the
+// map side. Linear in the rows (bounds-checked index lookups).
+struct MonsterTables {
+    std::span<const db::BeastRow> beasts;
+    std::span<const db::MonsterKindRow> monster_kinds;
+    std::span<const db::BeastPopulationRow> beast_populations;
+    std::span<const db::MonsterRow> monsters;
+    std::span<const db::SiteRow> sites;
+    std::span<const db::SettlementRow> settlements;
+    std::span<const std::int64_t> region_ids;
+    std::span<const std::int64_t> civ_ids;
+    std::int64_t end_year = 0;
+    std::int64_t map_size = 0;
+    std::span<const db::EventRow> events;
+    std::span<const db::EventParticipantRow> participants;
+    std::span<const db::EventValueRow> values;
+    std::span<const db::EventCauseRow> causes;
+    const EventCatalogue* catalogue = nullptr;
+};
+[[nodiscard]] std::optional<std::string> monster_tables_problem(const MonsterTables& t);
+
+// P5-02 8.3: the ending code of a settlement whose ruin event is `ruin` (0
+// when unknown: 5), given the kind key of an event and its causes.
+[[nodiscard]] std::int64_t settlement_ending_code(std::string_view ruin_kind,
+                                                  std::span<const std::string_view> cause_kinds) noexcept;
+
 // The sentence of event `event_id` (P3-04 8.5) from its kind's stored
 // template. FatalError "render_event: event <id>: <reason>" when the id is
 // not in the log or the stored template has a problem.

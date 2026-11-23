@@ -315,6 +315,19 @@ std::string history_note(const HistoryView& view, std::int64_t event_id, std::in
     }
     const KindDef* flare = catalogue.find("flare_up");
     if (flare != nullptr && e->row.kind == flare->id) {
+        // P5-02 12.7: a flare-up started by a monster's appearance.
+        const KindDef* appeared = catalogue.find("monster_appeared");
+        const HistoryView::Event* c = e->causes.empty() ? nullptr : view.event(e->causes.front());
+        if (appeared != nullptr && c != nullptr && c->row.kind == appeared->id) {
+            const std::int64_t m = participant(*c, *appeared, "monster");
+            const std::string* noun = view.monster_noun(m);
+            std::string out = "The waking of ";
+            if (noun == nullptr || !append_entity(out, view, EntityType::monster, m)) {
+                return {};
+            }
+            out += ", " + *noun + ", stirred the land.";
+            return out;
+        }
         return flare_note(view, *e, claims);
     }
     const KindDef* quiet = catalogue.find("quiet_stretch");
@@ -352,6 +365,7 @@ struct Kinds {
     Id famine = 0, plague = 0, plague_outbreak = 0, succession_crisis = 0, settlement_dwindled = 0;
     Id settlement_abandoned = 0, settlement_abandoned_to = 0;
     Id region_renamed = 0;  // r21 26.5 (P5-12)
+    Id monster_raid = 0, settlement_overrun = 0, undead_rose = 0, beasts_bold = 0;  // P5-02 12.6
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -394,6 +408,10 @@ struct Kinds {
         settlement_abandoned = id("settlement_abandoned");
         settlement_abandoned_to = id("settlement_abandoned_to");
         region_renamed = id("region_renamed");
+        monster_raid = id("monster_raid");
+        settlement_overrun = id("settlement_overrun");
+        undead_rose = id("undead_rose");
+        beasts_bold = id("beasts_bold");
     }
     // 25.2: the calamity kinds of the summary's cap.
     [[nodiscard]] bool calamity(Id k) const noexcept {
@@ -1259,6 +1277,65 @@ private:
         conflict_stats();
         war_stats();
         renaming_stats();
+        monster_stats();
+    }
+
+    // P5-02 12.6: appended at the end, in this order.
+    void monster_stats() {
+        put("beasts", static_cast<std::int64_t>(t_.beasts.size()));
+        put("monster_kinds", static_cast<std::int64_t>(t_.monster_kinds.size()));
+        put("beast_populations", static_cast<std::int64_t>(t_.beast_populations.size()));
+        put("monsters", static_cast<std::int64_t>(t_.monsters.size()));
+        put("sites", static_cast<std::int64_t>(t_.sites.size()));
+        std::int64_t alive = 0, slain = 0, died = 0;
+        for (const db::MonsterRow& m : t_.monsters) {
+            alive += (m.status == 1 || m.status == 2) ? 1 : 0;
+            slain += m.status == 3 ? 1 : 0;
+            died += m.status == 4 ? 1 : 0;
+        }
+        std::int64_t raids = 0, killed = 0, overrun = 0, risen = 0, bold = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == kinds_.monster_raid) {
+                ++raids;
+                // Saturating: the digest does not fail on a damaged file.
+                const std::int64_t v = std::max<std::int64_t>(0, value_of(e, "dead"));
+                killed = killed > std::numeric_limits<std::int64_t>::max() - v ? std::numeric_limits<std::int64_t>::max()
+                                                                                : killed + v;
+            }
+            overrun += e.row.kind == kinds_.settlement_overrun ? 1 : 0;
+            risen += e.row.kind == kinds_.undead_rose ? 1 : 0;
+            bold += e.row.kind == kinds_.beasts_bold ? 1 : 0;
+        }
+        std::int64_t outposts = 0, outposts_open = 0;
+        std::vector<std::uint8_t> shunned(t_.regions.size() + 1, 0);
+        for (const db::SiteRow& x : t_.sites) {
+            outposts += x.kind == 2 ? 1 : 0;
+            outposts_open += (x.kind == 2 && !x.ended_year) ? 1 : 0;
+            if (x.kind == 1 && !x.ended_year && x.settlement != 0 && x.region >= 1 &&
+                static_cast<std::size_t>(x.region) < shunned.size()) {
+                shunned[static_cast<std::size_t>(x.region)] = 1;
+            }
+        }
+        std::int64_t left = 0;
+        for (const db::SettlementRow& x : t_.settlements) {
+            left += (x.ending >= 3 && x.ending <= 5) ? 1 : 0;
+        }
+        std::int64_t regions_shunned = 0;
+        for (const std::uint8_t b : shunned) {
+            regions_shunned += b;
+        }
+        put("monsters_alive", alive);
+        put("monsters_slain", slain);
+        put("monsters_died", died);
+        put("monster_raids", raids);
+        put("monster_killed", killed);
+        put("settlements_overrun", overrun);
+        put("undead_risen", risen);
+        put("outposts", outposts);
+        put("outposts_open", outposts_open);
+        put("beasts_bold", bold);
+        put("settlements_left", left);
+        put("regions_shunned", regions_shunned);
     }
 
     // r21 26.5 item 2 (P5-12): region_names, regions_renamed, refuges,

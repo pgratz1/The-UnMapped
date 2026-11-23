@@ -163,7 +163,7 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     for (const Row& r : h.rows[9]) {
         t.settlements.push_back(db::SettlementRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5),
                                                   i64(r, 6), i64(r, 7), i64(r, 8), i64(r, 9), i64(r, 10), i64(r, 11),
-                                                  opt(r, 12), i64(r, 13)});
+                                                  opt(r, 12), i64(r, 13), i64(r, 14)});
     }
     for (const Row& r : h.rows[10]) {
         t.census.push_back(db::SettlementCensusRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5)});
@@ -178,14 +178,33 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     for (const Row& r : h.rows[13]) {  // schema 8
         t.region_names.push_back(db::RegionNameRow{i64(r, 0), i64(r, 1), r[2].bytes, i64(r, 3), i64(r, 4)});
     }
+    // Schema 9 (P5-02 11.1).
+    for (const Row& r : h.rows[14]) {
+        t.beasts.push_back(db::BeastRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5)});
+    }
+    for (const Row& r : h.rows[15]) {
+        t.monster_kinds.push_back(
+            db::MonsterKindRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5), i64(r, 6)});
+    }
+    for (const Row& r : h.rows[16]) {
+        t.beast_populations.push_back(db::BeastPopulationRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3)});
+    }
+    for (const Row& r : h.rows[17]) {
+        t.monsters.push_back(db::MonsterRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5),
+                                            opt(r, 6), i64(r, 7), i64(r, 8), i64(r, 9), i64(r, 10)});
+    }
+    for (const Row& r : h.rows[18]) {
+        t.sites.push_back(db::SiteRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
+                                      i64(r, 7), i64(r, 8), i64(r, 9), i64(r, 10), opt(r, 11), i64(r, 12), i64(r, 13)});
+    }
 }
 
 // --- The checks of 5.3 ------------------------------------------------------
 
 class Checks {
 public:
-    Checks(const HistoryTables& t, const inspect::HistoryTables& h, const Rows& cultures)
-        : t_(t), h_(h), cultures_(cultures), e_(t.end_year) {}
+    Checks(const HistoryTables& t, const inspect::HistoryTables& h, const Rows& cultures, std::int64_t map_size)
+        : t_(t), h_(h), cultures_(cultures), e_(t.end_year), map_size_(map_size) {}
 
     void run(const Rows& event_rows) const {
         regions();
@@ -197,6 +216,7 @@ public:
         region_control();
         relations();
         region_names();
+        monster_tables();
         gods_and_races();
     }
 
@@ -541,6 +561,78 @@ private:
         }
     }
 
+    // P5-02 11.4 (schema 9), after the region_name checks.
+    void monster_tables() const {
+        std::vector<std::int64_t> region_ids;
+        for (const RegionInfo& r : t_.regions) {
+            region_ids.push_back(r.id);
+        }
+        std::vector<std::int64_t> civ_ids;
+        for (const db::CivilizationRow& c : t_.civilizations) {
+            civ_ids.push_back(c.id);
+        }
+        std::stable_sort(civ_ids.begin(), civ_ids.end());
+        std::vector<db::EventRow> events;
+        for (const Row& r : h_.rows[4]) {
+            events.push_back(db::EventRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
+                                          i64(r, 7)});
+        }
+        std::vector<db::EventParticipantRow> participants;
+        for (const Row& r : h_.rows[5]) {
+            participants.push_back(db::EventParticipantRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4)});
+        }
+        std::vector<db::EventCauseRow> causes;
+        for (const Row& r : h_.rows[6]) {
+            causes.push_back(db::EventCauseRow{i64(r, 0), i64(r, 1)});
+        }
+        std::vector<db::EventValueRow> values;
+        for (const Row& r : h_.rows[7]) {
+            values.push_back(db::EventValueRow{i64(r, 0), i64(r, 1), i64(r, 2)});
+        }
+        // The stored catalogue: kind ids and keys, roles and value keys.
+        EventCatalogue cat;
+        for (const Row& k : h_.rows[0]) {
+            if (k[0].integer != static_cast<std::int64_t>(cat.kinds.size()) + 1) {
+                return;  // checked by HistoryView::load ("id not consecutive")
+            }
+            KindDef d;
+            d.id = k[0].integer;
+            d.key = k[1].bytes;
+            cat.kinds.push_back(std::move(d));
+        }
+        for (const Row& r : h_.rows[1]) {
+            if (r[0].integer >= 1 && static_cast<std::size_t>(r[0].integer) <= cat.kinds.size()) {
+                const std::optional<EntityType> type = entity_type_from_code(r[3].integer);
+                cat.kinds[static_cast<std::size_t>(r[0].integer - 1)].roles.push_back(
+                    RoleDef{r[1].integer, r[2].bytes, type.value_or(EntityType::race), r[4].integer, r[5].integer});
+            }
+        }
+        for (const Row& r : h_.rows[2]) {
+            if (r[0].integer >= 1 && static_cast<std::size_t>(r[0].integer) <= cat.kinds.size()) {
+                cat.kinds[static_cast<std::size_t>(r[0].integer - 1)].values.push_back(r[2].bytes);
+            }
+        }
+        MonsterTables mt;
+        mt.beasts = t_.beasts;
+        mt.monster_kinds = t_.monster_kinds;
+        mt.beast_populations = t_.beast_populations;
+        mt.monsters = t_.monsters;
+        mt.sites = t_.sites;
+        mt.settlements = t_.settlements;
+        mt.region_ids = region_ids;
+        mt.civ_ids = civ_ids;
+        mt.end_year = e_;
+        mt.map_size = map_size_;
+        mt.events = events;
+        mt.participants = participants;
+        mt.values = values;
+        mt.causes = causes;
+        mt.catalogue = &cat;
+        if (std::optional<std::string> why = monster_tables_problem(mt)) {
+            throw Corrupt{*why};
+        }
+    }
+
     void gods_and_races() const {
         for (const db::GodRow& g : t_.gods) {
             if (g.camp < 0 || g.camp > 2) {
@@ -558,6 +650,7 @@ private:
     const inspect::HistoryTables& h_;
     const Rows& cultures_;
     std::int64_t e_;
+    std::int64_t map_size_;
 };
 
 std::int64_t meta_integer(const db::WorldReader& world, std::string_view key) {
@@ -660,7 +753,7 @@ HistoryTables read_and_check(const db::WorldReader& world) {
     read_gods(t, gods);
     read_regions(t, read.rows(db::REGION_TABLE));
     const Rows cultures = read.rows(db::CULTURE_TABLE);
-    Checks(t, h, cultures).run(h.rows[4]);
+    Checks(t, h, cultures, meta_integer(world, db::META_PARAM_MAP_SIZE)).run(h.rows[4]);
     return t;
 }
 
@@ -683,6 +776,13 @@ std::optional<std::string> history_reads_disagree(const HistoryView& view, const
     // them from the tables.
     if (!std::equal(view.region_names().begin(), view.region_names().end(), t.region_names.begin(),
                     t.region_names.end())) {
+        return std::string("corrupt table 'event': the file changed while it was read");
+    }
+    // Schema 9: the timeline indexes the tables' monsters and sites by the
+    // view's events.
+    if (!std::equal(view.monster_rows().begin(), view.monster_rows().end(), t.monsters.begin(), t.monsters.end()) ||
+        !std::equal(view.site_rows().begin(), view.site_rows().end(), t.sites.begin(), t.sites.end()) ||
+        !std::equal(view.beast_rows().begin(), view.beast_rows().end(), t.beasts.begin(), t.beasts.end())) {
         return std::string("corrupt table 'event': the file changed while it was read");
     }
     return std::nullopt;
