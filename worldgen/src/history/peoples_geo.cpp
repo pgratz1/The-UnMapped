@@ -217,6 +217,8 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.plague_small_salience = r.get_int("plague_small_salience");
     t.plague_major_dead = r.get_int("plague_major_dead");
     t.crisis_small_salience = r.get_int("crisis_small_salience");
+    t.ghost_permille = r.get_int("ghost_permille");  // P5-02 4.5
+    t.ghost_max_population = r.get_int("ghost_max_population");
     return t;
 }
 
@@ -462,13 +464,23 @@ std::int64_t kind_cap(const PeoplesRace& race, SettlementKind kind, const People
 }
 
 std::int64_t grow_population(std::int64_t p, std::int64_t share, std::int64_t g, std::int64_t cap,
-                             std::int64_t decline_permille) {
+                             std::int64_t decline_permille, std::int64_t wild) {
     // r6 (9.1): the target is min(share, cap), so an excess over the kind
     // cap drains like an excess over the share.
     const std::int64_t target = std::min(share, cap);
     if (p < target) {
-        const std::int64_t num = checked_add(checked_mul(checked_mul(p, g), share - p), checked_mul(500, share));
-        std::int64_t d = floor_div(num, checked_mul(1000, share));
+        std::int64_t d = 0;
+        if (wild == 1000) {
+            // P5-02 7.1 with G = 1000: the same rational number as below,
+            // floored, in 9.1's form.
+            const std::int64_t num = checked_add(checked_mul(checked_mul(p, g), share - p), checked_mul(500, share));
+            d = floor_div(num, checked_mul(1000, share));
+        } else {
+            // P5-02 7.1: (P g G (C - P) + 500 x 1000 x C) div (10^6 C).
+            const std::int64_t num = checked_add(checked_mul(checked_mul(checked_mul(p, g), wild), share - p),
+                                                 checked_mul(500000, share));
+            d = floor_div(num, checked_mul(1000000, share));
+        }
         if (g > 0) {
             d = std::max<std::int64_t>(1, d);
         }

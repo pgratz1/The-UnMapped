@@ -37,6 +37,17 @@ inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800,
 
 inline constexpr std::size_t SUMMARY_CALAMITY_PER_PHASE = 2;  // 25.2
 inline constexpr std::size_t MILESTONES_ENDED = 4;            // 25.5
+// P5-02 12.4 (format v4): the living monsters listed in [monsters] at summary.
+// P5-02 r1 12.9: the summary line limit L = SUMMARY_LINES_MAX +
+// SUMMARY_LINES_PER_CIV * max(0, C - SUMMARY_LINES_CIVS), and the least
+// event budget B.
+inline constexpr std::int64_t SUMMARY_LINES_MAX = 790;
+inline constexpr std::int64_t SUMMARY_LINES_PER_CIV = 40;
+inline constexpr std::int64_t SUMMARY_LINES_CIVS = 16;
+inline constexpr std::int64_t SUMMARY_BUDGET_MIN = 100;
+// The cap on L: L = min(SUMMARY_LINES_CAP, SUMMARY_LINES_MAX + ...).
+inline constexpr std::int64_t SUMMARY_LINES_CAP = 1390;
+inline constexpr std::size_t SUMMARY_MONSTER_LINES = 2;
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
 // r21 26.5 item 2 (format v3): and regions_renamed, refuges_hidden.
 inline constexpr std::array<std::string_view, 17> SUMMARY_STATS = {
@@ -77,6 +88,13 @@ struct HistoryTables {
     std::vector<db::RelationRow> relations;
     // Schema 8 (P3-07 r21 26.6): table region_name, primary-key order.
     std::vector<db::RegionNameRow> region_names;
+    // Schema 9 (P5-02 11.4): tables beast, monster_kind, beast_population,
+    // monster and site, primary-key order.
+    std::vector<db::BeastRow> beasts;
+    std::vector<db::MonsterKindRow> monster_kinds;
+    std::vector<db::BeastPopulationRow> beast_populations;
+    std::vector<db::MonsterRow> monsters;
+    std::vector<db::SiteRow> sites;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };
@@ -148,6 +166,16 @@ struct HistoryDigest {
     std::int64_t summary_threshold = 0;             // T of 21.3 item 3
     std::int64_t summary_events = 0;                // the size of the summary set
     std::vector<std::uint8_t> summary;              // index id - 1: 1 when in the summary set (24.3)
+    // The inputs of 24.3 item 4's threshold, kept so that the set can be
+    // chosen again with another budget (P5-02 12.9): per event (index
+    // id - 1) 1 when in the floor set, and the highest salience of a
+    // candidate whose unit holds it (-1 none); summary_at_least[t] the
+    // non-floor events with that salience >= t (t <= 100), and the floor size.
+    std::vector<std::uint8_t> summary_floor;
+    std::vector<std::int64_t> summary_entered;
+    std::array<std::int64_t, 102> summary_at_least{};
+    std::int64_t summary_floor_size = 0;
+    std::int64_t summary_budget = 0;                // the budget the set was chosen with
     // r17 24.7: per settlement (index id - 1) the owner_civ of its census
     // row of largest year with status 1 or 2, 0 when none; the standing
     // claims, ascending id.
@@ -162,6 +190,17 @@ struct HistoryDigest {
 // Pure, does not fail: everything it relies on was checked by
 // read_history_tables and HistoryView::load on the same world.
 [[nodiscard]] HistoryDigest digest_history(const HistoryView& view, const HistoryTables& tables);
+
+// P5-02 12.9: B = min(SUMMARY_BUDGET, max(SUMMARY_BUDGET_MIN, L - O - F)),
+// with L (capped at SUMMARY_LINES_CAP) of `civilizations` rows (and `lines_max` for SUMMARY_LINES_MAX, a
+// test seam), O = `outside_lines` (the summary's lines outside
+// [chronicle]) and F = 4 + ages + 2 * phases.
+[[nodiscard]] std::int64_t summary_budget(std::int64_t civilizations, std::int64_t outside_lines, std::int64_t ages,
+                                          std::int64_t phases, std::int64_t lines_max = SUMMARY_LINES_MAX);
+
+// 24.3 item 4 with the budget B: chooses the summary set of `digest` again
+// (summary, summary_threshold, summary_events and their [stats] values).
+void choose_summary_set(HistoryDigest& digest, std::int64_t budget);
 
 // --- Notes (21.4, 22.2, 23) -------------------------------------------------
 

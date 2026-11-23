@@ -554,6 +554,8 @@ Schema history_peoples_schema() {
         i("plague_small_salience", 0, 100),
         i("plague_major_dead", 0, 1000000),   // r6 (generator 0.17.0)
         i("crisis_small_salience", 0, 100),   // r6 (generator 0.17.0)
+        i("ghost_permille", 0, 1000),         // P5-02 4.5 (generator 0.23.0)
+        i("ghost_max_population", 0, 1000000),
     };
     std::vector<Check> checks{
         Check{"peoples_ladder", [](const Record& r) { return check_peoples_ladder(r); }},
@@ -738,6 +740,7 @@ namespace {
 
 constexpr std::string_view NAME_SLOT = "{name}";
 constexpr std::string_view NOUN_SLOT = "{noun}";
+constexpr std::string_view STEM_SLOT = "{stem}";  // P5-02 21.2
 
 // ASCII letters, space and ', plus {name} and {noun} each at most once; at
 // least one letter outside the slots; no leading, trailing or double space;
@@ -748,6 +751,7 @@ bool is_valid_rename_form(std::string_view text) noexcept {
     }
     std::size_t names = 0;
     std::size_t nouns = 0;
+    std::size_t stems = 0;
     bool letter = false;
     std::size_t i = 0;
     while (i < text.size()) {
@@ -763,6 +767,11 @@ bool is_valid_rename_form(std::string_view text) noexcept {
                 i += NOUN_SLOT.size();
                 continue;
             }
+            if (text.substr(i, STEM_SLOT.size()) == STEM_SLOT) {
+                ++stems;
+                i += STEM_SLOT.size();
+                continue;
+            }
             return false;
         }
         if (c == ' ') {
@@ -776,11 +785,11 @@ bool is_valid_rename_form(std::string_view text) noexcept {
         }
         ++i;
     }
-    return names <= 1 && nouns <= 1 && letter;
+    return names <= 1 && nouns <= 1 && stems <= 1 && names + stems <= 1 && letter;
 }
 
 StringGrammar rename_form_grammar() noexcept {
-    return StringGrammar{"a region name form (letters, spaces, ' and the slots {name} and {noun})",
+    return StringGrammar{"a region name form (letters, spaces, ' and the slots {name} or {stem}, and {noun})",
                          &is_valid_rename_form};
 }
 
@@ -857,6 +866,9 @@ std::optional<std::string> check_renaming_forms_slots(const Record& r) {
         for (std::size_t j = 0; j < forms.size(); ++j) {
             if (forms[j].as_string().find(NAME_SLOT) != std::string::npos) {
                 return "rules[" + uint_text(i) + "].forms[" + uint_text(j) + "] uses {name} but name_role is empty";
+            }
+            if (forms[j].as_string().find(STEM_SLOT) != std::string::npos) {  // P5-02 21.2
+                return "rules[" + uint_text(i) + "].forms[" + uint_text(j) + "] uses {stem} but name_role is empty";
             }
         }
     }
@@ -964,6 +976,7 @@ Schema culture_naming_schema() {
         Field::required("god_forms", forms()),
         Field::required("civilization_forms", forms()),
         Field::required("settlement_forms", forms()),
+        Field::required("site_forms", forms()),  // P5-02 4.4 (generator 0.23.0)
     });
 }
 
@@ -994,6 +1007,248 @@ Schema history_chronology_schema() {
     };
     std::vector<Check> checks{
         Check{"chronology_age_name_form", [](const Record& r) { return check_chronology_age_name_form(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+// --- beast, monster and history.monsters (P5-02 4.1 to 4.3) ------------------------
+
+namespace {
+
+// display_name: ASCII letters and space, starting with an upper-case letter.
+bool is_valid_display_name(std::string_view text) noexcept {
+    if (text.empty() || !(text.front() >= 'A' && text.front() <= 'Z')) {
+        return false;
+    }
+    return std::all_of(text.begin(), text.end(), [](char c) { return is_ascii_letter(c) || c == ' '; });
+}
+
+// beast_plural: lower-case ASCII letters and single spaces, starting and
+// ending with a letter.
+bool is_valid_beast_plural(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!(c >= 'a' && c <= 'z')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// monster_noun: lower-case ASCII letters, space and ', starting with "a " or
+// "an ".
+bool is_valid_monster_noun(std::string_view text) noexcept {
+    if (!(text.substr(0, 2) == "a " || text.substr(0, 3) == "an ")) {
+        return false;
+    }
+    return std::all_of(text.begin(), text.end(),
+                       [](char c) { return (c >= 'a' && c <= 'z') || c == ' ' || c == '\''; });
+}
+
+StringGrammar display_name_grammar() noexcept {
+    return StringGrammar{"a display name (ASCII letters and space, starting with an upper-case letter)",
+                         &is_valid_display_name};
+}
+
+StringGrammar beast_plural_grammar() noexcept {
+    return StringGrammar{"a plural (lower-case letters and single spaces, starting and ending with a letter)",
+                         &is_valid_beast_plural};
+}
+
+StringGrammar monster_noun_grammar() noexcept {
+    return StringGrammar{"a monster noun (lower-case letters, space and ', starting with 'a ' or 'an ')",
+                         &is_valid_monster_noun};
+}
+
+Schema habitat_entry_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("biome", Type::string(32)),
+        Field::required("weight", Type::integer(0, 1000)),
+    });
+}
+
+// The repeated-biome half of beast_habitat_biomes and monster_biomes; the
+// other half (every biome names a biome definition) needs the biome kind
+// and is checked by history::check_history_data (P5-02 4.1, reading 1).
+std::optional<std::string> check_habitat_repeats(const Record& r, std::string_view field) {
+    const std::vector<Value>& list = r.get_array(field);
+    for (std::size_t j = 0; j < list.size(); ++j) {
+        const std::string& b = list[j].as_record().get_string("biome");
+        for (std::size_t k = 0; k < j; ++k) {
+            if (list[k].as_record().get_string("biome") == b) {
+                return std::string(field) + "[" + uint_text(j) + "].biome '" + b + "' is listed twice";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_monster_wild_habitat(const Record& r) {
+    if (r.get_string("wake") != "wild") {
+        return std::nullopt;
+    }
+    for (const Value& v : r.get_array("biomes")) {
+        if (v.as_record().get_int("weight") > 0) {
+            return std::nullopt;
+        }
+    }
+    return std::string("a wild monster needs a biome with a weight above 0");
+}
+
+std::optional<std::string> check_monster_toll_ordered(const Record& r) {
+    if (r.get_int("toll_min_permille") > r.get_int("toll_max_permille")) {
+        return "toll_min_permille " + int_text(r.get_int("toll_min_permille")) + " is above toll_max_permille " +
+               int_text(r.get_int("toll_max_permille"));
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_monster_overruns_unique(const Record& r) {
+    const std::vector<Value>& list = r.get_array("overruns");
+    for (std::size_t j = 0; j < list.size(); ++j) {
+        for (std::size_t k = 0; k < j; ++k) {
+            if (list[k].as_string() == list[j].as_string()) {
+                return "overruns[" + uint_text(j) + "] '" + list[j].as_string() + "' repeats overruns[" +
+                       uint_text(k) + "]";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_monster_bare_form_last(const Record& r) {
+    const std::vector<Value>& forms = r.get_array("name_forms");
+    for (std::size_t j = 0; j + 1 < forms.size(); ++j) {
+        if (forms[j].as_string() == ROOT_PLACEHOLDER) {
+            return "name_forms[" + uint_text(j) + "] '{root}' must be the last form";
+        }
+    }
+    return std::nullopt;
+}
+
+}  // namespace
+
+Schema beast_schema() {
+    std::vector<Field> fields{
+        Field::required("name", Type::string(32, display_name_grammar())),
+        Field::required("plural", Type::string(32, beast_plural_grammar())),
+        Field::required("habitat", Type::array(Type::record(habitat_entry_schema()), 1, 16)),
+        Field::required("density", Type::integer(0, 100000)),
+        Field::required("growth_permille", Type::integer(1, 1000)),
+        Field::required("menace", Type::integer(0, 1000)),
+        Field::required("food", Type::integer(0, 1000)),
+    };
+    std::vector<Check> checks{
+        Check{"beast_habitat_biomes", [](const Record& r) { return check_habitat_repeats(r, "habitat"); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+Schema monster_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    const auto forms = [] { return Type::array(Type::string(48, name_form_grammar()), 1, 8); };
+    std::vector<Field> fields{
+        Field::required("name", Type::string(32, display_name_grammar())),
+        Field::required("noun", Type::string(48, monster_noun_grammar())),
+        Field::required("grouped", Type::boolean()),
+        Field::required("wake", Type::enumeration({"wild", "dead"})),
+        Field::required("biomes", Type::array(Type::record(habitat_entry_schema()), 0, 16)),
+        i("wake_rate", 0, 10000000),
+        Field::required("naming_culture", Type::string(32)),
+        Field::required("name_forms", forms()),
+        Field::required("lair_forms", forms()),
+        i("might", 1, 10000000),
+        i("range_hops", 0, 4),
+        i("raid_permille", 0, 1000),
+        i("toll_min_permille", 0, 1000),
+        i("toll_max_permille", 0, 1000),
+        i("kill_max", 0, 10000000),
+        Field::required("overruns", Type::array(Type::enumeration({"hamlet", "village", "town"}), 0, 3)),
+        i("overrun_permille", 0, 1000),
+        i("active_years", 1, 100000),
+        i("rewake_ppm", 0, 1000000),
+        i("lifespan_years", 0, 100000),
+        i("max_alive", 0, 64),
+        Field::required("flare", Type::boolean()),
+        i("hoard_permille", 0, 1000),
+    };
+    std::vector<Check> checks{
+        Check{"monster_biomes", [](const Record& r) { return check_habitat_repeats(r, "biomes"); }},
+        Check{"monster_wild_habitat", [](const Record& r) { return check_monster_wild_habitat(r); }},
+        Check{"monster_toll_ordered", [](const Record& r) { return check_monster_toll_ordered(r); }},
+        Check{"monster_overruns_unique", [](const Record& r) { return check_monster_overruns_unique(r); }},
+        Check{"monster_bare_form_last", [](const Record& r) { return check_monster_bare_form_last(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+Schema history_monsters_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    const Schema pressure(std::vector<Field>{
+        i("low", 0, 10000),
+        i("normal", 0, 10000),
+        i("high", 0, 10000),
+    });
+    const Schema prey(std::vector<Field>{
+        i("hamlet", 0, 1000),
+        i("village", 0, 1000),
+        i("town", 0, 1000),
+        i("city", 0, 1000),
+        i("fortress", 0, 1000),
+    });
+    std::vector<Field> fields{
+        Field::required("pressure", Type::record(pressure)),
+        i("living_permille", 0, 1000),
+        i("undead_min_dead", 1, 1000000000),
+        i("undead_window_years", 1, 100000),
+        i("hunt_hops", 0, 8),
+        i("hunt_levy_permille", 0, 1000),
+        i("hunt_permille", 0, 1000),
+        i("hunt_memory_years", 1, 100000),
+        i("slay_max_permille", 0, 1000),
+        i("drive_permille", 0, 1000),
+        i("drive_years", 0, 100000),
+        i("displace_per_kpeople", 0, 1000),
+        i("displace_max_permille", 0, 1000),
+        i("beast_decline_permille", 1, 1000),
+        i("people_floor", 1, 100000),
+        i("drag_k", 0, 10000),
+        i("drag_max_permille", 0, 500),
+        i("feed_k", 0, 10000),
+        i("feed_max_permille", 0, 500),
+        i("bold_on_permille", 1, 1000000),
+        i("bold_off_permille", 0, 1000000),
+        i("bold_permille", 0, 1000),
+        i("bold_toll_permille", 0, 1000),
+        i("outpost_permille", 0, 1000),
+        i("outpost_max", 0, 16),
+        i("outpost_quiet_years", 1, 100000),
+        Field::required("prey_weight", Type::record(prey)),
+        i("prey_capital_permille", 0, 1000),
+        i("prey_hop_permille", 0, 1000),
+        i("prey_might_ref", 1, 10000000),
+        i("prey_might_max_permille", 0, 10000),
+    };
+    std::vector<Check> checks{
+        Check{"monsters_bold_ordered",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("bold_off_permille") > r.get_int("bold_on_permille")) {
+                      return "bold_off_permille " + int_text(r.get_int("bold_off_permille")) +
+                             " is above bold_on_permille " + int_text(r.get_int("bold_on_permille"));
+                  }
+                  return std::nullopt;
+              }},
     };
     return Schema(std::move(fields), std::move(checks));
 }

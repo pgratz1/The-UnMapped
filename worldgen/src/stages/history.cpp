@@ -4,15 +4,44 @@
 #include "worldgen/stages/history.hpp"
 
 #include <string>
+#include <vector>
 
 #include "worldgen/core/error.hpp"
+#include "worldgen/db/schema.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
+#include "worldgen/history/monsters.hpp"
 #include "worldgen/history/names.hpp"
 #include "worldgen/history/peoples.hpp"
 #include "worldgen/history/renaming.hpp"
 
 namespace worldgen::stages {
+
+namespace {
+
+// P5-02 10.4: every participant of entity type monster or site names a row
+// of table monster or site (ids are 1, 2, ...).
+void check_monster_participants(const HistoryResult& r) {
+    const auto monsters = static_cast<std::int64_t>(r.monsters.size());
+    const auto sites = static_cast<std::int64_t>(r.sites.size());
+    for (const db::EventParticipantRow& p : r.event_participants) {
+        const bool monster = p.entity_type == static_cast<std::int64_t>(history::EntityType::monster);
+        const bool site = p.entity_type == static_cast<std::int64_t>(history::EntityType::site);
+        if ((monster && (p.entity_id < 1 || p.entity_id > monsters)) || (site && (p.entity_id < 1 || p.entity_id > sites))) {
+            const db::EventRow& e = r.events[static_cast<std::size_t>(p.event - 1)];
+            for (const db::EventKindRow& row : r.event_kinds) {
+                if (row.id == e.kind) {
+                    throw FatalError("history: event " + db::format_i64(p.event) + " (" + row.key + "): " +
+                                     (monster ? "monster " : "site ") + db::format_i64(p.entity_id) + " has no row");
+                }
+            }
+            throw FatalError("history: event " + db::format_i64(p.event) + ": " + (monster ? "monster " : "site ") +
+                             db::format_i64(p.entity_id) + " has no row");
+        }
+    }
+}
+
+}  // namespace
 
 HistoryResult history_stage(const data::ContentSet& content, const history::HistoryInputs& inputs) {
     // 3.4 item 2: tuning.
@@ -36,16 +65,28 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     history::PeoplesSubsystem peoples;
     history::PeoplesAwakening awakening(peoples);
     history::ConflictSubsystem conflict(peoples, content);
+    // P5-02 6.1, 7, 9.3: the monsters run after renaming and are the second
+    // tension source; peoples reads their wild view, renaming their names.
+    history::MonstersSubsystem monsters(peoples, content);
     history::RenamingSubsystem renaming(peoples, renaming_tuning, catalogue);
+    peoples.set_wild(&monsters);
+    renaming.set_monsters(&monsters);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming};
-    config.tension = {&conflict};
+    config.subsystems = {&peoples, &conflict, &renaming, &monsters};
+    config.tension = {&conflict, &monsters};
     config.interventions = &none;
     config.catalogue = &catalogue;
     HistoryResult result = history::run_engine(content, inputs, config);
     result.region_names = renaming.sorted_rows();  // P3-04 r21 23.4
+    monsters.finish(inputs.params.span);  // P5-02 6.2.2: the rows of year E - 1
+    result.beasts = monsters.beast_rows();
+    result.monster_kinds = monsters.monster_kind_rows();
+    result.beast_populations = monsters.beast_population_rows();
+    result.monsters = monsters.monster_rows();
+    result.sites = monsters.site_rows();
+    check_monster_participants(result);  // P5-02 10.4
     return result;
 }
 
@@ -64,6 +105,12 @@ void write_history_result(StageContext& context, const HistoryResult& r) {
     for (const db::RegionControlRow& row : r.region_control) context.write_region_control(row);
     for (const db::RelationRow& row : r.relations) context.write_relation(row);
     for (const db::RegionNameRow& row : r.region_names) context.write_region_name(row);  // schema 8
+    // schema 9 (P5-02 11.1)
+    for (const db::BeastRow& row : r.beasts) context.write_beast(row);
+    for (const db::MonsterKindRow& row : r.monster_kinds) context.write_monster_kind(row);
+    for (const db::BeastPopulationRow& row : r.beast_populations) context.write_beast_population(row);
+    for (const db::MonsterRow& row : r.monsters) context.write_monster(row);
+    for (const db::SiteRow& row : r.sites) context.write_site(row);
 }
 
 void run_history(StageContext& context) {

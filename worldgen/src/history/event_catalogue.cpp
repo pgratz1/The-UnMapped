@@ -4,6 +4,7 @@
 #include "worldgen/history/event_catalogue.hpp"
 
 #include <algorithm>
+#include <tuple>
 #include <cstddef>
 #include <new>
 #include <utility>
@@ -199,6 +200,40 @@ EventCatalogue build_compiled() {
     // history, caused by its defining event.
     c.kinds.push_back(KindDef{43, "region_renamed", true, 1, 2, {role(1, "namer", EntityType::civilization, 0, 1)},
                               {}, 0, {}});
+    // P5-02 10.1 (generator 0.23.0): kinds 44 to 55, beasts, monsters and
+    // sites.
+    const auto monster_role = [] { return role(1, "monster", EntityType::monster, 1, 1); };
+    c.kinds.push_back(KindDef{44, "monster_appeared", false, 1, 0,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{45, "undead_rose", true, 1, 2,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{46, "monster_woke", true, 1, 0, {monster_role()}, {}, 0, {}});
+    c.kinds.push_back(KindDef{47, "monster_slept", true, 1, 0,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{48, "monster_raid", true, 1, 1,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)},
+                              {"dead", "plunder"}, 0, {}});
+    c.kinds.push_back(KindDef{49, "settlement_overrun", true, 1, 1,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "lair", EntityType::site, 1, 1)},
+                              {"survivors"}, 0, {}});
+    c.kinds.push_back(KindDef{50, "monster_slain", true, 1, 0,
+                              {monster_role(), role(2, "slayer", EntityType::civilization, 1, 1)}, {"hunters"}, 0, {}});
+    c.kinds.push_back(KindDef{51, "monster_driven_off", true, 1, 0,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{52, "monster_died", true, 1, 0, {monster_role()}, {}, 0, {}});
+    c.kinds.push_back(KindDef{53, "beasts_bold", false, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1)},
+                              {"beast", "dead"}, 0, {}});
+    c.kinds.push_back(KindDef{54, "outpost_built", true, 1, 0,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "enemy", EntityType::civilization, 1, 1), role(3, "site", EntityType::site, 1, 1)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{55, "outpost_abandoned", false, 1, 0,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "site", EntityType::site, 1, 1)},
+                              {"reason"}, 0, {}});
     return c;
 }
 
@@ -255,9 +290,10 @@ enum class TokenType : std::uint8_t {
     settlement,
     causes,
     region_former,  // r21 23.1
+    beast,          // P5-02 10.3: {@beast}
 };
 
-enum class Form : std::uint8_t { name, plural, adjective, all };
+enum class Form : std::uint8_t { name, plural, adjective, all, kind };  // kind: P5-02 10.3
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -367,6 +403,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
                 return "{@settlement} needs a kind with a settlement" + where;
             }
             out.type = TokenType::settlement;
+        } else if (body == "@beast") {  // P5-02 10.3
+            if (kind.value_seq("beast") == 0) {
+                return "{@beast} needs a kind with a value 'beast'" + where;
+            }
+            out.type = TokenType::beast;
         } else {
             return unknown;
         }
@@ -434,12 +475,17 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::adjective;
         } else if (*form == "all") {
             out.form = Form::all;
+        } else if (*form == "kind") {  // P5-02 10.3
+            out.form = Form::kind;
         } else {
             return unknown;
         }
     }
     if ((out.form == Form::plural || out.form == Form::adjective) && r->type != EntityType::race) {
         return "form '" + std::string(*form) + "' needs a race role" + where;
+    }
+    if (out.form == Form::kind && r->type != EntityType::monster) {
+        return "form 'kind' needs a monster role" + where;
     }
     if (r->min_count == 0 && out.form != Form::all) {
         return "role '" + r->role + "' may have no participant" + where;
@@ -798,11 +844,49 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             v.civilizations_.emplace_back(r.id, r.name);
             v.civilization_info_.emplace_back(r.id, CivilizationInfo{r.race, r.founded_year});
         }
-        for (const db::SettlementRow& r : read(db::read_settlement_rows(world), db::SETTLEMENT_TABLE)) {
+        const std::vector<db::SettlementRow> settlement_rows = read(db::read_settlement_rows(world), db::SETTLEMENT_TABLE);
+        for (const db::SettlementRow& r : settlement_rows) {
             v.settlements_.emplace_back(r.id, r.name);
         }
         for (const db::RegionRow& r : read(db::read_region_rows(world), db::REGION_TABLE)) {
             v.regions_.emplace_back(r.id, r.name);
+        }
+        // P5-02 10.3 (schema 9): the names of monsters and sites, the nouns
+        // of the monster kinds, the plurals of the beasts. Rows in primary-key
+        // order (ids are checked by monster_tables_problem below).
+        v.beast_rows_ = read(db::read_beast_rows(world), db::BEAST_TABLE);
+        v.monster_kind_rows_ = read(db::read_monster_kind_rows(world), db::MONSTER_KIND_TABLE);
+        v.monster_rows_ = read(db::read_monster_rows(world), db::MONSTER_TABLE);
+        v.site_rows_ = read(db::read_site_rows(world), db::SITE_TABLE);
+        for (const db::BeastRow& r : v.beast_rows_) {
+            v.beast_plurals_.emplace_back(r.id, r.plural);
+        }
+        for (const db::MonsterKindRow& r : v.monster_kind_rows_) {
+            v.monster_kind_nouns_.emplace_back(r.id, r.noun);
+        }
+        for (const db::MonsterRow& r : v.monster_rows_) {
+            v.monsters_.emplace_back(r.id, MonsterNames{r.name, r.kind});
+        }
+        for (const db::SiteRow& r : v.site_rows_) {
+            v.sites_.emplace_back(r.id, r.name);
+        }
+        const auto ascending = [](const auto& list) {
+            for (std::size_t i = 1; i < list.size(); ++i) {
+                if (list[i].first <= list[i - 1].first) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        if (!ascending(v.beast_plurals_) || !ascending(v.monster_kind_nouns_) || !ascending(v.monsters_) ||
+            !ascending(v.sites_)) {
+            // A file whose ids do not ascend is refused by the 11.4 checks;
+            // the lookups above need sorted ids, so they are cleared here and
+            // the checks report the row (P5-02 11.4).
+            v.beast_plurals_.clear();
+            v.monster_kind_nouns_.clear();
+            v.monsters_.clear();
+            v.sites_.clear();
         }
         std::vector<std::int64_t> culture_ids;
         for (const db::CultureRow& r : read(db::read_culture_rows(world), db::CULTURE_TABLE)) {
@@ -848,7 +932,9 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             if (!type || *type != kind.roles[static_cast<std::size_t>(r.role - 1)].type) {
                 view_fail(at + "entity type " + int_text(r.entity_type) + " is not the role's");
             }
-            if (v.name(*type, r.entity_id) == nullptr) {
+            // P5-02 11.4: a monster or site participant is checked with the
+            // tables of schema 9 below.
+            if (*type != EntityType::monster && *type != EntityType::site && v.name(*type, r.entity_id) == nullptr) {
                 view_fail(at + std::string(entity_type_key(*type)) + " " + int_text(r.entity_id) + " does not exist");
             }
             e.participants.push_back(r);
@@ -912,6 +998,65 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
                 view_fail(*why);
             }
         }
+        // P5-02 11.4 (schema 9), after the region_name checks.
+        {
+            std::vector<db::EventRow> event_rows;
+            std::vector<db::EventParticipantRow> participants;
+            std::vector<db::EventValueRow> values;
+            std::vector<db::EventCauseRow> causes;
+            for (const Event& e : v.events_) {
+                event_rows.push_back(e.row);
+                participants.insert(participants.end(), e.participants.begin(), e.participants.end());
+                for (std::size_t i = 0; i < e.values.size(); ++i) {
+                    values.push_back(db::EventValueRow{e.row.id, static_cast<std::int64_t>(i) + 1, e.values[i]});
+                }
+                for (const std::int64_t c : e.causes) {
+                    causes.push_back(db::EventCauseRow{e.row.id, c});
+                }
+            }
+            std::vector<std::int64_t> region_ids;
+            for (const auto& [id, name] : v.regions_) {
+                region_ids.push_back(id);
+            }
+            std::vector<std::int64_t> civ_ids;
+            for (const auto& [id, name] : v.civilizations_) {
+                civ_ids.push_back(id);
+            }
+            std::stable_sort(civ_ids.begin(), civ_ids.end());
+            std::int64_t end_year = 0;
+            std::int64_t map_size = 0;
+            if (const std::optional<std::string> text = world.meta(db::META_HISTORY_END_YEAR)) {
+                if (const std::optional<std::uint64_t> y = db::parse_canonical_u64(*text); y && *y <= 1000000000U) {
+                    end_year = static_cast<std::int64_t>(*y);
+                }
+            }
+            if (const std::optional<std::string> text = world.meta(db::META_PARAM_MAP_SIZE)) {
+                if (const std::optional<std::uint64_t> n = db::parse_canonical_u64(*text); n && *n <= 65536U) {
+                    map_size = static_cast<std::int64_t>(*n);
+                }
+            }
+            MonsterTables mt;
+            mt.beasts = v.beast_rows_;
+            mt.monster_kinds = v.monster_kind_rows_;
+            const std::vector<db::BeastPopulationRow> populations =
+                read(db::read_beast_population_rows(world), db::BEAST_POPULATION_TABLE);
+            mt.beast_populations = populations;
+            mt.monsters = v.monster_rows_;
+            mt.sites = v.site_rows_;
+            mt.settlements = settlement_rows;
+            mt.region_ids = region_ids;
+            mt.civ_ids = civ_ids;
+            mt.end_year = end_year;
+            mt.map_size = map_size;
+            mt.events = event_rows;
+            mt.participants = participants;
+            mt.values = values;
+            mt.causes = causes;
+            mt.catalogue = &v.catalogue_;
+            if (std::optional<std::string> why = monster_tables_problem(mt)) {
+                view_fail(*why);
+            }
+        }
         v.region_name_range_.assign(v.regions_.size(), {0, 0});
         for (std::size_t i = 0; i < v.region_names_.size(); ++i) {
             // Region ids are 1, 2, ... in valid worlds; find by search otherwise.
@@ -960,12 +1105,27 @@ const std::string* HistoryView::name(EntityType type, std::int64_t id) const noe
         case EntityType::civilization: return find_by_id(civilizations_, id);
         case EntityType::settlement: return find_by_id(settlements_, id);
         case EntityType::region: return find_by_id(regions_, id);
+        case EntityType::monster: {  // P5-02 10.3
+            const MonsterNames* m = find_by_id(monsters_, id);
+            return m != nullptr ? &m->name : nullptr;
+        }
+        case EntityType::site: return find_by_id(sites_, id);
         case EntityType::figure:
-        case EntityType::faction:
-        case EntityType::monster:
-        case EntityType::site: return nullptr;
+        case EntityType::faction: return nullptr;
     }
     return nullptr;
+}
+
+const std::string* HistoryView::monster_noun(std::int64_t monster) const noexcept {
+    const MonsterNames* m = find_by_id(monsters_, monster);
+    if (m == nullptr) {
+        return nullptr;
+    }
+    return find_by_id(monster_kind_nouns_, m->kind);
+}
+
+const std::string* HistoryView::beast_plural(std::int64_t beast) const noexcept {
+    return find_by_id(beast_plurals_, beast);
 }
 
 const std::string* HistoryView::race_plural(std::int64_t id) const noexcept {
@@ -1056,9 +1216,15 @@ std::optional<std::string> region_name_rows_problem(std::span<const db::RegionNa
                                                     std::span<const std::int64_t> region_ids,
                                                     std::span<const std::int64_t> culture_ids, std::int64_t end_year,
                                                     std::span<const db::EventRow> events, std::int64_t renamed_kind) {
+    const db::RegionNameRow* previous = nullptr;
     for (const db::RegionNameRow& r : rows) {
         const std::string at = "corrupt table 'region_name': row (" + int_text(r.region) + ", " +
                                int_text(r.from_year) + "): ";
+        // P5-02 21.3 A1: rows strictly ascending in (region, from_year).
+        if (previous != nullptr && std::pair(r.region, r.from_year) <= std::pair(previous->region, previous->from_year)) {
+            return at + "not above the previous row";
+        }
+        previous = &r;
         if (!sorted_has(region_ids, r.region)) {
             return at + "unknown region " + int_text(r.region);
         }
@@ -1080,15 +1246,355 @@ std::optional<std::string> region_name_rows_problem(std::span<const db::RegionNa
         }
     }
     if (renamed_kind != 0) {
+        // P5-02 21.3 A2: one pass marks the events with a row (every row's
+        // event is an event, checked above), one pass tests the kind's events.
+        std::vector<std::uint8_t> has(events.size() + 1, 0);
+        for (const db::RegionNameRow& r : rows) {
+            has[static_cast<std::size_t>(r.event)] = 1;
+        }
         for (const db::EventRow& e : events) {
             if (e.kind != renamed_kind) {
                 continue;
             }
-            const bool has_row = std::any_of(rows.begin(), rows.end(),
-                                             [&e](const db::RegionNameRow& r) { return r.event == e.id; });
+            const bool has_row = e.id >= 1 && static_cast<std::size_t>(e.id) < has.size() &&
+                                 has[static_cast<std::size_t>(e.id)] != 0;
             if (!has_row) {
                 return "corrupt table 'event': row " + int_text(e.id) + ": region_renamed without a region_name row";
             }
+        }
+    }
+    return std::nullopt;
+}
+
+// --- P5-02 11.4 ------------------------------------------------------------------------------
+
+namespace {
+
+bool is_definition_id(std::string_view s) noexcept {
+    return s.size() <= 64U && is_key(s);
+}
+
+bool is_display_name(std::string_view s) noexcept {
+    if (s.empty() || s.size() > 32U || !(s.front() >= 'A' && s.front() <= 'Z')) {
+        return false;
+    }
+    return std::all_of(s.begin(), s.end(),
+                       [](char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' '; });
+}
+
+bool is_plural(std::string_view s) noexcept {
+    if (s.empty() || s.size() > 32U || s.front() == ' ' || s.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == ' ' ? s[i + 1] == ' ' : !(s[i] >= 'a' && s[i] <= 'z')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_noun(std::string_view s) noexcept {
+    if (s.size() > 48U || !(s.substr(0, 2) == "a " || s.substr(0, 3) == "an ")) {
+        return false;
+    }
+    return std::all_of(s.begin(), s.end(), [](char c) { return (c >= 'a' && c <= 'z') || c == ' ' || c == '\''; });
+}
+
+// A monster or site name: ASCII letters, space, ' and -, 1 to 64 bytes.
+bool is_entity_name(std::string_view s) noexcept {
+    return is_region_name_text(s);
+}
+
+}  // namespace
+
+std::int64_t settlement_ending_code(std::string_view ruin_kind, std::span<const std::string_view> cause_kinds) noexcept {
+    if (ruin_kind == "sacked") {
+        return 1;
+    }
+    if (ruin_kind == "settlement_overrun") {
+        return 2;
+    }
+    if (ruin_kind == "settlement_abandoned" || ruin_kind == "settlement_abandoned_to") {
+        bool famine = false;
+        for (const std::string_view k : cause_kinds) {
+            if (k == "plague" || k == "plague_spread" || k == "plague_outbreak") {
+                return 3;
+            }
+            famine = famine || k == "famine";
+        }
+        if (famine) {
+            return 4;
+        }
+    }
+    return 5;
+}
+
+std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
+    const EventCatalogue& cat = *t.catalogue;
+    const std::int64_t n_events = static_cast<std::int64_t>(t.events.size());
+    const auto kind_key = [&](std::int64_t event) -> std::string_view {
+        if (event < 1 || event > n_events) {
+            return {};
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        return k != nullptr ? std::string_view(k->key) : std::string_view();
+    };
+    const auto year_of = [&](std::int64_t event) {
+        return t.events[static_cast<std::size_t>(event - 1)].year;
+    };
+    // Per event: its participants [first, last) and causes [first, last).
+    std::vector<std::pair<std::size_t, std::size_t>> parts(t.events.size(), {0, 0});
+    for (std::size_t i = 0; i < t.participants.size(); ++i) {
+        const std::int64_t e = t.participants[i].event;
+        if (e >= 1 && e <= n_events) {
+            auto& r = parts[static_cast<std::size_t>(e - 1)];
+            if (r.first == r.second) {
+                r = {i, i};
+            }
+            r.second = i + 1;
+        }
+    }
+    std::vector<std::pair<std::size_t, std::size_t>> causes(t.events.size(), {0, 0});
+    for (std::size_t i = 0; i < t.causes.size(); ++i) {
+        const std::int64_t e = t.causes[i].event;
+        if (e >= 1 && e <= n_events) {
+            auto& r = causes[static_cast<std::size_t>(e - 1)];
+            if (r.first == r.second) {
+                r = {i, i};
+            }
+            r.second = i + 1;
+        }
+    }
+    // The entity of the first participant of `event` in role `role` of type `type`, 0 none.
+    const auto participant = [&](std::int64_t event, std::string_view role) -> std::int64_t {
+        if (event < 1 || event > n_events) {
+            return 0;
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        const RoleDef* r = k != nullptr ? k->find_role(role) : nullptr;
+        if (r == nullptr) {
+            return 0;
+        }
+        const auto [a, b] = parts[static_cast<std::size_t>(event - 1)];
+        for (std::size_t i = a; i < b; ++i) {
+            if (t.participants[i].role == r->seq) {
+                return t.participants[i].entity_id;
+            }
+        }
+        return 0;
+    };
+    const auto names_site = [&](std::int64_t event, std::int64_t site) {
+        if (event < 1 || event > n_events) {
+            return false;
+        }
+        const auto [a, b] = parts[static_cast<std::size_t>(event - 1)];
+        for (std::size_t i = a; i < b; ++i) {
+            if (t.participants[i].entity_type == static_cast<std::int64_t>(EntityType::site) &&
+                t.participants[i].entity_id == site) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const auto n_monsters = static_cast<std::int64_t>(t.monsters.size());
+    const auto n_sites = static_cast<std::int64_t>(t.sites.size());
+    const auto n_beasts = static_cast<std::int64_t>(t.beasts.size());
+    const auto n_kinds = static_cast<std::int64_t>(t.monster_kinds.size());
+    const std::string range = " outside 0 to " + int_text(t.end_year - 1);
+    // beast.
+    for (std::size_t i = 0; i < t.beasts.size(); ++i) {
+        const db::BeastRow& r = t.beasts[i];
+        const std::string at = "corrupt table 'beast': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (!is_definition_id(r.key)) return at + "key is not a definition id";
+        if (!is_display_name(r.name)) return at + "name is not a name";
+        if (!is_plural(r.plural)) return at + "plural is not a plural";
+        if (r.menace < 0 || r.menace > 1000) return at + "menace " + int_text(r.menace) + " outside 0 to 1000";
+        if (r.food < 0 || r.food > 1000) return at + "food " + int_text(r.food) + " outside 0 to 1000";
+    }
+    // monster_kind.
+    for (std::size_t i = 0; i < t.monster_kinds.size(); ++i) {
+        const db::MonsterKindRow& r = t.monster_kinds[i];
+        const std::string at = "corrupt table 'monster_kind': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (!is_definition_id(r.key)) return at + "key is not a definition id";
+        if (!is_display_name(r.name)) return at + "name is not a name";
+        if (!is_noun(r.noun)) return at + "noun is not a noun";
+        if (r.grouped != 0 && r.grouped != 1) return at + "grouped " + int_text(r.grouped) + " is not 0 or 1";
+        if (r.wake != 1 && r.wake != 2) return at + "wake " + int_text(r.wake) + " is not 1 or 2";
+        if (r.might < 1 || r.might > 10000000) return at + "might " + int_text(r.might) + " outside 1 to 10000000";
+    }
+    // beast_population.
+    const db::BeastPopulationRow* prev = nullptr;
+    for (const db::BeastPopulationRow& r : t.beast_populations) {
+        const std::string at = "corrupt table 'beast_population': row (" + int_text(r.region) + ", " +
+                               int_text(r.beast) + ", " + int_text(r.year) + "): ";
+        if (prev != nullptr &&
+            std::tie(r.region, r.beast, r.year) <= std::tie(prev->region, prev->beast, prev->year)) {
+            return at + "not above the previous row";
+        }
+        if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
+        if (r.beast < 1 || r.beast > n_beasts) return at + "unknown beast " + int_text(r.beast);
+        if (r.year < 0 || r.year > t.end_year - 1) return at + "year " + int_text(r.year) + range;
+        if (r.count < 0 || r.count > 1000000) return at + "count " + int_text(r.count) + " outside 0 to 1000000";
+        if (prev != nullptr && prev->region == r.region && prev->beast == r.beast && prev->count == r.count) {
+            return at + "count equals the previous row of this region and beast";
+        }
+        prev = &r;
+    }
+    // site.
+    const auto n_settlements = static_cast<std::int64_t>(t.settlements.size());
+    const auto settlement_of = [&](std::int64_t id) -> const db::SettlementRow* {
+        if (id < 1 || id > n_settlements || t.settlements[static_cast<std::size_t>(id - 1)].id != id) {
+            return nullptr;
+        }
+        return &t.settlements[static_cast<std::size_t>(id - 1)];
+    };
+    std::vector<std::uint8_t> origin_of(t.events.size() + 1, 0);  // events that are a site's origin_event (count)
+    for (std::size_t i = 0; i < t.sites.size(); ++i) {
+        const db::SiteRow& r = t.sites[i];
+        const std::string at = "corrupt table 'site': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (r.kind != 1 && r.kind != 2) return at + "kind " + int_text(r.kind) + " is not 1 or 2";
+        if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
+        if (r.x < 0 || r.y < 0 || r.x >= t.map_size || r.y >= t.map_size) {
+            return at + "cell " + int_text(r.x) + " " + int_text(r.y) + " outside the map";
+        }
+        if (r.settlement != 0) {
+            const db::SettlementRow* s = settlement_of(r.settlement);
+            if (s == nullptr) return at + "unknown settlement " + int_text(r.settlement);
+            if (s->x != r.x || s->y != r.y) {
+                return at + "settlement " + int_text(r.settlement) + " is not at the site's cell";
+            }
+        }
+        if (r.kind == 1) {
+            if (r.monster < 1 || r.monster > n_monsters) return at + "monster " + int_text(r.monster) + " is not a monster row";
+            if (r.founder_civ != 0) return at + "founder_civ " + int_text(r.founder_civ) + " of a lair";
+        } else {
+            if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
+            if (r.monster != 0) return at + "monster " + int_text(r.monster) + " of an outpost";
+        }
+        if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
+        const std::string_view ok = kind_key(r.origin_event);
+        const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
+                                ok == "outpost_built") &&
+                               year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
+        if (!origin_ok) {
+            return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
+        }
+        if (origin_of[static_cast<std::size_t>(r.origin_event)] < 2) {
+            ++origin_of[static_cast<std::size_t>(r.origin_event)];
+        }
+        if (r.ended_year.has_value() != (r.ending_event != 0) || (r.ending_event != 0) != (r.ending != 0)) {
+            return at + "end columns disagree";
+        }
+        if (r.ended_year) {
+            if (*r.ended_year < r.origin_year) return at + "ended_year " + int_text(*r.ended_year) + " before origin_year";
+            if (r.ending_event < 1 || r.ending_event > n_events || year_of(r.ending_event) != *r.ended_year) {
+                return at + "ending_event " + int_text(r.ending_event) + " is not an event of year " +
+                       int_text(*r.ended_year);
+            }
+        }
+        if (r.ending < 0 || r.ending > 6) return at + "ending " + int_text(r.ending) + " outside 0 to 6";
+    }
+    // monster.
+    for (std::size_t i = 0; i < t.monsters.size(); ++i) {
+        const db::MonsterRow& r = t.monsters[i];
+        const std::string at = "corrupt table 'monster': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (r.kind < 1 || r.kind > n_kinds) return at + "unknown kind " + int_text(r.kind);
+        if (!is_entity_name(r.name)) return at + "name is not a name";
+        if (r.lair_site < 1 || r.lair_site > n_sites || t.sites[static_cast<std::size_t>(r.lair_site - 1)].kind != 1 ||
+            t.sites[static_cast<std::size_t>(r.lair_site - 1)].monster != r.id) {
+            return at + "lair_site " + int_text(r.lair_site) + " is not a lair of this monster";
+        }
+        const std::string_view bk = kind_key(r.born_event);
+        if (!((bk == "monster_appeared" || bk == "undead_rose") && year_of(r.born_event) == r.born &&
+              participant(r.born_event, "monster") == r.id)) {
+            return at + "born_event " + int_text(r.born_event) + " is not the appearance of this monster in year " +
+                   int_text(r.born);
+        }
+        if (r.status < 1 || r.status > 4) return at + "status " + int_text(r.status) + " outside 1 to 4";
+        const bool alive = r.status == 1 || r.status == 2;
+        if (alive != !r.died.has_value() || alive != (r.death_event == 0)) return at + "end columns disagree";
+        if (r.status == 3) {
+            const bool ok3 = r.slain_by != 0 && kind_key(r.death_event) == "monster_slain" &&
+                             year_of(r.death_event) == *r.died && participant(r.death_event, "monster") == r.id &&
+                             participant(r.death_event, "slayer") == r.slain_by;
+            if (!ok3) return at + "death_event " + int_text(r.death_event) + " is not this monster's slaying";
+        } else if (r.slain_by != 0) {
+            return at + "slain_by " + int_text(r.slain_by) + " of a monster not slain";
+        }
+        if (r.status == 4) {
+            const bool ok4 = kind_key(r.death_event) == "monster_died" && year_of(r.death_event) == *r.died &&
+                             participant(r.death_event, "monster") == r.id;
+            if (!ok4) return at + "death_event " + int_text(r.death_event) + " is not this monster's death";
+        }
+        if (r.hoard < 0) return at + "hoard " + int_text(r.hoard) + " negative";
+    }
+    // settlement.ending (8.3).
+    std::vector<std::int64_t> faded_ruin(t.settlements.size() + 1, 0);
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "ruin_faded" && e.settlement >= 1 && e.settlement <= n_settlements) {
+            const auto [a, b] = causes[static_cast<std::size_t>(e.id - 1)];
+            if (a < b) {
+                faded_ruin[static_cast<std::size_t>(e.settlement)] = t.causes[a].cause;
+            }
+        }
+    }
+    for (const db::SettlementRow& r : t.settlements) {
+        std::int64_t expected = 0;
+        if (r.status == 3 || r.status == 4) {
+            const std::int64_t ruin =
+                r.status == 3 ? r.ruin_event
+                              : (r.id >= 1 && r.id <= n_settlements ? faded_ruin[static_cast<std::size_t>(r.id)] : 0);
+            std::vector<std::string_view> ck;
+            if (ruin >= 1 && ruin <= n_events) {
+                const auto [a, b] = causes[static_cast<std::size_t>(ruin - 1)];
+                for (std::size_t i = a; i < b; ++i) {
+                    ck.push_back(kind_key(t.causes[i].cause));
+                }
+            }
+            expected = settlement_ending_code(kind_key(ruin), ck);
+        }
+        if (r.ending != expected) {
+            return "corrupt table 'settlement': row " + int_text(r.id) + ": ending " + int_text(r.ending) +
+                   " is not its ruin's ending " + int_text(expected);
+        }
+    }
+    // Events.
+    for (const db::EventParticipantRow& p : t.participants) {
+        const bool monster = p.entity_type == static_cast<std::int64_t>(EntityType::monster);
+        const bool site = p.entity_type == static_cast<std::int64_t>(EntityType::site);
+        if ((monster && (p.entity_id < 1 || p.entity_id > n_monsters)) || (site && (p.entity_id < 1 || p.entity_id > n_sites))) {
+            return "corrupt table 'event': row " + int_text(p.event) + ": " + (monster ? "monster " : "site ") +
+                   int_text(p.entity_id) + " has no row";
+        }
+    }
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        if ((k == "monster_appeared" || k == "undead_rose" || k == "settlement_overrun" || k == "outpost_built") &&
+            origin_of[static_cast<std::size_t>(e.id)] != 1) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": " + std::string(k) + " without its site row";
+        }
+    }
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(v.event - 1)].kind);
+        if (k != nullptr && k->value_seq("beast") == v.seq && (v.value < 1 || v.value > n_beasts)) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value beast " + int_text(v.value) +
+                   " is not a beast";
         }
     }
     return std::nullopt;
@@ -1130,6 +1636,8 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         const std::string* s = nullptr;
         if (form == Form::plural) {
             s = view.race_plural(p.entity_id);
+        } else if (form == Form::kind) {
+            s = view.monster_noun(p.entity_id);  // P5-02 10.3
         } else if (form == Form::adjective) {
             s = view.race_adjective(p.entity_id);
         } else {
@@ -1254,6 +1762,15 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                     fail(at + "no settlement " + int_text(e->row.settlement));
                 }
                 append_name(*s);
+                break;
+            }
+            case TokenType::beast: {  // P5-02 10.3: copied as stored
+                const std::int64_t b = value_of("beast");
+                const std::string* s = view.beast_plural(b);
+                if (s == nullptr) {
+                    fail(at + "no beast " + int_text(b));
+                }
+                out += *s;
                 break;
             }
             case TokenType::causes: {

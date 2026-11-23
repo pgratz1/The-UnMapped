@@ -918,14 +918,15 @@ void StageWriter::write_settlement(const SettlementRow& row) {
                                    row.founding_event, row.owner_civ, row.kind,   row.status,      row.population};
     insert_row(state_->db.get(),
                "INSERT INTO settlement (id, name, x, y, region, founder_civ, founded_year, founding_event, "
-               "owner_civ, kind, status, population, ruined_year, ruin_event) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, "
-               "?9, ?10, ?11, ?12, ?13, ?14)",
+               "owner_civ, kind, status, population, ruined_year, ruin_event, ending) VALUES (?1, ?2, ?3, ?4, ?5, ?6, "
+               "?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                3, ints,
                [&row](detail::Statement& stmt) {
                    int rc = stmt.bind_int64(1, row.id);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
                    if (rc == SQLITE_OK) rc = bind_optional(stmt, 13, row.ruined_year);
                    if (rc == SQLITE_OK) rc = stmt.bind_int64(14, row.ruin_event);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(15, row.ending);
                    return rc;
                },
                "settlement row " + format_i64(row.id));
@@ -985,6 +986,101 @@ void StageWriter::write_relation(const RelationRow& row) {
                },
                "relation row");
     state_->history_keys.relation = std::move(key);
+}
+
+void StageWriter::write_beast(const BeastRow& row) {
+    require_open(state_, "write_beast");
+    require_next_id("write_beast", "beast", row.id, state_->history_keys.beast);
+    const std::int64_t ints[2] = {row.menace, row.food};
+    insert_row(state_->db.get(), "INSERT INTO beast (id, key, name, plural, menace, food) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+               5, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.plural);
+                   return rc;
+               },
+               "beast row " + format_i64(row.id));
+    state_->history_keys.beast = row.id;
+}
+
+void StageWriter::write_monster_kind(const MonsterKindRow& row) {
+    require_open(state_, "write_monster_kind");
+    require_next_id("write_monster_kind", "monster_kind", row.id, state_->history_keys.monster_kind);
+    const std::int64_t ints[3] = {row.grouped, row.wake, row.might};
+    insert_row(state_->db.get(),
+               "INSERT INTO monster_kind (id, key, name, noun, grouped, wake, might) VALUES (?1, ?2, ?3, ?4, ?5, ?6, "
+               "?7)",
+               5, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.noun);
+                   return rc;
+               },
+               "monster_kind row " + format_i64(row.id));
+    state_->history_keys.monster_kind = row.id;
+}
+
+void StageWriter::write_beast_population(const BeastPopulationRow& row) {
+    require_open(state_, "write_beast_population");
+    const std::tuple<std::int64_t, std::int64_t, std::int64_t> key{row.region, row.beast, row.year};
+    const std::string key_str = "(" + format_i64(row.region) + ", " + format_i64(row.beast) + ", " +
+                                format_i64(row.year) + ")";
+    if (row.region < 1 || key <= state_->history_keys.beast_population) {
+        fatal_text("StageWriter::write_beast_population: row " + key_str +
+                   " is not above the previous row with a first key column >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[4] = {row.region, row.beast, row.year, row.count};
+    insert_row(state_->db.get(), "INSERT INTO beast_population (region, beast, year, count) VALUES (?1, ?2, ?3, ?4)", 1,
+               ints, NO_TEXT, "beast_population row " + key_str);
+    state_->history_keys.beast_population = key;
+}
+
+void StageWriter::write_monster(const MonsterRow& row) {
+    require_open(state_, "write_monster");
+    require_next_id("write_monster", "monster", row.id, state_->history_keys.monster);
+    const std::int64_t ints[4] = {row.kind, row.lair_site, row.born, row.born_event};
+    const std::int64_t tail[4] = {row.death_event, row.slain_by, row.status, row.hoard};
+    insert_row(state_->db.get(),
+               "INSERT INTO monster (id, name, kind, lair_site, born, born_event, died, death_event, slain_by, "
+               "status, hoard) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+               3, ints,
+               [&row, &tail](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 7, row.died);
+                   for (int i = 0; rc == SQLITE_OK && i < 4; ++i) {
+                       rc = stmt.bind_int64(8 + i, tail[static_cast<std::size_t>(i)]);
+                   }
+                   return rc;
+               },
+               "monster row " + format_i64(row.id));
+    state_->history_keys.monster = row.id;
+}
+
+void StageWriter::write_site(const SiteRow& row) {
+    require_open(state_, "write_site");
+    require_next_id("write_site", "site", row.id, state_->history_keys.site);
+    const std::int64_t ints[9] = {row.kind,        row.region,    row.x,           row.y,          row.settlement,
+                                  row.founder_civ, row.monster,   row.origin_year, row.origin_event};
+    insert_row(state_->db.get(),
+               "INSERT INTO site (id, name, kind, region, x, y, settlement, founder_civ, monster, origin_year, "
+               "origin_event, ended_year, ending_event, ending) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, "
+               "?12, ?13, ?14)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 12, row.ended_year);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(13, row.ending_event);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(14, row.ending);
+                   return rc;
+               },
+               "site row " + format_i64(row.id));
+    state_->history_keys.site = row.id;
 }
 
 void StageWriter::write_region_name(const RegionNameRow& row) {

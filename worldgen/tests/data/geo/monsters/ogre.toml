@@ -1,29 +1,25 @@
+# Monster kind (spec P5-02 4.2). Generator 0.23.0.
 [monster.ogre]
 name = "Ogre"
 noun = "an ogre"
 grouped = false
 wake = "wild"
-biomes = [
-  { biome = "grassland", weight = 400 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 700 },
-  { biome = "highland_moor", weight = 300 },
-]
-wake_rate = 10
+biomes = [{ biome = "grassland", weight = 400 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 700 }, { biome = "highland_moor", weight = 300 }]
+wake_rate = 40
 naming_culture = "orcish"
 name_forms = ["{root} the Glutton", "{root}"]
 lair_forms = ["{root}'s Larder", "The Pit of {root}"]
 might = 200
 range_hops = 1
-raid_permille = 100
+raid_permille = 150
 toll_min_permille = 20
 toll_max_permille = 60
 kill_max = 40
 overruns = ["hamlet"]
-overrun_permille = 80
+overrun_permille = 900
 active_years = 80
 rewake_ppm = 8000
-lifespan_years = 300
+lifespan_years = 1000
 max_alive = 3
 flare = false
 hoard_permille = 3

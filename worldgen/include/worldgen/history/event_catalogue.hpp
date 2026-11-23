@@ -156,7 +156,8 @@ public:
     // The event of that id, or nullptr.
     [[nodiscard]] const Event* event(std::int64_t id) const noexcept;
     // The display name of an entity (P3-04 8.3), or nullptr when it does not
-    // exist (or its type has no names: 6 to 9).
+    // exist (or its type has no names: 6 and 7; P5-02 10.3: monster.name and
+    // site.name for 8 and 9).
     [[nodiscard]] const std::string* name(EntityType type, std::int64_t id) const noexcept;
     // The (id, name) pairs of each entity table, ascending id.
     [[nodiscard]] std::span<const std::pair<std::int64_t, std::string>> gods() const noexcept { return gods_; }
@@ -191,7 +192,22 @@ public:
     [[nodiscard]] const std::string* region_name_at_event(std::int64_t region, std::int64_t event) const noexcept;
     [[nodiscard]] const std::string* region_name_at_year(std::int64_t region, std::int64_t year) const noexcept;
 
+    // P5-02 10.3 (schema 9): monster_kind.noun of the monster's kind, and
+    // beast.plural; nullptr when the row does not exist. The rows of the
+    // tables beast, monster_kind, monster and site as read (primary-key
+    // order).
+    [[nodiscard]] const std::string* monster_noun(std::int64_t monster) const noexcept;
+    [[nodiscard]] const std::string* beast_plural(std::int64_t beast) const noexcept;
+    [[nodiscard]] std::span<const db::BeastRow> beast_rows() const noexcept { return beast_rows_; }
+    [[nodiscard]] std::span<const db::MonsterKindRow> monster_kind_rows() const noexcept { return monster_kind_rows_; }
+    [[nodiscard]] std::span<const db::MonsterRow> monster_rows() const noexcept { return monster_rows_; }
+    [[nodiscard]] std::span<const db::SiteRow> site_rows() const noexcept { return site_rows_; }
+
 private:
+    struct MonsterNames {
+        std::string name;
+        std::int64_t kind = 0;
+    };
     struct RaceNames {
         std::string name;
         std::string plural;
@@ -210,6 +226,15 @@ private:
     // Per region (index id - 1 of regions_ when ids are 1, 2, ...): the
     // range [first, last) of its rows in region_names_.
     std::vector<std::pair<std::size_t, std::size_t>> region_name_range_;
+    // P5-02 (schema 9).
+    std::vector<db::BeastRow> beast_rows_;
+    std::vector<db::MonsterKindRow> monster_kind_rows_;
+    std::vector<db::MonsterRow> monster_rows_;
+    std::vector<db::SiteRow> site_rows_;
+    std::vector<std::pair<std::int64_t, std::string>> beast_plurals_;       // ascending id
+    std::vector<std::pair<std::int64_t, std::string>> monster_kind_nouns_;  // ascending id
+    std::vector<std::pair<std::int64_t, MonsterNames>> monsters_;           // ascending id
+    std::vector<std::pair<std::int64_t, std::string>> sites_;               // ascending id
 };
 
 // P3-07 r21 26.6: the first problem of the region_name rows (primary-key
@@ -224,6 +249,38 @@ private:
                                                                   std::int64_t end_year,
                                                                   std::span<const db::EventRow> events,
                                                                   std::int64_t renamed_kind);
+
+// P5-02 11.4 (schema 9): the first problem of the tables beast,
+// monster_kind, beast_population, site and monster, of settlement.ending,
+// and of the events of kinds 44 to 55, in the order of 11.4, as
+// "corrupt table '<table>': row <key>: <reason>", or std::nullopt. Every
+// row span is in primary-key order as read; region_ids and civ_ids
+// ascending; events in id order (ids are checked to be 1, 2, ... before);
+// participants, values and causes in primary-key order; end_year E and the
+// map side. Linear in the rows (bounds-checked index lookups).
+struct MonsterTables {
+    std::span<const db::BeastRow> beasts;
+    std::span<const db::MonsterKindRow> monster_kinds;
+    std::span<const db::BeastPopulationRow> beast_populations;
+    std::span<const db::MonsterRow> monsters;
+    std::span<const db::SiteRow> sites;
+    std::span<const db::SettlementRow> settlements;
+    std::span<const std::int64_t> region_ids;
+    std::span<const std::int64_t> civ_ids;
+    std::int64_t end_year = 0;
+    std::int64_t map_size = 0;
+    std::span<const db::EventRow> events;
+    std::span<const db::EventParticipantRow> participants;
+    std::span<const db::EventValueRow> values;
+    std::span<const db::EventCauseRow> causes;
+    const EventCatalogue* catalogue = nullptr;
+};
+[[nodiscard]] std::optional<std::string> monster_tables_problem(const MonsterTables& t);
+
+// P5-02 8.3: the ending code of a settlement whose ruin event is `ruin` (0
+// when unknown: 5), given the kind key of an event and its causes.
+[[nodiscard]] std::int64_t settlement_ending_code(std::string_view ruin_kind,
+                                                  std::span<const std::string_view> cause_kinds) noexcept;
 
 // The sentence of event `event_id` (P3-04 8.5) from its kind's stored
 // template. FatalError "render_event: event <id>: <reason>" when the id is

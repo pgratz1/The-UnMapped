@@ -1,6 +1,6 @@
 #pragma once
 
-// World database schema, version 7 (spec P0-02 sections 4.2, 5;
+// World database schema, version 9 (spec P0-02 sections 4.2, 5;
 // docs/specs/schema.md; table `pass` from P1-01 section 9.1, schema 2;
 // tables `biome` and `climate` from P1-04 section 3 and P1-03 section 3,
 // schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16;
@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 8;
+inline constexpr std::int64_t SCHEMA_VERSION = 9;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -175,7 +175,7 @@ inline constexpr std::string_view DDL_SETTLEMENT =
     "CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, "
     "region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event INTEGER NOT "
     "NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, "
-    "ruined_year INTEGER, ruin_event INTEGER NOT NULL) STRICT";
+    "ruined_year INTEGER, ruin_event INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view DDL_SETTLEMENT_CENSUS =
     "CREATE TABLE settlement_census (settlement INTEGER NOT NULL, year INTEGER NOT NULL, owner_civ INTEGER NOT NULL, "
     "kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, PRIMARY KEY (settlement, year)) "
@@ -217,11 +217,41 @@ inline constexpr std::string_view DDL_REGION_NAME =
     "INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
 inline constexpr std::string_view REGION_NAME_TABLE = "region_name";
 
+// DDL of the tables of P5-02 11.1 (schema version 9), executed after
+// region_name, in this order: the beast and monster kinds of the data, the
+// beast counts by region and year, the monsters and the sites, written by
+// the history stage, empty when it did not run. Nullable columns:
+// monster.died, site.ended_year.
+inline constexpr std::string_view DDL_BEAST =
+    "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
+    "menace INTEGER NOT NULL, food INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_MONSTER_KIND =
+    "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT NOT "
+    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_BEAST_POPULATION =
+    "CREATE TABLE beast_population (region INTEGER NOT NULL, beast INTEGER NOT NULL, year INTEGER NOT NULL, count "
+    "INTEGER NOT NULL, PRIMARY KEY (region, beast, year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_MONSTER =
+    "CREATE TABLE monster (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, lair_site INTEGER NOT "
+    "NULL, born INTEGER NOT NULL, born_event INTEGER NOT NULL, died INTEGER, death_event INTEGER NOT NULL, slain_by "
+    "INTEGER NOT NULL, status INTEGER NOT NULL, hoard INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SITE =
+    "CREATE TABLE site (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, region INTEGER NOT NULL, x "
+    "INTEGER NOT NULL, y INTEGER NOT NULL, settlement INTEGER NOT NULL, founder_civ INTEGER NOT NULL, monster INTEGER "
+    "NOT NULL, origin_year INTEGER NOT NULL, origin_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER "
+    "NOT NULL, ending INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view BEAST_TABLE = "beast";
+inline constexpr std::string_view MONSTER_KIND_TABLE = "monster_kind";
+inline constexpr std::string_view BEAST_POPULATION_TABLE = "beast_population";
+inline constexpr std::string_view MONSTER_TABLE = "monster";
+inline constexpr std::string_view SITE_TABLE = "site";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
-// history tables of P3-04 9.1; schema 8: then region_name).
-inline constexpr std::array<std::string_view, 27> DDL_STATEMENTS = {
+// history tables of P3-04 9.1; schema 8: then region_name; schema 9: then
+// beast, monster_kind, beast_population, monster, site).
+inline constexpr std::array<std::string_view, 32> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -230,7 +260,9 @@ inline constexpr std::array<std::string_view, 27> DDL_STATEMENTS = {
     DDL_EVENT_KIND_VALUE, DDL_PHASE,         DDL_EVENT,
     DDL_EVENT_PARTICIPANT, DDL_EVENT_CAUSE,  DDL_EVENT_VALUE,
     DDL_CIVILIZATION,   DDL_SETTLEMENT,      DDL_SETTLEMENT_CENSUS,
-    DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME};
+    DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME,
+    DDL_BEAST,          DDL_MONSTER_KIND,    DDL_BEAST_POPULATION,
+    DDL_MONSTER,        DDL_SITE};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------

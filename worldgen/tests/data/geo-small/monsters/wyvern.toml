@@ -1,28 +1,25 @@
+# Monster kind (spec P5-02 4.2). Generator 0.23.0.
 [monster.wyvern]
 name = "Wyvern"
 noun = "a brood of wyverns"
 grouped = true
 wake = "wild"
-biomes = [
-  { biome = "alpine", weight = 700 },
-  { biome = "heath", weight = 500 },
-  { biome = "highland_moor", weight = 600 },
-]
-wake_rate = 17
+biomes = [{ biome = "alpine", weight = 700 }, { biome = "heath", weight = 500 }, { biome = "highland_moor", weight = 600 }]
+wake_rate = 50
 naming_culture = "goblin"
 name_forms = ["The {root} Brood", "The Brood of {root}"]
 lair_forms = ["The Eyrie of {root}", "{root}'s Crag"]
 might = 600
 range_hops = 2
-raid_permille = 80
+raid_permille = 120
 toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 50
 overruns = ["hamlet"]
-overrun_permille = 50
+overrun_permille = 900
 active_years = 60
 rewake_ppm = 10000
-lifespan_years = 300
+lifespan_years = 1000
 max_alive = 2
 flare = false
 hoard_permille = 2

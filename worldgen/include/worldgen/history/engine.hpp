@@ -231,6 +231,8 @@ public:
     [[nodiscard]] std::int64_t years() const noexcept;
     [[nodiscard]] std::int64_t phase_id() const noexcept;
     [[nodiscard]] PhaseKind phase_kind() const noexcept;
+    // P5-02 7.4: the current phase row's trigger_event, 0 when none.
+    [[nodiscard]] std::int64_t phase_trigger_event() const noexcept;
     [[nodiscard]] const HistoryInputs& inputs() const noexcept;
     [[nodiscard]] const GeoView& geo() const noexcept;
     [[nodiscard]] const data::ContentSet& content() const noexcept;
@@ -355,6 +357,13 @@ struct HistoryResult {
     // (region, from_year); filled by the history stage, empty from
     // run_engine.
     std::vector<db::RegionNameRow> region_names;
+    // P5-02 11.1 (schema 9): the monsters subsystem's rows, filled by the
+    // history stage, empty from run_engine.
+    std::vector<db::BeastRow> beasts;
+    std::vector<db::MonsterKindRow> monster_kinds;
+    std::vector<db::BeastPopulationRow> beast_populations;
+    std::vector<db::MonsterRow> monsters;
+    std::vector<db::SiteRow> sites;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

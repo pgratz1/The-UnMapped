@@ -1,5 +1,5 @@
-// The history report, format "# worldgen history v3" (spec P3-07 section 6
-// with amendments 21 to 26).
+// The history report, format "# worldgen history v4" (spec P3-07 section 6
+// with amendments 21 to 26; P5-02 12, generator 0.23.0).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <new>
 #include <optional>
 #include <span>
@@ -85,7 +86,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V3));  // r21 26.1
+        line(std::string(HISTORY_REPORT_HEADER_V4));  // P5-02 12.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -95,12 +96,19 @@ public:
         if (level_ == HistoryLevel::full) {
             phases();
         }
+        const std::int64_t before = lines_;
         chronicle();
+        chronicle_lines_ = lines_ - before;
         civilizations();
         present();
+        monsters();  // P5-02 12.4
+        sites();     // P5-02 12.5
         stats();
         return std::move(out_);
     }
+
+    // After build(): the lines outside [chronicle] (P5-02 12.9's O at summary).
+    [[nodiscard]] std::int64_t outside_lines() const noexcept { return lines_ - chronicle_lines_; }
 
 private:
     // One line: the trailing-space rule of 6.1, then LF.
@@ -114,6 +122,7 @@ private:
             out_ += "\\x20";
         }
         out_ += '\n';
+        ++lines_;
     }
 
     // --- References (6.1) ---------------------------------------------------
@@ -516,6 +525,145 @@ private:
         open_wars();
         standing_claims();
         renamed_regions();  // r21 26.2
+        if (level_ == HistoryLevel::full) {
+            beasts();  // P5-02 12.3
+        }
+    }
+
+    // P5-02 12.3: the world totals of each species at E (the last row of each
+    // (region, beast) summed), species in ascending id.
+    void beasts() {
+        std::vector<std::int64_t> total(t_.beasts.size(), 0);
+        const std::vector<db::BeastPopulationRow>& rows = t_.beast_populations;
+        for (std::size_t i = 0; i < rows.size(); ++i) {
+            const bool last = i + 1 == rows.size() || rows[i + 1].region != rows[i].region ||
+                              rows[i + 1].beast != rows[i].beast;
+            const std::int64_t b = rows[i].beast;
+            if (last && b >= 1 && static_cast<std::size_t>(b) <= total.size()) {
+                std::int64_t& t = total[static_cast<std::size_t>(b - 1)];
+                t = t > std::numeric_limits<std::int64_t>::max() - rows[i].count ? std::numeric_limits<std::int64_t>::max()
+                                                                                 : t + rows[i].count;
+            }
+        }
+        std::string l = "beasts:";
+        for (std::size_t i = 0; i < t_.beasts.size(); ++i) {
+            l += (i == 0 ? " " : ", ") + escape_history_text(t_.beasts[i].plural) + " " + num(total[i]);
+        }
+        line(std::move(l));
+    }
+
+    // P5-02 12.4: [monsters].
+    void monsters() {
+        line("[monsters]");
+        std::array<std::int64_t, 5> status{};
+        for (const db::MonsterRow& m : t_.monsters) {
+            if (m.status >= 1 && m.status <= 4) {
+                ++status[static_cast<std::size_t>(m.status)];
+            }
+        }
+        line("monsters: " + num(static_cast<std::int64_t>(t_.monsters.size())) + "; awake " + num(status[1]) +
+             ", asleep " + num(status[2]) + ", slain " + num(status[3]) + ", died " + num(status[4]));
+        // Raids and their dead per monster (index id - 1).
+        std::vector<std::int64_t> raids(t_.monsters.size(), 0);
+        std::vector<std::int64_t> killed(t_.monsters.size(), 0);
+        const history::KindDef* raid = v_.catalogue().find("monster_raid");
+        for (const HistoryView::Event& e : v_.events()) {
+            if (raid == nullptr || e.row.kind != raid->id) {
+                continue;
+            }
+            const Id m = role_of(e, "monster");
+            const std::int64_t seq = raid->value_seq("dead");
+            if (m >= 1 && static_cast<std::size_t>(m) <= raids.size()) {
+                ++raids[static_cast<std::size_t>(m - 1)];
+                if (seq >= 1 && static_cast<std::size_t>(seq) <= e.values.size()) {
+                    std::int64_t& k = killed[static_cast<std::size_t>(m - 1)];
+                    const std::int64_t d = std::max<std::int64_t>(0, e.values[static_cast<std::size_t>(seq - 1)]);
+                    k = k > std::numeric_limits<std::int64_t>::max() - d ? std::numeric_limits<std::int64_t>::max() : k + d;
+                }
+            }
+        }
+        std::vector<const db::MonsterRow*> shown;
+        std::int64_t more = 0;
+        if (level_ == HistoryLevel::full) {
+            for (const db::MonsterRow& m : t_.monsters) {
+                shown.push_back(&m);
+            }
+        } else if (static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
+            // P5-02 12.9 (Paul, 2026-11-23): with more than SUMMARY_LINES_CIVS
+            // realms the summary's [monsters] is its count line only.
+            for (const db::MonsterRow& m : t_.monsters) {
+                if (m.status == 1 || m.status == 2) {
+                    shown.push_back(&m);
+                }
+            }
+            std::stable_sort(shown.begin(), shown.end(), [](const db::MonsterRow* a, const db::MonsterRow* b) {
+                return a->hoard != b->hoard ? a->hoard > b->hoard : a->id < b->id;
+            });
+            if (shown.size() > history::SUMMARY_MONSTER_LINES) {
+                more = static_cast<std::int64_t>(shown.size() - history::SUMMARY_MONSTER_LINES);
+                shown.resize(history::SUMMARY_MONSTER_LINES);
+            }
+        }
+        for (const db::MonsterRow* m : shown) {
+            const std::size_t i = static_cast<std::size_t>(m->id - 1);  // ids 1, 2, ... (P5-02 11.4)
+            std::string state;
+            switch (m->status) {
+                case 1: state = "awake"; break;
+                case 2: state = "asleep"; break;
+                case 3: state = "slain by " + civ(m->slain_by); break;
+                default: state = "died"; break;
+            }
+            const db::SiteRow& lair = t_.sites[static_cast<std::size_t>(m->lair_site - 1)];  // a lair (11.4)
+            const std::string kind_name = m->kind >= 1 && static_cast<std::size_t>(m->kind) <= t_.monster_kinds.size()
+                                              ? escape_history_text(t_.monster_kinds[static_cast<std::size_t>(m->kind - 1)].name)
+                                              : std::string("?");
+            std::string l = "  m" + num(m->id) + " " + escape_history_text(m->name) + ": " + kind_name + ", " + state +
+                            ", lair " + ref(9, lair.id) + " in " + region(lair.region) + ", since " + num(m->born) +
+                            " e" + num(m->born_event) + ", raids " + num(raids[i]) + ", killed " + num(killed[i]) +
+                            ", hoard " + num(m->hoard);
+            if (m->died) {
+                l += ", ended " + num(*m->died) + " e" + num(m->death_event);
+            }
+            line(std::move(l));
+        }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
+    }
+
+    // P5-02 12.5: [sites].
+    void sites() {
+        line("[sites]");
+        std::int64_t open = 0, lairs = 0, outposts = 0;
+        for (const db::SiteRow& x : t_.sites) {
+            open += x.ended_year ? 0 : 1;
+            lairs += x.kind == 1 ? 1 : 0;
+            outposts += x.kind == 2 ? 1 : 0;
+        }
+        line("sites: " + num(static_cast<std::int64_t>(t_.sites.size())) + "; open " + num(open) + "; lairs " +
+             num(lairs) + ", outposts " + num(outposts));
+        if (level_ != HistoryLevel::full) {
+            return;
+        }
+        static constexpr std::array<std::string_view, 6> ENDING = {"slain", "died", "moved", "lost", "fell", "quiet"};
+        for (const db::SiteRow& x : t_.sites) {
+            std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + ": " +
+                            (x.kind == 1 ? "lair" : "outpost") + " in " + region(x.region) + " at " + num(x.x) + " " +
+                            num(x.y) + ", since " + num(x.origin_year) + " e" + num(x.origin_event);
+            if (x.founder_civ != 0) {
+                l += ", of " + civ(x.founder_civ);
+            }
+            if (x.settlement != 0) {
+                l += ", at " + settlement(x.settlement);
+            }
+            if (x.ended_year) {
+                l += "; ended " + num(*x.ended_year) + " e" + num(x.ending_event) + " " +
+                     std::string(word(ENDING, x.ending, 1));
+            } else {
+                l += "; open";
+            }
+            line(std::move(l));
+        }
     }
 
     void settlement_line(const db::SettlementRow& s) {
@@ -564,27 +712,42 @@ private:
         }
         line("ruins: " + num(static_cast<std::int64_t>(rows.size())));
         for (const db::SettlementRow* s : rows) {
-            std::string l = "  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ":";
+            std::string l = "  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region);
+            // P5-02 12.3: the region's name when it was ruined, if it differs.
+            if (s->ruined_year) {
+                const std::string* then = v_.region_name_at_year(s->region, *s->ruined_year);
+                const std::string* now = v_.region_name_at_year(s->region, t_.end_year);
+                if (then != nullptr && now != nullptr && *then != *now) {
+                    l += ", then called " + escape_history_text(*then);
+                }
+            }
+            l += ":";
             if (s->ruined_year) {  // set while ruined (5.3: with ruin_event)
                 const HistoryView::Event& e = event(s->ruin_event);
-                l += " ruined " + num(*s->ruined_year) + ", e" + num(s->ruin_event) + " " + ruin_how(e) + ";";
+                l += " ruined " + num(*s->ruined_year) + ", e" + num(s->ruin_event) + " " + ruin_how(e, s->ending) + ";";
             }
             line(l + " last held by " + last_held_by(s->id));
         }
     }
 
     // r19 25.3 item 1: how a settlement was ruined, by its ruin event's kind.
-    [[nodiscard]] std::string ruin_how(const HistoryView::Event& e) const {
+    // P5-02 12.3: an overrun, and the plague or famine of an abandonment.
+    [[nodiscard]] std::string ruin_how(const HistoryView::Event& e, std::int64_t ending) const {
         const std::string& key = kind_of(e).key;
         if (key == "sacked") {
             const Id by = role_of(e, "attacker");
             return by != 0 ? "sacked by " + civ(by) : std::string("sacked");
         }
+        if (key == "settlement_overrun") {
+            const Id m = role_of(e, "monster");
+            return m != 0 ? "overrun by " + ref(8, m) : std::string("overrun");
+        }
+        const std::string after = ending == 3 ? " after plague" : ending == 4 ? " after famine" : "";
         if (key == "settlement_abandoned") {
-            return "abandoned";
+            return "abandoned" + after;
         }
         if (key == "settlement_abandoned_to") {
-            return "abandoned, survivors to " + settlement(role_of(e, "destination"));
+            return "abandoned" + after + ", survivors to " + settlement(role_of(e, "destination"));
         }
         return escape_history_text(key);
     }
@@ -700,6 +863,8 @@ private:
     const history::HistoryDigest& d_;
     HistoryLevel level_;
     std::string out_;
+    std::int64_t lines_ = 0;
+    std::int64_t chronicle_lines_ = 0;
     std::vector<std::int64_t> phase_events_;  // index phase id
     std::vector<std::int64_t> phase_shown_;
 };
@@ -748,8 +913,27 @@ db::Result<std::string> build_history_report(const db::WorldReader& world, Histo
         if (const std::optional<std::string> why = history::history_reads_disagree(view.value(), tables.value())) {
             return db::Error{db::ErrorCode::corrupt_layer, *why};
         }
-        const history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
-        return Report(view.value(), tables.value(), digest, level).build();
+        history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
+        // P5-02 12.9: O is counted on the summary rendered with the set of
+        // SUMMARY_BUDGET (no line outside [chronicle] depends on the set);
+        // the set is chosen again with B when B is smaller, for both levels.
+        Report summary(view.value(), tables.value(), digest, HistoryLevel::summary);
+        std::string text = summary.build();
+        const history::HistoryTables& t = tables.value();
+        const std::int64_t budget = history::summary_budget(
+            static_cast<std::int64_t>(t.civilizations.size()), summary.outside_lines(),
+            static_cast<std::int64_t>(t.ages.size()), static_cast<std::int64_t>(t.phases.size()));
+        const bool again = budget != digest.summary_budget;
+        if (again) {
+            history::choose_summary_set(digest, budget);
+        }
+        if (level == HistoryLevel::full) {
+            return Report(view.value(), tables.value(), digest, level).build();
+        }
+        if (again) {
+            text = Report(view.value(), tables.value(), digest, level).build();
+        }
+        return text;
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the history report"};
     }

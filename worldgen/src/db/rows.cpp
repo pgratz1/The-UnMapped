@@ -374,6 +374,7 @@ Result<std::vector<SettlementRow>> read_settlement_rows(const WorldReader& world
         r.population = c.integer();
         r.ruined_year = c.nullable_integer();
         r.ruin_event = c.integer();
+        r.ending = c.integer();  // schema 9
         return r;
     });
 }
@@ -427,6 +428,84 @@ Result<std::vector<RegionNameRow>> read_region_name_rows(const WorldReader& worl
         r.name = c.text();
         r.culture = c.integer();
         r.event = c.integer();
+        return r;
+    });
+}
+
+// Schema 9 (P5-02 11.1).
+Result<std::vector<BeastRow>> read_beast_rows(const WorldReader& world) {
+    return read_rows<BeastRow>(world, BEAST_TABLE, [](Columns& c) {
+        BeastRow r;
+        r.id = c.integer();
+        r.key = c.text();
+        r.name = c.text();
+        r.plural = c.text();
+        r.menace = c.integer();
+        r.food = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<MonsterKindRow>> read_monster_kind_rows(const WorldReader& world) {
+    return read_rows<MonsterKindRow>(world, MONSTER_KIND_TABLE, [](Columns& c) {
+        MonsterKindRow r;
+        r.id = c.integer();
+        r.key = c.text();
+        r.name = c.text();
+        r.noun = c.text();
+        r.grouped = c.integer();
+        r.wake = c.integer();
+        r.might = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<BeastPopulationRow>> read_beast_population_rows(const WorldReader& world) {
+    return read_rows<BeastPopulationRow>(world, BEAST_POPULATION_TABLE, [](Columns& c) {
+        BeastPopulationRow r;
+        r.region = c.integer();
+        r.beast = c.integer();
+        r.year = c.integer();
+        r.count = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<MonsterRow>> read_monster_rows(const WorldReader& world) {
+    return read_rows<MonsterRow>(world, MONSTER_TABLE, [](Columns& c) {
+        MonsterRow r;
+        r.id = c.integer();
+        r.name = c.text();
+        r.kind = c.integer();
+        r.lair_site = c.integer();
+        r.born = c.integer();
+        r.born_event = c.integer();
+        r.died = c.nullable_integer();
+        r.death_event = c.integer();
+        r.slain_by = c.integer();
+        r.status = c.integer();
+        r.hoard = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<SiteRow>> read_site_rows(const WorldReader& world) {
+    return read_rows<SiteRow>(world, SITE_TABLE, [](Columns& c) {
+        SiteRow r;
+        r.id = c.integer();
+        r.name = c.text();
+        r.kind = c.integer();
+        r.region = c.integer();
+        r.x = c.integer();
+        r.y = c.integer();
+        r.settlement = c.integer();
+        r.founder_civ = c.integer();
+        r.monster = c.integer();
+        r.origin_year = c.integer();
+        r.origin_event = c.integer();
+        r.ended_year = c.nullable_integer();
+        r.ending_event = c.integer();
+        r.ending = c.integer();
         return r;
     });
 }

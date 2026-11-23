@@ -2,9 +2,11 @@
 
 #include "worldgen/history/data_checks.hpp"
 
+#include <string>
 
 #include "worldgen/data/schema.hpp"
 #include "worldgen/data/settings.hpp"
+#include "worldgen/db/schema.hpp"
 
 namespace worldgen::history {
 
@@ -93,6 +95,51 @@ void check_race_age_name(std::string_view form, const data::Definition& race, st
     }
 }
 
+// P5-02 4.1, 4.2 (reading 1): the checks of kinds beast and monster that
+// need another kind, as "check '<name>' failed for '<kind>.<id>': <message>"
+// at the kind's directory.
+data::LoadError monster_error(std::string_view directory, std::string_view check, std::string_view kind,
+                              const std::string& id, const std::string& message) {
+    data::LoadError e;
+    e.path = std::string(directory);
+    e.message = "check '" + std::string(check) + "' failed for '" + std::string(kind) + "." + id + "': " + message;
+    return e;
+}
+
+void check_habitat_biomes(const data::ContentSet& content, std::string_view directory, std::string_view kind,
+                          std::string_view check, std::string_view field, std::vector<data::LoadError>& out) {
+    const data::KindContent* defs = content.find_kind(kind);
+    if (defs == nullptr) {
+        return;
+    }
+    for (const data::Definition& d : defs->definitions) {
+        const std::vector<data::Value>& list = d.record.get_array(field);
+        for (std::size_t i = 0; i < list.size(); ++i) {
+            const std::string& b = list[i].as_record().get_string("biome");
+            if (content.find(data::BIOME_KIND, b) == nullptr) {
+                out.push_back(monster_error(directory, check, kind, d.id,
+                                            std::string(field) + "[" + db::format_u64(i) + "].biome '" + b +
+                                                "' is not a biome"));
+                break;  // the first failure of the definition
+            }
+        }
+    }
+}
+
+void check_monster_cultures(const data::ContentSet& content, std::vector<data::LoadError>& out) {
+    const data::KindContent* defs = content.find_kind(data::MONSTER_KIND);
+    if (defs == nullptr) {
+        return;
+    }
+    for (const data::Definition& d : defs->definitions) {
+        const std::string& c = d.record.get_string("naming_culture");
+        if (content.find(data::CULTURE_KIND, c) == nullptr) {
+            out.push_back(monster_error(data::MONSTER_DIRECTORY, "monster_culture", data::MONSTER_KIND, d.id,
+                                        "naming_culture '" + c + "' is not a culture"));
+        }
+    }
+}
+
 }  // namespace
 
 std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective) {
@@ -129,6 +176,10 @@ std::vector<data::LoadError> check_history_data(const data::ContentSet& content)
             check_race_age_name(tuning->record.get_string("age_name_form"), *race, out);
         }
     }
+    // P5-02 4.1, 4.2: beast_habitat_biomes, monster_biomes, monster_culture.
+    check_habitat_biomes(content, data::BEAST_DIRECTORY, data::BEAST_KIND, "beast_habitat_biomes", "habitat", out);
+    check_habitat_biomes(content, data::MONSTER_DIRECTORY, data::MONSTER_KIND, "monster_biomes", "biomes", out);
+    check_monster_cultures(content, out);
     data::sort_errors(out);
     return out;
 }

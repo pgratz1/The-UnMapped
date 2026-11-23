@@ -86,6 +86,31 @@ struct RenamedName {
 };
 [[nodiscard]] RenamedName fill_rename_form(std::string_view form, std::string_view name_value,
                                            std::string_view noun_value);
+// P5-02 21.2: the same with {stem} replaced by stem_value, and the
+// possessive rule: after a slot value ending in s or S, a literal run
+// starting with 's loses its s (the 3-argument form uses stem = name).
+[[nodiscard]] RenamedName fill_rename_form(std::string_view form, std::string_view name_value,
+                                           std::string_view noun_value, std::string_view stem_value);
+// The general fill: each slot text (for example "{root}") replaced by its
+// value, the joins between the parts, and the possessive rule of 21.2.
+struct SlotValue {
+    std::string_view slot;
+    std::string_view value;
+};
+[[nodiscard]] RenamedName fill_slots(std::string_view form, std::span<const SlotValue> slots);
+// P5-02 21.2: a settlement's name without a trailing separate-word suffix
+// of its founder's culture: the first form {root}B of settlement_forms
+// (list order) whose B starts with a space, such that the name ends with B
+// and is longer than |B|; the whole name when none.
+[[nodiscard]] std::string settlement_stem(std::string_view name, const std::vector<std::string>& settlement_forms);
+
+// P5-02 9.3: what the renaming subsystem reads of the monsters (the root of
+// a monster's name, 9.2). Implemented by MonstersSubsystem.
+class MonsterNames {
+public:
+    virtual ~MonsterNames() = default;
+    [[nodiscard]] virtual std::string monster_root(std::int64_t monster) const = 0;
+};
 
 // max(1, regions x permille div 1000) (P5-12 6 items 3 and 4), in int64.
 [[nodiscard]] std::int64_t renaming_cap(std::int64_t regions, std::int64_t permille) noexcept;
@@ -119,6 +144,9 @@ public:
     [[nodiscard]] std::vector<db::RegionNameRow> sorted_rows() const;
     [[nodiscard]] const RenamingStats& stats() const noexcept { return stats_; }
     [[nodiscard]] const RenamingTuning& tuning() const noexcept { return tuning_; }
+    // P5-02 9.3: the monsters whose roots a monster name_role reads (the
+    // history stage sets it; without it such a role gives no {name}).
+    void set_monsters(const MonsterNames* monsters) noexcept { monsters_ = monsters; }
 
 private:
     struct WindowEntry {
@@ -145,6 +173,7 @@ private:
     // 6 item 2 for the chosen candidate of a region.
     void choose(StepContext& context, std::int64_t region, const Candidate& c);
     [[nodiscard]] const std::vector<std::string>& civilization_forms(std::int64_t culture) const;
+    [[nodiscard]] const std::vector<std::string>& settlement_forms(std::int64_t culture) const;
 
     PeoplesSubsystem& peoples_;
     RenamingTuning tuning_;
@@ -157,6 +186,8 @@ private:
     std::vector<std::string> nouns_;                          // per region (index id - 1)
     stages::PlacenameData placenames_;                        // the lists of 5.2 item 3 and the filter
     std::vector<std::pair<std::int64_t, std::vector<std::string>>> culture_forms_;  // (culture id, forms), ascending
+    std::vector<std::pair<std::int64_t, std::vector<std::string>>> settlement_forms_;  // P5-02 21.2, ascending
+    const MonsterNames* monsters_ = nullptr;
     std::vector<std::vector<std::vector<WindowEntry>>> windows_;  // [rule][region - 1]
     std::vector<std::vector<Renaming>> renamings_;               // per region (index id - 1)
     std::vector<std::int64_t> renaming_years_;                   // every renaming of the world, ascending

@@ -1,5 +1,4 @@
-# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 21.2
-# and rule 7 (P5-02 9.3), generator 0.23.0.
+# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; P5-02 21.2 and rule 7, generator 0.23.0.
 [history.renaming]
 region_max = 2
 region_gap_years = 300

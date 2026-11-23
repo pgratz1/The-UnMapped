@@ -1,8 +1,8 @@
 # P5-02 Beasts and monsters
 
-Status: **draft r0, 2026-11-23, for the lead's and Paul's approval.** Written by the spec writer on `p5/02-spec`, cut from `origin/main` at 03a5a2e (generator 0.22.0, schema 8, report format v3; P5-01 and P5-12 merged). Phase P5 History depth, stage 02 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-02 Beasts and monsters", 4, 5, 6.1, 7, 8, 10). Generator **0.23.0** (the next minor version at merge); **schema 9** (the next free version at merge, P5-00 4.3); history report format **v4**.
+Status: **r1, 2026-11-23, after the first implementation and calibration (for the lead's approval).** r0 was written by the spec writer on `p5/02-spec`, cut from `origin/main` at 03a5a2e (generator 0.22.0, schema 8, report format v3; P5-01 and P5-12 merged); r1 on `p5/02-spec-r1`, cut from `origin/p5/02-impl` at 956b472. Phase P5 History depth, stage 02 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-02 Beasts and monsters", 4, 5, 6.1, 7, 8, 10). Generator **0.23.0** (the next minor version at merge; r1 changes no released world, so the version stays); **schema 9** (the next free version at merge, P5-00 4.3); history report format **v4**. **What r1 changes**: the raid target (6.4.1, Paul's decision of 2026-11-23), a summary line limit (12.9, T18), the shipped values the engineer calibrated (4.2, 4.3, 4.5), the measured column of 16, the readings the implementation settled (25), the open questions decided (23), and the deltas for the engineer and the test writer (26).
 
-Sources: design doc 5 ("Peoples, beasts and monsters", "Beasts as pressure", "Monsters as actors", "Undead from history", "Flare-ups", "From history to play"), 6 (`site`, `monster`, `beast_population`), 13 (the P5 exit check), 14; P5-00 (the P5-02 paragraph, 4, 5, 6.1, 7, 8.3, 10); P3-04 r22, P3-05, P3-06, P3-07 r22, P4-01 r3, P5-12 r2; Paul's decisions of 2026-11-23 (relayed by the lead): T16 is a rate (decided), the share of renamings by capital sack stays, and **Paul's wish for abandoned places to explore** (section 8). Carried over from P5-12: section 21.
+Sources: design doc 5 ("Peoples, beasts and monsters", "Beasts as pressure", "Monsters as actors", "Undead from history", "Flare-ups", "From history to play"), 6 (`site`, `monster`, `beast_population`), 13 (the P5 exit check), 14; P5-00 (the P5-02 paragraph, 4, 5, 6.1, 7, 8.3, 10); P3-04 r22, P3-05, P3-06, P3-07 r22, P4-01 r3, P5-12 r2; Paul's decisions of 2026-11-23 (relayed by the lead): T16 is a rate (decided), the share of renamings by capital sack stays, and **Paul's wish for abandoned places to explore** (section 8); (r1) Paul's decisions on the open questions (23) and on monster-held settlements (6.4.1, 16 M4, G2), both of 2026-11-23, recorded in `docs/design/proposals.md`. Carried over from P5-12: section 21.
 
 The stage adds **one subsystem** (P5-00 4.1), `MonstersSubsystem`, which owns the beasts of each region, the named monsters and the first `site` rows (lairs and frontier outposts), and one small rule of peoples (ghost settlements, 8.2). Sections 3 to 20 are normative. Where an earlier spec is amended, its normative text is the section of this spec named in the table of section 2; the amended spec receives a revision note pointing here.
 
@@ -31,6 +31,8 @@ The smallest rule set that makes these matter to history is chosen; predator-pre
 | 8 | Report v4 | 12 | P3-07 (new section 27) | report |
 | 9 | Timeline reads for sites, monsters and endings | 13 | P4-01 (r4) | no |
 | 10 | Carried over from P5-12: names, audit A1 and A2, T16 | 21 | P5-12 4.1, 5; P3-07 26.6; P5-01 8 | yes |
+| 11 | (r1) The raid target: smaller and weaker places first (Paul) | 6.4.1 | — | yes |
+| 12 | (r1) The summary line limit (T18) | 12.9 | P3-07 24.3 item 4, 24.9 | report |
 
 ## 3. Inputs
 
@@ -39,7 +41,7 @@ The smallest rule set that makes these matter to history is chosen; predator-pre
 - **The log so far**, through `StepContext`'s reads (P3-04 r21 23.3): kind, year, region, settlement, values; for the undead (6.3.2) only.
 - **Data**: kinds `beast` (`game/data/beasts/`) and `monster` (`game/data/monsters/`), tuning `history.monsters` (`game/data/history/monsters.toml`), the race field `prowess_permille` (P3-06), the culture naming (P3-02, with `site_forms`), the name filter and placename lists (P3-02 11, P1-06 4.1), and the history engine tuning's `flare_threshold` of the world's detail (P3-04 4.1).
 - **Setting**: `param.monster_pressure` (P5-00 5) through `HistoryParams::monster_pressure`. `param.event_intensity` does **not** scale any rule of this stage (P5-00 5 lets each stage choose; monsters have their own setting).
-- **Streams** (P5-00 4.2), appended to `streams.hpp` after `hist.renaming.name`, in this order: `hist.beasts.bold`, `hist.monsters.wake`, `hist.monsters.rise`, `hist.monsters.sleep`, `hist.monsters.rewake`, `hist.monsters.raid`, `hist.monsters.raid_toll`, `hist.monsters.overrun`, `hist.monsters.hunt`, `hist.monsters.hunt_outcome`, `hist.monsters.lair_name`, `hist.sites.outpost`, `hist.peoples.ghost`, `hist.names.monster`, `hist.names.site`.
+- **Streams** (P5-00 4.2), appended to `streams.hpp` after `hist.renaming.name`, in this order: `hist.beasts.bold`, `hist.monsters.wake`, `hist.monsters.rise`, `hist.monsters.sleep`, `hist.monsters.rewake`, `hist.monsters.raid`, `hist.monsters.raid_toll`, `hist.monsters.overrun`, `hist.monsters.hunt`, `hist.monsters.hunt_outcome`, `hist.monsters.lair_name`, `hist.sites.outpost`, `hist.peoples.ghost`, `hist.names.monster`, `hist.names.site`, and (r1) `hist.monsters.raid_target` (6.4.1), appended last.
 
 **Draws.** Every simulation draw is `StepContext::draw(stream, a, b, k)` (w0 = the step's year; a quiet step's start), written below as `D(stream; a, b, k)`. Chances: `chance_pm(u, p)`, `chance_ppm(u, p)` are P3-05 3.3's; **`chance_ppb(u, p)`** is the same helper with scale 10^9 (`chance_scaled(u, p, 1000000000)`: true iff (u >> 32) < min(2^32, floor(max(0, p) × 2^32 / 10^9))). `pick(u, n)` is P3-02 4.1's. All arithmetic is int64 with checked multiplication (`checked_mul`, fatal on overflow) and floor division of non-negative values (`div`).
 
@@ -61,7 +63,7 @@ One definition per species, `[beast.<id>]`, in `game/data/beasts/<id>.toml` and 
 
 Checks (`… failed for 'beast.<id>': <message>`), in order: `beast_habitat_biomes`: every `habitat[i].biome` names a `biome` definition (`habitat[<i>].biome '<b>' is not a biome`) and none repeats (`habitat[<i>].biome '<b>' is listed twice`).
 
-**Shipped** (taste; numbers interim until the engineer's calibration sweep, 17):
+**Shipped** (taste). (r1) The engineer's calibration left every beast value as r0 gave it; they are now the calibrated values, re-measured after 6.4.1's r1 rule with the rest:
 
 | id | name | plural | habitat (biome = weight; others 0) | density | growth | menace | food |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -104,25 +106,25 @@ One definition per monster kind, `[monster.<id>]`, in `game/data/monsters/<id>.t
 
 Checks, in order: `monster_biomes` (as `beast_habitat_biomes`, on `biomes`); `monster_wild_habitat`: a `wild` kind has a weight above 0 (`a wild monster needs a biome with a weight above 0`); `monster_culture`: `naming_culture` names a `culture` definition; `monster_toll_ordered`: `toll_min_permille` ≤ `toll_max_permille`; `monster_overruns_unique`; `monster_bare_form_last`: a form that is exactly `{root}` may appear only as the last entry of `name_forms` (so that 9.2's root is exact: `name_forms[<i>] '{root}' must be the last form`).
 
-**Shipped** (taste; rates interim until calibration, 17). Habitat weights not listed are 0.
+**Shipped** (taste). (r1) The rates below are the engineer's first calibration (17 step 9, against the r0 targets of 16 at 1024 defaults); the values changed from r0's estimates are marked `*` (r0's value in brackets). They are **to be re-calibrated after 6.4.1's r1 target rule** (26.1). Habitat weights not listed are 0.
 
 | id | name | noun | grouped | wake | biomes | wake_rate | culture | name_forms | lair_forms |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `dragon` | Dragon | a dragon of the old world | no | wild | alpine 800, highland_moor 400, blighted_waste 600 | 6 | elven | `{root} the Black`, `{root} the Pale`, `{root}` | `The Lair of {root}`, `{root}'s Deep` |
-| `giant` | Giant | a giant of the mountains | no | wild | alpine 900, highland_moor 500 | 14 | dwarven | `{root} Stonehand`, `{root}` | `{root}'s Seat`, `The Hall of {root}` |
-| `ogre` | Ogre | an ogre | no | wild | grassland 400, heath 600, steppe 700, highland_moor 300 | 10 | orcish | `{root} the Glutton`, `{root}` | `{root}'s Larder`, `The Pit of {root}` |
-| `troll` | Troll | a troll of the hills | no | wild | highland_moor 800, alpine 600, temperate_forest 400, heath 300 | 17 | goblin | `Old {root}`, `{root}` | `{root}'s Hollow`, `The Den of {root}` |
-| `undead` | Undead | a host of the restless dead | yes | dead | — | 9000 | human | `The Host of {root}`, `The Restless of {root}` | `The Barrows of {root}`, `{root}'s Howe` |
-| `wyvern` | Wyvern | a brood of wyverns | yes | wild | alpine 700, heath 500, highland_moor 600 | 17 | goblin | `The {root} Brood`, `The Brood of {root}` | `The Eyrie of {root}`, `{root}'s Crag` |
+| `dragon` | Dragon | a dragon of the old world | no | wild | alpine 800, highland_moor 400, blighted_waste 600 | 60* (6) | elven | `{root} the Black`, `{root} the Pale`, `{root}` | `The Lair of {root}`, `{root}'s Deep` |
+| `giant` | Giant | a giant of the mountains | no | wild | alpine 900, highland_moor 500 | 25* (14) | dwarven | `{root} Stonehand`, `{root}` | `{root}'s Seat`, `The Hall of {root}` |
+| `ogre` | Ogre | an ogre | no | wild | grassland 400, heath 600, steppe 700, highland_moor 300 | 40* (10) | orcish | `{root} the Glutton`, `{root}` | `{root}'s Larder`, `The Pit of {root}` |
+| `troll` | Troll | a troll of the hills | no | wild | highland_moor 800, alpine 600, temperate_forest 400, heath 300 | 50* (17) | goblin | `Old {root}`, `{root}` | `{root}'s Hollow`, `The Den of {root}` |
+| `undead` | Undead | a host of the restless dead | yes | dead | — | 15000* (9000) | human | `The Host of {root}`, `The Restless of {root}` | `The Barrows of {root}`, `{root}'s Howe` |
+| `wyvern` | Wyvern | a brood of wyverns | yes | wild | alpine 700, heath 500, highland_moor 600 | 50* (17) | goblin | `The {root} Brood`, `The Brood of {root}` | `The Eyrie of {root}`, `{root}'s Crag` |
 
 | id | might | range | raid ‰ | toll ‰ | kill_max | overruns | overrun ‰ | active | rewake ppm | lifespan | max_alive | flare | hoard ‰ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `dragon` | 6000 | 2 | 30 | 50–200 | 600 | hamlet, village, town | 150 | 40 | 2000 | 0 | 1 | yes | 40 |
-| `giant` | 1200 | 1 | 40 | 30–100 | 150 | hamlet, village | 60 | 150 | 3000 | 2500 | 2 | yes | 8 |
-| `ogre` | 200 | 1 | 100 | 20–60 | 40 | hamlet | 80 | 80 | 8000 | 300 | 3 | no | 3 |
-| `troll` | 300 | 1 | 80 | 20–80 | 60 | hamlet, village | 100 | 120 | 5000 | 800 | 3 | no | 5 |
-| `undead` | 1500 | 1 | 60 | 30–120 | 200 | hamlet, village | 120 | 200 | 3000 | 1000 | 2 | no | 5 |
-| `wyvern` | 600 | 2 | 80 | 20–80 | 50 | hamlet | 50 | 60 | 10000 | 300 | 2 | no | 2 |
+| `dragon` | 6000 | 2 | 60* (30) | 50–200 | 600 | hamlet, village, town | 300* (150) | 40 | 2000 | 0 | 1 | yes | 40 |
+| `giant` | 1200 | 1 | 100* (40) | 30–100 | 150 | hamlet, village | 500* (60) | 150 | 3000 | 2500 | 2 | yes | 8 |
+| `ogre` | 200 | 1 | 150* (100) | 20–60 | 40 | hamlet | 500* (80) | 80 | 8000 | 1000* (300) | 3 | no | 3 |
+| `troll` | 300 | 1 | 150* (80) | 20–80 | 60 | hamlet, village | 500* (100) | 120 | 5000 | 2000* (800) | 3 | no | 5 |
+| `undead` | 1500 | 1 | 80* (60) | 30–120 | 200 | hamlet, village | 500* (120) | 200 | 3000 | 1000 | 2 | no | 5 |
+| `wyvern` | 600 | 2 | 120* (80) | 20–80 | 50 | hamlet | 500* (50) | 60 | 10000 | 1000* (300) | 2 | no | 2 |
 
 `monster_kind.id` = canonical id order: `dragon` 1, `giant` 2, `ogre` 3, `troll` 4, `undead` 5, `wyvern` 6. Why these: design 5's roster exactly (trolls, ogres, giants, undead, wyverns, dragons); two `flare` kinds (the great ones), one `dead` kind; the deep horrors of P5-07 will be further rows of this kind (their stage adds a `wake` value), not a new kind. Names: trolls and wyverns take goblin syllables (harsh, short), ogres orcish, giants dwarven (old, heavy), dragons elven (long and ancient: `Saelith the Black`), the undead human (a host named for a dead lord: `The Host of Edric`).
 
@@ -138,7 +140,7 @@ Checks, in order: `monster_biomes` (as `beast_habitat_biomes`, on `biomes`); `mo
 | `undead_window_years` | int(1, 100000) | 100 | that window |
 | `hunt_hops` | int(0, 8) | 2 | settlements within this many borders of the lair send hunters |
 | `hunt_levy_permille` | int(0, 1000) | 50 | hunters per mille of their population |
-| `hunt_permille` | int(0, 1000) | 150 | chance per year that a realm raided recently sends a hunt |
+| `hunt_permille` | int(0, 1000) | 20* (150) | chance per year that a realm raided recently sends a hunt |
 | `hunt_memory_years` | int(1, 100000) | 30 | how long a raid is remembered |
 | `slay_max_permille` | int(0, 1000) | 900 | cap on the odds of a hunt |
 | `drive_permille` | int(0, 1000) | 300 | share of the hunts not won that drive the monster off |
@@ -147,8 +149,8 @@ Checks, in order: `monster_biomes` (as `beast_habitat_biomes`, on `biomes`); `mo
 | `displace_max_permille` | int(0, 1000) | 900 | cap on that loss |
 | `beast_decline_permille` | int(1, 1000) | 200 | yearly loss of beasts above capacity, per mille of the excess |
 | `people_floor` | int(1, 100000) | 100 | the least population the per-person measures divide by |
-| `drag_k` | int(0, 10000) | 100 | growth drag per unit of predator menace per person |
-| `drag_max_permille` | int(0, 500) | 200 | cap on the drag |
+| `drag_k` | int(0, 10000) | 40* (100) | growth drag per unit of predator menace per person |
+| `drag_max_permille` | int(0, 500) | 100* (200) | cap on the drag |
 | `feed_k` | int(0, 10000) | 2 | growth bonus per unit of game per person |
 | `feed_max_permille` | int(0, 500) | 100 | cap on the bonus |
 | `bold_on_permille` | int(1, 1000000) | 1500 | predator menace per person at which beasts grow bold |
@@ -158,8 +160,15 @@ Checks, in order: `monster_biomes` (as `beast_habitat_biomes`, on `biomes`); `mo
 | `outpost_permille` | int(0, 1000) | 30 | chance per frontier region and tick year of a war that a watchtower is raised |
 | `outpost_max` | int(0, 16) | 2 | open outposts per civilization |
 | `outpost_quiet_years` | int(1, 100000) | 200 | years without a hostile neighbour after which an outpost is left |
+| `prey_weight` | record {`hamlet`, `village`, `town`, `city`, `fortress`} int(0, 1000) | 1000, 600, 150, 40, 20 | (r1) a raid target's weight by its kind (6.4.1) |
+| `prey_capital_permille` | int(0, 1000) | 250 | (r1) the weight of a capital, per mille of its kind's |
+| `prey_hop_permille` | int(0, 1000) | 500 | (r1) the weight kept per border between the lair's region and the target's |
+| `prey_might_ref` | int(1, 10000000) | 1500 | (r1) the might at which a kind weighs towns, cities and fortresses as `prey_weight` gives them |
+| `prey_might_max_permille` | int(0, 10000) | 4000 | (r1) the cap on that factor |
 
 Check `monsters_bold_ordered`: `bold_off_permille` ≤ `bold_on_permille`.
+
+(r1) The values marked `*` are the engineer's first calibration (r0's value in brackets), to be re-calibrated after 6.4.1's r1 rule; the `prey_*` fields are r1's, appended after `outpost_quiet_years` in this order (shipped and both fixture roots; the `zero` tuning of 7.5 keeps them as shipped, since no raid happens at pressure 0).
 
 ### 4.4 Culture field `site_forms` (amends P3-02 3)
 
@@ -167,7 +176,7 @@ Check `monsters_bold_ordered`: `bold_off_permille` ≤ `bold_on_permille`.
 
 ### 4.5 Peoples fields (amends P3-05 12.1)
 
-Appended after `crisis_small_salience`: `ghost_permille` int(0, 1000), shipped 200; `ghost_max_population` int(0, 1000000), shipped 300 (8.2).
+Appended after `crisis_small_salience`: `ghost_permille` int(0, 1000), shipped 200; `ghost_max_population` int(0, 1000000), shipped 600 (r1: the engineer's calibration; r0 300) (8.2).
 
 ## 5. State
 
@@ -272,7 +281,26 @@ For each monster m in ascending id, n = the count before the loop, skipping the 
 
 #### 6.4.1 A raid
 
-The target t: among the standing visible settlements whose region lies within `range_hops` of the lair's region (hop distance over `GeoView` neighbours), the smallest key (hops, −population, id). None: no raid. With P = P_t and c = t's owner:
+**The target (r1; replaces r0's "smallest key (hops, −population, id)", Paul's decision of 2026-11-23).** Monsters prefer the smaller and weaker places as easier prey; the strong kinds still strike towns, so raids stay varied. The **candidates** are the standing visible settlements u with an owner (`owner_civ` ≥ 1; every standing settlement has one under P3-05, so this only names the guard) whose region lies within `range_hops` of the lair's region (hop distance h(u) over `GeoView` neighbours), in **ascending settlement id**. With k the monster's kind and the tuning of 4.3:
+
+```
+might_f   = min(prey_might_max_permille, might_k × 1000 div prey_might_ref)      // dragon 4000, undead 1000, giant 800, wyvern 400, troll 200, ogre 133
+base(u)   = prey_weight[kind(u)]                                     if kind(u) is hamlet or village
+            prey_weight[kind(u)] × might_f div 1000                  if kind(u) is town, city or fortress
+hop_f(0)  = 1000;  hop_f(h + 1) = hop_f(h) × prey_hop_permille div 1000           // 1000, 500, 250, …
+w(u)      = base(u) × hop_f(h(u)) div 1000
+w(u)      = w(u) × prey_capital_permille div 1000                    if u is its owner's capital
+```
+
+Every product is of non-negative integers below 10^7 (checked multiplication); W = Σ w(u) over the candidates is below 10^12. **No candidate, or W = 0: no raid** (nothing is drawn). Else t = `weighted(D(hist.monsters.raid_target; m, 0, 0), [w(u) for the candidates in ascending id])` (P3-02 4.1's `weighted`: the smallest index i with (u >> 32) × W < 2^32 × (w[0] + … + w[i])); a candidate of weight 0 is never chosen. The draw comes after the raid's own chance (6.4 item 4) and before the toll's. A settlement's population does not enter beyond its kind (the kinds already order it: hamlet < 250 ≤ village < 1,500 ≤ town < 8,000 ≤ city, P3-05 12.1), so a smaller place is never a worse target than a larger one of the same kind and hop.
+
+With the shipped weights, a troll one border from a village and a town of equal standing weighs them 300 : 15; a dragon at the same border 300 : 300. Estimated on the engineer's 100 default worlds (the candidates rebuilt at each stored raid from `settlement_census` and the lair sites; a model, not a replay): targets by kind, r0's rule in the model hamlet 1%, village 23%, town 55%, city 5%, fortress 16% (the engineer measured 18% villages, 67% towns, 8% fortresses on the stored events; the model's kinds at each raid come from the census of the phase's end, so it reads them slightly low); **r1's rule hamlet 5%, village 57%, town 32%, city 1%, fortress 6%** (dragons 56% towns, giants and the undead 43% and 50%, trolls 23%, ogres 30%, wyverns 19%: towns remain in reach where no smaller place is).
+
+**Might and overruns.** A kind's might widens what it **raids** (`might_f` above), not what it may **overrun**: an overrun still needs the target's kind in the kind's `overruns` list (6.4.3), which is the data's statement of what each kind can take and hold (dragons up to towns; giants, trolls and the undead up to villages; ogres and wyverns hamlets only). Cities, fortresses and capitals are never overrun.
+
+**Expected effect.** Raids on a target the raider may overrun (its kind in the raider's `overruns`, not a capital) rise from about one in twelve to about two in five; the same model gives about three overruns a default world (2.8 a world, where it gives 0.7 for r0's rule, which measured 0.95), within M4's median 2 to 4 at the first calibration's `overrun_permille`. **Raid deaths fall**: the toll is a share of the target's population, so a smaller target loses fewer: the model's mean dead per raid falls from 93 to about 67 (−28%), with the same number of raids; but small places are pushed below `abandon_min` more often, so more of them are abandoned after a raid (ending 5, which G1 counts) and standing settlements at E fall by a few (G2).
+
+With P = P_t and c = t's owner:
 
 ```
 τ       = toll_min + pick(D(hist.monsters.raid_toll; m, 0, 0), toll_max − toll_min + 1)   // per mille
@@ -308,7 +336,7 @@ After a raid on t, if m holds no settlement as its lair, kind(t) is in the kind'
 3. `PeoplesSubsystem::ruin(ctx, t, event)` (P3-05 8.5's ruin procedure: the survivors join c's nearest standing settlement up to its room, t becomes ruined with that event as its `ruin_event` and owner 0, and c's hold on the region is released when it has no other standing settlement there; t is not the capital, so no seat moves);
 4. m's old lair ends (ending 3, event: the overrun); m's lair = s', `holds_settlement` = true, the hop distances from the new region.
 
-A monster overruns at most one settlement in its life.
+A monster overruns at most one settlement in its life. (r1) The overrun's conditions and draw are unchanged; only the raid's target (6.4.1) changes which settlements reach them.
 
 #### 6.4.4 Deaths of age in a quiet step (Q4)
 
@@ -423,6 +451,8 @@ A burned ruin is ending 1, a monster-held place is ending 2 (with an open lair a
 
 Overruns are at most one per monster and need an eligible small, non-capital target; ghost abandonments need a hamlet or village struck below 300 people. The prototype estimate (no sweep was run for this draft; the engineer's calibration sweep measures it, 17): 1 to 3 overruns and 3 to 6 ghost places per default world, against about 90 standing settlements at E, so the standing count at E falls by a few per cent at most; target G2 bounds it (16). Free regions at E rise by about one a world. The P3-05 and P3-06 targets read standing settlements and wars, which these rules touch only through small places; they are re-measured (16, row P).
 
+(r1) **Measured at the first calibration** (16): overruns median 1 a world (max 4), ghost places median 3 (max 11), standing settlements at E median 85 (0.22.0: 88), a lair on a former settlement open at E in 44 of 100 worlds. Paul found the overruns too rare (6.4.1); r1's target rule makes the small places the usual prey, and G2's floor for standing settlements is lowered to 92% to make room for it (16).
+
 ## 9. Names
 
 ### 9.1 Monster and site names (amends P3-02 4.5)
@@ -477,8 +507,8 @@ Order of appending = this table. The charged civilization of a quiet-step event 
 | `undead_rose` | 50 | `{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead of {@region} rose as {monster}.` | yes |
 | `monster_woke` | 25 | `{monster} woke again in {@region}.` | at low thresholds |
 | `monster_slept` | 10 | `{monster} sank into sleep in {lair}.` | no |
-| `monster_raid` | 15 | `{monster} fell upon {settlement}; {dead?no one died|one died|# died}.` | no |
-| `settlement_overrun` | 50 | `{monster} drove the people from {settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}.` | yes |
+| `monster_raid` | 15 | `{monster} fell upon {@settlement}; {dead?no one died|one died|# died}.` (r1: `{@settlement}`, 25 item 4) | no |
+| `settlement_overrun` | 50 | `{monster} drove the people from {@settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}.` (r1: `{@settlement}`) | yes |
 | `monster_slain` | 55 | `{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}.` | yes |
 | `monster_driven_off` | 30 | `{civilization} drove {monster} back to its lair in {@region}.` | yes |
 | `monster_died` | 30 | `{monster}, {monster:kind}, died of great age in {@region}.` | yes |
@@ -521,7 +551,7 @@ CREATE TABLE monster (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER N
 CREATE TABLE site (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, region INTEGER NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, settlement INTEGER NOT NULL, founder_civ INTEGER NOT NULL, monster INTEGER NOT NULL, origin_year INTEGER NOT NULL, origin_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT
 ```
 
-`SCHEMA_VERSION`, `user_version` and `meta.schema_version` become **9**; readers refuse version 8 (`world schema version 8, this build reads 9`). The empty world gains the root pages of the five tables and the automatic indexes `sqlite_autoindex_beast_1` and `sqlite_autoindex_monster_kind_1`: expected 35 + 7 = **42 pages, 172032 bytes**, to be confirmed by the engineer with the vendored SQLite (P3-04 9.6's method). `db::HISTORY_TABLES` stays at 13 entries (P3-04 r22 23.4); the new tables are read by name, after `region_name`.
+`SCHEMA_VERSION`, `user_version` and `meta.schema_version` become **9**; readers refuse version 8 (`world schema version 8, this build reads 9`). The empty world gains the root pages of the five tables and the automatic indexes `sqlite_autoindex_beast_1` and `sqlite_autoindex_monster_kind_1`: r0 expected 35 + 7 = 42 pages; (r1) **measured 43 pages, 176128 bytes** with the vendored SQLite 3.54.1 (P3-04 9.6's method): the five root pages, the two automatic indexes, and one more page of `sqlite_schema`, which the longer statements overflow. `docs/specs/schema.md` records it. `db::HISTORY_TABLES` stays at 13 entries (P3-04 r22 23.4); the new tables are read by name, after `region_name`.
 
 ### 11.2 Columns, codes and row order
 
@@ -552,6 +582,13 @@ After the `region_name` checks (21.3 included), the first failing row of each ta
 - **`monster`**: `id <i> is not <previous + 1>`; `unknown kind <k>`; `name is not a name`; `lair_site <s> is not a lair of this monster` (site kind 1 with `monster` = id); `born_event <e> is not the appearance of this monster in year <born>` (kind `monster_appeared` or `undead_rose`, year `born`, participant m in role `monster`); `status <s> outside 1 to 4`; status 1 or 2 ⇔ `died` NULL ⇔ `death_event` 0 (`end columns disagree`); status 3 ⇔ `slain_by` ≠ 0, `death_event` a `monster_slain` of year `died` with this monster and `slayer` = `slain_by`; status 4 ⇔ `death_event` a `monster_died` of year `died` with this monster; `hoard` negative.
 - **`settlement.ending`**: `ending <k> is not its ruin's ending <k'>` (8.3's derivation from the `ruin_event` and its causes).
 - **Events**: every participant of type 8 or 9 names a row (`event <e>: <type> <id> has no row`); every event of kinds 44, 45, 49, 54 is the `origin_event` of exactly one site (`<kind> without its site row`); every value `beast` names a `beast` row.
+
+(r1) **Messages as built** for the cases r0 left open (normative):
+
+- `site`, kind 1 with `founder_civ` ≠ 0: `founder_civ <c> of a lair`; kind 2 with `monster` ≠ 0: `monster <m> of an outpost`.
+- `monster`: a status-3 row failing the slaying test: `death_event <e> is not this monster's slaying`; `slain_by` ≠ 0 on a row of status other than 3: `slain_by <c> of a monster not slain`; a status-4 row failing the death test: `death_event <e> is not this monster's death`; `hoard <h> negative`.
+- Events, as `corrupt table 'event': row <e>: <reason>`: `monster <id> has no row`, `site <id> has no row`, `<kind key> without its site row`, `value beast <b> is not a beast`.
+- `settlement.ending`: `corrupt table 'settlement': row <id>: ending <k> is not its ruin's ending <k'>`, k' derived as 25 item 3 states for a faded settlement.
 
 Ids are dense and ascending, so every lookup is an index; nothing relies on SQLite's row order beyond `ORDER BY` the primary key, and no check has undefined behaviour on a damaged file (every index is checked before use).
 
@@ -601,7 +638,33 @@ A `flare_up` whose first cause is a `monster_appeared` gets the note `The waking
 
 ### 12.8 Length
 
-At summary the report grows by at most 1 + 1 + 2 + 1 = 5 lines of `[monsters]`, 2 of `[sites]`, and the phase lines of the flare-ups a great monster starts (about 0.3 a world). The summary event set keeps its budget of 250 (12 to 15 new candidates per default world, none in `civs4`). Expected: default median about 595 (0.22.0: 587), `civs4` median about 1,093 (1,085): within T18, with little room in `civs4` (question 4).
+At summary the report grows by at most 1 + 1 + 2 + 1 = 5 lines of `[monsters]`, 2 of `[sites]`, and the phase lines of the flare-ups a great monster starts (about 0.3 a world). The summary event set keeps its budget of 250 (r1: at most 250, 12.9) (12 to 15 new candidates per default world, none in `civs4`). Expected: default median about 595 (0.22.0: 587), `civs4` median about 1,093 (1,085): within T18, with little room in `civs4` (question 4).
+
+(r1) Measured at the first calibration: default median 603, max **872** (seed 29), `civs4` median 1,087, max 1,351. Seed 29 breaks T18's default maximum of 800; 12.9 bounds it.
+
+### 12.9 The summary line limit (r1; amends P3-07 24.3 item 4 and 24.9; T18)
+
+**Why seed 29 is long.** Its summary had 740 lines at 0.22.0 (the fifth longest; the longest was 777) and has 872 at 0.23.0 (the next longest 762, median 603). Its history is a war-rich one, not a monster-heavy one: 75 wars against 47 at 0.22.0, 1,814 events against 1,293, 31 phases against 24 (two monster flare-ups, the dragon Fiecie in 1275 and the giant Hartaind Stonehand in 2537, move the schedule), 15 civilizations, all alive at E. Of the 132 lines it gained: `[civilizations]` +60 (adversary lines 46 → 76, milestones 108 → 120, one realm more), `[chronicle]` +47 (33 more shown events at the same threshold 71, and 7 more phases with a heading and a hidden-count line each), `[present]` +18 (ruins 29 → 37, standing claims 23 → 28), `[monsters]` and `[sites]` +7. Monster events fill 8 chronicle lines (6 appearances, 2 deaths of age), inside the 250-event budget, where they displace other events rather than add lines; **raids are no summary candidates** (salience 15 < `SUMMARY_MIN_SALIENCE`), so a cap on raid lines per phase, or raids as companions, would remove nothing. Caps on the lists that grew do not suffice either (prototype on the stored summaries): adversary lines at most 4 per realm, ruins at most 12 and standing claims at most 8 at summary together take seed 29 to about 813. What is elastic is the chronicle: the summary set's budget.
+
+**Rule.** At summary the budget of 24.3 item 4 is B instead of `SUMMARY_BUDGET`:
+
+```
+C      = civilization rows
+L      = SUMMARY_LINES_MAX + SUMMARY_LINES_PER_CIV × max(0, C − SUMMARY_LINES_CIVS)      // 790 + 40 × max(0, C − 16)
+O      = the number of lines of the summary report outside [chronicle], as printed (every line before the
+         `[chronicle]` line and every line from `[civilizations]` on)
+F      = 4 + A + 2 × P      // `[chronicle]`, `threshold`, `events`, `shown`; one heading per age (A ages);
+                            // per phase (P phases) its heading and room for its `(n more events not shown)` line
+B      = min(SUMMARY_BUDGET, max(SUMMARY_BUDGET_MIN, L − O − F))
+```
+
+T = the smallest t in [20, 100] with |floor ∪ C(t)| ≤ B; if there is none, T = 100 (24.3 item 4, with B for 250). Every other rule of the summary set (candidates, 25.2's calamity cap, the age floor, units, 26.5's companions) is unchanged. New constants of section 8: `SUMMARY_LINES_MAX` = **790**, `SUMMARY_LINES_PER_CIV` = **40**, `SUMMARY_LINES_CIVS` = **16**, `SUMMARY_BUDGET_MIN` = **100**.
+
+- **O is fixed before the set is chosen.** No line outside `[chronicle]` depends on the summary set: the milestones are 24.5's own choice, and `[stats]`'s `summary_threshold` and `summary_events` are values on fixed lines. So O is counted by rendering every other block of the summary first (or by an equal count), then the set is chosen with B. The summary set is one set for both levels, as before: a `full` report's `summary_threshold` and `summary_events` are those of the set chosen with B (O is always the summary's count).
+- **The bound.** Each shown event is one chronicle line, so a summary whose set holds at most B events has at most O + F + B ≤ L lines whenever B = L − O − F ≥ `SUMMARY_BUDGET_MIN`. It may exceed L when the floor set alone is larger than B (T = 100), or when O + F > L − `SUMMARY_BUDGET_MIN`; neither happens in the measured sweeps.
+- **Why L grows with the realms.** A realm costs a summary about 30 to 40 lines outside the chronicle (its block, its `[present]` line, its share of the lists). T18's bounds (800 default, 1,400 `civs4`) already allow more for more realms; with 40 lines per realm beyond 16, no `civs4` world of the first calibration (22 to 38 realms, 862 to 1,351 lines) reaches its L, so `civs4` is unchanged. A default world has 7 to 15 realms (0.22.0's longest had 17).
+- **Expected effect** (prototype on the first calibration's summaries): in **seed 29**, C = 15, L = 790, O = 557, A = 6, P = 31, so B = 790 − 557 − 4 − 6 − 62 = **161** against 244 shown at threshold 71: the threshold rises until at most 161 events are shown, and the summary has at most 790 lines (a few fewer when the last unit taken leaves the set below 161, since a unit is never cut). In every other default world and every `civs4` world B = 250 (L − O − F ≥ 250): **the median is unchanged** (603), and the next longest default summary stays 762. At 0.22.0's sweep only seed 12 (C = 17, L = 830) would get B < 250 (230, against 178 shown): no change there either. r1's target rule (6.4.1) adds ruins to `[present]`, so more worlds may reach L at the second calibration; the rule holds them at L.
+- `full` is unchanged but for the two `[stats]` values above. The format stays **v4** (the line types are unchanged; only which events a summary shows). P3-07's 24.9 gains the four constants.
 
 ## 13. Timeline and viewer hooks (amends P4-01; r4)
 
@@ -611,7 +674,7 @@ At summary the report grows by at most 1 + 1 + 2 + 1 = 5 lines of `[monsters]`, 
 struct SiteState    { std::int64_t site; std::int64_t kind, region, x, y, settlement, monster, founder; bool open; std::int64_t ending; };
 struct MonsterState { std::int64_t monster; std::int64_t kind; bool alive, awake; std::int64_t lair_site, region; };
 std::span<const std::int64_t> sites_existing(std::int64_t year) const;   // sites with origin_year <= Y, ascending id
-SiteState site_at(std::int64_t site, std::int64_t year) const;           // open iff ended_year NULL or Y < ended_year
+SiteState site_at(std::int64_t site, std::int64_t year) const;           // open iff origin_year <= Y and (ended_year NULL or Y < ended_year) (r1, 25 item 12)
 MonsterState monster_at(std::int64_t monster, std::int64_t year) const;
 std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t year) const;  // the row with the largest year <= Y, else 0
 ```
@@ -625,10 +688,10 @@ std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t y
 ## 14. Invariants
 
 1. Counts: 0 ≤ B ≤ 10^6; `beast_population` rows change count from row to row; a species with K0(r, s) = 0 in every year has no row for r.
-2. 800 ≤ g(r) ≤ 1100 with the shipped tuning (1000 − `drag_max_permille` ≤ g ≤ 1000 + `feed_max_permille`).
+2. 900 ≤ g(r) ≤ 1100 with the shipped tuning (1000 − `drag_max_permille` ≤ g ≤ 1000 + `feed_max_permille`; r0 had 800 with its `drag_max_permille` 200).
 3. At any year at most one open lair per region; living monsters ≤ L_world; per kind ≤ `max_alive`.
 4. Every monster has exactly one appearance (kind 44 or 45, its `born_event`); every monster event after it is between `born` and `died`; at most one `settlement_overrun` per monster; a slain monster has exactly one `monster_slain`, a dead one one `monster_died`, and no event after.
-5. Every raid target lies within `range_hops` of the lair at the raid's year; `dead` ≤ min(`kill_max`, P − 1).
+5. Every raid target lies within `range_hops` of the lair at the raid's year and has an owner; `dead` ≤ min(`kill_max`, P − 1).
 6. Every lair of a living monster is open, every lair of an ended monster is ended in the monster's death year; a site's `settlement` ≠ 0 only for a lair of an overrun or a rising at a ruin, and that settlement is ruined or faded from the site's `origin_year`.
 7. An overrun settlement is never its owner's capital or last standing settlement at the overrun; no monster overruns more than one; overruns ≤ a quarter of the world's settlements (P5-00 8.3, hard).
 8. No founding (`colony_founded`) targets a shunned region (7.2).
@@ -649,27 +712,27 @@ std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t y
 
 ## 16. Targets (validation)
 
-At 1024 defaults (100 worlds, seeds 0–99) unless stated. Bounds marked "interim" are set from estimates, not a sweep (no 0.23.0 sweep exists before implementation); the engineer's calibration sweep (17 step 9) may change the shipped rates in data to meet them, and reports the measured figures in a spec revision, as P5-12 r2 did.
+At 1024 defaults (100 worlds, seeds 0–99) unless stated. r0's bounds were set from estimates; (r1) the last column is the engineer's first calibration sweep (17 step 9; `~/.cache/the-unmapped/out/p5-02-impl/final-measurements.txt`, worlds of `final/default` and `final/civs4`), measured with r0's raid target. **Restated in r1** (Paul's decision of 2026-11-23, 6.4.1): M4 (living monster's lair at E ≥ 85, was 90; a lair on a former settlement open at E ≥ 65, was 50; overruns median 2 to 4, was 1 to 3) and G2 (standing settlements ≥ 92%, was 95%; population stays 95%). The second calibration (26.1) re-measures every row with r1's rules and reports it in r2.
 
-| Target | Definition | Bound |
-| --- | --- | --- |
-| **M1** | monsters per world (rows) | median 4 to 8, max at most 20; at least one in ≥ 95 worlds (interim) |
-| **M2** | participation (P5-00 8.3) | each kind in ≥ 10% of worlds and in at least one event over the sweep; each kind at least once across the `low` sweep |
-| **M3** | worlds with at least one `monster_raid` | ≥ 90 |
-| **M4** | monster-held places | a living monster's lair at E in ≥ 90 worlds; a lair on a settlement (overrun or risen at a ruin) open at E in ≥ 50 worlds; overruns per world median 1 to 3 |
-| **M5** | slain among ended monsters | 20% to 70% of the monsters that end are slain (reported by kind) |
-| **M6** | invariants 3 to 7 | every world of every sweep (hard) |
-| **G1** | ghost places (settlements with `ending` 3, 4 or 5) | median ≥ 3 per world (0.22.0: 0.5) |
-| **G2** | standing settlements at E; world population at E | medians at least 95% of 0.22.0's (`settlements` and `population` of `[stats]`) |
-| **G3** | once-held regions free at E | reported; expected median 2 (0.22.0: 1) |
-| **S1** | outposts per world; ended outposts | median 3 to 15; at least one ended in ≥ 70 worlds |
-| **B1** | `beasts_bold` per world; settlement-years with g < 1000 and > 1000 | median at most 30; reported |
-| **F1** | flare-ups started by a monster | reported; at most 2 in any world |
-| **R** | P5-12's R1 to R4 with rule 7; `ravage` renamings | R1 to R4 as bounded there; `ravage` at least 5 times over the sweep |
-| **P** | P5-01's T1, T2, T5, T9 to T15, T17, T19, T20, quick aim wins, T3, T4, T6, T7; P3-00 12.3 | as bounded at 0.22.0 (statistics, not pair for pair, 7.5) |
-| **T16** | battles that repeat an earlier battle's sides and both tolls exactly | **at most 2 per thousand battles** of the default sweep (Paul's decision of 2026-11-23; 0.22.0: 13 of 8,935, 1.5‰); mixed toll clauses 0 |
-| **T18** | summary lines | default median ≤ 700, max ≤ 800; `civs4` median ≤ 1,100, max ≤ 1,400 |
-| **timing** | `generate` at 1024, release, seed 0, three runs | at most 10% slower than 0.22.0 (about 0.95 s); `report --history` under 2 s |
+| Target | Definition | Bound (r1) | 0.23.0, first calibration (engineer, 100 default worlds; `civs4` 20) |
+| --- | --- | --- | --- |
+| **M1** | monsters per world (rows) | median 4 to 8, max at most 20; at least one in ≥ 95 worlds | median 8, max 14; 100 worlds (`civs4`: 8.5, 15) |
+| **M2** | participation (P5-00 8.3) | each kind in ≥ 10% of worlds and in at least one event over the sweep; each kind at least once across the `low` sweep | worlds with the kind: dragon 66, giant 49, ogre 75, troll 95, undead 71, wyvern 64 (monsters 67, 59, 145, 258, 158, 105); `low` not run |
+| **M3** | worlds with at least one `monster_raid` | ≥ 90 | 98; raids per world median 44.5 (`civs4` 20, 68.5) |
+| **M4** | monster-held places | (r1, Paul) a living monster's lair at E in **≥ 85** worlds; a lair on a former settlement (overrun, or risen at a ruin) open at E in **≥ 65** worlds; overruns per world median **2 to 4** | 88 worlds; **44** worlds; overruns median **1**, max 4; risings median 2 (`civs4`: 16 and 8 of 20, 1) |
+| **M5** | slain among ended monsters | 20% to 70% of the monsters that end are slain (reported by kind) | 290 of 611, 47% (dragon 6 of 6, giant 20 of 51, ogre 39 of 136, troll 116 of 232, undead 79 of 87, wyvern 30 of 99); `civs4` 65% |
+| **M6** | invariants 3 to 7 | every world of every sweep (hard) | none broken (both sets) |
+| **G1** | ghost places (settlements with `ending` 3, 4 or 5) | median ≥ 3 per world (0.22.0: 0.5) | median 3, max 11; endings over the sweep: sacked 1,219, overrun 95, plague 229, famine 114 (`civs4` 10) |
+| **G2** | standing settlements at E; world population at E | (r1) medians at least **92%** (standing) and **95%** (population) of 0.22.0's (88 and 225,789: at least 81 and 214,500) | 85 (96.6%), 220,174 (97.5%); sums 93.8%, 95.2% (`civs4` 161.5 and 279,216: 105%, 99.7%) |
+| **G3** | once-held regions free at E | reported; expected median 2 (0.22.0: 1) | median 1 (`civs4` 1.5) |
+| **S1** | outposts per world; ended outposts | median 3 to 15; at least one ended in ≥ 70 worlds | median 12, max 32; 95 worlds (`civs4` 35, 47; 20) |
+| **B1** | `beasts_bold` per world; settlement-years with g < 1000 and > 1000 | median at most 30; reported | median 3, max 13; settlement-years not reported |
+| **F1** | flare-ups started by a monster | reported; at most 2 in any world | 90 over the sweep, max 2 (`civs4` 17, max 3) |
+| **R** | P5-12's R1 to R4 with rule 7; `ravage` renamings | R1 to R4 as bounded there; `ravage` at least 5 times over the sweep | `ravage` 43 (`civs4` 11); renamings by cause: sacked 198, battle 58, plague 46, overrun 43, conquest 36, seat 34 of 415 (largest share 47.7%) |
+| **P** | P5-01's T1, T2, T5, T9 to T15, T17, T19, T20, quick aim wins, T3, T4, T6, T7; P3-00 12.3 | as bounded at 0.22.0 (statistics, not pair for pair, 7.5) | T1 hollow 213‰; T2 0 worlds; T3 1 world; T4 0; T5 orc wins 151, losses 65; T9 7 worlds; T10 0; T11 median 10 years; T12 first orc war won 30, lost 23; T13 0 of 2,469; T14 190 grim of 4,951 names; T15 none; T17 calamity share median 7.0%, max 15.9%; T20 0 of 459; wars median 23.5 (0.22.0: 24), simulated years median 1,376 (1,342.5), ruins median 12 (11) |
+| **T16** | battles that repeat an earlier battle's sides and both tolls exactly | **at most 2 per thousand battles** of the default sweep (Paul's decision of 2026-11-23; 0.22.0: 13 of 8,935, 1.5‰); mixed toll clauses 0 | 9 of 8,415 (1.07‰); mixed 0 |
+| **T18** | summary lines | default median ≤ 700, max ≤ 800; `civs4` median ≤ 1,100, max ≤ 1,400 (r1: 12.9 holds the default maximum) | default median 603, max **872** (seed 29; next 762); `civs4` median 1,087, max 1,351 |
+| **timing** | `generate` at 1024, release, seed 0, three runs | at most 10% slower than 0.22.0 (about 0.95 s); `report --history` under 2 s | within noise on a loaded shared machine (whole `generate` 23.3 s at 0.22.0, 23.0 s at 0.23.0, means of three); `report --history` 0.03 s; validation re-measures |
 
 **Which earlier figures may move, and by how much** (reported, not targets): wars per world and simulated years by up to 5% (monster flare-ups add about 15 active years a world); ruins (+1 to +4 a world from overruns and ghost places); free regions at E (+1); renamed regions per world (R1 median +0 to +1, by `ravage`); T17's calamity share (unchanged: ghost abandonments are not calamity kinds, but their abandonment lines (55) enter the summary); T5, T9 to T12 (orcs) within their run-to-run spread, since monsters prefer the uplands and moors where goblins and orcs live and slow their small settlements most.
 
@@ -729,7 +792,7 @@ One branch, one engineer, one test writer, working separately from the specs. `G
 3. Boldness: the hysteresis (on at 1500, stays bold at 900, off at 799); the toll and its cap at P − 1; the species chosen.
 4. Appearances: the caps (world, kind, one per region, one per step); `chance_ppb`'s threshold at p = 0, 1, 10^9; islets skipped; quiet steps with and without budget; `pending_flare` set in Q4 only for `flare` kinds and cleared at the next Q4; `tension()` pure (called twice, same answer).
 5. The undead: the window (an entry at Y − window drops, at Y − window + 1 stays); battle and sack magnitudes; the 8 causes by size then id, listed ascending; the lair at a ruined sacked settlement, and at the wild cell when that settlement already holds a site.
-6. The monsters' year: the order age, rewake, sleep, raid, hunt; `drive_until`; raid targeting (hops, then population, then id); toll bounds; plunder and hoard; the hunt odds at S = 0, S = might, the cap; slain, driven, nothing by u at the thresholds; hunting realms by memory.
+6. The monsters' year: the order age, rewake, sleep, raid, hunt; `drive_until`; raid targeting (r1: 6.4.1's weights and draw, 26.2); toll bounds; plunder and hoard; the hunt odds at S = 0, S = might, the cap; slain, driven, nothing by u at the thresholds; hunting realms by memory.
 7. Overrun: every condition (kind, capital, last settlement, another monster's lair, once only); the new site, the old lair's ending 3; `ruin`'s effects; the region shunned and then no colony into it; the shun lifted when the monster dies.
 8. Outposts: raised only at war, on the height, one per civilization per year, `outpost_max`; each ending reason and its cause; quiet-step budget.
 9. Names: monster names per kind (culture, forms); roots with the bare form last; lair names cycling, the possessive rule, the fallback numeral; outposts from `site_forms`; all in the one registry.
@@ -808,18 +871,89 @@ The engineer checks that every new form word passes the placename `forbidden` an
 - The heartland renaming note naming the seat (21.1 item 2); more land nouns per biome (finding 5).
 - Sites P6 derives (battlefields, barrows, tombs), dungeon records, `layout_seed`.
 
-## 23. Open questions for Paul (each with a recommendation and the interim choice)
+## 23. Questions decided (r1; r0's open questions)
 
-1. **Ancient renamings.** The world critic found renamings late (74% after year 5000): the rules need sacks, battles and plagues that the early, thinly peopled ages rarely reach. Recommendation: in a later balance pass, set the death-toll thresholds of `great_sack`, `slaughter` and `plague` relative to the population of the time (for example per mille of the world's population at the event), so an ancient massacre of a small world counts as a great one. Interim: no change in this stage.
-2. **A monster's flare-up without a war.** A great monster's waking in a quiet age now starts a flare-up, which forces no declaration (7.4). Recommendation and interim: as specified; the design summary's "a flare-up always brings its war" is narrowed to flare-ups of strain (proposals entry). The alternative, that a monster's flare-up also forces conflict's best claim, ties monsters to wars without a cause in the story.
-3. **How dead places are told apart.** Recommendation and interim: an ending column on `settlement` and `site` (8.3) beside the unchanged status. The alternative is a new settlement status `abandoned` (5), which every P3 rule and reader of "ruined" would have to learn.
-4. **The `civs4` summary length.** The `civs4` median is at 1,085 of 1,100; this stage adds about 7 summary lines. Recommendation and interim: as specified (2 monster lines at summary). If validation finds the median above 1,100, `SUMMARY_MONSTER_LINES` becomes 0 at summary (a constant, report only), or Paul raises the `civs4` bound, which was set for a world without monsters.
-5. **Outposts.** Recommendation and interim: watchtowers on a frontier in war, left when the land is lost, the realm falls or the frontier is quiet for 200 years. The alternative is to leave every non-monster site to P5-04 (mines) and P6, which would leave few abandoned sites outside lairs.
+Paul answered r0's five questions on 2026-11-23 ("1. I accept the narrowing, 2. That's fine to drop, 3. Now is good if it's easy now, 4. And 5. I take the recommendation"; recorded in `docs/design/proposals.md`, "Paul's decisions of 2026-11-23 on P5-02's open questions", whose numbering is the lead's, given in brackets). Each is now normative as specified:
+
+1. **Ancient renamings** [5]: no change in this stage; a later balance pass sets the death-toll thresholds of `great_sack`, `slaughter` and `plague` relative to the population of the time (22).
+2. **A monster's flare-up without a war** [1]: accepted. A flare-up started by a monster forces no declaration (7.4); design 5's "a flare-up always brings its war" holds for flare-ups of strain between realms, and the design doc should say so.
+3. **How dead places are told apart** [4]: a recorded ending cause, `settlement.ending` and `site.ending` (8.3, 11.2), beside the unchanged status.
+4. **The `civs4` summary length** [2]: if the `civs4` summary median passes 1,100, the monster lines are dropped from the summary on those worlds (`SUMMARY_MONSTER_LINES` 0; they stay at full); the bound is not raised. At the first calibration the median is 1,087 (16), so nothing is dropped; the second calibration checks it again (r1's target rule adds ruins, 12.9 does not act on `civs4`).
+5. **Outposts** [3]: built in this stage, since it proved easy (the engineer: outposts are in, 6.6).
+
+No question of r1 needs Paul: 6.4.1 is his decision worked out, and 12.9 is a report rule within T18's bounds, for the lead to approve.
 
 ## 24. Proposals
 
 Three entries in `docs/design/proposals.md`: "History: beasts and monsters, P5-02 (readings and scope)", "Schema 9: beasts, monsters and sites (P5-02)" (hard rule 7) and "Paul's wish of 2026-11-23: abandoned places to explore (P5-02)".
 
+## 25. Settled in the implementation (r1)
+
+The first implementation (`origin/p5/02-impl` at 956b472) settled these points where r0 was silent or loose. Each is now normative as stated; the code is right in every one.
+
+1. **Split data checks and their error path.** The checks of 4.1 and 4.2 that need another kind run after every kind is loaded, in the history data checks (`check_history_data`, `src/history/data_checks.cpp`): every `habitat[i].biome` and `biomes[i].biome` names a `biome` definition (`habitat[<i>].biome '<b>' is not a biome`, the first failing entry of a definition only), and `naming_culture` names a `culture` (`naming_culture '<c>' is not a culture`). They report as `check '<name>' failed for '<kind>.<id>': <message>` at the kind's directory, sorted with the other load errors. The checks within one definition (a repeated biome, `listed twice`; `monster_wild_habitat`; `monster_toll_ordered`; `monster_overruns_unique`; `monster_bare_form_last`) run with the kind's loader.
+2. **Habitat sums, one floor per region.** H(r, s) = (Σ over r's `region_biome` rows of cells × w(s, key)) div 1000: the sum first, one floor per region and species, not one per row. The same for H_k(r) of 6.3.1.
+3. **A faded settlement's ruin event.** P3-05's fading (status 4) clears `ruined_year` and `ruin_event` (the engine's `set_status`). A faded settlement's ending (8.3) is therefore derived from the first cause of its `ruin_faded` event, which is the event that ruined it; the writer (`settlement_endings`), the reader's check (11.4) and the timeline read it so. 6.3.2's "ruined or faded" settlement and invariant 6 are unchanged.
+4. **Templates of kinds 48 and 49** name the target as `{@settlement}` (the event's settlement column): those kinds have no `settlement` role, so 10.2's `{settlement}` would be a template problem. As shipped: `{monster} fell upon {@settlement}; …` and `{monster} drove the people from {@settlement} and made it its lair; …`.
+5. **The empty world**: 43 pages, 176128 bytes (11.1).
+6. **The open 11.4 messages**, as built: listed in 11.4.
+7. **The renaming message.** P5-12's check of `name_role` reads `name_role '<r>' is not a civilization, settlement or monster role of kind '<k>'`.
+8. **`{stem}` with no name role.** A form holding `{stem}` is skipped, as one holding `{name}` is, when the event gives no name value. `{stem}` equals `{name}`'s value for a civilization or monster role, and for a settlement whose `founder_civ` is 0.
+9. **The possessive rule after any slot value.** 21.2's rule applies after the value of any slot (`{name}`, `{stem}`, `{noun}`, and `{root}` in lair names) that ends in `s` or `S`, when the literal run right after it starts with `'s`.
+10. **The outpost's cause.** The `since_event` of the open `war` relation between c and the `enemy` participant e, looked up as (c, e) first, then (e, c).
+11. **Raid memory.** One entry per civilization, in ascending civilization id. A later raid on the same civilization replaces the entry. Entries are kept when the monster sleeps, is driven off or moves its lair. Entries older than `hunt_memory_years` are skipped, not removed. The hunts of a year walk a copy of the list taken before the first hunt, and a slaying or a driving off ends them.
+12. **The timeline's monster state** (13). Alive iff `born` ≤ Y and (`died` NULL or Y < `died`). Awake: the last event of kinds 44, 45 or 46 (awake) or 47 or 51 (asleep) with year ≤ Y decides, in event-id order; a monster not alive is not awake. The lair at Y is its first lair site, by ascending id, with `origin_year` ≤ Y < `ended_year` (or open); if there is none, its last lair begun by Y; before `born`, the stored `lair_site`. `site_at`: open iff `origin_year` ≤ Y and (`ended_year` NULL or Y < `ended_year`); `ending` is the stored code from `ended_year` on, else 0. A settlement's `ending` at Y is the stored code when its state at Y (P4-01's census reading) is ruined or faded, else 0.
+13. **Every draw key** (D(stream; a, b, k), w0 the step's year; a quiet step's start):
+
+    | Stream | a, b, k | Stream | a, b, k |
+    | --- | --- | --- | --- |
+    | `hist.beasts.bold` | region, 0, 0 | `hist.monsters.overrun` | monster, settlement, 0 |
+    | `hist.monsters.wake` | region, kind id, 0 | `hist.monsters.hunt` | monster, civilization, 0 |
+    | `hist.monsters.rise` | region, kind id, 0 | `hist.monsters.hunt_outcome` | monster, civilization, 0 |
+    | `hist.monsters.sleep` | monster, 0, 0 | `hist.monsters.lair_name` | site, 0, 0 |
+    | `hist.monsters.rewake` | monster, 0, 0 | `hist.sites.outpost` | civilization, region, 0 |
+    | `hist.monsters.raid` | monster, 0, 0 | `hist.peoples.ghost` | settlement, 0, 0 |
+    | `hist.monsters.raid_toll` | monster, 0, 0 | (r1) `hist.monsters.raid_target` | monster, 0, 0 |
+
+    `hist.names.monster` and `hist.names.site` are P3-02 4.2's name attempts with c = the `culture.id` of the kind's `naming_culture` (monster) or of the founder's culture (site), and the entity id the monster's or site's id.
+14. **The quiet-step budget.** In Q4 a wild appearance checks `quiet_events_left(0)` > 0 once, before its scan; each death of age that is due checks it before its event, and waits otherwise; each outpost end checks `quiet_events_left(founder)`. Nothing that waits draws.
+15. **The undead's event settlement.** `undead_rose`'s `settlement` is the lair's settlement when the host rises at a ruin, else 0 (the kind's settlement use is 2, optional).
+16. **The bold toll guard.** dead = max(0, min(P − 1, max(1, P × `bold_toll_permille` div 1000))), so a settlement of one person loses no one. `set_population` is called only when dead > 0; `note_reduction` always.
+17. **Saturating sums.** The report's per-monster `killed` (12.4) and `[stats]`'s `monster_killed` add the `dead` values with negative values taken as 0 and saturate at INT64_MAX: the digest never fails on a damaged file.
+18. **The `beast` and `monster_kind` tables** are written from the data by every run of the history stage, also when the subsystem never ran a step. "Empty without history" (11.2) means a world with no history stage.
+
+Outposts are in (Paul's "if it's easy": it was, 23 item 5).
+
+## 26. What changes in r1
+
+### 26.1 For the engineer
+
+Only A (6.4.1) and B (12.9) change code or data; 25 changes nothing.
+
+**A, the raid target** (world bytes):
+
+- `core/streams.hpp`: `hist.monsters.raid_target` = `"hist.monsters.raid_target"`, appended to the stream list after `hist.names.site`.
+- Tuning `history.monsters`: the five `prey_*` fields of 4.3, appended in that order after `outpost_quiet_years` (schema in `src/data/kinds_history.cpp`, `MonstersTuning` and `monsters_tuning_from`); the shipped values in `game/data/history/monsters.toml` and in both fixture roots (`worldgen/tests/data/geo/`, `geo-small/`), and in any hand-made root of the test writer that carries a `monsters.toml`.
+- `MonstersSubsystem::raid`: replace the (hops, −population, id) choice by 6.4.1's candidates, weights and `weighted` draw; no raid event and no toll draw when there is no candidate or W = 0. The overrun (6.4.3) is unchanged.
+- **Second calibration**, data only, on the default 100 and the 20 `civs4` worlds (and, for r2, the other sets of 16, which the first calibration did not run: `calm`, `turbulent`, 512 seeds 0–19, 2048 seeds 0–4, `--monster-pressure low` and `high`). Measure every row of 16, and also the raid targets by kind and the mean dead per raid. To meet M4, tune `overrun_permille` first, then `prey_weight`. To hold G2's floors, tune the ghost rate first (`ghost_permille`, then `ghost_max_population`), then the raid tolls (`toll_min_permille`, `toll_max_permille`, `kill_max` of the kinds). Leave the wake rates alone unless M1 leaves its band. Report the shipped values and the figures in r2.
+
+**B, the summary line limit** (report text only; no world byte):
+
+- `worldgen/history/digest.hpp`: constants `SUMMARY_LINES_MAX` 790, `SUMMARY_LINES_PER_CIV` 40, `SUMMARY_LINES_CIVS` 16, `SUMMARY_BUDGET_MIN` 100.
+- The summary set (`digest.cpp`, 24.3 item 4) takes the budget B of 12.9 instead of `SUMMARY_BUDGET`. B needs O, the summary's lines outside `[chronicle]`, so the report renders those blocks at summary level first (or counts them equally) and then chooses the set. The same set serves both levels.
+- The header stays `# worldgen history v4`. `report --help` is unchanged.
+
+Nothing else moves: no schema, catalogue, template or report line type change; `GENERATOR_VERSION` stays 0.23.0 (no world of 0.23.0 has been released).
+
+### 26.2 For the test writer
+
+- **Reference** (`p5_02_monsters_reference.py`, inside the conflict reference's replay): 6.4.1's raid target (the candidates, `might_f`, the weights, `weighted` on `hist.monsters.raid_target`, no draw when there is no candidate), the five `prey_*` fields in its data reader, and invariant 5's owner. Every history with a raid changes from its first raid on, so every later event id moves.
+- **Report reference** (`p3_report_reference.py`): 12.9's budget B, with O counted on the reference's own summary text and F = 4 + A + 2P. On the shipped cases B = 250 is expected everywhere, unless a case has more than 790 lines with 16 realms or fewer. Then the case's chronicle shrinks.
+- **Goldens to re-record** (in step 11, once, after the second calibration): `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` and README's phrase hash (validation: the shipped `history.monsters` changes every content hash); `p3-01-data.txt` (content hashes); `p3-06-conflict.txt` and `hist-conflict-73-1024`; `p3-07-report.txt` (every report whose world raids, and any world 12.9 limits); `p4-01-timeline.txt`; `p5-12-renaming.txt`; `p5-02-monsters.txt`. `p3-04-engine.txt` and `p3-05-peoples.txt` move only where they hash a world's `meta` or the content hash (no monster runs in those configurations). `core_vectors.txt`, `p1-01` to `p1-06`, `p3-02-names.txt` and `p3-03-chronology.txt` must not move.
+- **Unit tests** (19.1): item 6's raid targeting becomes 6.4.1: each factor (kind weight, `might_f` and its cap for towns, cities and fortresses only, `hop_f` at 0, 1 and 2 hops, the capital factor), the choice at the `weighted` boundaries, no raid and no draw with no candidate or W = 0, a settlement without an owner never a candidate; item 1 gains the `prey_*` fields' bounds and absence. Item 15 gains 12.9: B at its three branches (250, L − O − F, `SUMMARY_BUDGET_MIN`), with O and F counted on a fixture, and the threshold chosen with B (a fixture with more than `SUMMARY_BUDGET_MIN` candidates and a small L through the constants' test seam, or a hand-made world whose blocks are long). Item 16 and 14 read 25 items 3 and 12.
+- **Fixtures**: both fixture roots gain the `prey_*` fields; `monsters-small` keeps raids frequent, and with r1 its overruns grow (small places are the prey).
+
 ## Revision notes
 
 - r0 (2026-11-23): first draft, with Paul's decisions of 2026-11-23 (T16 a rate; the capital sack share kept; abandoned places to explore) worked in.
+- r1 (2026-11-23): after the first implementation and calibration. Paul's decision on monster-held settlements: the raid target becomes a weighted draw that prefers smaller and weaker places (6.4.1, tuning `prey_*`, stream `hist.monsters.raid_target`); M4 and G2 restated (16). The T18 default maximum: the summary line limit (12.9). The engineer's calibrated values replace r0's estimates (4.1 to 4.5), marked for re-calibration; the first calibration's figures in 16; the empty world measured (11.1); the reader messages as built (11.4); the implementation's readings (25); the open questions decided (23); the deltas for the engineer and the test writer (26).

@@ -1,18 +1,8 @@
+# Beast species (spec P5-02 4.1). Generator 0.23.0.
 [beast.wolf]
 name = "Wolf"
 plural = "wolves"
-habitat = [
-  { biome = "temperate_forest", weight = 700 },
-  { biome = "wet_woodland", weight = 500 },
-  { biome = "grassland", weight = 400 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 700 },
-  { biome = "highland_moor", weight = 800 },
-  { biome = "alpine", weight = 400 },
-  { biome = "marsh", weight = 100 },
-  { biome = "fen", weight = 100 },
-  { biome = "blighted_waste", weight = 200 },
-]
+habitat = [{ biome = "temperate_forest", weight = 700 }, { biome = "wet_woodland", weight = 500 }, { biome = "grassland", weight = 400 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 700 }, { biome = "highland_moor", weight = 800 }, { biome = "alpine", weight = 400 }, { biome = "marsh", weight = 100 }, { biome = "fen", weight = 100 }, { biome = "blighted_waste", weight = 200 }]
 density = 20
 growth_permille = 150
 menace = 10

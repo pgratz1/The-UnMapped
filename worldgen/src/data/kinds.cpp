@@ -622,6 +622,7 @@ KindRegistry builtin_kinds() {
                                             IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
                                             IdSchema{std::string(HISTORY_CONFLICT_ID), history_conflict_schema()},
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
+                                            IdSchema{std::string(HISTORY_MONSTERS_ID), history_monsters_schema()},
                                             IdSchema{std::string(HISTORY_PEOPLES_ID), history_peoples_schema()},
                                             IdSchema{std::string(HISTORY_RENAMING_ID), history_renaming_schema()},
                                             IdSchema{std::string(HISTORY_REPORT_ID), history_report_schema()},
@@ -637,6 +638,10 @@ KindRegistry builtin_kinds() {
     Kind name_filter{std::string(NAME_FILTER_KIND), std::string(NAME_FILTER_DIRECTORY), true, name_filter_schema()};
     name_filter.kind_checks = name_filter_kind_checks();
     registry.add(std::move(name_filter));
+    // P5-02 4.1, 4.2 (generator 0.23.0): kinds beast and monster, required,
+    // open ids.
+    registry.add(Kind{std::string(BEAST_KIND), std::string(BEAST_DIRECTORY), true, beast_schema()});
+    registry.add(Kind{std::string(MONSTER_KIND), std::string(MONSTER_DIRECTORY), true, monster_schema()});
     return registry;
 }
 

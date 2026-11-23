@@ -237,5 +237,12 @@ private:
 [[nodiscard]] Result<std::vector<RelationRow>> read_relation_rows(const WorldReader& world);
 // Schema 8 (P5-12): table region_name, in primary-key order.
 [[nodiscard]] Result<std::vector<RegionNameRow>> read_region_name_rows(const WorldReader& world);
+// Schema 9 (P5-02 11.1): tables beast, monster_kind, beast_population,
+// monster and site, in primary-key order.
+[[nodiscard]] Result<std::vector<BeastRow>> read_beast_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<MonsterKindRow>> read_monster_kind_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<BeastPopulationRow>> read_beast_population_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<MonsterRow>> read_monster_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<SiteRow>> read_site_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

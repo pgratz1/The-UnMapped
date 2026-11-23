@@ -22,25 +22,30 @@ using Rows = std::vector<std::vector<db::ColumnValue>>;
 struct Shape {
     std::string_view table;
     std::size_t columns;
-    std::array<std::size_t, 2> text;  // unused slots hold `columns`
+    std::array<std::size_t, 3> text;  // unused slots hold `columns`
     std::size_t nullable;
 };
 
-constexpr std::array<Shape, 14> SHAPES = {{
-    {db::EVENT_KIND_TABLE, 7, {1, 6}, 7},
-    {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6}, 6},
-    {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3}, 3},
-    {db::PHASE_TABLE, 6, {6, 6}, 6},
-    {db::EVENT_TABLE, 8, {8, 8}, 8},
-    {db::EVENT_PARTICIPANT_TABLE, 5, {5, 5}, 5},
-    {db::EVENT_CAUSE_TABLE, 2, {2, 2}, 2},
-    {db::EVENT_VALUE_TABLE, 3, {3, 3}, 3},
-    {db::CIVILIZATION_TABLE, 10, {1, 10}, 8},
-    {db::SETTLEMENT_TABLE, 14, {1, 14}, 12},
-    {db::SETTLEMENT_CENSUS_TABLE, 6, {6, 6}, 6},
-    {db::REGION_CONTROL_TABLE, 5, {5, 5}, 2},
-    {db::RELATION_TABLE, 9, {4, 9}, 6},
-    {db::REGION_NAME_TABLE, 5, {2, 5}, 5},  // schema 8 (P3-04 r21 23.4)
+constexpr std::array<Shape, 19> SHAPES = {{
+    {db::EVENT_KIND_TABLE, 7, {1, 6, 7}, 7},
+    {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6, 6}, 6},
+    {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3, 3}, 3},
+    {db::PHASE_TABLE, 6, {6, 6, 6}, 6},
+    {db::EVENT_TABLE, 8, {8, 8, 8}, 8},
+    {db::EVENT_PARTICIPANT_TABLE, 5, {5, 5, 5}, 5},
+    {db::EVENT_CAUSE_TABLE, 2, {2, 2, 2}, 2},
+    {db::EVENT_VALUE_TABLE, 3, {3, 3, 3}, 3},
+    {db::CIVILIZATION_TABLE, 10, {1, 10, 10}, 8},
+    {db::SETTLEMENT_TABLE, 15, {1, 15, 15}, 12},  // schema 9: column ending
+    {db::SETTLEMENT_CENSUS_TABLE, 6, {6, 6, 6}, 6},
+    {db::REGION_CONTROL_TABLE, 5, {5, 5, 5}, 2},
+    {db::RELATION_TABLE, 9, {4, 9, 9}, 6},
+    {db::REGION_NAME_TABLE, 5, {2, 5, 5}, 5},  // schema 8 (P3-04 r21 23.4)
+    {db::BEAST_TABLE, 6, {1, 2, 3}, 6},        // schema 9 (P5-02 11.1)
+    {db::MONSTER_KIND_TABLE, 7, {1, 2, 3}, 7},
+    {db::BEAST_POPULATION_TABLE, 4, {4, 4, 4}, 4},
+    {db::MONSTER_TABLE, 11, {1, 11, 11}, 6},
+    {db::SITE_TABLE, 14, {1, 14, 14}, 11},
 }};
 
 std::string row_at(const std::vector<db::ColumnValue>& row) {
@@ -54,7 +59,7 @@ std::optional<std::string> shape_problem(const Shape& s, const std::vector<db::C
         return "has " + db::format_u64(row.size()) + " columns, expected " + db::format_u64(s.columns);
     }
     for (std::size_t k = 0; k < s.columns; ++k) {
-        const bool is_text = s.text[0] == k || s.text[1] == k;
+        const bool is_text = s.text[0] == k || s.text[1] == k || s.text[2] == k;
         if (is_text) {
             if (row[k].type != db::ValueType::text) {
                 return "column " + db::format_u64(k + 1U) + " is not text";
@@ -226,6 +231,11 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
     st.census_rows = n(rows[10].size());
     st.relations = n(rows[12].size());
     st.region_names = n(rows[13].size());  // P3-04 r21 23.4
+    st.beasts = n(rows[14].size());  // P5-02 11.3
+    st.monster_kinds = n(rows[15].size());
+    st.beast_populations = n(rows[16].size());
+    st.monsters = n(rows[17].size());
+    st.sites = n(rows[18].size());
     // P3-05 15.4: per race. Race rows: column 1 id, 2 key.
     std::vector<std::int64_t> race_ids;
     for (const std::vector<db::ColumnValue>& row : tables.races) {
@@ -302,6 +312,11 @@ std::string history_section_text(const HistoryStats& st) {
     line("census_rows", st.census_rows);
     line("relations", st.relations);
     line("region_names", st.region_names);
+    line("beasts", st.beasts);  // P5-02 11.3
+    line("monster_kinds", st.monster_kinds);
+    line("beast_populations", st.beast_populations);
+    line("monsters", st.monsters);
+    line("sites", st.sites);
     line("population", st.population);
     for (const HistoryStats::RaceStats& r : st.races) {
         line("population_" + r.key, r.population);

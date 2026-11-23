@@ -45,8 +45,9 @@ namespace worldgen {
 // 42, battle toll factors, flare_min_years, fewer grim region names, name
 // filter entries, one number form per clause); 0.21.0 until P5-12 (regions
 // renamed by history, kind 43, schema 8, the fused-suffix rule, the name
-// filter on region names); now 0.22.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.22.0";
+// filter on region names); 0.22.0 until P5-02 (beasts, monsters and sites,
+// kinds 44 to 55, schema 9, the ghost rule, settlement endings); now 0.23.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.23.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

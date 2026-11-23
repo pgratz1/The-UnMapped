@@ -146,6 +146,12 @@ public:
     void write_region_control(const db::RegionControlRow& row);
     void write_relation(const db::RelationRow& row);
     void write_region_name(const db::RegionNameRow& row);  // schema 8 (P5-12)
+    // schema 9 (P5-02)
+    void write_beast(const db::BeastRow& row);
+    void write_monster_kind(const db::MonsterKindRow& row);
+    void write_beast_population(const db::BeastPopulationRow& row);
+    void write_monster(const db::MonsterRow& row);
+    void write_site(const db::SiteRow& row);
 
 private:
     friend class detail::Pipeline;

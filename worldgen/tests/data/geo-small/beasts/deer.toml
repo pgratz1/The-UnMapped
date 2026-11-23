@@ -1,17 +1,8 @@
+# Beast species (spec P5-02 4.1). Generator 0.23.0.
 [beast.deer]
 name = "Deer"
 plural = "deer"
-habitat = [
-  { biome = "temperate_forest", weight = 900 },
-  { biome = "wet_woodland", weight = 600 },
-  { biome = "grassland", weight = 800 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 500 },
-  { biome = "highland_moor", weight = 500 },
-  { biome = "alpine", weight = 200 },
-  { biome = "marsh", weight = 200 },
-  { biome = "fen", weight = 200 },
-]
+habitat = [{ biome = "temperate_forest", weight = 900 }, { biome = "wet_woodland", weight = 600 }, { biome = "grassland", weight = 800 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 500 }, { biome = "highland_moor", weight = 500 }, { biome = "alpine", weight = 200 }, { biome = "marsh", weight = 200 }, { biome = "fen", weight = 200 }]
 density = 100
 growth_permille = 250
 menace = 0

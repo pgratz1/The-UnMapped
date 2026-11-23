@@ -240,11 +240,12 @@ public:
                                                             c.founded_year, c.founding_event, c.ended_year,
                                                             c.ending_event});
         }
+        const std::vector<std::int64_t> endings = settlement_endings();
         for (const Settlement& s : state_.settlements_) {
             out.settlements.push_back(db::SettlementRow{
                 s.id, s.name, s.x, s.y, s.region, s.founder_civ, s.founded_year, s.founding_event, s.owner_civ,
                 static_cast<std::int64_t>(s.kind), static_cast<std::int64_t>(s.status), s.population, s.ruined_year,
-                s.ruin_event});
+                s.ruin_event, endings[static_cast<std::size_t>(s.id - 1)]});
         }
         out.settlement_census = std::move(census_rows_);
         std::stable_sort(out.settlement_census.begin(), out.settlement_census.end(),
@@ -264,12 +265,71 @@ public:
         return out;
     }
 
+    // P5-02 8.3: the ending code of every settlement (index id - 1), from
+    // the log: for a ruined settlement the kind of its ruin_event and that
+    // event's causes; for a faded one (whose ruin_event is 0) the ruin event
+    // is the cause of its ruin_faded event (reading 3).
+    [[nodiscard]] std::vector<std::int64_t> settlement_endings() const {
+        const auto id_of = [this](std::string_view key) {
+            const KindDef* k = config_.catalogue->find(key);
+            return k != nullptr ? k->id : 0;
+        };
+        const std::int64_t faded_kind = id_of("ruin_faded");
+        std::vector<std::int64_t> ruin_of(state_.settlements_.size(), 0);
+        for (const StoredEvent& e : events_) {
+            if (e.row.kind == faded_kind && faded_kind != 0 && e.row.settlement >= 1 &&
+                static_cast<std::size_t>(e.row.settlement) <= ruin_of.size() && !e.causes.empty()) {
+                ruin_of[static_cast<std::size_t>(e.row.settlement - 1)] = e.causes.front();
+            }
+        }
+        std::vector<std::int64_t> out(state_.settlements_.size(), 0);
+        for (std::size_t i = 0; i < state_.settlements_.size(); ++i) {
+            const Settlement& s = state_.settlements_[i];
+            std::int64_t ruin = 0;
+            if (s.status == SettlementStatus::ruined) {
+                ruin = s.ruin_event;
+            } else if (s.status == SettlementStatus::faded) {
+                ruin = ruin_of[i];
+            } else {
+                continue;
+            }
+            out[i] = ruin >= 1 && ruin <= last_event() ? ending_of(ruin) : 5;
+        }
+        return out;
+    }
+
+    [[nodiscard]] std::int64_t ending_of(std::int64_t ruin) const {
+        const StoredEvent& e = events_[static_cast<std::size_t>(ruin - 1)];
+        const std::string& key = config_.catalogue->find_id(e.row.kind)->key;
+        if (key == "sacked") {
+            return 1;
+        }
+        if (key == "settlement_overrun") {
+            return 2;
+        }
+        if (key == "settlement_abandoned" || key == "settlement_abandoned_to") {
+            bool famine = false;
+            for (const std::int64_t c : e.causes) {
+                const std::string& ck = config_.catalogue->find_id(events_[static_cast<std::size_t>(c - 1)].row.kind)->key;
+                if (ck == "plague" || ck == "plague_spread" || ck == "plague_outbreak") {
+                    return 3;
+                }
+                famine = famine || ck == "famine";
+            }
+            if (famine) {
+                return 4;
+            }
+        }
+        return 5;
+    }
+
     // --- Accessors for State and StepContext ---------------------------------------
     [[nodiscard]] std::uint64_t serial() const noexcept { return serial_; }
     [[nodiscard]] std::int64_t year() const noexcept { return year_; }
     [[nodiscard]] std::int64_t years() const noexcept { return years_; }
     [[nodiscard]] std::int64_t phase_id() const noexcept { return phase_id_; }
     [[nodiscard]] PhaseKind phase_kind() const noexcept { return phase_kind_; }
+    [[nodiscard]] std::int64_t phase_trigger() const noexcept { return phase_trigger_; }
     [[nodiscard]] const HistoryInputs& inputs() const noexcept { return inputs_; }
     [[nodiscard]] const GeoView& geo() const noexcept { return geo_; }
     [[nodiscard]] const data::ContentSet& content() const noexcept { return content_; }
@@ -303,6 +363,15 @@ public:
         return false;
     }
 
+    // P5-02 10.4 (W4): the engine knows no monster or site; their ids are
+    // only checked to be at least 1 (the history stage checks the rows).
+    [[nodiscard]] bool participant_exists(EntityType type, std::int64_t id) const noexcept {
+        if (type == EntityType::monster || type == EntityType::site) {
+            return id >= 1;
+        }
+        return entity_exists(type, id);
+    }
+
     // W4, W7: an entity that exists, or the civilization or settlement the
     // emitter founds in the same operation, right after the event that names
     // it (the next id; 7.2 appends civ_founded before found_civilization).
@@ -314,7 +383,7 @@ public:
         if (type == EntityType::settlement) {
             return id >= 1 && static_cast<std::uint64_t>(id) <= state_.settlements_.size() + 1U;
         }
-        return entity_exists(type, id);
+        return participant_exists(type, id);
     }
 
     [[nodiscard]] std::int64_t quiet_events_left(std::int64_t civ) const {
@@ -397,7 +466,7 @@ private:
                                    config_.catalogue->find_id(e.row.kind)->key + "): ";
             for (const db::EventParticipantRow& p : e.participants) {
                 const auto type = static_cast<EntityType>(p.entity_type);
-                if (!entity_exists(type, p.entity_id)) {
+                if (!participant_exists(type, p.entity_id)) {
                     fail(at + std::string(entity_type_key(type)) + " " + int_text(p.entity_id) +
                          " was not founded in the step that named it");
                 }
@@ -425,12 +494,14 @@ private:
     void active_phase(db::PhaseRow& row) override {
         phase_id_ = row.id;
         phase_kind_ = static_cast<PhaseKind>(row.kind);
+        phase_trigger_ = row.trigger_event;  // P5-02 7.4
         in_quiet_ = false;
         for (std::int64_t y = row.start_year; y <= row.end_year; ++y) {
             year_ = y;
             years_ = 1;
             if (phase_kind_ == PhaseKind::opening && y == row.start_year) {
                 awakening(row);
+                phase_trigger_ = row.trigger_event;
             }
             if (phase_kind_ == PhaseKind::flare && y == row.start_year) {
                 flare_start(row);
@@ -521,6 +592,7 @@ private:
     void quiet_row(const db::PhaseRow& row) override {
         phase_id_ = row.id;
         phase_kind_ = PhaseKind::quiet;
+        phase_trigger_ = row.trigger_event;
         open_stretch_ = 0;
         stretch_decided_ = false;
     }
@@ -877,6 +949,7 @@ private:
     std::int64_t years_ = 1;
     std::int64_t phase_id_ = 0;
     PhaseKind phase_kind_ = PhaseKind::opening;
+    std::int64_t phase_trigger_ = 0;  // P5-02 7.4: the current phase row's trigger_event
     bool in_quiet_ = false;
 
     std::vector<StoredEvent> events_;
@@ -1149,6 +1222,10 @@ std::int64_t StepContext::year() const noexcept {
 
 std::int64_t StepContext::years() const noexcept {
     return engine_.years();
+}
+
+std::int64_t StepContext::phase_trigger_event() const noexcept {
+    return engine_.phase_trigger();
 }
 
 std::int64_t StepContext::phase_id() const noexcept {
