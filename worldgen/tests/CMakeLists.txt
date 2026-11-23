@@ -454,7 +454,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
     SHARD balance 20 "*history_balance_*"
     SHARD history-report 20 "*history_report_*"
-    SHARD timeline 60 "*timeline_*"
+    SHARD timeline 40 "*timeline_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -469,6 +469,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-engine 490 "*-slow" "*history_balance_*,*conflict_engineer_test.cpp,*history_engine_golden_test.cpp,*history_engine_property_test.cpp,*history_engine_schedule_test.cpp,*history_engine_r12_test.cpp"
     SLOW slow-biomes-resources-regions 550 "*-slow" "*stages_biomes_*,*stages_resources_*,*stages_regions_*"
     SLOW slow-history-report 120 "*-slow" "*history_report_*"
-    SLOW slow-timeline 150 "*-slow" "*timeline_*"
+    SLOW slow-timeline 400 "*-slow" "*timeline_*"
     SLOW_REST slow-other 10 "*-slow"
 )
