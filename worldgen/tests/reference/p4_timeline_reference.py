@@ -120,9 +120,10 @@ T7 13.2 item 3 "a region freed (since = its last to_year)": the free since of a 
    from_year <= Y" because rows of a region do not overlap.
 P4-03 readings:
 A3a 9.4: a region's "run" is a maximal sequence of consecutive rows (in table order) with that region; the
-    rows of a region split into two runs are not joined. Within a run, row by row in order: first the pair
-    check against the row before it (overlap at r.from_year), then the row's own check (to_year <=
-    from_year). The C++ tests only use cases where exactly one check fails, so this order is not asserted.
+    rows of a region split into two runs are not joined. Rows are visited in order; a row's own check
+    (to_year <= from_year) runs before its overlap check with the next row (the engineer's order, accepted
+    by the lead). The sequence own(p0), pair(p0, p1), own(p1), pair(p1, p2), ... is what
+    control_run_error does; timeline_borders_test.cpp asserts it on a row that fails both.
 A3b 9.4: the texts are exactly those of the spec with the integers in decimal; nothing else is checked.
 P1  8.2: a border cell that is drawn by step 3 or 4 (a lake or river cell), or has e < 0, is kind 0: its
     pixel is B (black), its region, east and south 0 (9.2: "v when kind is 1 or 2, else 0").
@@ -137,7 +138,10 @@ P5  9.6: the golden file keeps P4-01's case list and years; the `territory` line
     holders of territory_holders at that year (the CLI's call, 9.2).
 """
 
-FIXTURE_NAMES_P3 = prr.FIXTURE_NAMES
+def fixture_names_p3():
+    """The P3-07 fixtures: the twelve of P4-01 (h1 ... h10) under --rules p4-01; with P4-03's rules at 0.21.0
+    also h11-v2 (P3-07 r19 25.13), which worldgen-tests' hrtest::fixture_names() lists at 0.21.0."""
+    return prr.fixture_names()
 T1_NAME = "t1-edges"
 WORLD_CASES = ("geo-phrase-512", "geo-seed-0-512", "geo-seed-1-1024", "geo-seed-42-512", "hist-dense-1024",
                "hist-races-elf-orc-1024", "hist-span-2000-512", "sample-42-1024")
@@ -344,8 +348,8 @@ class History:
 def control_run_error(rows):
     """P4-03 9.4: the FatalError text Timeline::build gives for these region_control rows (region, from,
     to or None, civ, event) in table order, or None. A run is a maximal sequence of consecutive rows of one
-    region. Per run, per row in order: first the pair check against the row before it (p open, or
-    p.to > r.from: overlap at r.from), then the row's own check (to <= from). Readings A3a, A3b."""
+    region. Rows in order; a row's own check (to <= from) before its overlap check with the next row
+    (p open, or p.to > r.from: overlap at r.from). Readings A3a, A3b."""
     prev = None
     for r in rows:
         if prev is not None and prev[0] == r[0]:
@@ -815,7 +819,7 @@ def case_lines(name, path, is_fixture):
 
 
 def golden_text(inputs):
-    cases = [(n, fixture_db(n), True) for n in FIXTURE_NAMES_P3 + (T1_NAME,)]
+    cases = [(n, fixture_db(n), True) for n in fixture_names_p3() + (T1_NAME,)]
     cases += [(n, os.path.join(inputs, n + ".db"), False) for n in WORLD_CASES]
     lines = []
     for name, path, is_fixture in sorted(cases, key=lambda c: c[0].encode()):
@@ -1036,6 +1040,9 @@ def check_control_runs(c):
     d = t1[:5] + [(4, 1010, 1010, 4, 9)]
     c.eq("A3 (d) to_year = from_year", control_run_error(d),
          "timeline: region_control row (4, 1010) ends at 1010, not after it starts")
+    both = [t1[0], (2, 300, 300, 3, 4), (2, 200, None, 3, 14)] + t1[3:]
+    c.eq("A3 a row failing its own check before the overlap with the next", control_run_error(both),
+         "timeline: region_control row (2, 300) ends at 300, not after it starts")
     e = t1[:5] + [(4, 1010, 900, 4, 9)]
     c.eq("A3 to_year before from_year", control_run_error(e),
          "timeline: region_control row (4, 1010) ends at 900, not after it starts")
@@ -1227,7 +1234,7 @@ def cmd_check(argv):
         check_colours(c)
     check_example_56(c)
     check_t1(c)
-    for name in FIXTURE_NAMES_P3 + (T1_NAME,):
+    for name in fixture_names_p3() + (T1_NAME,):
         check_invariants(c, name, fixture_db(name))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)
     if have and not quick:
