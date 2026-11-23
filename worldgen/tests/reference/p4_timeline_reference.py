@@ -40,9 +40,10 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         Writes the reference's copy of a fixture: t1-edges (worldgen/tests/data/timeline/) or one of the
         P3-07 fixtures (worldgen/tests/data/history-report/).
 
-    python3 -B worldgen/tests/reference/p4_timeline_reference.py golden [PATH|-] [--inputs DIR] [--rules p4-01]
+    python3 -B worldgen/tests/reference/p4_timeline_reference.py golden [PATH|-] [--inputs DIR] [--rules R]
         Writes worldgen/tests/golden/p4-01-timeline.txt ("-": stdout). World cases are read from DIR
-        (default ~/.cache/the-unmapped/out/p4-03-tests/inputs, the 0.21.0 worlds; with --rules p4-01
+        (default ~/.cache/the-unmapped/out/p5-12-int/inputs, the 0.22.0 worlds; with --rules p4-03
+        ~/.cache/the-unmapped/out/p4-03-tests/inputs, the 0.21.0 ones, no `name` lines; with --rules p4-01
         ~/.cache/the-unmapped/out/p4-01-tests/inputs, the 0.20.0 ones), one <case>.db per case, generated
         by worldgen-cli with the checkout's game/data as tools/ci/world-hashes.sh does (sample-42-1024:
         generate --seed 42 --map-size 1024).
@@ -80,22 +81,29 @@ GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p4-01-timeline.txt")
 T1_DIR = os.path.join(REPO, "worldgen", "tests", "data", "timeline")
 INPUTS_P4_01 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-01-tests", "inputs")
 INPUTS_P4_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-03-tests", "inputs")
+INPUTS_P5_12 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-int", "inputs")
 SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 
-# The rule set: "p4-03" (default) or "p4-01" (--rules p4-01: P4-01's colours and image, generator 0.20.0).
-RULES = "p4-03"
+# The rule set: "p5-12" (default: P4-03's colours and image with P4-01 r3 16's region names, generator
+# 0.22.0), "p4-03" (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
+RULES = "p5-12"
 
 
 def p403():
-    return RULES == "p4-03"
+    return RULES in ("p4-03", "p5-12")
+
+
+def r3():
+    """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
+    return RULES == "p5-12"
 
 
 def default_inputs():
-    return INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.21.0" if p403() else "0.20.0"
+    return "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -214,6 +222,7 @@ def civilization_shade(base, ordinal):
 
 HIST_TABLES = ("region", "biome", "race", "age", "phase", "event", "event_participant", "event_cause",
                "civilization", "settlement", "settlement_census", "region_control", "relation")
+REGION_NAME_COLS = ("region", "from_year", "name", "culture", "event")
 
 
 class History:
@@ -224,10 +233,15 @@ class History:
         try:
             self.meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
             t = {name: prr.pk_rows(conn, name)[1] for name in HIST_TABLES}
+            has_names = conn.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND "
+                                     "name = 'region_name'").fetchone()[0] == 1
+            t["region_name"] = prr.pk_rows(conn, "region_name")[1] if has_names else []
         finally:
             conn.close()
         self.E = int(self.meta["history_end_year"])
         self.regions = [r[0] for r in t["region"]]
+        self.geo_name = {r[0]: r[1] for r in t["region"]}
+        self.region_names = t["region_name"]   # region, from_year, name, culture, event (primary-key order)
         self.race_key = {r[0]: r[1].encode("latin-1") for r in t["race"]}
         self.ages = t["age"]            # id, race, start_year, end_year, name
         self.phases = t["phase"]        # id, age, kind, start_year, end_year, trigger_event
@@ -257,6 +271,15 @@ class History:
         self.civ_index = {c[0]: i for i, c in enumerate(self.civs)}
 
     # --- section 4, at year Y ---------------------------------------------------------------------
+
+    def region_name(self, region, y):
+        """P4-01 r3 16 item 1: the name of r's region_name row with the largest from_year <= Y, else
+        region.name (a linear scan of the stored rows)."""
+        best = None
+        for row in self.region_names:
+            if row[0] == region and row[1] <= y and (best is None or row[1] > best[1]):
+                best = row
+        return best[2] if best is not None else self.geo_name[region]
 
     def holder(self, region, y):
         rows = self.control.get(region, [])
@@ -419,6 +442,10 @@ def static_dump(h):
         out.append("civ %d %s" % (c[0], ids(civ_ev[c[0]])))
     for r in h.regions:
         out.append("region %d %s" % (r, ids(reg_ev[r])))
+    if r3():
+        # P4-01 r3 16 item 4: after the region lines, one line per region_name row in primary-key order.
+        for row in h.region_names:
+            out.append("name %d %d %s" % (row[0], row[1], row[2]))
     for s in h.settlements:
         out.append("settlement %d %s" % (s[0], ids(set_ev[s[0]])))
     for e in h.events:
@@ -831,6 +858,9 @@ def golden_text(inputs):
         first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s, with the colours"
                  % generator_version(),
                  "# and territory image of docs/specs/p4-03-history-view.md 7 and 8 (P4-03 9.6)."]
+        if r3():
+            first.append("# Region names by year (P4-01 r3 16): S gains a line `name <region> <from_year> <name>` per "
+                         "region_name row.")
     else:
         first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s."
                  % generator_version()]
@@ -1314,11 +1344,13 @@ def main(argv):
     if "--rules" in argv:
         i = argv.index("--rules")
         RULES = argv[i + 1]
-        if RULES not in ("p4-01", "p4-03"):
-            raise SystemExit("--rules: p4-01 or p4-03")
+        if RULES not in ("p4-01", "p4-03", "p5-12"):
+            raise SystemExit("--rules: p4-01, p4-03 or p5-12")
         argv = argv[:i] + argv[i + 2:]
         if RULES == "p4-01":
             prr.use_version("0.20.0")   # the P3-07 fixtures' meta as P4-01 recorded them
+        elif RULES == "p4-03":
+            prr.use_version("0.21.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "distances":
         return cmd_distances(rest)

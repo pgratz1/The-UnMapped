@@ -1366,10 +1366,11 @@ def _res_owned(w):
 FIXTURE_NAMES = ("h1-war-and-ruin", "h2-minimal", "h3-runaway", "h3b-runaway-1000", "h3c-share-ties", "h4-budget",
                  "h5-saturated", "h6-notes", "h7-runs", "h8-frames", "h9-realms", "h10-floor")
 FIXTURE_NAMES_V2 = FIXTURE_NAMES + ("h11-v2",)   # r19 25.13 item 11: H11 holds the v2 cases
+FIXTURE_NAMES_V3 = FIXTURE_NAMES_V2 + ("h12-v3",)   # r21 26.8 item 9: H12 holds the v3 cases 2 to 5
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -1409,6 +1410,8 @@ def expand_fixture(fx):
         full[0], full[1], full[2], full[RC["cells"]], full[RC["lake_cells"]], full[RC["walk_cells"]] = r
         regs.append(tuple(full))
     rows["region"] = _sorted_rows("region", regs)
+    if V3:   # schema 8: [region, from_year, name, culture, event] (P5-12 7.2)
+        rows["region_name"] = sorted(tuple(r) for r in tb.get("region_name", []))
     kinds, kroles, kvalues = [], [], []
     by_key = {}
     for i, k in enumerate(fx.get("kind", [])):

@@ -401,6 +401,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_renaming_data_test.cpp
     history/history_renaming_golden_test.cpp
     history/history_renaming_readers_test.cpp
+    history/history_renaming_seams_test.cpp
     history/history_renaming_unit_test.cpp
     history/history_names_r19_test.cpp
     stages_regions_v8_test.cpp
@@ -431,6 +432,7 @@ target_sources(worldgen-tests PRIVATE
     history_report_worlds_test.cpp
     history_report_r17_test.cpp
     history_report_v2_test.cpp
+    history_report_v3_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"

@@ -2865,7 +2865,9 @@ def check_peoples_invariants(c, res, inp, w, label):
             c.true("%s P3-05 inv 8 e%d %s cause kinds %s" % (label, e[0], key, [KEY_OF[kind[x]] for x in cs]),
                    all(KEY_OF[kind[x]] in want_cause[key] for x in cs) and (cs or key == "settlement_dwindled"))
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
-            c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), e[3] in QUIET_KINDS)
+            # P5-12 6: the renaming subsystem runs in Q4 as well, charged to its namer (W9)
+            quiet_ok = e[3] in QUIET_KINDS or (FLAGS["rename"] and key == "region_renamed")
+            c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
 
@@ -6731,8 +6733,14 @@ def cmd_check(argv):
             guards[k] = guards.get(k, 0) + getattr(w, k)
         if name == "hist-conflict-flight":
             found = sum(1 for _h, y in w.hidden_until.items() if y < inp.params["span"])
-            c.true("hist-conflict-flight: flights and found refuges (%d, %d)" % (w.flights, found),
-                   w.flights >= 1 and found >= 1)
+            if FLAGS["rename"]:
+                # P5-12 6 "Effect on the rest of history": from the first renaming on the history differs from
+                # 0.21.0's, and seed 1 at 512 no longer has a flight at 0.22.0 (the case was chosen for its 0.18.0
+                # history). Reported, not checked; flights and found refuges are reached by the stress cases.
+                print("note: hist-conflict-flight at 0.22.0: flights %d, found refuges %d" % (w.flights, found))
+            else:
+                c.true("hist-conflict-flight: flights and found refuges (%d, %d)" % (w.flights, found),
+                       w.flights >= 1 and found >= 1)
         for r in res["relation"]:
             if r[6] is not None and r[5] == r[6]:
                 guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1

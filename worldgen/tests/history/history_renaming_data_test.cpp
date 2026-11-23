@@ -297,9 +297,10 @@ TEST_CASE("P3-01 r16 5.4: the four named checks of history.renaming, with their 
                                   "\"The {noun} of the Slain\"]\n",
                                   "forms = [\"The Red {noun}\", \"The Bloody {noun}\"]\n"))
               .ok());
-    CHECK(load(with_renaming_edit("forms = [\"The Red {noun}\", \"The Bloody {noun}\", \"{name}'s Bane\", "
-                                  "\"The {noun} of the Slain\"]\nname_role = ",
-                                  "forms = [\"The Red {noun}\"]\nname_role = "))
+    // ... and name_role "" with forms that use no {name} (slaughter: name_role is the field two lines above forms)
+    CHECK(load(with_renaming_edit("name_role = \"loser\"\nnamer_role = \"winner\"\nforms = [\"The Red {noun}\", "
+                                  "\"The Bloody {noun}\", \"{name}'s Bane\", \"The {noun} of the Slain\"]\n",
+                                  "name_role = \"\"\nnamer_role = \"winner\"\nforms = [\"The Red {noun}\"]\n"))
               .ok());
     // zero rules: valid
     {

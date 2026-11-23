@@ -1,0 +1,375 @@
+# P3-07 r21 26.8 items 2 to 5: H12 v3 (P5-12). Region 2 renamed twice (after a sack, then after a battle), region 4
+# renamed once with no namer; refuges hidden to E - 1 (listed), found earlier (counted only) and without kind 42
+# (counted only); a renamed home region and a sentence before its renaming; a sack whose renaming is its
+# companion at a threshold above the renaming's salience (1000 notes of salience (37 i) mod 101, as H4), and a
+# renaming of salience 95 that brings its battle (a battle is no summary candidate, 24.3). Written by the test
+# writer; format: README.md in this directory.
+
+[meta]
+seed = 1212
+seed_phrase = ""
+map_size = 512
+history_span = 2000
+history_detail = "normal"
+races = "human"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+region = [
+    [1, "Arn Vale", 1, 2000, 0, 1500],
+    [2, "The Holt of Yews", 1, 2000, 0, 1500],
+    [3, "Bel Downs", 1, 2000, 0, 1500],
+    [4, "Cor Wold", 1, 2000, 0, 1500],
+]
+race = [[1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1]]
+culture = [[1, "human", "Human", 1]]
+god = [[1, "Wealstuld", 1]]
+age = [[1, 1, 0, 1999, "The Age of Humans"]]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 2, 150, 1899, 0],
+    [3, 1, 4, 1900, 1999, 0],
+]
+civilization = [
+    [1, "The Kingdom of Arn", 1, 1, 1, 1, 0, 2, -1, 0],
+    [2, "The Kingdom of Bel", 1, 1, 2, 4, 10, 4, -1, 0],
+]
+settlement = [
+    [1, "Arnton", 10, 10, 1, 1, 0, 3, 1, 3, 1, 3000, -1, 0],
+    [2, "Belford", 20, 20, 2, 2, 10, 5, 0, 3, 3, 0, 800, 8],
+    [3, "Corwick", 40, 40, 4, 1, 20, 6, 1, 2, 1, 1000, -1, 0],
+    [4, "Hidden Hole", 50, 50, 3, 2, 801, 10, 2, 1, 1, 150, -1, 0],
+    [5, "Found Hole", 60, 60, 3, 2, 802, 12, 2, 1, 1, 150, -1, 0],
+    [6, "Plain Hole", 70, 70, 3, 2, 803, 14, 2, 1, 1, 100, -1, 0],
+]
+settlement_census = [
+    [1, 0, 1, 3, 1, 3000],
+    [2, 10, 2, 3, 1, 2500],
+    [2, 800, 0, 3, 3, 0],
+    [3, 20, 1, 2, 1, 1000],
+    [4, 801, 2, 1, 1, 150],
+    [5, 802, 2, 1, 1, 150],
+    [6, 803, 2, 1, 1, 100],
+]
+region_control = [
+    [1, 0, -1, 1, 2],
+    [2, 10, 800, 2, 4],
+    [2, 800, -1, 1, 8],
+    [3, 801, -1, 2, 10],
+    [4, 20, -1, 1, 6],
+]
+relation = [
+    [3, 1, 3, 2, "war", 500, -1, 7, 0],
+]
+# Schema 8 (P5-12 7.2): [region, from_year, name, culture, event].
+region_name = [
+    [2, 800, "Belford's Fall", 1, 9],
+    [2, 1300, "The Red Downs", 1, 16],
+    [4, 1400, "The Bloody Wold", 0, 18],
+]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "settlement_founded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 40
+template = "{founder} founded {settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "war_declared"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 70
+template = "{attacker} declared war on {defender} over {@region}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+
+[[kind]]
+key = "sacked"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 75
+template = "{@settlement} of {defender} was sacked; {dead} died and {survivors} fled."
+roles = [["attacker", 3, 0, 1], ["defender", 3, 1, 1]]
+values = ["dead", "survivors"]
+
+[[kind]]
+key = "refugees_settled"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 65
+template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1], ["origin", 4, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "refuge_hidden"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 10
+template = "{@settlement} lay hidden from {@year} to {@end_year}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+
+[[kind]]
+key = "battle"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}."
+roles = [["winner", 3, 1, 1], ["loser", 3, 1, 1]]
+values = ["winner_dead", "loser_dead"]
+
+[[kind]]
+key = "region_renamed"
+caused = 1
+region_use = 1
+settlement_use = 2
+salience = 60
+template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became known as {@region}."
+roles = [["namer", 3, 0, 1]]
+
+[[kind]]
+key = "claim"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {@region}, held by {holder}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "note"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 50
+template = "A note was made."
+roles = []
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 1
+settlement = 1
+parts = [["settlement", 1], ["founder", 1]]
+values = [3000]
+
+[[event]]
+id = 4
+year = 10
+kind = "civ_founded"
+phase = 1
+region = 2
+parts = [["civilization", 2], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 5
+year = 10
+kind = "settlement_founded"
+phase = 1
+region = 2
+settlement = 2
+parts = [["settlement", 2], ["founder", 2]]
+values = [2500]
+
+[[event]]
+id = 6
+year = 20
+kind = "settlement_founded"
+phase = 1
+region = 4
+settlement = 3
+parts = [["settlement", 3], ["founder", 1]]
+values = [1000]
+
+# Before the renamings: the sentence names region 2 by its geographic name.
+[[event]]
+id = 7
+year = 500
+kind = "war_declared"
+phase = 2
+region = 2
+parts = [["attacker", 1], ["defender", 2]]
+
+[[event]]
+id = 8
+year = 800
+kind = "sacked"
+phase = 2
+region = 2
+settlement = 2
+salience = 90
+parts = [["attacker", 1], ["defender", 2]]
+values = [2000, 300]
+causes = [7]
+
+[[event]]
+id = 9
+year = 800
+kind = "region_renamed"
+phase = 2
+region = 2
+settlement = 2
+parts = [["namer", 1]]
+causes = [8]
+
+[[event]]
+id = 10
+year = 801
+kind = "refugees_settled"
+phase = 2
+region = 3
+settlement = 4
+parts = [["settlement", 4], ["founder", 2], ["origin", 2]]
+values = [150]
+causes = [8]
+
+[[event]]
+id = 11
+year = 801
+end = 1999
+kind = "refuge_hidden"
+phase = 2
+region = 3
+settlement = 4
+parts = [["settlement", 4], ["founder", 2]]
+causes = [10]
+
+[[event]]
+id = 12
+year = 802
+kind = "refugees_settled"
+phase = 2
+region = 3
+settlement = 5
+parts = [["settlement", 5], ["founder", 2], ["origin", 2]]
+values = [150]
+causes = [8]
+
+[[event]]
+id = 13
+year = 802
+end = 1200
+kind = "refuge_hidden"
+phase = 2
+region = 3
+settlement = 5
+parts = [["settlement", 5], ["founder", 2]]
+causes = [12]
+
+[[event]]
+id = 14
+year = 803
+kind = "refugees_settled"
+phase = 2
+region = 3
+settlement = 6
+parts = [["settlement", 6], ["founder", 2], ["origin", 2]]
+values = [100]
+causes = [8]
+
+[[event]]
+id = 15
+year = 1300
+kind = "battle"
+phase = 2
+region = 2
+parts = [["winner", 1], ["loser", 2]]
+values = [2500, 4000]
+causes = [7]
+
+# The second name of region 2; salience 95, above the threshold, brings its battle.
+[[event]]
+id = 16
+year = 1300
+kind = "region_renamed"
+phase = 2
+region = 2
+salience = 95
+parts = [["namer", 1]]
+causes = [15]
+
+[[event]]
+id = 17
+year = 1400
+kind = "battle"
+phase = 2
+region = 4
+parts = [["winner", 2], ["loser", 1]]
+values = [3000, 3500]
+causes = [7]
+
+[[event]]
+id = 18
+year = 1400
+kind = "region_renamed"
+phase = 2
+region = 4
+causes = [17]
+
+# After both renamings: the sentence names region 2 by its second name.
+[[event]]
+id = 19
+year = 1500
+kind = "claim"
+phase = 2
+region = 2
+parts = [["claimant", 2], ["holder", 1]]
+
+[[bulk]]
+kind = "note"
+count = 1000
+year = 1600
+phase = 2
+salience_mul = 37
+salience_mod = 101

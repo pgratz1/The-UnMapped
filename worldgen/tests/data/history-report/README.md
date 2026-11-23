@@ -19,6 +19,7 @@ The two copies must have the same table hashes (`hash --detail`'s `table` lines)
 | `h9-realms.toml` | r17 24.5 to 24.7, 24.11 items 3, 7 to 10: three secessions in one age, the wars line with every outcome, adversaries with every state, milestones (the kind limit, ties, the longest quiet stretch with 0 and 4 generations, a realm with fewer than eight events), every standing-claim case, a settlement captured twice before its sack, a refuge, two open wars |
 | `h10-floor.toml` | r17 24.3 item 3, 24.11 item 5: an age whose candidates of salience 25 are split between its race and another; 300 chants of salience 90 in the next age (T = 91) |
 | `h11-v2.toml` | P3-07 r19 25.13 items 2 to 9 (format v2; the spec's "H9 v2", named H11 since H9 is r17's): five calamity candidates 45, 45, 40, 25, 25 in one phase and one in another; ruins by a sack with and without an attacker, an abandonment, an abandonment with survivors to a destination and an unknown kind (`swallowed`); a faded and a ruined settlement of an ended realm; two war adversaries and three without war (two in enmity, one none); a realm with only a no-war adversary; an ended realm in short with a quiet-stretch milestone; flare-ups with and without a war in their phase at T = 100 (300 chants of 100 in the second age); a war ended in 1656; a no-war realm whose kind changes and claims outrank its plagues; a fresh kind 20 claim caused by a claim of 1300 on another region and a fresh kind 39 claim; refuges with kind 42 to E - 1, to 1990, and none; a claim dropped (kind 41) and one standing. Its `sacked` kind has an optional attacker (role min 0) and a template that names only the defender, so the sack without an attacker loads and renders (the view refuses an event that lacks a participant of a role of min 1, and one with fewer values than its kind) |
+| `h12-v3.toml` | P3-07 r21 26.8 items 2 to 5 (format v3, P5-12): region 2 renamed twice (after a sack, then after a battle; the second renaming of salience 95) and region 4 once with no namer; refuges with kind 42 to E - 1, to 1200 and none; a renamed home region; a war declared over region 2 before its renamings and a claim after them; 1000 notes of salience (37 i) mod 101 (T = 78, above the renaming's 60) |
 | `h7-runs.toml` | `wars_same_goal_unchanged_max` (21.8 item 5 with 22.5b): a region emptied and resettled by its holder (one run of 2) and one taken by another civilization between wars (runs of 1): key 2 |
 
 ## Format
@@ -26,10 +27,11 @@ The two copies must have the same table hashes (`hash --detail`'s `table` lines)
 TOML. `[meta]` holds the settings recorded in `meta` (`seed`, `seed_phrase`, `map_size`, `history_span`,
 `history_detail`, `races`, `civs_per_race`, `event_intensity`, `monster_pressure`, `divine_activity`,
 `divine_script`); the world's stages are `biomes,regions,chronology,history`, its content hash that of no
-data, its generator version the current one. `[tables]` holds rows as arrays in column order (schema 7,
+data, its generator version the current one. `[tables]` holds rows as arrays in column order (schema 8,
 `docs/specs/schema.md`), with these exceptions:
 
 - `region` rows are `[id, name, biome, cells, lake_cells, walk_cells]`; every other column is 0.
+- `region_name` rows (schema 8, P5-12 7.2) are `[region, from_year, name, culture, event]`.
 - `-1` stands for NULL in the nullable columns (`race.awakening_year`, `civilization.ended_year`,
   `settlement.ruined_year`, `region_control.to_year`, `relation.until`).
 - Rows are written in primary-key order whatever their order in the file.

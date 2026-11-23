@@ -59,7 +59,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h3b-runaway-1000", "h3c-share-ties", "h4-budget",
                                                "h5-saturated",    "h6-notes",       "h7-runs",
                                                "h8-frames",       "h9-realms",      "h10-floor",
-                                               "h11-v2"};   // r19 25.13 item 11 (the spec's "H9 v2")
+                                               "h11-v2",    // r19 25.13 item 11 (the spec's "H9 v2")
+                                               "h12-v3"};   // r21 26.8 item 9 (P5-12)
     return v;
 }
 
@@ -90,6 +91,7 @@ struct Fixture {
     std::vector<db::SettlementCensusRow> census;
     std::vector<db::RegionControlRow> region_control;
     std::vector<db::RelationRow> relations;
+    std::vector<db::RegionNameRow> region_names;  // schema 8 (P5-12 7.2; P3-07 r21 26.8 item 9, H12)
 };
 
 namespace detail {
@@ -227,6 +229,10 @@ inline Fixture load_fixture(const std::string& name) {
         row.until_event = i64(*r->get(8));
         fx.relations.push_back(row);
     }
+    // Schema 8: [region, from_year, name, culture, event] (P5-12 7.2).
+    for (const toml::array* r : detail::rows(doc, "region_name")) {
+        fx.region_names.push_back({i64(*r->get(0)), i64(*r->get(1)), str(*r->get(2)), i64(*r->get(3)), i64(*r->get(4))});
+    }
     // The catalogue: id = position; roles and values seq = position.
     struct KindInfo {
         std::int64_t id;
@@ -353,6 +359,8 @@ inline Fixture load_fixture(const std::string& name) {
     std::sort(fx.relations.begin(), fx.relations.end(), by([](const db::RelationRow& r) {
                   return std::make_tuple(r.a_type, r.a_id, r.b_type, r.b_id, r.kind, r.since);
               }));
+    std::sort(fx.region_names.begin(), fx.region_names.end(),
+              by([](const db::RegionNameRow& r) { return std::make_pair(r.region, r.from_year); }));
     return fx;
 }
 
@@ -393,6 +401,7 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.census) ctx.write_settlement_census(r);
     for (const auto& r : f.region_control) ctx.write_region_control(r);
     for (const auto& r : f.relations) ctx.write_relation(r);
+    for (const auto& r : f.region_names) ctx.write_region_name(r);
 }
 
 inline const dbtest::TempDir& fixture_dir() {

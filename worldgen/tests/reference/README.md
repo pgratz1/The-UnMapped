@@ -1445,6 +1445,24 @@ python3 -B worldgen/tests/reference/p3_report_reference.py golden
   `refuge_hidden` of smallest id), `renamed regions:` (26.2), present names outside sentences (26.4), the four
   `[stats]` keys and `SUMMARY_STATS_022` (26.5); fixture DDL from `schema.md` at the current version.
 
+### 0.22.0, phase 2 (integration with the engineer's branch)
+
+- `p4_timeline_reference.py`: rule set `p5-12` (the default; `--rules p4-03` keeps the 0.21.0 golden, `--rules p4-01`
+  the 0.20.0 one): the static dump S gains `name <region> <from_year> <name>` per `region_name` row after the
+  `region` lines (P4-01 r3 16 item 4), `History.region_name(r, Y)` (16 item 1, a scan of the rows); world cases
+  from `~/.cache/the-unmapped/out/p5-12-int/inputs` (0.22.0 worlds by `worldgen-cli generate`, the arguments of
+  `tools/ci/world-hashes.sh`, and `sample-42-1024`). `p4-01-timeline.txt` re-recorded from it: every world case
+  moves (0.22.0 histories), the fixtures' `table meta` (schema 8, 0.22.0) and a `table region_name` line each, and
+  H12.
+- `p3_report_reference.py`: fixture H12 (`h12-v3.toml`, P3-07 r21 26.8 item 9) in `FIXTURE_NAMES_V3`; fixture
+  rows of `region_name` (`[region, from_year, name, culture, event]`). `p3-07-report.txt` gains H12's lines only.
+- `p3_conflict_reference.py` `check`: invariant 8/14.2 admits `region_renamed` in a quiet step (P5-12 6: Q4);
+  `hist-conflict-flight`'s "flights and found refuges" is printed, not checked, at 0.22.0 (seed 1 at 512 has no
+  flight once the renamings shift the event ids; P5-12 6 "Effect on the rest of history").
+- The C++ synthetic geographies (`p3_05_peoples_support.hpp` `inputs_of`) carry `landmass` 1 and the dominant
+  dry biome of `region_biome` in their region rows, as `land_nouns` reads them without `region_land` (the lead's
+  ruling 3); no peoples or conflict rule reads those columns.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

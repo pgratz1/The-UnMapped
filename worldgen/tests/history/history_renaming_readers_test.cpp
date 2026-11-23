@@ -8,8 +8,8 @@
 //     [present] (one line per row with its cause and former name), the hidden refuges' count line, the [present]
 //     region lines (full) and the four [stats] keys of 26.5;
 //   - P3-04 r21 23.4: [history] region_names of the world report and hash --detail's table line.
-// GUESSES (the spec names them, not their exact signatures): HistoryView::region_name_at_event(r, e) and
-// region_name_at_year(r, y) return a std::string_view; Timeline::region_name is as P4-01 r3 16 item 2 gives it.
+// HistoryView::region_name_at_event(r, e) and region_name_at_year(r, y) return a const std::string*, null when r is
+// not a region (the engineer's signatures); Timeline::region_name is as P4-01 r3 16 item 2 gives it.
 // Written from the specs before the implementation (test-writer rule).
 
 #include "p5_12_renaming_support.hpp"
@@ -57,10 +57,14 @@ TEST_CASE("P4-01 r3 16, P3-04 r21 23.1: the name of a region by year and by even
         const std::string before = current.at(w.region);
         CHECK(std::string(h.timeline.region_name(w.region, w.from_year - 1)) == before);
         CHECK(std::string(h.timeline.region_name(w.region, w.from_year)) == w.name);
-        CHECK(std::string(h.view.region_name_at_year(w.region, w.from_year - 1)) == before);
-        CHECK(std::string(h.view.region_name_at_year(w.region, w.from_year)) == w.name);
-        CHECK(std::string(h.view.region_name_at_event(w.region, w.event)) == w.name);
-        CHECK(std::string(h.view.region_name_at_event(w.region, w.event - 1)) == before);
+        REQUIRE(h.view.region_name_at_year(w.region, w.from_year - 1) != nullptr);
+        CHECK(*h.view.region_name_at_year(w.region, w.from_year - 1) == before);
+        REQUIRE(h.view.region_name_at_year(w.region, w.from_year) != nullptr);
+        CHECK(*h.view.region_name_at_year(w.region, w.from_year) == w.name);
+        REQUIRE(h.view.region_name_at_event(w.region, w.event) != nullptr);
+        CHECK(*h.view.region_name_at_event(w.region, w.event) == w.name);
+        REQUIRE(h.view.region_name_at_event(w.region, w.event - 1) != nullptr);
+        CHECK(*h.view.region_name_at_event(w.region, w.event - 1) == before);
         current[w.region] = w.name;
     }
     for (const auto& [rid, name] : current) {

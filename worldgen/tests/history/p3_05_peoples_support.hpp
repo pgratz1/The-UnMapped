@@ -524,6 +524,26 @@ inline eng::HistoryInputs inputs_of(const Geo& g, std::uint64_t seed, const Sett
     in.map_size = g.n;
     in.params = chrono_api::to_lib(p);
     in.regions = g.regions;
+    // P5-12 3 (the lead's ruling 3; the reference's land_nouns without region_land): a synthetic geography has one
+    // landmass, and a region's biome is its dominant dry biome of region_biome (most cells, then the smaller code;
+    // codes 1 and 2 are water), else its dominant biome. The renaming subsystem computes {noun} from these rows; no
+    // other history rule reads them.
+    for (db::RegionRow& r : in.regions) {
+        r.landmass = 1;
+        std::int64_t best = 0;
+        std::int64_t best_cells = -1;
+        bool best_dry = false;
+        for (const db::RegionBiomeRow& b : g.region_biomes) {
+            if (b.region != r.id) continue;
+            const bool dry = b.biome > 2;
+            if ((dry && !best_dry) || (dry == best_dry && (b.cells > best_cells || (b.cells == best_cells && b.biome < best)))) {
+                best = b.biome;
+                best_cells = b.cells;
+                best_dry = dry;
+            }
+        }
+        r.biome = best_cells < 0 ? 1 : best;
+    }
     in.region_borders = g.borders;
     in.region_biomes = g.region_biomes;
     std::size_t k = 0;

@@ -375,6 +375,13 @@ inline std::string static_dump(const wh::LoadedHistory& h) {
     for (const wh::RegionInfo& r : h.tables.regions) {
         out += "region " + num(r.id) + " " + list_text(t.events_of_region(r.id)) + "\n";
     }
+    // P4-01 r3 16 item 4: one line per region_name row in primary-key order. The name is read through
+    // Timeline::region_name at the row's from_year (item 1: a region renamed in Y bears its new name at Y),
+    // so the golden hash also pins the API's answer at every renaming year.
+    for (const db::RegionNameRow& n : h.tables.region_names) {
+        out += "name " + num(n.region) + " " + num(n.from_year) + " " +
+               std::string(t.region_name(n.region, n.from_year)) + "\n";
+    }
     for (const db::SettlementRow& s : h.tables.settlements) {
         out += "settlement " + num(s.id) + " " + list_text(t.events_of_settlement(s.id)) + "\n";
     }

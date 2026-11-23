@@ -50,6 +50,15 @@ std::string world_of(const RCase& g, const std::string& until = "") {
 }
 
 void check_rows(const RCase& g, const Tables& t) {
+    if (static_cast<std::int64_t>(t.region_name.size()) != g.rows || table_hash(5, t.region_name) != g.hash) {
+        // the C++ rows, in the golden file's `rename` order, to diff against the reference's
+        std::string dump;
+        for (const Row& r : t.region_name) {
+            dump += "rename " + std::to_string(at(r, 0)) + " " + std::to_string(at(r, 1)) + " culture " +
+                    std::to_string(at(r, 3)) + " e" + std::to_string(at(r, 4)) + " " + r[2].bytes + "\n";
+        }
+        MESSAGE(g.name << ": the C++ rows:\n" << dump);
+    }
     REQUIRE(static_cast<std::int64_t>(t.region_name.size()) == g.rows);
     CHECK(table_hash(5, t.region_name) == g.hash);
     REQUIRE(g.renames.size() == t.region_name.size());
