@@ -19,6 +19,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/db/reader.hpp"
@@ -114,6 +115,9 @@ public:
     // `biome`.
     [[nodiscard]] std::vector<worldgen::inspect::LegendEntry> legend(
         std::span<const worldgen::inspect::BiomeRecord> biomes) const;
+    // The tooltip of a territory legend row (P4-03 r4 6.4): the longer
+    // explanation of a border row, empty for every other label.
+    [[nodiscard]] static std::string_view legend_tooltip(std::string_view label) noexcept;
 
     // --- The territory image -------------------------------------------------
     // Builds the year-independent base once (P4-03 3.1 step 5). Returns

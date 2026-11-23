@@ -32,11 +32,15 @@ std::string to_utf8(const godot::String& text) {
     return {utf8.get_data(), static_cast<std::size_t>(utf8.length())};
 }
 
-godot::Array legend_array(const std::vector<worldgen::inspect::LegendEntry>& entries) {
+// Each row: label, colours and tooltip (empty unless tooltips is given and
+// has one for the label).
+godot::Array legend_array(const std::vector<worldgen::inspect::LegendEntry>& entries,
+                          std::string_view (*tooltips)(std::string_view) noexcept = nullptr) {
     godot::Array out;
     for (const auto& entry : entries) {
         godot::Dictionary row;
         row["label"] = to_godot(entry.label);
+        row["tooltip"] = to_godot(tooltips == nullptr ? std::string_view{} : tooltips(entry.label));
         godot::PackedInt32Array colours;
         for (const std::uint32_t c : entry.colours) {
             colours.push_back(static_cast<int32_t>(c));
@@ -274,7 +278,7 @@ bool ViewerModel::select_view(int64_t index) {
     } else if (const auto composite = composite_of(index)) {
         legend_ = legend_array(worldgen::inspect::composite_legend(*composite, world_->biome_records()));
     } else {
-        legend_ = legend_array(history_.legend(world_->biome_records()));
+        legend_ = legend_array(history_.legend(world_->biome_records()), &HistoryState::legend_tooltip);
     }
     emit_signal("view_selected", index);
     return true;
@@ -541,7 +545,7 @@ bool ViewerModel::set_year(int64_t year) {
         history_.set_year(year);
         redraw_territory();
         if (selected_ >= 0 && selected_ == get_territory_view()) {
-            legend_ = legend_array(history_.legend(world_->biome_records()));
+            legend_ = legend_array(history_.legend(world_->biome_records()), &HistoryState::legend_tooltip);
         }
     } catch (const std::exception& e) {
         godot::UtilityFunctions::push_error(godot::String("ViewerModel.set_year: ") + e.what());

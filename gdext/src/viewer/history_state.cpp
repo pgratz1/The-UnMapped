@@ -291,8 +291,8 @@ std::vector<worldgen::inspect::LegendEntry> HistoryState::legend(
     }
     // 2 to 4. The three borders (P4-03 r4 6.4).
     out.push_back(LegendEntry{"border between holders", {0x000000U}});
-    out.push_back(LegendEntry{"border within a realm (the realm's colour, darker)", {}});
-    out.push_back(LegendEntry{"border between free regions (the land's colour, half strength)", {}});
+    out.push_back(LegendEntry{"border inside a realm", {}});
+    out.push_back(LegendEntry{"border in free land", {}});
     // 5. Free land: the regions composite's rows after its border row and
     // before its last three rows (the land biomes). 6. Water: its last three
     // rows (ocean, lake, river) under their own heading.
@@ -313,6 +313,20 @@ std::vector<worldgen::inspect::LegendEntry> HistoryState::legend(
         out.push_back(std::move(rows[i]));
     }
     return out;
+}
+
+std::string_view HistoryState::legend_tooltip(std::string_view label) noexcept {
+    // P4-03 r4 6.4: the longer explanation of the three border rows.
+    if (label == "border between holders") {
+        return "black, between regions of different holders";
+    }
+    if (label == "border inside a realm") {
+        return "the realm's colour, darker";
+    }
+    if (label == "border in free land") {
+        return "the land's colour, darker";
+    }
+    return {};
 }
 
 std::optional<std::string> HistoryState::build_base(const TerritoryLayers& layers,

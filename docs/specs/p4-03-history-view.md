@@ -242,9 +242,11 @@ The viewer never decides who holds what: holders come from `territory_holders` a
 ### 6.4 Legend rows (`get_legend()` while `territory` is selected), in this order
 
 1. For each race with at least one civilization alive at Y, in ascending race id: a heading row, label `<race plural>` (the `race` row's `plural`), colours empty; then each civilization of that race alive at Y, ascending id: label `<civilization name>`, colours `[colour]` (section 7).
-2. `border between holders`, colours `[0x000000]`.
-3. `border within a realm (the realm's colour, darker)`, colours empty: no swatch, since the colour depends on the realm (section 8: dim of the realm's fill).
-4. `border between free regions (the land's colour, half strength)`, colours empty: no swatch, since the colour depends on the land (8.2, half).
+2. `border between holders`, colours `[0x000000]`, tooltip `black, between regions of different holders`.
+3. `border inside a realm`, colours empty: no swatch, since the colour depends on the realm (section 8: dim of the realm's fill); tooltip `the realm's colour, darker`.
+4. `border in free land`, colours empty: no swatch, since the colour depends on the land (8.2, half); tooltip `the land's colour, darker`.
+
+The three border labels are short so that they fit the legend's width; the longer explanation is the row's tooltip (`get_legend()` row key `tooltip`, empty on every other row; the list shows it on hover).
 5. A heading row `free land`, colours empty; then the rows of `composite_legend(Composite::regions, biomes)` after its `region border` row and before its last three rows, in its order (the biome rows of land biomes).
 6. A heading row `water`, colours empty; then the last three rows of that legend, in its order: the water rows W of P4-02 4.4 (`ocean, 0 to 3000 m deep`, `lake`, `river, class 1 to 6+`). The ocean is not free land.
 
@@ -485,7 +487,7 @@ With `--expect-history loaded` (real world):
 - H6 Hover: at Y = E, the first cell in row-major order whose region is held (by `get_region_holding`) and the first whose region is free; each description ends with the text of 6.1 for that holding (civilization name from the report's `[civilizations]` block of that id; `since` as the model's holding); the same held cell at Y = 0 ends with the 6.1 text of its holding at 0. Then `hover_cell(−1, −1)` restores the prompt, as today.
 - H7 Colours: for every civilization, `get_civilization_info(c).colour` equals the colour the library gives (`civilization_colours` of the check's own `load_history` of the same file; the check may call the library directly, P4-00 7: library correctness is doctest's job, the check proves the wiring); and every swatch of the territory legend equals its civilization's colour.
 - H8 Year marks: `get_year_marks()` holds one `awakening` per age start year of `[ages]`, one `phase` per `[phases]` line at its start, and one `present` at E, in ascending year.
-- H9 (r4) Territory legend tail: at E, the rows after the last civilization row are exactly, label and colours: `border between holders` [0x000000]; `border within a realm (the realm's colour, darker)` []; `border between free regions (the land's colour, half strength)` []; `free land` []; the rows of the `regions` view's legend between its `region border` row and its last three rows, in order; `water` []; the last three rows of the `regions` legend, in order.
+- H9 (r4) Territory legend tail: at E, the rows after the last civilization row are exactly, label and colours: `border between holders` [0x000000]; `border inside a realm` []; `border in free land` []; `free land` []; the rows of the `regions` view's legend between its `region border` row and its last three rows, in order; `water` []; the last three rows of the `regions` legend, in order. The three border rows carry the tooltips of 6.4, every other row of the tail an empty one.
 
 The existing checks (every layer and composite pixel-equal to the CLI, legends, the biome rows of `biomes` and `regions`, the hover on the first composite entry, reader errors, units) run unchanged; on the real world the composite list now has four entries and the first-entry hover is on `territory`, whose text still contains everything the existing hover check asks for.
 
@@ -570,5 +572,5 @@ r4 (2026-11-23, the change spec `docs/specs/p4-03a-territory-colour-followups.md
 2. 7.5 new: the integer luma L and the r4 table's L values; the pale test L > 190 on the r3 table that chose the darkened entries.
 3. 8.1, 8.2: a border with both sides free is half(U), half the cell's unbordered land colour; the inner-border dim is 10/16 when L(C) > 175, else 12/16; an empty holder vector still draws every border black; a worked example for each.
 4. 9.2: `Cell::half`; the timeline form of `render_territory`, used by the CLI and the viewer (3.3, 3.4, 5.1); the two-vector forms stay.
-5. 6.4: the free-land border row and a `water` heading before the water rows; 10.2 H9 checks the legend tail.
+5. 6.4: the free-land border row and a `water` heading before the water rows; 10.2 H9 checks the legend tail. Later in r4 (lead's ruling, the long rows were cut off at the legend's width): the border rows read `border between holders`, `border inside a realm`, `border in free land`, with the longer text as tooltips; H9 checks labels and tooltips.
 6. 11.1 items 1, 2, 5, 6, 6a, 9: tests for the above.
