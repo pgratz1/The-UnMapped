@@ -1,6 +1,6 @@
 # P5-01 Carried-over follow-ups
 
-Status: **draft r0, 2026-11-22, for the lead's approval.** Written by the spec writer on `p5/01-spec`, cut from `origin/main` at f29deec (generator 0.20.0, P3 approved, P4-00 and P5-00 merged). Phase P5 History depth, stage 1 (`docs/specs/p5-00-history-depth-overview.md` 3.1, "P5-01 Carried-over follow-ups"): the changes Paul's approval of P3 carried into P5, as one change. Generator **0.21.0**.
+Status: **draft r0, 2026-11-22, for the lead's approval; r1 (2026-11-22): text after the integration, the measured results, T18 restated and the quarrel threshold kept by Paul's decisions of 2026-11-22 (see the revision note at the end).** Written by the spec writer on `p5/01-spec`, cut from `origin/main` at f29deec (generator 0.20.0, P3 approved, P4-00 and P5-00 merged). Phase P5 History depth, stage 1 (`docs/specs/p5-00-history-depth-overview.md` 3.1, "P5-01 Carried-over follow-ups"): the changes Paul's approval of P3 carried into P5, as one change. Generator **0.21.0**.
 
 **No schema change**: schema stays 7. The change:
 - appends two event kinds, 41 `claim_dropped` and 42 `refuge_hidden` (P5-00 4.4: P5-01's kinds take 41 onward);
@@ -173,13 +173,33 @@ On the sweeps of P3-06 15.6 at 0.21.0, at 1024 defaults (100 worlds, seeds 0–9
 | **T15** | names: none holding `fag`, `didin` or `ririn`; none with a word `shiva`, `hindi` or `fannie`; three equal letters, crude fragments, `tard`: none; fallbacks 0 (names and regions) | `Shyfaglae` 1, `didin` 8, `ririn` 19, `Shiva` 1, `Hindi` 1, `Fannie` 2 (375 worlds) | 0 each |
 | **T16** (new) | battles that repeat an earlier battle's sides and both tolls exactly; battle sentences with a digit toll and a word toll in one clause | 361 (83 worlds); 230 | at most 10; 0 |
 | **T17** (new) | the summary's calamity share (`famine`, `plague`, `plague_outbreak`, `succession_crisis` lines of the summary chronicle) | median 15%, max 53% (seed 0: 104 of 221) | median at most 10%, every default world at most 25% (prototype: 8%, 22%) |
-| **T18** (new) | summary report lines (`report --history`) | default 644–806 (the r17 samples); `civs4` 1,270–1,358 | at most 700 in every default world; at most 1,100 in every `civs4` world |
+| **T18** (new; restated by Paul's decision of 2026-11-22, "restate the report length target") | summary report lines (`report --history`) | default 644–806 (the r17 samples); `civs4` 1,270–1,358 | default worlds: median ≤ 700 and maximum ≤ 800; four civilizations per race (`civs4`): median ≤ 1,100 and maximum ≤ 1,400 (r0: at most 700 in every default world, 1,100 in every `civs4` world) |
 | **T19** (new) | `[present]`'s standing claims and refuges marked `; hidden` equal the reference's open claims and hidden refuges at E | approximate (P3-07 24.7) | equal in every world of the sweep |
 | **T20** (new) | flare-ups shorter than `flare_min_years` (scaled) | 11 of 393 | 0 |
 | quick aim wins (P3-06 22.5) | as 22.5 defines them | 0 | at most 3 |
 | T3, T4, T6, T7 (P3-09, P3-10) | as stated there | met | as before |
 | P3-00 12.3 hard bounds | every world | met | every world |
 | timing (P5-00 8.1) | `generate` at 1024, release, seed 0, three runs | about 9.3 s | at most 5 s more |
+
+**Measured at 0.21.0** (r1; the engineer's sweep on `p5/01-int`, 100 default 1024 worlds unless stated):
+
+| Target | Result |
+| --- | --- |
+| T1 | 215‰ |
+| T5 | 169 / 62 |
+| T9 | 3 |
+| T11 | median 12.5 years |
+| T12 | 38 / 17 |
+| T13 | 0 of 2,601 declarations |
+| T14 | 43.9‰ at 1024, 34.7‰ at 2048 |
+| T15 | one region named `Tarden` (default seed 84), otherwise 0 each; the name filter does not apply to region names and the placename `forbidden` list has no `tard`; deferred (section 12) |
+| T16 | 9; 0 |
+| T17 | median 7.8%, maximum 22.8% |
+| T18 | default 321–754 lines, median 571; 20 `civs4` worlds 890–1,353, median 1,046 |
+| T19 | equal to the reference on all 12 golden world cases |
+| T20 | 0 of 383 flare-ups |
+
+**T12 and T8.** The first orc declaration comes a median **166** years after the awakening (0.20.0: 59), in **81** of 100 worlds (0.20.0: 83). Paul's decision of 2026-11-22: `quarrel_strength_permille` stays 1000; no lower value is measured (question 1 closed).
 
 **Reported**, with no target:
 1. **Orcs**: the first war's outcome by the number of standing settlements at the declaration and by the defender's race; the median years from the awakening to the first orc declaration (0.20.0: 59) and the worlds with one (T8, 0.20.0: 83); the worlds in which a quarrel claim was ever held back by 24.2, and for how long; T5, T9, T10, T11, T12 on `calm` and `turbulent`; orc people and standing settlements (0.20.0: 88‰ and 95‰).
@@ -212,8 +232,8 @@ On the sweeps of P3-06 15.6 at 0.21.0, at 1024 defaults (100 worlds, seeds 0–9
 
 ## 10. Open questions
 
-1. **The quarrel gate's cost in time** (for the lead; non-blocking). The strength test (P3-06 24.2) makes the first orc war winnable (measured: 28 won, 18 lost, against 27 and 32 at 0.20.0; T5 153 / 65; T9 6; T10 0; T11 9), but it delays it: the median first orc declaration comes 181 years after the awakening instead of 59, and orcs declare in 72 worlds instead of 83 (T8, a reported statistic). The colony still comes first (T11), so the orcs are not silent; they are building. Recommendation: accept; the orc age at defaults is about 450 years, so a war around +180 still leaves the last age to the orcs. If the lead or the critic finds the first two centuries too quiet, the data lever is `quarrel_strength_permille` 700 (not prototyped; expected between the two columns of P3-06 24.2's table). Interim: 1000.
-2. **The `civs4` summary length** (for the lead). With B3, B4 and the `[stats]` cut the `civs4` summaries are expected at about 1,040 to 1,095 lines, above P5-00 7.2's "about 1,000" (which is stated for default worlds, which fall to about 510 to 670). Recommendation: accept T18's 1,100 for `civs4`; a further cut (at most 6 milestones for every realm at summary) would bring them under 1,000 at the cost of every default world's blocks. Interim: as specified.
+1. **The quarrel gate's cost in time** (r1: **closed** by Paul's decision of 2026-11-22: `quarrel_strength_permille` stays 1000, no lower value is measured; at 0.21.0 the first orc declaration comes a median 166 years after the awakening, in 81 of 100 worlds). (For the lead; non-blocking.) The strength test (P3-06 24.2) makes the first orc war winnable (measured: 28 won, 18 lost, against 27 and 32 at 0.20.0; T5 153 / 65; T9 6; T10 0; T11 9), but it delays it: the median first orc declaration comes 181 years after the awakening instead of 59, and orcs declare in 72 worlds instead of 83 (T8, a reported statistic). The colony still comes first (T11), so the orcs are not silent; they are building. Recommendation: accept; the orc age at defaults is about 450 years, so a war around +180 still leaves the last age to the orcs. If the lead or the critic finds the first two centuries too quiet, the data lever is `quarrel_strength_permille` 700 (not prototyped; expected between the two columns of P3-06 24.2's table). Interim: 1000.
+2. **The `civs4` summary length** (r1: **closed** by Paul's decision of 2026-11-22, which restates T18 as medians and maxima, section 8). (For the lead.) With B3, B4 and the `[stats]` cut the `civs4` summaries are expected at about 1,040 to 1,095 lines, above P5-00 7.2's "about 1,000" (which is stated for default worlds, which fall to about 510 to 670). Recommendation: accept T18's 1,100 for `civs4`; a further cut (at most 6 milestones for every realm at summary) would bring them under 1,000 at the cost of every default world's blocks. Interim: as specified.
 3. **Items 8 and 9 were optional** (for the lead). Both change balance a little: the toll factor moves every war's dead and so some endings (T1, T5, T12 are re-measured), and `flare_min_years` removes 11 of 393 flare-ups at defaults. Recommendation: keep both. Interim: in, with their off values (`toll_spread_permille` 0, `flare_min_years` 1) as the fallback if validation finds a target missed through them.
 
 ## 11. Proposals
@@ -234,3 +254,8 @@ Listed here, not specified. Sources: the P3-07 world critic's (b) and (c), the P
 - **Large tributes** (8 above 5,000 at defaults, the largest 9,492): a balance pass.
 - **Equal populations of sister villages** (critic F6): harmless now; the viewer will show it (P4).
 - **A plain reading form of the report** (A9): Paul's choice of 2026-11-22 keeps ids and refs on every line.
+- **`tard` in region names** (r1, T15): one region is named `Tarden` at 0.21.0 (default seed 84). The name filter (P3-02 11) does not apply to region names and P1-06's placename `forbidden` list has no `tard`. Deferred to the next change that alters world bytes: add `tard` to the placename `forbidden` list, or let P5-12's renamed regions go through the filter (P5-00 4.5), whichever comes first; for P5-12.
+
+## Revision note r1 (2026-11-22, text after the integration)
+
+Text only; the implementation and tests on `p5/01-int` (generator 0.21.0) already follow every point. Section 8: T18 restated by Paul's decision of 2026-11-22 (default median ≤ 700, maximum ≤ 800; `civs4` median ≤ 1,100, maximum ≤ 1,400), the measured results of the engineer's sweep, and T12 / T8 with Paul's decision to keep `quarrel_strength_permille` at 1000; section 10 questions 1 and 2 closed by those decisions; section 12 gains `Tarden` (T15) for P5-12. The amended stage specs' corrections of this round: P3-02 r18, P3-04 r20, P3-06 r23, P3-07 r20.

@@ -1151,3 +1151,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - The history report becomes format v2, with P5's growth rule.
 - Interim choice: as proposed; the design document is not affected. Questions for the lead (P5-01 section 10): the delay the strength gate puts on the first orc war; the `civs4` summary length (about 1,100 lines, against "about 1,000" for default worlds); keeping the two optional rules (tolls, short flare-ups).
 - Status: open
+
+### Paul's decisions of 2026-11-22: the report length target restated, the quarrel threshold kept
+
+- Date: 2026-11-22
+- Raised by: lead, from the P5-01 validation sweep at generator 0.21.0 (`docs/specs/p5-01-followups.md` section 8, T18, T12 and T8; section 10 questions 1 and 2)
+- Design doc section: 5 (the orc age), 13 (the text history report)
+- Problem: T18 asked for at most 700 summary lines in every default world and at most 1,100 in every world with four civilizations per race; measured at 0.21.0, 100 default worlds give 321 to 754 lines (median 571) and 20 `civs4` worlds 890 to 1,353 (median 1,046). The orcs' strength gate delays their first declaration to a median 166 years after the awakening (59 at 0.20.0), in 81 of 100 worlds.
+- Proposal: (1) "Restate the report length target": summary length, default worlds median at most 700 and maximum at most 800 lines; four civilizations per race median at most 1,100 and maximum at most 1,400. (2) `history.conflict.quarrel_strength_permille` stays 1000; no lower value is measured.
+- Interim choice: P5-01 r1 section 8 and P3-07 r20 25.5 state T18 so; P5-01 questions 1 and 2 are closed. The design document is not affected.
+- Status: accepted
