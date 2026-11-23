@@ -201,4 +201,10 @@ struct HistoryDigest {
 // 3 "flare_up", 4 "final"; anything else empty.
 [[nodiscard]] std::string_view phase_kind_word(std::int64_t kind) noexcept;
 
+// The words of a settlement kind and status (P3-07 report, P4-04 4): kind 1
+// "hamlet" .. 5 "fortress"; status 1 "thriving", 2 "declining", 3 "ruined",
+// 4 "faded"; anything else empty.
+[[nodiscard]] std::string_view settlement_kind_word(std::int64_t kind) noexcept;
+[[nodiscard]] std::string_view settlement_status_word(std::int64_t status) noexcept;
+
 }  // namespace worldgen::history
