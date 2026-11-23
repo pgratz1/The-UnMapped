@@ -4,6 +4,7 @@
 #include <exception>
 #include <new>
 #include <span>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -361,7 +362,10 @@ godot::String ViewerModel::describe_cell(int64_t x, int64_t y) {
         if (region == 0) {
             text += "   |   no region (ocean)";
         } else {
-            const std::string name = to_utf8(world_->get_region_name(region));
+            // P4-01 r3 16.5: the name in force at the year shown; the
+            // geographic name (region.name) without history.
+            const std::optional<std::string> named = history_.region_name(region);
+            const std::string name = named ? *named : to_utf8(world_->get_region_name(region));
             text += "   |   region " + std::to_string(region) + (name.empty() ? std::string() : " " + name);
             text += history_.holding_text(region);  // P4-03 6.1; empty without history
         }
