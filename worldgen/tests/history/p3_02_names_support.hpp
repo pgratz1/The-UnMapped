@@ -244,6 +244,8 @@ inline Naming shipped_naming(std::string_view id) {
         n.god_patterns = {"ONCONC", "ONC-ONC", "ONONC"};
     } else if (id == "human") {
         n.god_patterns = {"ONCONC"};
+        // r19 (P3-02 16.2, P5-12, generator 0.22.0): ass appended to forbidden
+        n.forbidden.push_back("ass");
     } else if (id == "orcish") {
         n.god_patterns = {"ONC'ONC", "ONCONC", "NC'ONC"};
     } else {

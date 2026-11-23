@@ -97,8 +97,10 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
         }
         tributes += at(e, 3) == k_tribute ? 1 : 0;
     }
-    CHECK(flights >= 1);
-    CHECK(found >= 1);
+    // P5-12 6 "Effect on the rest of history": from 0.22.0 seed 1 at 512 has no flight (the renamings shift the
+    // event ids that conflict keys draws by); the reference reports it and no longer checks it. Flights and found
+    // refuges are reached by the stress cases of p3-06-conflict.txt.
+    MESSAGE("hist-conflict-flight at 0.22.0: flights " << flights << ", found " << found);
     CHECK(tributes >= 1);
     // threads: byte-identical tables
     CHECK(tables_of_world(open_world(flight_world(4))) == t);

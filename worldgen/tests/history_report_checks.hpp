@@ -109,6 +109,7 @@ public:
                    "war_won", "truce", "search_abandoned", "region_ceded", "settlements_ceded", "tribute",
                    "capital_moved", "refugees_settled", "civ_conquered"});
         battles_ = ids({"battle", "battle_at_pass"});
+        renamed_ = ids({"region_renamed"});
         falls_ = ids({"sacked", "settlement_captured"});
         conseq_ = ids({"capital_moved", "refugees_settled", "civ_conquered"});
         claims_ = ids({"claim", "claim_settlements"});
@@ -179,6 +180,16 @@ public:
     // a consequence's unit, need not bring its consequences: 24.2 says companions are not followed further).
     [[nodiscard]] std::vector<std::string> violations(const std::set<std::int64_t>& shown) const {
         std::vector<std::string> bad;
+        const auto renaming_cause = [this](std::int64_t x, const std::set<std::int64_t>& sh) {
+            for (const std::int64_t y : sh) {
+                const auto* e = view_.event(y);
+                if (e != nullptr && renamed_.count(e->row.kind) != 0U &&
+                    std::find(e->causes.begin(), e->causes.end(), x) != e->causes.end()) {
+                    return true;
+                }
+            }
+            return false;
+        };
         for (const std::int64_t x : shown) {
             const std::int64_t k = kind(x);
             const auto d = war(x);
@@ -203,7 +214,9 @@ public:
                 }
             }
             if (claims_.count(k) != 0U || spread_.count(k) != 0U) bad.push_back(ex + "a claim or plague_spread");
-            if (battles_.count(k) != 0U && (!d || last_battle(*d) != x)) bad.push_back(ex + "not its war's last battle");
+            if (battles_.count(k) != 0U && (!d || last_battle(*d) != x) && !renaming_cause(x, shown)) {
+                bad.push_back(ex + "not its war's last battle");   // r21 26.5 item 1: or a shown renaming's cause
+            }
         }
         for (const auto& e : view_.events()) {
             if (quiet_.count(e.row.kind) != 0U && shown.count(e.row.id) == 0U) {
@@ -225,7 +238,7 @@ private:
         return std::move(rows).value();
     }
     worldgen::history::HistoryView view_;
-    std::set<std::int64_t> W_, EW_, battles_, falls_, conseq_, claims_, spread_, quiet_, excluded_;
+    std::set<std::int64_t> W_, EW_, battles_, renamed_, falls_, conseq_, claims_, spread_, quiet_, excluded_;
     std::map<std::int64_t, std::int64_t> rows_, ended_by_, war_, last_battle_;
     std::map<std::int64_t, std::vector<std::int64_t>> kids_;
 };
@@ -289,9 +302,22 @@ inline std::vector<std::string> v2_summary_violations(const worldgen::history::H
     const auto* decl = view.catalogue().find("war_declared");
     std::map<std::int64_t, std::int64_t> per_phase;
     std::set<std::int64_t> war_phases;
+    // r21 26.5 item 1 (part 4): a shown renaming brings its cause, also a calamity beyond 25.2's cap (25.2 says such a
+    // calamity is no companion of anything; both the C++ and the reference let 26.5 rule: a spec question). Those
+    // causes are not counted against the cap.
+    std::set<std::int64_t> renaming_causes;
+    if (const auto* rn = view.catalogue().find("region_renamed")) {
+        for (const auto& e : view.events()) {
+            if (e.row.kind == rn->id && shown.count(e.row.id) != 0U) {
+                renaming_causes.insert(e.causes.begin(), e.causes.end());
+            }
+        }
+    }
     for (const auto& e : view.events()) {
         if (decl != nullptr && e.row.kind == decl->id) war_phases.insert(e.row.phase);
-        if (cal.count(e.row.kind) != 0U && shown.count(e.row.id) != 0U) ++per_phase[e.row.phase];
+        if (cal.count(e.row.kind) != 0U && shown.count(e.row.id) != 0U && renaming_causes.count(e.row.id) == 0U) {
+            ++per_phase[e.row.phase];
+        }
     }
     for (const auto& [p, n] : per_phase) {
         if (n > 2) bad.push_back("p" + std::to_string(p) + ": " + std::to_string(n) + " calamities shown (25.2)");
@@ -305,12 +331,14 @@ inline std::vector<std::string> v2_summary_violations(const worldgen::history::H
     return bad;
 }
 
-// r19 25.7 item 4: SUMMARY_STATS, the 15 keys printed at summary (in section 9's order, that of full's block).
+// r19 25.7 item 4 with r21 26.5 item 2: SUMMARY_STATS, the 17 keys printed at summary (in section 9's order, that of
+// full's block).
 inline const std::set<std::string>& summary_stat_keys() {
     static const std::set<std::string> k = {"end_year", "events", "summary_threshold", "summary_events",
                                             "civilizations", "civilizations_alive", "civilizations_ended",
                                             "settlements_standing", "settlements_ruined", "population", "wars",
-                                            "wars_open", "wars_hollow_permille", "share_max_permille", "races_alive"};
+                                            "wars_open", "wars_hollow_permille", "share_max_permille", "races_alive",
+                                            "regions_renamed", "refuges_hidden"};
     return k;
 }
 
@@ -423,12 +451,14 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
             if (summary_stat_keys().count(l.substr(0, l.find(" = "))) != 0U) subset.push_back(l);
         }
         CHECK(block(summary, "[stats]") == subset);
-        CHECK(subset.size() == 15U);
+        CHECK(subset.size() == 17U);
     }
     CHECK(civ_common(summary, false) == civ_common(full, true));
     std::vector<std::string> present_f;
     for (const std::string& l : block(full, "[present]")) {
-        const bool region_line = l.rfind("  rg", 0) == 0;
+        // a [present] region line `  rg<id> <name>: ...` (full only); r21 26.2's `  rg<id>: ...` is at both levels
+        const bool region_line = l.rfind("  rg", 0) == 0 && l.find(' ', 4) != std::string::npos &&
+                                 l.find(' ', 4) < l.find(':');
         const bool settlement_line = l.rfind("  s", 0) == 0 && l.size() > 3 && l[3] >= '0' && l[3] <= '9' &&
                                      l.find(", at ") != std::string::npos;
         if (!region_line && !settlement_line) present_f.push_back(l);

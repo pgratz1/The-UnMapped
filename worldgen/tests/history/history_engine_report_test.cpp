@@ -101,7 +101,7 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
         "simulated_years = 1350\nsimulated_permille = 225\nevents = 4\nevents_awakening = 3\nevents_civ_founded = 0\n"
         "events_settlement_founded = 0\nevents_quiet_era = 0\nevents_flare_up = 1\ncivilizations = 2\n"
         "civilizations_alive = 1\nsettlements = 2\nsettlements_standing = 1\nregions_held = 1\ncensus_rows = 3\n"
-        "relations = 1\n";
+        "relations = 1\nregion_names = 0\n";   // P3-04 r21 23.4: region_names after relations
     // P3-05 15.4 appends the population keys after relations.
     const std::string p305 = "population = 200\n""population_elf = 200\n""population_goblin = 0\n""population_dwarf = 0\n""population_faerie = 0\n""population_human = 0\n""population_orc = 0\n""settlements_standing_elf = 1\n""settlements_standing_goblin = 0\n""settlements_standing_dwarf = 0\n""settlements_standing_faerie = 0\n""settlements_standing_human = 0\n""settlements_standing_orc = 0\n""regions_held_elf = 0\n""regions_held_goblin = 0\n""regions_held_dwarf = 1\n""regions_held_faerie = 0\n""regions_held_human = 0\n""regions_held_orc = 0\n";
     CHECK(section(text, "[history]") == want + p305);
@@ -117,13 +117,13 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
     REQUIRE(h != std::string::npos);
     CHECK(c < h);
     CHECK(text.find("\n[", c + 1) == h - 1);
-    // [tables]: 26 tables, ascending name
+    // [tables]: 27 tables (schema 8, P3-04 r21 23.4), ascending name
     const std::string tables = section(text, "[tables]");
     std::size_t n = 0;
     for (const char ch : tables) {
         n += ch == '\n' ? 1 : 0;
     }
-    CHECK(n == 27U);  // header + 26
+    CHECK(n == 28U);  // header + 27
     for (const std::string& t : hash_tables()) {
         CHECK_MESSAGE(tables.find("\n" + t + " = ") != std::string::npos, t);
     }

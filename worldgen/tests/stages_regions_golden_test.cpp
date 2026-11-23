@@ -873,7 +873,7 @@ TEST_CASE("P1-06 2, 3, RG14: the stage entry reads the thirteen layers and table
     // Schema 7 (P3-04); every row an integer or text (no REAL), names TEXT.
     const dbtest::SqliteFile db(dir.file("ok.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         const auto rows = db.rows(std::string("SELECT count(*) FROM ") + table);
@@ -941,7 +941,7 @@ TEST_CASE("P1-06 2: the stage reads neither coast_dist, temperature, rainfall no
 
 // --- Schema 5 (P0-02 amendment 17; 10.1 test 6) ------------------------------------------------------
 
-TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 7 since P3-04: 34 pages, 139264 bytes)") {
+TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 8 since P5-12: 35 pages, 143360 bytes)") {
     CHECK(worldgen::db::SCHEMA_VERSION == 8);
     dbtest::TempDir dir("regions-schema");
     REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), dir.file("e.db"),
@@ -950,15 +950,15 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     CHECK(dbtest::read_file(dir.file("e.db")).size() == 143360U);
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"34"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"35"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"8"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         CHECK(db.rows(std::string("SELECT count(*) FROM ") + table) == std::vector<std::vector<std::string>>{{"0"}});
     }
     // The three statements of 3.1, byte for byte, after climate's.
-    const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' AND name LIKE 'region%' AND name <> 'region_control' ORDER BY rowid");
+    const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' AND name LIKE 'region%' AND name <> 'region_control' AND name <> 'region_name' ORDER BY rowid");  // the history tables region_control (schema 7) and region_name (schema 8) are not 3.1's
     REQUIRE(sql.size() == 3U);
     CHECK(sql[0][0] == "region");
     CHECK(sql[1][0] == "region_border");

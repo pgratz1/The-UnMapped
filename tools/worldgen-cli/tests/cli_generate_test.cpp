@@ -345,12 +345,13 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     }
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    // Schema 7 (P3-04 9.1): twenty-six tables, all empty but meta (17 rows).
+    // Schema 8 (P3-04 9.1, P5-12 7.2): twenty-seven tables, all empty but meta (17 rows).
     const std::vector<std::string> names = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
                                             "event_kind", "event_kind_role", "event_kind_value", "event_participant",
                                             "event_value", "god", "layer", "meta", "pass", "phase", "race",
                                             "race_biome", "region", "region_biome", "region_border",
-                                            "region_control", "relation", "settlement", "settlement_census"};
+                                            "region_control", "region_name", "relation", "settlement",
+                                            "settlement_census"};
     REQUIRE(tables.value().size() == names.size());
     for (std::size_t k = 0; k < names.size(); ++k) {
         CHECK(tables.value()[k].name == names[k]);
@@ -365,7 +366,9 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // tables biome and climate and of the automatic index of biome.key;
     // schema version 5 the root pages of the three region tables (P0-02
     // amendment 17); schema version 6 the roots of the five chronology tables
-    // and two key indexes, 18 pages (P3-03 5.1).
+    // and two key indexes, 18 pages (P3-03 5.1); schema version 7 the
+    // thirteen history tables, 34 pages (P3-04 9.6); schema version 8 the
+    // root of region_name, 35 pages (P5-12 12).
     CHECK(fs::file_size(out) == 143360U);
 }
 

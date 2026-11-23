@@ -1039,7 +1039,7 @@ TEST_CASE("report v2: the whole report of a world with elevation only") {
     layers.push_back({"elevation", g, Codec::delta_varint});
     REQUIRE(worldgen::stages::testing::write_fixture_world(out, 5, layers).ok());
     const std::string expected = "# worldgen report v2\n[meta]\n" + meta_lines(5, "test_fixture") +
-                                 "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"
+                                 "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"
                                  "elevation i16 5x5 codec=1 bytes=" +
                                  std::to_string(worldgen::db::encode_layer_blob(g).size()) +
                                  " min=-300 max=20000\n" + p100::with_empty_pass_lines(p100::SQUARE_GEOGRAPHY);
@@ -1056,7 +1056,7 @@ TEST_CASE("report v2: the whole report of the P1-02 worked example") {
                " min=" + lo + " max=" + hi + "\n";
     };
     const std::string expected =
-        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 8\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n" +
+        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 8\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n" +
         layer_line(layers[0], "i16", "-5", "80") + layer_line(layers[1], "u8", "0", "3") +
         layer_line(layers[2], "u16", "0", "8") + layer_line(layers[3], "u8", "0", "8") +
         layer_line(layers[4], "u32", "0", "10") + layer_line(layers[5], "u8", "0", "2") +

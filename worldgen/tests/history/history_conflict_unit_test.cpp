@@ -91,7 +91,7 @@ TEST_CASE("P3-06 8.2, 8.3 item 3 (N1): steps T2, T6, Q4; the shipped stage is pe
         CAPTURE(g.name);
         const eng::HistoryInputs in = synthetic_inputs(g);
         ConflictConfig c(shipped());
-        const Tables a = eng::run_engine(shipped(), in, c.get());
+        const Tables a = c.run(shipped(), in);
         CHECK(a == eng::history_stage(shipped(), in));
         CHECK(table_hashes(a) == g.tables);
     }
@@ -156,7 +156,7 @@ TEST_CASE("P3-06 5.4, 8.3 item 2, 16.1 item 5: the tension asked in Q5 equals th
         eng::EngineConfig ec = cfg.get();
         REQUIRE(ec.tension.size() == 1U);
         ec.tension[0] = &rec;
-        const Tables t = eng::run_engine(c, synthetic_inputs(g), ec);
+        const Tables t = cfg.run(c, synthetic_inputs(g), ec);
         CHECK(table_hashes(t) == g.tables);  // the probe changes nothing
         for (const auto& [start, vt] : g.tension) {
             CAPTURE(start);
@@ -183,7 +183,7 @@ TEST_CASE("P3-06 14 item 9 (Y3): test-only draws on the five hist.conflict strea
                 }
             }
         });
-        CHECK(table_hashes(eng::run_engine(c, in, cfg.get())) == g.tables);
+        CHECK(table_hashes(cfg.run(c, in)) == g.tables);
         CHECK(sink != 1U);
     }
 }
@@ -217,7 +217,7 @@ TEST_CASE("P3-06 16.2 item 17 (Y4): relations opened in two orders in one step g
                 ctx.state().open_relation(k1, e);
             }
         });
-        runs.push_back(eng::run_engine(shipped(), in, cfg.get()));
+        runs.push_back(cfg.run(shipped(), in));
     }
     CHECK(runs[0].relation == runs[1].relation);
     CHECK(runs[0] == runs[1]);
@@ -250,7 +250,7 @@ TEST_CASE("P3-04 6.4 r8: StepContext::event_kind and event_participant read the 
         }
         last = n;
     });
-    const Tables t = eng::run_engine(shipped(), in, cfg.get());
+    const Tables t = cfg.run(shipped(), in);
     REQUIRE_FALSE(kinds.empty());
     CHECK(unknown == "history: state: event " + std::to_string(last) + " does not exist");
     const Index x(t);

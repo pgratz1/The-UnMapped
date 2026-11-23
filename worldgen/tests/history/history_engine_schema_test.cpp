@@ -104,6 +104,9 @@ std::map<std::string, std::vector<Row>> sample_rows() {
         {"region_control", {{I(10), I(5), I(9), I(2), I(2)}, {I(12), I(0), N(), I(1), I(1)}}},
         {"relation", {{I(3), I(1), I(3), I(2), T("peace"), I(5), I(9), I(2), I(2)},
                       {I(3), I(1), I(3), I(2), T("war"), I(5), N(), I(2), I(0)}}},
+        // schema 8 (P3-04 r21 23.4): (region, from_year) keys ascending, one region twice
+        {"region_name", {{I(10), I(5), T("The Ashes of Ruin"), I(1), I(3)}, {I(10), I(9), T("Ruin's Grave"), I(0), I(4)},
+                         {I(12), I(0), T("The Heart of Voeledell"), I(2), I(1)}}},
     };
 }
 
@@ -182,7 +185,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
         const std::string path = generated(dir, "none-" + std::to_string(span) + ".db", "none", span);
         const db::WorldReader r = open_world(path);
         CHECK(r.meta("history_end_year").value_or("<absent>") == std::to_string(span));
-        CHECK(r.meta("schema_version").value_or("") == "7");
+        CHECK(r.meta("schema_version").value_or("") == "8");   // P5-12 (P3-04 r21 23.4)
         for (const std::string& t : ddl_tables()) {
             CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }

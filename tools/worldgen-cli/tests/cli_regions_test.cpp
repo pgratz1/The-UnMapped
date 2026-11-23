@@ -224,7 +224,8 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
                                              "event_value", "god", "layer", "meta", "pass", "phase", "race",
                                              "race_biome", "region", "region_biome", "region_border",
-                                             "region_control", "relation", "settlement", "settlement_census"});
+                                             "region_control", "region_name", "relation", "settlement",
+                                             "settlement_census"});
     REQUIRE_FALSE(layers.empty());
     CHECK(layers.back() == "region");
     CHECK(hex["layer region"] == gold.at("region"));
@@ -253,7 +254,7 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
             "table race_biome",   "table civilization",      "table event",        "table event_cause",
             "table event_kind",   "table event_kind_role",   "table event_kind_value", "table event_participant",
             "table event_value",  "table phase",             "table region_control", "table relation",
-            "table settlement",   "table settlement_census"};  // chronology (P3-03) and history (P3-04)
+            "table settlement",   "table settlement_census", "table region_name"};  // chronology (P3-03) and history (P3-04, P5-12)
         if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
         }
@@ -299,7 +300,7 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     REQUIRE(r.exit_code == EXIT_OK);
     CHECK(contains(r.out, "\nregion = 0\nregion_biome = 0\nregion_border = 0\n"));
     CHECK_FALSE(contains(r.out, "\nregions = "));
-    // --until none: every table empty, 34 pages (139264 bytes) since schema 7 (P3-04 9.6).
+    // --until none: every table empty, 35 pages (143360 bytes) since schema 8 (P5-12 12).
     const fs::path e = w.sb.file("none.db");
     generate(w.sb, w.data, {"--until", "none"}, e);
     CHECK(read_bytes(e).size() == 143360U);

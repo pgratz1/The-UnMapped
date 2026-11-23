@@ -96,7 +96,7 @@ std::string check_golden_db(const Sandbox& sb, const std::string& name, const fs
             rep += value + "\n";
         }
     }
-    CHECK(tables == 13U);
+    CHECK(tables == 14U);  // the thirteen history tables of P3-04 9.1 and region_name (P5-12 7.2)
     const std::string report = run_ok(sb, {"report", "--db", u8(db)});
     CHECK(section(report, "[history]") == rep);
     const std::size_t c = report.find("[chronology]\n");
@@ -118,7 +118,7 @@ TEST_SUITE("history") {
 TEST_CASE("cli P3-06 16.3, 16.2 item 18: the golden world geo-seed-42-512, --until history, --threads 5") {
     Sandbox sb;
     const fs::path a = generate_case(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
-    CHECK(meta_of(a, "generator_version") == "0.21.0");  // P5-01
+    CHECK(meta_of(a, "generator_version") == "0.22.0");  // P5-12
     CHECK(meta_of(a, "schema_version") == "8");
     check_golden_db(sb, "geo-seed-42-512", a);
     const fs::path b = generate_case(sb, "threads", {"--seed", "42", "--map-size", "512", "--threads", "5"});
@@ -126,7 +126,7 @@ TEST_CASE("cli P3-06 16.3, 16.2 item 18: the golden world geo-seed-42-512, --unt
     const fs::path chron = generate_case(sb, "chron", {"--seed", "42", "--map-size", "512", "--until", "chronology"});
     const std::string rep = run_ok(sb, {"report", "--db", u8(chron)});
     CHECK(section(rep, "[history]").empty());
-    CHECK(contains(section(rep, "[tables]"), "\nrelation = 0\n"));
+    CHECK(contains(section(rep, "[tables]"), "\nregion_name = 0\nrelation = 0\n"));  // schema 8 (P5-12 7.2)
 }
 
 TEST_CASE("cli P3-06 5.2, 16.2 item 15: --event-intensity turbulent and --civs-per-race 4 reach the conflict history") {

@@ -379,6 +379,7 @@ inline std::vector<std::string> report_lines(const Tables& t, std::int64_t end_y
     line("regions_held", held);
     line("census_rows", static_cast<std::int64_t>(t.settlement_census.size()));
     line("relations", static_cast<std::int64_t>(t.relation.size()));
+    line("region_names", static_cast<std::int64_t>(t.region_name.size()));   // P3-04 r21 23.4, after relations
     return o;
 }
 

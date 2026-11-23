@@ -194,7 +194,7 @@ Result probe_run(const wd::ContentSet& content, const eng::HistoryInputs& in, h:
         }
         now.clear();
     });
-    out.t = eng::run_engine(content, in, cfg.get());
+    out.t = cfg.run(content, in);
     return out;
 }
 

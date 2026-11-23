@@ -566,7 +566,9 @@ TEST_CASE("P3-02 11.6 (r5): the sample table under r5 (seed 0, one registry per 
                     "Skrizuz", "Droggkazz Hole", "Slobeerk", "Snok", "Kruskreezz Hole", "The Gnazz Horde",
                     "The Baskeeb Mob", "The Grodratch Horde", "The Krunkgirk Horde", "The Warrens of Gnonk",
                     "Zab-Skreeb", "Kruskux", "Nugnug"}},
-        {"human", {"Deanham", "Alantton", "Cickham", "Gackwick", "Brir", "Tackbury", "Gurdton", "Studford", "Ceambury",
+        // P3-02 r19 16.1 (P5-12, 0.22.0): settlement 2 "Alantton" (n + ton) is rejected and redrawn "Serd" (golden
+        // hresult 0 human settlement 5 2); 11.6's table still lists Alantton (a spec correction)
+        {"human", {"Deanham", "Serd", "Cickham", "Gackwick", "Brir", "Tackbury", "Gurdton", "Studford", "Ceambury",
                    "Buld", "Silstudstead", "Tirdwick", "Dack", "Stastint", "Moldstead", "Edumford", "Tontstead",
                    "Ceanbir", "Durdton", "Durdbury", "The Duchy of Ashem", "The Kingdom of Ashos", "The Kingdom of Edes",
                    "The Duchy of Wick", "The Duchy of Circon", "Wasbrid", "Histold", "Edostold"}},

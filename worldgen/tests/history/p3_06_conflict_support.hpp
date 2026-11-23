@@ -9,6 +9,7 @@
 // with probe subsystems. Library API of P3-06 only through
 // p3_06_conflict_api.hpp.
 
+#include "worldgen/history/renaming.hpp"
 #include "p3_05_peoples_support.hpp"
 #include "p3_06_conflict_api.hpp"
 
@@ -1769,9 +1770,14 @@ struct ConflictConfig {
     std::vector<std::unique_ptr<FnSubsystem>> before, between, after;
     std::unique_ptr<eng::InterventionSource> interventions = std::make_unique<eng::EmptyInterventionSource>();
     eng::EventCatalogue catalogue;
+    // P5-12 6: the renaming subsystem, installed after conflict as the history stage installs it (its rows are
+    // HistoryResult::region_names only through run() below; run_engine leaves them empty, P3-04 r21 23.4).
+    std::unique_ptr<worldgen::history::RenamingSubsystem> renaming;
 
     explicit ConflictConfig(const wd::ContentSet& c)
-        : pair(std::make_unique<cfl::Conflict>(c)), catalogue(eng::catalogue_of(c)) {}
+        : pair(std::make_unique<cfl::Conflict>(c)), catalogue(eng::catalogue_of(c)),
+          renaming(std::make_unique<worldgen::history::RenamingSubsystem>(
+              *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue)) {}
     void add_before(std::vector<eng::Step> steps, FnSubsystem::Fn fn) {
         before.push_back(std::make_unique<FnSubsystem>(std::move(steps), std::move(fn)));
     }
@@ -1788,11 +1794,19 @@ struct ConflictConfig {
         c.subsystems.push_back(pair->peoples.sub.get());
         for (const auto& s : between) c.subsystems.push_back(s.get());
         c.subsystems.push_back(pair->subsystem());
+        c.subsystems.push_back(renaming.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
         c.interventions = interventions.get();
         c.catalogue = &catalogue;
         return c;
+    }
+    // run_engine with get() (or `ec`), the tables with the renaming rows filled in as the history stage fills them.
+    [[nodiscard]] Tables run(const wd::ContentSet& c, const eng::HistoryInputs& in) const { return run(c, in, get()); }
+    [[nodiscard]] Tables run(const wd::ContentSet& c, const eng::HistoryInputs& in, const eng::EngineConfig& ec) const {
+        worldgen::history::HistoryResult r = worldgen::history::run_engine(c, in, ec);
+        r.region_names = renaming->sorted_rows();
+        return eng::tables_of(r);
     }
 };
 

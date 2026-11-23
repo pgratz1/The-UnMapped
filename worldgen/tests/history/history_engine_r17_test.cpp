@@ -80,7 +80,10 @@ std::vector<std::string> render_all(const std::string& file, const std::vector<E
         "UPDATE settlement SET name = 'Drutnot Hole' WHERE id = 1;"
         "UPDATE settlement SET name = 'Nutskrank' WHERE id = 2;"
         "UPDATE settlement SET name = 'The Grey Fort' WHERE id = 3;"
-        "UPDATE region SET name = 'King''s Fold' WHERE id = " + std::to_string(region) + ";";
+        "UPDATE region SET name = 'King''s Fold' WHERE id = " + std::to_string(region) + ";"
+        // P5-12: this region is renamed in the world (rg11, 3311); the appended events come after the renaming
+        // (N(r, e), P3-04 r21 23.1), so its region_name rows carry the test's name too
+        "UPDATE region_name SET name = 'King''s Fold' WHERE region = " + std::to_string(region) + ";";
     std::vector<std::int64_t> ids;
     for (std::size_t i = 0; i < evs.size(); ++i) {
         const Ev& ev = evs[i];

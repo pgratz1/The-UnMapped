@@ -655,7 +655,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
 
 TEST_CASE("P1-04 3, 10.1 test 9: SCHEMA_VERSION 4; DDL of meta, layer, pass, biome (schema 3), climate (schema 4)") {
     CHECK(worldgen::db::SCHEMA_VERSION == 8);  // P3-03 5.1
-    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 26U);
+    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 27U);  // schema 8: region_name (P5-12 7.2)
     CHECK(worldgen::db::DDL_STATEMENTS[0].substr(0, 18) == "CREATE TABLE meta ");
     CHECK(worldgen::db::DDL_STATEMENTS[1].substr(0, 19) == "CREATE TABLE layer ");
     CHECK(worldgen::db::DDL_STATEMENTS[2].substr(0, 18) == "CREATE TABLE pass ");
@@ -674,7 +674,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                 .ok());
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"8"}});
     {
         auto r = worldgen::db::WorldReader::open(dir.file("e.db"));
@@ -701,7 +701,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                                              "event_kind", "event_kind_role", "event_kind_value", "phase", "event",
                                              "event_participant", "event_cause", "event_value", "civilization",
                                              "settlement", "settlement_census", "region_control",
-                                             "relation"});  // schema 7 (P3-04 9.1)
+                                             "relation", "region_name"});  // schema 8 (P3-04 9.1, P5-12 7.2)
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' ORDER BY name") ==
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_biome_1"},
                                                 {"sqlite_autoindex_culture_1"},
@@ -711,7 +711,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
     // P1-04 12, P0-02 amendment 15: 8 pages, root pages: sqlite_schema, meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate.
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 143360U);  // 34 pages since schema 7 (P3-04 9.6)
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 143360U);  // 35 pages since schema 8 (P5-12 12: the root of region_name)
 }
 
 TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {
@@ -723,7 +723,7 @@ TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {
     REQUIRE(db.ok());
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
 }
 
 // --- Slow checks (opt-in) ------------------------------------------------------------------------

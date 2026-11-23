@@ -198,13 +198,14 @@ TEST_CASE("P3-07 r19 25.13 item 7: one end year per war; colonies and kind chang
               "    1600 e37 claim: Fen laid claim to the Holt of Yews, held by Dun.",
               "    1810 e48 sacked: Dunsike of Dun was sacked; 50 died and 94 fled.",
               "    1820 e49 settlement_abandoned: Dunlea was abandoned; no one survived."});
-    // [stats] at summary: exactly the 15 keys of SUMMARY_STATS, in section 9's order, with full's values
+    // [stats] at summary: exactly the 17 keys (r21 26.5) of SUMMARY_STATS, in section 9's order, with full's values
     std::vector<std::string> keys;
     for (const auto& [k, v] : hrtest::stats_list(summary())) keys.push_back(k);
     CHECK(keys == std::vector<std::string>{"end_year", "events", "summary_threshold", "summary_events", "civilizations",
                                            "civilizations_alive", "civilizations_ended", "settlements_standing",
                                            "settlements_ruined", "population", "share_max_permille", "wars",
-                                           "wars_open", "races_alive", "wars_hollow_permille"});
+                                           "wars_open", "races_alive", "wars_hollow_permille", "regions_renamed",
+                                           "refuges_hidden"});   // r21 26.5 item 2
     const auto sf = hrtest::stats_of(full());
     for (const auto& [k, v] : hrtest::stats_list(summary())) {
         CAPTURE(k);

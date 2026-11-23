@@ -1622,7 +1622,9 @@ def summary_violations(w, fr, shown):
                     bad.append("e%d: its sack or capture e%d not shown" % (x, y))
         if k in kset(w, ("claim", "claim_settlements", "plague_spread")):
             bad.append("e%d: a claim or plague_spread is shown" % x)
-        if k in kset(w, ("battle", "battle_at_pass")) and fr.last_battle.get(d) != x:
+        # r21 26.5 item 1 (part 4): a battle shown as the cause of a shown renaming
+        renamed_cause = V3 and any(w.ev[y][3] == w.K["region_renamed"] and x in w.causes.get(y, []) for y in shown)
+        if k in kset(w, ("battle", "battle_at_pass")) and fr.last_battle.get(d) != x and not renamed_cause:
             bad.append("e%d: a battle that is not its war's last is shown" % x)
     for e in w.t["event"]:
         if e[3] == K["quiet_stretch"] and e[0] not in shown:
@@ -1678,7 +1680,8 @@ def check_invariants(c, name, w):
         c.eq("%s: 25.5 ended blocks" % name, {k: v for k, v in sb.items() if k in ended},
              {k: strip(v, cut) for k, v in fb.items() if k in ended})
     c.eq("%s: 24.10 item 3 [present]" % name, block(s, "[present]"),
-         [x for x in block(f, "[present]") if not (x.startswith("  rg") or
+         [x for x in block(f, "[present]") if not ((x.startswith("  rg") and " " in x[4:] and
+                                                     x.index(" ", 4) < x.index(":")) or   # r21 26.2's lines stay
                                                     (x.startswith("  s") and x[3:4].isdigit() and ", at " in x))])
     ev_lines_full = [line for line in block(f, "[chronicle]") if line[:1].isdigit()]
     c.eq("%s: full shows every event" % name, len(ev_lines_full), len(w.t["event"]))
@@ -1694,8 +1697,11 @@ def check_invariants(c, name, w):
     if V2:   # 25.12 item 1
         cal = kset(w, CALAMITY_KINDS)
         per = {}
+        # r21 26.5 item 1 (part 4) against 25.2's "no companions of anything": a shown renaming brings its cause, also
+        # a calamity beyond the cap (reading R26.5a, a spec question); such causes are not counted
+        rcause = {y for x in shown if V3 and w.ev[x][3] == w.K.get("region_renamed") for y in w.causes.get(x, [])}
         for x in shown:
-            if w.ev[x][3] in cal:
+            if w.ev[x][3] in cal and x not in rcause:
                 per[w.ev[x][4]] = per.get(w.ev[x][4], 0) + 1
         c.eq("%s: 25.12 item 1 at most %d calamities per phase" % (name, SUMMARY_CALAMITY_PER_PHASE),
              [p for p, n in per.items() if n > SUMMARY_CALAMITY_PER_PHASE], [])
@@ -1719,7 +1725,8 @@ def check_invariants(c, name, w):
     hist = pe.report_lines(dict(phase=w.t["phase"], event=w.t["event"], event_kind=w.t["event_kind"],
                                 civilization=w.t["civilization"], settlement=w.t["settlement"],
                                 region_control=w.t["region_control"], settlement_census=w.t["settlement_census"],
-                                relation=w.t["relation"]), w.E, w.t["race"])
+                                relation=w.t["relation"], region_name=w.t.get("region_name", [])), w.E,
+                         w.t["race"])
     for line in hist[1:]:
         k, v = line.split(" = ")
         c.eq("%s: 13.6 [history] %s" % (name, k), stat.get(k), v)
@@ -1802,7 +1809,8 @@ def check_fixture_facts_v2(c):
     w = load_world(path)
     d = Digest(w)
     s, f = report(w, "summary").decode("ascii"), report(w, "full").decode("ascii")
-    c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), ("# worldgen history v2", "# worldgen history v2"))
+    hv = "# worldgen history v3" if V3 else "# worldgen history v2"   # r21 26.1
+    c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), (hv, hv))
     c.eq("H11 T = 100 (300 chants of 100)", d.T, 100)
     cands = set(summary_candidates(w, d.frames))
     c.eq("H11 25.2 p2's five calamities 45, 45, 40, 25, 25 (e26, e27, e25, e23, e24): the two 45s stay",
@@ -1825,9 +1833,14 @@ def check_fixture_facts_v2(c):
     c.eq("H11 25.3 item 1 ruins in words", pres[i:i + 7], want_ruins)
     c.eq("H11 25.3 item 3 c5's settlements line", [x for x in s.split("\n") if x.startswith("  settlements: 2 founded, 0")],
          ["  settlements: 2 founded, 0 held at the end, 1 ruined, 1 faded"])
-    i = pres.index("refuges: 3")
-    c.eq("H11 25.9 item 1 refuges", [x.rsplit(", e", 1)[1] for x in pres[i + 1:i + 4]], ["53; hidden", "55; found 1991",
-                                                                                          "57"])
+    if V3:   # r21 26.3: only the refuge hidden at E - 1 (s16, kind 42 to 2999) is listed; s17 (to 1990), s18 (none) not
+        i = pres.index("hidden refuges: 1 of 3 founded by flight")
+        c.eq("H11 r21 26.3 hidden refuges", [x.rsplit(", e", 1)[1] for x in pres[i + 1:i + 2]] +
+             [pres[i + 2].split(":")[0]], ["53", "open wars"])
+    else:
+        i = pres.index("refuges: 3")
+        c.eq("H11 25.9 item 1 refuges", [x.rsplit(", e", 1)[1] for x in pres[i + 1:i + 4]], ["53; hidden",
+                                                                                              "55; found 1991", "57"])
     i = pres.index("standing claims: 1")
     c.eq("H11 25.9 item 2 the dropped claim e37 is not listed (e58 is)", pres[i:i + 2],
          ["standing claims: 1", "  e58 2000 Cor (c3) on Arn (c1): Arn Vale (rg1)"])

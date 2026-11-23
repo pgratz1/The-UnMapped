@@ -177,7 +177,7 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
     const auto d = detail_hashes(open_world(out));
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 26);
+    REQUIRE(d.value().tables.size() == 27);  // schema 8
     CHECK(d.value().tables[14].digest ==
           p004::meta_table_hash(p004::meta_rows(ps.seed, ps.phrase, "test_pattern", "512")));
     CHECK(d.value().tables[15].digest == p004::pass_table_hash({}));
@@ -198,7 +198,7 @@ TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
         {2, "test.hash", 256, 256, "u8", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, hash))},
         {3, "test.noise", 256, 256, "i16", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, noise))},
     };
-    REQUIRE(d.value().tables.size() == 26);
+    REQUIRE(d.value().tables.size() == 27);  // schema 8
     CHECK(d.value().tables[13].digest == p004::layer_table_hash(rows));
     CHECK(d.value().tables[15].name == "pass");
     CHECK(d.value().tables[15].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
@@ -298,7 +298,7 @@ TEST_CASE("hashes 8: REAL values and tables without a primary key are errors") {
         REQUIRE(worldgen::db::testing::execute_on_file(out, "ANALYZE").ok());
         const auto d = detail_hashes(open_world(out));
         REQUIRE(d.ok());
-        const std::vector<std::string> names = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer", "meta", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border", "region_control", "relation", "settlement", "settlement_census"};
+        const std::vector<std::string> names = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer", "meta", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border", "region_control", "region_name", "relation", "settlement", "settlement_census"};
         REQUIRE(d.value().tables.size() == names.size());
         for (std::size_t k = 0; k < names.size(); ++k) {
             CHECK(d.value().tables[k].name == names[k]);
@@ -329,7 +329,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
 
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 26);
+    REQUIRE(tables.value().size() == 27);  // schema 8
     CHECK(tables.value()[0].name == "age");
     CHECK(tables.value()[0].row_count == 0U);
     CHECK(tables.value()[1].name == "biome");
@@ -404,6 +404,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("region_biome"), text("region_biome"), text(p004::DDL_REGION_BIOME)},
         {text("table"), text("region_border"), text("region_border"), text(p004::DDL_REGION_BORDER)},
         {text("table"), text("region_control"), text("region_control"), text(p004::DDL_REGION_CONTROL)},
+        {text("table"), text("region_name"), text("region_name"), text(p004::DDL_REGION_NAME)},
         {text("table"), text("relation"), text("relation"), text(p004::DDL_RELATION)},
         {text("table"), text("settlement"), text("settlement"), text(p004::DDL_SETTLEMENT)},
         {text("table"), text("settlement_census"), text("settlement_census"), text(p004::DDL_SETTLEMENT_CENSUS)},
@@ -417,7 +418,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
                  ++visited;
              })
                 .ok());
-    CHECK(visited == 31);  // 26 tables and 5 automatic indexes (schema 7)
+    CHECK(visited == 32);  // 27 tables and 5 automatic indexes (schema 8)
     CHECK(std::string(worldgen::db::sqlite_library_version()) == sqlite3_libversion());
 }
 
@@ -465,7 +466,7 @@ TEST_CASE("reader raw rows: primary-key order with BINARY collation, composite k
     e.col_blob(std::vector<std::uint8_t>{0x00});
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 27);
+    REQUIRE(d.value().tables.size() == 28);  // schema 8's 27 and pair
     CHECK(d.value().tables[15].name == "pair");
     CHECK(d.value().tables[15].digest == e.digest());
     // The schema hash now covers the new table too (and is no longer the P0 one).

@@ -202,7 +202,7 @@ inline Tables tables_of(const worldgen::stages::HistoryResult& r) {
         t.relation.push_back({I(x.a_type), I(x.a_id), I(x.b_type), I(x.b_id), T(x.kind), I(x.since), O(x.until),
                               I(x.since_event), I(x.until_event)});
     }
-    // P3-04 r21 23.4 (P5-12): HistoryResult::region_names, sorted by (region, from_year). GUESS: the row type is
+    // P3-04 r21 23.4 (P5-12): HistoryResult::region_names, sorted by (region, from_year); the row type is
     // db::RegionNameRow with the column names of the table.
     for (const auto& x : r.region_names) {
         t.region_name.push_back({I(x.region), I(x.from_year), T(x.name), I(x.culture), I(x.event)});
@@ -385,7 +385,7 @@ inline void write_row(db::StageWriter& w, std::string_view table, const Row& c) 
         w.write_region_control(db::RegionControlRow{i(0), i(1), o(2), i(3), i(4)});
     } else if (table == "relation") {
         w.write_relation(db::RelationRow{i(0), i(1), i(2), i(3), s(4), i(5), o(6), i(7), i(8)});
-    } else if (table == "region_name") {   // P3-04 r21 23.4. GUESS: write_region_name and db::RegionNameRow
+    } else if (table == "region_name") {   // P3-04 r21 23.4: write_region_name and db::RegionNameRow
         w.write_region_name(db::RegionNameRow{i(0), i(1), s(2), i(3), i(4)});
     } else {
         throw worldgen::FatalError("eng::write_row: unknown table");

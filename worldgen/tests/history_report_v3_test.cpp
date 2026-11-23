@@ -165,7 +165,8 @@ TEST_CASE("P3-07 r21 26.4, 26.8 item 4: references by the present name, sentence
         }
         CHECK(l.find("The Holt of Yews") == std::string::npos);
         CHECK(l.find("Belford's Fall") == std::string::npos);
-        CHECK(l.find("(rg4)") == std::string::npos || l.find("The Bloody Wold (rg4)") != std::string::npos);
+        const bool rg4_ok = l.find("(rg4)") == std::string::npos || l.find("The Bloody Wold (rg4)") != std::string::npos;
+        CHECK(rg4_ok);
     }
 }
 

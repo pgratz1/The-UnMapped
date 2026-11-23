@@ -121,7 +121,7 @@ std::string seed_0_report_with_line(const std::string& line) {
     return "# worldgen report v2\n[meta]\n"
            "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
            "format = the-unmapped-world\n"
-           "generator_version = 0.21.0\n"
+           "generator_version = 0.22.0\n"
            "history_end_year = 6000\n"
            "param.civs_per_race = auto\n"
            "param.divine_activity = normal\n"
@@ -137,7 +137,7 @@ std::string seed_0_report_with_line(const std::string& line) {
            "seed_phrase =\n"
            "stages =\n" +
            line +
-           "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 18\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n(none)\n";
+           "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 18\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n(none)\n";
 }
 
 }  // namespace
@@ -179,7 +179,7 @@ TEST_CASE("report 7: test-pattern world") {
         "# worldgen report v2\n[meta]\n"
         "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
         "format = the-unmapped-world\n"
-        "generator_version = 0.21.0\n"
+        "generator_version = 0.22.0\n"
         "history_end_year = 6000\n"
         "param.civs_per_race = auto\n"
         "param.divine_activity = normal\n"
@@ -194,7 +194,7 @@ TEST_CASE("report 7: test-pattern world") {
         "seed = 42\n"
         "seed_phrase =\n"
         "stages = test_pattern\n"
-        "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 3\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n" +
+        "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 3\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n" +
         line("test.ramp", "u8", p004::grid_of(256, 256, p004::ramp_cells()), "0", "255") +
         line("test.hash", "u8", p004::grid_of(256, 256, hash), std::to_string(int{*hlo}), std::to_string(int{*hhi})) +
         line("test.noise", "i16", p004::grid_of(256, 256, noise), std::to_string(int{*nlo}), std::to_string(int{*nhi}));
@@ -216,7 +216,7 @@ TEST_CASE("report 7: layer lines for every element type, codec 0, extreme values
     const std::string out = dir.file("w.db");
     REQUIRE(worldgen::stages::testing::write_fixture_world(out, 3, layers).ok());
     const std::string report = report_of(out);
-    const std::string expected_tail = "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 4\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"
+    const std::string expected_tail = "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 4\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"
                                       "test.u64 u64 2x1 codec=0 bytes=40 min=0 max=18446744073709551615\n"
                                       "test.i64 i64 1x2 codec=0 bytes=40 min=-9223372036854775808 "
                                       "max=9223372036854775807\n"
@@ -239,7 +239,7 @@ TEST_CASE("report 7: sqlite_* tables are excluded, other tables listed by name")
                 out, "CREATE TABLE aaa (id INTEGER PRIMARY KEY) STRICT; INSERT INTO aaa VALUES (1), (2), (3)")
                 .ok());
     const std::string report = report_of(out);
-    CHECK(report.find("[tables]\naaa = 3\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n") != std::string::npos);
+    CHECK(report.find("[tables]\naaa = 3\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n") != std::string::npos);
 }
 
 TEST_CASE("report 7: a corrupt layer is a corrupt_layer error") {

@@ -138,14 +138,15 @@ TEST_CASE("P3-03 9.1, 14.1 item 10: race rows with an empty age table are corrup
           "corrupt table 'age': 0 rows for 3 present races");
 }
 
-TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 26 tables and [meta] the 17 keys (P3-04)") {
+TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 27 tables (schema 8, P5-12) and [meta] the 17 keys (P3-04)") {
     Worlds w;
     const auto r = report_of(w.make(""));
     REQUIRE(r.ok());
     const std::string tables = section(r.value(), "[tables]");
     CHECK(tables ==
           "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\n"
-          "race_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\n"
+          "race_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\n"
+          "relation = 0\n"
           "settlement = 0\nsettlement_census = 0\n");
     const std::string meta = section(r.value(), "[meta]");
     for (const std::string& k : eight_keys()) {

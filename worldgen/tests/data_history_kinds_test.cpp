@@ -255,12 +255,14 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 5U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06
+    REQUIRE(history.id_schemas.size() == 6U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+                                               // renaming P5-12 (r16 5.4)
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "conflict");
     CHECK(history.id_schemas[2].id == "engine");
     CHECK(history.id_schemas[3].id == "peoples");
-    CHECK(history.id_schemas[4].id == "report");
+    CHECK(history.id_schemas[4].id == "renaming");
+    CHECK(history.id_schemas[5].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -369,7 +371,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 5U);  // conflict.toml from 0.16.0 (P3-06 12.1)
+    CHECK(directory_from_disk(data, "history").entries.size() == 6U);  // conflict.toml from 0.16.0 (P3-06 12.1),
+                                                                         // renaming.toml from 0.22.0 (P5-12 4)
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -556,6 +559,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
+        f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
     }
@@ -578,6 +582,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
+        f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         const Load l = load(f);
         INFO(dump(l));
         CHECK(l.ok());
@@ -676,7 +681,8 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'monsters' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'peoples', 'report'");
+          "unknown id 'monsters' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'peoples', "
+          "'renaming', 'report'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {
@@ -1152,7 +1158,7 @@ TEST_CASE("P3-02 r17 15.2, P3-05 r18 24, P3-06 r22 24.6: the dwarven forbidden l
                      "  { kind = \"claim_dropped\", salience = 15, template = \"{claimant} let the claim against {holder} "
                      "over {@region} lapse.\" },\n"
                      "  { kind = \"refuge_hidden\", salience = 10, template = \"{@settlement} lay hidden from {@year} to "
-                     "{@end_year}.\" },\n]"));
+                     "{@end_year}.\" },\n  { kind = \"region_renamed\", salience = 60, "));   // P3-04 r21 23.2 (P5-12)
     // the listings load (and 8.1 test 1 compares them with game/data and both fixture roots)
     CHECK(load(history_data::shipped_files()).ok());
 }

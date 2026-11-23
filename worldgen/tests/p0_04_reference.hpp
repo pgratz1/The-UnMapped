@@ -132,6 +132,10 @@ inline constexpr std::string_view DDL_RELATION =
     " INTEGER NOT NULL, kind TEXT NOT NULL, since INTEGER NOT NULL, until INTEGER, since_event INTEGER NO"
     "T NULL, until_event INTEGER NOT NULL, PRIMARY KEY (a_type, a_id, b_type, b_id, kind, since)) STRICT,"
     " WITHOUT ROWID";
+// Table region_name (schema 8, P5-12 7.2; docs/specs/schema.md).
+inline constexpr std::string_view DDL_REGION_NAME =
+    "CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, cultur"
+    "e INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -245,7 +249,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.21.0"},
+        {"generator_version", "0.22.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -356,11 +360,13 @@ inline worldgen::Sha256Digest empty_settlement_table_hash() { return empty_table
 inline worldgen::Sha256Digest empty_settlement_census_table_hash() { return empty_table_hash(6); }
 inline worldgen::Sha256Digest empty_region_control_table_hash() { return empty_table_hash(5); }
 inline worldgen::Sha256Digest empty_relation_table_hash() { return empty_table_hash(9); }
+// table region_name (5 columns) with no rows (schema 8, P5-12 7.2).
+inline worldgen::Sha256Digest empty_region_name_table_hash() { return empty_table_hash(5); }
 
-// schema of every world at schema version 7 (the name is the P0 one):
+// schema of every world at schema version 8 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
 // biome.key, culture.key, event_kind.key, layer.name and race.key (sql NULL,
-// amendment 10), then the twenty-six tables with their DDL. rootpage is excluded.
+// amendment 10), then the twenty-seven tables with their DDL. rootpage is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
     const auto index = [&e](std::string_view name, std::string_view table) {
@@ -403,6 +409,7 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     table("region_biome", DDL_REGION_BIOME);
     table("region_border", DDL_REGION_BORDER);
     table("region_control", DDL_REGION_CONTROL);
+    table("region_name", DDL_REGION_NAME);
     table("relation", DDL_RELATION);
     table("settlement", DDL_SETTLEMENT);
     table("settlement_census", DDL_SETTLEMENT_CENSUS);
@@ -410,7 +417,7 @@ inline worldgen::Sha256Digest p0_schema_hash() {
 }
 
 // The `table` lines of hash --detail for a world whose only non-empty
-// tables are layer and meta (schema 7): (name, digest) in ascending name.
+// tables are layer and meta (schema 8): (name, digest) in ascending name.
 inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_tables(
     const worldgen::Sha256Digest& layer, const worldgen::Sha256Digest& meta) {
     return {
@@ -437,6 +444,7 @@ inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_t
         {"region_biome", empty_region_biome_table_hash()},
         {"region_border", empty_region_border_table_hash()},
         {"region_control", empty_region_control_table_hash()},
+        {"region_name", empty_region_name_table_hash()},
         {"relation", empty_relation_table_hash()},
         {"settlement", empty_settlement_table_hash()},
         {"settlement_census", empty_settlement_census_table_hash()},
@@ -476,7 +484,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.21.0\n"
+    "generator_version = 0.22.0\n"
     "history_end_year = 6000\n"
     "param.civs_per_race = auto\n"
     "param.divine_activity = normal\n"
@@ -515,6 +523,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "region_biome = 0\n"
     "region_border = 0\n"
     "region_control = 0\n"
+    "region_name = 0\n"
     "relation = 0\n"
     "settlement = 0\n"
     "settlement_census = 0\n"

@@ -178,6 +178,7 @@ TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race o
     f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
     f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
     f["history/report.toml"] = std::string(history_data::REPORT_TOML);
+    f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4: a required fixed id
     const Load l = load(f);
     INFO(dump(l));
     REQUIRE(l.ok());
