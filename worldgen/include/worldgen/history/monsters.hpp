@@ -105,6 +105,11 @@ struct MonstersTuning {
     std::int64_t drag_k = 0, drag_max_permille = 0, feed_k = 0, feed_max_permille = 0;
     std::int64_t bold_on_permille = 1, bold_off_permille = 0, bold_permille = 0, bold_toll_permille = 0;
     std::int64_t outpost_permille = 0, outpost_max = 0, outpost_quiet_years = 1;
+    // (r1, 6.4.1) the raid target's weights. prey_weight is indexed by the
+    // SettlementKind code (1 hamlet to 5 fortress); index 0 is unused.
+    std::array<std::int64_t, 6> prey_weight{};
+    std::int64_t prey_capital_permille = 0, prey_hop_permille = 0;
+    std::int64_t prey_might_ref = 1, prey_might_max_permille = 0;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -227,6 +232,8 @@ private:
     // 6.4.
     void monsters_year(StepContext& context);
     void die_of_age(StepContext& context, std::int64_t monster);
+    [[nodiscard]] std::int64_t prey_weight(SettlementKind kind, std::int64_t might, std::int64_t hops) const;
+    [[nodiscard]] std::int64_t raid_target(StepContext& context, std::int64_t monster) const;
     void raid(StepContext& context, std::int64_t monster);
     void overrun(StepContext& context, std::int64_t monster, std::int64_t target, std::int64_t raid_event);
     void hunts(StepContext& context, std::int64_t monster);
@@ -251,7 +258,7 @@ private:
     std::vector<BeastDef> beasts_;
     std::vector<MonsterKindDef> kinds_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 12> keys_{};
+    std::array<std::uint64_t, 13> keys_{};
     std::int64_t pressure_ = 1000;  // M
     std::int64_t threshold_ = 0;    // T_d
     std::int64_t region_count_ = 0;

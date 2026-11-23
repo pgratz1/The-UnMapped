@@ -96,7 +96,9 @@ public:
         if (level_ == HistoryLevel::full) {
             phases();
         }
+        const std::int64_t before = lines_;
         chronicle();
+        chronicle_lines_ = lines_ - before;
         civilizations();
         present();
         monsters();  // P5-02 12.4
@@ -104,6 +106,9 @@ public:
         stats();
         return std::move(out_);
     }
+
+    // After build(): the lines outside [chronicle] (P5-02 12.9's O at summary).
+    [[nodiscard]] std::int64_t outside_lines() const noexcept { return lines_ - chronicle_lines_; }
 
 private:
     // One line: the trailing-space rule of 6.1, then LF.
@@ -117,6 +122,7 @@ private:
             out_ += "\\x20";
         }
         out_ += '\n';
+        ++lines_;
     }
 
     // --- References (6.1) ---------------------------------------------------
@@ -855,6 +861,8 @@ private:
     const history::HistoryDigest& d_;
     HistoryLevel level_;
     std::string out_;
+    std::int64_t lines_ = 0;
+    std::int64_t chronicle_lines_ = 0;
     std::vector<std::int64_t> phase_events_;  // index phase id
     std::vector<std::int64_t> phase_shown_;
 };
@@ -903,8 +911,27 @@ db::Result<std::string> build_history_report(const db::WorldReader& world, Histo
         if (const std::optional<std::string> why = history::history_reads_disagree(view.value(), tables.value())) {
             return db::Error{db::ErrorCode::corrupt_layer, *why};
         }
-        const history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
-        return Report(view.value(), tables.value(), digest, level).build();
+        history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
+        // P5-02 12.9: O is counted on the summary rendered with the set of
+        // SUMMARY_BUDGET (no line outside [chronicle] depends on the set);
+        // the set is chosen again with B when B is smaller, for both levels.
+        Report summary(view.value(), tables.value(), digest, HistoryLevel::summary);
+        std::string text = summary.build();
+        const history::HistoryTables& t = tables.value();
+        const std::int64_t budget = history::summary_budget(
+            static_cast<std::int64_t>(t.civilizations.size()), summary.outside_lines(),
+            static_cast<std::int64_t>(t.ages.size()), static_cast<std::int64_t>(t.phases.size()));
+        const bool again = budget != digest.summary_budget;
+        if (again) {
+            history::choose_summary_set(digest, budget);
+        }
+        if (level == HistoryLevel::full) {
+            return Report(view.value(), tables.value(), digest, level).build();
+        }
+        if (again) {
+            text = Report(view.value(), tables.value(), digest, level).build();
+        }
+        return text;
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the history report"};
     }

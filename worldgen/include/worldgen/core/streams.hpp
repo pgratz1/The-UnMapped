@@ -133,8 +133,10 @@ inline constexpr std::string_view hist_sites_outpost = "hist.sites.outpost";
 inline constexpr std::string_view hist_peoples_ghost = "hist.peoples.ghost";
 inline constexpr std::string_view hist_names_monster = "hist.names.monster";
 inline constexpr std::string_view hist_names_site = "hist.names.site";
+// P5-02 r1 (6.4.1): the target of a monster's raid.
+inline constexpr std::string_view hist_monsters_raid_target = "hist.monsters.raid_target";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 71> all_stream_names = {
+inline constexpr std::array<std::string_view, 72> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -206,6 +208,7 @@ inline constexpr std::array<std::string_view, 71> all_stream_names = {
     hist_peoples_ghost,
     hist_names_monster,
     hist_names_site,
+    hist_monsters_raid_target,
 };
 
 }  // namespace worldgen::streams

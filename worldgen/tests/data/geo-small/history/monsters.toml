@@ -26,3 +26,8 @@ bold_toll_permille = 10
 outpost_permille = 30
 outpost_max = 2
 outpost_quiet_years = 200
+prey_weight = { hamlet = 1000, village = 600, town = 150, city = 40, fortress = 20 }
+prey_capital_permille = 250
+prey_hop_permille = 500
+prey_might_ref = 1500
+prey_might_max_permille = 4000

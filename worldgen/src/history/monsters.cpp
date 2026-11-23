@@ -54,12 +54,14 @@ enum Stream : std::size_t {
     HUNT_OUTCOME,
     LAIR_NAME,
     OUTPOST,
+    RAID_TARGET,
 };
-constexpr std::array<std::string_view, 12> STREAM_NAMES = {
+constexpr std::array<std::string_view, 13> STREAM_NAMES = {
     streams::hist_beasts_bold,     streams::hist_monsters_wake,      streams::hist_monsters_rise,
     streams::hist_monsters_sleep,  streams::hist_monsters_rewake,    streams::hist_monsters_raid,
     streams::hist_monsters_raid_toll, streams::hist_monsters_overrun, streams::hist_monsters_hunt,
     streams::hist_monsters_hunt_outcome, streams::hist_monsters_lair_name, streams::hist_sites_outpost,
+    streams::hist_monsters_raid_target,
 };
 
 constexpr std::array<Step, 5> STEPS = {Step::t1, Step::t4, Step::t6, Step::q1, Step::q4};
@@ -196,6 +198,16 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.outpost_permille = r.get_int("outpost_permille");
     t.outpost_max = r.get_int("outpost_max");
     t.outpost_quiet_years = r.get_int("outpost_quiet_years");
+    const data::Record& w = r.get_record("prey_weight");
+    t.prey_weight[1] = w.get_int("hamlet");
+    t.prey_weight[2] = w.get_int("village");
+    t.prey_weight[3] = w.get_int("town");
+    t.prey_weight[4] = w.get_int("city");
+    t.prey_weight[5] = w.get_int("fortress");
+    t.prey_capital_permille = r.get_int("prey_capital_permille");
+    t.prey_hop_permille = r.get_int("prey_hop_permille");
+    t.prey_might_ref = r.get_int("prey_might_ref");
+    t.prey_might_max_permille = r.get_int("prey_might_max_permille");
     return t;
 }
 
@@ -942,28 +954,62 @@ void MonstersSubsystem::monsters_year(StepContext& ctx) {
     }
 }
 
-void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
-    State& state = ctx.state();
+// 6.4.1 (r1): the weight of a candidate at h hops, before the capital factor.
+std::int64_t MonstersSubsystem::prey_weight(SettlementKind kind, std::int64_t might, std::int64_t hops) const {
+    const auto code = static_cast<std::size_t>(kind);
+    if (code < 1 || code >= tuning_.prey_weight.size()) {
+        fail("history: monsters: a settlement of unknown kind");
+    }
+    std::int64_t base = tuning_.prey_weight[code];
+    if (kind == SettlementKind::town || kind == SettlementKind::city || kind == SettlementKind::fortress) {
+        const std::int64_t might_f = std::min(tuning_.prey_might_max_permille,
+                                              floor_div(checked_mul(might, 1000), tuning_.prey_might_ref));
+        base = floor_div(checked_mul(base, might_f), 1000);
+    }
+    std::int64_t hop_f = 1000;
+    for (std::int64_t h = 0; h < hops; ++h) {
+        hop_f = floor_div(checked_mul(hop_f, tuning_.prey_hop_permille), 1000);
+    }
+    return floor_div(checked_mul(base, hop_f), 1000);
+}
+
+// 6.4.1 (r1): a keyed weighted draw over the candidates in ascending id; 0
+// (and no draw) when there is no candidate or every weight is 0.
+std::int64_t MonstersSubsystem::raid_target(StepContext& ctx, std::int64_t id) const {
+    const State& state = ctx.state();
     const MonsterKindDef& def = kinds_[monster(id).kind];
-    // 6.4.1: the target, smallest (hops, -population, id).
-    std::int64_t target = 0;
-    std::tuple<std::int64_t, std::int64_t, std::int64_t> best{};
+    std::vector<std::int64_t> ids;
+    std::vector<std::int64_t> weights;
+    std::int64_t total = 0;
     const std::int64_t ns = settlement_count(state);
     for (std::int64_t sid = 1; sid <= ns; ++sid) {
         const Settlement& s = state.settlement(sid);
-        if (!standing(s) || !ctx.visible(s) || s.region < 1 || s.region > region_count_) {
+        if (!standing(s) || !ctx.visible(s) || s.owner_civ < 1 || s.region < 1 || s.region > region_count_) {
             continue;
         }
         const std::int64_t h = monster(id).hops[static_cast<std::size_t>(s.region - 1)];
         if (h < 0 || h > def.range_hops) {
             continue;
         }
-        const auto k = std::make_tuple(h, -s.population, sid);
-        if (target == 0 || k < best) {
-            target = sid;
-            best = k;
+        std::int64_t w = prey_weight(s.kind, def.might, h);
+        if (state.civ(s.owner_civ).capital == sid) {
+            w = floor_div(checked_mul(w, tuning_.prey_capital_permille), 1000);
         }
+        ids.push_back(sid);
+        weights.push_back(w);
+        total = checked_add(total, w);
     }
+    if (ids.empty() || total == 0) {
+        return 0;
+    }
+    const std::size_t i = weighted(ctx.draw(key(RAID_TARGET), word(id), 0, 0), weights);
+    return ids[i];
+}
+
+void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
+    State& state = ctx.state();
+    const MonsterKindDef& def = kinds_[monster(id).kind];
+    const std::int64_t target = raid_target(ctx, id);
     if (target == 0) {
         return;
     }

@@ -14,6 +14,7 @@
 #include <string_view>
 #include <vector>
 
+#include "worldgen/core/checked.hpp"
 #include "worldgen/core/wide.hpp"
 #include "worldgen/db/schema.hpp"
 
@@ -346,6 +347,28 @@ namespace worldgen::history {
 namespace {
 
 using Id = std::int64_t;
+
+// 24.3 item 4 with the budget B (P5-02 12.9): T = the smallest t in
+// [SUMMARY_MIN_SALIENCE, 100] with |floor and C(t)| <= B, else 100.
+void set_summary(HistoryDigest& d, std::int64_t budget) {
+    std::int64_t threshold = 100;
+    for (std::int64_t t = SUMMARY_MIN_SALIENCE; t <= 100; ++t) {
+        if (d.summary_floor_size + d.summary_at_least[static_cast<std::size_t>(t)] <= budget) {
+            threshold = t;
+            break;
+        }
+    }
+    const std::size_t n = d.summary_floor.size();
+    d.summary_budget = budget;
+    d.summary_threshold = threshold;
+    d.summary_events = 0;
+    d.summary.assign(n, 0);
+    for (std::size_t i = 0; i < n; ++i) {
+        const bool shown = d.summary_floor[i] != 0 || d.summary_entered[i] >= threshold;
+        d.summary[i] = shown ? 1 : 0;
+        d.summary_events += shown ? 1 : 0;
+    }
+}
 
 bool standing(std::int64_t status) noexcept {
     return status == 1 || status == 2;
@@ -1223,7 +1246,8 @@ private:
                 entered[static_cast<std::size_t>(u)] = std::max(entered[static_cast<std::size_t>(u)], s);
             }
         }
-        std::array<std::int64_t, 102> at_least{};  // at_least[t]: non-floor events with entered >= t, t <= 100
+        std::array<std::int64_t, 102>& at_least = d_.summary_at_least;  // non-floor events with entered >= t
+        at_least.fill(0);
         for (std::size_t i = 1; i <= n; ++i) {
             if (floor[i] == 0 && entered[i] >= SUMMARY_MIN_SALIENCE) {
                 ++at_least[static_cast<std::size_t>(std::min<std::int64_t>(entered[i], 100))];
@@ -1232,20 +1256,14 @@ private:
         for (std::size_t t = 100; t-- > 0;) {
             at_least[t] += at_least[t + 1];
         }
-        std::int64_t threshold = 100;
-        for (std::int64_t t = SUMMARY_MIN_SALIENCE; t <= 100; ++t) {
-            if (floor_size + at_least[static_cast<std::size_t>(t)] <= SUMMARY_BUDGET) {
-                threshold = t;
-                break;
-            }
-        }
-        d_.summary_threshold = threshold;
-        d_.summary.assign(n, 0);
+        d_.summary_floor.assign(n, 0);
+        d_.summary_entered.assign(n, -1);
         for (std::size_t i = 1; i <= n; ++i) {
-            const bool shown = floor[i] != 0 || entered[i] >= threshold;
-            d_.summary[i - 1] = shown ? 1 : 0;
-            d_.summary_events += shown ? 1 : 0;
+            d_.summary_floor[i - 1] = floor[i] != 0 ? 1 : 0;
+            d_.summary_entered[i - 1] = entered[i];
         }
+        d_.summary_floor_size = floor_size;
+        set_summary(d_, SUMMARY_BUDGET);
     }
 
     // --- [stats] (section 9 with 21.5, 21.8, 22, 23) --------------------
@@ -1770,6 +1788,26 @@ private:
 
 HistoryDigest digest_history(const HistoryView& view, const HistoryTables& tables) {
     return Digester(view, tables).run();
+}
+
+std::int64_t summary_budget(std::int64_t civilizations, std::int64_t outside_lines, std::int64_t ages,
+                            std::int64_t phases, std::int64_t lines_max) {
+    const std::int64_t l = checked_add(
+        lines_max, checked_mul(SUMMARY_LINES_PER_CIV, std::max<std::int64_t>(0, civilizations - SUMMARY_LINES_CIVS)));
+    const std::int64_t f = checked_add(checked_add(4, ages), checked_mul(2, phases));
+    const std::int64_t room = l - checked_add(outside_lines, f);
+    return std::min(SUMMARY_BUDGET, std::max(SUMMARY_BUDGET_MIN, room));
+}
+
+void choose_summary_set(HistoryDigest& digest, std::int64_t budget) {
+    set_summary(digest, budget);
+    for (std::pair<std::string, std::int64_t>& s : digest.stats) {
+        if (s.first == "summary_threshold") {
+            s.second = digest.summary_threshold;
+        } else if (s.first == "summary_events") {
+            s.second = digest.summary_events;
+        }
+    }
 }
 
 }  // namespace worldgen::history

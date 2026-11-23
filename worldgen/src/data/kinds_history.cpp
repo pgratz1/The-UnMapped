@@ -1200,6 +1200,13 @@ Schema history_monsters_schema() {
         i("normal", 0, 10000),
         i("high", 0, 10000),
     });
+    const Schema prey(std::vector<Field>{
+        i("hamlet", 0, 1000),
+        i("village", 0, 1000),
+        i("town", 0, 1000),
+        i("city", 0, 1000),
+        i("fortress", 0, 1000),
+    });
     std::vector<Field> fields{
         Field::required("pressure", Type::record(pressure)),
         i("living_permille", 0, 1000),
@@ -1227,6 +1234,11 @@ Schema history_monsters_schema() {
         i("outpost_permille", 0, 1000),
         i("outpost_max", 0, 16),
         i("outpost_quiet_years", 1, 100000),
+        Field::required("prey_weight", Type::record(prey)),
+        i("prey_capital_permille", 0, 1000),
+        i("prey_hop_permille", 0, 1000),
+        i("prey_might_ref", 1, 10000000),
+        i("prey_might_max_permille", 0, 10000),
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
