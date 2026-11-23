@@ -1289,6 +1289,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   3. Outposts (watchtowers) are built in this stage, if that is easy; if it proves costly the engineer says so and they move to a later stage.
   4. How a settlement ended is a recorded cause (column `settlement.ending`), not a new settlement status.
   5. Ancient renamings: no change in this stage; later, death-toll thresholds relative to the population of the time.
-- Also decided the same day: the territory colours of P4-03a stand ("the colors look good to me"); the share of renamings by capital sack stays ("if the capital is sacked the conquerors will want to rename it"); in P4-04 the spec writer's open questions take their recommended choices unless Paul says otherwise.
+- Also decided the same day: the territory colours of P4-03a stand ("the colors look good to me"); the share of renamings by capital sack stays ("if the capital is sacked the conquerors will want to rename it").
+- Not decided by Paul (the lead's interim): in P4-04 the spec writer's five open questions take their recommended choices until Paul answers them.
 
 - Status: decided
