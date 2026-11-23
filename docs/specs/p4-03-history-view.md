@@ -87,6 +87,8 @@ Owned by the model, in `gdext/src/viewer/history_state.hpp`. Holds: the `LoadedH
 4. If the selected view is `territory`, its legend is rebuilt (section 6.4).
 5. Emit `year_changed(Y)`.
 
+*Amended by P4-04 (`docs/specs/p4-04-markers.md` 8.1):* a marker step comes between steps 3 and 4: if markers are enabled, `MarkerIndex::markers_at` for Y, and `markers_changed()` when the settlements, places or passes differ from the current set. 10.2 is unchanged.
+
 Holders change about 50 times in 6,000 years, so dragging the slider over quiet years rebuilds nothing; a rebuild is one `render_territory` (3.9 ms at 1024, P4-01 6.2) plus the texture update on the screen side.
 
 **Budgets** (P4-00 8): steps 1 and 2 within 2 ms at 1024 (8 ms at 2048); step 3 within 40 ms (160 ms); a year change to the next drawn frame within 50 ms while dragging (200 ms). Debug builds may take four times as long. Measured with `--bench` (section 11.2).

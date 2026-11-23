@@ -1,6 +1,6 @@
 # P4-04 Settlement and place markers
 
-Status: **r1 draft, 2026-11-23**, for approval by the lead. Phase P4 Viewer v1, stage 4 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-04", 3.2, rules V1 to V10, 7 row P4-04, 8, 9). Builds on P4-01 r3 (`docs/specs/p4-01-timeline.md`: `Timeline`, `SettlementState`, `YearState`, `load_history`), P4-03 r4 (`docs/specs/p4-03-history-view.md`: the year bar, `HistoryState`, the territory view, the headless check H1 to H9) and P4-03a (`docs/specs/p4-03a-territory-colour-followups.md`: the timeline form of `render_territory`, `Cell::half`, legend tooltips), as on branch `p4/03a-final`. Design doc 10 ("World viewer": "settlements and sites as markers") and 13 (P4 row: "settlement and site markers").
+Status: **r2, 2026-11-23** (r1 draft 2026-11-23; r2 the corrections after both parts were implemented and Part A integrated, no implementation defect found; revision notes at the end), for approval by the lead. Phase P4 Viewer v1, stage 4 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-04", 3.2, rules V1 to V10, 7 row P4-04, 8, 9). Builds on P4-01 r3 (`docs/specs/p4-01-timeline.md`: `Timeline`, `SettlementState`, `YearState`, `load_history`), P4-03 r4 (`docs/specs/p4-03-history-view.md`: the year bar, `HistoryState`, the territory view, the headless check H1 to H9) and P4-03a (`docs/specs/p4-03a-territory-colour-followups.md`: the timeline form of `render_territory`, `Cell::half`, legend tooltips), as on branch `p4/03a-final`. Design doc 10 ("World viewer": "settlements and sites as markers") and 13 (P4 row: "settlement and site markers").
 
 Numbers for the 512 world are from `worldgen-cli generate --seed 42 --map-size 512 --data game/data` at generator 0.22.0 (the headless check's real world): E = 6000, 67 settlements (at E 43 thriving, 7 declining, 9 ruined, 8 faded), first ruin in year 4984, first `ruin_faded` event in 3992, 1 pass, at most 6 events with a place in one year. 1024 worlds, seeds 0 / 5 / 42: 88 / 115 / 96 settlements, 2 / 2 / 1 passes, at most 7 / 6 / 8 placed events in a year; settlements standing at the same time are 23 cells or more apart (median nearest neighbour 31; the exceptions are relaxed awakening sites and a faded ruin sharing its cell with a later settlement, P3-05 invariant 2). Measured with `~/.cache/the-unmapped/out/p4-04-spec/`.
 
@@ -56,16 +56,18 @@ The capital is not stored by year (`civilization.capital` is the end state), so 
 | `civ_seceded` | `civilization` | the event's `settlement` |
 | `capital_moved` | `civilization` | the event's `settlement` |
 
-Kinds and roles are found by key and role name in the stored catalogue (V7); a kind the world lacks contributes nothing. The **capital run** of c is the list of (year, event, settlement) of those events with a participant of that role, entity type 3 and id c, and `settlement` ≠ 0, in ascending event id. **capital(c, Y)** = the settlement of the last entry with year ≤ Y, if c is alive at Y (`YearState::civilizations`), that settlement exists and is standing (status 1 or 2) at Y and its owner at Y is c; otherwise none. A standing entry is a **capital** iff it is capital(owner, Y).
+Kinds and roles are found by key and role name in the stored catalogue (V7); a kind the world lacks contributes nothing. The **capital run** of c is the list of (year, event, settlement) of those events with a participant of that role, entity type 3 and id c, and `settlement` ≠ 0, in ascending event id; an event that names c through several such participants counts once (the reference enters it once; the C++ may enter it once per participant, which gives the same capital(c, Y)). **capital(c, Y)** = the settlement of the last entry, in run order, with year ≤ Y, if c is alive at Y (`YearState::civilizations`), that settlement exists and is standing (status 1 or 2) at Y and its owner at Y is c; otherwise none. A standing entry is a **capital** iff it is capital(owner, Y).
 
-Measured on the four worlds above, at every year: every civilization alive at Y has a capital by this rule, standing and its own, and at E it equals `civilization.capital` for every civilization (26,902 civilization-years at seed 42 / 512). Invariant 4 (section 12) makes the test writer's sweep hold the rule to that; a P5 change that sets a capital by another event kind must add its row here and in the library (the invariant fails otherwise).
+Measured on the four worlds above, at every year: every civilization alive at Y has a capital by this rule, standing and its own, and at E it equals `civilization.capital` for every civilization (26,902 civilization-years at seed 42 / 512). Invariant 4 (section 12) makes the test writer's sweep hold the rule to that on generated worlds; a P5 change that sets a capital by another event kind must add its row here and in the library (the invariant fails otherwise).
 
 ### 3.3 Ruin year and ruin event
 
 `settlement.ruined_year` and `ruin_event` are NULL and 0 once a ruin has faded (P3-04 9.2), so the library derives both per settlement, once:
 
 - **ruined year** R(s) = the `year` of the first census row of s with status 3; none if it has none.
-- **ruin event** = `settlement.ruin_event` when non-zero; otherwise the smallest cause of the event of kind key `ruin_faded` whose `settlement` is s (P3-05: a faded ruin is caused by its ruin event); otherwise 0.
+- **ruin event** = `settlement.ruin_event` when non-zero; otherwise the smallest cause of the event of kind key `ruin_faded` whose `settlement` is s (P3-05: a faded ruin is caused by its ruin event); with several such events, the one of smallest id and its smallest cause (0 when it has none); otherwise 0.
+
+A settlement is **ever ruined** when its census has a row of status 3 (so R(s) exists), whatever its status at E.
 
 A `ruin` or `faded` entry carries R(s) and the ruin event (a standing entry: −1 and 0). Measured: for every ruined settlement R(s) = `ruined_year`, and for every faded one the year of the derived event is R(s) (invariant 5).
 
@@ -175,12 +177,13 @@ struct Glyph {
     std::int32_t radius = 0;                 // the grid is (2 radius + 1) squared
     std::vector<std::uint8_t> cells;         // row-major from (-radius, -radius); 0 none, 1 halo, 2 fill, 3 ink, 4 interior
 };
+inline constexpr std::uint8_t GLYPH_NONE = 0, GLYPH_HALO = 1, GLYPH_FILL = 2, GLYPH_INK = 3, GLYPH_INTERIOR = 4;
 inline constexpr Rgb MARKER_INK{0, 0, 0};
 inline constexpr Rgb MARKER_HALO{240, 240, 240};
 inline constexpr Rgb MARKER_FADED{150, 150, 150};
 inline constexpr Rgb MARKER_NO_OWNER{128, 128, 128};
 [[nodiscard]] Glyph marker_glyph(GlyphKey key);          // FatalError for a key section 5 does not define
-[[nodiscard]] GlyphKey glyph_of(const SettlementMarker&) noexcept;
+[[nodiscard]] GlyphKey glyph_of(const SettlementMarker&) noexcept;   // base 0 for a kind outside 1..5 or a status outside 1..4
 
 // Draws the markers onto an RGB buffer laid out as render_rgb (width x height cells at scale k),
 // in the order of 6.1. colours: civilization_colours (index id - 1). FatalError "draw_markers: ..."
@@ -190,9 +193,17 @@ void draw_markers(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_
 }
 ```
 
-In `worldgen/history/digest.hpp`: `std::string_view settlement_kind_word(std::int64_t kind) noexcept` (1 `hamlet` … 5 `fortress`) and `std::string_view settlement_status_word(std::int64_t status) noexcept` (1 `thriving` … 4 `faded`), empty for any other value: the report's `SETTLEMENT_KIND` and `STATUS` tables moved, as P4-03 9.5 moved `phase_kind_word`; `history_report.cpp` calls them and its bytes are unchanged.
+**As built** (r2). The header above is the one on the branch, in summary; beyond r1 it has:
 
-**Cost.** `load`: one pass over events and participants, census and the two tables, O(n). `markers_at`: O(S + C log k + m + P) for S settlements, C civilizations (one binary search in each capital run), m events of Y, P passes, plus the place grouping (at most 8 placed events a year: a linear merge by cell is enough; any method whose result is the order of 3.4). Expected under 0.2 ms at 1024; budget **1 ms at 1024, 4 ms at 2048** (on top of P4-00 8's 2 ms year answer). `draw_markers`: at most 23 × 23 glyph cells per marker, k² pixels each.
+- the class constants `GLYPH_NONE` … `GLYPH_INTERIOR` (one `inline constexpr std::uint8_t` each in the header);
+- `glyph_of`: status 1 or 2 gives base = kind, `declining` = status 2, `capital`; status 3 base 8; status 4 base 9; a kind outside 1 to 5 (standing) or a status outside 1 to 4 gives base 0. `draw_markers` then raises `marker_glyph`'s FatalError for the base-0 key of a standing entry; an entry with a status outside 1 to 4 belongs to no draw step of 6.1 and is not drawn (neither is reachable on checked data);
+- `markers_at` checks, besides the settlement count and the year, that the history has the event count, the civilization count and the end year E the index was loaded with (FatalError `markers: the history is not the one the index was loaded from`);
+- `draw_markers` checks the scale, then the buffer size, then the owner colour of every standing entry with owner ≠ 0, all before it draws anything;
+- `load` reads, in this order: table `region` (`db::read_region_rows`, the reader's errors), table `pass` with the row checks (`read_pass_row`, now shared in `worldgen/inspect/geography.hpp` between the report and the markers; rows checked against `world.map_size()`, the map size of `meta.param.map_size`), then compares the region ids with `history.tables.regions`. So with both tables bad, the pass error is the one returned; a bad region table is reported before the pass table is read.
+
+In `worldgen/history/digest.hpp` (namespace `worldgen::history`): `std::string_view settlement_kind_word(std::int64_t kind) noexcept` (1 `hamlet` … 5 `fortress`) and `std::string_view settlement_status_word(std::int64_t status) noexcept` (1 `thriving` … 4 `faded`), empty for any other value: the report's `SETTLEMENT_KIND` and `STATUS` tables moved, as P4-03 9.5 moved `phase_kind_word`; `history_report.cpp` calls them and its bytes are unchanged.
+
+**Cost.** `load`: one pass over events and participants, census and the two tables, O(n). `markers_at`: O(S + C log k + m + P) for S settlements, C civilizations (one binary search in each capital run), m events of Y, P passes, plus the place grouping (at most 8 placed events a year: a linear merge by cell is enough; any method whose result is the order of 3.4). Expected under 0.2 ms at 1024; budget **1 ms at 1024, 4 ms at 2048** (on top of P4-00 8's 2 ms year answer). `draw_markers`: at most 23 × 23 glyph cells per marker, k² pixels each. Measured (r2, `timeline-bench`, seed 42 at 1024, `linux-gcc-release`): `load` 0.20 ms, `markers_at` mean 0.0007 ms over every year, `draw_markers` at E 0.067 ms.
 
 ## 5. Glyphs
 
@@ -275,7 +286,7 @@ Counts: ruin 36 halo, 9 ink; faded 9 fill; pass 23 halo, 5 ink.
 
 ### 5.4 Place ring (base 11)
 
-3 on C(10) \ C(9) and on C(8) \ C(7); 2 on C(9) \ C(8), filled with the place's symbol colour; the inside C(7) stays 0 (the settlement under it shows and is hit, 8.5); halo rule; radius 11. Counts: 144 halo, 68 fill, 104 ink. The colour band (C(9) \ C(8), from 73 to 90 in dx² + dy²) lies outside the body of the largest settlement glyph, a capital city (S(5), at most 50, halo S(6) at most 72), so it is never covered (6.1 draws settlements later).
+3 on C(10) \ C(9) and on C(8) \ C(7); 2 on C(9) \ C(8), filled with the place's symbol colour; the rest of the inside C(7) stays 0; halo rule; radius 11. Counts: 144 halo, 68 fill, 104 ink. The halo reaches inward as well as outward: the cells of C(7) with an 8-neighbour in C(8) \ C(7) become 1 (they are among the 144), so only the cells of C(7) farther in stay 0. For a settlement at the ring's centre this changes nothing: its glyph is drawn later (6.1), over any ring cell it shares, and is hit-tested first (8.5), so it shows whole and is hit on every cell of its glyph; a point of the ring's inner halo outside the settlement's glyph hits the ring, and only the zero part of C(7) outside the settlement's glyph hits neither of the two. The colour band (C(9) \ C(8), from 73 to 90 in dx² + dy²) lies outside the body of the largest settlement glyph, a capital city (S(5), at most 50, halo S(6) at most 72), so it is never covered (6.1 draws settlements later).
 
 ## 6. Drawing (`draw_markers`)
 
@@ -296,24 +307,33 @@ worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [-
 
 - `--markers` draws the markers of year Y (section 6, `MarkerOptions{faded, true, true}`) over the image of `--layer` or `--composite`, any of them, after it is rendered at `--scale`. `--faded` adds faded ruins. `--year Y` now applies to `--composite territory` and to `--markers`; default E for both.
 - Default output: `<stem>.<name>-<Y>.markers.png` (`<name>` the layer or composite name; `<stem>.territory-<Y>.markers.png` for territory), with `<stem>.<name>-<Y>.markers-faded.png` for `--faded`. Without `--markers` names are as before.
-- Checks, in order (first failure): (1) usage, exit 2: the existing checks; `--faded applies to --markers only`; `--year applies to --composite territory or --markers only` (replaces amendment 23's `--year applies to --composite territory only`); the `--year` value as amendment 23. (2) open the world (3). (3) the layer's or composite's own checks (3). (4) with `--markers` or `territory`: `load_history`, its messages (3, the no-history message of amendment 21 (b)). (5) with `--markers`: `MarkerIndex::load` (3, its messages). (6) the year range (2, amendment 23's message). (7) image size, output location, render, draw, write.
-- `render --help`: the synopsis above; after the `--year` lines (now reading `with --composite territory or --markers: the year, 0 to the history's end year`):
+- Default names in full (r2, as built): `<stem>.<layer>-<Y>.markers.png` for `--layer`, `<stem>.<composite>-<Y>.markers.png` for `map`, `biomes`, `regions` and `territory`, and `.markers-faded.png` in place of `.markers.png` with `--faded`; `<Y>` is the year drawn (E when `--year` is not given). Without `--markers`: `<stem>.<layer>.png`, `<stem>.<composite>.png`, `<stem>.territory-<Y>.png`, unchanged.
+- Checks, in order (first failure): (1) usage, exit 2: the existing checks (among them `--scale`); then `--faded applies to --markers only`; then `--year applies to --composite territory or --markers only` (replaces amendment 23's `--year applies to --composite territory only`); then the `--year` value as amendment 23 (an integer option). So `--faded --year 5` with `--composite regions` and no `--markers` reports the `--faded` message. (2) open the world (3). (3) the layer's or composite's own checks (3). (4) with `--markers` or `territory`: `load_history`, its messages (3, the no-history message of amendment 21 (b)). (5) with `--markers`: `MarkerIndex::load` (3, its messages). (6) the year range (2, amendment 23's message). (7) image size, output location, render, draw, write.
+- `render --help` (exact, as built; lines of the help that this stage does not touch are left out here):
 
 ```
+usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--year Y] [--markers [--faded]]
+                           [--out PATH] [--scale N] [--force] [--verbose]
+...
+  --year Y            with --composite territory or --markers: the year, 0 to the history's end year
+                      (default the end year, the present)
   --markers           draw the settlements, ruins, event places and passes of the year over the
                       image (needs the history)
   --faded             with --markers: also the faded ruins
+  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,
+                      <db file stem>.<composite>.png for --composite, or
+                      <db file stem>.territory-<year>.png for territory, with -<year>.markers.png for --markers)
 ```
 
-and in `--out`: `, with -<year>.markers.png for --markers`.
+The first `--year` line is one line; the `--out` phrase `, with -<year>.markers.png for --markers` sits inside the parenthesis of the territory line.
 
 ## 8. Viewer (Part B)
 
 ### 8.1 Model state (`HistoryState`, `ViewerModel`)
 
-On open, after `load_history` succeeds, `MarkerIndex::load(reader, history)`. Its failure leaves the history loaded and the markers off and disabled; the file label gains `markers: <code>: <message>` (V10). Held across years: the index, the options, the enabled flag (default **on**), the current `YearMarkers`, the glyph cache (8.4). Nothing else is cached across a change of Y (V6).
+On open, after `load_history` succeeds, `MarkerIndex::load(reader, history)`. Its failure leaves the history loaded (year bar, territory view and every P4-03 answer as without markers) and the markers unavailable (`get_markers_available()` false, every control of 8.2 disabled); the file label gains a line `markers: <code>: <message>` (V10). Held across years: the index, the options, the enabled flag (default **on**), the current `YearMarkers`, the glyph cache (8.4). Nothing else is cached across a change of Y (V6).
 
-Year change (P4-03 3.4), new step after its step 3: if markers are enabled, `markers_at(history, state, options, scratch)`; if scratch ≠ current: swap, emit `markers_changed()`. Then P4-03 steps 4 and 5. An option or the enabled flag changing recomputes the same way (disabled: the current set becomes empty) and emits `markers_changed()` if it differs. So dragging over years where no settlement changes state and no placed event starts or ends redraws nothing; settlement states change at about 1,700 census rows in 6,000 years, and placed events in at most a few hundred years.
+Year change (P4-03 3.4), new step after its step 3: if markers are enabled, `markers_at(history, state, options, scratch)`; if scratch differs from current: swap, emit `markers_changed()`. "Differs" compares the `settlements`, `places` and `passes` lists only, never `year`, so a year change that leaves every list equal emits nothing. Then P4-03 steps 4 and 5. An option or the enabled flag changing recomputes the same way (disabled: the current set becomes empty) and emits `markers_changed()` if it differs. So dragging over years where no settlement changes state and no placed event starts or ends redraws nothing; settlement states change at about 1,700 census rows in 6,000 years, and placed events in at most a few hundred years.
 
 Bound methods (every one valid without history; answers as stated):
 
@@ -322,7 +342,7 @@ Bound methods (every one valid without history; answers as stated):
 | `get_markers_available()` | history loaded and the index loaded |
 | `get_markers_enabled()`, `set_markers_enabled(on)` | the flag; set returns false and changes nothing when not available |
 | `get_marker_option(name)`, `set_marker_option(name, on)` | `faded`, `events`, `passes`; false for any other name or when not available |
-| `get_markers()` | Array of Dictionary in draw order (6.1): `{type, id, x, y, glyph, fill, capital, small, events}`; `type` `pass`, `place`, `faded`, `ruin`, `standing`; `id` the pass or settlement id, for a place its smallest event id; `glyph` the glyph name (8.3); `fill` 0xRRGGBB (−1 for glyphs without fill class); `small` true for hamlets, villages that are not capitals, ruins and faded (8.4); `events` PackedInt64Array (places only). Empty when disabled or not available |
+| `get_markers()` | Array of Dictionary in draw order (6.1): `{type, id, x, y, glyph, fill, capital, small, events}`; `type` `pass`, `place`, `faded`, `ruin`, `standing`; `id` the pass or settlement id, for a place its smallest event id; `glyph` the glyph name (8.3); `fill` 0xRRGGBB (−1 for glyphs without fill class); `small` true for hamlets and villages that are not capitals, ruins and faded (8.4); a capital is never small, whatever its kind; `events` PackedInt64Array (places only). Empty when disabled or not available |
 | `get_marker_glyph(name)` | Dictionary `{radius, cells}` (`cells` PackedByteArray of section 5); empty for an unknown name |
 | `describe_marker(index)` | the hover text of 8.5 for entry `index` of `get_markers()`; empty out of range |
 | `get_marker_legend()` | Array of Dictionary `{label, colours, glyph}`, section 8.6 |
@@ -342,6 +362,8 @@ MarkersHeading   Label "Markers"
 %MarkerLegend    ItemList (not selectable, auto height)
 ```
 
+As built (r2): the three boxes sit side by side in one row, an `HBoxContainer` `MarkerBoxes` (not unique-named) under the sidebar, between `%MarkersToggle` and `%MarkerLegend`; `%MarkerLegend` shows its rows in two columns (`max_columns` 2). The unique names are those above.
+
 Every control is disabled when `get_markers_available()` is false; the three boxes also while the toggle is off. Key **M** (in `_unhandled_key_input`, as P4-03 4.3) toggles `set_markers_enabled`. The key list `%MarkerLegend` is separate from the view legend, so the legend of every view stays as P2, P4-02 and P4-03 define it.
 
 ### 8.3 Glyph names
@@ -360,6 +382,8 @@ Each distinct (glyph name, fill, g) is drawn from one `ImageTexture` built from 
 
 **Budgets** (P4-00 8): the marker step of a year change within 1 ms at 1024 (4 ms at 2048); drawing the markers within 2 ms a frame; a year change to the next drawn frame stays within 50 ms (200 ms). `--bench` (P4-03 11.2) adds the slowest and mean marker step, the number of `markers_changed` over 0 … E and back, and the time of one marker draw.
 
+Measured (r2, `--bench`, seed 42 at 1024, `linux-gcc-release`): marker step mean 0.0011 ms; one marker draw 0.38 ms for 95 markers. Both well within budget. The slowest year change was 170 ms (to year 5494), over P4-03's 50 ms budget; it comes from P4-03's territory rebuild and predates the markers (the marker step is a negligible part of it), so it is carried as a follow-up of P4-03, not a P4-04 defect.
+
 ### 8.5 Hover
 
 On mouse motion `LayerMapView` hit-tests the drawn markers in reverse draw order: a marker is hit when the glyph cell under the mouse has a class other than 0 (interior 4 counts; the inside of a ring does not, so the settlement in a ring is hit). It emits `marker_hovered(index)` (−1 when none) beside `cell_hovered`. While a marker is hit, `%CellLabel` shows `describe_marker(index)` instead of the cell description; otherwise the cell description as today. Texts (exact; the check compares them; names as `HistoryView` gives them):
@@ -372,13 +396,27 @@ On mouse motion `LayerMapView` hit-tests the drawn markers in reverse draw order
 | place | `In <Y>: <sentence 1>[ <sentence 2> …]`, the sentences of its events in ascending id, separated by one space |
 | pass | `pass <id>: <lowered pass | natural gap>, col <col_dm div 10>.<col_dm mod 10> m` |
 
+With owner 0 (no owner; not on checked data) the standing text leaves out ` of <owner name>`.
+
 `<sentence>` is `render_event` of the ruin event (3.3; left out with its `: ` when the event is 0); place sentences are `render_event` of each event. Examples (seed 42 at 512, Y = 6000): `Saelo, village of The Realm of Ithieglie, thriving, population 831 recorded in <since>, founded in 950`; `Iennmo, ruin of a village, ruined in 5617: <sentence of e470>`.
 
 `LayerMapView` also gains, for the check only, `get_marker_screen_position(index)` (the centre (cx, cy), or (−1, −1) when not drawn).
 
 ### 8.6 Key list (`get_marker_legend()`)
 
-Rows, in order; `glyph` names a glyph drawn as the row's icon with fill (160, 160, 160), `colours` as in `get_legend()`: `hamlet`, `village`, `town`, `city`, `fortress` (their glyphs); `capital` (`town capital`); `declining` (`village declining`); `ruin` (`ruin`); `faded ruin` (`faded`; only while the `faded` option is on); `sack or capture`, `siege`, `battle`, `plague`, `other event` (glyph `ring`, colours [symbol colour]; only while `events` is on); `pass` (`pass`; only while `passes` is on). Empty when markers are off or not available.
+Rows, in order; `glyph` names a glyph drawn as the row's icon; `colours` is empty for every row that is not a ring, whose icon is drawn with fill (160, 160, 160), and holds the one symbol colour for a ring row, whose icon is drawn with that colour: `hamlet`, `village`, `town`, `city`, `fortress` (their glyphs); `capital` (`town capital`); `declining` (`village declining`); `ruin` (`ruin`); `faded ruin` (`faded`; only while the `faded` option is on); `sack or capture`, `siege`, `battle`, `plague`, `other event` (glyph `ring`; only while `events` is on); `pass` (`pass`; only while `passes` is on). Empty when markers are off or not available.
+
+### 8.7 Command-line options for review screenshots (r2, as built)
+
+After `--` with a world path, beside P4-03's `--year`, `--view`, `--hover`, `--screenshot` and `--bench`:
+
+| Option | Effect |
+| --- | --- |
+| `--zoom <z> --centre <x> <y>` | at open, cell (x, y) in the middle of the map view at z screen pixels per cell (both needed) |
+| `--mouse <x> <y>` | at open, a mouse motion sent to the map view at the centre of cell (x, y), so a marker there is described in `%CellLabel` |
+| `--faded` | starts with the `faded` option on |
+
+They are for screenshots by hand and the world critic; the headless check does not use them.
 
 ## 9. Headless check (P4-00 7 row P4-04)
 
@@ -387,9 +425,10 @@ Rows, in order; `glyph` names a glyph drawn as the row's icon with fill (160, 16
 Real world (`--seed 42 --map-size 512`), in addition to P4-03 10.1:
 
 - from `history.txt`: R0 = the smallest `ruined <year>` of the `[present]` settlement lines; D0 = the year of the first chronicle line of kind `ruin_faded`; a world content assert (as P4-03 10.1) that both exist and that `report --db` has `passes` ≥ 1;
-- the marker years LM = {0, D0 − 1, D0, R0 − 1, R0, F, floor(E / 2), E}, ascending, each once (seed 42 at 512: {0, 2483, 3000, 3991, 3992, 4983, 4984, 6000});
+- the marker years LM = {0, D0 − 1, D0, R0 − 1, R0, F, floor(E / 2), E}, ascending, each once, where F is P4-03 10.1's year of the first `region_ceded` event (2483 for seed 42 at 512; the script reuses the value it reads for P4-03's L) (seed 42 at 512: {0, 2483, 3000, 3991, 3992, 4983, 4984, 6000});
 - for each Y in LM: `render --composite territory --year Y --markers --out <real>/markers-<Y>.png`; also `--markers --faded` at E and at D0 (`markers-faded-<Y>.png`), and `render --layer elevation --year R0 --markers --out <real>/elevation-markers-<R0>.png`;
-- the viewer run adds `--expect-marker-years <LM>`.
+- from `report --db`: the number of passes (the line `passes = <n>`);
+- the viewer run adds `--expect-marker-years <LM>` and `--expect-passes <n>`.
 
 Pattern and geography-only worlds: no new files.
 
@@ -401,12 +440,12 @@ Pattern and geography-only worlds: no new files.
 | M1 | real world at open: available, enabled, options `faded` off, `events` on, `passes` on (read back and from the boxes' pressed state); the key list equals 8.6 without `faded ruin` |
 | M2 | at E with `faded` on: the `faded`, `ruin` and `standing` entries, sorted by id, equal the `[present]` settlement lines `s<id> <name>: <kind>, <status>, population <p>, <owner (c<id>) or no owner>, at <x> <y> …`: id, kind word, status word, population, owner (0 for `no owner`), x, y; with `faded` off the same without the faded lines; the counts by kind and status equal those lines' counts; the entries with `capital` are exactly the `capital: <name> (s<id>)` lines of the `[civilizations]` blocks of civilizations alive at E |
 | M3 | ruins: for every `[present]` line with `ruined <R>`: at R − 1 the settlement's entry is `standing`, at R it is `ruin`. For every chronicle line of kind `ruin_faded` in year D with `@s<id>`: at D − 1 the entry is `ruin`; at D it is absent with `faded` off and `faded` with it on |
-| M4 | event places: for each Y in LM and each of the first 20 chronicle years with an event that has a place: the union of the `events` of the `place` entries equals the set of chronicle event ids with start ≤ Y ≤ end and an `@s` or `@rg` tag; each place's (x, y) is the `at <x> <y>` of the `[present]` line of its `@s`, or, without `@s`, the seed cell of its `@rg` region (the check reads `read_region_rows` through the library, as H7 calls the library); with `events` off there are no `place` entries |
-| M5 | passes: the `pass` entries are as many as `report --db`'s `passes`, at the col cells of the library's `MarkerIndex::passes()`; with `passes` off none |
+| M4 | event places: for each Y in LM and each of the first 20 chronicle years with an event that has a place: the union of the `events` of the `place` entries equals the set of chronicle event ids with start ≤ Y ≤ end and an `@s` or `@rg` tag; each place's (x, y) is the `at <x> <y>` of the `[present]` line of its `@s`, or, without `@s`, the seed cell of its `@rg` region (the check reads the seed cells with `worldgen::db::read_region_rows`, as H7 calls the library); with `events` off there are no `place` entries |
+| M5 | passes: the `pass` entries are as many as `--expect-passes` (`report --db`'s `passes`), at the col cells of the library's `MarkerIndex::passes()`; with `passes` off none |
 | M6 | pixels: for each Y in LM (set through the slider), the territory view's image copied and drawn on with `draw_markers(…, model's YearMarkers, colours)` at scale 1 equals `markers-<Y>.png`; likewise `markers-faded-<Y>.png` with `faded` on, and the `elevation` view at R0 equals `elevation-markers-<R0>.png`. This compares the model's marker set with the CLI's through the same rasteriser; and `get_markers()` lists exactly the model's `YearMarkers` in the order of 6.1 |
-| M7 | hover: at E, for the first standing entry, the first capital and the first ruin in id order: `describe_marker` equals the text of 8.5 built from the `[present]` and `[civilizations]` lines and the chronicle sentence of the ruin event (`<since>` from the model's entry); then a mouse motion sent to `%MapView` at `get_marker_screen_position(i)` makes `%CellLabel` that text; a motion at the centre of a ring that surrounds a settlement shows the settlement's text; a motion away from every marker restores the cell description |
+| M7 | hover: at E, for the first standing entry that is not a capital, the first capital and the first ruin in id order: `describe_marker` equals the text of 8.5 built from the `[present]` and `[civilizations]` lines and the chronicle sentence of the ruin event (`<since>` from the model's entry); then a mouse motion sent to `%MapView` at `get_marker_screen_position(i)` makes `%CellLabel` that text; a motion at the centre of a ring that surrounds a settlement shows the settlement's text (the check searches the years from E downward, with the default options, for a place whose cell is that of a settlement entry, takes the first such year and, in it, the first place in list order and the first settlement entry at its cell); a motion away from every marker restores the cell description |
 | M8 | toggles: `set_markers_enabled(false)` empties `get_markers()` and emits `markers_changed` once; key M turns it back on; `faded` on adds exactly the faded entries of Y; each change emits `markers_changed` once and none when nothing differs |
-| M9 | rebuilds: stepping `set_year` from 0 to E, `markers_changed` is emitted in exactly the years where `markers_at(Y)` ≠ `markers_at(Y − 1)` (the check computes these from the library) |
+| M9 | rebuilds: stepping `set_year` from 0 to E, `markers_changed` is emitted in exactly the years where `markers_at(Y)` and `markers_at(Y − 1)` differ in their `settlements`, `places` or `passes` lists (8.1; the `year` field is not compared; the check computes these from the library) |
 
 P4-03's checks are unchanged (markers are not part of any view image or of `get_legend()`). The check stays one CTest entry under 60 s on `linux-gcc-release`: nine more renders (about half a second) and M9's 6,000 year steps (about one second at 512).
 
@@ -427,7 +466,7 @@ place <x> <y> <symbol word> <event ids>
 pass <id> <x> <y> <kind>
 ```
 
-(`<type>` `standing`, `ruin`, `faded`; lines in list order.) **Static dump**: `capital <civ> <year> <event> <settlement>` per capital-run entry (civ ascending, then event), then `ruin <settlement> <ruined_year> <ruin_event>` per settlement ever ruined. **Glyph dump**: for each of the 24 keys (base 1 to 5 × declining × capital, then 8, 9, 10, 11), `glyph <name> <radius>` and one line per grid row of digits.
+(`<type>` `standing`, `ruin`, `faded`; lines in list order; an empty list prints no line; a place's event ids separated by single spaces.) **Static dump**: `capital <civ> <year> <event> <settlement>` per capital-run entry (civ ascending, then event), then `ruin <settlement> <ruined_year> <ruin_event>` per settlement ever ruined (3.3: a census row with status 3), ascending id. **Glyph dump**: for each of the 24 keys in the order base 1 to 5 (outer), then declining false, true, then capital false, true (inner), then 8, 9, 10, 11, `glyph <name> <radius>` (name as 8.3, e.g. `village declining capital`) and one line per grid row, the class digits of the row from dx = −radius.
 
 ### 10.2 Unit tests (`worldgen-tests-markers`)
 
@@ -440,14 +479,15 @@ pass <id> <x> <y> <kind>
 
 ### 10.3 Golden (`worldgen/tests/golden/p4-04-markers.txt`)
 
-Written by `python3 -B worldgen/tests/reference/p4_markers_reference.py golden`, header `# ` lines (generator 0.22.0, provenance, line forms). Cases as P4-01 13.4 (the seven `geo-*` and `hist-*` world cases, `sample-42-1024`, the P3-07 fixtures that have tables `region` and `pass`, and T2), ascending byte order. Per case:
+Written by `python3 -B worldgen/tests/reference/p4_markers_reference.py golden`, header `# ` lines (generator 0.22.0, provenance, line forms). Cases as P4-01 13.4 (the seven `geo-*` and `hist-*` world cases, `sample-42-1024`, the P3-07 fixtures that have tables `region` and `pass`, T1 `t1-edges` and T2 `t2-markers`), ascending byte order of the name. Per case:
 
 1. `<case> static <sha256>`;
-2. `<case> markers <Y> <sha256>` of M(Y) for Y in {0, floor(E / 2), E − 1, E} ∪ the age start years ∪ the ruined years ∪ the years of `ruin_faded` events, ascending, each once;
+2. `<case> markers <Y> <sha256>` of M(Y) for Y in {0, floor(E / 2), E − 1, E} ∪ the age start years ∪ the ruined years R(s) of every settlement ever ruined (3.3, faded ones included) ∪ the years of `ruin_faded` events, ascending, each once;
 3. `<case> markers-years <sha256>` of M(0) … M(E) concatenated;
-4. world cases: `<case> overlay <Y> <sha256>`, the RGB buffer of `render_territory` at Y with `draw_markers` (all options on) at scale 1, Y in {the smallest ruined year if any, floor(E / 2), E}; and `<case> overlay-scale3 <E> <sha256>`.
+4. world cases: `<case> overlay <Y> <sha256>`, the RGB buffer of `render_territory` at Y with `draw_markers` (all options on) at scale 1, Y in {the smallest ruined year if any, floor(E / 2), E}, where the smallest ruined year is the smallest R(s) of 3.3 over every settlement, faded ones included (seed 42 at 512: 2477; not the smallest `settlement.ruined_year`, 4984, which is 9.1's R0); and `<case> overlay-scale3 <E> <sha256>` (the territory and the markers both at scale 3);
+5. T2 only: `t2-markers table <name> <hex>`, the `hash --detail` table lines of the reference's SQL copy of T2, so that the C++ copy built through the writer API (10.2 item 3) is held to it.
 
-Once: `glyphs <sha256>` of the glyph dump. The 1024 cases run in `worldgen-tests-slow-markers`. Re-recorded only by the reference, never to make a C++ test pass.
+Once: `glyphs <sha256>` of the glyph dump. The 1024 cases run in `worldgen-tests-slow-markers`, which takes about 21 minutes (1238 s measured on `linux-gcc-release` at `ctest -j 2`; its CTest cost is set from that run); it is the longest slow entry. Re-recorded only by the reference, never to make a C++ test pass.
 
 ### 10.4 Property and bench
 
@@ -471,7 +511,7 @@ For every world `load_history` and `MarkerIndex::load` accept and every Y in [0,
 1. The settlement entries at Y are exactly the settlements with `founded_year` ≤ Y (minus status 4 without `faded`), ascending id, with the fields of `settlement_state(s, Y)`; once present a settlement stays present (with `faded`).
 2. At E the entries equal the `settlement` rows' end state (owner, kind, status, population).
 3. A settlement's type is `ruin` from R(s) until the year its `ruin_faded` event starts, then `faded`; it is never `standing` again.
-4. Every civilization alive at Y has exactly one capital entry, standing and owned by it; no entry of a dead civilization or of another owner is a capital; at E capital(c, E) = `civilization.capital` for every alive c.
+4. On generated worlds: every civilization alive at Y has exactly one capital entry, standing and owned by it; at E capital(c, E) = `civilization.capital` for every alive c. On every world, fixtures included: no entry of a dead civilization or of another owner is a capital, and a civilization has at most one. (A hand-made fixture may leave a realm without a capital: T2's Birch has none after its seat is taken.)
 5. R(s) = `ruined_year` for every settlement ruined at E; the ruin event of a faded settlement is dated R(s).
 6. The union of the places' events is exactly the events of Y with a settlement or region; each event in one place; a place's symbol is the maximum of its events' symbols; places are in ascending smallest event id.
 7. Passes are every `pass` row, independent of Y.
@@ -507,8 +547,8 @@ Lint: the new files are in scope; nothing banned is expected. Worth a look: the 
 ## 15. Amendments to other specs (applied by the lead at merge unless done here)
 
 - **P0-04 amendment 24** (applied with this spec, `docs/specs/p0-04-worldgen-cli.md`): section 7 of this spec.
-- **P4-00 3.1, P4-04 paragraph and table row**: side `worldgen`, `worldgen-cli`, then `gdext`; markers are a library answer with a CLI overlay (section 1). Not edited here, to keep this branch clear of the P4-03a merge's edits to P4-00; the lead adds the pointer line.
-- **P4-03 3.4**: the marker step between its steps 3 and 4 (8.1); 10.2 is unchanged (markers are outside every image and legend it checks). Pointer line likewise by the lead.
+- **P4-00 3.1, P4-04 paragraph and table row**: side `worldgen`, `worldgen-cli`, then `gdext`; markers are a library answer with a CLI overlay (section 1). Pointer line added in r2.
+- **P4-03 3.4**: the marker step between its steps 3 and 4 (8.1); 10.2 is unchanged (markers are outside every image and legend it checks). Pointer line added in r2.
 - **CLAUDE.md, README** (lead, at merge): `worldgen/inspect/markers.hpp`, the CTest entries `worldgen-tests-markers` and `worldgen-tests-slow-markers`, the golden file, `markers.txt` in the `world-hashes.sh` paragraph.
 
 ## 16. Open questions for Paul
@@ -529,3 +569,16 @@ Each with the recommendation and the interim choice the implementation takes.
 4. A ring sits at the settlement's cell even when the settlement is a faded ruin that is not drawn; an event with only a region is at the region's seed cell (P4-00 3.1).
 5. CLI glyphs are fixed in cells (they scale with `--scale`); viewer glyphs are fixed in screen pixels (g of 8.4). Both use the same glyph grids.
 6. The key list is a sidebar list of its own, not rows of the view legend, so the legends that P2 to P4-03 check stay as they are.
+
+## Revision notes
+
+**r2, 2026-11-23** (corrections after both parts were implemented and Part A integrated on `p4/04-final`; no implementation defect found; the code is the reference for each item):
+
+1. 3.2: an event naming c through several participants enters c's run once; "the last entry" is in run order. 3.3: several `ruin_faded` events: smallest id, its smallest cause, else 0; "ever ruined" defined (a census row with status 3).
+2. Section 4: "As built" list (the `GLYPH_*` constants, `glyph_of`'s base 0, `markers_at`'s further checks, `draw_markers` checking every owner colour first, the load order with `read_pass_row` shared in `inspect/geography.hpp` and rows checked against `world.map_size()`), the words in namespace `worldgen::history`, measured library costs.
+3. 5.4: the ring's halo reaches inward; what that means for a settlement at the centre and for 8.5.
+4. Section 7 (and P0-04 amendment 24 (c), (d), (e)): full default names, the order of the usage checks, `render --help` exactly as built.
+5. 8.1: marker load failure; `markers_changed` compares the three lists, not the year; a capital is never small. 8.2: `MarkerBoxes` row, two-column key list. 8.4: measured viewer costs and the 170 ms year change as a P4-03 follow-up. 8.5: owner 0. 8.6: `colours` empty except on ring rows. New 8.7: `--zoom`, `--centre`, `--mouse`, `--faded`.
+6. 9.1: F defined (P4-03's first `region_ceded` year, used by the script); `--expect-passes`. 9.2 M4 (`worldgen::db::read_region_rows`), M5, M7 (the non-capital standing entry; the ring search), M9 (the lists, not the year).
+7. 10.1 dump details and order; 10.3 cases with T1, R(s) over every settlement for items 2 and 4 (2477 at seed 42 / 512), the `t2-markers table` lines, the slow entry's time (about 21 minutes at `-j 2`).
+8. Section 12 invariant 4: the generated-world part. Section 15: the P4-00 3.1 and P4-03 3.4 pointer lines added.
