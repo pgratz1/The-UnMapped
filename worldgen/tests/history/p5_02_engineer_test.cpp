@@ -121,6 +121,13 @@ TEST_CASE("p5-02 engineer: I0, zero tuning against the subsystem removed (512 se
     check_i0(1, 512);
 }
 
+TEST_SUITE("p5-02-engineer-slow" * doctest::skip()) {
+TEST_CASE("p5-02 engineer: I0 at 1024 (seeds 0 and 1)") {
+    check_i0(0, 1024);
+    check_i0(1, 1024);
+}
+}
+
 TEST_CASE("p5-02 engineer: growth at G = 1000 is 9.1's") {
     for (std::int64_t p = 1; p < 400; p += 7) {
         for (std::int64_t g = 0; g <= 1000; g += 125) {
