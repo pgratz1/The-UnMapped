@@ -29,7 +29,11 @@
 //     text); with --expect-history loaded, H1 to H8 (the year bar, the
 //     territory image at each year of --expect-years against
 //     territory-<Y>.png, the readouts and the legend against the history
-//     report, steps, keys, hover, colours, year marks).
+//     report, steps, keys, hover, colours, year marks);
+//   - markers (spec P4-04 9.2): M0 without history; M1 to M9 with it (the
+//     marker set against the history report, the pixels of the model's set
+//     drawn by worldgen against <dir>/markers-<Y>.png for --expect-marker-years,
+//     hover texts and mouse motions, toggles, markers_changed per year).
 // Prints one line per check and "UNMAPPED-CHECK: PASS" or "UNMAPPED-CHECK:
 // FAIL", and returns the process exit code (0 or 1).
 
@@ -51,6 +55,8 @@ struct ViewerCheckOptions {
     int64_t expect_end_year = -1;
     std::vector<int64_t> expect_years;  // compared with <reference dir>/territory-<Y>.png
     godot::String history_report;       // `report --history --level full` of the world
+    std::vector<int64_t> marker_years;  // P4-04 9: compared with <reference dir>/markers-<Y>.png
+    int64_t expect_passes = -1;         // the world report's passes; -1: not checked
     bool wired = false;
 };
 

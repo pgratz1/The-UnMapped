@@ -20,6 +20,12 @@
 // event, [ and ] the previous / next change of holder, Home year 0, End the
 // present. Without history the year bar is disabled.
 //
+// Markers (spec P4-04 8.2): %MarkersToggle, %MarkFaded, %MarkEvents,
+// %MarkPasses call the model; %MarkerLegend is the key list. On
+// markers_changed and view_selected the screen hands the model's markers and
+// their glyphs to %MapView. Key M toggles the markers. While the mouse is on
+// a marker, %CellLabel shows its description instead of the cell's.
+//
 // Command line (arguments after `--`):
 //   <world.db>                 open this world at start
 //   --view <name>              then show this layer or composite ("biome",
@@ -41,11 +47,21 @@
 //   --history-report <file>    with --check: `report --history --level full`
 //   --screenshot <file.png>    save the window's contents after one second,
 //                              then quit (needs a display; for review images)
+//   --zoom <z> --centre <x> <y>  with --screenshot: show cell (x, y) at the
+//                              centre at z screen pixels per cell
+//   --mouse <x> <y>            with --screenshot: a mouse motion over the
+//                              centre of cell (x, y) (markers hover too)
+//   --faded                    start with the faded ruins shown
+//   --expect-marker-years <a,b,...>  with --check: the years compared with
+//                              <dir>/markers-<Y>.png (P4-04 9)
+//   --expect-passes <n>        with --check: the world report's passes
 
 #include <cstdint>
 #include <vector>
 
 #include <godot_cpp/classes/button.hpp>
+#include <godot_cpp/classes/check_box.hpp>
+#include <godot_cpp/classes/check_button.hpp>
 #include <godot_cpp/classes/control.hpp>
 #include <godot_cpp/classes/file_dialog.hpp>
 #include <godot_cpp/classes/h_slider.hpp>
@@ -97,6 +113,11 @@ public:
     [[nodiscard]] godot::Label* year_label() const noexcept { return year_label_; }
     [[nodiscard]] godot::Label* year_counts() const noexcept { return year_counts_; }
     [[nodiscard]] YearMarks* year_marks() const noexcept { return year_marks_; }
+    [[nodiscard]] godot::CheckButton* markers_toggle() const noexcept { return markers_toggle_; }
+    [[nodiscard]] godot::CheckBox* mark_faded() const noexcept { return mark_faded_; }
+    [[nodiscard]] godot::CheckBox* mark_events() const noexcept { return mark_events_; }
+    [[nodiscard]] godot::CheckBox* mark_passes() const noexcept { return mark_passes_; }
+    [[nodiscard]] godot::ItemList* marker_legend() const noexcept { return marker_legend_; }
     // The eight buttons of the year row, in their order in the row.
     [[nodiscard]] std::vector<godot::Button*> year_buttons() const;
     // The texts of %YearLabel and %YearCounts for the model's year (4.4).
@@ -136,12 +157,22 @@ private:
     void on_step_event(int64_t direction);
     void on_step_change(int64_t direction);
 
+    void on_markers_changed();
+    void on_marker_hovered(int64_t index);
+    void on_markers_toggled(bool on);
+    void on_marker_option_toggled(bool on, const godot::String& name);
+    void push_markers();
+    void update_marker_controls();
+    void show_hover_text();
+    void apply_view_options();
+
     void show_status(const godot::String& text, bool is_error);
     void show_legend();
     void update_year_bar();
     void apply_start_year(const godot::String& text);
     void run_check_deferred();
     void run_bench();
+    void finish_bench();
     void take_screenshot();
 
     godot::Ref<ViewerModel> model_;
@@ -168,6 +199,14 @@ private:
     godot::SpinBox* year_field_ = nullptr;
     godot::Label* year_label_ = nullptr;
     godot::Label* year_counts_ = nullptr;
+    godot::CheckButton* markers_toggle_ = nullptr;
+    godot::CheckBox* mark_faded_ = nullptr;
+    godot::CheckBox* mark_events_ = nullptr;
+    godot::CheckBox* mark_passes_ = nullptr;
+    godot::ItemList* marker_legend_ = nullptr;
+    int64_t hovered_marker_ = -1;
+    godot::Dictionary marker_glyphs_;  // glyph name -> {radius, cells}, filled on first use
+    godot::Array marker_legend_rows_;  // the key list's rows as last shown
     bool wired_ = false;
     bool updating_year_bar_ = false;  // value_changed from our own updates is ignored
     int64_t hover_x_ = -1;            // the cell last hovered, (-1, -1) for none
@@ -185,6 +224,14 @@ private:
     int64_t check_expect_end_year_ = -1;
     godot::String check_expect_years_;
     godot::String check_history_report_;
+    godot::String check_expect_marker_years_;
+    int64_t check_expect_passes_ = -1;
+    double start_zoom_ = 0.0;
+    int64_t start_centre_x_ = -1;
+    int64_t start_centre_y_ = -1;
+    int64_t start_mouse_x_ = -1;
+    int64_t start_mouse_y_ = -1;
+    bool start_faded_ = false;
     godot::String screenshot_path_;
     godot::String bench_world_;
     bool bench_ = false;

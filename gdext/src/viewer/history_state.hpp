@@ -26,6 +26,7 @@
 #include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
+#include "worldgen/inspect/markers.hpp"
 #include "worldgen/inspect/territory.hpp"
 
 namespace unmapped {
@@ -49,6 +50,12 @@ struct TerritoryLayers {
     const worldgen::db::LayerGrid* biome = nullptr;
     const worldgen::db::LayerGrid* region = nullptr;
 };
+
+// Glyph names (P4-04 8.3): "<kind word>[ declining][ capital]", "ruin",
+// "faded", "pass", "ring". One to one with the keys of section 5; empty /
+// nullopt for a key or name outside them.
+[[nodiscard]] std::string marker_glyph_name(worldgen::inspect::GlyphKey key);
+[[nodiscard]] std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name);
 
 class HistoryState {
 public:
@@ -138,6 +145,30 @@ public:
     // The image must be drawn again from scratch (e.g. it was dropped).
     void forget_drawn() noexcept { drawn_valid_ = false; }
 
+    // --- Markers (spec P4-04 8.1) --------------------------------------------
+    // Loaded with the history (MarkerIndex::load); a failure leaves the
+    // history loaded and the markers unavailable, with worldgen's code and
+    // message.
+    [[nodiscard]] bool markers_available() const noexcept { return loaded() && markers_.has_value(); }
+    [[nodiscard]] const std::string& markers_error_code() const noexcept { return markers_error_code_; }
+    [[nodiscard]] const std::string& markers_error_message() const noexcept { return markers_error_message_; }
+    [[nodiscard]] bool markers_enabled() const noexcept { return markers_enabled_; }
+    [[nodiscard]] const worldgen::inspect::MarkerOptions& marker_options() const noexcept { return marker_options_; }
+    // Sets the flag or the options (nothing else); call update_markers next.
+    void set_markers_enabled(bool on) noexcept { markers_enabled_ = on; }
+    void set_marker_options(const worldgen::inspect::MarkerOptions& options) noexcept { marker_options_ = options; }
+    // Recomputes the marker set of Y (empty when disabled or unavailable)
+    // into a scratch set; when it differs from the current one (the three
+    // lists; the year alone is no difference), swaps it in and returns true.
+    // The time it took is kept for --bench.
+    bool update_markers();
+    // The current set: the markers of Y, empty when disabled or unavailable.
+    [[nodiscard]] const worldgen::inspect::YearMarkers& markers() const noexcept { return markers_current_; }
+    [[nodiscard]] const worldgen::inspect::MarkerIndex* marker_index() const noexcept {
+        return markers_ ? &*markers_ : nullptr;
+    }
+    [[nodiscard]] std::int64_t last_marker_step_nsec() const noexcept { return last_marker_step_nsec_; }
+
 private:
     HistoryStatus status_ = HistoryStatus::none;
     std::string error_code_;
@@ -150,6 +181,15 @@ private:
     std::vector<std::int64_t> holders_;
     std::vector<std::int64_t> drawn_holders_;
     bool drawn_valid_ = false;
+
+    std::optional<worldgen::inspect::MarkerIndex> markers_;
+    std::string markers_error_code_;
+    std::string markers_error_message_;
+    bool markers_enabled_ = true;
+    worldgen::inspect::MarkerOptions marker_options_;
+    worldgen::inspect::YearMarkers markers_current_;
+    worldgen::inspect::YearMarkers markers_scratch_;
+    std::int64_t last_marker_step_nsec_ = 0;
 };
 
 }  // namespace unmapped

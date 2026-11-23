@@ -40,6 +40,50 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="MarkersHeading" type="Label" parent="Split/Sidebar"]
+layout_mode = 2
+text = "Markers"
+
+[node name="MarkersToggle" type="CheckButton" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Settlements, ruins, event places and passes of the year (M)"
+button_pressed = true
+text = "Show markers"
+
+[node name="MarkerBoxes" type="HBoxContainer" parent="Split/Sidebar"]
+layout_mode = 2
+
+[node name="MarkFaded" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "Faded ruins"
+
+[node name="MarkEvents" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+button_pressed = true
+text = "Event places"
+
+[node name="MarkPasses" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+button_pressed = true
+text = "Passes"
+
+[node name="MarkerLegend" type="ItemList" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+auto_height = true
+max_columns = 2
+same_column_width = true
+fixed_icon_size = Vector2i(23, 23)
+
 [node name="MetaHeading" type="Label" parent="Split/Sidebar"]
 layout_mode = 2
 text = "Meta"
