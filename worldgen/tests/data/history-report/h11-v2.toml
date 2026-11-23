@@ -312,7 +312,7 @@ region_use = 1
 settlement_use = 1
 salience = 75
 template = "{@settlement} of {defender} was sacked; {dead} died and {survivors} fled."
-roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+roles = [["attacker", 3, 0, 1], ["defender", 3, 1, 1]]
 values = ["dead", "survivors"]
 
 [[kind]]
@@ -511,7 +511,7 @@ phase = 1
 region = 1
 settlement = 1
 parts = [["settlement", 1], ["civilization", 1]]
-values = [30]
+values = [30, 470]
 
 [[event]]
 id = 16
@@ -590,7 +590,7 @@ phase = 2
 region = 6
 settlement = 5
 parts = [["settlement", 5], ["civilization", 4]]
-values = [20]
+values = [20, 480]
 
 [[event]]
 id = 24
@@ -600,7 +600,7 @@ phase = 2
 region = 6
 settlement = 9
 parts = [["settlement", 9], ["civilization", 4]]
-values = [25]
+values = [25, 475]
 
 [[event]]
 id = 25
@@ -619,7 +619,7 @@ phase = 2
 region = 6
 settlement = 5
 parts = [["settlement", 5], ["civilization", 4]]
-values = [300]
+values = [300, 700]
 
 [[event]]
 id = 27

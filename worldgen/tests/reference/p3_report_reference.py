@@ -1344,11 +1344,16 @@ def expand_fixture(fx):
             roles[role] = (j + 1, typ)
         for j, key in enumerate(k.get("values", [])):
             kvalues.append((kid, j + 1, key))
-        by_key[k["key"]] = (kid, roles, k["salience"])
+        by_key[k["key"]] = (kid, roles, k["salience"], len(k.get("values", [])))
     events, parts, vals, causes = [], [], [], []
 
     def add(eid, year, end, key, phase, region, settlement, sal, ps, vs, cs):
-        kid, roles, base = by_key[key]
+        kid, roles, base, nvals = by_key[key]
+        # P3-04 9.3 / the view's load (W-rules): an event carries one value per value key of its kind; a fixture
+        # that breaks this is refused (the C++ report refuses such a world as corrupt; integration P5-01 found H11's
+        # famine and plague events with one value of two)
+        if len(vs) != nvals:
+            raise ValueError("fixture event %d (%s) has %d values, its kind %d" % (eid, key, len(vs), nvals))
         events.append((eid, year, end, kid, phase, region, settlement, base if sal is None else sal))
         for j, (role, x) in enumerate(ps):
             parts.append((eid, j + 1, roles[role][0], roles[role][1], x))

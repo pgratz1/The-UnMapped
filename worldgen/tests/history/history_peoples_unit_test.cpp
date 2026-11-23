@@ -107,8 +107,9 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
          "{settlement} grew into a village of {population}."},
         {"became_town", true, {{"settlement", S}, {"civilization", C}}, {"population"}, 18,
          "{settlement} grew into a town of {population}."},
+        // P3-05 r18 24 (0.21.0): the region in place of the figure (the value stays)
         {"became_city", true, {{"settlement", S}, {"civilization", C}}, {"population"}, 45,
-         "{settlement} grew into a city of {population}."},
+         "{settlement} in {@region} grew into a city."},
         // P3-05 r12 22.3 (0.19.0): the cause clause (P3-04 r12 20.2's {@causes:...})
         {"settlement_dwindled", false, {{"settlement", S}, {"civilization", C}}, {"population"}, 15,
          "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"

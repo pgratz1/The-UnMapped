@@ -150,7 +150,7 @@ TEST_CASE("P3-02 r10 12.1, 12.3: the eight filter entries reject the names of 12
     }
     // 12.1 sizes after the edit: crude 70 / 16 / 14; words 5 / 1 / 389; after P3-02 r13 13.1 (the second
     // round): crude 72 / 12 / 14, words 5 / 1 / 387; after P3-02 r15 14.3 (P3-11): crude 71 / 12 / 14, words
-    // 5 / 1 / 391.
+    // 5 / 1 / 391; after P3-02 r17 15.1 (P5-01): crude 71 / 12 / 15 (`fannie`).
     const wd::KindContent* kind = content.find_kind("name_filter");
     REQUIRE(kind != nullptr);
     for (const auto& d : kind->definitions) {
@@ -158,7 +158,7 @@ TEST_CASE("P3-02 r10 12.1, 12.3: the eight filter entries reject the names of 12
         if (d.id == "crude") {
             CHECK(d.record.get_array("anywhere").size() == 71U);
             CHECK(d.record.get_array("at_start").size() == 12U);
-            CHECK(d.record.get_array("whole").size() == 14U);
+            CHECK(d.record.get_array("whole").size() == 15U);
         }
         if (d.id == "words") {
             CHECK(d.record.get_array("anywhere").size() == 5U);

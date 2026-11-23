@@ -546,7 +546,9 @@ TEST_CASE("P3-02 11.6 (r5): the sample table under r5 (seed 0, one registry per 
         {"dwarven", {"Moumka", "Thoumdaili", "Makmoudin Deep", "Brummthu", "Gromka", "Kaird Deep", "Khaili Hold", "Kili",
                      "Thoum Hold", "Nodin", "Gondhark", "Turnbruk Deep", "Kidinkorn", "Tharndramm Hold", "Grangrak",
                      "Houmm Deep", "Doknirk", "Gali", "Nailimim Deep", "Tairdbra Hold", "The Kourdbrar Throne",
-                     "The Hold of Didin", "Clan Durgarin", "Clan Drourd", "Clan Drailimai", "Brommgrai", "Groumtoun",
+                     // P3-02 r17 15.2 (0.21.0): `didin` is forbidden; the 9.2 table's "The Hold of Didin" is
+                     // replaced by the next attempt (the reference's make_name; spec table to be corrected)
+                     "The Khandthra Throne", "Clan Durgarin", "Clan Drourd", "Clan Drailimai", "Brommgrai", "Groumtoun",
                      "Nurnthaimm"}},
         {"elven", {"Iensath", "Onaeme", "Ierrael", "Elonoma", "Fievos", "Mielae", "Asvathdell", "Lafin", "Laevo",
                    "Leithiedell", "Orith", "Voglael", "Mievife", "Iefann", "Cellve", "Fimo", "Londcae", "Rienel",
@@ -912,11 +914,12 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     // The test reads game/data/name_filters/ with toml++; the library builds its filter from the
     // loaded content set (name_filter_from). Compared as sets (only membership matters, 11.2).
     const names_api::Filter& mine = names_test::shipped_filter();
-    // P3-02 r15 14.3 (0.20.0): 109 / 31 / 511 (r13 13.1: 110 / 31 / 508; r10 12.1: 108 / 36 / 510; 101 / 35 / 514
+    // P3-02 r17 15.1 (0.21.0): 109 / 30 / 514 (`fag` from at_start to anywhere, `fagg` removed from anywhere;
+    // `shiva`, `hindi`, `fannie` whole). P3-02 r15 14.3 (0.20.0): 109 / 31 / 511 (r13 13.1: 110 / 31 / 508; r10 12.1: 108 / 36 / 510; 101 / 35 / 514
     // at 0.18.0; 768 whole at 0.17.0)
     CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 109);
-    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 31);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 511);
+    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 30);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 514);
 }
 
 }  // TEST_SUITE

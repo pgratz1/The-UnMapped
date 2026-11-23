@@ -202,10 +202,11 @@ TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31
     CHECK(cat.kinds[16].salience == 50);   // capital_moved
 }
 
-TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-40 in kind id order (P3-04 r12 20.4: 37, 38; r17 21.2: 39, 40)") {
+TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-42 in kind id order (P3-04 r12 20.4: 37, 38; r17 21.2: 39, 40; r19 22.2: 41, 42)") {
     const wd::Record& r = history_record(shipped_content(), "report");
     const auto& events = r.get_array("events");
-    REQUIRE(events.size() == 40U);  // P3-06 r19 23.6 (0.20.0): kinds 39, 40 after quiet_stretch
+    REQUIRE(events.size() == 42U);  // P3-06 r19 23.6 (0.20.0): kinds 39, 40 after quiet_stretch; P3-04 r19 22.2
+                                    // (0.21.0): 41 claim_dropped, 42 refuge_hidden
     const eng::EventCatalogue& compiled = eng::compiled();
     for (std::size_t i = 0; i < events.size(); ++i) {
         CHECK(events[i].as_record().get_string("kind") == compiled.kinds[i].key);

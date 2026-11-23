@@ -119,7 +119,7 @@ TEST_CASE("P3-06 16.4: the tuning messages, exact texts") {
     CHECK(configure_error(shipped()) == "<no error>");
 }
 
-TEST_CASE("P3-06 5.4, 8.3 item 2, 16.1 item 5: the tension read in Q4 equals the golden tension; it is a pure read") {
+TEST_CASE("P3-06 5.4, 8.3 item 2, 16.1 item 5: the tension asked in Q5 equals the golden tension; it is a pure read") {
     for (const char* name : {"syn-1", "syn-5", "stress-0", "stress-5", "stress-7"}) {
         const CCase& g = conflict_case(name);
         CAPTURE(g.name);
@@ -127,16 +127,36 @@ TEST_CASE("P3-06 5.4, 8.3 item 2, 16.1 item 5: the tension read in Q4 equals the
         ConflictConfig cfg(c);
         ConflictConfig* p = &cfg;
         std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> seen;
-        cfg.add_after({Step::q4}, [p, &seen](eng::StepContext& ctx) {
+        cfg.add_after({Step::q4}, [p](eng::StepContext& ctx) {
             const eng::TensionReport a = p->pair->tension()->tension(ctx);
             const std::size_t rel = ctx.state().relations().size();
             const eng::TensionReport b = p->pair->tension()->tension(ctx);
             CHECK(a.value == b.value);
             CHECK(a.trigger_event == b.trigger_event);
             CHECK(ctx.state().relations().size() == rel);
-            seen[ctx.year()] = {a.value, a.trigger_event};
         });
-        const Tables t = eng::run_engine(c, synthetic_inputs(g), cfg.get());
+        // The golden tension is the one asked in Q5 (P3-04 6.2). Since 0.21.0 a probe after Q4 can read another
+        // value: P3-06 r22 24.2's strength reads the forces of the settlements visible in the step, and those
+        // founded in Q4 are visible from Q5 on. So the values are recorded where the engine asks them, by a
+        // source that forwards to the subsystem's (and asks it twice: a pure read).
+        struct Recorder : eng::TensionSource {
+            eng::TensionSource* inner = nullptr;
+            std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>>* log = nullptr;
+            eng::TensionReport tension(const eng::StepContext& ctx) override {
+                const eng::TensionReport a = inner->tension(ctx);
+                const eng::TensionReport b = inner->tension(ctx);
+                CHECK(a.value == b.value);
+                CHECK(a.trigger_event == b.trigger_event);
+                (*log)[ctx.year()] = {a.value, a.trigger_event};
+                return a;
+            }
+        } rec;
+        rec.inner = p->pair->tension();
+        rec.log = &seen;
+        eng::EngineConfig ec = cfg.get();
+        REQUIRE(ec.tension.size() == 1U);
+        ec.tension[0] = &rec;
+        const Tables t = eng::run_engine(c, synthetic_inputs(g), ec);
         CHECK(table_hashes(t) == g.tables);  // the probe changes nothing
         for (const auto& [start, vt] : g.tension) {
             CAPTURE(start);

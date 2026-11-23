@@ -45,6 +45,9 @@ struct OwnPhase {
 std::vector<OwnPhase> own_phases(const std::vector<std::int64_t>& y, std::int64_t e, const Detail& d,
                                  const EngineTuning& t, std::int64_t period, std::int64_t value) {
     const OwnBase b = own_base(y, e, d, t);
+    // P3-04 r19 22.3 (generator 0.21.0): no flare-up shorter than m = max(1, the scaled flare_min_years), whether
+    // the cut is by the next interval's start or by the cap budget (lead's ruling 4)
+    const std::int64_t m = std::max<std::int64_t>(1, (t.flare_min_years * e + 3000) / 6000);
     std::vector<OwnPhase> out;
     std::int64_t flare_total = 0;
     auto quiet = [&](std::int64_t qs, std::int64_t qe) {
@@ -62,7 +65,7 @@ std::vector<OwnPhase> own_phases(const std::vector<std::int64_t>& y, std::int64_
                 }
                 if (period != 0 && s % period == 0 && value >= d.flare_threshold) {
                     const std::int64_t f = std::min({b.f, qe - s, b.cap - b.sched - flare_total});
-                    if (f >= 1) {
+                    if (f >= m) {
                         out.push_back({2, row, s - 1});
                         out.push_back({3, s, s + f - 1});
                         flare_total += f;
@@ -389,6 +392,10 @@ void hand_made_tuning(int count, const std::function<bool(int)>& run_case) {
             d->flare_years = m.in(1, 1000);
             d->flare_threshold = m.in(1, 1000000);
         }
+        // P3-04 r19 22.3 (engine_flare_min): at most every level's flare_years; no draw, so the cases keep their
+        // numbers
+        t.flare_min_years = std::min({std::int64_t{10}, t.sparse.flare_years, t.normal.flare_years,
+                                      t.dense.flare_years});
         const std::int64_t e = m.in(2000, 12000);
         const std::int64_t np = m.in(1, 6);
         std::vector<std::int64_t> y = {0};

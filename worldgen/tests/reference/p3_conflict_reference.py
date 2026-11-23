@@ -585,6 +585,9 @@ class Engine(pe.Engine):
                         if last is not None and not (1 <= trig <= last):
                             fatal("history: tension: trigger %d outside 1 to %d" % (trig, last))
                         flare = min(b["F"], qe - end, b["cap"] - b["sched"] - self.flare_total)
+                        if flare < b["M"]:   # P3-04 r19 22.3: no flare-up shorter than m; the quiet row goes on
+                            self.flares_skipped.append((s, ln, flare))
+                            flare = 0
                 closes = end == qe or flare >= 1
                 self.hooks.quiet_b(self, s, ln, closes, row[3])
                 s = end

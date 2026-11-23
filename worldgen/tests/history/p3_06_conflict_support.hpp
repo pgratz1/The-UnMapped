@@ -197,6 +197,16 @@ inline std::int64_t conflict_int(const wd::ContentSet& c, std::string_view f) {
     FAIL("no history.conflict");
     return 0;
 }
+// An optional history.conflict field (one appended in a later revision), `fallback` when the content lacks it.
+inline std::int64_t conflict_int_or(const wd::ContentSet& c, std::string_view f, std::int64_t fallback) {
+    for (const wd::KindContent& k : c.kinds) {
+        if (k.kind != "history") continue;
+        for (const wd::Definition& d : k.definitions) {
+            if (d.id == "conflict") return d.record.find(f) != nullptr ? d.record.get_int(f) : fallback;
+        }
+    }
+    return fallback;
+}
 
 // P3-06 r17 22.2, P3-01 r13 3.6 (P3-10 second round): the hidden years of a refuge by its founder's race (race
 // order, the civilization row's race column): the race field hidden_years; a content set without it (the first
@@ -1028,6 +1038,7 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
     const std::int64_t kill_max = conflict_int(content, "kill_max_permille");
     const std::int64_t loss_w = conflict_int(content, "loss_winner_permille");
     const std::int64_t loss_l = conflict_int(content, "loss_loser_permille");
+    const std::int64_t spread = conflict_int_or(content, "toll_spread_permille", 0);   // r22 24.5; absent: off
     std::map<std::int64_t, std::int64_t> war_of_end;
     for (const Row& r : t.relation) {
         if (r[4].bytes == "war" && !is_null(r[6])) war_of_end[at(r, 8)] = at(r, 7);
@@ -1065,8 +1076,13 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
         if (k == k_battle || k == k_battle_at_pass) {
             const std::int64_t dw = x.values.at(id).at(1), dl = x.values.at(id).at(2);
             // F_W <= F_L: F_W < (dw + 1) / loss_w, dl <= F_W x kill_max; F_W > F_L: F_L < (dw + 1) / loss_w,
-            // dl <= F_L x loss_l (all per mille): so dl x loss_w < (dw + 1) x max(kill_max, loss_l)
-            CHECK_MESSAGE(dl * loss_w < (dw + 1) * std::max(kill_max, loss_l),
+            // dl <= F_L x loss_l (all per mille): so dl x loss_w < (dw + 1) x max(kill_max, loss_l).
+            // P3-06 r22 24.5 (generator 0.21.0; lead's ruling 2 on invariant (9)): the base tolls dl0, dw0 are
+            // multiplied by factors in [1000 - s, 1000 + s]: dl <= dl0 (1000 + s) / 1000 and
+            // dw0 < (dw + 1) 1000 / (1000 - s), so dl loss_w 1000 (1000 - s) < (1000 + s) M ((dw + 1) 1000 + 1000 - s)
+            // with M = max(kill_max, loss_l); at s = 0 this is the bound above.
+            const std::int64_t mx = std::max(kill_max, loss_l);
+            CHECK_MESSAGE(dl * loss_w * 1000 * (1000 - spread) < (1000 + spread) * mx * ((dw + 1) * 1000 + 1000 - spread),
                           "battle e" << id << ": dead_L " << dl << " above the kill bound for dead_W " << dw);
         }
         if (k == k_search_abandoned) {

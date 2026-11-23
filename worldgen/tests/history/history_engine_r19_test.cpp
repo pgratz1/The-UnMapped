@@ -27,6 +27,7 @@
 #include "p3_04_engine_golden_support.hpp"
 #include "p3_04_engine_support.hpp"
 #include "worldgen/db/testing.hpp"
+#include "worldgen/history/schedule.hpp"
 
 namespace {
 
@@ -131,7 +132,7 @@ std::vector<std::string> render_all(const std::string& file, const std::vector<E
     REQUIRE_MESSAGE(s.ok(), "SQL rejected");
     const db::WorldReader r = open_world(path);
     const auto err = eng::view_error(r);
-    REQUIRE_MESSAGE(!err.has_value(), "HistoryView::load refused the test world");
+    REQUIRE_MESSAGE(!err.has_value(), "HistoryView::load refused the test world: " << (err ? err->message : ""));
     std::vector<std::string> out;
     for (const std::int64_t id : ids) out.push_back(eng::render(r, id));
     return out;
@@ -287,8 +288,9 @@ TEST_CASE("P3-05 r18 24: became_city names its region without the figure; The lo
     CHECK(k9->templ == "{settlement} in {@region} grew into a city.");
     CHECK_FALSE(eng::template_problem(*k9, k9->templ).has_value());
     const std::vector<std::string> got =
-        render_all("city.db", {Ev{"became_city", "", {{"population", 8017}}, {P{1, 4, 1}}},
-                               Ev{"became_city", "", {{"population", 8017}}, {P{1, 4, 3}}}},
+        // roles settlement and civilization (both 1 to 1): the view refuses an event without its civilization
+        render_all("city.db", {Ev{"became_city", "", {{"population", 8017}}, {P{1, 4, 1}, P{2, 3, 1}}},
+                               Ev{"became_city", "", {{"population", 8017}}, {P{1, 4, 3}, P{2, 3, 1}}}},
                    "The Holt of Yews");
     REQUIRE(got.size() == 2U);
     CHECK(got[0] == "Drutnot Hole in the Holt of Yews grew into a city.");
@@ -302,8 +304,10 @@ TEST_CASE("P3-04 r19 22.3: a flare-up of 5 years before the final phase is skipp
     CHECK(m10 == PhaseRows{{1, 0, 149}, {2, 150, 5554}, {4, 5555, 6005}});
     const PhaseRows m1 = flare_run(6006, 5550, 1);
     CHECK(m1 == PhaseRows{{1, 0, 149}, {2, 150, 5549}, {3, 5550, 5554}, {4, 5555, 6005}});
-    // without the field (hand-made tuning): 1, as before
-    CHECK(flare_run(6006, 5550, 10, false) == m1);
+    // Hand-made tuning (tuning built in code, 22.3): flare_min_years 1, as before. The field is required in data
+    // (P3-01 r15 3.8), so a record without it is refused content, not hand-made tuning; the default is that of
+    // the tuning built in code.
+    CHECK(worldgen::history::EngineTuning{}.flare_min_years == 1);
 }
 
 TEST_CASE("P3-04 r19 22.3: a crossing with 40 years left gives min(F, 40); the scaled minimum at E 2003, 2004 is 3") {
