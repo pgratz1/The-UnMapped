@@ -1,7 +1,7 @@
 #pragma once
 
 // The history report of worldgen-cli report --history, format
-// "# worldgen history v1" (spec P3-07 sections 4 to 6, amendments 21 to 23).
+// "# worldgen history v2" (spec P3-07 sections 4 to 6, amendments 21 to 25).
 // The text is part of the cross-platform contract: ASCII and LF only,
 // integers only, no locale.
 
@@ -15,8 +15,11 @@
 
 namespace worldgen::inspect {
 
-// First line of format v1, without its line feed (P3-07 6.2).
+// First line of format v1, without its line feed (P3-07 6.2); no longer
+// written from generator 0.21.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V1 = "# worldgen history v1";
+// First line of format v2 (P3-07 r19 25.1), the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V2 = "# worldgen history v2";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 

@@ -35,6 +35,6 @@ namespace worldgen::history::conflict_detail {
 [[nodiscard]] RelationKey symmetric_relation(std::int64_t a, std::int64_t b, std::string_view kind);
 
 // The streams of 3.3 (and r10's search), index into ConflictSubsystem's keys.
-enum ConflictStream : std::size_t { DECLARE = 0, BATTLE, BATTLE_WIN, SIEGE, SACK, SEARCH };
+enum ConflictStream : std::size_t { DECLARE = 0, BATTLE, BATTLE_WIN, SIEGE, SACK, SEARCH, TOLL };
 
 }  // namespace worldgen::history::conflict_detail

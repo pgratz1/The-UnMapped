@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -30,6 +31,16 @@ inline constexpr std::size_t MILESTONES = 8;          // r17 24.9 (was 6)
 inline constexpr std::int64_t MILESTONE_KIND_MAX = 2;  // r17 24.5
 inline constexpr std::int64_t ISLET_MAX_DRY_CELLS = 1172;
 inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800, 900};
+
+// --- Constants of format v2 (P3-07 r19 25.11) --------------------------------
+
+inline constexpr std::size_t SUMMARY_CALAMITY_PER_PHASE = 2;  // 25.2
+inline constexpr std::size_t MILESTONES_ENDED = 4;            // 25.5
+// 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
+inline constexpr std::array<std::string_view, 15> SUMMARY_STATS = {
+    "end_year",           "events",           "summary_threshold",    "summary_events",       "civilizations",
+    "civilizations_alive", "civilizations_ended", "settlements_standing", "settlements_ruined", "population",
+    "wars",               "wars_open",        "wars_hollow_permille", "share_max_permille",   "races_alive"};
 
 // --- Tables (5.1, 5.3) ------------------------------------------------------
 
@@ -92,11 +103,15 @@ struct CivilizationDigest {
     std::int64_t id = 0;
     RegionPeak peak_regions;
     PopulationPeak peak_population;
-    std::int64_t settlements_founded = 0, settlements_held = 0, settlements_ruined = 0;
+    // r19 25.3 item 3: ruined counts status 3 only, faded status 4.
+    std::int64_t settlements_founded = 0, settlements_held = 0, settlements_ruined = 0, settlements_faded = 0;
     // At E: open region_control rows, the population of the standing
     // settlements it owns, the events with it as participant.
     std::int64_t regions_held = 0, population = 0, events = 0;
     std::vector<std::int64_t> milestones;  // 24.5 (replaces 7.3), ascending event id
+    // r19 25.5: at most MILESTONES_ENDED of the same choice, for the summary
+    // block of an ended civilization (empty for an alive one).
+    std::vector<std::int64_t> milestones_ended;
     std::vector<std::size_t> relations;    // indexes into HistoryTables::relations, in 6.6 order
     // r17 24.5: the civilization of the `from` role of a civ_seceded
     // founding event (0: not seceded); the wars line.
@@ -108,7 +123,9 @@ struct CivilizationDigest {
     struct Adversary {
         std::int64_t type = 0, id = 0;
         std::int64_t wars = 0, won = 0, lost = 0, drawn = 0, open = 0;
-        std::int64_t first = 0, last = 0;  // over the war rows; meaningful when wars > 0
+        // over the war rows, meaningful when wars > 0; r19 25.7 item 1: last is
+        // the largest of E - 1 (open row) and until (closed row).
+        std::int64_t first = 0, last = 0;
         std::string state;                 // "at war", "at peace", "enmity" or "none"
     };
     std::vector<Adversary> adversaries;
@@ -123,6 +140,9 @@ struct HistoryDigest {
     // claims, ascending id.
     std::vector<std::int64_t> last_held_by;
     std::vector<std::int64_t> standing_claims;
+    // r19 25.9 item 1: per settlement (index id - 1) the end_year of the
+    // refuge_hidden with it as settlement, smallest id first; -1 when none.
+    std::vector<std::int64_t> refuge_hidden_end;
     std::vector<std::pair<std::string, std::int64_t>> stats;  // section 9 with 21.5, 21.8, 22, 23, in order
 };
 
@@ -142,7 +162,9 @@ struct HistoryDigest {
 //                 <year>." or "Claimed the same year." when its region is the
 //                 war's, else (23 item 3) "The claim, since <year>, was to
 //                 <region>." or "The claim, made the same year, was to
-//                 <region>."; then, from the second war between the same
+//                 <region>." (r19 25.8: every year is that of root(c), c's
+//                 own claim cause with the smallest id, else c's); then,
+//                 from the second war between the same
 //                 two civilizations, " The <ordinal> war between them.";
 //   flare_up:     "The claim of <claimant> to <region>, held by <holder>,
 //                 came to a head." when its first cause is a claim (P3-07

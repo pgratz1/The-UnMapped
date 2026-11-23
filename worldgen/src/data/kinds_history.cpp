@@ -3,6 +3,7 @@
 // tuning kind `history` (id `chronology`). Registered by builtin_kinds()
 // in kinds.cpp.
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -366,6 +367,16 @@ std::optional<std::string> check_engine_quiet_min(const Record& r) {
     return std::string("quiet_min_years must not be above 2 x quiet_step_years");
 }
 
+// P3-04 r19 22.3: no level's flare-up may be shorter than its minimum.
+std::optional<std::string> check_engine_flare_min(const Record& r) {
+    for (const std::string_view level : ENGINE_LEVELS) {
+        if (r.get_int("flare_min_years") > r.get_record(level).get_int("flare_years")) {
+            return std::string(level) + ": flare_min_years must not be above flare_years";
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<std::string> check_engine_phase_budget(const Record& r) {
     const std::int64_t budget = 6 * r.get_int("simulated_max_permille") - 30;  // at most 2970
     for (const std::string_view level : ENGINE_LEVELS) {
@@ -636,6 +647,8 @@ Schema history_conflict_schema() {
         i("search_repeat_salience", 0, 100),
         i("quarrel_strain", 0, 5000),        // P3-06 r15 21.12 item 2
         i("quarrel_min_settlements", 0, 1000),  // P3-06 r17 22.1
+        i("quarrel_strength_permille", 0, 1000),  // P3-06 r22 24.2 (generator 0.21.0)
+        i("toll_spread_permille", 0, 500),        // P3-06 r22 24.5
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };
@@ -675,6 +688,16 @@ Schema history_conflict_schema() {
                   }
                   return std::string("quarrel_strain must not be above strain_max");
               }},
+        Check{"conflict_toll_spread",  // P3-06 r22 24.5
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::int64_t s = r.get_int("toll_spread_permille");
+                  const std::int64_t bound =
+                      std::min(r.get_int("loss_loser_permille"), r.get_int("kill_max_permille"));
+                  if (r.get_int("loss_winner_permille") * (1000 + s) <= bound * (1000 - s)) {
+                      return std::nullopt;
+                  }
+                  return std::string("toll_spread_permille lets the victors lose more than the defeated");
+              }},
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -685,6 +708,7 @@ Schema history_engine_schema() {
         Field::required("quiet_step_years", Type::integer(1, 200)),
         Field::required("quiet_events_max", Type::integer(1, 100)),
         Field::required("quiet_min_years", Type::integer(0, 400)),  // P3-04 r15 20.1 item 1a
+        Field::required("flare_min_years", Type::integer(1, 1000)),  // P3-04 r19 22.3
         Field::required("simulated_min_permille", Type::integer(100, 500)),
         Field::required("simulated_max_permille", Type::integer(100, 500)),
         Field::required("islet_max_dry_cells", Type::integer(0, 1000000)),
@@ -695,6 +719,7 @@ Schema history_engine_schema() {
     std::vector<Check> checks{
         Check{"engine_simulated_bounds", [](const Record& r) { return check_engine_simulated_bounds(r); }},
         Check{"engine_quiet_min", [](const Record& r) { return check_engine_quiet_min(r); }},  // P3-04 r15
+        Check{"engine_flare_min", [](const Record& r) { return check_engine_flare_min(r); }},  // P3-04 r19
         Check{"engine_phase_budget", [](const Record& r) { return check_engine_phase_budget(r); }},
     };
     return Schema(std::move(fields), std::move(checks));

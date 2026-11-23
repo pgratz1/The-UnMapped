@@ -187,6 +187,14 @@ EventCatalogue build_compiled() {
                                role(2, "to", EntityType::civilization, 1, 1),
                                role(3, "settlement", EntityType::settlement, 1, 0)},
                               {}, 0, {}});
+    // P3-04 r19 22.2 (P5-01, generator 0.21.0): kind 41, a claim dropped at a
+    // declaration with no allowed goal (P3-06 24.3); kind 42, the years a
+    // fled refuge stays hidden, as a span (P3-06 24.4).
+    c.kinds.push_back(KindDef{41, "claim_dropped", true, 1, 0, two("claimant", "holder"), {}, 0, {}});
+    c.kinds.push_back(KindDef{42, "refuge_hidden", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "founder", EntityType::civilization, 1, 1)},
+                              {}, 0, {}});
     return c;
 }
 
@@ -926,6 +934,21 @@ std::optional<HistoryView::CivilizationInfo> HistoryView::civilization_info(std:
 
 // --- render_event (8.5) ------------------------------------------------------------------
 
+namespace {
+
+// P3-04 r19 22.1: the number of clause cuts ("; " or ", ") in a literal.
+std::size_t clause_cuts(std::string_view literal) noexcept {
+    std::size_t n = 0;
+    for (std::size_t i = 0; i + 1 < literal.size(); ++i) {
+        if ((literal[i] == ';' || literal[i] == ',') && literal[i + 1] == ' ') {
+            ++n;
+        }
+    }
+    return n;
+}
+
+}  // namespace
+
 std::string render_event(const HistoryView& view, std::int64_t event_id) {
     const std::string at = "render_event: event " + int_text(event_id) + ": ";
     const HistoryView::Event* e = view.event(event_id);
@@ -972,7 +995,36 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
             out += name;
         }
     };
-    for (const Token& t : parsed.tokens) {
+    // r19 22.1: the clause of each token (a placeholder belongs to the
+    // clause in which it starts), and per clause whether every number of it
+    // (each {value} and each '#' of a chosen three-word form) is 1 to 9.
+    std::vector<std::size_t> clause_of(parsed.tokens.size(), 0);
+    std::vector<std::uint8_t> clause_words(1, 1);
+    for (std::size_t i = 0; i < parsed.tokens.size(); ++i) {
+        const Token& t = parsed.tokens[i];
+        clause_of[i] = clause_words.size() - 1;
+        if (t.type == TokenType::literal) {
+            clause_words.resize(clause_words.size() + clause_cuts(t.text), 1);
+            continue;
+        }
+        bool is_number = t.type == TokenType::value;
+        std::int64_t v = 0;
+        if (t.type == TokenType::value) {
+            v = value_of(t.text);
+        } else if (t.type == TokenType::choice && t.three) {
+            v = value_of(t.text);
+            const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
+            is_number = word.find('#') != std::string::npos;
+        }
+        if (is_number && (v < 1 || v > 9)) {
+            clause_words[clause_of[i]] = 0;
+        }
+    }
+    const auto number_text = [&](std::size_t token, std::int64_t v) {
+        return clause_words[clause_of[token]] != 0 ? sentence_value_text(v) : grouped_text(v);
+    };
+    for (std::size_t ti = 0; ti < parsed.tokens.size(); ++ti) {
+        const Token& t = parsed.tokens[ti];
         switch (t.type) {
             case TokenType::literal: out += t.text; break;
             case TokenType::role: {
@@ -1002,7 +1054,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 }
                 break;
             }
-            case TokenType::value: out += sentence_value_text(value_of(t.text)); break;
+            case TokenType::value: out += number_text(ti, value_of(t.text)); break;
             case TokenType::choice: {
                 const std::int64_t v = value_of(t.text);
                 if (!t.three) {
@@ -1013,7 +1065,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
                 for (const char c : word) {
                     if (c == '#') {
-                        out += sentence_value_text(v);  // r17 21.1
+                        out += number_text(ti, v);  // r17 21.1, r19 22.1
                     } else {
                         out += c;
                     }

@@ -107,10 +107,21 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     const std::int64_t loser = x_wins ? y : x;
     const std::int64_t f_winner = x_wins ? attack : defend;
     const std::int64_t f_loser = x_wins ? defend : attack;
-    const std::int64_t dead_loser = loser_dead_of(tuning_, f_winner, f_loser);  // r10 20.16
+    std::int64_t dead_loser = loser_dead_of(tuning_, f_winner, f_loser);  // r10 20.16
     // r7 (P3-08): the victors lose loss_winner of the smaller force.
-    const std::int64_t dead_winner =
+    std::int64_t dead_winner =
         floor_div(checked_mul(std::min(f_winner, f_loser), tuning_.loss_winner_permille), 1000);
+    // r22 24.5: each side's toll times a keyed factor in [1000 - s, 1000 + s]
+    // permille (no draw when s = 0).
+    if (const std::int64_t s = tuning_.toll_spread_permille; s > 0) {
+        const auto n = static_cast<std::uint64_t>(2 * s + 1);
+        const std::int64_t v_loser =
+            1000 - s + static_cast<std::int64_t>(pick(ctx.draw(keys_[TOLL], word(w0.declared), 0, 0), n));
+        const std::int64_t v_winner =
+            1000 - s + static_cast<std::int64_t>(pick(ctx.draw(keys_[TOLL], word(w0.declared), 0, 1), n));
+        dead_loser = floor_div(checked_mul(dead_loser, v_loser), 1000);
+        dead_winner = floor_div(checked_mul(dead_winner, v_winner), 1000);
+    }
     EventSpec e = point_event(ctx, at_pass ? "battle_at_pass" : "battle", region, 0);
     e.participants = {civ_role("winner", winner), civ_role("loser", loser)};
     e.values = {dead_winner, dead_loser};
@@ -273,8 +284,19 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     }
     state.set_region_owner(plan.region, y, settled);
     // r17 22.2: the hidden years of the founder's race.
-    const std::int64_t until = checked_add(ctx.year(), race_of_civ(ctx, y).hidden_years);
+    const std::int64_t hidden_years = race_of_civ(ctx, y).hidden_years;
+    const std::int64_t until = checked_add(ctx.year(), hidden_years);
     hidden_until_[h] = until;
+    // r22 24.4: the refuge's hidden years within the history, as a span
+    // (kind 42) right after its refugees_settled.
+    if (hidden_years >= 1) {
+        EventSpec r = point_event(ctx, "refuge_hidden", plan.region, h);
+        r.end_year = std::min(until, ctx.inputs().params.span) - 1;
+        r.participants = {Participant{"settlement", EntityType::settlement, h},
+                          Participant{"founder", EntityType::civilization, y}};
+        r.causes = {settled};
+        (void)ctx.append(r);
+    }
     // r14 21.10 item 1, r17 22.3: y lies low while its refuge stands, is its
     // own and is hidden; peoples holds the record and the one predicate
     // (P3-05 r15 22.7a).

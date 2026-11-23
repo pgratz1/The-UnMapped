@@ -93,6 +93,11 @@ struct ConflictTuning {
     // r17 22.1: the standing settlements a civilization needs before its
     // awakening quarrel claim is pursued (a hand-made tuning: 1, the rule off).
     std::int64_t quarrel_min_settlements = 1;
+    // r22 24.2 (generator 0.21.0): the least strength at which the awakening
+    // quarrel claim is pursued; r22 24.5: the spread of the keyed factor on
+    // each side's battle toll. A hand-made tuning: 0 and 0, both rules off.
+    std::int64_t quarrel_strength_permille = 0;
+    std::int64_t toll_spread_permille = 0;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 
@@ -313,8 +318,12 @@ public:
     // r17 22.1: the open awakening quarrels, civilization -> its neighbour.
     [[nodiscard]] const std::map<std::int64_t, std::int64_t>& quarrel_with() const noexcept { return quarrel_with_; }
     // r17 22.1 item 3: a's claim on b is its quarrel claim and a has fewer
-    // than quarrel_min_settlements standing visible settlements.
+    // than quarrel_min_settlements standing visible settlements, or (r22
+    // 24.2) strength(a, b) is below quarrel_strength_permille.
     [[nodiscard]] bool quarrel_held_back(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    // r22 24.2: 20.6 item 3's odds of a's claim on b without the aggression
+    // discount: min(1000, force(a) x 1000 div max(1, fb x declare_ratio div 1000)).
+    [[nodiscard]] std::int64_t strength_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
     // r14 21.12: the civilizations whose awakening quarrel waits for a people.
     [[nodiscard]] const std::set<std::int64_t>& quarrel_pending() const noexcept { return quarrel_pending_; }
 
@@ -373,6 +382,12 @@ private:
     [[nodiscard]] std::pair<std::int64_t, std::int64_t> defence_at(const StepContext& context, std::int64_t y,
                                                                    const FrontEntry& e) const;
     [[nodiscard]] std::int64_t odds_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    // 20.6 item 3's fb for a's claim on b: force(b) x def(G) div 1000.
+    [[nodiscard]] std::int64_t claim_defence_force(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    // 5.3: the claim event of a on b over region (kind 20 when b owns it,
+    // else kind 39 naming b's seen settlements there), with extra causes.
+    [[nodiscard]] EventSpec claim_event(const StepContext& context, std::int64_t a, std::int64_t b,
+                                        std::int64_t region, std::span<const std::int64_t> extra_causes) const;
     [[nodiscard]] bool weary(const StepContext& context, std::int64_t defender, std::int64_t region) const;
     [[nodiscard]] std::vector<FrontEntry> allowed_goals(const StepContext& context, std::int64_t b,
                                                         std::span<const FrontEntry> front) const;
@@ -444,7 +459,7 @@ private:
     PeoplesSubsystem& peoples_;
     ConflictTuning tuning_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 6> keys_{};
+    std::array<std::uint64_t, 7> keys_{};
     std::int64_t intensity_ = 1000;
     std::vector<ConflictRace> races_;          // race row order (ascending id)
     ConflictGraph graph_;                      // open borders, index region - 1

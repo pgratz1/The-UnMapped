@@ -142,7 +142,7 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
                 headings.push_back(l);
             }
         }
-        CHECK(lines[0] == "# worldgen history v1");
+        CHECK(lines[0] == "# worldgen history v2");  // P3-07 r19 25.1
         // r17 24.4: the chronicle before the civilizations, [phases] at full only.
         if (text == &full) {
             CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[chronicle]",
@@ -154,8 +154,22 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
     }
     const std::vector<std::string> s = lines_of(summary);
     const std::vector<std::string> f = lines_of(full);
-    for (const std::string_view b : {"[settings]", "[ages]", "[stats]"}) {
+    for (const std::string_view b : {"[settings]", "[ages]"}) {
         CHECK(block(s, b) == block(f, b));
+    }
+    // r19 25.12 item 2: [stats] at summary is the SUMMARY_STATS subset of full's, in full's order.
+    {
+        std::vector<std::string> subset;
+        for (const std::string& l : block(f, "[stats]")) {
+            const std::string key = l.substr(0, l.find(" = "));
+            for (const std::string_view k : worldgen::history::SUMMARY_STATS) {
+                if (key == k) {
+                    subset.push_back(l);
+                }
+            }
+        }
+        CHECK(block(s, "[stats]") == subset);
+        CHECK(subset.size() == worldgen::history::SUMMARY_STATS.size());
     }
     // 24.10 item 5: the wars line's outcomes add up; item 6: one quiet
     // stretch milestone with its note per realm that lived through one.
@@ -178,7 +192,8 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
         CHECK(stretch_milestones > 0);
         CHECK(stretch_milestones <= blocks);
     }
-    const std::map<std::string, std::string> stats = keyed(block(s, "[stats]"));
+    // r19 25.12 item 2: invariant 6 is read on full.
+    const std::map<std::string, std::string> stats = keyed(block(f, "[stats]"));
     // Invariant 6: every key of the world report's [history] with its value.
     wdb::Result<wdb::WorldReader> world = wdb::WorldReader::open(world_42());
     REQUIRE(world.ok());
