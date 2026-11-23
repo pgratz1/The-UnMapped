@@ -1167,7 +1167,7 @@ class World(pe.World):
         P5-02 7.1: the rate times G / 1000, d = (P g G (C - P) + 500 1000 C) div (1000 1000 C)."""
         p = s["population"]
         g = self.pd.race[self.race_of(s)]["growth"]
-        G = self.wild_growth(s["region"])
+        G = self.wild_growth(s["region"]) if self.wild is not None else 1000
         cap = self.kind_cap(s)
         if FLAGS["cap"] and p > cap:
             # 14 item 3 (r6): a settlement above its kind cap at the start of a year loses at least 1 in it
