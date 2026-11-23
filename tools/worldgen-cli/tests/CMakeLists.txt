@@ -151,6 +151,12 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
 # its own Sandbox (counter and process id), so the groups never share a
 # scratch path. Costs are seconds under linux-gcc-release (generator 0.10.0);
 # timeout 3600 s per entry on every preset.
+# render --composite territory and --year (P4-01 7 and 13.6; P0-04
+# amendment 23): the default name, the usage errors and the year range, the
+# worlds without layers or history, the help text, and the PNG's pixels
+# against the library's render_territory.
+target_sources(worldgen-cli-tests PRIVATE cli_territory_test.cpp)
+
 unmapped_add_doctest_shards(worldgen-cli-tests
     TIMEOUT 3600
     SHARD hydrology-elevation 13 "*cli_hydrology_test.cpp,*cli_elevation_test.cpp"
@@ -162,6 +168,7 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD chronology 20 "*cli_chronology_test.cpp"
     SHARD engine 15 "*cli_history_test.cpp"
     SHARD conflict 27 "*cli_history_conflict_test.cpp"
+    SHARD territory 12 "*cli_territory_test.cpp"
     REST other 10
     # The *-slow suites (label slow), as for worldgen-tests; costs measured
     # 2026-11-21 at 0.18.0.

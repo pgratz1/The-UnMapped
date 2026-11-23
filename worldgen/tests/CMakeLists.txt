@@ -415,6 +415,24 @@ target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"
     UNMAPPED_P3_07_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-07-report.txt"
 )
+# Timeline in the library (spec P4-01): fixture T1 (data/timeline/, written
+# through the writer API by timeline_support.hpp) against the reference's
+# table hashes, the queries of section 4, the colours of 5.5, the territory
+# image of 5.6, load_history's errors, the invariants of section 8 on 512
+# worlds (seeds 0 to 19) and the golden dumps of 13.4 (reference
+# reference/p4_timeline_reference.py). The 1024 cases are in the skipped
+# suite "timeline-slow"; the bench is the skipped suite "timeline-bench".
+target_sources(worldgen-tests PRIVATE
+    timeline_unit_test.cpp
+    timeline_territory_test.cpp
+    timeline_golden_test.cpp
+    timeline_property_test.cpp
+    timeline_bench_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P4_01_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/timeline"
+    UNMAPPED_P4_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-01-timeline.txt"
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the
@@ -447,6 +465,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD balance 20 "*history_balance_*"
     SHARD history-report 20 "*history_report_*"
     SHARD layer-catalogue 8 "*inspect_layer_catalogue_worlds_test.cpp"
+    SHARD timeline 40 "*timeline_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -461,5 +480,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-engine 490 "*-slow" "*history_balance_*,*conflict_engineer_test.cpp,*history_engine_golden_test.cpp,*history_engine_property_test.cpp,*history_engine_schedule_test.cpp,*history_engine_r12_test.cpp"
     SLOW slow-biomes-resources-regions 550 "*-slow" "*stages_biomes_*,*stages_resources_*,*stages_regions_*"
     SLOW slow-history-report 120 "*-slow" "*history_report_*"
+    SLOW slow-timeline 400 "*-slow" "*timeline_*"
     SLOW_REST slow-other 10 "*-slow"
 )
