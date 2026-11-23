@@ -16,7 +16,6 @@ add_library(unmapped_gdext SHARED
     src/register_types.cpp
     src/world_file.cpp
     src/world_layer.cpp
-    src/viewer/layer_catalogue.cpp
     src/viewer/viewer_model.cpp
     src/viewer/layer_map_view.cpp
     src/viewer/viewer_screen.cpp

@@ -9,7 +9,7 @@
 #include <godot_cpp/variant/char_string.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
 
-#include "viewer/layer_catalogue.hpp"
+#include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
 
@@ -24,7 +24,7 @@ std::string to_utf8(const godot::String& text) {
     return {utf8.get_data(), static_cast<std::size_t>(utf8.length())};
 }
 
-godot::Array legend_array(const std::vector<catalogue::LegendEntry>& entries) {
+godot::Array legend_array(const std::vector<worldgen::inspect::LegendEntry>& entries) {
     godot::Array out;
     for (const auto& entry : entries) {
         godot::Dictionary row;
@@ -127,8 +127,8 @@ godot::Dictionary ViewerModel::get_view_info(int64_t index) const {
         godot::Dictionary info = world_->get_layer_info(index);
         info["kind"] = "layer";
         const std::string name = to_utf8(info["name"]);
-        info["group"] = to_godot(catalogue::group_title(catalogue::layer_group(name)));
-        info["unit"] = to_godot(catalogue::layer_unit(name));
+        info["group"] = to_godot(worldgen::inspect::layer_group_title(worldgen::inspect::layer_group(name)));
+        info["unit"] = to_godot(worldgen::inspect::layer_unit(name));
         const godot::Ref<WorldLayer> layer = get_layer(index);
         info["palette"] = layer.is_valid() ? layer->get_palette() : godot::String();
         return info;
@@ -136,7 +136,7 @@ godot::Dictionary ViewerModel::get_view_info(int64_t index) const {
     const auto composite = composites_[static_cast<std::size_t>(index - get_layer_count())];
     godot::Dictionary info;
     info["kind"] = "composite";
-    info["group"] = to_godot(catalogue::group_title(catalogue::Group::composites));
+    info["group"] = to_godot(worldgen::inspect::layer_group_title(worldgen::inspect::LayerGroup::composites));
     info["unit"] = "";
     info["name"] = to_godot(worldgen::inspect::composite_name(composite));
     const godot::Dictionary elevation = world_->get_layer_info(world_->find_layer("elevation"));
@@ -237,10 +237,10 @@ bool ViewerModel::select_view(int64_t index) {
     selected_ = index;
     if (index < get_layer_count()) {
         const godot::Ref<WorldLayer> layer = get_layer(index);
-        legend_ = legend_array(catalogue::layer_legend(layer->layer().name, layer->palette(), layer->layer().grid,
-                                                       world_->biome_records()));
+        legend_ = legend_array(worldgen::inspect::layer_legend(layer->layer().name, layer->palette(),
+                                                               layer->layer().grid, world_->biome_records()));
     } else {
-        legend_ = legend_array(catalogue::composite_legend(
+        legend_ = legend_array(worldgen::inspect::composite_legend(
             composites_[static_cast<std::size_t>(index - get_layer_count())], world_->biome_records()));
     }
     emit_signal("view_selected", index);
@@ -317,21 +317,21 @@ godot::String ViewerModel::describe_cell(int64_t x, int64_t y) {
 
     std::string text = "x " + std::to_string(cx) + ", y " + std::to_string(cy) + "   " + value_layer + " ";
     std::int64_t value = 0;
-    if (catalogue::cell_value(*value_grid, cx, cy, value)) {
-        text += catalogue::format_value(value_layer, value);
+    if (worldgen::inspect::cell_value(*value_grid, cx, cy, value)) {
+        text += worldgen::inspect::format_layer_value(value_layer, value);
     } else {
         text += to_utf8(get_layer(world_->find_layer(value_layer))->get_cell_text(x, y));
     }
 
     std::int64_t biome = 0;
     const worldgen::db::LayerGrid* biome_grid = layer_grid("biome");
-    if (biome_grid != nullptr && catalogue::cell_value(*biome_grid, cx, cy, biome)) {
+    if (biome_grid != nullptr && worldgen::inspect::cell_value(*biome_grid, cx, cy, biome)) {
         const worldgen::inspect::BiomeRecord* record = world_->find_biome(biome);
         text += "   |   biome " + (record != nullptr ? record->name : "code " + std::to_string(biome));
     }
     std::int64_t region = 0;
     const worldgen::db::LayerGrid* region_grid = layer_grid("region");
-    if (region_grid != nullptr && catalogue::cell_value(*region_grid, cx, cy, region)) {
+    if (region_grid != nullptr && worldgen::inspect::cell_value(*region_grid, cx, cy, region)) {
         if (region == 0) {
             text += "   |   no region (ocean)";
         } else {
@@ -355,11 +355,8 @@ godot::String ViewerModel::get_legend_title() const {
     const godot::Dictionary info = get_view_info(selected_);
     const godot::String name = info["name"];
     if (info["kind"] == godot::Variant("composite")) {
-        if (name == "map") {
-            return "map: relief shaded by slope";
-        }
-        return name + godot::String(": biome colours shaded by slope") +
-               godot::String(name == "regions" ? ", region borders" : "");
+        const auto composite = composites_[static_cast<std::size_t>(selected_ - get_layer_count())];
+        return name + godot::String(": ") + to_godot(worldgen::inspect::composite_description(composite));
     }
     const godot::String unit = info.get("unit", "");
     // The unit when the catalogue gives one; otherwise the palette.

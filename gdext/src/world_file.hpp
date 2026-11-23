@@ -122,19 +122,12 @@ private:
     void read_biome_table();
     void read_region_table();
 
-    struct RegionRow {
-        std::int64_t id = 0;
-        godot::String name;
-        std::int64_t biome = 0;
-        std::int64_t cells = 0;
-    };
-
     std::optional<worldgen::db::WorldReader> reader_;
     std::vector<worldgen::db::LayerInfo> layers_;
     std::vector<worldgen::inspect::BiomeRecord> biome_records_;
     std::vector<worldgen::inspect::BiomeColour> biome_colours_;
     godot::String biome_table_problem_;
-    std::vector<RegionRow> regions_;  // ascending id
+    std::vector<worldgen::inspect::RegionRecord> regions_;  // ascending id, as read_region_rows gives them
     godot::String region_table_problem_;
     godot::String path_;
     godot::String error_code_;

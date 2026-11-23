@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <string_view>
 
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -24,8 +25,8 @@
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-#include "viewer/layer_catalogue.hpp"
 #include "viewer/viewer_check.hpp"
+#include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
 
@@ -302,9 +303,11 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
     view_item_.assign(static_cast<std::size_t>(count), -1);
     // Group by the model's group titles, in the catalogue's group order;
     // within a group, in view order (layer id order).
-    for (std::size_t g = 0; g < unmapped::catalogue::GROUP_COUNT; ++g) {
-        const godot::String title = godot::String::utf8(
-            unmapped::catalogue::group_title(static_cast<unmapped::catalogue::Group>(g)).data());
+    for (std::size_t g = 0; g < worldgen::inspect::LAYER_GROUP_COUNT; ++g) {
+        const std::string_view group_title =
+            worldgen::inspect::layer_group_title(static_cast<worldgen::inspect::LayerGroup>(g));
+        const godot::String title =
+            godot::String::utf8(group_title.data(), static_cast<int64_t>(group_title.size()));
         bool heading = false;
         for (int64_t i = 0; i < count; ++i) {
             const godot::Dictionary info = model_->get_view_info(i);

@@ -13,9 +13,9 @@
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-#include "viewer/layer_catalogue.hpp"
 #include "viewer/viewer_screen.hpp"
 #include "world_file.hpp"
+#include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
 
@@ -276,7 +276,7 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
             for (std::uint32_t y = grid.height / 2; y < grid.height && region_id == 0; ++y) {
                 for (std::uint32_t x = 0; x < grid.width && region_id == 0; ++x) {
                     std::int64_t v = 0;
-                    if (catalogue::cell_value(grid, x, y, v) && v > 0) {
+                    if (worldgen::inspect::cell_value(grid, x, y, v) && v > 0) {
                         cx = x;
                         cy = y;
                         region_id = v;
@@ -293,7 +293,7 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
             // A composite shows the elevation in metres.
             const godot::Ref<WorldLayer> elevation = model->get_layer(world->find_layer("elevation"));
             ok = ok && elevation.is_valid() &&
-                 text.contains(godot::String("elevation ") + to_godot(catalogue::format_value(
+                 text.contains(godot::String("elevation ") + to_godot(worldgen::inspect::format_layer_value(
                                                   "elevation", elevation->get_cell_text(cx, cy).to_int())));
         }
         if (biome_index >= 0) {
@@ -314,11 +314,11 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
                      "leaving the map shows the prompt again");
         // Units of a few catalogue layers, in display form.
         if (region_index >= 0) {
-            check.expect(catalogue::format_value("elevation", 1234) == "123.4 m" &&
-                             catalogue::format_value("temperature", -15) == "-1.5 \u00B0C" &&
-                             catalogue::format_value("water", 2) == "lake" &&
-                             catalogue::format_value("flow_dir", 8) == "none (ocean)" &&
-                             catalogue::format_value("coast_dist", -48) == "48 m offshore",
+            check.expect(worldgen::inspect::format_layer_value("elevation", 1234) == "123.4 m" &&
+                             worldgen::inspect::format_layer_value("temperature", -15) == "-1.5 \u00B0C" &&
+                             worldgen::inspect::format_layer_value("water", 2) == "lake" &&
+                             worldgen::inspect::format_layer_value("flow_dir", 8) == "none (ocean)" &&
+                             worldgen::inspect::format_layer_value("coast_dist", -48) == "48 m offshore",
                          "display units of elevation, temperature, water, flow_dir, coast_dist");
         }
     }
