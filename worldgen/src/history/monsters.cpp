@@ -1260,15 +1260,22 @@ void MonstersSubsystem::outposts_left(StepContext& ctx) {
 void MonstersSubsystem::outposts_raised(StepContext& ctx) {
     const State& state = ctx.state();
     const std::int64_t nc = civ_count(state);
+    // The open outposts per region and per founder, kept up to date below.
+    std::vector<std::uint8_t> outpost_in(static_cast<std::size_t>(region_count_), 0);
+    std::vector<std::int64_t> open_of(static_cast<std::size_t>(nc) + 1, 0);
+    for (const Site& t : sites_) {
+        if (t.kind == 2 && !t.ended_year) {
+            outpost_in[static_cast<std::size_t>(t.region - 1)] = 1;
+            if (t.founder >= 1 && t.founder <= nc) {
+                ++open_of[static_cast<std::size_t>(t.founder)];
+            }
+        }
+    }
     for (std::int64_t c = 1; c <= nc; ++c) {
         if (state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
             continue;
         }
-        std::int64_t open = 0;
-        for (const Site& t : sites_) {
-            open += (t.kind == 2 && !t.ended_year && t.founder == c) ? 1 : 0;
-        }
-        if (open >= tuning_.outpost_max) {
+        if (open_of[static_cast<std::size_t>(c)] >= tuning_.outpost_max) {
             continue;
         }
         std::vector<std::int64_t> enemies;  // ascending
@@ -1285,10 +1292,7 @@ void MonstersSubsystem::outposts_raised(StepContext& ctx) {
             if (state.region(r).owner != c || islet_[ri] != 0) {
                 continue;
             }
-            const bool has_outpost = std::any_of(sites_.begin(), sites_.end(), [r](const Site& t) {
-                return t.kind == 2 && !t.ended_year && t.region == r;
-            });
-            if (has_outpost) {
+            if (outpost_in[ri] != 0) {
                 continue;
             }
             std::int64_t enemy = 0;
@@ -1353,6 +1357,8 @@ void MonstersSubsystem::outposts_raised(StepContext& ctx) {
             t.origin_event = ev;
             t.hostile_year = ctx.year();
             sites_.push_back(std::move(t));
+            outpost_in[ri] = 1;
+            ++open_of[static_cast<std::size_t>(c)];
             ++stats_.outposts;
             break;
         }
