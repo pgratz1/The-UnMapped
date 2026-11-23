@@ -588,7 +588,9 @@ private:
             for (const db::MonsterRow& m : t_.monsters) {
                 shown.push_back(&m);
             }
-        } else {
+        } else if (static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
+            // P5-02 12.9 (Paul, 2026-11-23): with more than SUMMARY_LINES_CIVS
+            // realms the summary's [monsters] is its count line only.
             for (const db::MonsterRow& m : t_.monsters) {
                 if (m.status == 1 || m.status == 2) {
                     shown.push_back(&m);

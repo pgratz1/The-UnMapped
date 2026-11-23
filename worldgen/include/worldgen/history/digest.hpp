@@ -45,6 +45,8 @@ inline constexpr std::int64_t SUMMARY_LINES_MAX = 790;
 inline constexpr std::int64_t SUMMARY_LINES_PER_CIV = 40;
 inline constexpr std::int64_t SUMMARY_LINES_CIVS = 16;
 inline constexpr std::int64_t SUMMARY_BUDGET_MIN = 100;
+// The cap on L: L = min(SUMMARY_LINES_CAP, SUMMARY_LINES_MAX + ...).
+inline constexpr std::int64_t SUMMARY_LINES_CAP = 1390;
 inline constexpr std::size_t SUMMARY_MONSTER_LINES = 2;
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
 // r21 26.5 item 2 (format v3): and regions_renamed, refuges_hidden.
@@ -190,7 +192,7 @@ struct HistoryDigest {
 [[nodiscard]] HistoryDigest digest_history(const HistoryView& view, const HistoryTables& tables);
 
 // P5-02 12.9: B = min(SUMMARY_BUDGET, max(SUMMARY_BUDGET_MIN, L - O - F)),
-// with L of `civilizations` rows (and `lines_max` for SUMMARY_LINES_MAX, a
+// with L (capped at SUMMARY_LINES_CAP) of `civilizations` rows (and `lines_max` for SUMMARY_LINES_MAX, a
 // test seam), O = `outside_lines` (the summary's lines outside
 // [chronicle]) and F = 4 + ages + 2 * phases.
 [[nodiscard]] std::int64_t summary_budget(std::int64_t civilizations, std::int64_t outside_lines, std::int64_t ages,

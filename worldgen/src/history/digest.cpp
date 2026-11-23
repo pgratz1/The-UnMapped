@@ -1792,8 +1792,10 @@ HistoryDigest digest_history(const HistoryView& view, const HistoryTables& table
 
 std::int64_t summary_budget(std::int64_t civilizations, std::int64_t outside_lines, std::int64_t ages,
                             std::int64_t phases, std::int64_t lines_max) {
-    const std::int64_t l = checked_add(
-        lines_max, checked_mul(SUMMARY_LINES_PER_CIV, std::max<std::int64_t>(0, civilizations - SUMMARY_LINES_CIVS)));
+    const std::int64_t l = std::min(
+        SUMMARY_LINES_CAP,
+        checked_add(lines_max,
+                    checked_mul(SUMMARY_LINES_PER_CIV, std::max<std::int64_t>(0, civilizations - SUMMARY_LINES_CIVS))));
     const std::int64_t f = checked_add(checked_add(4, ages), checked_mul(2, phases));
     const std::int64_t room = l - checked_add(outside_lines, f);
     return std::min(SUMMARY_BUDGET, std::max(SUMMARY_BUDGET_MIN, room));
