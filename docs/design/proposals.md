@@ -1186,3 +1186,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - The history report becomes format v2, with P5's growth rule.
 - Interim choice: as proposed; the design document is not affected. Questions for the lead (P5-01 section 10): the delay the strength gate puts on the first orc war; the `civs4` summary length (about 1,100 lines, against "about 1,000" for default worlds); keeping the two optional rules (tolls, short flare-ups).
 - Status: open
+
+### Paul's decision of 2026-11-22: the P5-01 critic's three notes go to P5-12
+
+- Date: 2026-11-22
+- Raised by: lead, from the world critic's review of P5-01 (`docs/reviews/p5-01-followups-world-critic.md`, F1 to F3)
+- Design doc section: 13 (P5)
+- Problem: at generator 0.21.0 some settlement names double a place suffix (`Sudsteadstead`, `Galwickwick`, `Stonton`, `Deasstead`), one region is named "Tarden" (the name filter does not cover region names), and the `refuges` list of the report's `[present]` section also lists refuges found long ago. Fixing names changes world bytes, so every reference and golden value would be recorded twice in a row.
+- Decision (Paul: "carry them into P5-12"): P5-01 merges as it is; the three notes are fixed in P5-12 (regions renamed by history), the next stage that changes world bytes.
+- Status: accepted
