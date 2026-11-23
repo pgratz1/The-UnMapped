@@ -1561,6 +1561,44 @@ renames in the rename-small fixtures), `p3-07-report.txt` (v4, every report), `p
 dumps of schema 9), and the new `p5-02-monsters.txt`. Not touched: `core_vectors.txt`, `p1-*`,
 `p3-03-chronology.txt`, and the world-hash files `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` (validation's).
 
+### 0.23.0, phase 2 (integration with the engineer's branch at spec r1)
+
+Merged with `origin/p5/02-impl-r1` (ba90687): every data root holds the implementation's calibrated values, and
+the listings follow them (`BEASTS_023`, `MONSTERS_KINDS_023`, `MONSTERS_TUNING_023`, `GHOST_023` of
+`p3_data_reference.py`; the C++ listing `p3_01_history_data.hpp` is regenerated from those by replacing each raw
+string with `monster_file_023`, `beast_file_023` and `monsters_file_023`; `history/history_monsters_data_test.cpp`'s
+tables). The data-check messages are the built ones (r1 25 items 1 and 6): `toll_min_permille <a> is above
+toll_max_permille <b>`, `overruns[<i>] '<k>' repeats overruns[<j>]`, `bold_off_permille <a> is above
+bold_on_permille <b>`; the biome and culture checks run in `check_history_data` at the kind's directory.
+
+- `p5_02_monsters_reference.py`: 6.4.1's raid target (`prey_weight`, `raid_target`: candidates standing, visible,
+  owned, within `range_hops`, ascending id; weights floored factor by factor; `weighted` on
+  `hist.monsters.raid_target` (m, 0, 0); no draw without a candidate or with W = 0), the stream appended to
+  `SIM_STREAMS`; the unit checks of 26.2. Invariant 7's quarter bound is left out on monsters-small (a stress
+  fixture: overrun_permille 1000 with r1's prey on small places).
+- `p3_report_reference.py`: 12.9 (`summary_budget`, `SUMMARY_LINES_CAP` 1390, O counted by `outside_lines` on the
+  summary, the set chosen again with B; the lead's ruling that `[monsters]` is its count line at summary with
+  C > 16); `LINES_MAX_SEAM` mirrors the C++ `lines_max` seam; `check_budget_r1`. The report is rendered as
+  `outside_lines` + `chronicle_lines`. The fixture DDL is versioned against `schema.md` (which now holds 9).
+- `p5_12_renaming_reference.py`: the stage check's message names a monster role at 0.23.0 (r1 25 item 7).
+- `p4_timeline_reference.py`: a settlement not yet founded prints its ending field (0) under rules p5-02. The dump
+  lines of rules p5-02 (13's formats, normative for the spec): static `site <id> <kind> <region> <x> <y>
+  <settlement> <founder_civ> <monster> <origin_year> <ended_year|-> <ending>`, `monster <id> <kind> <born>
+  <died|-> <status> <lair_site>`, `beast <region> <beast> <year> <count>` (after the settlement lines, in primary-key
+  order); year dump D(Y) `settlement <id> <exists> <owner> <kind> <status> <population> <since> <ending>`, then
+  after the `start` lines `site <id>` per open site and `monster <id> <awake 0|1> <lair_site> <region>` per living
+  monster.
+- `p4_markers_reference.py`: 0.23.0 by default (inputs `~/.cache/the-unmapped/out/p5-02-int/report-inputs`);
+  `--version 0.22.0` reproduces the committed 0.22.0 `p4-04-markers.txt` byte for byte (checked).
+- Report inputs rebuilt at r1: `python3 -B worldgen/tests/reference/p3_report_reference.py build-inputs
+  ~/.cache/the-unmapped/out/p3-07-tests/inputs ~/.cache/the-unmapped/out/p5-02-int/report-inputs`.
+
+Goldens re-recorded at phase 2: `p3-01-data.txt` (calibrated values and prey_*), `p3-05-peoples.txt`
+(ghost_max_population 600), `p3-06-conflict.txt`, `p5-12-renaming.txt`, `p5-02-monsters.txt` (r1's raid target and
+the calibrated rates), `p3-07-report.txt` (the r1 histories, 12.9, H13's culture), `p4-01-timeline.txt` (r1
+histories, the not-yet-founded settlement line), `p4-04-markers.txt` (0.23.0). Not moved: `p3-02-names.txt`,
+`p3-04-engine.txt`, `core_vectors.txt`, `p1-*`, `p3-03-chronology.txt`. The world-hash files are validation's.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file
