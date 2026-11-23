@@ -102,7 +102,8 @@ inline wd::ContentSet with_renaming(const std::map<std::string, wd::Value>& edit
 inline const wd::ContentSet& rename_small_content() {
     static const wd::ContentSet c = with_renaming(
         {{"world_max_permille", wd::Value::integer(1000)}, {"century_max_permille", wd::Value::integer(1000)}},
-        {{"min_magnitude", wd::Value::integer(1)}, {"chance_permille", wd::Value::integer(1000)}}, stress_content());
+        {{"min_magnitude", wd::Value::integer(1)}, {"chance_permille", wd::Value::integer(1000)}},
+        conflict_test::stress_content());
     return c;
 }
 // 13: region_max 0 (the subsystem off), on the shipped content.
@@ -199,7 +200,7 @@ inline const RGolden& renaming_golden() {
     return g;
 }
 
-inline const RCase& renaming_case(const std::string& name) {
+inline const RCase& renaming_case(const char* name) {
     for (const RCase& c : renaming_golden().cases) {
         if (c.name == name) return c;
     }

@@ -30,6 +30,7 @@ namespace {
 
 using namespace renaming_test;
 namespace wh = worldgen::history;
+using worldgen::inspect::HistoryLevel;
 
 std::string geo42() {
     const CCase& c = conflict_case("geo-seed-42-512");
