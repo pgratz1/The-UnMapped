@@ -493,7 +493,10 @@ inline std::vector<std::uint8_t> regions_composite(const WorldLayers& l, std::ui
 // The territory years of 13.4 item 4: {the smallest holder change year, floor(E / 2), E}, ascending, each
 // once (the first omitted when no region ever changed hands).
 inline std::vector<std::int64_t> territory_years(const wh::LoadedHistory& h) {
-    std::vector<std::int64_t> v = {h.tables.end_year / 2, h.tables.end_year};
+    std::vector<std::int64_t> v;
+    v.reserve(3);   // (GCC 15's -Warray-bounds false positive on the initializer list then push_back, -O2)
+    v.push_back(h.tables.end_year / 2);
+    v.push_back(h.tables.end_year);
     const auto ch = h.timeline.holder_change_years();
     if (!ch.empty()) v.push_back(ch.front());
     std::sort(v.begin(), v.end());

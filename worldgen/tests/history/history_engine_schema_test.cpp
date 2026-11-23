@@ -198,8 +198,9 @@ TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schem
     dbtest::TempDir dir("engine-v6");
     int k = 0;
     for (const char* v : {"6", "8"}) {
-        for (const std::string sql : {std::string("PRAGMA user_version = ") + v,
-                                      std::string("UPDATE meta SET value = '") + v + "' WHERE key = 'schema_version'"}) {
+        for (const std::string& sql : std::vector<std::string>{
+                 std::string("PRAGMA user_version = ") + v,
+                 std::string("UPDATE meta SET value = '") + v + "' WHERE key = 'schema_version'"}) {
             CAPTURE(sql);
             const std::string path = generated(dir, "w" + std::to_string(k++) + ".db", "none");
             REQUIRE(worldgen::db::testing::execute_on_file(path, sql).ok());

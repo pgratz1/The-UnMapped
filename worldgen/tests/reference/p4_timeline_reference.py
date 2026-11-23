@@ -517,7 +517,8 @@ def year_dump(h, y):
     for r in h.regions:
         out.append("hold %d %d %d %d" % h.holder(r, y))
     for s in h.settlements:
-        out.append("settlement %d %d %d %d %d %d %d" % h.settlement_state(s[0], y))
+        st = h.settlement_state(s[0], y)
+    out.append(("settlement" + " %d" * len(st)) % st)
     for i in h.relations_in_force(y):
         out.append("relation %d" % i)
     for c in h.alive(y):

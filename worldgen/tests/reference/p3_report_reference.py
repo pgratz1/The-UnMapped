@@ -1208,6 +1208,8 @@ def beast_totals_line(w):
     tot = {b: 0 for b in w.beast}
     for (r, b), n in last.items():
         tot[b] = tot.get(b, 0) + n
+    if not w.beast:   # a world with no beast rows (a hand-made fixture): no list, no trailing space (reading V1)
+        return "beasts:"
     return "beasts: " + ", ".join("%s %d" % (w.beast[b][3], tot[b]) for b in sorted(w.beast))
 
 
@@ -1807,7 +1809,8 @@ def check_invariants(c, name, w):
         ok = ok and all(line != "" and not line.endswith(" ") for line in lines)
         heads = [line for line in lines if line.startswith("[") and line.endswith("]") and " " not in line]
         c.eq("%s %s: bytes and lines" % (name, lv), ok, True)
-        c.eq("%s %s: 24.4 blocks" % (name, lv), heads, heads_want[lv])
+        want_heads = heads_want[lv] if not V4 else heads_want[lv][:-1] + ["[monsters]", "[sites]", "[stats]"]
+        c.eq("%s %s: 24.4 blocks" % (name, lv), heads, want_heads)   # P5-02 12.4, 12.5
     s, f = (texts[lv].decode("ascii") for lv in ("summary", "full"))
     stat = dict(line.split(" = ") for line in block(f, "[stats]"))   # 25.12 item 2: invariant 6 read on full
     for b in ("[settings]", "[ages]") + (() if V2 else ("[stats]",)):
@@ -1840,7 +1843,8 @@ def check_invariants(c, name, w):
     c.eq("%s: 24.10 item 3 [present]" % name, block(s, "[present]"),
          [x for x in block(f, "[present]") if not ((x.startswith("  rg") and " " in x[4:] and
                                                      x.index(" ", 4) < x.index(":")) or   # r21 26.2's lines stay
-                                                    (x.startswith("  s") and x[3:4].isdigit() and ", at " in x))])
+                                                    (x.startswith("  s") and x[3:4].isdigit() and ", at " in x) or
+                                                    (V4 and x.startswith("beasts:")))])   # P5-02 12.3: full only
     ev_lines_full = [line for line in block(f, "[chronicle]") if line[:1].isdigit()]
     c.eq("%s: full shows every event" % name, len(ev_lines_full), len(w.t["event"]))
     ev_lines = [line for line in block(s, "[chronicle]") if line[:1].isdigit()]
@@ -1883,7 +1887,8 @@ def check_invariants(c, name, w):
     hist = pe.report_lines(dict(phase=w.t["phase"], event=w.t["event"], event_kind=w.t["event_kind"],
                                 civilization=w.t["civilization"], settlement=w.t["settlement"],
                                 region_control=w.t["region_control"], settlement_census=w.t["settlement_census"],
-                                relation=w.t["relation"], region_name=w.t.get("region_name", [])), w.E,
+                                relation=w.t["relation"], region_name=w.t.get("region_name", []),
+                                **{t: w.t[t] for t in (pe.NEW_TABLES_023 if V4 else ())}), w.E,
                          w.t["race"])
     for line in hist[1:]:
         k, v = line.split(" = ")
@@ -1967,7 +1972,7 @@ def check_fixture_facts_v2(c):
     w = load_world(path)
     d = Digest(w)
     s, f = report(w, "summary").decode("ascii"), report(w, "full").decode("ascii")
-    hv = "# worldgen history v3" if V3 else "# worldgen history v2"   # r21 26.1
+    hv = "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else "# worldgen history v2"   # P5-02 12.1
     c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), (hv, hv))
     c.eq("H11 T = 100 (300 chants of 100)", d.T, 100)
     cands = set(summary_candidates(w, d.frames))

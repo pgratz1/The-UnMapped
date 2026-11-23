@@ -46,7 +46,7 @@ struct MGolden {
     std::vector<std::string> kinds_seen, events_seen;
 };
 
-const MGolden& golden() {
+const MGolden& monsters_golden() {
     static const MGolden g = [] {
         MGolden out;
         std::ifstream f(UNMAPPED_P5_02_GOLDEN_PATH, std::ios::binary);
@@ -116,11 +116,11 @@ const MGolden& golden() {
 }
 
 const MCase& mcase(const char* name) {
-    for (const MCase& c : golden().cases) {
+    for (const MCase& c : monsters_golden().cases) {
         if (c.name == name) return c;
     }
     FAIL("no monsters golden case " << name);
-    return golden().cases.front();
+    return monsters_golden().cases.front();
 }
 
 // --- Content edits (the reference's monsters_small_data and zero_data) -----------------------------------------
@@ -470,7 +470,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt, p5-monsters-high-1024 and fixtures") {
     std::set<std::string> worlds;
-    for (const MCase& c : golden().cases) {
+    for (const MCase& c : monsters_golden().cases) {
         if (c.kind == "world" && c.pressure == "normal") worlds.insert(c.name);
     }
     std::set<std::string> conflict;
@@ -483,10 +483,10 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
     CHECK(high.size == 1024);
     CHECK(high.pressure == "high");
     // every kind appears and every event kind but beasts_bold is written over the monsters-small fixtures
-    CHECK(golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
-    CHECK(golden().events_seen.size() >= 11U);
+    CHECK(monsters_golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
+    CHECK(monsters_golden().events_seen.size() >= 11U);
     // the table lines of the world cases equal p3-06-conflict.txt's
-    for (const MCase& c : golden().cases) {
+    for (const MCase& c : monsters_golden().cases) {
         if (c.kind != "world" || c.pressure != "normal") continue;
         CAPTURE(c.name);
         const CCase& cc = conflict_case(c.name.c_str());
@@ -500,7 +500,7 @@ TEST_CASE("P5-02 14, 18: geo-seed-42-512 and geo-seed-0-512 against the golden f
 }
 
 TEST_CASE("P5-02 19.3: the fixtures monsters-small and zero against the golden file; invariants from the rows") {
-    for (const MCase& g : golden().cases) {
+    for (const MCase& g : monsters_golden().cases) {
         if (g.kind != "fixture") continue;
         const Tables t = fixture_run(g, g.data == "zero" ? zero_content() : monsters_small_content());
         check_against(g, t);
@@ -547,7 +547,7 @@ TEST_CASE("P5-02 19.2: the history of a 512 world is the same with 1 and 3 threa
 TEST_SUITE("monsters-slow" * doctest::skip()) {
 
 TEST_CASE("P5-02 18: every other world case against the golden file; invariants from the rows") {
-    for (const MCase& g : golden().cases) {
+    for (const MCase& g : monsters_golden().cases) {
         if (g.kind == "world" && g.name != "geo-seed-42-512" && g.name != "geo-seed-0-512") {
             check_world_case(g);
         }

@@ -1627,6 +1627,8 @@ def settlement_ending(status, ruin_event, kind_key_of, causes_of):
     case. kind_key_of(e) is the key of e's kind, causes_of(e) e's causes."""
     if status in (1, 2):
         return 0
+    if not ruin_event:
+        return 5
     k = kind_key_of(ruin_event)
     if k == "sacked":
         return 1
@@ -1651,14 +1653,14 @@ def ruin_events_from_rows(res):
         causes.setdefault(e, []).append(c)
     faded = {}
     for e in res["event"]:
-        if key[e[3]] == "ruin_faded":
+        if key[e[3]] == "ruin_faded" and causes.get(e[0]):   # a hand-made fixture may give none: ending 5
             faded[e[6]] = min(causes[e[0]])
     out = {}
     for s in res["settlement"]:
         if s[10] == 3:
             out[s[0]] = s[13]
         elif s[10] == 4:
-            out[s[0]] = faded[s[0]]
+            out[s[0]] = faded.get(s[0], 0)   # a hand-made fixture may lack the ruin_faded event
     return out
 
 

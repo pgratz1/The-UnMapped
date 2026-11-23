@@ -16,7 +16,8 @@
 #include <string>
 #include <vector>
 
-#include "p3_01_history_support.hpp"
+#include "../p3_01_history_data.hpp"
+#include "../p3_01_history_support.hpp"
 #include "p5_02_monsters_api.hpp"
 #include "worldgen/history/names.hpp"
 
