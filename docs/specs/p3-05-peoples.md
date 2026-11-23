@@ -1380,3 +1380,7 @@ New section 23 (`docs/specs/p3-11-followups.md` item 1): race field `awakening_p
 ## Revision note r18 (2026-11-22, P5-01; generator 0.21.0)
 
 New section 24 (`docs/specs/p5-01-followups.md` item 4): the template of `became_city` drops the population and names the region (`{settlement} in {@region} grew into a city.`). Data only; no earlier section is renumbered.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+The growth rate of 9.1 and 9.2 is scaled by the wild view's factor G (identical at G = 1000); 9.3's targets exclude shunned regions; the ghost rule after 10.4's strike (stream `hist.peoples.ghost`, included in 10.2's plan); `settlement.ending` derived from the ruin event. Normative text: `docs/specs/p5-02-beasts-monsters.md` sections 7.1 to 7.3, 8.2, 8.3. This note is the revision record here; the section numbers of this spec are unchanged.

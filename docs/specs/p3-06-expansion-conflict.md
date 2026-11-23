@@ -2038,3 +2038,7 @@ Text only; the implementation and tests on `p5/01-int` (generator 0.21.0) alread
 ## Revision note r24 (2026-11-23, text after the P5-12 integration)
 
 Text only; no rule, value or golden changes. 20.14 item 8: from generator 0.22.0 the golden case `hist-conflict-flight` (seed 1 at 512) has no flight, since P5-12's renamings shift the event ids conflict keys its draws by; its flights and found refuges are reported, not required, and the stress cases reach them. It was a 0.21.0 history fact.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+The declaration forced at a flare-up's start (7.2) only when the phase's trigger is a `claim` or `claim_settlements` event; the tension sources are conflict, then monsters; T16 is a rate of at most 2 per thousand battles (Paul's decision of 2026-11-23). Normative text: `docs/specs/p5-02-beasts-monsters.md` sections 6.5, 7.4, 21.4. This note is the revision record here; the section numbers of this spec are unchanged.

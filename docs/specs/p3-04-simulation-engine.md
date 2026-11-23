@@ -1302,3 +1302,7 @@ New section 23 (`docs/specs/p5-12-renamed-regions.md` items 2 and 3): a region i
 ## Revision note r22 (2026-11-23, text after the P5-12 integration)
 
 Text only; the code and tests on `p5/12-int` already follow it. 23.1: `HistoryView::load` runs P3-07 26.6's checks of `region_name` (the same function as `read_history_tables`), E from `meta.history_end_year` (0 when absent). 23.4: `db::HISTORY_TABLES` stays at 13 entries; the world report reads 14 raw history tables with `region_name` last; `[history]` `region_names` directly after `relations`, and the history report's `[stats]` puts its new keys last.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+Shipped configuration: subsystems peoples, conflict, renaming, monsters; tension sources conflict, monsters. `StepContext::phase_trigger_event()`. W4 for entity types 8 and 9. Display names of types 8 and 9; form `kind` for monster roles; placeholder `{@beast}`. Kinds 44 to 55. Schema 9 (`settlement.ending`; tables `beast`, `monster_kind`, `beast_population`, `monster`, `site`). Normative text: `docs/specs/p5-02-beasts-monsters.md` sections 6.1, 7.4, 10, 11. This note is the revision record here; the section numbers of this spec are unchanged.

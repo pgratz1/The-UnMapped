@@ -259,3 +259,7 @@ Listed here, not specified. Sources: the P3-07 world critic's (b) and (c), the P
 ## Revision note r1 (2026-11-22, text after the integration)
 
 Text only; the implementation and tests on `p5/01-int` (generator 0.21.0) already follow every point. Section 8: T18 restated by Paul's decision of 2026-11-22 (default median ≤ 700, maximum ≤ 800; `civs4` median ≤ 1,100, maximum ≤ 1,400), the measured results of the engineer's sweep, and T12 / T8 with Paul's decision to keep `quarrel_strength_permille` at 1000; section 10 questions 1 and 2 closed by those decisions; section 12 gains `Tarden` (T15) for P5-12. The amended stage specs' corrections of this round: P3-02 r18, P3-04 r20, P3-06 r23, P3-07 r20.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+T16 restated as a rate: at most 2 repeated battles per thousand battles of the default sweep (Paul's decision of 2026-11-23). Normative text: `docs/specs/p5-02-beasts-monsters.md` section 21.4. This note is the revision record here; the section numbers of this spec are unchanged.

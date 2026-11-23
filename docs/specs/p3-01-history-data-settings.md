@@ -613,3 +613,7 @@ New 5.4 and a row of 5's table: the fixed id `renaming` of kind `history` (`docs
 ## Revision note r17 (2026-11-23, text after the P5-12 integration)
 
 Text only; the code and tests on `p5/12-int` already follow it. 5.4: the stage check `renaming_rules` runs rule by rule, then kind by kind, then the problems in the listed order; a `name_role` of `settlement` always means the event's settlement column and needs `settlement_use` ≠ 0, even when the kind has a role of that name.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+New required data kinds `beast` and `monster`, the fixed tuning id `history.monsters`, the culture naming field `site_forms` and the peoples fields `ghost_permille`, `ghost_max_population`. Normative text: `docs/specs/p5-02-beasts-monsters.md` sections 4.1 to 4.5. This note is the revision record here; the section numbers of this spec are unchanged.

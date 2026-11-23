@@ -1198,3 +1198,7 @@ New section 16 (`docs/specs/p5-12-renamed-regions.md` item 4; the P5-01 world cr
 ## Revision note r20 (2026-11-23, text after the P5-12 integration)
 
 Text only; no rule or data change. 16.4: invariant 10's suffix part is checked on attempts (by replay), since a bare-form name may end in a tail (`Canasham`); only `ass` is scanned on stored names. 11.6's r5 sample table: human settlement 2 is `Serd` from 0.22.0 (`Alantton` is rejected by 16.1 item 3), with a note.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+Two name kinds after `settlement`, `monster` (stream `hist.names.monster`, forms from the monster data, syllables of its `naming_culture`) and `site` (stream `hist.names.site`, field `site_forms` after `settlement_forms`); neither adds to the core set K. Normative text: `docs/specs/p5-02-beasts-monsters.md` sections 4.4 and 9. This note is the revision record here; the section numbers of this spec are unchanged.

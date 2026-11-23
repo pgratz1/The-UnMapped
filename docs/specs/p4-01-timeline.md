@@ -470,3 +470,7 @@ Normative from generator 0.22.0 (`docs/specs/p5-12-renamed-regions.md` 7.3; tabl
 3. **Invariant** (added to 8): `region_name(r, E)` is the report's present name of r (P3-07 r21 26.4); `region_name(r, Y)` changes only at the `from_year` of r's rows.
 4. **Dumps** (13.1): the static dump S gains, after the `region` lines, one line `name <region> <from_year> <name>` per `region_name` row in primary-key order; the year dump is unchanged. `p4-01-timeline.txt` is re-recorded by the test writer's reference (every world case changes with 0.22.0 anyway).
 5. **Viewer** (for the viewer engineer, after this merge): the hover text and the region list name a region by `region_name(r, Y)` at the year the viewer shows (E when it opens, P4-00 decision 3), and may add the geographic name (`region.name`, from P4-02's `region_name()`) when the two differ. Until that change the viewer shows `region.name`; `gdext-headless-check` compares layers and composites only, so it is unaffected.
+
+## Pointer to P5-02 (2026-11-23, generator 0.23.0, before implementation)
+
+r4: `sites_existing`, `site_at`, `monster_at`, `beast_count`, and `SettlementState::ending`; dumps gain sites, monsters and beasts. Normative text: `docs/specs/p5-02-beasts-monsters.md` section 13. This note is the revision record here; the section numbers of this spec are unchanged.

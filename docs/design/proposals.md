@@ -1247,3 +1247,31 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: restate T16 as a rate: **at most 2 repeated battles per thousand battles** of the sweep (13 of 8,935 is 1.5‰; 0.21.0's 9 was about 1‰). The second half of T16 (no battle sentence with a digit toll and a word toll in one clause: 0) is unchanged.
 - Interim choice: none; the bound of 10 is not changed by the spec, and validation reports T16 as missed at 0.22.0 until Paul decides.
 - Status: open
+
+### History: beasts and monsters, P5-02 (readings and scope)
+
+- Date: 2026-11-23
+- Raised by: spec writer (`docs/specs/p5-02-beasts-monsters.md`)
+- Design doc section: 5 ("Peoples, beasts and monsters", "Beasts as pressure", "Monsters as actors", "Undead from history", "Flare-ups"), 6, 13
+- Problem: the design gives beasts and monsters roles in history but no rules; P5-00 3.1 outlines the stage.
+- Proposal (readings taken): beasts are counts per region and species that fill their habitat and retreat before people; predators slow and game speeds the **rate** of settlement growth only (never the size a settlement tends to), so P3's balance holds; no predator-prey coupling yet. Monsters are rare named actors created by one subsystem after renaming: wild kinds appear by habitat, the undead rise where at least 4,000 died within a century; they raid within a territory of borders, sleep and wake, age, may overrun one small settlement and make it their lair, and are slain or driven off by the realms they raided (no heroes before P5-06; a failed hunt costs nothing). Monster names are built from the syllables of a culture named in the monster data with the kind's own forms (monsters have no culture of their own; P5-00 4.5 reads "templates in each culture"), outposts from a new culture field `site_forms`. The waking of a great monster (`flare` kinds: dragons, giants) in a quiet step is a tension source; such a flare-up forces no war, so design 5's "a flare-up always brings its war" holds for flare-ups of strain only. Raids, sleep, hunts and risings happen in tick years only; quiet steps write appearances and deaths of age. `param.event_intensity` does not scale monsters.
+- Interim choice: as proposed.
+
+### Schema 9: beasts, monsters and sites (P5-02)
+
+- Date: 2026-11-23
+- Raised by: spec writer (P5-02 11), hard rule 7
+- Design doc section: 6 (`beast_population`, `monster`, `site`)
+- Problem: P5-02 needs the beast and monster definitions in the world, beast counts by year, named monsters and the first sites, and a record of how each dead settlement ended.
+- Proposal: schema 8 → 9 with generator 0.23.0 (numbers the next free at merge): tables `beast`, `monster_kind` (echoes of the data, as `biome` and `race`), `beast_population` (region, beast, year, count; rows at year 0, at every phase end and at E − 1 when the count changed), `monster` (design 6 columns plus `born_event`, `death_event`, `status`, `hoard`), `site` (design 6 columns without P6's `layout_seed`, plus region, settlement, founder, monster, `ended_year`, `ending_event`, `ending`); column `settlement.ending` (how a dead settlement ended, derived from its `ruin_event` and checked on read). Entity types 8 `monster` and 9 `site` come into use. Event kinds 44 to 55 appended. Readers refuse version 8.
+- Interim choice: as proposed.
+
+### Paul's wish of 2026-11-23: abandoned places to explore (P5-02)
+
+- Date: 2026-11-23
+- Raised by: Paul (relayed by the lead), answered by the spec writer in P5-02 8
+- Design doc section: 5 ("From history to play"), 6 (`site`)
+- Wish: "Are there any conditions that can lead to an area of the map losing its owner without gaining a new one? I'd like there to be situations that can lead to abandoned points of interest that the player can explore." At 0.22.0 the only abandoned place is a ruin burned in a war (of 1,123 dead settlements in 100 default worlds, 1,071 sacked, 52 left by migration).
+- Answer in P5-02: (a) a monster may **overrun** a small settlement and make it its lair: the settlement dies (ending `overrun`), the region is released when it was its owner's last there, and no realm founds a settlement in it while the monster lives; (b) a **ghost rule**: a hamlet or village struck below 300 by famine or plague may be abandoned and left standing, and every dead settlement records **how it ended** (`settlement.ending`: sacked, overrun, plague, famine, left) beside the unchanged status; (c) the first **sites**: lairs, and **watchtowers** raised on a frontier in war and left when the land is lost, the realm falls or the frontier is quiet, each with founder, years, ending code and ending event; (d) the timeline answers by year which sites stand, which monsters live and how each dead place ended. Targets: a median of at least three ghost places per default world, a monster-held place open at E in at least half of the worlds, standing settlements at E at least 95% of 0.22.0's.
+- Later stages add: mines and forges worked out or lost (P5-04), lost holds and delvings (P5-07), shrines marked by gods (P5-08), towers and libraries (P5-09), each as a `site` kind with its own ending codes; P6 derives battlefields, barrows, tombs and dungeon records.
+- Interim choice: as answered.
