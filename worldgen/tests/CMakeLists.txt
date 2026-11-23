@@ -442,6 +442,11 @@ target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P4_01_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/timeline"
     UNMAPPED_P4_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-01-timeline.txt"
 )
+# The generator engineer's checks of spec P4-03 (the 8.2 example, the colour
+# table of 7.2, phase_kind_word); the stage's tests are the timeline files.
+target_sources(worldgen-tests PRIVATE
+    p4_03_engineer_test.cpp
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the

@@ -656,4 +656,14 @@ db::Result<HistoryTables> read_history_tables(const db::WorldReader& world) {
     }
 }
 
+std::string_view phase_kind_word(std::int64_t kind) noexcept {
+    switch (kind) {
+        case 1: return "opening";
+        case 2: return "quiet";
+        case 3: return "flare_up";
+        case 4: return "final";
+        default: return {};
+    }
+}
+
 }  // namespace worldgen::history

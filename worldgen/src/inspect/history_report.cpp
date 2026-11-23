@@ -48,7 +48,6 @@ std::string event_span(const db::EventRow& e) {
 }
 
 constexpr std::array<std::string_view, 9> PREFIX = {"ra", "g", "c", "s", "rg", "f", "fa", "m", "si"};
-constexpr std::array<std::string_view, 4> PHASE_KIND = {"opening", "quiet", "flare_up", "final"};
 constexpr std::array<std::string_view, 3> CAMP = {"good", "neutral", "evil"};
 constexpr std::array<std::string_view, 5> SETTLEMENT_KIND = {"hamlet", "village", "town", "city", "fortress"};
 constexpr std::array<std::string_view, 4> STATUS = {"thriving", "declining", "ruined", "faded"};
@@ -57,6 +56,13 @@ template <std::size_t N>
 std::string_view word(const std::array<std::string_view, N>& words, std::int64_t code, std::int64_t first) {
     const std::int64_t k = code - first;
     return (k >= 0 && static_cast<std::size_t>(k) < N) ? words[static_cast<std::size_t>(k)] : std::string_view("?");
+}
+
+// The phase kind word of the report: history::phase_kind_word, "?" for a
+// kind it does not know (as the other code tables here).
+std::string_view phase_word(std::int64_t kind) noexcept {
+    const std::string_view w = history::phase_kind_word(kind);
+    return w.empty() ? std::string_view("?") : w;
 }
 
 bool standing(std::int64_t status) noexcept {
@@ -232,7 +238,7 @@ private:
     void phases() {
         line("[phases]");
         for (const db::PhaseRow& p : t_.phases) {
-            line("p" + num(p.id) + " a" + num(p.age) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + " " +
+            line("p" + num(p.id) + " a" + num(p.age) + " " + std::string(phase_word(p.kind)) + " " +
                  phase_tail(p));
         }
     }
@@ -390,7 +396,7 @@ private:
                 if (p.age != a.id) {
                     continue;
                 }
-                line("-- p" + num(p.id) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + ": " + phase_tail(p));
+                line("-- p" + num(p.id) + " " + std::string(phase_word(p.kind)) + ": " + phase_tail(p));
                 // The events of a phase are consecutive ids (5.3).
                 while (next < all.size() && all[next].row.phase == p.id) {
                     if (shown(all[next].row.id)) {
