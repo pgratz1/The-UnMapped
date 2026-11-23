@@ -1020,8 +1020,10 @@ def cmd_check(argv):
         res = fixture_case(seed, small)
         check_res(c, "rename-small-%d" % seed, res, small)
         seen.update(x[2] for x in res["_world"].renaming.log)
-    c.eq("13 rename-small: every rule renames at least once", sorted(seen),
-         sorted(r["key"] for r in small.renaming["rules"]))
+    # READING: heartland needs a city at a capital, which no synthetic map of 2 to 60 regions grows; it renames in
+    # the world cases (geo-phrase-512, hist-dense-1024, hist-conflict-73-1024), checked by the golden file
+    c.eq("13 rename-small: every rule but heartland renames at least once", sorted(seen),
+         sorted(r["key"] for r in small.renaming["rules"] if r["key"] != "heartland"))
     off = fixture_case(0, off_data(dat))
     on = fixture_case(0, dat)
     c.eq("13 region_max 0: no row", off["region_name"], [])
