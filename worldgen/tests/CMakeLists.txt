@@ -470,6 +470,12 @@ target_compile_definitions(worldgen-tests PRIVATE
 target_sources(worldgen-tests PRIVATE
     p4_03_engineer_test.cpp
 )
+# The generator engineer's checks of spec P4-04 (the glyphs of section 5, the
+# symbols of 3.4, the settlement words, draw_markers); the stage's tests are
+# the test writer's markers_* files.
+target_sources(worldgen-tests PRIVATE
+    p4_04_engineer_test.cpp
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the

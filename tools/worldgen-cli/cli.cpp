@@ -52,6 +52,7 @@
 #include "worldgen/inspect/render.hpp"
 #include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/report.hpp"
+#include "worldgen/inspect/markers.hpp"
 #include "worldgen/inspect/territory.hpp"
 #include "worldgen/stages/stage.hpp"
 #include "worldgen/version.hpp"
@@ -184,8 +185,8 @@ constexpr std::string_view GENERATE_USAGE =
     "Prints the absolute path of the written file.\n";
 
 constexpr std::string_view RENDER_USAGE =
-    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME [--year Y]) [--out PATH]\n"
-    "                           [--scale N] [--force] [--verbose]\n"
+    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--year Y] [--markers [--faded]]\n"
+    "                           [--out PATH] [--scale N] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
     "  --layer NAME        layer to render\n"
@@ -195,11 +196,14 @@ constexpr std::string_view RENDER_USAGE =
     "                      regions: the biomes composite with the borders of layer region in black;\n"
     "                      territory: the regions composite with each region held in the year in the\n"
     "                      colour of its holder (needs the history)\n"
-    "  --year Y            with --composite territory: the year, 0 to the history's end year\n"
+    "  --year Y            with --composite territory or --markers: the year, 0 to the history's end year\n"
     "                      (default the end year, the present)\n"
+    "  --markers           draw the settlements, ruins, event places and passes of the year over the\n"
+    "                      image (needs the history)\n"
+    "  --faded             with --markers: also the faded ruins\n"
     "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
     "                      <db file stem>.<composite>.png for --composite, or\n"
-    "                      <db file stem>.territory-<year>.png for territory)\n"
+    "                      <db file stem>.territory-<year>.png for territory, with -<year>.markers.png for --markers)\n"
     "  --palette P         auto (the layer's registered palette, default), gray, hypsometric,\n"
     "                      water, river, log2, direction, ids, signed, temperature, rainfall,\n"
     "                      biome or score; --layer only\n"
@@ -753,6 +757,8 @@ const CommandSpec RENDER{
         {"scale", true},
         {"year", true},
         {"force", false},
+        {"markers", false},
+        {"faded", false},
     },
 };
 
@@ -906,13 +912,19 @@ Exit run_render(const Options& options) {
         }
         scale = static_cast<std::uint32_t>(v);
     }
-    // --year (P0-04 amendment 23): territory only; its range is judged once
-    // the history is read.
+    // --markers and --faded (P0-04 amendment 24).
+    const bool markers = options.flag("markers");
+    const bool faded = options.flag("faded");
+    if (faded && !markers) {
+        usage_error("--faded applies to --markers only");
+    }
+    // --year (P0-04 amendments 23 and 24): territory or markers; its range is
+    // judged once the history is read.
     const std::string* year_option = options.value("year");
     std::optional<std::uint64_t> year_value;
     if (year_option != nullptr) {
-        if (!territory) {
-            usage_error("--year applies to --composite territory only");
+        if (!territory && !markers) {
+            usage_error("--year applies to --composite territory or --markers only");
         }
         year_value = parse_integer_option("year", *year_option);
     }
@@ -958,16 +970,26 @@ Exit run_render(const Options& options) {
                     std::string(inspect::palette_requirement(*palette)));
     }
 
-    // territory (P0-04 amendment 23 (b)): the history, then the year range.
+    // territory or markers (P0-04 amendments 23 (b), 24 (d)): the history,
+    // the marker index, then the year range.
     std::optional<worldgen::history::LoadedHistory> loaded;
+    std::optional<inspect::MarkerIndex> marker_index;
     std::int64_t year = 0;
-    if (territory) {
+    if (territory || markers) {
         progress.note("reading the history");
         db::Result<worldgen::history::LoadedHistory> h = worldgen::history::load_history(world);
         if (!h.ok()) {
             fail_with(h.error());
         }
         loaded.emplace(std::move(h).value());
+        if (markers) {
+            progress.note("building the markers");
+            db::Result<inspect::MarkerIndex> m = inspect::MarkerIndex::load(world, *loaded);
+            if (!m.ok()) {
+                fail_with(m.error());
+            }
+            marker_index.emplace(std::move(m).value());
+        }
         const std::int64_t end = loaded->timeline.end_year();
         if (year_value) {
             if (*year_value > static_cast<std::uint64_t>(end)) {
@@ -992,7 +1014,10 @@ Exit run_render(const Options& options) {
         out = *path;
     } else {
         const std::string stem = db::path_to_utf8(db::path_from_utf8(db_path).stem());
-        const std::string name = territory ? image_name + "-" + db::format_i64(year) : image_name;
+        std::string name = (territory || markers) ? image_name + "-" + db::format_i64(year) : image_name;
+        if (markers) {
+            name += faded ? ".markers-faded" : ".markers";
+        }
         out = db::path_to_utf8(db::path_from_utf8(default_output_dir()) /
                                db::path_from_utf8(stem + "." + name + ".png"));
     }
@@ -1036,6 +1061,16 @@ Exit run_render(const Options& options) {
             colours = read_biome_colours(world, progress);
         }
         rgb = inspect::render_rgb(grid, chosen, scale, colours);
+    }
+    if (markers) {
+        // P4-04 7: the markers of year Y over the rendered image.
+        const inspect::MarkerOptions marker_options{faded, true, true};
+        const inspect::YearMarkers year_markers = marker_index->markers_at(*loaded, year, marker_options);
+        progress.note("drawing " + format_u64(year_markers.settlements.size()) + " settlements, " +
+                      format_u64(year_markers.places.size()) + " event places and " +
+                      format_u64(year_markers.passes.size()) + " passes of year " + db::format_i64(year));
+        const std::vector<inspect::Rgb> civ_colours = inspect::civilization_colours(loaded->tables);
+        inspect::draw_markers(rgb, grid.width, grid.height, scale, year_markers, civ_colours);
     }
 
     std::vector<std::uint8_t> png;

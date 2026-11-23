@@ -352,6 +352,16 @@ inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
 [[nodiscard]] bool pass_walkable(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
                                  std::span<const std::uint32_t> path);
 
+// One row of table pass (P1-01 9.1) as report reads it (and the markers of
+// P4-04 4), checked as P1-00 10.3 "Malformed pass rows" asks: 9 columns,
+// integers except the blob path; kind and capped in {0, 1}, capped 0 when
+// kind is 0, the col inside the w x h elevation grid, path non-empty with a
+// length divisible by 4 and every u32 little-endian index below `cells`.
+// Returns the reason ("row <id>: ...") when the row fails, std::nullopt (and
+// p filled) otherwise.
+[[nodiscard]] std::optional<std::string> read_pass_row(const std::vector<db::ColumnValue>& row, std::uint32_t w,
+                                                       std::uint32_t h, std::uint64_t cells, PassRecord& p);
+
 // The pass keys of P1-00 10.3 in their order, each "<key> = <value>\n":
 // passes, natural_gaps, passes_capped, pass_col_m, passes_walkable.
 // FatalError if a col or path cell is outside the grid.

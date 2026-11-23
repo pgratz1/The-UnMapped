@@ -29,6 +29,10 @@
 #                 worldgen-cli render --composite territory at year 0,
 #                 floor(E/2) and the history's end year E (the default year),
 #                 ascending, a year that coincides with the one before once.
+#             <preset>-<case>.markers.txt
+#                 P4-04 11: lines "<year> <sha256 of the PNG>" for
+#                 worldgen-cli render --composite territory --year <year>
+#                 --markers --faded at the years of the territory file.
 #                 The PNGs are written to a scratch directory and removed.
 #           A .txt file exists only if its command succeeded.
 # expect    runs hash --expect for every case against its golden file: the
@@ -38,7 +42,8 @@
 #           worldgen/tests/golden/p3-worlds.txt (--golden-hist). A golden
 #           file that does not exist is reported and its cases are skipped.
 # compare   fails if any preset's .txt, .report.txt or (for a case with
-#           history) .history.summary.txt, .history.full.txt or .territory.txt
+#           history) .history.summary.txt, .history.full.txt, .territory.txt
+#           or .markers.txt
 #           for any case
 #           differs from the others, byte for byte, or is missing, and prints
 #           a diff -u of at most DIFF_LINES lines.
@@ -77,7 +82,7 @@ HISTORY_CASES="$GEO_CASES $HIST_CASES"
 
 # The kinds of saved text compared per case (file suffixes).
 TEXT_KINDS='txt report.txt'
-HISTORY_KINDS='history.summary.txt history.full.txt territory.txt'
+HISTORY_KINDS='history.summary.txt history.full.txt territory.txt markers.txt'
 
 # Longest diff -u that compare prints for one differing file; the rest is
 # counted, not printed (a full history report is tens of thousands of lines).
@@ -290,6 +295,28 @@ territory_hashes() {
     rm -f "$t_dir"/*.png
 }
 
+# Renders the territory image with the markers (render --markers --faded) of
+# world $2 at each year of territory file $3 (P4-04 11) into scratch
+# directory $4 and writes "<year> <sha256>" lines to file $1.
+markers_hashes() {
+    m_target=$1
+    m_db=$2
+    m_years=$3
+    m_dir=$4
+    mkdir -p "$m_dir" || return 1
+    rm -f "$m_dir"/*.png "$m_target.partial"
+    [ -f "$m_years" ] || return 1
+    : >"$m_target.partial" || return 1
+    for m_year in $(cut -d' ' -f1 "$m_years"); do
+        m_png=$m_dir/m$m_year.png
+        "$cli" render --db "$m_db" --composite territory --year "$m_year" --markers --faded --out "$m_png" \
+            >/dev/null || return 1
+        echo "$m_year $(file_sha256 "$m_png")" >>"$m_target.partial" || return 1
+    done
+    mv -f "$m_target.partial" "$m_target"
+    rm -f "$m_dir"/*.png
+}
+
 # Run a command with stdout to file $1, keeping the file only on success.
 capture() {
     target=$1
@@ -338,6 +365,9 @@ generate() {
             done
             if ! territory_hashes "$base.territory.txt" "$base.db" "$out_dir/png-$preset"; then
                 echo "$me: FAIL $preset $c: render --composite territory failed" >&2
+                failed=1
+            elif ! markers_hashes "$base.markers.txt" "$base.db" "$base.territory.txt" "$out_dir/png-$preset"; then
+                echo "$me: FAIL $preset $c: render --composite territory --markers failed" >&2
                 failed=1
             fi
         fi

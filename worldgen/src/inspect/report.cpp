@@ -47,68 +47,6 @@ std::string format_range(const ValueRange& range) {
     return "min=" + db::format_u64(range.min_unsigned) + " max=" + db::format_u64(range.max_unsigned);
 }
 
-// One row of table pass (P1-01 9.1) as report reads it, checked as P1-00
-// 10.3 "Malformed pass rows" asks: kind and capped in {0, 1}, capped 0 when
-// kind is 0, the col inside the elevation grid (w x h), path non-empty with a
-// length divisible by 4 and every u32 little-endian index below w h. Returns
-// the reason when the row fails, std::nullopt (and p filled) otherwise.
-std::optional<std::string> read_pass_row(const std::vector<db::ColumnValue>& row, std::uint32_t w, std::uint32_t h,
-                                         std::uint64_t cells, PassRecord& p) {
-    constexpr std::size_t COLUMNS = 9;  // id, range_id, kind, capped, col_x, col_y, saddle_dm, col_dm, path
-    const std::string id = (!row.empty() && row[0].type == db::ValueType::integer) ? db::format_i64(row[0].integer)
-                                                                                   : std::string("?");
-    const std::string at = "row " + id + ": ";
-    if (row.size() != COLUMNS) {
-        return at + "has " + db::format_u64(row.size()) + " columns, expected 9";
-    }
-    for (std::size_t k = 0; k + 1U < COLUMNS; ++k) {
-        if (row[k].type != db::ValueType::integer) {
-            return at + "column " + db::format_u64(k + 1U) + " is not an integer";
-        }
-    }
-    if (row[8].type != db::ValueType::blob) {
-        return at + "path is not a blob";
-    }
-    p.kind = row[2].integer;
-    p.capped = row[3].integer;
-    p.col_x = row[4].integer;
-    p.col_y = row[5].integer;
-    if (p.kind != 0 && p.kind != 1) {
-        return at + "kind " + db::format_i64(p.kind) + " is not 0 or 1";
-    }
-    if (p.capped != 0 && p.capped != 1) {
-        return at + "capped " + db::format_i64(p.capped) + " is not 0 or 1";
-    }
-    if (p.kind == 0 && p.capped != 0) {
-        return at + "a natural gap (kind 0) has capped 1";
-    }
-    if (p.col_x < 0 || p.col_y < 0 || p.col_x >= std::int64_t{w} || p.col_y >= std::int64_t{h}) {
-        return at + "col (" + db::format_i64(p.col_x) + ", " + db::format_i64(p.col_y) +
-               ") is outside the elevation grid";
-    }
-    const std::string& b = row[8].bytes;
-    if (b.empty()) {
-        return at + "path is empty";
-    }
-    if (b.size() % 4U != 0U) {
-        return at + "path length " + db::format_u64(b.size()) + " is not a multiple of 4";
-    }
-    p.path.clear();
-    p.path.reserve(b.size() / 4U);
-    for (std::size_t i = 0; i < b.size(); i += 4U) {
-        // u32 little-endian, independent of the host byte order.
-        std::uint32_t c = 0;
-        for (std::size_t k = 0; k < 4U; ++k) {
-            c |= static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i + k])) << (8U * k);
-        }
-        if (std::uint64_t{c} >= cells) {
-            return at + "path cell " + db::format_u64(c) + " is outside the elevation grid";
-        }
-        p.path.push_back(c);
-    }
-    return std::nullopt;
-}
-
 }  // namespace
 
 db::Result<std::string> build_report(const db::WorldReader& world) {
