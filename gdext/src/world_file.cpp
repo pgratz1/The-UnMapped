@@ -1,6 +1,5 @@
 #include "world_file.hpp"
 
-#include <algorithm>
 #include <exception>
 #include <new>
 #include <string>
@@ -12,6 +11,7 @@
 
 #include "worldgen/db/result.hpp"
 #include "worldgen/db/schema.hpp"
+#include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
 
@@ -96,23 +96,14 @@ void WorldFile::read_region_table() {
         }
         return;
     }
-    // worldgen's checks first (column count and types, cells >= 1); its
-    // record leaves out the name, which the viewer takes from column 1.
-    const worldgen::inspect::RegionTableResult table = worldgen::inspect::read_region_rows(rows.value());
+    // worldgen's checks (column count and types, cells >= 1) and its records,
+    // name and biome included, in id order (primary-key order).
+    worldgen::inspect::RegionTableResult table = worldgen::inspect::read_region_rows(rows.value());
     if (table.problem) {
         region_table_problem_ = "corrupt table 'region': " + to_godot(*table.problem);
         return;
     }
-    // P1-06 3.2 column order: id, name, biome, x_min, ..., landmass, cells.
-    constexpr std::size_t NAME = 1;
-    constexpr std::size_t BIOME = 2;
-    constexpr std::size_t CELLS = 10;
-    for (const auto& row : rows.value()) {
-        regions_.push_back(RegionRow{row[0].integer, to_godot(row[NAME].bytes), row[BIOME].integer,
-                                     row[CELLS].integer});
-    }
-    // Rows come in primary-key order already; keep the lookup independent of it.
-    std::sort(regions_.begin(), regions_.end(), [](const RegionRow& a, const RegionRow& b) { return a.id < b.id; });
+    regions_ = std::move(table.records);
 }
 
 void WorldFile::close() {
@@ -244,7 +235,7 @@ godot::Array WorldFile::get_region_entries() const {
     for (const auto& region : regions_) {
         godot::Dictionary row;
         row["id"] = region.id;
-        row["name"] = region.name;
+        row["name"] = to_godot(region.name);
         row["biome"] = region.biome;
         row["cells"] = region.cells;
         entries.push_back(row);
@@ -257,9 +248,7 @@ godot::String WorldFile::get_region_table_problem() const {
 }
 
 godot::String WorldFile::get_region_name(int64_t id) const {
-    const auto it = std::lower_bound(regions_.begin(), regions_.end(), id,
-                                     [](const RegionRow& row, int64_t key) { return row.id < key; });
-    return it != regions_.end() && it->id == id ? it->name : godot::String();
+    return to_godot(worldgen::inspect::region_name(regions_, id));
 }
 
 const worldgen::inspect::BiomeRecord* WorldFile::find_biome(std::int64_t id) const noexcept {
@@ -281,22 +270,7 @@ int64_t WorldFile::find_layer(std::string_view name) const {
 }
 
 std::vector<worldgen::inspect::Composite> WorldFile::composites() const {
-    std::vector<worldgen::inspect::Composite> result;
-    if (find_layer("elevation") < 0) {
-        return result;
-    }
-    for (const worldgen::inspect::Composite composite : worldgen::inspect::ALL_COMPOSITES) {
-        const bool needs_biome = composite == worldgen::inspect::Composite::biomes ||
-                                 composite == worldgen::inspect::Composite::regions;
-        if (needs_biome && (find_layer("biome") < 0 || !biome_table_problem_.is_empty())) {
-            continue;
-        }
-        if (composite == worldgen::inspect::Composite::regions && find_layer("region") < 0) {
-            continue;
-        }
-        result.push_back(composite);
-    }
-    return result;
+    return worldgen::inspect::available_composites(layers_, biome_table_problem_.is_empty());
 }
 
 godot::PackedStringArray WorldFile::get_composite_names() const {
