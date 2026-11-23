@@ -175,13 +175,17 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
         t.relations.push_back(db::RelationRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), r[4].bytes, i64(r, 5),
                                               opt(r, 6), i64(r, 7), i64(r, 8)});
     }
+    for (const Row& r : h.rows[13]) {  // schema 8
+        t.region_names.push_back(db::RegionNameRow{i64(r, 0), i64(r, 1), r[2].bytes, i64(r, 3), i64(r, 4)});
+    }
 }
 
 // --- The checks of 5.3 ------------------------------------------------------
 
 class Checks {
 public:
-    explicit Checks(const HistoryTables& t) : t_(t), e_(t.end_year) {}
+    Checks(const HistoryTables& t, const inspect::HistoryTables& h, const Rows& cultures)
+        : t_(t), h_(h), cultures_(cultures), e_(t.end_year) {}
 
     void run(const Rows& event_rows) const {
         regions();
@@ -192,6 +196,7 @@ public:
         census();
         region_control();
         relations();
+        region_names();
         gods_and_races();
     }
 
@@ -506,6 +511,36 @@ private:
         }
     }
 
+    // P3-07 r21 26.6 (schema 8), after the relation checks.
+    void region_names() const {
+        std::vector<std::int64_t> region_ids;
+        for (const RegionInfo& r : t_.regions) {
+            region_ids.push_back(r.id);
+        }
+        std::vector<std::int64_t> culture_ids;
+        for (const Row& r : cultures_) {
+            if (!r.empty() && r[0].type == db::ValueType::integer) {
+                culture_ids.push_back(r[0].integer);
+            }
+        }
+        std::stable_sort(culture_ids.begin(), culture_ids.end());
+        std::vector<db::EventRow> events;
+        for (const Row& r : h_.rows[4]) {  // shapes checked by history_stats
+            events.push_back(db::EventRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
+                                          i64(r, 7)});
+        }
+        std::int64_t renamed = 0;
+        for (const Row& k : h_.rows[0]) {
+            if (k[1].bytes == "region_renamed") {
+                renamed = k[0].integer;
+            }
+        }
+        if (std::optional<std::string> why =
+                region_name_rows_problem(t_.region_names, region_ids, culture_ids, e_, events, renamed)) {
+            throw Corrupt{*why};
+        }
+    }
+
     void gods_and_races() const {
         for (const db::GodRow& g : t_.gods) {
             if (g.camp < 0 || g.camp > 2) {
@@ -520,6 +555,8 @@ private:
     }
 
     const HistoryTables& t_;
+    const inspect::HistoryTables& h_;
+    const Rows& cultures_;
     std::int64_t e_;
 };
 
@@ -622,7 +659,8 @@ HistoryTables read_and_check(const db::WorldReader& world) {
     read_biomes(t, read.rows(db::BIOME_TABLE));
     read_gods(t, gods);
     read_regions(t, read.rows(db::REGION_TABLE));
-    Checks(t).run(h.rows[4]);
+    const Rows cultures = read.rows(db::CULTURE_TABLE);
+    Checks(t, h, cultures).run(h.rows[4]);
     return t;
 }
 
@@ -640,6 +678,12 @@ std::optional<std::string> history_reads_disagree(const HistoryView& view, const
         if (e.row.phase < 1 || static_cast<std::size_t>(e.row.phase) > t.phases.size()) {
             return std::string("corrupt table 'event': the file changed while it was read");
         }
+    }
+    // Schema 8: the report names regions through the view's rows and counts
+    // them from the tables.
+    if (!std::equal(view.region_names().begin(), view.region_names().end(), t.region_names.begin(),
+                    t.region_names.end())) {
+        return std::string("corrupt table 'event': the file changed while it was read");
     }
     return std::nullopt;
 }

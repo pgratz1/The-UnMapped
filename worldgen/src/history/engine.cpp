@@ -332,6 +332,18 @@ public:
         return config_.catalogue->find_id(stored(event).row.kind)->key;
     }
     [[nodiscard]] std::int64_t event_year(std::int64_t event) const { return stored(event).row.year; }
+    // P3-04 r21 23.3.
+    [[nodiscard]] std::int64_t event_region(std::int64_t event) const { return stored(event).row.region; }
+    [[nodiscard]] std::int64_t event_settlement(std::int64_t event) const { return stored(event).row.settlement; }
+    [[nodiscard]] std::int64_t event_salience(std::int64_t event) const { return stored(event).row.salience; }
+    [[nodiscard]] std::int64_t event_value(std::int64_t event, std::string_view key) const {
+        const StoredEvent& e = stored(event);
+        const std::int64_t seq = config_.catalogue->find_id(e.row.kind)->value_seq(key);
+        if (seq == 0) {
+            fail("history: state: event " + int_text(event) + " has no value '" + std::string(key) + "'");
+        }
+        return e.values[static_cast<std::size_t>(seq - 1)];
+    }
     [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const {
         const StoredEvent& e = stored(event);
         const RoleDef* r = config_.catalogue->find_id(e.row.kind)->find_role(role);
@@ -1189,6 +1201,26 @@ std::int64_t StepContext::event_year(std::int64_t event) const {
 
 std::int64_t StepContext::event_participant(std::int64_t event, std::string_view role) const {
     return engine_.event_participant(event, role);
+}
+
+std::int64_t StepContext::last_event_id() const {
+    return engine_.last_event();
+}
+
+std::int64_t StepContext::event_region(std::int64_t event) const {
+    return engine_.event_region(event);
+}
+
+std::int64_t StepContext::event_settlement(std::int64_t event) const {
+    return engine_.event_settlement(event);
+}
+
+std::int64_t StepContext::event_salience(std::int64_t event) const {
+    return engine_.event_salience(event);
+}
+
+std::int64_t StepContext::event_value(std::int64_t event, std::string_view key) const {
+    return engine_.event_value(event, key);
 }
 
 std::int64_t StepContext::quiet_events_left(std::int64_t civ) const {

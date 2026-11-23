@@ -223,6 +223,10 @@ void StageContext::write_relation(const db::RelationRow& row) {
     state_->stage.write_relation(row);
 }
 
+void StageContext::write_region_name(const db::RegionNameRow& row) {
+    state_->stage.write_region_name(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

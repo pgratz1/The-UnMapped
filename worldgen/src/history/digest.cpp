@@ -76,6 +76,17 @@ bool append_entity(std::string& out, const HistoryView& view, EntityType type, s
     return true;
 }
 
+// P3-04 r21 23.1: a region named in a note as at the note's event `event`
+// (a note is read with its sentence).
+bool append_region(std::string& out, const HistoryView& view, std::int64_t region, std::int64_t event) {
+    const std::string* n = view.region_name_at_event(region, event);
+    if (n == nullptr) {
+        return false;
+    }
+    append_name(out, *n, false);
+    return true;
+}
+
 // The settlement participants of claim c (role `settlement` of its kind),
 // in participant order, joined as {role:all} joins names, every name in
 // mid-sentence; false when there is none or one has no name.
@@ -136,7 +147,7 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
             return {};
         }
         out += " in ";
-        if (!append_entity(out, view, EntityType::region, c->row.region)) {
+        if (!append_region(out, view, c->row.region, e.row.id)) {
             return {};
         }
         out += ".";
@@ -146,7 +157,7 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
         // P3-07 r14 23 item 3 (P3-06 r19 23.4): the war's goal is not the
         // claim's region.
         out = same_year ? "The claim, made the same year, was to " : "The claim, since " + int_text(y_c) + ", was to ";
-        if (!append_entity(out, view, EntityType::region, c->row.region)) {
+        if (!append_region(out, view, c->row.region, e.row.id)) {
             return {};
         }
         out += ".";
@@ -171,8 +182,10 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
     return out;
 }
 
-// P3-07 r14 23 item 4: a flare-up caused by a claim_settlements.
-std::string flare_settlements_note(const HistoryView& view, const HistoryView::Event& c, const KindDef& kind) {
+// P3-07 r14 23 item 4: a flare-up (event `event`) caused by a
+// claim_settlements.
+std::string flare_settlements_note(const HistoryView& view, const HistoryView::Event& c, const KindDef& kind,
+                                   std::int64_t event) {
     std::string out = "The claim of ";
     if (!append_entity(out, view, EntityType::civilization, participant(c, kind, "claimant"))) {
         return {};
@@ -186,7 +199,7 @@ std::string flare_settlements_note(const HistoryView& view, const HistoryView::E
         return {};
     }
     out += " in ";
-    if (!append_entity(out, view, EntityType::region, c.row.region)) {
+    if (!append_region(out, view, c.row.region, event)) {
         return {};
     }
     out += " came to a head.";
@@ -202,7 +215,7 @@ std::string flare_note(const HistoryView& view, const HistoryView::Event& e, con
         return {};
     }
     if (is_kind(*c, claims.settlements)) {
-        return flare_settlements_note(view, *c, *claims.settlements);
+        return flare_settlements_note(view, *c, *claims.settlements, e.row.id);
     }
     if (!is_kind(*c, claims.claim)) {
         return {};
@@ -210,7 +223,7 @@ std::string flare_note(const HistoryView& view, const HistoryView::Event& e, con
     const KindDef* claim = claims.claim;
     const std::string* a = view.name(EntityType::civilization, participant(*c, *claim, "claimant"));
     const std::string* b = view.name(EntityType::civilization, participant(*c, *claim, "holder"));
-    const std::string* r = view.name(EntityType::region, c->row.region);
+    const std::string* r = view.region_name_at_event(c->row.region, e.row.id);
     if (a == nullptr || b == nullptr || r == nullptr) {
         return {};
     }
@@ -338,6 +351,7 @@ struct Kinds {
     Id claim_dropped = 0, refuge_hidden = 0, flare_up = 0;
     Id famine = 0, plague = 0, plague_outbreak = 0, succession_crisis = 0, settlement_dwindled = 0;
     Id settlement_abandoned = 0, settlement_abandoned_to = 0;
+    Id region_renamed = 0;  // r21 26.5 (P5-12)
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -379,6 +393,7 @@ struct Kinds {
         settlement_dwindled = id("settlement_dwindled");
         settlement_abandoned = id("settlement_abandoned");
         settlement_abandoned_to = id("settlement_abandoned_to");
+        region_renamed = id("region_renamed");
     }
     // 25.2: the calamity kinds of the summary's cap.
     [[nodiscard]] bool calamity(Id k) const noexcept {
@@ -1029,6 +1044,8 @@ private:
         } else if (kinds_.fall(k)) {
             add_effects(e, [this](Id x) { return kinds_.consequence(x); });
         }
+        // r21 26.5 item 1: every renaming e caused.
+        add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
         // Part 3: the war frame.
         if (const Id d = war_of_[static_cast<std::size_t>(e)]; d != 0) {
             append_frame(out, d);
@@ -1040,6 +1057,12 @@ private:
                     out.push_back(c);
                     break;
                 }
+            }
+        }
+        // r21 26.5 item 1: the cause of a renaming (it has one, P5-12 8 item 5).
+        if (k == kinds_.region_renamed) {
+            for (const Id c : events_[static_cast<std::size_t>(e - 1)].causes) {
+                out.push_back(c);
             }
         }
         return out;
@@ -1235,6 +1258,39 @@ private:
         race_stats();
         conflict_stats();
         war_stats();
+        renaming_stats();
+    }
+
+    // r21 26.5 item 2 (P5-12): region_names, regions_renamed, refuges,
+    // refuges_hidden (26.3's n and h).
+    void renaming_stats() {
+        std::int64_t renamed = 0;
+        for (std::size_t i = 0; i < t_.region_names.size(); ++i) {
+            renamed += (i == 0 || t_.region_names[i].region != t_.region_names[i - 1].region) ? 1 : 0;
+        }
+        std::int64_t refuges = 0;
+        std::int64_t hidden = 0;
+        for (const db::SettlementRow& s : t_.settlements) {
+            const bool standing_now = s.status == 1 || s.status == 2;
+            if (!standing_now || s.founding_event < 1 || static_cast<std::size_t>(s.founding_event) > events_.size() ||
+                kind(s.founding_event) != kinds_.refugees_settled) {
+                continue;
+            }
+            ++refuges;
+            hidden += refuge_hidden_at_end(s.id) ? 1 : 0;
+        }
+        put("region_names", static_cast<std::int64_t>(t_.region_names.size()));
+        put("regions_renamed", renamed);
+        put("refuges", refuges);
+        put("refuges_hidden", hidden);
+    }
+
+    // 26.3: the refuge's refuge_hidden (smallest id) ends at E - 1 or later.
+    [[nodiscard]] bool refuge_hidden_at_end(Id settlement) const {
+        if (settlement < 1 || static_cast<std::size_t>(settlement) > d_.refuge_hidden_end.size()) {
+            return false;
+        }
+        return d_.refuge_hidden_end[static_cast<std::size_t>(settlement - 1)] >= e_ - 1;
     }
 
     void frame_stats() {

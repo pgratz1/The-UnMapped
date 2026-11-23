@@ -11,6 +11,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/db/reader.hpp"
@@ -67,6 +68,10 @@ public:
     // <s>", "timeline: no civilization <c>", "timeline: no event <e>" for an
     // id the world does not have.
     [[nodiscard]] RegionHolding region_holder(std::int64_t region, std::int64_t year) const;
+    // P4-01 r3 16 (P5-12): the name of the region at year Y, the name of its
+    // region_name row with the largest from_year <= Y, else region.name. A
+    // view into the timeline's own storage.
+    [[nodiscard]] std::string_view region_name(std::int64_t region, std::int64_t year) const;
     [[nodiscard]] SettlementState settlement_state(std::int64_t settlement, std::int64_t year) const;
     [[nodiscard]] YearState year_state(std::int64_t year) const;
     // Reuses out's buffers; the same content as the returning overload.
@@ -111,6 +116,12 @@ private:
     std::vector<db::RegionControlRow> control_;
     std::vector<std::size_t> control_offsets_;
     std::vector<std::int64_t> change_years_;
+    // r3 16: per region position its geographic name, and its region_name
+    // rows names_[name_offsets_[p]] .. names_[name_offsets_[p + 1] - 1],
+    // ascending from_year.
+    std::vector<std::string> region_names_;
+    std::vector<db::RegionNameRow> names_;
+    std::vector<std::size_t> name_offsets_;
     // Settlements (index id - 1): founded year; census rows likewise by offsets.
     std::vector<std::int64_t> settlement_founded_;
     std::vector<db::SettlementCensusRow> census_;

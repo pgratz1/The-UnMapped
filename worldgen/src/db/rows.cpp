@@ -419,4 +419,16 @@ Result<std::vector<RelationRow>> read_relation_rows(const WorldReader& world) {
     });
 }
 
+Result<std::vector<RegionNameRow>> read_region_name_rows(const WorldReader& world) {
+    return read_rows<RegionNameRow>(world, REGION_NAME_TABLE, [](Columns& c) {
+        RegionNameRow r;
+        r.region = c.integer();
+        r.from_year = c.integer();
+        r.name = c.text();
+        r.culture = c.integer();
+        r.event = c.integer();
+        return r;
+    });
+}
+
 }  // namespace worldgen::db

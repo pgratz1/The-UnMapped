@@ -987,6 +987,24 @@ void StageWriter::write_relation(const RelationRow& row) {
     state_->history_keys.relation = std::move(key);
 }
 
+void StageWriter::write_region_name(const RegionNameRow& row) {
+    require_open(state_, "write_region_name");
+    const std::pair<std::int64_t, std::int64_t> key{row.region, row.from_year};
+    require_next_pair("write_region_name", key, state_->history_keys.region_name);
+    const std::int64_t ints[2] = {row.culture, row.event};
+    insert_row(state_->db.get(),
+               "INSERT INTO region_name (region, from_year, name, culture, event) VALUES (?1, ?2, ?3, ?4, ?5)", 4,
+               ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.region);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.from_year);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+                   return rc;
+               },
+               "region_name row " + key_text(key));
+    state_->history_keys.region_name = key;
+}
+
 void StageWriter::commit() {
     if (state_ == nullptr) {
         fatal("StageWriter::commit: stage is not open");

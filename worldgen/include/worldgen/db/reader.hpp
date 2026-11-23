@@ -235,5 +235,7 @@ private:
 [[nodiscard]] Result<std::vector<SettlementCensusRow>> read_settlement_census_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<RegionControlRow>> read_region_control_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<RelationRow>> read_relation_rows(const WorldReader& world);
+// Schema 8 (P5-12): table region_name, in primary-key order.
+[[nodiscard]] Result<std::vector<RegionNameRow>> read_region_name_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

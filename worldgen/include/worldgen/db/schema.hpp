@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 7;
+inline constexpr std::int64_t SCHEMA_VERSION = 8;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -208,11 +208,20 @@ inline constexpr std::array<std::string_view, 13> HISTORY_TABLES = {
     CIVILIZATION_TABLE,      SETTLEMENT_TABLE,        SETTLEMENT_CENSUS_TABLE, REGION_CONTROL_TABLE,
     RELATION_TABLE};
 
+// DDL of table region_name (P3-04 r21 23.4, P5-12 7.2, schema version 8),
+// executed twenty-seventh, after relation: one row per renaming of a region
+// by history, written by the history stage in (region, from_year) order,
+// empty when it did not run. region.name is never rewritten.
+inline constexpr std::string_view DDL_REGION_NAME =
+    "CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture "
+    "INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view REGION_NAME_TABLE = "region_name";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
-// history tables of P3-04 9.1).
-inline constexpr std::array<std::string_view, 26> DDL_STATEMENTS = {
+// history tables of P3-04 9.1; schema 8: then region_name).
+inline constexpr std::array<std::string_view, 27> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -221,7 +230,7 @@ inline constexpr std::array<std::string_view, 26> DDL_STATEMENTS = {
     DDL_EVENT_KIND_VALUE, DDL_PHASE,         DDL_EVENT,
     DDL_EVENT_PARTICIPANT, DDL_EVENT_CAUSE,  DDL_EVENT_VALUE,
     DDL_CIVILIZATION,   DDL_SETTLEMENT,      DDL_SETTLEMENT_CENSUS,
-    DDL_REGION_CONTROL, DDL_RELATION};
+    DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------

@@ -145,6 +145,7 @@ public:
     void write_settlement_census(const db::SettlementCensusRow& row);
     void write_region_control(const db::RegionControlRow& row);
     void write_relation(const db::RelationRow& row);
+    void write_region_name(const db::RegionNameRow& row);  // schema 8 (P5-12)
 
 private:
     friend class detail::Pipeline;

@@ -19,6 +19,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "worldgen/data/content.hpp"
@@ -353,6 +354,13 @@ public:
     // "history: peoples: used before the first step" otherwise.
     [[nodiscard]] const PeoplesGeo& geo() const;
     [[nodiscard]] const PeoplesTuning& tuning() const noexcept { return tuning_; }
+    // P5-12 3 (the shared name registry seam): the history stage's one
+    // registry of names (P3-02 4.4), read by the renaming subsystem, which
+    // adds each renamed region's name (not a core, P3-02 12.2).
+    [[nodiscard]] const NameRegistry& name_registry() const noexcept { return registry_; }
+    void add_name(std::string name) { registry_.add(std::move(name)); }
+    // The world's name filter (P3-02 11.2), after the first step.
+    [[nodiscard]] const NameFilter& name_filter() const noexcept { return filter_; }
 
     // The settlements a rule reads: the state, or (the plague plan, 10.2) a
     // copy of the populations and of which settlements of the owner stand,

@@ -8,6 +8,7 @@
 // Kind ids are fixed: later specs append kinds, never renumber or edit one
 // (8.2, "A shipped kind is never edited").
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -182,6 +183,14 @@ public:
     };
     [[nodiscard]] std::optional<CivilizationInfo> civilization_info(std::int64_t id) const noexcept;
 
+    // P3-04 r21 23.1 (schema 8): the rows of table region_name, in primary-key
+    // order; N(r, e), the name of row of r with the largest event <= e, else
+    // region.name; and the name at year Y, the row with the largest
+    // from_year <= Y, else region.name. nullptr when r is not a region.
+    [[nodiscard]] std::span<const db::RegionNameRow> region_names() const noexcept { return region_names_; }
+    [[nodiscard]] const std::string* region_name_at_event(std::int64_t region, std::int64_t event) const noexcept;
+    [[nodiscard]] const std::string* region_name_at_year(std::int64_t region, std::int64_t year) const noexcept;
+
 private:
     struct RaceNames {
         std::string name;
@@ -197,7 +206,24 @@ private:
     std::vector<std::pair<std::int64_t, CivilizationInfo>> civilization_info_;  // ascending id
     std::vector<std::pair<std::int64_t, std::string>> settlements_;
     std::vector<std::pair<std::int64_t, std::string>> regions_;
+    std::vector<db::RegionNameRow> region_names_;  // primary-key order
+    // Per region (index id - 1 of regions_ when ids are 1, 2, ...): the
+    // range [first, last) of its rows in region_names_.
+    std::vector<std::pair<std::size_t, std::size_t>> region_name_range_;
 };
+
+// P3-07 r21 26.6: the first problem of the region_name rows (primary-key
+// order), as "corrupt table 'region_name': row (<region>, <from_year>):
+// <reason>" or "corrupt table 'event': row <e>: region_renamed without a
+// region_name row", or std::nullopt. region_ids and culture_ids ascending;
+// events in id order with ids 1, 2, ...; renamed_kind the id of the stored
+// kind region_renamed (0 when the catalogue has none); end_year E.
+[[nodiscard]] std::optional<std::string> region_name_rows_problem(std::span<const db::RegionNameRow> rows,
+                                                                  std::span<const std::int64_t> region_ids,
+                                                                  std::span<const std::int64_t> culture_ids,
+                                                                  std::int64_t end_year,
+                                                                  std::span<const db::EventRow> events,
+                                                                  std::int64_t renamed_kind);
 
 // The sentence of event `event_id` (P3-04 8.5) from its kind's stored
 // template. FatalError "render_event: event <id>: <reason>" when the id is

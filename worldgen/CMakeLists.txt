@@ -87,6 +87,7 @@ add_library(worldgen STATIC
     src/history/inputs.cpp
     src/history/conflict.cpp
     src/history/conflict_war.cpp
+    src/history/renaming.cpp
     src/history/peoples.cpp
     src/history/peoples_geo.cpp
     src/history/schedule.cpp
