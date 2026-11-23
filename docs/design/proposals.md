@@ -1170,3 +1170,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: code, a fixed table in `worldgen/inspect/layer_catalogue.hpp`. The catalogue is not tunable content: it describes what the stages' code writes, and changing a fixed layer's type, units or meaning is already a schema change (P1-00 4 rule 3), so a TOML copy could only disagree with the code. The palettes and ramps it uses are code already, and readers (the viewer, later the create-world screen and the in-game map) then need no data root to label a layer. Labels that do depend on data (biome and region names and colours) keep coming from the world's own tables.
 - Interim choice: as proposed, in P4-02.
 - Status: open
+
+### Paul's decision of 2026-11-22: the P5-01 critic's three notes go to P5-12
+
+- Date: 2026-11-22
+- Raised by: lead, from the world critic's review of P5-01 (`docs/reviews/p5-01-followups-world-critic.md`, F1 to F3)
+- Design doc section: 13 (P5)
+- Problem: at generator 0.21.0 some settlement names double a place suffix (`Sudsteadstead`, `Galwickwick`, `Stonton`, `Deasstead`), one region is named "Tarden" (the name filter does not cover region names), and the `refuges` list of the report's `[present]` section also lists refuges found long ago. Fixing names changes world bytes, so every reference and golden value would be recorded twice in a row.
+- Decision (Paul: "carry them into P5-12"): P5-01 merges as it is; the three notes are fixed in P5-12 (regions renamed by history), the next stage that changes world bytes.
+- Status: accepted
