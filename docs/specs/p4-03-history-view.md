@@ -263,13 +263,13 @@ Each shipped race gets **four explicit colours**, saturated, so that held land r
 | Key | k mod 4 = 0 | 1 | 2 | 3 | min to B | min within race |
 | --- | --- | --- | --- | --- | --- | --- |
 | `elf` (green) | (40, 190, 70) | (130, 215, 130) | (0, 140, 40) | (130, 205, 40) | 109 | 126 |
-| `goblin` (yellow) | (230, 195, 20) | (235, 215, 90) | (170, 125, 0) | (150, 150, 30) | 89 | 75 |
+| `goblin` (yellow) | (230, 195, 20) | (235, 215, 90) | (170, 125, 0) | (140, 155, 30) | 89 | 89 |
 | `dwarf` (orange-brown) | (220, 105, 25) | (245, 165, 105) | (150, 65, 15) | (195, 80, 55) | 93 | 78 |
 | `faerie` (violet) | (175, 70, 225) | (215, 160, 250) | (115, 35, 165) | (200, 110, 200) | 127 | 97 |
 | `human` (teal) | (0, 190, 195) | (100, 215, 215) | (0, 120, 130) | (50, 215, 175) | 96 | 94 |
 | `orc` (red) | (205, 30, 30) | (240, 120, 110) | (135, 15, 20) | (230, 50, 80) | 165 | 93 |
 
-This is the **one place** that holds the 24 values (r4; P4-03a). r4 changed four entries: goblin 3 (205, 160, 60) to olive (150, 150, 30), a hue apart from goblin 0 and 2 (critic finding 1); goblin 1 (250, 235, 110), elf 1 (150, 230, 150) and human 1 (125, 235, 230) darkened by about 15 per cent by the test of 7.5 (critic finding 2). Entry 0 is the race's base colour: `race_base_colour(key)` returns it for these six keys. The closest pair across races is dwarf 1 / orc 1 at 90; the closest pair of one race is goblin 2 / goblin 3 at 75.
+This is the **one place** that holds the 24 values (r4; P4-03a). r4 changed four entries: goblin 3 (205, 160, 60) to olive (140, 155, 30), a hue apart from goblin 0 and 2 (critic finding 1); goblin 1 (250, 235, 110), elf 1 (150, 230, 150) and human 1 (125, 235, 230) darkened by about 15 per cent by the test of 7.5 (critic finding 2). Entry 0 is the race's base colour: `race_base_colour(key)` returns it for these six keys. The closest pair across races is dwarf 1 / orc 1 at 90; the closest pair of one race is dwarf 0 / dwarf 3 at 78 (goblin 2 / goblin 3: 89).
 
 **Any other key** keeps P4-01 5.5 unchanged: the base from the key's hash (`TAG_COLOUR`), the shade by `civilization_shade(base, k)` (base, light, dark, deep). Such colours carry no distance guarantee; a race added by P5 gets its own row here when it ships.
 
@@ -296,7 +296,7 @@ Required for the 24 entries of 7.2:
 | C2 two entries of one race | D ≥ 256 · 70² (1,254,400) |
 | C3 two entries of different races | D ≥ 256 · 80² |
 
-The table passes with the margins shown (worst: goblin 1 against steppe, 89; within a race, goblin 2 / goblin 3, 75). A change to the shipped biome colours that breaks C1 fails the test, which is intended: the two palettes are judged together.
+The table passes with the margins shown (worst: goblin 1 against steppe, 89; within a race, dwarf 0 / dwarf 3, 78). A change to the shipped biome colours that breaks C1 fails the test, which is intended: the two palettes are judged together.
 
 ### 7.4 API
 
@@ -566,7 +566,7 @@ r3 (2026-11-23, after the viewer part on `p4/03-viewer`; corrections to match th
 
 r4 (2026-11-23, the change spec `docs/specs/p4-03a-territory-colour-followups.md`: the world critic's findings 1 to 5 and the library audit's A1; the lead's decisions after Paul saw the images):
 
-1. 7.2: goblin 3 to (150, 150, 30); goblin 1, elf 1, human 1 to (235, 215, 90), (130, 215, 130), (100, 215, 215); the min columns of goblin (89, 75) and human (96) updated; 7.3's worst margins restated. The table is the one place that holds the colours.
+1. 7.2: goblin 3 to (140, 155, 30); goblin 1, elf 1, human 1 to (235, 215, 90), (130, 215, 130), (100, 215, 215); the min columns of goblin (89, 89) and human (96) updated; 7.3's worst margins restated. The table is the one place that holds the colours.
 2. 7.5 new: the integer luma L and the r4 table's L values; the pale test L > 190 on the r3 table that chose the darkened entries.
 3. 8.1, 8.2: a border with both sides free is half(U), half the cell's unbordered land colour; the inner-border dim is 10/16 when L(C) > 175, else 12/16; an empty holder vector still draws every border black; a worked example for each.
 4. 9.2: `Cell::half`; the timeline form of `render_territory`, used by the CLI and the viewer (3.3, 3.4, 5.1); the two-vector forms stay.

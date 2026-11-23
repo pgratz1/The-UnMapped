@@ -1,16 +1,16 @@
 # P4-03a Territory colour and border follow-ups
 
-Status: **draft r0, 2026-11-23, for the lead's approval.** Written by the spec writer on `p4/03a-spec`, cut from `origin/main` at d363da3 (P4-03 merged, generator 0.21.0, schema 7). A change spec in the form of `docs/specs/p5-01-followups.md`: it lists the items and names the section of `docs/specs/p4-03-history-view.md` **r4** that holds the normative text. P4-03 stays the single source for the territory image and the history view.
+Status: **r1, 2026-11-23, approved by the lead** (r0 draft; r1: goblin 3 is the greener (140, 155, 30), the bound 175 and half strength confirmed, the P4-00 6.3 pointer added). Written by the spec writer on `p4/03a-spec`, cut from `origin/main` at d363da3 (P4-03 merged, generator 0.21.0, schema 7). A change spec in the form of `docs/specs/p5-01-followups.md`: it lists the items and names the section of `docs/specs/p4-03-history-view.md` **r4** that holds the normative text. P4-03 stays the single source for the territory image and the history view.
 
 Sources: the world critic's review `docs/reviews/p4-03-history-view-world-critic.md` (findings 1 to 5), the library audit `docs/reviews/p4-03-history-view-library-audit.md` (advisory A1), and the lead's decisions of 2026-11-23 after Paul saw the images. Paul may still adjust the colours: every colour value is in the one table of P4-03 7.2, and the luma bound in P4-03 8.2; a change to either is a change of those two places, the reference and the golden lines of section 5 only.
 
-**No world byte changes.** `GENERATOR_VERSION` is unchanged; schema stays 7. The design doc is not contradicted (it says nothing on map colours or border drawing), so there is no proposals entry.
+**No world byte changes.** `GENERATOR_VERSION` is unchanged; schema stays 7. The design doc is not contradicted (it says nothing on map colours or border drawing), so there is no proposals entry. P4-00 6.3 gains a pointer line: its "free land shows the `regions` composite unchanged" holds for the fill only.
 
 ## 1. Items
 
 | # | Item | Source | Normative text (P4-03 r4) |
 | --- | --- | --- | --- |
-| 1 | Goblin entry 3 from tan (205, 160, 60) to olive **(150, 150, 30)** | critic 1 | 7.2 |
+| 1 | Goblin entry 3 from tan (205, 160, 60) to olive **(140, 155, 30)** | critic 1 | 7.2 |
 | 2 | Pale entries 1 darkened: goblin (250, 235, 110) to **(235, 215, 90)**, elf (150, 230, 150) to **(130, 215, 130)**, human (125, 235, 230) to **(100, 215, 215)**; dwarf, faerie and orc entry 1 unchanged | critic 2 | 7.2, 7.5 |
 | 3 | A border with **both sides free** drawn at half strength (each channel of the cell's unbordered colour times 8/16, floored) instead of black | critic 3 | 8.2, 9.2 |
 | 4 | Inner borders dimmed by **10/16** instead of 12/16 when the realm colour's luma L is above **175** | critic 4 | 8.2 |
@@ -31,14 +31,14 @@ D is the red-mean distance of P4-03 7.3, d = floor(sqrt(floor(D / 256))); thresh
 
 | Entry | Colour | L | nearest in B | nearest in race | nearest other race |
 | --- | --- | --- | --- | --- | --- |
-| goblin 3 (new) | (150, 150, 30) | 136 | 101 grassland | 75 goblin 2 | 115 elf 3 |
+| goblin 3 (new) | (140, 155, 30) | 136 | 99 grassland | 89 goblin 2 | 102 elf 3 |
 | goblin 1 (new) | (235, 215, 90) | 206 | 89 steppe | 109 goblin 0 | 103 dwarf 1 |
 | elf 1 (new) | (130, 215, 130) | 179 | 114 grassland | 143 elf 3 | 142 human 3 |
 | human 1 (new) | (100, 215, 215) | 180 | 96 ocean (depth 0) | 100 human 3 | 143 elf 1 |
 
-Every value passes; none had to be adjusted. Effects on the rest of the table: goblin 0's nearest in race goes from 100 (old goblin 3) to 109; goblin 2's from 128 to 75 (the new goblin 3); elf 3's nearest other race from 154 to 115 (goblin 3). The table's minima become: C1 89 (goblin 1 / steppe; was 88), C2 75 (goblin 2 / goblin 3; was 78, dwarf 0 / dwarf 3, which stays 78), C3 90 (dwarf 1 / orc 1, unchanged). The full per-race minima are in P4-03 r4 7.2.
+Every value passes. Effects on the rest of the table: goblin 0's nearest in race goes from 100 (old goblin 3) to 109; goblin 2's from 128 to 89 (the new goblin 3); elf 3's nearest other race from 154 to 102 (goblin 3); elf 0's from 182 to 180 (goblin 3). The table's minima become: C1 89 (goblin 1 / steppe; was 88), C2 78 (dwarf 0 / dwarf 3, unchanged), C3 90 (dwarf 1 / orc 1, unchanged). The full per-race minima are in P4-03 r4 7.2.
 
-Goblin 2 / goblin 3 at 75 is now the closest pair of one race. The two differ in hue (ochre against olive), which is what the critic asked for, but D weighs it less than the old difference in value (128). An olive a step greener, (140, 155, 30), gives 89 to goblin 2, 99 to grassland and 102 to elf 3; it is offered to Paul (section 7), not adopted, since the lead's value passes.
+The r0 draft had the lead's first value (150, 150, 30): it passed (101 to grassland, 115 to elf 3) but was only 75 from goblin 2, the closest pair of one race. The lead chose the greener (140, 155, 30) in r1 for the better in-race margin (89); its L is 136 either way, so the luma split of section 3 does not move.
 
 ## 3. Borders (items 3 and 4)
 
@@ -107,6 +107,6 @@ Test writer, from P4-03 r4 (11.1) and this spec, with the independent reference:
 
 ## 8. Open points for Paul
 
-1. **The luma bound** is 175, not the critic's 190 (section 3): with 190 only goblin 1 would get the stronger inner line after the darkening. Confirm 175, or give 190 (only goblin 1 at 10/16).
-2. **Goblin 3**: (150, 150, 30) passes with 75 to goblin 2, the tightest same-race pair. A greener (140, 155, 30) gives 89. Keep, or take the greener one.
-3. **Half strength for free borders** is half of the land colour (a darker line of the same hue), not a grey; if the free web still competes with realm outlines, a weaker 12/16 is a change of one factor.
+1. **The luma bound** is 175, not the critic's 190 (section 3), confirmed by the lead in r1; Paul may still ask for 190 (only goblin 1 at 10/16).
+2. **Goblin 3**: settled by the lead in r1, (140, 155, 30).
+3. **Half strength for free borders** (8/16 of the land colour) confirmed by the lead in r1; if the free web still competes with realm outlines, a weaker 12/16 is a change of one factor.
