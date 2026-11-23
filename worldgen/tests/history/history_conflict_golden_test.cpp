@@ -223,13 +223,11 @@ TEST_CASE("P3-06 21.6 (D1): hist-conflict-73-1024, a check where aim and exhaust
     const CCase& g = conflict_case("hist-conflict-73-1024");
     REQUIRE(g.kind == "world");
     check_world_case(g);
-    REQUIRE(g.sentences.count(914) == 1U);
-    const db::WorldReader r = open_world(world_path(g));
-    const Tables t = tables_of_world(r);
-    REQUIRE(t.event.size() >= 914U);
-    const Row& e = t.event[913];
-    CHECK(at(e, 1) == 5063);
-    CHECK(at(e, 3) == k_peace);  // the reference: aim with the defender exhausted
+    // P5-01 (generator 0.21.0): the history of seed 73 changed (fresh claims, the quarrel's strength test, the
+    // toll factors) and no longer reaches a T6 check where aim and exhaustion both hold (the reference, instrumented
+    // at goal_ending on this world at integration, finds none); the case stays as a 1024 world equal to the
+    // reference. The order of 21.6 is checked on the hand-made cases of history_conflict_order_test.cpp, whose
+    // synthetic worlds still reach checks where exhaustion first would end the war otherwise.
 }
 
 TEST_CASE("P3-06 16.3 item 20, 16.2 item 18a (r7): seed 42 at 1024 below its first claim is the peoples-only log") {

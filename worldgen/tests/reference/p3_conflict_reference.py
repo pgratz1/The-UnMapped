@@ -2610,7 +2610,8 @@ def spec_war_lines(res, inp):
             end = str(y)
             how = {"exhaustion": "exhaustion", "aim": "aim taken", "no-front": "no front", "length": "length",
                    "quiet": "end of the active phase", "goal-lost": "goal lost", "conquest": "conquest of the defender"
-                   if not w.alive(war["b"]) else "conquest of the attacker", "ended": "end of a side"}[h]
+                   if not w.alive(war["b"]) else "conquest of the attacker", "ended": "end of a side",
+                   "unfound": "search abandoned"}[h]   # r9 20.10 (the `world` printout only; P5-01 integration)
             res_ = ("won by %s" % cname[win] + (", ceded" if war["ceded"] else "")) if win is not None else "no victor"
         out.append("e%d, %d-%s: %s (c%d) on %s (c%d) over %s, claim e%d (%d); %d battles, %d sacked, %d taken; %s, %s." % (
             war["w"], war["start"], end, cname[war["a"]], war["a"], cname[war["b"]], war["b"], rname[war["goal"]],

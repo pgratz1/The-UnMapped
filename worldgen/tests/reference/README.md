@@ -1378,6 +1378,16 @@ python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs $I
   `geo-seed-42-512` so built equals `p3-06-conflict.txt`'s table hashes. At integration the C++ worlds of
   `world-hashes.sh` must give the same reports.
 
+Integration (P5-01 phase 2, against the engineer's branch):
+- Reference defect fixed: `p3_conflict_reference.py`'s `Engine.run_quiet` (the override that asks the tension in
+  Q5) did not apply P3-04 r19 22.3 (it copied SC6 from before r19), so flare-ups shorter than m survived in the
+  conflict and report worlds (`geo-seed-42-512` e335 "one year of upheaval", `hist-conflict-turbulent-512`,
+  `stress-7`, report world `civs4-seed-12-1024`). After the fix `p3-06-conflict.txt` and, with the report inputs
+  rebuilt by `build-inputs`, `p3-07-report.txt` were re-recorded; no other case moved.
+- Fixture H11: famine and plague events with one value of two, and a sack without an attacker under a kind whose
+  attacker role had min 1; both are corrupt worlds for the C++ view (P3-04 9.3). The fixture now gives both values
+  and the sack kind an optional attacker; `expand_fixture` refuses a wrong value count.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

@@ -492,13 +492,15 @@ TEST_SUITE("history-slow" * doctest::skip()) {
 // e933 of region 25 in 4410, colony s101; e1102 of region 29 in 4885, colony s110; P3-10 second round
 // integration); the test finds the first in the log, the first cession that passes a
 // settlement created earlier in its step, and checks invariant (13) over the whole world.
-TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 turbulent seed 5 and a same-step colony cession (20.27 item 7)") {
-    static dbtest::TempDir dir("conflict-engineer-1024-turbulent-5");
+// P5-01 (generator 0.21.0, test writer at integration): seed 5 has no same-step colony cession any more; 1024
+// turbulent seed 19 has one (region_ceded e751 of region 10 in 4331, colony s122).
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 turbulent seed 19 and a same-step colony cession (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-1024-turbulent-19");
     std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const worldgen::WorldParams wp = chrono_test::world_params(5, 1024, hp, ct::shipped());
-    const std::string path = dir.file("turbulent-5-1024.db");
+    const worldgen::WorldParams wp = chrono_test::world_params(19, 1024, hp, ct::shipped());
+    const std::string path = dir.file("turbulent-19-1024.db");
     REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
     const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
     const Watched w = watched_run(ct::shipped(), in);
