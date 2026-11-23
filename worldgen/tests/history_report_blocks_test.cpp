@@ -114,7 +114,7 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
     const std::string s = summary("h1-war-and-ruin");
     const std::vector<std::string> lines = hrtest::lines_of(s);
     REQUIRE(lines.size() > 3U);
-    CHECK(lines[0] == "# worldgen history v3");   // r19 25.1
+    CHECK(lines[0] == "# worldgen history v4");   // r19 25.1; v4 since P5-02 12.1
     CHECK(lines[1] == "level = summary");
     CHECK(lines[2] == "[settings]");
     CHECK(block(s, "[settings]") == std::vector<std::string>{

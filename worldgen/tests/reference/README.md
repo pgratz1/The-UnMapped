@@ -1471,6 +1471,96 @@ python3 -B worldgen/tests/reference/p3_report_reference.py golden
   dry biome of `region_biome` in their region rows, as `land_nouns` reads them without `region_land` (the lead's
   ruling 3); no peoples or conflict rule reads those columns.
 
+## Generator 0.23.0 (P5-02: beasts, monsters and sites; abandoned places; P5-12 carry-overs)
+
+Written from `docs/specs/p5-02-beasts-monsters.md` r0 (and the sections it amends) without the engineer's branch.
+Every reference serves 0.23.0 by default and keeps `--version 0.22.0` (for the timeline `--rules p4-03a`), which
+reproduces the committed 0.22.0 goldens byte for byte (checked before the change for `p3-01-data.txt`,
+`p3-02-names.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt`, `p3-06-conflict.txt`, `p3-07-report.txt`,
+`p5-12-renaming.txt`; the files of the base are those of `73fc624`, `P5_02_BASE_COMMIT`). The data of 4.1 to 4.5,
+9.3, 10.2 and 21.2 are written into `game/data` and both fixture roots exactly as the spec states them, with one
+reading (D2 below): kinds 48 and 49 read `{@settlement}`.
+
+Inputs: `~/.cache/the-unmapped/out/p5-02-tests/inputs/` (the P5-12 inputs, geography only, plus
+`p5-monsters-high-1024.db`, `generate --seed 7 --map-size 1024 --monster-pressure high --until regions` with the
+0.22.0 CLI and a 0.22.0 data root: geography does not change at 0.23.0); the report and timeline inputs
+`~/.cache/the-unmapped/out/p5-02-tests/report-inputs/`, rebuilt with `p3_report_reference.py build-inputs
+~/.cache/the-unmapped/out/p3-07-tests/inputs ~/.cache/the-unmapped/out/p5-02-tests/report-inputs` (schema 9: the
+settlement statement replaced, the five tables added, history recomputed by the conflict reference).
+
+```
+I=~/.cache/the-unmapped/out/p5-02-tests/inputs
+python3 -B worldgen/tests/reference/p3_data_reference.py golden
+python3 -B worldgen/tests/reference/p3_names_reference.py golden
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I                 # about 1 minute
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs $I                # about 5 minutes
+python3 -B worldgen/tests/reference/p5_12_renaming_reference.py golden --inputs $I             # about 10 minutes
+python3 -B worldgen/tests/reference/p5_02_monsters_reference.py golden --inputs $I             # about 12 minutes
+python3 -B worldgen/tests/reference/p3_report_reference.py golden
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden
+```
+
+After the engineer's calibration (17 step 9) the rates are read from the data roots: edit the listings
+`BEASTS_023`, `MONSTERS_KINDS_023` and `MONSTERS_TUNING_023` of `p3_data_reference.py` (the one place; `check`
+compares them with the files), the C++ listing `p3_01_history_data.hpp` (generated from the files) and the tables of
+`history/history_monsters_data_test.cpp`, then run the commands above; each golden is one command.
+
+- `p3_data_reference.py`: `KINDS_023` (new kinds `beast` (`BEAST`), `monster` (`MONSTER`), history `monsters`
+  (`MONSTERS_023`), culture `site_forms`, peoples `ghost_*`), the listings of 4.1 to 4.5, `RENAMING_RULES_023`,
+  `REPORT_ENTRIES_023`, `KIND43_CAUSES_023`, the grammars `display_name`, `beast_plural`, `monster_noun`,
+  `name_form` and `rename_form` with `{stem}`, the named checks with their messages (`beast_check_messages`,
+  `monster_check_messages`, `monsters_check_messages`; the messages 4.2 and 4.3 do not give are this reference's,
+  reading A3), `pre_023`, `check_spec_023`. The beast and monster files have no comment line (headers at line 1).
+- `p3_names_reference.py`: `CULTURES_R23` (site_forms), `STREAMS_023` (`hist.names.monster`, `hist.names.site`),
+  `with_forms` (a monster's D is its naming culture's, F its kind's name_forms), `monster_name`, `site_name`,
+  golden lines `mattempt`, `mformtext`, `formtext <culture> site`, `mname`, `sname`, `msha256` (`r23_golden_lines`).
+- `p3_engine_reference.py`: `KINDS_023`, `COMPILED_023`, `RENDER_R23` (names of types 8 and 9, form `kind`,
+  `{@beast}` and their `template_problem` messages), schema 9 (`COLUMNS_023`, `SETTLEMENT_DDL_023`, `DDL_023_NEW`,
+  `ddl_023`), `settlement_ending` / `endings_from_rows` (8.3, a faded row through its `ruin_faded` cause),
+  `beast_rows`, `monster_kind_rows`, the `[history]` keys of 11.3, `TEMPLATE_CASES_R23`. Stub worlds: beast and
+  monster_kind rows written, the other three tables empty (reading S1).
+- `p3_peoples_reference.py`: flag `ghost` (8.2 in the strike and in the outbreak's plan), `set_wild`,
+  `wild_growth` (7.1's formula), `shunned` (7.2: no inside or outward target), stream `hist.peoples.ghost`,
+  `rows_of_023`. The peoples-only configuration installs no monsters (no view: G = 1000).
+- `p3_conflict_reference.py`: flags `monsters` (the subsystem after renaming in T1, T4, T6, Q1, Q4; `tension_all`,
+  the larger of the two sources, conflict's on a tie; `finish` at E - 1) and `flare_claim` (7.4: the forced
+  declaration only for a `claim` or `claim_settlements` trigger), the monster flare-up note (12.7) in
+  `history_note`, the schema 9 gate of `check-world`, invariant 8 admitting the monsters' flare-ups, `HEADER_023`.
+- `p5_02_monsters_reference.py` (new): `Monsters` (sections 5 and 6), `WildView`, `GeoNb` (GeoView neighbours =
+  every region_border row, reading G1), `fill_form` (21.2's possessive), lair names (9.2), `invariant_violations`
+  (14's invariants 1, 3 to 11 on rows, also on a world file: `check-world DB`), `res_violations` (with invariant
+  2), `i0_differences` (7.5's I0: the zero tuning with the subsystem against the configuration without it, the
+  history tables equal; on the stress fixtures and the 512 inputs), `check_units` (19.1's units on stub worlds of
+  `p3_conflict_reference.unit_world`: habitat and capacity, the yearly step at B < K, B > K, B = K, B = 0, d capped,
+  g at the caps, Q1 = L years of T1, the rows at year 0, a phase change and finish, boldness's hysteresis and toll,
+  the caps, chance_ppb at 0, 1, 10^9, islets, the quiet budget, pending_flare, tension pure, the undead window, raid
+  targeting and toll, the hunt odds, each overrun condition and its effects, the shun lifted, outposts at war on the
+  height, one a year, the quiet ending), fixtures `monsters-small` (`monsters_small_data`: the conflict stress data,
+  every wake_rate x 2000, living_permille 1000, overrun_permille 1000; in-memory, reading X1) and `zero`
+  (`zero_data`), `golden` (`p5-02-monsters.txt`). Readings: `readings`.
+- `p5_12_renaming_reference.py`: `--version` (default 0.23.0), `{stem}` (`stem_value`), the possessive rule
+  (`form_pieces`, `fill`), a monster `name_role` (the monster's root through `Monsters.monster_root_of`), the stage
+  check admitting a monster role, `rename-small` = monsters-small + the renaming edits at 0.23.0, `HEADER_023`.
+- `p3_report_reference.py`: format v4 (`V4`): header, references of types 8 and 9, the ruins list (`overrun by`,
+  `after plague`, `after famine`, `then called`), the `beasts:` line (full), `[monsters]` (`SUMMARY_MONSTER_LINES`
+  2), `[sites]`, the `[stats]` keys of 12.6 (full only), fixture H13 (`h13-v4.toml`), fixture DDL at schema 9 (the
+  spec's statements while `schema.md` holds 8), `build-inputs` to schema 9.
+- `p4_timeline_reference.py`: rule set `p5-02` (default; `--rules p4-03a` keeps the 0.22.0 file): `site_at`,
+  `monster_at`, `beast_count`, `sites_existing`, the settlement ending at Y; S gains `site`, `monster`, `beast`
+  lines after the settlement lines and D(Y) the open sites and living monsters (reading P5: 13 gives no line
+  format), inputs the report inputs above.
+
+Goldens re-recorded and why each moved: `p3-01-data.txt` (the new kinds, fixed id and fields: content hashes),
+`p3-02-names.txt` (the two streams' lines and the r23 section; no line of the existing kinds moves),
+`p3-04-engine.txt` (the catalogue of 55 kinds, the five tables and settlement's ending, the `[history]` keys, the
+template cases; no sentence or schedule moves), `p3-05-peoples.txt` (the ghost rule: the cases whose histories hold
+a famine or plague on a small place move from that event on; settlement.ending), `p3-06-conflict.txt` (every
+history: the monsters subsystem, outposts, the renaming forms), `p5-12-renaming.txt` (every history; `ravage`
+renames in the rename-small fixtures), `p3-07-report.txt` (v4, every report), `p4-01-timeline.txt` (every case:
+dumps of schema 9), and the new `p5-02-monsters.txt`. Not touched: `core_vectors.txt`, `p1-*`,
+`p3-03-chronology.txt`, and the world-hash files `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` (validation's).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

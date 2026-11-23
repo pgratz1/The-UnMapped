@@ -95,7 +95,7 @@ TEST_CASE("P3-01 r16 5.4: each problem of renaming_rules, with its text") {
     for (const Case& c : cases) {
         CAPTURE(c.what);
         wh::RenamingTuning t = shipped_tuning();
-        REQUIRE(t.rules.size() == 6U);
+        REQUIRE(t.rules.size() == 7U);   // P5-02 9.3: rule 7 ravage
         REQUIRE(t.rules[c.rule].key == c.key);
         c.edit(t.rules[c.rule]);
         CHECK(problem_with(t) == std::optional<std::string>(msg(c.key, c.problem)));
@@ -201,6 +201,21 @@ TEST_CASE("P5-12 5.1, 5.2 item 4: the parts of a filled form and the joins betwe
         const wh::RenamedName n = wh::fill_rename_form("The {name} Reach", "Nife", "Downs");
         CHECK(n.name == "The Nife Reach");
         CHECK(n.joins == std::vector<std::size_t>{4, 8});
+    }
+    // P5-02 21.2 (generator 0.23.0): the possessive rule, a slot value ending in s or S followed by a literal that
+    // starts with 's loses that s (GUESS: fill_rename_form applies it, the joins as before)
+    {
+        const wh::RenamedName n = wh::fill_rename_form("{name}'s Grave", "Omos", "Fells");
+        CHECK(n.name == "Omos' Grave");
+        CHECK(n.joins == std::vector<std::size_t>{4});
+    }
+    {
+        const wh::RenamedName n = wh::fill_rename_form("{name}'s Grave", "IERSAES", "Fells");
+        CHECK(n.name == "IERSAES' Grave");
+    }
+    {
+        const wh::RenamedName n = wh::fill_rename_form("{name} Stones", "Omos", "Fells");   // no 's: unchanged
+        CHECK(n.name == "Omos Stones");
     }
 }
 

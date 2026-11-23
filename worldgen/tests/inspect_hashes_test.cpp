@@ -298,7 +298,7 @@ TEST_CASE("hashes 8: REAL values and tables without a primary key are errors") {
         REQUIRE(worldgen::db::testing::execute_on_file(out, "ANALYZE").ok());
         const auto d = detail_hashes(open_world(out));
         REQUIRE(d.ok());
-        const std::vector<std::string> names = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer", "meta", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border", "region_control", "region_name", "relation", "settlement", "settlement_census"};
+        const std::vector<std::string> names = {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border", "region_control", "region_name", "relation", "settlement", "settlement_census", "site"};
         REQUIRE(d.value().tables.size() == names.size());
         for (std::size_t k = 0; k < names.size(); ++k) {
             CHECK(d.value().tables[k].name == names[k]);
@@ -376,12 +376,16 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
     const auto schema = w.schema_rows();
     REQUIRE(schema.ok());
     const std::vector<std::vector<ColumnValue>> expected_schema = {
+        {text("index"), text("sqlite_autoindex_beast_1"), text("beast"), null_value()},   // P5-02 11.1
         {text("index"), text("sqlite_autoindex_biome_1"), text("biome"), null_value()},
         {text("index"), text("sqlite_autoindex_culture_1"), text("culture"), null_value()},
         {text("index"), text("sqlite_autoindex_event_kind_1"), text("event_kind"), null_value()},
         {text("index"), text("sqlite_autoindex_layer_1"), text("layer"), null_value()},
+        {text("index"), text("sqlite_autoindex_monster_kind_1"), text("monster_kind"), null_value()},
         {text("index"), text("sqlite_autoindex_race_1"), text("race"), null_value()},
         {text("table"), text("age"), text("age"), text(p004::DDL_AGE)},
+        {text("table"), text("beast"), text("beast"), text(p004::DDL_BEAST)},   // P5-02 11.1
+        {text("table"), text("beast_population"), text("beast_population"), text(p004::DDL_BEAST_POPULATION)},
         {text("table"), text("biome"), text("biome"), text(p004::DDL_BIOME)},
         {text("table"), text("civilization"), text("civilization"), text(p004::DDL_CIVILIZATION)},
         {text("table"), text("climate"), text("climate"), text(p004::DDL_CLIMATE)},
@@ -396,6 +400,8 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("god"), text("god"), text(p004::DDL_GOD)},
         {text("table"), text("layer"), text("layer"), text(p004::DDL_LAYER)},
         {text("table"), text("meta"), text("meta"), text(p004::DDL_META)},
+        {text("table"), text("monster"), text("monster"), text(p004::DDL_MONSTER)},
+        {text("table"), text("monster_kind"), text("monster_kind"), text(p004::DDL_MONSTER_KIND)},
         {text("table"), text("pass"), text("pass"), text(p004::DDL_PASS)},
         {text("table"), text("phase"), text("phase"), text(p004::DDL_PHASE)},
         {text("table"), text("race"), text("race"), text(p004::DDL_RACE)},
@@ -408,6 +414,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("relation"), text("relation"), text(p004::DDL_RELATION)},
         {text("table"), text("settlement"), text("settlement"), text(p004::DDL_SETTLEMENT)},
         {text("table"), text("settlement_census"), text("settlement_census"), text(p004::DDL_SETTLEMENT_CENSUS)},
+        {text("table"), text("site"), text("site"), text(p004::DDL_SITE)},
     };
     CHECK(schema.value() == expected_schema);
     CHECK(worldgen::db::SCHEMA_ROW_COLUMNS == std::array<std::string_view, 4>{"type", "name", "tbl_name", "sql"});

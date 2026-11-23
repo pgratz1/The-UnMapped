@@ -60,7 +60,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h5-saturated",    "h6-notes",       "h7-runs",
                                                "h8-frames",       "h9-realms",      "h10-floor",
                                                "h11-v2",    // r19 25.13 item 11 (the spec's "H9 v2")
-                                               "h12-v3"};   // r21 26.8 item 9 (P5-12)
+                                               "h12-v3",    // r21 26.8 item 9 (P5-12)
+                                               "h13-v4"};   // P5-02 19.1 item 15 (format v4, schema 9)
     return v;
 }
 
@@ -92,6 +93,12 @@ struct Fixture {
     std::vector<db::RegionControlRow> region_control;
     std::vector<db::RelationRow> relations;
     std::vector<db::RegionNameRow> region_names;  // schema 8 (P5-12 7.2; P3-07 r21 26.8 item 9, H12)
+    // schema 9 (P5-02 11.1; H13). GUESS the row types (p5_02 api header of the history tests).
+    std::vector<db::BeastRow> beasts;
+    std::vector<db::MonsterKindRow> monster_kinds;
+    std::vector<db::BeastPopulationRow> beast_populations;
+    std::vector<db::MonsterRow> monsters;
+    std::vector<db::SiteRow> sites;
 };
 
 namespace detail {
@@ -202,11 +209,13 @@ inline Fixture load_fixture(const std::string& name) {
                                     i64(*r->get(4)), i64(*r->get(5)), i64(*r->get(6)), i64(*r->get(7)),
                                     nullable(*r->get(8)), i64(*r->get(9))});
     }
+    std::vector<bool> derive_ending;   // P5-02 8.3: a row of fourteen columns has its ending derived below
     for (const toml::array* r : detail::rows(doc, "settlement")) {
         fx.settlements.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)),
                                   i64(*r->get(4)), i64(*r->get(5)), i64(*r->get(6)), i64(*r->get(7)),
                                   i64(*r->get(8)), i64(*r->get(9)), i64(*r->get(10)), i64(*r->get(11)),
-                                  nullable(*r->get(12)), i64(*r->get(13))});
+                                  nullable(*r->get(12)), i64(*r->get(13)), r->size() > 14U ? i64(*r->get(14)) : 0});
+        derive_ending.push_back(r->size() <= 14U);
     }
     for (const toml::array* r : detail::rows(doc, "settlement_census")) {
         fx.census.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
@@ -232,6 +241,28 @@ inline Fixture load_fixture(const std::string& name) {
     // Schema 8: [region, from_year, name, culture, event] (P5-12 7.2).
     for (const toml::array* r : detail::rows(doc, "region_name")) {
         fx.region_names.push_back({i64(*r->get(0)), i64(*r->get(1)), str(*r->get(2)), i64(*r->get(3)), i64(*r->get(4))});
+    }
+    // Schema 9 (P5-02 11.1, 11.2): the five tables in column order; -1 is NULL in monster.died and site.ended_year.
+    for (const toml::array* r : detail::rows(doc, "beast")) {
+        fx.beasts.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), str(*r->get(3)), i64(*r->get(4)),
+                             i64(*r->get(5))});
+    }
+    for (const toml::array* r : detail::rows(doc, "monster_kind")) {
+        fx.monster_kinds.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), str(*r->get(3)),
+                                    i64(*r->get(4)), i64(*r->get(5)), i64(*r->get(6))});
+    }
+    for (const toml::array* r : detail::rows(doc, "beast_population")) {
+        fx.beast_populations.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3))});
+    }
+    for (const toml::array* r : detail::rows(doc, "monster")) {
+        fx.monsters.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
+                               i64(*r->get(5)), nullable(*r->get(6)), i64(*r->get(7)), i64(*r->get(8)),
+                               i64(*r->get(9)), i64(*r->get(10))});
+    }
+    for (const toml::array* r : detail::rows(doc, "site")) {
+        fx.sites.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
+                            i64(*r->get(5)), i64(*r->get(6)), i64(*r->get(7)), i64(*r->get(8)), i64(*r->get(9)),
+                            i64(*r->get(10)), nullable(*r->get(11)), i64(*r->get(12)), i64(*r->get(13))});
     }
     // The catalogue: id = position; roles and values seq = position.
     struct KindInfo {
@@ -341,6 +372,49 @@ inline Fixture load_fixture(const std::string& name) {
             }
         }
     }
+    // P5-02 8.3: the ending of a fourteen-column settlement row, from the log (status 3: its ruin_event; status 4:
+    // the cause of its ruin_faded event), as the reference's expand_fixture derives it.
+    {
+        std::map<std::int64_t, std::string> key_of_kind;
+        for (const auto& k : fx.kinds) key_of_kind[k.id] = k.key;
+        std::map<std::int64_t, std::string> key_of_event;
+        std::map<std::int64_t, std::int64_t> settlement_of;
+        for (const auto& e : fx.events) {
+            key_of_event[e.id] = key_of_kind[e.kind];
+            settlement_of[e.id] = e.settlement;
+        }
+        std::map<std::int64_t, std::vector<std::int64_t>> causes_of;
+        for (const auto& c : fx.causes) causes_of[c.event].push_back(c.cause);
+        std::map<std::int64_t, std::int64_t> faded_ruin;
+        for (const auto& [e, k] : key_of_event) {
+            if (k == "ruin_faded" && !causes_of[e].empty()) faded_ruin[settlement_of[e]] = causes_of[e].front();
+        }
+        for (std::size_t i = 0; i < fx.settlements.size(); ++i) {
+            if (!derive_ending[i]) continue;
+            db::SettlementRow& s = fx.settlements[i];
+            if (s.status == 1 || s.status == 2) {
+                s.ending = 0;
+                continue;
+            }
+            const std::int64_t ruin = s.status == 3 ? s.ruin_event : faded_ruin[s.id];
+            const std::string& k = key_of_event[ruin];
+            std::int64_t ending = 5;
+            if (k == "sacked") {
+                ending = 1;
+            } else if (k == "settlement_overrun") {
+                ending = 2;
+            } else if (k == "settlement_abandoned" || k == "settlement_abandoned_to") {
+                bool plague = false, famine = false;
+                for (const std::int64_t c : causes_of[ruin]) {
+                    const std::string& ck = key_of_event[c];
+                    plague = plague || ck == "plague" || ck == "plague_spread" || ck == "plague_outbreak";
+                    famine = famine || ck == "famine";
+                }
+                ending = plague ? 3 : famine ? 4 : 5;
+            }
+            s.ending = ending;
+        }
+    }
     // Primary-key order (the writer requires ascending keys).
     auto by = [](auto key) { return [key](const auto& a, const auto& b) { return key(a) < key(b); }; };
     std::sort(fx.biomes.begin(), fx.biomes.end(), by([](const db::BiomeRow& r) { return r.id; }));
@@ -402,6 +476,12 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.region_control) ctx.write_region_control(r);
     for (const auto& r : f.relations) ctx.write_relation(r);
     for (const auto& r : f.region_names) ctx.write_region_name(r);
+    // P5-02 11.1: GUESS the StageContext writers, as write_region_name
+    for (const auto& r : f.beasts) ctx.write_beast(r);
+    for (const auto& r : f.monster_kinds) ctx.write_monster_kind(r);
+    for (const auto& r : f.beast_populations) ctx.write_beast_population(r);
+    for (const auto& r : f.monsters) ctx.write_monster(r);
+    for (const auto& r : f.sites) ctx.write_site(r);
 }
 
 inline const dbtest::TempDir& fixture_dir() {

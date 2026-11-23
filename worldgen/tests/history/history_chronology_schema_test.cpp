@@ -89,7 +89,7 @@ TEST_SUITE("chronology") {
 // --- 14.1 item 7 ------------------------------------------------------------------------------
 
 TEST_CASE("P3-03 5.1, 14.1 item 7: SCHEMA_VERSION 6 and the five statements after region_biome's, byte for byte") {
-    CHECK(chrono_api::schema_version() == 8);
+    CHECK(chrono_api::schema_version() == 9);   // P5-02 11.1
     const std::vector<std::string> ddl = chrono_api::ddl_statements();
     REQUIRE(ddl.size() == 27U);  // P3-04 9.1: thirteen more after age's; region_name (schema 8, P3-04 r21 23.4)
     CHECK(ddl[7].rfind("CREATE TABLE region_biome ", 0) == 0U);
@@ -109,8 +109,8 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA page_count") ==
           std::vector<std::vector<std::string>>{{std::to_string(EMPTY_WORLD_PAGES)}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"8"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"9"}});
     for (const std::string& t : five_tables()) {
         CAPTURE(t);
         CHECK(db.rows("SELECT count(*) FROM " + t) == std::vector<std::vector<std::string>>{{"0"}});

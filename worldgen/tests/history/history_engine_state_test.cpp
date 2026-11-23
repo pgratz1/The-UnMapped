@@ -221,7 +221,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                      {8, 1, 1, 1, 2}, {8, 2, 2, 2, 2}, {9, 1, 1, 3, 2}, {9, 2, 2, 1, 2}, {10, 1, 1, 4, 2},
                      {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {11, 2, 1, 3, 2}, {13, 1, 1, 3, 1}, {13, 2, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
-    REQUIRE(t.event_kind.size() == 44U);  // 43 kinds from 0.22.0 (P3-04 r21 23.2; 42 from 0.21.0), then the test kind
+    REQUIRE(t.event_kind.size() == 56U);  // 55 kinds from 0.23.0 (P5-02 10.1); 43 kinds from 0.22.0 (P3-04 r21 23.2; 42 from 0.21.0), then the test kind
     CHECK(t.event_kind[43][1].bytes == "test_change");
 }
 

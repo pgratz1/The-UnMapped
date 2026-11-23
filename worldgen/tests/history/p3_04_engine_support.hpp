@@ -52,7 +52,7 @@ using eng::Tables;
 // bytes) is the spec writer's measurement with Python's SQLite 3.46.1 and
 // is UNCONFIRMED with the vendored SQLite; the engineer records the
 // confirmed figure in 16.5, and this is the one constant to change.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 35;
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 42;   // P5-02 11.1: 35 + the roots of five tables and two indexes
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 // The thirteen tables of 9.1 in DDL order, and in hash --detail order.
@@ -60,7 +60,8 @@ inline const std::vector<std::string>& ddl_tables() {
     static const std::vector<std::string> v = {
         "event_kind", "event_kind_role", "event_kind_value", "phase",      "event",
         "event_participant", "event_cause", "event_value", "civilization", "settlement",
-        "settlement_census", "region_control", "relation", "region_name"};   // region_name: schema 8 (r21 23.4)
+        "settlement_census", "region_control", "relation", "region_name",   // region_name: schema 8 (r21 23.4)
+        "beast", "monster_kind", "beast_population", "monster", "site"};    // P5-02 11.1 (schema 9)
     return v;
 }
 inline const std::vector<std::string>& hash_tables() {
@@ -75,8 +76,9 @@ inline std::size_t columns_of(std::string_view t) {
     static const std::map<std::string, std::size_t, std::less<>> m = {
         {"event_kind", 7},   {"event_kind_role", 6}, {"event_kind_value", 3}, {"phase", 6},
         {"event", 8},        {"event_participant", 5}, {"event_cause", 2},    {"event_value", 3},
-        {"civilization", 10}, {"settlement", 14},    {"settlement_census", 6}, {"region_control", 5},
-        {"relation", 9},     {"region_name", 5}};
+        {"civilization", 10}, {"settlement", 15},    {"settlement_census", 6}, {"region_control", 5},
+        {"relation", 9},     {"region_name", 5},     // settlement: 15 since P5-02 11.1 (ending)
+        {"beast", 6},        {"monster_kind", 7},    {"beast_population", 4}, {"monster", 11}, {"site", 14}};
     return m.find(t)->second;
 }
 
@@ -380,6 +382,12 @@ inline std::vector<std::string> report_lines(const Tables& t, std::int64_t end_y
     line("census_rows", static_cast<std::int64_t>(t.settlement_census.size()));
     line("relations", static_cast<std::int64_t>(t.relation.size()));
     line("region_names", static_cast<std::int64_t>(t.region_name.size()));   // P3-04 r21 23.4, after relations
+    // P5-02 11.3: directly after region_names
+    line("beasts", static_cast<std::int64_t>(t.beast.size()));
+    line("monster_kinds", static_cast<std::int64_t>(t.monster_kind.size()));
+    line("beast_populations", static_cast<std::int64_t>(t.beast_population.size()));
+    line("monsters", static_cast<std::int64_t>(t.monster.size()));
+    line("sites", static_cast<std::int64_t>(t.site.size()));
     return o;
 }
 

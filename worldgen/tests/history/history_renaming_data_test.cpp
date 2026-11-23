@@ -82,15 +82,20 @@ const std::vector<Rule>& shipped_rules() {
         {"conquest", {"civ_conquered"}, {}, 1, 1, 0, false, 1000, 100, "civilization", "conqueror",
          {"{name}'s Grave", "The Grave of {name}", "The End of {name}", "{name}'s Barrow"}},
         {"capital_sack", {"sacked"}, {}, 1, 1, 90, false, 700, 90, "settlement", "attacker",
-         {"{name}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "{name} Waste"}},
+         {"{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"}},   // P5-02 21.2
         {"great_sack", {"sacked"}, {"dead"}, 1500, 1, 0, false, 500, 80, "settlement", "attacker",
-         {"{name}'s Pyre", "The Ashes of {name}", "{name} Waste", "The Burnt {noun}"}},
+         {"{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"}},
         {"slaughter", {"battle", "battle_at_pass"}, {"winner_dead", "loser_dead"}, 5000, 100, 0, false, 600, 70, "loser",
-         "winner", {"The Red {noun}", "The Bloody {noun}", "{name}'s Bane", "The {noun} of the Slain"}},
+         "winner", {"The Red {noun}", "The Bloody {noun}", "The Rout of {name}", "The {noun} of the Slain",
+                    "The Weeping {noun}", "The Grim {noun}"}},
         {"plague", {"plague_outbreak"}, {"total"}, 3000, 1, 0, false, 400, 60, "settlement", "civilization",
-         {"The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{name}'s Grave"}},
+         {"The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{stem}'s Grave", "The Pale {noun}",
+          "The Hollow {noun}"}},
         {"heartland", {"became_city"}, {}, 1, 1, 0, true, 300, 50, "civilization", "civilization",
          {"{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"}},
+        // P5-02 9.3: rule 7
+        {"ravage", {"settlement_overrun"}, {}, 1, 1, 0, false, 600, 75, "monster", "civilization",
+         {"The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"}},
     };
     return v;
 }
@@ -280,9 +285,9 @@ TEST_CASE("P3-01 r16 5.4: the four named checks of history.renaming, with their 
               "check 'renaming_rule_lists' " + check_prefix() + "rules[3].values[1] 'winner_dead' repeats values[0]");
     }
     {
-        const wd::LoadError e = one_error(load(with_renaming_edit("\"The Burnt {noun}\"]", "\"{name}'s Pyre\"]")));
+        const wd::LoadError e = one_error(load(with_renaming_edit("\"The Cinder {noun}\"]", "\"{stem}'s Pyre\"]")));
         CHECK(e.message ==
-              "check 'renaming_rule_lists' " + check_prefix() + "rules[2].forms[3] '{name}'s Pyre' repeats forms[0]");
+              "check 'renaming_rule_lists' " + check_prefix() + "rules[2].forms[3] '{stem}'s Pyre' repeats forms[0]");
     }
     // renaming_forms_slots: heartland with name_role "" uses {name}
     {
@@ -293,13 +298,14 @@ TEST_CASE("P3-01 r16 5.4: the four named checks of history.renaming, with their 
               "check 'renaming_forms_slots' " + check_prefix() + "rules[5].forms[0] uses {name} but name_role is empty");
     }
     // a rule without {name} may have name_role "" (no slot used)
-    CHECK(load(with_renaming_edit("forms = [\"The Red {noun}\", \"The Bloody {noun}\", \"{name}'s Bane\", "
-                                  "\"The {noun} of the Slain\"]\n",
+    CHECK(load(with_renaming_edit("forms = [\"The Red {noun}\", \"The Bloody {noun}\", \"The Rout of {name}\", "
+                                  "\"The {noun} of the Slain\", \"The Weeping {noun}\", \"The Grim {noun}\"]\n",
                                   "forms = [\"The Red {noun}\", \"The Bloody {noun}\"]\n"))
               .ok());
     // ... and name_role "" with forms that use no {name} (slaughter: name_role is the field two lines above forms)
     CHECK(load(with_renaming_edit("name_role = \"loser\"\nnamer_role = \"winner\"\nforms = [\"The Red {noun}\", "
-                                  "\"The Bloody {noun}\", \"{name}'s Bane\", \"The {noun} of the Slain\"]\n",
+                                  "\"The Bloody {noun}\", \"The Rout of {name}\", \"The {noun} of the Slain\", "
+                                  "\"The Weeping {noun}\", \"The Grim {noun}\"]\n",
                                   "name_role = \"\"\nnamer_role = \"winner\"\nforms = [\"The Red {noun}\"]\n"))
               .ok());
     // zero rules: valid
@@ -331,14 +337,14 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
     for (const wd::Definition& d : h->definitions) {
         if (d.id != "report") continue;
         const std::vector<wd::Value>& ev = d.record.get("events").as_array();
-        REQUIRE(ev.size() == 43U);
-        const wd::Record& last = ev.back().as_record();
+        REQUIRE(ev.size() == 55U);   // P5-02 10.2
+        const wd::Record& last = ev[42].as_record();   // kind 43; kinds 44 to 55 follow (P5-02 10.2)
         CHECK(last.get_string("kind") == "region_renamed");
         CHECK(last.get_int("salience") == 60);
-        CHECK(last.get_string("template") ==
+        CHECK(last.get_string("template") ==   // P5-02 21.2: a realm's seat, the ravage
               "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
-              "slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became "
-              "known as {@region}.");
+              "slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
+              "ravage|After |, }{@region_former} became known as {@region}.");
     }
 }
 

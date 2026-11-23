@@ -52,8 +52,8 @@ TEST_CASE("P3-01 8.3 test 9: the spec listings with the shipped geography data h
     CHECK(worldgen::data::content_hash_hex(shipped_content()) == golden_hashes().at("game/data"));
 }
 
-TEST_CASE("P3-01 2, 6.3, 7: generator version and schema version (0.22.0 since P5-12; schema 8 since P5-12)") {
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.22.0");  // P5-12
-    CHECK(std::string(worldgen::generator_version()) == "0.22.0");  // P5-12
-    CHECK(worldgen::db::SCHEMA_VERSION == 8);  // P5-12 7.2: table region_name
+TEST_CASE("P3-01 2, 6.3, 7: generator version and schema version (0.23.0 since P5-02; schema 9 since P5-02)") {
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.23.0");  // P5-02
+    CHECK(std::string(worldgen::generator_version()) == "0.23.0");  // P5-02
+    CHECK(worldgen::db::SCHEMA_VERSION == 9);  // P5-02 11.1 (8 at P5-12: table region_name)
 }

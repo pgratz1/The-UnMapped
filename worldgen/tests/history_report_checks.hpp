@@ -361,7 +361,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         const std::vector<std::string> lines = lines_of(*text);
         REQUIRE(lines.size() >= 2U);
         // r19 25.1: the header is v2 (tested on the text: the spec names no library constant for it)
-        CHECK(lines[0] == "# worldgen history v3");
+        CHECK(lines[0] == "# worldgen history v4");   // P5-02 12.1
         CHECK(lines[1] == (is_full ? "level = full" : "level = summary"));
         std::vector<std::string> got_heads;
         for (const std::string& l : lines) {

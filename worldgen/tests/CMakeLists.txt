@@ -409,6 +409,21 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P5_12_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-12-renaming.txt"
 )
+# Beasts and monsters (spec P5-02, generator 0.23.0, schema 9): the data of the kinds beast and monster and of
+# history.monsters, site_forms and ghost_*; the catalogue kinds 44 to 55, their sentences and the reader's checks of
+# 11.4; the golden worlds and fixtures of golden/p5-02-monsters.txt (reference/p5_02_monsters_reference.py), the
+# invariants of section 14 from the rows and I0 (7.5). Slow cases in the suite "monsters-slow". The report v4
+# tests are history_report_v4_test.cpp (shard history-report), the timeline reads timeline_monsters_test.cpp
+# (shard timeline).
+target_sources(worldgen-tests PRIVATE
+    history/history_monsters_data_test.cpp
+    history/history_monsters_render_test.cpp
+    history/history_monsters_golden_test.cpp
+    history/history_monsters_names_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P5_02_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-02-monsters.txt"
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -433,6 +448,7 @@ target_sources(worldgen-tests PRIVATE
     history_report_r17_test.cpp
     history_report_v2_test.cpp
     history_report_v3_test.cpp
+    history_report_v4_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"
@@ -457,6 +473,7 @@ target_sources(worldgen-tests PRIVATE
     timeline_territory_test.cpp
     timeline_borders_test.cpp
     timeline_colours_p403a_test.cpp
+    timeline_monsters_test.cpp
     timeline_golden_test.cpp
     timeline_property_test.cpp
     timeline_bench_test.cpp
@@ -504,6 +521,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD layer-catalogue 8 "*inspect_layer_catalogue_worlds_test.cpp"
     SHARD timeline 40 "*timeline_*"
     SHARD renaming 30 "*history_renaming_*"
+    SHARD monsters 30 "*history_monsters_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -520,5 +538,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-history-report 120 "*-slow" "*history_report_*"
     SLOW slow-timeline 400 "*-slow" "*timeline_*"
     SLOW slow-renaming 600 "*-slow" "*history_renaming_*"
+    SLOW slow-monsters 600 "*-slow" "*history_monsters_*"
     SLOW_REST slow-other 10 "*-slow"
 )

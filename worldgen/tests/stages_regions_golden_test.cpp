@@ -873,7 +873,7 @@ TEST_CASE("P1-06 2, 3, RG14: the stage entry reads the thirteen layers and table
     // Schema 7 (P3-04); every row an integer or text (no REAL), names TEXT.
     const dbtest::SqliteFile db(dir.file("ok.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         const auto rows = db.rows(std::string("SELECT count(*) FROM ") + table);
@@ -941,18 +941,18 @@ TEST_CASE("P1-06 2: the stage reads neither coast_dist, temperature, rainfall no
 
 // --- Schema 5 (P0-02 amendment 17; 10.1 test 6) ------------------------------------------------------
 
-TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 8 since P5-12: 35 pages, 143360 bytes)") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 8);
+TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 9 since P5-02: 42 pages, 172032 bytes)") {
+    CHECK(worldgen::db::SCHEMA_VERSION == 9);
     dbtest::TempDir dir("regions-schema");
     REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 143360U);
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 172032U);   // P5-02 11.1: 42 pages
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"35"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"8"}});
+    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"42"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"9"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         CHECK(db.rows(std::string("SELECT count(*) FROM ") + table) == std::vector<std::vector<std::string>>{{"0"}});

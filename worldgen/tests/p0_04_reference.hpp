@@ -119,7 +119,8 @@ inline constexpr std::string_view DDL_SETTLEMENT =
     "CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER N"
     "OT NULL, region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, found"
     "ing_event INTEGER NOT NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NU"
-    "LL, population INTEGER NOT NULL, ruined_year INTEGER, ruin_event INTEGER NOT NULL) STRICT";
+    "LL, population INTEGER NOT NULL, ruined_year INTEGER, ruin_event INTEGER NOT NULL, ending INTEGER NOT NULL) "
+    "STRICT";   // P5-02 11.1 (schema 9): the last column ending
 inline constexpr std::string_view DDL_SETTLEMENT_CENSUS =
     "CREATE TABLE settlement_census (settlement INTEGER NOT NULL, year INTEGER NOT NULL, owner_civ INTEGE"
     "R NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, PRIMARY KEY"
@@ -136,6 +137,25 @@ inline constexpr std::string_view DDL_RELATION =
 inline constexpr std::string_view DDL_REGION_NAME =
     "CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, cultur"
     "e INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
+// The five tables of P5-02 11.1 (schema 9), byte for byte.
+inline constexpr std::string_view DDL_BEAST =
+    "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
+    "menace INTEGER NOT NULL, food INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_MONSTER_KIND =
+    "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT NOT "
+    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_BEAST_POPULATION =
+    "CREATE TABLE beast_population (region INTEGER NOT NULL, beast INTEGER NOT NULL, year INTEGER NOT NULL, count "
+    "INTEGER NOT NULL, PRIMARY KEY (region, beast, year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_MONSTER =
+    "CREATE TABLE monster (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, lair_site INTEGER NOT "
+    "NULL, born INTEGER NOT NULL, born_event INTEGER NOT NULL, died INTEGER, death_event INTEGER NOT NULL, slain_by "
+    "INTEGER NOT NULL, status INTEGER NOT NULL, hoard INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SITE =
+    "CREATE TABLE site (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, region INTEGER NOT NULL, "
+    "x INTEGER NOT NULL, y INTEGER NOT NULL, settlement INTEGER NOT NULL, founder_civ INTEGER NOT NULL, monster "
+    "INTEGER NOT NULL, origin_year INTEGER NOT NULL, origin_event INTEGER NOT NULL, ended_year INTEGER, ending_event "
+    "INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -249,7 +269,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.22.0"},
+        {"generator_version", "0.23.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -260,7 +280,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
         {"param.map_size", std::string(map_size)},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "8"},
+        {"schema_version", "9"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -356,12 +376,18 @@ inline worldgen::Sha256Digest empty_event_participant_table_hash() { return empt
 inline worldgen::Sha256Digest empty_event_cause_table_hash() { return empty_table_hash(2); }
 inline worldgen::Sha256Digest empty_event_value_table_hash() { return empty_table_hash(3); }
 inline worldgen::Sha256Digest empty_civilization_table_hash() { return empty_table_hash(10); }
-inline worldgen::Sha256Digest empty_settlement_table_hash() { return empty_table_hash(14); }
+inline worldgen::Sha256Digest empty_settlement_table_hash() { return empty_table_hash(15); }   // P5-02: 15
 inline worldgen::Sha256Digest empty_settlement_census_table_hash() { return empty_table_hash(6); }
 inline worldgen::Sha256Digest empty_region_control_table_hash() { return empty_table_hash(5); }
 inline worldgen::Sha256Digest empty_relation_table_hash() { return empty_table_hash(9); }
 // table region_name (5 columns) with no rows (schema 8, P5-12 7.2).
 inline worldgen::Sha256Digest empty_region_name_table_hash() { return empty_table_hash(5); }
+// the five tables of P5-02 11.1 with no rows (schema 9).
+inline worldgen::Sha256Digest empty_beast_table_hash() { return empty_table_hash(6); }
+inline worldgen::Sha256Digest empty_monster_kind_table_hash() { return empty_table_hash(7); }
+inline worldgen::Sha256Digest empty_beast_population_table_hash() { return empty_table_hash(4); }
+inline worldgen::Sha256Digest empty_monster_table_hash() { return empty_table_hash(11); }
+inline worldgen::Sha256Digest empty_site_table_hash() { return empty_table_hash(14); }
 
 // schema of every world at schema version 8 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
@@ -381,12 +407,16 @@ inline worldgen::Sha256Digest p0_schema_hash() {
         e.col_text(name);
         e.col_text(ddl);
     };
+    index("sqlite_autoindex_beast_1", "beast");                 // P5-02 11.1
     index("sqlite_autoindex_biome_1", "biome");
     index("sqlite_autoindex_culture_1", "culture");
     index("sqlite_autoindex_event_kind_1", "event_kind");
     index("sqlite_autoindex_layer_1", "layer");
+    index("sqlite_autoindex_monster_kind_1", "monster_kind");   // P5-02 11.1
     index("sqlite_autoindex_race_1", "race");
     table("age", DDL_AGE);
+    table("beast", DDL_BEAST);
+    table("beast_population", DDL_BEAST_POPULATION);
     table("biome", DDL_BIOME);
     table("civilization", DDL_CIVILIZATION);
     table("climate", DDL_CLIMATE);
@@ -401,6 +431,8 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     table("god", DDL_GOD);
     table("layer", DDL_LAYER);
     table("meta", DDL_META);
+    table("monster", DDL_MONSTER);
+    table("monster_kind", DDL_MONSTER_KIND);
     table("pass", DDL_PASS);
     table("phase", DDL_PHASE);
     table("race", DDL_RACE);
@@ -413,6 +445,7 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     table("relation", DDL_RELATION);
     table("settlement", DDL_SETTLEMENT);
     table("settlement_census", DDL_SETTLEMENT_CENSUS);
+    table("site", DDL_SITE);
     return e.digest();
 }
 
@@ -422,6 +455,8 @@ inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_t
     const worldgen::Sha256Digest& layer, const worldgen::Sha256Digest& meta) {
     return {
         {"age", empty_age_table_hash()},
+        {"beast", empty_beast_table_hash()},                        // P5-02 11.1
+        {"beast_population", empty_beast_population_table_hash()},
         {"biome", empty_biome_table_hash()},
         {"civilization", empty_civilization_table_hash()},
         {"climate", empty_climate_table_hash()},
@@ -436,6 +471,8 @@ inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_t
         {"god", empty_god_table_hash()},
         {"layer", layer},
         {"meta", meta},
+        {"monster", empty_monster_table_hash()},
+        {"monster_kind", empty_monster_kind_table_hash()},
         {"pass", empty_pass_table_hash()},
         {"phase", empty_phase_table_hash()},
         {"race", empty_race_table_hash()},
@@ -448,6 +485,7 @@ inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_t
         {"relation", empty_relation_table_hash()},
         {"settlement", empty_settlement_table_hash()},
         {"settlement_census", empty_settlement_census_table_hash()},
+        {"site", empty_site_table_hash()},
     };
 }
 
@@ -495,12 +533,14 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "param.map_size = 1024\n"
     "param.monster_pressure = normal\n"
     "param.races = elf,goblin,dwarf,faerie,human,orc\n"
-    "schema_version = 8\n"
+    "schema_version = 9\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
     "[tables]\n"
     "age = 0\n"
+    "beast = 0\n"
+    "beast_population = 0\n"
     "biome = 0\n"
     "civilization = 0\n"
     "climate = 0\n"
@@ -515,6 +555,8 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "god = 0\n"
     "layer = 0\n"
     "meta = 17\n"
+    "monster = 0\n"
+    "monster_kind = 0\n"
     "pass = 0\n"
     "phase = 0\n"
     "race = 0\n"
@@ -527,6 +569,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "relation = 0\n"
     "settlement = 0\n"
     "settlement_census = 0\n"
+    "site = 0\n"
     "[layers]\n"
     "(none)\n";
 

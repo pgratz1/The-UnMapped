@@ -93,7 +93,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.22.0"},
+        {"generator_version", "0.23.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -104,7 +104,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
         {"param.map_size", "1024"},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "8"},
+        {"schema_version", "9"},
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -216,7 +216,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     // the thirteen history tables, the key index of event_kind and two
     // sqlite_schema leaf pages, so 34 (P3-04 9.6); schema version 8 adds the
     // root page of table region_name, so 35 (P5-12 12).
-    CHECK(dbtest::read_file(path).size() == 143360);
+    CHECK(dbtest::read_file(path).size() == 172032);   // P5-02 11.1: 42 pages
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());
@@ -259,7 +259,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(worldgen::db::DDL_CLIMATE == std::string_view(SPEC_DDL_CLIMATE));
     CHECK(db.rows("SELECT count(*) FROM biome") == Rows{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == Rows{{"0"}});
-    CHECK(worldgen::db::SCHEMA_VERSION == 8);
+    CHECK(worldgen::db::SCHEMA_VERSION == 9);
 
     // meta: exactly 17 rows (8 history keys since schema 6, P3-03 4.2;
     // history_end_year since schema 7, P3-04 9.4), in key order, all TEXT.
@@ -270,7 +270,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM layer") == Rows{{"0"}});
     // Pragmas agree with the header.
     CHECK(db.rows("PRAGMA application_id") == Rows{{"1431194960"}});
-    CHECK(db.rows("PRAGMA user_version") == Rows{{"8"}});
+    CHECK(db.rows("PRAGMA user_version") == Rows{{"9"}});
     CHECK(db.rows("PRAGMA page_size") == Rows{{"4096"}});
     CHECK(db.rows("PRAGMA encoding") == Rows{{"UTF-8"}});
     CHECK(db.rows("PRAGMA auto_vacuum") == Rows{{"0"}});
@@ -288,8 +288,8 @@ TEST_CASE("empty world through the reader (9)") {
     REQUIRE_MESSAGE(opened.ok(), (opened.ok() ? std::string() : opened.error().message));
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
-    CHECK(reader.schema_version() == 8);
-    CHECK(reader.generator_version() == "0.22.0");
+    CHECK(reader.schema_version() == 9);
+    CHECK(reader.generator_version() == "0.23.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());

@@ -1776,8 +1776,9 @@ struct ConflictConfig {
 
     explicit ConflictConfig(const wd::ContentSet& c)
         : pair(std::make_unique<cfl::Conflict>(c)), catalogue(eng::catalogue_of(c)),
+          // P5-02 9.3: GUESS the fourth parameter, the monsters subsystem (null: none installed; p5_02_monsters_api.hpp)
           renaming(std::make_unique<worldgen::history::RenamingSubsystem>(
-              *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue)) {}
+              *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue, nullptr)) {}
     void add_before(std::vector<eng::Step> steps, FnSubsystem::Fn fn) {
         before.push_back(std::make_unique<FnSubsystem>(std::move(steps), std::move(fn)));
     }

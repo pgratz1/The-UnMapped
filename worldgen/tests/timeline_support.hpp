@@ -341,20 +341,35 @@ inline std::string list_text(std::span<const std::int64_t> ids) {
     return s;
 }
 
-// D(Y) of a YearState.
-inline std::string year_dump(const wh::YearState& st) {
+// D(Y) of a YearState. P5-02 13 (P4-01 r4; the test writer's line formats, reading P5 of the reference: 13 gives
+// none): the settlement lines gain the ending at Y (GUESS SettlementState::ending), and with the timeline D(Y)
+// ends with `site <id>` per site open at Y and `monster <id> <awake> <lair> <region>` per monster alive at Y.
+inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nullptr) {
     std::string out = "year " + num(st.year) + " phase " + num(st.phase) + " age " + num(st.age) + "\n";
     for (const wh::RegionHolding& r : st.regions) {
         out += "hold " + num(r.region) + " " + num(r.civ) + " " + num(r.since) + " " + num(r.event) + "\n";
     }
     for (const wh::SettlementState& s : st.settlements) {
         out += "settlement " + num(s.settlement) + " " + (s.exists ? "1" : "0") + " " + num(s.owner) + " " +
-               num(s.kind) + " " + num(s.status) + " " + num(s.population) + " " + num(s.since) + "\n";
+               num(s.kind) + " " + num(s.status) + " " + num(s.population) + " " + num(s.since) + " " +
+               num(s.ending) + "\n";
     }
     for (const std::size_t i : st.relations) out += "relation " + std::to_string(i) + "\n";
     for (const std::int64_t c : st.civilizations) out += "alive " + num(c) + "\n";
     for (const std::int64_t e : st.events) out += "event " + num(e) + "\n";
     for (const std::int64_t e : st.events_starting) out += "start " + num(e) + "\n";
+    if (t != nullptr) {
+        for (const std::int64_t site : t->sites_existing(st.year)) {
+            if (t->site_at(site, st.year).open) out += "site " + num(site) + "\n";
+        }
+        for (std::int64_t m = 1; m <= t->monster_count(); ++m) {   // GUESS Timeline::monster_count
+            const wh::MonsterState ms = t->monster_at(m, st.year);
+            if (ms.alive) {
+                out += "monster " + num(m) + " " + (ms.awake ? "1" : "0") + " " + num(ms.lair_site) + " " +
+                       num(ms.region) + "\n";
+            }
+        }
+    }
     return out;
 }
 
@@ -385,6 +400,20 @@ inline std::string static_dump(const wh::LoadedHistory& h) {
     for (const db::SettlementRow& s : h.tables.settlements) {
         out += "settlement " + num(s.id) + " " + list_text(t.events_of_settlement(s.id)) + "\n";
     }
+    // P5-02 13 (the reference's reading P5): site, monster and beast lines after the settlement lines.
+    // GUESS HistoryTables::sites, monsters and beast_populations (db rows of schema 9).
+    for (const db::SiteRow& x : h.tables.sites) {
+        out += "site " + num(x.id) + " " + num(x.kind) + " " + num(x.region) + " " + num(x.x) + " " + num(x.y) + " " +
+               num(x.settlement) + " " + num(x.founder_civ) + " " + num(x.monster) + " " + num(x.origin_year) + " " +
+               (x.ended_year ? num(*x.ended_year) : std::string("-")) + " " + num(x.ending) + "\n";
+    }
+    for (const db::MonsterRow& m : h.tables.monsters) {
+        out += "monster " + num(m.id) + " " + num(m.kind) + " " + num(m.born) + " " +
+               (m.died ? num(*m.died) : std::string("-")) + " " + num(m.status) + " " + num(m.lair_site) + "\n";
+    }
+    for (const db::BeastPopulationRow& b : h.tables.beast_populations) {
+        out += "beast " + num(b.region) + " " + num(b.beast) + " " + num(b.year) + " " + num(b.count) + "\n";
+    }
     for (const wh::HistoryView::Event& e : h.view.events()) {
         out += "effects " + num(e.row.id) + " " + list_text(t.effects(e.row.id)) + "\n";
     }
@@ -410,7 +439,7 @@ inline std::string years_hash(const wh::Timeline& t) {
     wh::YearState st;
     for (std::int64_t y = 0; y <= t.end_year(); ++y) {
         t.year_state(y, st);
-        m.update(std::string_view(year_dump(st)));
+        m.update(std::string_view(year_dump(st, &t)));
     }
     return worldgen::to_hex(m.final());
 }
@@ -530,7 +559,7 @@ inline void check_dumps(const std::string& name, const wh::LoadedHistory& h) {
     CHECK_MESSAGE(sha(s) == g.static_hash, "S of " << name << ":\n" << s.substr(0, 4000));
     std::vector<std::pair<std::int64_t, std::string>> got;
     for (const std::int64_t y : golden_years(h)) {
-        const std::string d = year_dump(h.timeline.year_state(y));
+        const std::string d = year_dump(h.timeline.year_state(y), &h.timeline);
         got.emplace_back(y, sha(d));
         const auto it = std::find_if(g.years.begin(), g.years.end(), [&](const auto& p) { return p.first == y; });
         if (it != g.years.end() && it->second != got.back().second) {
