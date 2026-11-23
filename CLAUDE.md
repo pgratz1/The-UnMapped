@@ -93,7 +93,7 @@ Requirements: CMake 3.25 or newer, Ninja, and GCC, Clang or MSVC (Visual Studio 
 | `linux-gcc-release` | GCC | Release |
 | `linux-clang-debug` | Clang | Debug |
 | `linux-clang-release` | Clang | Release |
-| `linux-clang-asan` | Clang | Debug with AddressSanitizer and UndefinedBehaviorSanitizer |
+| `linux-clang-asan` | Clang | Debug (`-O1 -g`, assertions on) with AddressSanitizer and UndefinedBehaviorSanitizer; `-O1` keeps the CI job well inside its timeout and changes no world byte |
 | `windows-msvc-debug` | MSVC | Debug |
 | `windows-msvc-release` | MSVC | Release |
 
