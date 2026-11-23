@@ -488,7 +488,12 @@ void ViewerScreen::show_legend() {
         const godot::Ref<godot::Texture2D> icon =
             colours.is_empty() ? godot::Ref<godot::Texture2D>() : godot::Ref<godot::Texture2D>(legend_icon(colours));
         const int32_t item = legend_list_->add_item(entry["label"], icon, false);
-        legend_list_->set_item_tooltip_enabled(item, false);
+        const godot::String tooltip = entry.get("tooltip", godot::String());
+        if (tooltip.is_empty()) {
+            legend_list_->set_item_tooltip_enabled(item, false);
+        } else {
+            legend_list_->set_item_tooltip(item, tooltip);
+        }
     }
 }
 

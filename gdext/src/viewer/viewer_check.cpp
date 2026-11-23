@@ -642,8 +642,8 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
         // against the regions legend of the same world.
         std::vector<std::pair<std::string, std::vector<int64_t>>> want = {
             {"border between holders", {0}},
-            {"border within a realm (the realm's colour, darker)", {}},
-            {"border between free regions (the land's colour, half strength)", {}},
+            {"border inside a realm", {}},
+            {"border in free land", {}},
             {"free land", {}},
         };
         std::vector<worldgen::inspect::LegendEntry> regions_rows;
@@ -696,6 +696,17 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
                 }
                 if (!same) {
                     tail_diff = "row " + std::to_string(k) + " '" + label + "', want '" + want[k].first + "'";
+                } else {
+                    // The border rows (k < 3) carry their explanation as a
+                    // tooltip; every other row has none (P4-03 r4 6.4).
+                    static constexpr const char* tips[] = {"black, between regions of different holders",
+                                                           "the realm's colour, darker", "the land's colour, darker"};
+                    const std::string tip = to_utf8(row.get("tooltip", godot::String()));
+                    const std::string want_tip = k < 3U ? tips[k] : "";
+                    if (tip != want_tip) {
+                        tail_diff = "row " + std::to_string(k) + " '" + label + "' tooltip '" + tip + "', want '" +
+                                    want_tip + "'";
+                    }
                 }
             }
         }
