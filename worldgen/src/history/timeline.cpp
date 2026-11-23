@@ -131,6 +131,25 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             timeline_fatal("region_control row of region " + num(t.control_[row].region) + " out of order");
         }
     }
+    // r3 16: the names by year.
+    for (const RegionInfo& r : tables.regions) {
+        t.region_names_.push_back(r.name);
+    }
+    t.names_ = tables.region_names;
+    t.name_offsets_.assign(t.region_ids_.size() + 1U, 0U);
+    {
+        std::size_t row = 0;
+        for (std::size_t p = 0; p < t.region_ids_.size(); ++p) {
+            t.name_offsets_[p] = row;
+            while (row < t.names_.size() && t.names_[row].region == t.region_ids_[p]) {
+                ++row;
+            }
+        }
+        t.name_offsets_[t.region_ids_.size()] = row;
+        if (row != t.names_.size()) {
+            timeline_fatal("region_name row of region " + num(t.names_[row].region) + " out of order");
+        }
+    }
     for (const db::RegionControlRow& r : t.control_) {
         t.change_years_.push_back(r.from_year);
         if (r.to_year) {
@@ -397,6 +416,20 @@ void Timeline::events_at(std::int64_t year, std::vector<std::int64_t>& events,
 RegionHolding Timeline::region_holder(std::int64_t region, std::int64_t year) const {
     require_year(year);
     return holder_at(region_position(region), year);
+}
+
+std::string_view Timeline::region_name(std::int64_t region, std::int64_t year) const {
+    require_year(year);
+    const std::size_t p = region_position(region);
+    const auto first = names_.begin() + static_cast<std::ptrdiff_t>(name_offsets_[p]);
+    const auto last = names_.begin() + static_cast<std::ptrdiff_t>(name_offsets_[p + 1U]);
+    const auto after = std::upper_bound(first, last, year, [](std::int64_t y, const db::RegionNameRow& r) {
+        return y < r.from_year;
+    });
+    if (after == first) {
+        return region_names_[p];
+    }
+    return (after - 1)->name;
 }
 
 SettlementState Timeline::settlement_state(std::int64_t settlement, std::int64_t year) const {

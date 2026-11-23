@@ -2,6 +2,7 @@
 
 #include "worldgen/history/names.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <utility>
@@ -271,7 +272,78 @@ struct Syllable {
         out.valid = false;
         out.repeated = true;
     }
+    // r19 16.1: no doubled place suffix (no draw added).
+    if (out.valid) {
+        const auto [a, b] = split_form(form);
+        (void)a;
+        const std::string x = squeezed(lower_text(b.substr(0, b.find(' '))));
+        if (!x.empty() && doubled_suffix(out.root, x, fused_tails(name_forms(naming, kind)))) {
+            out.valid = false;
+            out.doubled = true;
+        }
+    }
     return out;
+}
+
+[[nodiscard]] bool is_tail_vowel(char c) noexcept {
+    return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y';
+}
+
+[[nodiscard]] bool ends_with(std::string_view text, std::string_view suffix) noexcept {
+    return text.size() >= suffix.size() && text.substr(text.size() - suffix.size()) == suffix;
+}
+
+// The letters of one word of a name (P1-06 r11 17.1): S_w and the offset of
+// each letter in the name; part[i] is the index of the part (run of letters
+// between ' and -) letter i belongs to.
+struct WordLetters {
+    std::string letters;
+    std::vector<std::size_t> offset;
+    std::vector<std::size_t> part;
+};
+
+[[nodiscard]] bool spans_join(const std::vector<std::size_t>& joins, std::size_t first, std::size_t last) noexcept {
+    for (const std::size_t j : joins) {
+        if (first < j && j <= last) {
+            return true;
+        }
+    }
+    return false;
+}
+
+[[nodiscard]] bool word_filtered_at_joins(const NameFilter& filter, const WordLetters& w,
+                                          const std::vector<std::size_t>& joins) {
+    const std::string_view s = w.letters;
+    for (const std::string& e : filter.anywhere) {
+        if (e.empty()) {
+            continue;
+        }
+        for (std::size_t p = s.find(e); p != std::string_view::npos; p = s.find(e, p + 1)) {
+            if (spans_join(joins, w.offset[p], w.offset[p + e.size() - 1])) {
+                return true;
+            }
+        }
+    }
+    std::size_t i = 0;
+    while (i < s.size()) {
+        std::size_t j = i;
+        while (j < s.size() && w.part[j] == w.part[i]) {
+            ++j;
+        }
+        const std::string_view part = s.substr(i, j - i);
+        for (const std::string& e : filter.at_start) {
+            if (!e.empty() && starts_with(part, e) && spans_join(joins, w.offset[i], w.offset[i + e.size() - 1])) {
+                return true;
+            }
+        }
+        for (const std::string& e : filter.whole) {
+            if (part == e && spans_join(joins, w.offset[i], w.offset[j - 1])) {
+                return true;
+            }
+        }
+        i = j;
+    }
+    return false;
 }
 
 const NameFilter& empty_filter() {
@@ -404,6 +476,80 @@ bool name_filtered(const NameFilter& filter, std::string_view w) {
             }
         }
         i = j;
+    }
+    return false;
+}
+
+std::vector<std::string> fused_tails(const std::vector<std::string>& forms) {
+    std::vector<std::string> out;
+    for (const std::string& f : forms) {
+        const auto [a, b] = split_form(f);
+        (void)a;
+        std::string x = squeezed(lower_text(b.substr(0, b.find(' '))));
+        if (!x.empty() && std::find(out.begin(), out.end(), x) == out.end()) {
+            out.push_back(std::move(x));
+        }
+    }
+    return out;
+}
+
+std::string tail_first_syllable(std::string_view x) {
+    std::size_t i = 0;
+    while (i < x.size() && !is_tail_vowel(x[i])) {
+        ++i;
+    }
+    while (i < x.size() && is_tail_vowel(x[i])) {
+        ++i;
+    }
+    while (i < x.size() && !is_tail_vowel(x[i])) {
+        ++i;
+    }
+    return std::string(x.substr(0, i));
+}
+
+bool doubled_suffix(std::string_view root, std::string_view x, const std::vector<std::string>& tails) {
+    const std::string r = squeezed(lower_text(root));
+    if (r.empty() || x.empty()) {
+        return false;
+    }
+    // Item 1: the tail or its first syllable.
+    if (ends_with(r, x) || ends_with(r, tail_first_syllable(x))) {
+        return true;
+    }
+    // Item 2: another tail of the kind.
+    for (const std::string& y : tails) {
+        if (ends_with(r, y)) {
+            return true;
+        }
+    }
+    // Item 3: the root's last letter is the tail's first.
+    return r.back() == x.front();
+}
+
+bool name_filtered_at_joins(const NameFilter& filter, std::string_view name, const std::vector<std::size_t>& joins) {
+    std::size_t start = 0;
+    while (start <= name.size()) {
+        const std::size_t sp = name.find(' ', start);
+        const std::size_t end = sp == std::string_view::npos ? name.size() : sp;
+        WordLetters w;
+        std::size_t part = 0;
+        for (std::size_t o = start; o < end; ++o) {
+            const char c = to_lower(name[o]);
+            if (is_lower(c)) {
+                w.letters += c;
+                w.offset.push_back(o);
+                w.part.push_back(part);
+            } else {
+                ++part;  // ' and - (and any other byte) end a part
+            }
+        }
+        if (word_filtered_at_joins(filter, w, joins)) {
+            return true;
+        }
+        if (sp == std::string_view::npos) {
+            break;
+        }
+        start = sp + 1;
     }
     return false;
 }

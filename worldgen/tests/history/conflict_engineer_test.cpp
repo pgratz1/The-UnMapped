@@ -18,6 +18,7 @@
 
 #include "p3_06_conflict_support.hpp"
 #include "worldgen/core/error.hpp"
+#include "worldgen/history/renaming.hpp"
 #include "worldgen/history/conflict.hpp"
 
 namespace h = worldgen::history;
@@ -353,6 +354,10 @@ Watched watched_run(const worldgen::data::ContentSet& content, const eng::Histor
     CessionWatch watch;
     if (setup) setup(watch);
     watch.install(cfg);
+    // P5-12: the shipped stage runs the renaming subsystem after conflict
+    // (and after the probe, which only reads).
+    h::RenamingSubsystem renaming(*cfg.pair->peoples.sub, content, cfg.catalogue);
+    cfg.add_after({h::Step::t6, h::Step::q4}, [&renaming](h::StepContext& ctx) { renaming.run(ctx); });
     Watched out;
     out.tables = eng::run_engine(content, in, cfg.get());
     out.cessions = watch.cessions;

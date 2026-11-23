@@ -38,6 +38,7 @@
 #include "worldgen/db/writer.hpp"
 #include "worldgen/geo/grid.hpp"
 #include "worldgen/geo/noise.hpp"
+#include "worldgen/history/names.hpp"
 #include "worldgen/stages/biomes.hpp"
 #include "worldgen/stages/stage.hpp"
 
@@ -337,6 +338,10 @@ struct PlacenameDef {
 // Every definition of kind placename, in canonical (ascending id) order.
 struct PlacenameData {
     std::vector<PlacenameDef> definitions;
+    // P1-06 r11 17 (generator 0.22.0): the effective name filter lists (kind
+    // name_filter, P3-02 11.2) that V8 tests at the joins of a name. Empty in
+    // hand-built data: V8 then rejects nothing.
+    history::NameFilter filter;
 
     friend bool operator==(const PlacenameData&, const PlacenameData&) = default;
 };
@@ -395,6 +400,20 @@ using PlaceSlotValues = std::vector<std::pair<std::size_t, std::string>>;
 // order) against the common definition's forbidden and excluded lists.
 [[nodiscard]] bool region_name_valid(std::string_view form, const PlaceSlotValues& values,
                                      const PlacenameDef& common);
+// P1-06 r11 17.1 (generator 0.22.0): V1 to V6 and V8, the filter at the
+// joins of the form's parts (its literal runs and its slot values, in form
+// order).
+[[nodiscard]] bool region_name_valid(std::string_view form, const PlaceSlotValues& values,
+                                     const PlacenameDef& common, const history::NameFilter& filter);
+
+// P5-12 5.2: the validity of a name given to a region by history: at most
+// 48 bytes (V6), no three equal letters in a row (V2), no word with a
+// forbidden entry of the common definition and no excluded name or word
+// (V4, V5), and no filter entry of `placenames.filter` across one of
+// `joins` (V8, P1-06 r11 17). Fatal unless the data has exactly one common
+// definition.
+[[nodiscard]] bool renamed_region_name_valid(std::string_view name, const std::vector<std::size_t>& joins,
+                                             const PlacenameData& placenames);
 
 // One attempt of RG11 6 and 7: the name of attempt t for region id r, and
 // whether it is valid (V1 to V6). An invalid attempt's name is not
@@ -422,6 +441,11 @@ struct RegionNameAttempt {
 // when there is none.
 [[nodiscard]] std::optional<std::string> region_name_fallback(const PlacenameDef& land, const PlacenameDef& common,
                                                               const std::set<std::string, std::less<>>& used);
+// r11 17.1: the same, each compound also tested by V8 (parts prefix and
+// suffix).
+[[nodiscard]] std::optional<std::string> region_name_fallback(const PlacenameDef& land, const PlacenameDef& common,
+                                                              const std::set<std::string, std::less<>>& used,
+                                                              const history::NameFilter& filter);
 
 // How a region got its name (golden lines of P1-06 10.5): kept its base
 // name, the accepted attempt t, or the fallback.
@@ -431,6 +455,23 @@ struct RegionNameChoice {
     bool fallback = false;
     std::int64_t attempt = 0;
 };
+
+// RG11 3 (rules a to d) and 15.7 item 1 without the sectors: the land noun
+// of every region, in id order (P5-12 3: shared with the history stage).
+// Fatal as region_base_names for a bad biome, landmass, cell count, tuning
+// or upland_own_noun key.
+[[nodiscard]] std::vector<std::string> region_land_nouns(std::span<const RegionNameInput> regions,
+                                                         std::span<const std::uint64_t> landmass_cells,
+                                                         const BiomeDefinitions& definitions,
+                                                         const RegionTuning& tuning);
+// The same from stored region rows (P5-12 3, H8): the cells of each
+// landmass summed from region.cells per landmass; the stored labels
+// numbered 1, 2, ... in ascending order. A hand-made row whose biome has no
+// definition gets an empty noun. Fatal for a biome outside 0 to 255 or
+// cells below 1.
+[[nodiscard]] std::vector<std::string> region_land_nouns(std::span<const db::RegionRow> rows,
+                                                         const BiomeDefinitions& definitions,
+                                                         const RegionTuning& tuning);
 
 // RG11 1 to 4 without the draws: the base name (sector word, one space,
 // noun) of every region, in id order. Fatal if a region's biome has no

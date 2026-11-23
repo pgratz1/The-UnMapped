@@ -255,6 +255,17 @@ public:
     [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const;
     // The `year` of event `event` (P3-05 r12 22.2: the cause memory).
     [[nodiscard]] std::int64_t event_year(std::int64_t event) const;
+    // P3-04 r21 23.3 (P5-12): pure reads of the events appended so far. The
+    // id of the last event (0 when none); an event's region, settlement (0
+    // none) and salience; the value of key `key` (FatalError "history: state:
+    // event <e> has no value '<key>'" when the kind has no such key). Each is
+    // fatal "history: state: event <e> does not exist" for an id outside
+    // [1, last_event_id()].
+    [[nodiscard]] std::int64_t last_event_id() const;
+    [[nodiscard]] std::int64_t event_region(std::int64_t event) const;
+    [[nodiscard]] std::int64_t event_settlement(std::int64_t event) const;
+    [[nodiscard]] std::int64_t event_salience(std::int64_t event) const;
+    [[nodiscard]] std::int64_t event_value(std::int64_t event, std::string_view key) const;
 
 private:
     friend class Engine;
@@ -340,6 +351,10 @@ struct HistoryResult {
     std::vector<db::SettlementCensusRow> settlement_census;
     std::vector<db::RegionControlRow> region_control;
     std::vector<db::RelationRow> relations;
+    // P3-04 r21 23.4 (schema 8): the renaming subsystem's rows, sorted by
+    // (region, from_year); filled by the history stage, empty from
+    // run_engine.
+    std::vector<db::RegionNameRow> region_names;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

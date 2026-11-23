@@ -370,6 +370,17 @@ struct RegionControlRow {
     friend bool operator==(const RegionControlRow&, const RegionControlRow&) = default;
 };
 
+// One row of table `region_name` (P3-04 r21 23.4, P5-12 7.2, schema 8).
+struct RegionNameRow {
+    std::int64_t region = 0;
+    std::int64_t from_year = 0;
+    std::string name;
+    std::int64_t culture = 0;
+    std::int64_t event = 0;
+
+    friend bool operator==(const RegionNameRow&, const RegionNameRow&) = default;
+};
+
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
 // while open.
 struct RelationRow {
@@ -474,6 +485,8 @@ public:
     void write_settlement_census(const SettlementCensusRow& row);
     void write_region_control(const RegionControlRow& row);
     void write_relation(const RelationRow& row);
+    // Table region_name (schema 8): rows in ascending (region, from_year).
+    void write_region_name(const RegionNameRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

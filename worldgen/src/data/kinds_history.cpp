@@ -732,6 +732,157 @@ Schema history_report_schema() {
     });
 }
 
+// --- history.renaming (P5-12 section 4, P3-01 r16 5.4) ---------------------------
+
+namespace {
+
+constexpr std::string_view NAME_SLOT = "{name}";
+constexpr std::string_view NOUN_SLOT = "{noun}";
+
+// ASCII letters, space and ', plus {name} and {noun} each at most once; at
+// least one letter outside the slots; no leading, trailing or double space;
+// no other { or }.
+bool is_valid_rename_form(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    std::size_t names = 0;
+    std::size_t nouns = 0;
+    bool letter = false;
+    std::size_t i = 0;
+    while (i < text.size()) {
+        const char c = text[i];
+        if (c == '{') {
+            if (text.substr(i, NAME_SLOT.size()) == NAME_SLOT) {
+                ++names;
+                i += NAME_SLOT.size();
+                continue;
+            }
+            if (text.substr(i, NOUN_SLOT.size()) == NOUN_SLOT) {
+                ++nouns;
+                i += NOUN_SLOT.size();
+                continue;
+            }
+            return false;
+        }
+        if (c == ' ') {
+            if (i + 1 < text.size() && text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (is_ascii_letter(c)) {
+            letter = true;
+        } else if (c != '\'') {
+            return false;
+        }
+        ++i;
+    }
+    return names <= 1 && nouns <= 1 && letter;
+}
+
+StringGrammar rename_form_grammar() noexcept {
+    return StringGrammar{"a region name form (letters, spaces, ' and the slots {name} and {noun})",
+                         &is_valid_rename_form};
+}
+
+Schema rename_rule_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("key", Type::string(32, id_grammar())),
+        Field::required("kinds", Type::array(Type::string(32), 1, 8)),
+        Field::required("values", Type::array(Type::string(32), 0, 4)),
+        Field::required("min_magnitude", Type::integer(1, 1000000000)),
+        Field::required("window_years", Type::integer(1, 100000)),
+        Field::required("min_salience", Type::integer(0, 100)),
+        Field::required("capital", Type::boolean()),
+        Field::required("chance_permille", Type::integer(0, 1000)),
+        Field::required("weight", Type::integer(1, 1000)),
+        Field::required("name_role", Type::string(32)),
+        Field::required("namer_role", Type::string(32)),
+        Field::required("forms", Type::array(Type::string(48, rename_form_grammar()), 1, 16)),
+    });
+}
+
+std::optional<std::string> check_renaming_rule_keys(const Record& r) {
+    const std::vector<Value>& rules = r.get_array("rules");
+    for (std::size_t j = 0; j < rules.size(); ++j) {
+        for (std::size_t i = 0; i < j; ++i) {
+            const std::string& k = rules[j].as_record().get_string("key");
+            if (rules[i].as_record().get_string("key") == k) {
+                return "rules[" + uint_text(j) + "] key '" + k + "' repeats rules[" + uint_text(i) + "]";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_renaming_rule_weights(const Record& r) {
+    const std::vector<Value>& rules = r.get_array("rules");
+    for (std::size_t j = 0; j < rules.size(); ++j) {
+        for (std::size_t i = 0; i < j; ++i) {
+            const std::int64_t w = rules[j].as_record().get_int("weight");
+            if (rules[i].as_record().get_int("weight") == w) {
+                return "rules[" + uint_text(j) + "] weight " + int_text(w) + " repeats rules[" + uint_text(i) + "]";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_renaming_rule_lists(const Record& r) {
+    const std::vector<Value>& rules = r.get_array("rules");
+    for (std::size_t i = 0; i < rules.size(); ++i) {
+        for (const std::string_view field : {std::string_view("kinds"), std::string_view("values"),
+                                             std::string_view("forms")}) {
+            const std::vector<Value>& list = rules[i].as_record().get_array(field);
+            for (std::size_t j = 0; j < list.size(); ++j) {
+                for (std::size_t k = 0; k < j; ++k) {
+                    if (list[k].as_string() == list[j].as_string()) {
+                        return "rules[" + uint_text(i) + "]." + std::string(field) + "[" + uint_text(j) + "] '" +
+                               list[j].as_string() + "' repeats " + std::string(field) + "[" + uint_text(k) + "]";
+                    }
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> check_renaming_forms_slots(const Record& r) {
+    const std::vector<Value>& rules = r.get_array("rules");
+    for (std::size_t i = 0; i < rules.size(); ++i) {
+        const Record& rule = rules[i].as_record();
+        if (!rule.get_string("name_role").empty()) {
+            continue;
+        }
+        const std::vector<Value>& forms = rule.get_array("forms");
+        for (std::size_t j = 0; j < forms.size(); ++j) {
+            if (forms[j].as_string().find(NAME_SLOT) != std::string::npos) {
+                return "rules[" + uint_text(i) + "].forms[" + uint_text(j) + "] uses {name} but name_role is empty";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+}  // namespace
+
+Schema history_renaming_schema() {
+    std::vector<Field> fields{
+        Field::required("region_max", Type::integer(0, 16)),
+        Field::required("region_gap_years", Type::integer(1, 100000)),
+        Field::required("world_max_permille", Type::integer(0, 1000)),
+        Field::required("century_max_permille", Type::integer(0, 1000)),
+        Field::required("century_years", Type::integer(1, 100000)),
+        Field::required("rules", Type::array(Type::record(rename_rule_schema()), 0, 64)),
+    };
+    std::vector<Check> checks{
+        Check{"renaming_rule_keys", [](const Record& r) { return check_renaming_rule_keys(r); }},
+        Check{"renaming_rule_weights", [](const Record& r) { return check_renaming_rule_weights(r); }},
+        Check{"renaming_rule_lists", [](const Record& r) { return check_renaming_rule_lists(r); }},
+        Check{"renaming_forms_slots", [](const Record& r) { return check_renaming_forms_slots(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
 std::vector<KindCheck> history_kind_checks() {
     std::vector<KindCheck> out;
     out.push_back(KindCheck{"report_events", [](std::span<const Definition> d) { return check_report_events(d); }});

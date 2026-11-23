@@ -325,6 +325,7 @@ target_sources(worldgen-tests PRIVATE
     history/p3_10_engineer_test.cpp
     history/p3_11_engineer_test.cpp
     history/p3_07_engineer_test.cpp
+    history/p5_12_engineer_test.cpp
     history/relation_bookkeeping_engineer_test.cpp
     history/history_engine_catalogue_test.cpp
     history/history_engine_render_test.cpp

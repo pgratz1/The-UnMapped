@@ -113,8 +113,11 @@ inline constexpr std::string_view hist_conflict_sack = "hist.conflict.sack";
 inline constexpr std::string_view hist_conflict_search = "hist.conflict.search";
 // P3-06 r22 24.5 (P5-01, generator 0.21.0): the keyed factor of a battle toll.
 inline constexpr std::string_view hist_conflict_toll = "hist.conflict.toll";
+// P5-12 3 (generator 0.22.0): the renaming subsystem's chance and name draws.
+inline constexpr std::string_view hist_renaming_chance = "hist.renaming.chance";
+inline constexpr std::string_view hist_renaming_name = "hist.renaming.name";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 54> all_stream_names = {
+inline constexpr std::array<std::string_view, 56> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -169,6 +172,8 @@ inline constexpr std::array<std::string_view, 54> all_stream_names = {
     hist_conflict_sack,
     hist_conflict_search,
     hist_conflict_toll,
+    hist_renaming_chance,
+    hist_renaming_name,
 };
 
 }  // namespace worldgen::streams

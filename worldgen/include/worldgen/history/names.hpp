@@ -80,7 +80,23 @@ struct NameAttempt {
     // triple-letter rule pass and two consecutive syllables repeat (valid is
     // then false).
     bool repeated = false;
+    // r19 (P3-02 16.1, generator 0.22.0): true when every earlier rule
+    // passes and the root doubles a fused tail of its kind (valid is then
+    // false).
+    bool doubled = false;
 };
+
+// P3-02 r19 16.1: the fused tails T_K of a kind: for every form of the
+// kind, its letters fused after {root} up to the first space (B' of 11.3),
+// lower-cased without ' and -, when not empty; in form order, each once.
+[[nodiscard]] std::vector<std::string> fused_tails(const std::vector<std::string>& forms);
+// fs(x) of 16.1: the shortest prefix of x holding its first run of vowels
+// (a e i o u y) and every consonant after it up to the next vowel; all of x
+// when no vowel follows.
+[[nodiscard]] std::string tail_first_syllable(std::string_view tail);
+// 16.1 items 1 to 3: whether an attempt with root `root` and fused tail `x`
+// (not empty) of a kind with tails `tails` is doubled.
+[[nodiscard]] bool doubled_suffix(std::string_view root, std::string_view x, const std::vector<std::string>& tails);
 
 // P3-02 r15 14.2: whether an attempt with this pattern and these drawn
 // strings (one per O, N and C symbol of the pattern, in pattern order;
@@ -98,6 +114,8 @@ struct NameFilter {
     std::vector<std::string> anywhere;
     std::vector<std::string> at_start;
     std::vector<std::string> whole;
+
+    friend bool operator==(const NameFilter&, const NameFilter&) = default;
 };
 
 // The effective lists of loaded content (every definition of kind
@@ -114,6 +132,18 @@ struct NameFilter {
 // -, a part of W (the runs of a-z between ' and -) starting with an
 // `at_start` entry, or a part equal to a `whole` entry.
 [[nodiscard]] bool name_filtered(const NameFilter& filter, std::string_view root_word);
+
+// V8 of P1-06 r11 17.1 (generator 0.22.0; region names, drawn, fallback and
+// renamed, P5-12 5.2 item 4): true when a filter entry spans a join of
+// `name`. `joins` are the byte offsets of `name` between two consecutive
+// parts. For every word (split at spaces), its letters lower-cased with '
+// and - removed (S_w, each letter keeping its offset): an `anywhere` entry
+// in S_w whose first and last letters lie on both sides of a join (some j
+// with first < j <= last); a part of the word (a run of letters between '
+// and - and the word's ends) starting with an `at_start` entry that spans a
+// join; or a part equal to a `whole` entry that spans a join.
+[[nodiscard]] bool name_filtered_at_joins(const NameFilter& filter, std::string_view name,
+                                          const std::vector<std::size_t>& joins);
 
 // The stage check names_form_text of P3-02 11.3 (r6): for every culture
 // (ascending id), kind (god, civilization, settlement) and form, the form's

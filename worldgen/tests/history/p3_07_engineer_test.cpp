@@ -142,7 +142,7 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
                 headings.push_back(l);
             }
         }
-        CHECK(lines[0] == "# worldgen history v3");  // P3-07 r19 25.1
+        CHECK(lines[0] == "# worldgen history v3");  // P3-07 r21 26.1
         // r17 24.4: the chronicle before the civilizations, [phases] at full only.
         if (text == &full) {
             CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[chronicle]",

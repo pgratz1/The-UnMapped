@@ -420,6 +420,7 @@ inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 inline constexpr std::string_view HISTORY_CONFLICT_ID = "conflict";  // P3-06 12.1
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
 inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
+inline constexpr std::string_view HISTORY_RENAMING_ID = "renaming";  // P5-12 4 (generator 0.22.0)
 inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
@@ -486,6 +487,19 @@ inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 // {calm, normal, turbulent}. Named checks, in this order: peoples_ladder,
 // peoples_tolls, peoples_floor, peoples_colonists.
 [[nodiscard]] Schema history_peoples_schema();
+
+// The schema of definition history.renaming (P5-12 4, P3-01 r16 5.4):
+// region_max int(0, 16), region_gap_years int(1, 100000),
+// world_max_permille int(0, 1000), century_max_permille int(0, 1000),
+// century_years int(1, 100000), rules array(record rename_rule, 0, 64);
+// rename_rule {key string(32, id), kinds array(string(32), 1, 8), values
+// array(string(32), 0, 4), min_magnitude int(1, 10^9), window_years int(1,
+// 100000), min_salience int(0, 100), capital bool, chance_permille int(0,
+// 1000), weight int(1, 1000), name_role string(32), namer_role string(32),
+// forms array(string(48, rename_form), 1, 16)}; all required, in this
+// order. Named checks, in this order: renaming_rule_keys,
+// renaming_rule_weights, renaming_rule_lists, renaming_forms_slots.
+[[nodiscard]] Schema history_renaming_schema();
 
 // The schema of definition history.report (P3-04 4.2): events
 // array(record report_event {kind string(32, id), salience int(0, 100),

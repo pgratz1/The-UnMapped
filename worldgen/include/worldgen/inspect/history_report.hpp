@@ -1,12 +1,14 @@
 #pragma once
 
 // The history report of worldgen-cli report --history, format
-// "# worldgen history v2" (spec P3-07 sections 4 to 6, amendments 21 to 25).
+// "# worldgen history v3" (spec P3-07 sections 4 to 6, amendments 21 to 26).
 // The text is part of the cross-platform contract: ASCII and LF only,
 // integers only, no locale.
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -18,10 +20,24 @@ namespace worldgen::inspect {
 // First line of format v1, without its line feed (P3-07 6.2); no longer
 // written from generator 0.21.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V1 = "# worldgen history v1";
-// First line of format v2 (P3-07 r19 25.1), the one written.
+// First line of format v2 (P3-07 r19 25.1); no longer written from
+// generator 0.22.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V2 = "# worldgen history v2";
+// First line of format v3 (P3-07 r21 26.1), the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V3 = "# worldgen history v3";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
+
+// P3-07 r21 26.7 (audit A1): the row of settlement `id` in a vector indexed
+// by settlement id - 1 (the digest's last_held_by and refuge_hidden_end), or
+// null when id is below 1 or above the span's size.
+template <class T>
+[[nodiscard]] const T* settlement_row(std::span<const T> rows, std::int64_t id) noexcept {
+    if (id < 1 || static_cast<std::uint64_t>(id) > rows.size()) {
+        return nullptr;
+    }
+    return &rows[static_cast<std::size_t>(id - 1)];
+}
 
 // "summary" or "full"; std::nullopt for anything else.
 [[nodiscard]] std::optional<HistoryLevel> parse_history_level(std::string_view text);

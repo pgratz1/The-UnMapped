@@ -1,5 +1,5 @@
-// The history report, format "# worldgen history v2" (spec P3-07 section 6
-// with amendments 21 to 25).
+// The history report, format "# worldgen history v3" (spec P3-07 section 6
+// with amendments 21 to 26).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -63,6 +63,8 @@ bool standing(std::int64_t status) noexcept {
     return status == 1 || status == 2;
 }
 
+
+
 // The upland rule of P3-00 7, 4 * walk_cells < cells, without the product:
 // cells and walk_cells are only bounded below by 5.3 (0 <= walk_cells <=
 // cells, cells >= 1), so 4 * walk_cells could overflow on a damaged file.
@@ -77,7 +79,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V2));  // r19 25.1
+        line(std::string(HISTORY_REPORT_HEADER_V3));  // r21 26.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -113,7 +115,10 @@ private:
     [[nodiscard]] std::string ref(Id type, Id id) const {
         const std::string tag = std::string(word(PREFIX, type, 1)) + num(id);
         const std::optional<EntityType> t = history::entity_type_from_code(type);
-        const std::string* name = t ? v_.name(*t, id) : nullptr;
+        // r21 26.4: a region by its present name, its name at E.
+        const std::string* name = !t ? nullptr
+                                  : *t == EntityType::region ? v_.region_name_at_year(id, t_.end_year)
+                                                             : v_.name(*t, id);
         if (name == nullptr) {
             return tag;  // types 6 to 9 have no names
         }
@@ -473,7 +478,8 @@ private:
                         open = &*it;
                     }
                 }
-                line("  rg" + num(g.id) + " " + escape_history_text(g.name) + ": " +
+                const std::string* present = v_.region_name_at_year(g.id, t_.end_year);  // r21 26.4
+                line("  rg" + num(g.id) + " " + escape_history_text(present != nullptr ? *present : g.name) + ": " +
                      (open != nullptr ? civ(open->civ) + " since " + num(open->from_year) : std::string("free")));
             }
         }
@@ -503,6 +509,7 @@ private:
         refuges();
         open_wars();
         standing_claims();
+        renamed_regions();  // r21 26.2
     }
 
     void settlement_line(const db::SettlementRow& s) {
@@ -524,8 +531,8 @@ private:
     // --- [present]'s lists (24.7) -------------------------------------------
 
     [[nodiscard]] std::string last_held_by(Id settlement_id) const {
-        const Id c = d_.last_held_by[static_cast<std::size_t>(settlement_id - 1)];
-        return c != 0 ? civ(c) : std::string("no one");
+        const Id* c = settlement_row(std::span<const Id>(d_.last_held_by), settlement_id);  // r21 26.7
+        return c != nullptr && *c != 0 ? civ(*c) : std::string("no one");
     }
 
     // The first participant of `role` (by key) of event e, or 0.
@@ -576,32 +583,56 @@ private:
         return escape_history_text(key);
     }
 
+    // r21 26.3 (F3): the refuges still hidden at E.
     void refuges() {
         const history::KindDef* refugees = v_.catalogue().find("refugees_settled");
         std::vector<const db::SettlementRow*> rows;
+        std::int64_t n = 0;
         for (const db::SettlementRow& s : t_.settlements) {
             if (refugees != nullptr && standing(s.status) && event(s.founding_event).row.kind == refugees->id) {
-                rows.push_back(&s);
+                ++n;
+                if (hidden_at_end(s.id)) {
+                    rows.push_back(&s);
+                }
             }
         }
-        line("refuges: " + num(static_cast<std::int64_t>(rows.size())));
+        line("hidden refuges: " + num(static_cast<std::int64_t>(rows.size())) + " of " + num(n) +
+             " founded by flight");
         for (const db::SettlementRow* s : rows) {
             const Id origin = role_of(event(s->founding_event), "origin");
             line("  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ": " +
                  (s->owner_civ != 0 ? civ(s->owner_civ) : std::string("no owner")) + ", population " +
                  num(s->population) + ", founded " + num(s->founded_year) + " by flight from " + settlement(origin) +
-                 ", e" + num(s->founding_event) + refuge_state(s->id));
+                 ", e" + num(s->founding_event));
         }
     }
 
-    // r19 25.9 item 1: "; hidden" or "; found <year>" from the refuge's
-    // refuge_hidden, nothing without one.
-    [[nodiscard]] std::string refuge_state(Id settlement_id) const {
-        const std::int64_t end = d_.refuge_hidden_end[static_cast<std::size_t>(settlement_id - 1)];
-        if (end < 0) {
-            return {};
+    // 26.3: the refuge's refuge_hidden (smallest id) has end_year >= E - 1;
+    // "not hidden" when it has none (26.7).
+    [[nodiscard]] bool hidden_at_end(Id settlement_id) const {
+        const std::int64_t* end = settlement_row(std::span<const std::int64_t>(d_.refuge_hidden_end), settlement_id);
+        return end != nullptr && *end >= 0 && *end >= t_.end_year - 1;
+    }
+
+    // r21 26.2: every row of region_name with the name it replaced.
+    void renamed_regions() {
+        const std::span<const db::RegionNameRow> rows = v_.region_names();
+        line("renamed regions: " + num(static_cast<std::int64_t>(rows.size())));
+        for (std::size_t i = 0; i < rows.size(); ++i) {
+            const db::RegionNameRow& r = rows[i];
+            const std::string* geographic = v_.name(EntityType::region, r.region);
+            const std::string& previous =
+                (i > 0 && rows[i - 1].region == r.region) ? rows[i - 1].name
+                                                          : (geographic != nullptr ? *geographic : r.name);
+            const HistoryView::Event& e = event(r.event);
+            std::string l = "  rg" + num(r.region) + ": " + escape_history_text(r.name) + " since " + num(r.from_year) +
+                            ", e" + num(r.event);
+            if (!e.causes.empty()) {
+                const Id c = e.causes.front();
+                l += " after e" + num(c) + " " + escape_history_text(kind_of(event(c)).key);
+            }
+            line(l + "; formerly " + escape_history_text(previous));
         }
-        return end >= t_.end_year - 1 ? std::string("; hidden") : "; found " + num(end + 1);
     }
 
     void open_wars() {

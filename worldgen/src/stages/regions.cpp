@@ -969,28 +969,17 @@ struct RegionBase {
     std::string biome_key;                     // rule d: the dominant biome's key
 };
 
-std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
-                                     std::span<const std::uint64_t> landmass_cells, std::uint64_t land_cells,
-                                     std::uint64_t sum_x, std::uint64_t sum_y, std::int64_t n,
+// RG11 3 (rules a to d) and 15.7 item 1 for every region, id order: the land
+// noun and the rule that picked the land (base left empty).
+std::vector<RegionBase> region_lands(std::span<const RegionNameInput> regions,
+                                     std::span<const std::uint64_t> landmass_cells,
                                      const BiomeDefinitions& definitions, const RegionTuning& tuning) {
-    check_region_tuning(tuning);
-    if (land_cells == 0U) {
-        fatal("region_names: no land cells");
-    }
-    if (n < 1 || n > 4096 || sum_x >= (std::uint64_t{1} << 62) || sum_y >= (std::uint64_t{1} << 62)) {
-        fatal("region_names: map side or sums outside their range");
-    }
     std::array<const BiomeDef*, 256> by_code{};
     for (const BiomeDef& b : definitions.biomes) {
         if (b.code >= 0 && b.code <= 255) {
             by_code[static_cast<std::size_t>(b.code)] = &b;
         }
     }
-    // 1. Land centroid and central radius.
-    const auto l = static_cast<std::int64_t>(land_cells);
-    const std::int64_t cx = rha(static_cast<std::int64_t>(sum_x), l);
-    const std::int64_t cy = rha(static_cast<std::int64_t>(sum_y), l);
-    const std::int64_t r_c = mul_int(tuning.name_central_frac, n).round_int();
     // The largest landmass: most cells, ties to the smaller label.
     std::uint32_t largest = 0;
     for (std::size_t k = 0; k < landmass_cells.size(); ++k) {
@@ -1024,7 +1013,6 @@ std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
             fatal_text("regions: tuning: upland_own_noun '" + key + "' is not a loaded biome");
         }
     }
-    const std::array<std::string_view, 9> sectors = region_sector_words(tuning.names);
     std::vector<RegionBase> out;
     out.reserve(regions.size());
     for (const RegionNameInput& r : regions) {
@@ -1032,8 +1020,6 @@ std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
         if (b == nullptr) {
             fatal("region_names: a region's biome has no definition");
         }
-        // 2. Sector.
-        const std::uint32_t sector = region_sector(r.seed_x - cx, r.seed_y - cy, r_c);
         if (r.cells < 1 || r.lake_cells < 0 || r.walk_cells < 0 || r.lake_cells > r.cells || r.walk_cells > r.cells) {
             fatal("region_names: cell counts out of range");
         }
@@ -1055,9 +1041,34 @@ std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
         } else {
             base.biome_key = b->key;
         }
-        base.base = std::string(sectors[sector]) + " " + *noun;
         base.noun = *noun;
         out.push_back(std::move(base));
+    }
+    return out;
+}
+
+std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
+                                     std::span<const std::uint64_t> landmass_cells, std::uint64_t land_cells,
+                                     std::uint64_t sum_x, std::uint64_t sum_y, std::int64_t n,
+                                     const BiomeDefinitions& definitions, const RegionTuning& tuning) {
+    check_region_tuning(tuning);
+    if (land_cells == 0U) {
+        fatal("region_names: no land cells");
+    }
+    if (n < 1 || n > 4096 || sum_x >= (std::uint64_t{1} << 62) || sum_y >= (std::uint64_t{1} << 62)) {
+        fatal("region_names: map side or sums outside their range");
+    }
+    // 1. Land centroid and central radius.
+    const auto l = static_cast<std::int64_t>(land_cells);
+    const std::int64_t cx = rha(static_cast<std::int64_t>(sum_x), l);
+    const std::int64_t cy = rha(static_cast<std::int64_t>(sum_y), l);
+    const std::int64_t r_c = mul_int(tuning.name_central_frac, n).round_int();
+    std::vector<RegionBase> out = region_lands(regions, landmass_cells, definitions, tuning);
+    const std::array<std::string_view, 9> sectors = region_sector_words(tuning.names);
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        // 2. Sector.
+        const std::uint32_t sector = region_sector(regions[i].seed_x - cx, regions[i].seed_y - cy, r_c);
+        out[i].base = std::string(sectors[sector]) + " " + out[i].noun;
     }
     return out;
 }
@@ -1096,6 +1107,7 @@ PlacenameData placename_data_from(const data::ContentSet& content) {
         p.excluded = strings_of(r, "excluded");
         out.definitions.push_back(std::move(p));
     }
+    out.filter = history::name_filter_from(content);  // r11 17 (V8)
     return out;
 }
 
@@ -1171,6 +1183,79 @@ std::string region_fill_form(std::string_view form, const PlaceSlotValues& value
     return out;
 }
 
+namespace {
+
+// r11 17.1: the byte offsets between consecutive parts of the filled form.
+std::vector<std::size_t> region_name_joins(const std::vector<FormToken>& tokens, const PlaceSlotValues& values) {
+    std::vector<std::size_t> joins;
+    std::size_t at = 0;
+    std::size_t k = 0;
+    for (std::size_t i = 0; i < tokens.size(); ++i) {
+        if (i > 0) {
+            joins.push_back(at);
+        }
+        if (tokens[i].slot == PLACE_LIST_COUNT) {
+            at += tokens[i].literal.size();
+        } else {
+            at += values[k].second.size();
+            ++k;
+        }
+    }
+    return joins;
+}
+
+}  // namespace
+
+bool region_name_valid(std::string_view form, const PlaceSlotValues& values, const PlacenameDef& common,
+                       const history::NameFilter& filter) {
+    if (!region_name_valid(form, values, common)) {
+        return false;
+    }
+    // V8 (r11 17.1): no filter entry across a join.
+    return !history::name_filtered_at_joins(filter, region_fill_form(form, values),
+                                            region_name_joins(form_tokens(form), values));
+}
+
+bool renamed_region_name_valid(std::string_view name, const std::vector<std::size_t>& joins,
+                               const PlacenameData& placenames) {
+    const PlacenameDef& common = common_def(placenames);
+    // 1 (V6): at most 48 bytes.
+    if (name.size() > 48U) {
+        return false;
+    }
+    // 2 (V2): no three equal letters in a row, case-insensitive.
+    const std::string low = lower_text(name);
+    for (std::size_t i = 2; i < low.size(); ++i) {
+        if (low[i] >= 'a' && low[i] <= 'z' && low[i] == low[i - 1] && low[i] == low[i - 2]) {
+            return false;
+        }
+    }
+    // 3 (V4, V5): no word holds a forbidden entry; not an excluded name, and
+    // no word an excluded single word.
+    for (const std::string_view w : words_of(low)) {
+        for (const std::string& f : common.forbidden) {
+            if (w.find(f) != std::string_view::npos) {
+                return false;
+            }
+        }
+    }
+    const std::vector<std::string_view> words = words_of(name);
+    for (const std::string& e : common.excluded) {
+        if (name == e) {
+            return false;
+        }
+        if (e.find(' ') == std::string::npos) {
+            for (const std::string_view w : words) {
+                if (w == e) {
+                    return false;
+                }
+            }
+        }
+    }
+    // 4 (V8): no filter entry across a join.
+    return !history::name_filtered_at_joins(placenames.filter, name, joins);
+}
+
 bool region_name_valid(std::string_view form, const PlaceSlotValues& values, const PlacenameDef& common) {
     const std::vector<FormToken> tokens = form_tokens(form);
     const std::string name = region_fill_form(form, values);
@@ -1232,9 +1317,27 @@ bool region_name_valid(std::string_view form, const PlaceSlotValues& values, con
     return name.size() <= 48U;
 }
 
+namespace {
+
+RegionNameAttempt name_attempt_impl(std::uint64_t k_name, std::int64_t region, std::int64_t attempt,
+                                    const PlacenameDef& land, const PlacenameDef& common,
+                                    std::span<const PlacenameDef* const> traits, const RegionTuning& tuning,
+                                    const history::NameFilter& filter);
+
+}  // namespace
+
 RegionNameAttempt region_name_attempt(std::uint64_t k_name, std::int64_t region, std::int64_t attempt,
                                       const PlacenameDef& land, const PlacenameDef& common,
                                       std::span<const PlacenameDef* const> traits, const RegionTuning& tuning) {
+    return name_attempt_impl(k_name, region, attempt, land, common, traits, tuning, history::NameFilter{});
+}
+
+namespace {
+
+RegionNameAttempt name_attempt_impl(std::uint64_t k_name, std::int64_t region, std::int64_t attempt,
+                                    const PlacenameDef& land, const PlacenameDef& common,
+                                    std::span<const PlacenameDef* const> traits, const RegionTuning& tuning,
+                                    const history::NameFilter& filter) {
     const auto u = [&](std::int64_t k) { return hash_at3(k_name, region, attempt, k); };
     if (land.forms.empty()) {
         fatal_text("regions: placename: land '" + land.id + "' has no forms");
@@ -1270,10 +1373,12 @@ RegionNameAttempt region_name_attempt(std::uint64_t k_name, std::int64_t region,
     }
     RegionNameAttempt out;
     out.name = region_fill_form(form, values);
-    out.valid = region_name_valid(form, values, common);
+    out.valid = region_name_valid(form, values, common, filter);
     out.values = std::move(values);
     return out;
 }
+
+}  // namespace
 
 std::vector<std::string> region_name_stems(const PlaceSlotValues& values) {
     constexpr std::size_t NOUN = 0;
@@ -1298,6 +1403,11 @@ std::vector<std::string> region_name_stems(const PlaceSlotValues& values) {
 
 std::optional<std::string> region_name_fallback(const PlacenameDef& land, const PlacenameDef& common,
                                                 const UsedNames& used) {
+    return region_name_fallback(land, common, used, history::NameFilter{});
+}
+
+std::optional<std::string> region_name_fallback(const PlacenameDef& land, const PlacenameDef& common,
+                                                const UsedNames& used, const history::NameFilter& filter) {
     constexpr std::size_t PREFIX = 2;
     constexpr std::size_t SUFFIX = 1;
     std::vector<std::string> p = common.lists[PREFIX];
@@ -1308,12 +1418,64 @@ std::optional<std::string> region_name_fallback(const PlacenameDef& land, const 
         for (const std::string& b : sx) {
             const PlaceSlotValues values = {{PREFIX, a}, {SUFFIX, b}};
             std::string n = a + b;
-            if (region_name_valid("{prefix}{suffix}", values, common) && used.find(n) == used.end()) {
+            if (region_name_valid("{prefix}{suffix}", values, common, filter) && used.find(n) == used.end()) {
                 return n;
             }
         }
     }
     return std::nullopt;
+}
+
+std::vector<std::string> region_land_nouns(std::span<const RegionNameInput> regions,
+                                           std::span<const std::uint64_t> landmass_cells,
+                                           const BiomeDefinitions& definitions, const RegionTuning& tuning) {
+    check_region_tuning(tuning);
+    std::vector<std::string> out;
+    for (RegionBase& b : region_lands(regions, landmass_cells, definitions, tuning)) {
+        out.push_back(std::move(b.noun));
+    }
+    return out;
+}
+
+std::vector<std::string> region_land_nouns(std::span<const db::RegionRow> rows, const BiomeDefinitions& definitions,
+                                           const RegionTuning& tuning) {
+    // The stored labels, ascending, numbered 1, 2, ... in that order (a
+    // generated world's labels are already 1 to k; a hand-made row may hold
+    // 0). Ascending order keeps the ties of the largest landmass.
+    std::vector<std::int64_t> labels;
+    for (const db::RegionRow& r : rows) {
+        labels.push_back(r.landmass);
+    }
+    std::stable_sort(labels.begin(), labels.end());
+    labels.erase(std::unique(labels.begin(), labels.end()), labels.end());
+    std::vector<std::uint64_t> landmass_cells(labels.size(), 0U);
+    std::vector<RegionNameInput> inputs;
+    std::vector<std::uint8_t> undefined;  // a hand-made row whose biome has no definition: no noun
+    for (const db::RegionRow& r : rows) {
+        if (r.biome < 0 || r.biome > 255 || r.cells < 1) {
+            fatal_text("regions: land noun: region " + db::format_i64(r.id) + " has a biome or cells out of range");
+        }
+        const auto lm = static_cast<std::size_t>(std::lower_bound(labels.begin(), labels.end(), r.landmass) -
+                                                 labels.begin());
+        landmass_cells[lm] += static_cast<std::uint64_t>(r.cells);
+        const bool defined = std::any_of(definitions.biomes.begin(), definitions.biomes.end(),
+                                         [&r](const BiomeDef& b) { return b.code == r.biome; });
+        undefined.push_back(defined ? 0U : 1U);
+        RegionNameInput ni;
+        ni.biome = defined ? static_cast<std::uint8_t>(r.biome) : definitions.fallback_code;
+        ni.landmass = static_cast<std::uint32_t>(lm + 1U);
+        ni.cells = r.cells;
+        ni.lake_cells = r.lake_cells;
+        ni.walk_cells = r.walk_cells;
+        inputs.push_back(ni);
+    }
+    std::vector<std::string> out = region_land_nouns(inputs, landmass_cells, definitions, tuning);
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        if (undefined[i] != 0U) {
+            out[i].clear();
+        }
+    }
+    return out;
 }
 
 std::vector<std::string> region_base_names(std::span<const RegionNameInput> regions,
@@ -1372,7 +1534,8 @@ std::vector<RegionNameChoice> region_name_choices(std::span<const RegionNameInpu
         const std::vector<const PlacenameDef*> traits = trait_defs(placenames, region_traits(regions[i], tuning));
         bool named = false;
         for (std::int64_t t = 0; t < 64 && !named; ++t) {
-            RegionNameAttempt a = region_name_attempt(k_name, id, t, *land, common, traits, tuning);
+            RegionNameAttempt a =
+                name_attempt_impl(k_name, id, t, *land, common, traits, tuning, placenames.filter);
             if (!a.valid || used.find(a.name) != used.end()) {
                 continue;
             }
@@ -1389,7 +1552,7 @@ std::vector<RegionNameChoice> region_name_choices(std::span<const RegionNameInpu
         if (named) {
             continue;
         }
-        std::optional<std::string> f = region_name_fallback(*land, common, used);
+        std::optional<std::string> f = region_name_fallback(*land, common, used, placenames.filter);
         if (!f) {
             fatal_text("regions: no free name for region " + db::format_i64(id));
         }

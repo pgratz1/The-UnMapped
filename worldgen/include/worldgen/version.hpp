@@ -43,8 +43,10 @@ namespace worldgen {
 // no repeated syllable, tard, small numbers as words); 0.20.0 until the
 // P5-01 follow-ups (fresh claims, the quarrel's strength test, kinds 41 and
 // 42, battle toll factors, flare_min_years, fewer grim region names, name
-// filter entries, one number form per clause); now 0.21.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.21.0";
+// filter entries, one number form per clause); 0.21.0 until P5-12 (regions
+// renamed by history, kind 43, schema 8, the fused-suffix rule, the name
+// filter on region names); now 0.22.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.22.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

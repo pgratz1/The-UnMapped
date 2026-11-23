@@ -195,6 +195,10 @@ EventCatalogue build_compiled() {
                               {role(1, "settlement", EntityType::settlement, 1, 1),
                                role(2, "founder", EntityType::civilization, 1, 1)},
                               {}, 0, {}});
+    // P3-04 r21 23.2 (P5-12, generator 0.22.0): kind 43, a region renamed by
+    // history, caused by its defining event.
+    c.kinds.push_back(KindDef{43, "region_renamed", true, 1, 2, {role(1, "namer", EntityType::civilization, 0, 1)},
+                              {}, 0, {}});
     return c;
 }
 
@@ -240,7 +244,18 @@ void check_compiled(const EventCatalogue& c) {
 
 // --- Template grammar (8.4) -----------------------------------------------------
 
-enum class TokenType : std::uint8_t { literal, role, value, choice, year, end_year, region, settlement, causes };
+enum class TokenType : std::uint8_t {
+    literal,
+    role,
+    value,
+    choice,
+    year,
+    end_year,
+    region,
+    settlement,
+    causes,
+    region_former,  // r21 23.1
+};
 
 enum class Form : std::uint8_t { name, plural, adjective, all };
 
@@ -342,6 +357,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
                 return "{@region} needs a kind with a region" + where;
             }
             out.type = TokenType::region;
+        } else if (body == "@region_former") {  // r21 23.1
+            if (kind.region_use != 1) {
+                return "{@region_former} needs a kind with a region" + where;
+            }
+            out.type = TokenType::region_former;
         } else if (body == "@settlement") {
             if (kind.settlement_use != 1) {
                 return "{@settlement} needs a kind with a settlement" + where;
@@ -784,6 +804,10 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::RegionRow& r : read(db::read_region_rows(world), db::REGION_TABLE)) {
             v.regions_.emplace_back(r.id, r.name);
         }
+        std::vector<std::int64_t> culture_ids;
+        for (const db::CultureRow& r : read(db::read_culture_rows(world), db::CULTURE_TABLE)) {
+            culture_ids.push_back(r.id);
+        }
         for (const db::EventRow& r : read(db::read_event_rows(world), db::EVENT_TABLE)) {
             const std::string at = "corrupt table 'event': row " + int_text(r.id) + ": ";
             if (r.id != static_cast<std::int64_t>(v.events_.size()) + 1) {
@@ -865,6 +889,41 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
                 }
             }
         }
+        // r21 23.1 (schema 8): table region_name, checked as P3-07 r21 26.6.
+        v.region_names_ = read(db::read_region_name_rows(world), db::REGION_NAME_TABLE);
+        {
+            std::vector<std::int64_t> region_ids;
+            for (const auto& [id, name] : v.regions_) {
+                region_ids.push_back(id);
+            }
+            std::vector<db::EventRow> event_rows;
+            for (const Event& e : v.events_) {
+                event_rows.push_back(e.row);
+            }
+            std::int64_t end_year = 0;
+            if (const std::optional<std::string> text = world.meta(db::META_HISTORY_END_YEAR)) {
+                if (const std::optional<std::uint64_t> y = db::parse_canonical_u64(*text); y && *y <= 1000000000U) {
+                    end_year = static_cast<std::int64_t>(*y);
+                }
+            }
+            const KindDef* renamed = v.catalogue_.find("region_renamed");
+            if (std::optional<std::string> why = region_name_rows_problem(
+                    v.region_names_, region_ids, culture_ids, end_year, event_rows, renamed != nullptr ? renamed->id : 0)) {
+                view_fail(*why);
+            }
+        }
+        v.region_name_range_.assign(v.regions_.size(), {0, 0});
+        for (std::size_t i = 0; i < v.region_names_.size(); ++i) {
+            // Region ids are 1, 2, ... in valid worlds; find by search otherwise.
+            const auto it = std::lower_bound(
+                v.regions_.begin(), v.regions_.end(), v.region_names_[i].region,
+                [](const std::pair<std::int64_t, std::string>& a, std::int64_t r) { return a.first < r; });
+            auto& range = v.region_name_range_[static_cast<std::size_t>(it - v.regions_.begin())];
+            if (range.first == range.second) {
+                range = {i, i};
+            }
+            range.second = i + 1;
+        }
         return v;
     } catch (const ViewProblem& p) {
         if (reader_error) {
@@ -932,6 +991,109 @@ std::optional<HistoryView::CivilizationInfo> HistoryView::civilization_info(std:
     return *c;
 }
 
+const std::string* HistoryView::region_name_at_event(std::int64_t region, std::int64_t event) const noexcept {
+    const auto it = std::lower_bound(regions_.begin(), regions_.end(), region,
+                                     [](const std::pair<std::int64_t, std::string>& a, std::int64_t r) {
+                                         return a.first < r;
+                                     });
+    if (it == regions_.end() || it->first != region) {
+        return nullptr;
+    }
+    const std::string* out = &it->second;
+    if (region_name_range_.size() == regions_.size()) {
+        const auto [first, last] = region_name_range_[static_cast<std::size_t>(it - regions_.begin())];
+        for (std::size_t i = first; i < last; ++i) {
+            if (region_names_[i].event <= event) {
+                out = &region_names_[i].name;
+            }
+        }
+    }
+    return out;
+}
+
+const std::string* HistoryView::region_name_at_year(std::int64_t region, std::int64_t year) const noexcept {
+    const auto it = std::lower_bound(regions_.begin(), regions_.end(), region,
+                                     [](const std::pair<std::int64_t, std::string>& a, std::int64_t r) {
+                                         return a.first < r;
+                                     });
+    if (it == regions_.end() || it->first != region) {
+        return nullptr;
+    }
+    const std::string* out = &it->second;
+    if (region_name_range_.size() == regions_.size()) {
+        const auto [first, last] = region_name_range_[static_cast<std::size_t>(it - regions_.begin())];
+        for (std::size_t i = first; i < last; ++i) {
+            if (region_names_[i].from_year <= year) {
+                out = &region_names_[i].name;
+            }
+        }
+    }
+    return out;
+}
+
+namespace {
+
+bool is_region_name_text(std::string_view name) noexcept {
+    if (name.empty() || name.size() > 64U) {
+        return false;
+    }
+    for (const char c : name) {
+        const bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ' || c == '\'' || c == '-';
+        if (!ok) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool sorted_has(std::span<const std::int64_t> ids, std::int64_t id) noexcept {
+    return std::binary_search(ids.begin(), ids.end(), id);
+}
+
+}  // namespace
+
+std::optional<std::string> region_name_rows_problem(std::span<const db::RegionNameRow> rows,
+                                                    std::span<const std::int64_t> region_ids,
+                                                    std::span<const std::int64_t> culture_ids, std::int64_t end_year,
+                                                    std::span<const db::EventRow> events, std::int64_t renamed_kind) {
+    for (const db::RegionNameRow& r : rows) {
+        const std::string at = "corrupt table 'region_name': row (" + int_text(r.region) + ", " +
+                               int_text(r.from_year) + "): ";
+        if (!sorted_has(region_ids, r.region)) {
+            return at + "unknown region " + int_text(r.region);
+        }
+        if (r.from_year < 0 || r.from_year > end_year - 1) {
+            return at + "from_year " + int_text(r.from_year) + " outside 0 to " + int_text(end_year - 1);
+        }
+        if (!is_region_name_text(r.name)) {
+            return at + "name is not a name";
+        }
+        if (r.culture != 0 && !sorted_has(culture_ids, r.culture)) {
+            return at + "unknown culture " + int_text(r.culture);
+        }
+        const bool event_ok = renamed_kind != 0 && r.event >= 1 && static_cast<std::uint64_t>(r.event) <= events.size() &&
+                              events[static_cast<std::size_t>(r.event - 1)].kind == renamed_kind &&
+                              events[static_cast<std::size_t>(r.event - 1)].region == r.region &&
+                              events[static_cast<std::size_t>(r.event - 1)].year == r.from_year;
+        if (!event_ok) {
+            return at + "event " + int_text(r.event) + " is not a region_renamed of this region and year";
+        }
+    }
+    if (renamed_kind != 0) {
+        for (const db::EventRow& e : events) {
+            if (e.kind != renamed_kind) {
+                continue;
+            }
+            const bool has_row = std::any_of(rows.begin(), rows.end(),
+                                             [&e](const db::RegionNameRow& r) { return r.event == e.id; });
+            if (!has_row) {
+                return "corrupt table 'event': row " + int_text(e.id) + ": region_renamed without a region_name row";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 // --- render_event (8.5) ------------------------------------------------------------------
 
 namespace {
@@ -971,7 +1133,8 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         } else if (form == Form::adjective) {
             s = view.race_adjective(p.entity_id);
         } else {
-            s = view.name(type, p.entity_id);
+            s = type == EntityType::region ? view.region_name_at_event(p.entity_id, event_id)  // r21 23.1
+                                           : view.name(type, p.entity_id);
         }
         if (s == nullptr) {
             fail(at + "no name for " + std::string(entity_type_key(type)) + " " + int_text(p.entity_id));
@@ -1074,8 +1237,11 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
             }
             case TokenType::year: out += int_text(e->row.year); break;
             case TokenType::end_year: out += int_text(e->row.end_year); break;
-            case TokenType::region: {
-                const std::string* s = view.name(EntityType::region, e->row.region);
+            case TokenType::region:
+            case TokenType::region_former: {
+                // r21 23.1: the name in force at the event, or just before it.
+                const std::int64_t at_event = t.type == TokenType::region ? event_id : event_id - 1;
+                const std::string* s = view.region_name_at_event(e->row.region, at_event);
                 if (s == nullptr) {
                     fail(at + "no region " + int_text(e->row.region));
                 }

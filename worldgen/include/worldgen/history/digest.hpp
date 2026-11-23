@@ -38,10 +38,12 @@ inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800,
 inline constexpr std::size_t SUMMARY_CALAMITY_PER_PHASE = 2;  // 25.2
 inline constexpr std::size_t MILESTONES_ENDED = 4;            // 25.5
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
-inline constexpr std::array<std::string_view, 15> SUMMARY_STATS = {
+// r21 26.5 item 2 (format v3): and regions_renamed, refuges_hidden.
+inline constexpr std::array<std::string_view, 17> SUMMARY_STATS = {
     "end_year",           "events",           "summary_threshold",    "summary_events",       "civilizations",
     "civilizations_alive", "civilizations_ended", "settlements_standing", "settlements_ruined", "population",
-    "wars",               "wars_open",        "wars_hollow_permille", "share_max_permille",   "races_alive"};
+    "wars",               "wars_open",        "wars_hollow_permille", "share_max_permille",   "races_alive",
+    "regions_renamed",    "refuges_hidden"};
 
 // --- Tables (5.1, 5.3) ------------------------------------------------------
 
@@ -73,6 +75,8 @@ struct HistoryTables {
     std::vector<db::SettlementCensusRow> census;
     std::vector<db::RegionControlRow> region_control;
     std::vector<db::RelationRow> relations;
+    // Schema 8 (P3-07 r21 26.6): table region_name, primary-key order.
+    std::vector<db::RegionNameRow> region_names;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };
