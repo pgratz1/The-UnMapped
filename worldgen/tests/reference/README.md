@@ -1561,3 +1561,34 @@ Re-recording of `worldgen/tests/golden/p4-01-timeline.txt` (P4-03 9.6), in three
    hist-races-elf-orc-1024 (the holders at the first change year and at E / 2 are those of 0.20.0); and the
    `table meta` line of each of the 13 fixtures (meta `generator_version` 0.21.0). No fixture's `static`,
    `year` or `years` line moves between steps 2 and 3.
+
+### P4-03a territory colour and border follow-ups (generator 0.22.0, no world change)
+
+Written from `docs/specs/p4-03a-territory-colour-followups.md` r1 and P4-03 r4 (7.2, 7.3, 7.5, 8.2, 9.2) without
+the engineer's branch. Rule set `p4-03a` is the new default; `--rules p5-12` keeps P4-03 r3's colours and image
+on the same 0.22.0 inputs (`~/.cache/the-unmapped/out/p5-12-int/inputs`) and reproduces the golden file as P5-12
+recorded it, byte for byte (checked before and after the change). `p4-03a` adds: the r4 table `TABLE_P403A` and
+its "min" columns, `luma`, `dim` with n = 10 when L > 175 (`LUMA_BOUND`), `Base.half` (half(U) on kind-2 cells)
+and rule 3 of 8.2 in `Base.pixel`.
+
+```
+python3 -B worldgen/tests/reference/p4_timeline_reference.py check --quick           # P4-03a rules
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden                  # P4-03a rules, 0.22.0 inputs
+python3 -B worldgen/tests/reference/p4_timeline_reference.py --rules p5-12 golden -  # = the P5-12 file
+```
+
+`check` adds: the four changed entries and that exactly those four differ from r3; the table of P4-03a 2.2
+(each changed entry's nearest colour in B, in its race and in another race, with the nearest in B named), the
+effects it names and the minima C1 89, C2 78, C3 90; L of 7.5 for all 24 entries, the n = 10 set {goblin 1,
+faerie 1, goblin 0, dwarf 1, human 1, elf 1}, the 18 others between 51 and 163, the three pale r3 entries of
+2.1; 8.2's r4 examples (one side free, all free on steppe (112, 105, 75), goblin 1 dim (146, 134, 56)); the
+free-border fixture of `timeline_colours_p403a_test.cpp` (`check_free_borders`); T1's half-strength cells at
+299, 1500 and 2000; the 8 x 6 layout of `timeline_borders_test.cpp` with regions 5 | 6 at half strength. The
+readings are `READINGS` Q1 to Q4.
+
+The re-record moved, against the P5-12 file, exactly: the two header lines; the `static` lines of the 18 cases
+that have a civilization of key elf, goblin or human with ordinal k = 1 (mod 4) or of goblin with k = 3 (mod 4)
+(every case but geo-seed-0-512, h10-floor, h2-minimal, h4-budget and h5-saturated), the set the rule of
+P4-03a 5 (b) predicts; and 23 of the 24 `territory` lines (geo-seed-0-512 at 6000 has no free-free border, no
+inner border of a realm with L > 175 and no cell of a changed colour, so its image is unchanged). No `year`,
+`years` or `table` line moved.

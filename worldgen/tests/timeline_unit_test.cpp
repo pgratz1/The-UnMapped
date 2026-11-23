@@ -141,12 +141,12 @@ TEST_CASE("P4-01 13.2 item 1 (P4-03 7.2): civilization_shade on P4-01's base col
 TEST_CASE("P4-01 13.2 item 2: civilization_colours counts ordinals per race, not per id") {
     const wh::HistoryTables& tb = t1().h.tables;
     REQUIRE(tb.civilizations.size() == 4U);
-    // c1 elf, c2 dwarf, c3 elf, c4 dwarf; P4-03 7.2 (11.1 item 3)
+    // c1 elf, c2 dwarf, c3 elf, c4 dwarf; P4-03 r4 7.2 (11.1 item 3; P4-03a item 2: elf 1 darkened)
     const std::vector<Rgb> c = wi::civilization_colours(tb);
     REQUIRE(c.size() == 4U);
     CHECK(c[0] == Rgb{40, 190, 70});    // elf, ordinal 0
     CHECK(c[1] == Rgb{220, 105, 25});   // dwarf, ordinal 0
-    CHECK(c[2] == Rgb{150, 230, 150});  // elf, ordinal 1
+    CHECK(c[2] == Rgb{130, 215, 130});  // elf, ordinal 1
     CHECK(c[3] == Rgb{245, 165, 105});  // dwarf, ordinal 1
     // a function of the tables only: the same on every call
     CHECK(wi::civilization_colours(tb) == c);

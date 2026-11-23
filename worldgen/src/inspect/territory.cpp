@@ -22,18 +22,18 @@ namespace worldgen::inspect {
 
 namespace {
 
-// The four colours of each shipped race key (P4-03 7.2), entry k mod 4 for
+// The four colours of each shipped race key (P4-03 r4 7.2), entry k mod 4 for
 // the civilization of ordinal k; entry 0 is the race's base colour.
 struct KeyColours {
     std::string_view key;
     std::array<Rgb, 4> colours;
 };
 constexpr std::array<KeyColours, 6> RACE_COLOURS = {{
-    {"elf", {{{40, 190, 70}, {150, 230, 150}, {0, 140, 40}, {130, 205, 40}}}},
-    {"goblin", {{{230, 195, 20}, {250, 235, 110}, {170, 125, 0}, {205, 160, 60}}}},
+    {"elf", {{{40, 190, 70}, {130, 215, 130}, {0, 140, 40}, {130, 205, 40}}}},
+    {"goblin", {{{230, 195, 20}, {235, 215, 90}, {170, 125, 0}, {140, 155, 30}}}},
     {"dwarf", {{{220, 105, 25}, {245, 165, 105}, {150, 65, 15}, {195, 80, 55}}}},
     {"faerie", {{{175, 70, 225}, {215, 160, 250}, {115, 35, 165}, {200, 110, 200}}}},
-    {"human", {{{0, 190, 195}, {125, 235, 230}, {0, 120, 130}, {50, 215, 175}}}},
+    {"human", {{{0, 190, 195}, {100, 215, 215}, {0, 120, 130}, {50, 215, 175}}}},
     {"orc", {{{205, 30, 30}, {240, 120, 110}, {135, 15, 20}, {230, 50, 80}}}},
 }};
 
@@ -66,10 +66,28 @@ std::uint8_t deep(std::uint8_t c) noexcept {
     return static_cast<std::uint8_t>(static_cast<unsigned>(c) * 7U / 16U);
 }
 
-// dim(C) of P4-03 8.2: each channel times 12 / 16, floored.
+// L(c) of P4-03 r4 7.5: floor((77 R + 150 G + 29 B) / 256).
+unsigned luma(Rgb c) noexcept {
+    return (77U * static_cast<unsigned>(c.r) + 150U * static_cast<unsigned>(c.g) +
+            29U * static_cast<unsigned>(c.b)) /
+           256U;
+}
+
+// The luma bound of the inner-border dim (P4-03 r4 8.2).
+constexpr unsigned DIM_LUMA_BOUND = 175U;
+
+// dim(C) of P4-03 r4 8.2: each channel times n / 16, floored, with n = 10
+// when luma(C) > 175 and n = 12 otherwise.
 Rgb dim(Rgb c) noexcept {
-    const auto d = [](std::uint8_t v) { return static_cast<std::uint8_t>(static_cast<unsigned>(v) * 12U / 16U); };
+    const unsigned n = luma(c) > DIM_LUMA_BOUND ? 10U : 12U;
+    const auto d = [n](std::uint8_t v) { return static_cast<std::uint8_t>(static_cast<unsigned>(v) * n / 16U); };
     return Rgb{d(c.r), d(c.g), d(c.b)};
+}
+
+// half(U) of P4-03 r4 8.2 rule 3: each channel times 8 / 16, floored.
+Rgb half(Rgb c) noexcept {
+    const auto h = [](std::uint8_t v) { return static_cast<std::uint8_t>(static_cast<unsigned>(v) * 8U / 16U); };
+    return Rgb{h(c.r), h(c.g), h(c.b)};
 }
 
 // P4-01 5.5: the base colour of a key without a row.
@@ -100,26 +118,35 @@ std::int64_t holder_of(std::span<const std::int64_t> holders, std::uint16_t v) n
     return v < holders.size() ? holders[v] : 0;
 }
 
-// The pixel of one cell (P4-01 5.6, P4-03 8.2).
+// The pixel of one cell (P4-01 5.6, P4-03 r4 8.2).
 Rgb territory_pixel(const TerritoryBase::Cell& cell, std::span<const std::optional<Rgb>> fill,
                     std::span<const std::int64_t> holders) noexcept {
-    if (cell.kind == TerritoryBase::KIND_PLAIN || cell.region >= fill.size()) {
-        return cell.base;
-    }
-    const std::optional<Rgb>& colour = fill[cell.region];
-    if (!colour) {
+    if (cell.kind == TerritoryBase::KIND_PLAIN) {
         return cell.base;
     }
     if (cell.kind == TerritoryBase::KIND_FILLABLE) {
-        return shade_colour(*colour, cell.factor);
-    }
-    // Inner border candidate: every side held by the same civilization.
-    const std::int64_t c = holder_of(holders, cell.region);
-    if (c == 0 || (cell.east != 0U && holder_of(holders, cell.east) != c) ||
-        (cell.south != 0U && holder_of(holders, cell.south) != c)) {
+        if (cell.region < fill.size() && fill[cell.region]) {
+            return shade_colour(*fill[cell.region], cell.factor);
+        }
         return cell.base;
     }
-    return shade_colour(dim(*colour), cell.factor);
+    // Inner border candidate, rules 1 to 4 of 8.2 in order.
+    if (holders.empty()) {  // rule 1: no holder information
+        return cell.base;
+    }
+    // Every side (v and every w of O) has the same holder c.
+    const std::int64_t c = holder_of(holders, cell.region);
+    if ((cell.east != 0U && holder_of(holders, cell.east) != c) ||
+        (cell.south != 0U && holder_of(holders, cell.south) != c)) {
+        return cell.base;  // rule 4: the holders differ
+    }
+    if (c == 0) {
+        return cell.half;  // rule 3: every side free
+    }
+    if (cell.region < fill.size() && fill[cell.region]) {
+        return shade_colour(dim(*fill[cell.region]), cell.factor);  // rule 2
+    }
+    return cell.base;  // rule 4: held, but no fill
 }
 
 }  // namespace
@@ -238,6 +265,9 @@ TerritoryBase TerritoryBase::build(const db::LayerGrid& elevation, const db::Lay
             c.kind = KIND_INNER_BORDER;
             c.east = cells.east[i];
             c.south = cells.south[i];
+            // P4-03 r4 8.2 rule 3: the composite's own unbordered colour,
+            // the pixel of the biomes composite, halved.
+            c.half = half(cells.unbordered[i]);
         }
     }
     return base;
@@ -263,6 +293,22 @@ std::vector<std::uint8_t> render_territory(const TerritoryBase& base, std::span<
     std::vector<std::uint8_t> out(territory_rgb_size(base, scale));
     render_territory(base, fill, holders, scale, out);
     return out;
+}
+
+void render_territory(const TerritoryBase& base, const history::Timeline& timeline, std::span<const Rgb> colours,
+                      std::int64_t year, std::uint32_t scale, std::span<std::uint8_t> out) {
+    // The errors in the order of P4-03 r4 9.2: year and missing colour
+    // (territory_fill), then scale and size (the two-vector form).
+    const std::vector<std::optional<Rgb>> fill = territory_fill(timeline, colours, year);
+    const std::vector<std::int64_t> holders = territory_holders(timeline, year);
+    render_territory(base, fill, holders, scale, out);
+}
+
+std::vector<std::uint8_t> render_territory(const TerritoryBase& base, const history::Timeline& timeline,
+                                           std::span<const Rgb> colours, std::int64_t year, std::uint32_t scale) {
+    const std::vector<std::optional<Rgb>> fill = territory_fill(timeline, colours, year);
+    const std::vector<std::int64_t> holders = territory_holders(timeline, year);
+    return render_territory(base, fill, holders, scale);
 }
 
 }  // namespace worldgen::inspect
