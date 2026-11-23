@@ -30,16 +30,16 @@ geo-phrase-512 region_name 1 2a4d585eeb3a61b1beaa578b4129bbc96fad2e0256859d2b941
 geo-phrase-512 rename 9 3021 capital_sack culture 4 e60 cause e58 The Ruin of Vaenies
 geo-phrase-512 rename_stats candidates 2 taken 1 dropped world:1
 world geo-seed-1-1024 1 1024 6000 all normal auto normal
-geo-seed-1-1024 region_name 8 7473dd2dbd040dd6f38b2216d74d5d602f6f75c3e40da44afe99892ac8fb3fdc
-geo-seed-1-1024 rename 4 5946 heartland culture 5 e1027 cause e1026 The Heart of Brod
-geo-seed-1-1024 rename 6 5886 slaughter culture 2 e934 cause e933 The Weeping Wood
-geo-seed-1-1024 rename 12 5797 great_sack culture 6 e863 cause e860 The Burnt Wood
+geo-seed-1-1024 region_name 8 c732692ea7d458c5f3a45412d6dde16cf2f6e231881def70bed713848d03768d
+geo-seed-1-1024 rename 9 5819 capital_sack culture 4 e905 cause e903 Bizz's Fall
+geo-seed-1-1024 rename 12 5715 great_sack culture 6 e721 cause e718 The Ashes of Geackham
 geo-seed-1-1024 rename 13 4965 capital_sack culture 2 e379 cause e377 Kaz's Fall
+geo-seed-1-1024 rename 15 5859 capital_sack culture 6 e971 cause e969 Elomaell's Fall
 geo-seed-1-1024 rename 18 2102 ravage culture 2 e26 cause e25 Zug's Shadow
-geo-seed-1-1024 rename 28 5645 plague culture 5 e670 cause e669 The Silent Wood
-geo-seed-1-1024 rename 34 5773 ravage culture 1 e840 cause e839 The Forsaken Downs
+geo-seed-1-1024 rename 20 5184 heartland culture 5 e491 cause e487 Hodmalland
+geo-seed-1-1024 rename 33 5716 capital_sack culture 5 e728 cause e726 The Fallen Wood
 geo-seed-1-1024 rename 42 4510 conquest culture 4 e298 cause e297 The Grave of Sawy
-geo-seed-1-1024 rename_stats candidates 8 taken 8 dropped -
+geo-seed-1-1024 rename_stats candidates 18 taken 8 dropped century:1,gap:6,weight:1,world:1
 world hist-span-2000-512 7 512 2000 all normal auto normal
 hist-span-2000-512 region_name 1 236ba2f673aaada7af7af0ff4983e988acb384290784d5edbd34f3ac5cb9e634
 hist-span-2000-512 rename 8 1443 capital_sack culture 4 e76 cause e71 The Ruin of Harinhimm
@@ -79,12 +79,13 @@ hist-conflict-flight region_name 1 991e383b4a37d759f1db12146d99daddbb2eeba4faa04
 hist-conflict-flight rename 2 2358 capital_sack culture 2 e42 cause e40 The Fallen Downs
 hist-conflict-flight rename_stats candidates 7 taken 1 dropped weight:3,world:2
 world hist-conflict-73-1024 73 1024 6000 all normal auto normal
-hist-conflict-73-1024 region_name 4 ad7c67c578d22c6db03cddec5bb0e89425c4e41aca3823cd83fba35b5f25f461
+hist-conflict-73-1024 region_name 5 93374ee6c93485e3c2504fbda7b083e1e6b5f8082cd764003bc5a07c75d2cb63
+hist-conflict-73-1024 rename 13 5873 capital_sack culture 6 e1152 cause e1150 The Fallen Peaks
 hist-conflict-73-1024 rename 18 2649 great_sack culture 2 e112 cause e111 The Burnt Downs
 hist-conflict-73-1024 rename 19 5018 conquest culture 4 e718 cause e717 Hirinnun's Grave
 hist-conflict-73-1024 rename 20 5278 heartland culture 5 e867 cause e865 Ashol's Hearth
 hist-conflict-73-1024 rename 36 4251 conquest culture 4 e452 cause e451 The Grave of Gank-Drat
-hist-conflict-73-1024 rename_stats candidates 6 taken 4 dropped weight:1
+hist-conflict-73-1024 rename_stats candidates 8 taken 5 dropped weight:2
 fixture rename-small-0 0 2000 all auto normal rename-small
 rename-small-0 region_name 7 0dffb257037455d67a898c60ec4cc8c8c622651107cc6ae788417da9bf65ada6
 rename-small-0 rename 4 1845 capital_sack culture 1 e263 cause e257 The Ashes of Silstudstead

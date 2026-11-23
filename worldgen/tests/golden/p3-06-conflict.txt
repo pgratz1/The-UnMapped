@@ -2523,24 +2523,24 @@ geo-phrase-512 e341 The Urom Horde besieged Alarham of the Meald League; it held
 world geo-seed-1-1024 1 1024 6000 all normal auto normal
 geo-seed-1-1024 input_region 4bc128ab7bd74cbf9b6f153bda790088c237f815577d7fbda5aff09509d28733
 geo-seed-1-1024 table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
-geo-seed-1-1024 table beast_population 3b4fe4a2b82f7374027ea24ee8a5e4d33fb8d99484384271d7a9ec01a36da2bc
-geo-seed-1-1024 table civilization c700f63b16b9655af5f06900c3e16aecbab433a28ff00ee9973d425bafcc8b5f
-geo-seed-1-1024 table event 7cf7c9870d8cf57fb149d315dcf0e2502defdec12ecf30cbe07cf8c24cd01ba1
-geo-seed-1-1024 table event_cause a49313ad1accd79b26f19be8d1ef7e24e6aafa7bb9777896fe60b5538c017a54
+geo-seed-1-1024 table beast_population 685c035b54459749c7f1a39ad7fed4aba9b06e73710b2c464dc67e74b4030b2e
+geo-seed-1-1024 table civilization 09f25ea19b5ee93282ecc61dcc6fdcdc50c3280e98bb9f24252a95f474ad22a5
+geo-seed-1-1024 table event 6bd202383ed9d110bd322ac33adc7368657ccf1e26fc2b8fdbd38bf204fd2628
+geo-seed-1-1024 table event_cause 71cc576613fdfa955b7f8564ee26c68a42f0d52031b7b7b9e2d36d7b5c82c3b3
 geo-seed-1-1024 table event_kind e29f4e009816a61336ec02603e33e8a31c595adfa462398e89b7903b025878b6
 geo-seed-1-1024 table event_kind_role 5e69dd770ca8047ff4f4925f0417c8969d4a5f7b88a3cfad1cbe50f359f305c0
 geo-seed-1-1024 table event_kind_value 800461fae6225a2f5c9f4602c9b686e3e1254dbc1f972791f0f741c100296e80
-geo-seed-1-1024 table event_participant 6ed4f8d4b769f10f5a7cf3156203085a60814fac21421c21b67e089af63f6cc6
-geo-seed-1-1024 table event_value a7d2b19da8ec2ea36f91316af8ab216b31d2a0f59781c32892a026ce8a2e47b5
-geo-seed-1-1024 table monster bca99f201756ee0ca540232643ac63c6570950bddf17df3b4acb00c535754a50
+geo-seed-1-1024 table event_participant 1f714fae0d00208d693108a5ded396af28745d6eb8522dd4125e5f66a6ff71b2
+geo-seed-1-1024 table event_value c6ea0a2ee983ca9fa34b49b83bf89c9d9eb85bb9302b90615fdf25166057b49e
+geo-seed-1-1024 table monster 9eac26c9467d51b89472704e5df9cf51db6859258608a843ee0e2f7d2d20f8d2
 geo-seed-1-1024 table monster_kind 0924769b215e6edf9f8576b8eafa2cc19e0b31440a0476b7848b6f3c300594c8
-geo-seed-1-1024 table phase 3b953e50e8cd86c5edc2dffa934361fbcf97ace786302b8412d328e7b815c725
-geo-seed-1-1024 table region_control be1ef59acce360f8e155b3d8edc5a65ceec6af6dd0105a4d1d8213392de1bede
-geo-seed-1-1024 table region_name 7473dd2dbd040dd6f38b2216d74d5d602f6f75c3e40da44afe99892ac8fb3fdc
-geo-seed-1-1024 table relation 7dd933b5b8970e754a7a632706923f61406c030f10bab236b51cfc33f297ae9f
-geo-seed-1-1024 table settlement 4a894b05dd73bccd24fba5c8f29a4be1ba464d3c6842050b9141c6b116af7d0f
-geo-seed-1-1024 table settlement_census 378925073efbafbbe07a36f956a18ce89f22be2e0d7ae99fe0cd57af604c4336
-geo-seed-1-1024 table site 67c0f19c000c0d4c4df71913be2fbcbe4537f963e63278c1e1bb7cbf092e53a5
+geo-seed-1-1024 table phase b754f58835c3a71222977036a47508239d9e06009b63785aaf34b4b2045da7af
+geo-seed-1-1024 table region_control e561e0a750e6b6dc3521aafc754343a1e9366315d03100d41da7be1e712f624f
+geo-seed-1-1024 table region_name c732692ea7d458c5f3a45412d6dde16cf2f6e231881def70bed713848d03768d
+geo-seed-1-1024 table relation ab733ac85b25d330220d2800b0a2de43f68f282320f33b70543f70fb82e1bee3
+geo-seed-1-1024 table settlement 4bd311c55619b18c887a8b649df817afc5cee9419f5b9adb3eab95e92e75e110
+geo-seed-1-1024 table settlement_census 34a318007eee26be8252012c22104aae87e50d46240f0488155b4bd9737d1fef
+geo-seed-1-1024 table site cbcf18a59b7de990bbc8ab7fdafee48fa850cfbaca28d5d44e70b46fb7a83cf7
 geo-seed-1-1024 report end_year = 6000
 geo-seed-1-1024 report phases_opening = 6
 geo-seed-1-1024 report phases_quiet = 12
@@ -2548,119 +2548,119 @@ geo-seed-1-1024 report phases_flare = 8
 geo-seed-1-1024 report phases_final = 1
 geo-seed-1-1024 report simulated_years = 1540
 geo-seed-1-1024 report simulated_permille = 256
-geo-seed-1-1024 report events = 1077
+geo-seed-1-1024 report events = 1124
 geo-seed-1-1024 report events_awakening = 6
 geo-seed-1-1024 report events_civ_founded = 9
 geo-seed-1-1024 report events_settlement_founded = 9
 geo-seed-1-1024 report events_quiet_era = 0
 geo-seed-1-1024 report events_flare_up = 8
-geo-seed-1-1024 report events_colony_founded = 127
-geo-seed-1-1024 report events_became_village = 34
-geo-seed-1-1024 report events_became_town = 89
-geo-seed-1-1024 report events_became_city = 12
-geo-seed-1-1024 report events_settlement_dwindled = 22
-geo-seed-1-1024 report events_famine = 77
+geo-seed-1-1024 report events_colony_founded = 111
+geo-seed-1-1024 report events_became_village = 29
+geo-seed-1-1024 report events_became_town = 88
+geo-seed-1-1024 report events_became_city = 9
+geo-seed-1-1024 report events_settlement_dwindled = 20
+geo-seed-1-1024 report events_famine = 76
 geo-seed-1-1024 report events_plague = 0
-geo-seed-1-1024 report events_plague_spread = 91
-geo-seed-1-1024 report events_succession_crisis = 26
+geo-seed-1-1024 report events_plague_spread = 80
+geo-seed-1-1024 report events_succession_crisis = 24
 geo-seed-1-1024 report events_civ_seceded = 6
 geo-seed-1-1024 report events_settlement_abandoned = 0
-geo-seed-1-1024 report events_capital_moved = 6
+geo-seed-1-1024 report events_capital_moved = 16
 geo-seed-1-1024 report events_civ_ended = 0
 geo-seed-1-1024 report events_ruin_faded = 2
-geo-seed-1-1024 report events_claim = 78
-geo-seed-1-1024 report events_war_declared = 30
-geo-seed-1-1024 report events_battle = 99
+geo-seed-1-1024 report events_claim = 75
+geo-seed-1-1024 report events_war_declared = 38
+geo-seed-1-1024 report events_battle = 141
 geo-seed-1-1024 report events_battle_at_pass = 0
-geo-seed-1-1024 report events_siege = 57
-geo-seed-1-1024 report events_sacked = 19
-geo-seed-1-1024 report events_settlement_captured = 3
-geo-seed-1-1024 report events_peace = 9
-geo-seed-1-1024 report events_truce = 6
-geo-seed-1-1024 report events_region_ceded = 7
-geo-seed-1-1024 report events_civ_conquered = 1
+geo-seed-1-1024 report events_siege = 73
+geo-seed-1-1024 report events_sacked = 25
+geo-seed-1-1024 report events_settlement_captured = 12
+geo-seed-1-1024 report events_peace = 10
+geo-seed-1-1024 report events_truce = 12
+geo-seed-1-1024 report events_region_ceded = 9
+geo-seed-1-1024 report events_civ_conquered = 3
 geo-seed-1-1024 report events_settlement_abandoned_to = 0
-geo-seed-1-1024 report events_refugees_settled = 0
-geo-seed-1-1024 report events_tribute = 10
-geo-seed-1-1024 report events_war_won = 9
-geo-seed-1-1024 report events_search_abandoned = 4
+geo-seed-1-1024 report events_refugees_settled = 1
+geo-seed-1-1024 report events_tribute = 6
+geo-seed-1-1024 report events_war_won = 7
+geo-seed-1-1024 report events_search_abandoned = 5
 geo-seed-1-1024 report events_refuge_held = 0
-geo-seed-1-1024 report events_plague_outbreak = 91
+geo-seed-1-1024 report events_plague_outbreak = 79
 geo-seed-1-1024 report events_quiet_stretch = 9
-geo-seed-1-1024 report events_claim_settlements = 0
+geo-seed-1-1024 report events_claim_settlements = 1
 geo-seed-1-1024 report events_settlements_ceded = 0
-geo-seed-1-1024 report events_claim_dropped = 4
-geo-seed-1-1024 report events_refuge_hidden = 0
+geo-seed-1-1024 report events_claim_dropped = 7
+geo-seed-1-1024 report events_refuge_hidden = 1
 geo-seed-1-1024 report events_region_renamed = 8
 geo-seed-1-1024 report events_monster_appeared = 4
 geo-seed-1-1024 report events_undead_rose = 4
-geo-seed-1-1024 report events_monster_woke = 1
-geo-seed-1-1024 report events_monster_slept = 4
-geo-seed-1-1024 report events_monster_raid = 59
-geo-seed-1-1024 report events_settlement_overrun = 4
+geo-seed-1-1024 report events_monster_woke = 0
+geo-seed-1-1024 report events_monster_slept = 2
+geo-seed-1-1024 report events_monster_raid = 63
+geo-seed-1-1024 report events_settlement_overrun = 6
 geo-seed-1-1024 report events_monster_slain = 4
 geo-seed-1-1024 report events_monster_driven_off = 1
 geo-seed-1-1024 report events_monster_died = 2
 geo-seed-1-1024 report events_beasts_bold = 6
-geo-seed-1-1024 report events_outpost_built = 14
+geo-seed-1-1024 report events_outpost_built = 11
 geo-seed-1-1024 report events_outpost_abandoned = 6
 geo-seed-1-1024 report civilizations = 15
-geo-seed-1-1024 report civilizations_alive = 14
-geo-seed-1-1024 report settlements = 136
-geo-seed-1-1024 report settlements_standing = 113
-geo-seed-1-1024 report regions_held = 41
-geo-seed-1-1024 report census_rows = 1935
-geo-seed-1-1024 report relations = 77
+geo-seed-1-1024 report civilizations_alive = 12
+geo-seed-1-1024 report settlements = 121
+geo-seed-1-1024 report settlements_standing = 90
+geo-seed-1-1024 report regions_held = 33
+geo-seed-1-1024 report census_rows = 1887
+geo-seed-1-1024 report relations = 91
 geo-seed-1-1024 report region_names = 8
 geo-seed-1-1024 report beasts = 5
 geo-seed-1-1024 report monster_kinds = 6
-geo-seed-1-1024 report beast_populations = 1148
+geo-seed-1-1024 report beast_populations = 1099
 geo-seed-1-1024 report monsters = 8
-geo-seed-1-1024 report sites = 26
-geo-seed-1-1024 report population = 293183
-geo-seed-1-1024 report population_elf = 20733
-geo-seed-1-1024 report population_goblin = 83302
-geo-seed-1-1024 report population_dwarf = 29958
-geo-seed-1-1024 report population_faerie = 5837
-geo-seed-1-1024 report population_human = 133674
-geo-seed-1-1024 report population_orc = 19679
-geo-seed-1-1024 report settlements_standing_elf = 18
-geo-seed-1-1024 report settlements_standing_goblin = 44
-geo-seed-1-1024 report settlements_standing_dwarf = 13
-geo-seed-1-1024 report settlements_standing_faerie = 5
-geo-seed-1-1024 report settlements_standing_human = 26
-geo-seed-1-1024 report settlements_standing_orc = 7
-geo-seed-1-1024 report regions_held_elf = 5
+geo-seed-1-1024 report sites = 25
+geo-seed-1-1024 report population = 237300
+geo-seed-1-1024 report population_elf = 1260
+geo-seed-1-1024 report population_goblin = 80044
+geo-seed-1-1024 report population_dwarf = 20910
+geo-seed-1-1024 report population_faerie = 6075
+geo-seed-1-1024 report population_human = 96597
+geo-seed-1-1024 report population_orc = 32414
+geo-seed-1-1024 report settlements_standing_elf = 1
+geo-seed-1-1024 report settlements_standing_goblin = 39
+geo-seed-1-1024 report settlements_standing_dwarf = 9
+geo-seed-1-1024 report settlements_standing_faerie = 6
+geo-seed-1-1024 report settlements_standing_human = 21
+geo-seed-1-1024 report settlements_standing_orc = 14
+geo-seed-1-1024 report regions_held_elf = 1
 geo-seed-1-1024 report regions_held_goblin = 12
-geo-seed-1-1024 report regions_held_dwarf = 5
+geo-seed-1-1024 report regions_held_dwarf = 2
 geo-seed-1-1024 report regions_held_faerie = 2
-geo-seed-1-1024 report regions_held_human = 13
-geo-seed-1-1024 report regions_held_orc = 4
-geo-seed-1-1024 stats civ_settlements_max = 18
-geo-seed-1-1024 stats settlements_colonies = 127
+geo-seed-1-1024 report regions_held_human = 9
+geo-seed-1-1024 report regions_held_orc = 7
+geo-seed-1-1024 stats civ_settlements_max = 14
+geo-seed-1-1024 stats settlements_colonies = 111
 geo-seed-1-1024 stats civilizations_seceded = 6
 geo-seed-1-1024 stats relations_enmity = 19
-geo-seed-1-1024 stats relations_peace = 28
-geo-seed-1-1024 stats war_years_total = 350
-geo-seed-1-1024 stats war_years_max = 32
-geo-seed-1-1024 stats civilizations_conquered = 1
-geo-seed-1-1024 stats settlements_sacked = 19
-geo-seed-1-1024 stats settlements_captured = 3
-geo-seed-1-1024 stats regions_conquered = 9
+geo-seed-1-1024 stats relations_peace = 34
+geo-seed-1-1024 stats war_years_total = 506
+geo-seed-1-1024 stats war_years_max = 35
+geo-seed-1-1024 stats civilizations_conquered = 3
+geo-seed-1-1024 stats settlements_sacked = 25
+geo-seed-1-1024 stats settlements_captured = 12
+geo-seed-1-1024 stats regions_conquered = 12
 geo-seed-1-1024 stats races_alive = 6
 geo-seed-1-1024 stats wars_attacker_elf = 1
-geo-seed-1-1024 stats wars_attacker_goblin = 16
+geo-seed-1-1024 stats wars_attacker_goblin = 23
 geo-seed-1-1024 stats wars_attacker_dwarf = 2
 geo-seed-1-1024 stats wars_attacker_faerie = 0
 geo-seed-1-1024 stats wars_attacker_human = 5
-geo-seed-1-1024 stats wars_attacker_orc = 6
-geo-seed-1-1024 stats wars_hollow = 5
-geo-seed-1-1024 stats wars_hollow_permille = 192
+geo-seed-1-1024 stats wars_attacker_orc = 7
+geo-seed-1-1024 stats wars_hollow = 7
+geo-seed-1-1024 stats wars_hollow_permille = 212
 geo-seed-1-1024 stats wars_same_goal_max = 3
 geo-seed-1-1024 stats wars_same_goal_unchanged_max = 3
-geo-seed-1-1024 stats race_population_share_max_permille = 455
-geo-seed-1-1024 stats race_regions_share_max_permille = 317
-geo-seed-1-1024 stats wars_unfound = 4
+geo-seed-1-1024 stats race_population_share_max_permille = 407
+geo-seed-1-1024 stats race_regions_share_max_permille = 363
+geo-seed-1-1024 stats wars_unfound = 5
 geo-seed-1-1024 stats refuges_held_no_destination = 0
 geo-seed-1-1024 war e71 2571-2581 c3 c1 rg10 claim e37 battles 5 sacked 0 taken 0 exhaustion truce
 geo-seed-1-1024 war e118 3321-3328 c3 c1 rg17 claim e105 battles 4 sacked 0 taken 0 exhaustion truce
@@ -2672,32 +2672,40 @@ geo-seed-1-1024 war e318 4545-4547 c2 c4 rg52 claim e317 battles 1 sacked 1 take
 geo-seed-1-1024 war e327 4578-4592 c3 c6 rg25 claim e262 battles 0 sacked 0 taken 0 unfound unfound
 geo-seed-1-1024 war e363 4953-4974 c1 c5 rg13 claim e335 battles 5 sacked 3 taken 0 exhaustion won-c1-tribute
 geo-seed-1-1024 war e384 4968-4979 c2 c4 rg52 claim e359 battles 3 sacked 1 taken 0 exhaustion truce
-geo-seed-1-1024 war e456 5134-5153 c5 c6 rg25 claim e454 battles 5 sacked 0 taken 0 exhaustion won-c6-tribute
-geo-seed-1-1024 war e489 5209-5226 c3 c5 rg13 claim e361 battles 6 sacked 1 taken 0 exhaustion won-c3-tribute
-geo-seed-1-1024 war e527 5284-5288 c3 c6 rg16 claim e453 battles 1 sacked 1 taken 0 goal-lost won-c3-ceded
-geo-seed-1-1024 war e528 5284-5287 c9 c6 rg16 claim e487 battles 0 sacked 0 taken 0 unfound unfound
-geo-seed-1-1024 war e616 5583-5590 c11 c6 rg25 claim e571 battles 0 sacked 0 taken 0 unfound unfound
-geo-seed-1-1024 war e689 5685-5717 c9 c3 rg29 claim e653 battles 7 sacked 2 taken 0 exhaustion truce
-geo-seed-1-1024 war e702 5700-5711 c13 c1 rg18 claim e636 battles 4 sacked 0 taken 0 exhaustion won-c13-ceded
-geo-seed-1-1024 war e727 5716-5732 c4 c2 rg51 claim e675 battles 6 sacked 3 taken 0 exhaustion won-c4-ceded
-geo-seed-1-1024 war e734 5724-5725 c9 c11 rg14 claim e654 battles 1 sacked 1 taken 0 goal-lost won-c9-ceded
-geo-seed-1-1024 war e746 5727-5747 c9 c12 rg33 claim e655 battles 5 sacked 1 taken 0 exhaustion won-c9-tribute
-geo-seed-1-1024 war e780 5742-5744 c4 c10 rg47 claim e701 battles 1 sacked 0 taken 1 aim won-c4-ceded
-geo-seed-1-1024 war e798 5745-5757 c10 c2 rg45 claim e797 battles 6 sacked 0 taken 0 exhaustion won-c10-tribute
-geo-seed-1-1024 war e842 5781-5797 c13 c8 rg12 claim e615 battles 2 sacked 1 taken 0 goal-lost won-c13-tribute
-geo-seed-1-1024 war e851 5789-5792 c12 c6 rg16 claim e849 battles 0 sacked 0 taken 0 unfound unfound
-geo-seed-1-1024 war e868 5800-5807 c13 c1 rg6 claim e841 battles 4 sacked 0 taken 0 exhaustion truce
-geo-seed-1-1024 war e928 5883-5893 c13 c1 rg6 claim e918 battles 4 sacked 1 taken 0 exhaustion truce
-geo-seed-1-1024 war e950 5896-5905 c13 c8 rg12 claim e919 battles 4 sacked 1 taken 0 goal-lost won-c13-tribute
-geo-seed-1-1024 war e982 5918-5942 c9 c10 rg39 claim e843 battles 5 sacked 2 taken 1 goal-lost won-c9-tribute
-geo-seed-1-1024 war e983 5922-5941 c10 c12 rg33 claim e607 battles 7 sacked 0 taken 0 exhaustion won-c12-ceded
-geo-seed-1-1024 war e1077 5998-open c13 c1 rg6 claim e1035 battles 0 sacked 0 taken 0 open -
-geo-seed-1-1024 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
-geo-seed-1-1024 r19 t11 7 first_orc_war 120 claims39 0/0/0 cessions40 0 goal_differs 0
-geo-seed-1-1024 r22 fresh 2/0 dropped 4 refuge_hidden 0 repeated_tolls 0 mixed_tolls 0
-geo-seed-1-1024 r22 open_claims e176,e486,e505,e599,e622,e631,e656,e660,e667,e683,e726,e847,e865,e891,e893,e964,e1024,e1033,e1039,e1042,e1047,e1052,e1056,e1065,e1066,e1068,e1074,e1076
-geo-seed-1-1024 r22 hidden_refuges -
-geo-seed-1-1024 r21 renamings 8 4:5946:heartland:e1026,6:5886:slaughter:e933,12:5797:great_sack:e860,13:4965:capital_sack:e377,18:2102:ravage:e25,28:5645:plague:e669,34:5773:ravage:e839,42:4510:conquest:e297
+geo-seed-1-1024 war e459 5134-5158 c5 c6 rg25 claim e457 battles 6 sacked 0 taken 0 exhaustion truce
+geo-seed-1-1024 war e493 5209-5244 c3 c5 rg13 claim e361 battles 7 sacked 0 taken 0 exhaustion truce
+geo-seed-1-1024 war e523 5284-5287 c3 c6 rg16 claim e456 battles 0 sacked 0 taken 0 unfound unfound
+geo-seed-1-1024 war e524 5284-5291 c9 c6 rg16 claim e490 battles 0 sacked 0 taken 0 unfound unfound
+geo-seed-1-1024 war e632 5616-5619 c11 c6 rg14 claim e579 battles 0 sacked 0 taken 0 unfound unfound
+geo-seed-1-1024 war e662 5685-5700 c9 c3 rg29 claim e630 battles 5 sacked 2 taken 0 exhaustion won-c9-ceded
+geo-seed-1-1024 war e677 5700-5703 c13 c1 rg18 claim e613 battles 1 sacked 1 taken 0 goal-lost won-c13-ceded
+geo-seed-1-1024 war e691 5704-5715 c8 c1 rg19 claim e690 battles 4 sacked 0 taken 0 exhaustion won-c8-ceded
+geo-seed-1-1024 war e696 5710-5718 c9 c12 rg33 claim e631 battles 5 sacked 3 taken 1 conquest -
+geo-seed-1-1024 war e698 5710-5715 c12 c6 rg25 claim e697 battles 0 sacked 0 taken 0 unfound unfound
+geo-seed-1-1024 war e703 5712-5715 c13 c8 rg12 claim e598 battles 1 sacked 1 taken 0 goal-lost won-c13-ceded
+geo-seed-1-1024 war e723 5716-5744 c4 c2 rg51 claim e648 battles 6 sacked 1 taken 2 exhaustion truce
+geo-seed-1-1024 war e775 5743-5760 c3 c1 rg17 claim e176 battles 4 sacked 0 taken 0 exhaustion won-c3-ceded
+geo-seed-1-1024 war e808 5771-5781 c13 c1 rg10 claim e801 battles 3 sacked 1 taken 0 exhaustion truce
+geo-seed-1-1024 war e820 5778-5785 c5 c1 rg10 claim e819 battles 5 sacked 0 taken 0 exhaustion truce
+geo-seed-1-1024 war e835 5789-5821 c5 c11 rg9 claim e593 battles 7 sacked 1 taken 0 exhaustion truce
+geo-seed-1-1024 war e842 5795-5813 c4 c10 rg47 claim e676 battles 7 sacked 1 taken 1 goal-lost truce
+geo-seed-1-1024 war e850 5798-5812 c2 c10 rg47 claim e695 battles 3 sacked 0 taken 2 aim won-c2-ceded
+geo-seed-1-1024 war e851 5798-5810 c13 c8 rg12 claim e832 battles 1 sacked 0 taken 1 aim won-c13-tribute
+geo-seed-1-1024 war e854 5800-5816 c3 c6 rg16 claim e837 battles 6 sacked 0 taken 0 exhaustion truce
+geo-seed-1-1024 war e911 5828-5858 c3 c11 rg9 claim e849 battles 7 sacked 0 taken 1 conquest -
+geo-seed-1-1024 war e916 5831-5858 c11 c1 rg15 claim e915 battles 10 sacked 3 taken 0 conquest -
+geo-seed-1-1024 war e959 5856-5863 c13 c1 rg15 claim e930 battles 2 sacked 2 taken 0 exhaustion won-c13-ceded
+geo-seed-1-1024 war e976 5860-5863 c3 c5 rg9 claim e974 battles 1 sacked 0 taken 1 aim won-c3-tribute
+geo-seed-1-1024 war e991 5866-5880 c9 c10 rg39 claim e773 battles 6 sacked 1 taken 1 exhaustion won-c9-ceded
+geo-seed-1-1024 war e1018 5888-5910 c13 c8 rg20 claim e1006 battles 6 sacked 0 taken 0 exhaustion won-c13-tribute
+geo-seed-1-1024 war e1054 5929-5936 c13 c1 rg15 claim e1049 battles 2 sacked 2 taken 0 goal-lost won-c13
+geo-seed-1-1024 war e1106 5985-5994 c2 c4 rg51 claim e1094 battles 5 sacked 1 taken 1 exhaustion truce
+geo-seed-1-1024 r17 quick_aim_wins 0 foothold_cessions 1 held_goal_wars 0/0/1/0
+geo-seed-1-1024 r19 t11 7 first_orc_war 120 claims39 1/0/0 cessions40 0 goal_differs 0
+geo-seed-1-1024 r22 fresh 5/0 dropped 7 refuge_hidden 1 repeated_tolls 2 mixed_tolls 0
+geo-seed-1-1024 r22 open_claims e608,e642,e1040,e1075,e1085,e1096,e1103,e1105
+geo-seed-1-1024 r22 hidden_refuges s118
+geo-seed-1-1024 r21 renamings 8 9:5819:capital_sack:e903,12:5715:great_sack:e718,13:4965:capital_sack:e377,15:5859:capital_sack:e969,18:2102:ravage:e25,20:5184:heartland:e487,33:5716:capital_sack:e726,42:4510:conquest:e297
 geo-seed-1-1024 q150 0 e0
 geo-seed-1-1024 q175 0 e0
 geo-seed-1-1024 q200 0 e0
@@ -2862,18 +2870,18 @@ geo-seed-1-1024 q4853 957 e280
 geo-seed-1-1024 q4878 973 e280
 geo-seed-1-1024 q4903 989 e280
 geo-seed-1-1024 q5084 850 e361
-geo-seed-1-1024 q5109 1426 e454
+geo-seed-1-1024 q5109 1426 e457
 geo-seed-1-1024 q5184 1087 e361
-geo-seed-1-1024 q5259 1273 e453
-geo-seed-1-1024 q5334 417 e545
-geo-seed-1-1024 q5359 433 e545
-geo-seed-1-1024 q5384 478 e571
-geo-seed-1-1024 q5409 536 e571
-geo-seed-1-1024 q5434 597 e571
-geo-seed-1-1024 q5459 660 e571
-geo-seed-1-1024 q5484 725 e571
-geo-seed-1-1024 q5509 792 e571
-geo-seed-1-1024 q5534 862 e571
+geo-seed-1-1024 q5259 1273 e456
+geo-seed-1-1024 q5334 417 e538
+geo-seed-1-1024 q5359 433 e538
+geo-seed-1-1024 q5384 449 e538
+geo-seed-1-1024 q5409 465 e538
+geo-seed-1-1024 q5434 481 e538
+geo-seed-1-1024 q5459 497 e538
+geo-seed-1-1024 q5484 513 e538
+geo-seed-1-1024 q5509 529 e538
+geo-seed-1-1024 q5534 545 e538
 geo-seed-1-1024 note e70 The claim of the Skreegg Horde to the Grove of the Moon, held by the House of Glaefaenn, came to a head.
 geo-seed-1-1024 note e71 Claimed since 2183.
 geo-seed-1-1024 note e117 The claim of the Skreegg Horde to Douredge Woods, held by the House of Glaefaenn, came to a head.
@@ -2889,30 +2897,38 @@ geo-seed-1-1024 note e326 The claim of the Skreegg Horde to Boarfall Woods, held
 geo-seed-1-1024 note e327 Claimed since 4252.
 geo-seed-1-1024 note e363 Claimed since 4616.
 geo-seed-1-1024 note e384 Claimed since 4937. The third war between them.
-geo-seed-1-1024 note e455 The claim of the Warrens of Zeez to Boarfall Woods, held by the Lousstwo Court, came to a head.
-geo-seed-1-1024 note e456 Claimed since 5109.
-geo-seed-1-1024 note e488 The claim of the Skreegg Horde to Kaz's Fall, held by the Warrens of Zeez, came to a head.
-geo-seed-1-1024 note e489 Claimed since 4953. The third war between them.
-geo-seed-1-1024 note e526 The claim of the Skreegg Horde to Briarpike Tangle, held by the Lousstwo Court, came to a head.
-geo-seed-1-1024 note e527 Claimed since 5109. The second war between them.
-geo-seed-1-1024 note e528 Claimed since 5184.
-geo-seed-1-1024 note e616 Claimed since 5331.
-geo-seed-1-1024 note e689 Claimed since 5613.
-geo-seed-1-1024 note e702 Claimed since 5596.
-geo-seed-1-1024 note e727 Claimed since 5657. The fourth war between them.
-geo-seed-1-1024 note e734 Claimed since 5615.
-geo-seed-1-1024 note e746 Claimed since 5615.
-geo-seed-1-1024 note e780 Claimed since 5700.
-geo-seed-1-1024 note e798 Claimed since 5359.
-geo-seed-1-1024 note e842 Claimed since 5580.
-geo-seed-1-1024 note e851 Claimed since 5787.
-geo-seed-1-1024 note e868 Claimed since 5775. The second war between them.
-geo-seed-1-1024 note e928 Claimed since 5869. The third war between them.
-geo-seed-1-1024 note e950 Claimed since 5869. The second war between them.
-geo-seed-1-1024 note e982 Claimed since 5782.
-geo-seed-1-1024 note e983 Claimed since 5509.
-geo-seed-1-1024 note e1077 Claimed since 5953. The fourth war between them.
-geo-seed-1-1024 summary threshold 36 shown 216 ages 7,20,20,21,54,94
+geo-seed-1-1024 note e458 The claim of the Warrens of Zeez to Boarfall Woods, held by the Lousstwo Court, came to a head.
+geo-seed-1-1024 note e459 Claimed since 5109.
+geo-seed-1-1024 note e492 The claim of the Skreegg Horde to Kaz's Fall, held by the Warrens of Zeez, came to a head.
+geo-seed-1-1024 note e493 Claimed since 4953. The third war between them.
+geo-seed-1-1024 note e522 The claim of the Skreegg Horde to Briarpike Tangle, held by the Lousstwo Court, came to a head.
+geo-seed-1-1024 note e523 Claimed since 5109. The second war between them.
+geo-seed-1-1024 note e524 Claimed since 5184.
+geo-seed-1-1024 note e632 Claimed since 5434.
+geo-seed-1-1024 note e662 Claimed since 5613.
+geo-seed-1-1024 note e677 Claimed since 5596.
+geo-seed-1-1024 note e691 Claimed since 5184.
+geo-seed-1-1024 note e696 Claimed since 5615.
+geo-seed-1-1024 note e698 Claimed since 5509.
+geo-seed-1-1024 note e703 Claimed since 5580.
+geo-seed-1-1024 note e723 Claimed since 5657. The fourth war between them.
+geo-seed-1-1024 note e775 Claimed since 3816. The third war between them.
+geo-seed-1-1024 note e808 Claimed since 5766. The second war between them.
+geo-seed-1-1024 note e820 Claimed since 5221. The second war between them.
+geo-seed-1-1024 note e835 Claimed since 5534.
+geo-seed-1-1024 note e842 Claimed since 5700.
+geo-seed-1-1024 note e850 Claimed since 5710.
+geo-seed-1-1024 note e851 Claimed since 5787. The second war between them.
+geo-seed-1-1024 note e854 Claimed since 5791. The third war between them.
+geo-seed-1-1024 note e911 Claimed since 5798.
+geo-seed-1-1024 note e916 Claimed since 5459.
+geo-seed-1-1024 note e959 Claimed since 5842. The third war between them.
+geo-seed-1-1024 note e976 Claimed the same year. The fourth war between them.
+geo-seed-1-1024 note e991 Claimed since 5741.
+geo-seed-1-1024 note e1018 Claimed since 5877. The third war between them.
+geo-seed-1-1024 note e1054 Claimed since 5922. The fourth war between them.
+geo-seed-1-1024 note e1106 The claim, since 5972, was to Snink-Grozz Hole and Kut-Gnoz Hole in the Wintry Leas. The fifth war between them.
+geo-seed-1-1024 summary threshold 36 shown 242 ages 7,20,20,21,48,126
 geo-seed-1-1024 e4 For 1,921 years, from 150 to 2070, the land was quiet; one realm held it.
 geo-seed-1-1024 e6 Old Zug, a troll of the hills, made its lair in West Peaks.
 geo-seed-1-1024 e19 Old Zug fell upon Buskug; 25 died.
@@ -3108,364 +3124,442 @@ geo-seed-1-1024 e409 After the slaughter and the sack, the dead of Kaz's Fall ro
 geo-seed-1-1024 e410 Plague broke out in Gnudrig Pit and spread to two other settlements; 763 died in all.
 geo-seed-1-1024 e413 Plague broke out in Greerk and spread to one other settlement; 852 died in all.
 geo-seed-1-1024 e416 The Host of Sarcant fell upon Nifiell; 67 died.
-geo-seed-1-1024 e423 Plague broke out in Aeglaes and spread to one other settlement; 1,796 died in all.
-geo-seed-1-1024 e429 The Host of Sarcant fell upon Aethglen; 114 died.
-geo-seed-1-1024 e430 The Host of Sarcant fell upon Bix; 110 died.
-geo-seed-1-1024 e431 Plague broke out in Skub Pit and spread to four other settlements; 1,371 died in all.
-geo-seed-1-1024 e436 The Host of Sarcant fell upon Nifiell; 45 died.
-geo-seed-1-1024 e438 Plague broke out in Buskug and spread to one other settlement; 961 died in all.
-geo-seed-1-1024 e440 The Host of Sarcant fell upon Aethglen; 97 died.
-geo-seed-1-1024 e441 The Host of Sarcant fell upon Nifiell; 82 died.
-geo-seed-1-1024 e442 The House of Glaefaenn hunted down and slew the Host of Sarcant, a host of the restless dead, in Kaz's Fall.
-geo-seed-1-1024 e444 Plague broke out in Gnok-Skeex; 584 died.
-geo-seed-1-1024 e445 Plague broke out in Skub Pit and spread to two other settlements; 645 died in all.
-geo-seed-1-1024 e449 For 50 years, from 5084 to 5133, the land was quiet, and eight realms kept the peace.
-geo-seed-1-1024 e453 The Skreegg Horde laid claim to Briarpike Tangle, held by the Lousstwo Court.
-geo-seed-1-1024 e454 The Warrens of Zeez laid claim to Boarfall Woods, held by the Lousstwo Court.
-geo-seed-1-1024 e456 The Warrens of Zeez declared war on the Lousstwo Court over Boarfall Woods.
-geo-seed-1-1024 e457 Plague broke out in Aeglaes and spread to three other settlements; 910 died in all.
-geo-seed-1-1024 e461 The Warrens of Zeez defeated the Lousstwo Court in Boarfall Woods; 83 of the defeated and 26 of the victors fell.
-geo-seed-1-1024 e462 The Warrens of Zeez besieged Glietwie Glade of the Lousstwo Court; it held.
-geo-seed-1-1024 e463 The Lousstwo Court defeated the Warrens of Zeez in Boarfall Woods; 163 of the defeated and 27 of the victors fell.
-geo-seed-1-1024 e465 Plague broke out in Grix and spread to two other settlements; 1,169 died in all.
-geo-seed-1-1024 e468 The Warrens of Zeez defeated the Lousstwo Court in Kaz's Fall; 78 of the defeated and 24 of the victors fell.
-geo-seed-1-1024 e469 The Lousstwo Court defeated the Warrens of Zeez in Boarfall Woods; 187 of the defeated and 27 of the victors fell.
-geo-seed-1-1024 e471 Plague broke out in Sostha and spread to two other settlements; 1,155 died in all.
-geo-seed-1-1024 e474 The Lousstwo Court defeated the Warrens of Zeez in Kaz's Fall; 169 of the defeated and 19 of the victors fell.
-geo-seed-1-1024 e475 The Lousstwo Court besieged Skrukkreek of the Warrens of Zeez; it held.
-geo-seed-1-1024 e476 The Lousstwo Court prevailed over the Warrens of Zeez after 19 years of war.
-geo-seed-1-1024 e477 The Warrens of Zeez paid tribute to the Lousstwo Court; 868 were carried off.
-geo-seed-1-1024 e486 The Hodmal League laid claim to Larchstrand, held by the House of Glaefaenn.
-geo-seed-1-1024 e487 The Kingdom of Alid laid claim to Briarpike Tangle, held by the Lousstwo Court.
-geo-seed-1-1024 e489 The Skreegg Horde declared war on the Warrens of Zeez over Kaz's Fall.
-geo-seed-1-1024 e490 The Skreegg Horde defeated the Warrens of Zeez in Kaz's Fall; 209 of the defeated and 70 of the victors fell.
-geo-seed-1-1024 e491 The Skreegg Horde besieged Skrukkreek of the Warrens of Zeez; it fell.
-geo-seed-1-1024 e492 The Skreegg Horde sacked Skrukkreek of the Warrens of Zeez; 1,560 died and 3,642 fled.
-geo-seed-1-1024 e496 Plague broke out in Skuzz; 911 died.
-geo-seed-1-1024 e497 The Skreegg Horde defeated the Warrens of Zeez in Kaz's Fall; 164 of the defeated and 43 of the victors fell.
-geo-seed-1-1024 e498 The Skreegg Horde besieged Skuzz of the Warrens of Zeez; it held.
-geo-seed-1-1024 e499 The Skreegg Horde defeated the Warrens of Zeez in Kaz's Fall; 131 of the defeated and 37 of the victors fell.
-geo-seed-1-1024 e500 The Skreegg Horde besieged Skuzz of the Warrens of Zeez; it held.
-geo-seed-1-1024 e501 The Warrens of Zeez defeated the Skreegg Horde in Kaz's Fall; 326 of the defeated and 47 of the victors fell.
-geo-seed-1-1024 e504 The Skreegg Horde defeated the Warrens of Zeez in Starkden; 161 of the defeated and 52 of the victors fell.
-geo-seed-1-1024 e505 The Warrens of Zeez laid claim to Douredge Woods, held by the House of Glaefaenn.
-geo-seed-1-1024 e506 Plague broke out in Skakragg Hole and spread to two other settlements; 648 died in all.
-geo-seed-1-1024 e509 The Skreegg Horde defeated the Warrens of Zeez in Kaz's Fall; 165 of the defeated and 37 of the victors fell.
-geo-seed-1-1024 e510 The Skreegg Horde besieged Skuzz of the Warrens of Zeez; it held.
-geo-seed-1-1024 e511 The Warrens of Zeez sued the Skreegg Horde for peace after 17 years of war.
-geo-seed-1-1024 e512 The Warrens of Zeez paid tribute to the Skreegg Horde; 701 were carried off.
-geo-seed-1-1024 e513 Plague broke out in Nik Pit and spread to two other settlements; 1,218 died in all.
-geo-seed-1-1024 e517 Plague broke out in Hurk; 754 died.
-geo-seed-1-1024 e525 The Skrot Mob laid claim to the Brambled Weald, held by the Khirnhu Throne.
-geo-seed-1-1024 e527 The Skreegg Horde declared war on the Lousstwo Court over Briarpike Tangle.
-geo-seed-1-1024 e528 The Kingdom of Alid declared war on the Lousstwo Court over Briarpike Tangle.
-geo-seed-1-1024 e529 In Collier's Weald the wolves grew bold, and travellers from Taelousia went in fear; two died on the roads.
-geo-seed-1-1024 e532 The Kingdom of Alid searched Briarpike Tangle for the Lousstwo Court and found no one; the war ended after three years.
-geo-seed-1-1024 e533 The Skreegg Horde defeated the Lousstwo Court in Briarpike Tangle; 128 of the defeated and 31 of the victors fell.
-geo-seed-1-1024 e534 The Skreegg Horde besieged Vienwy of the Lousstwo Court; it fell.
-geo-seed-1-1024 e535 The Skreegg Horde sacked Vienwy of the Lousstwo Court; 93 died and 217 fled.
-geo-seed-1-1024 e536 The Skreegg Horde prevailed over the Lousstwo Court after four years of war.
-geo-seed-1-1024 e537 The Lousstwo Court ceded Collier's Weald to the Skreegg Horde.
-geo-seed-1-1024 e545 The Skrot Mob laid claim to Boarfall Woods, held by the Lousstwo Court.
-geo-seed-1-1024 e554 Plague broke out in Backham; 2,244 died.
-geo-seed-1-1024 e558 Plague broke out in Thaili Hold and spread to one other settlement; 692 died in all.
-geo-seed-1-1024 e562 The Gub Horde laid claim to South Fells, held by the Khirnhu Throne.
-geo-seed-1-1024 e566 In the Weald of Floods the giant spiders grew bold, and travellers from Kigg Hole went in fear; one died on the roads.
-geo-seed-1-1024 e568 Plague broke out in Gaggkot Pit and spread to two other settlements; 506 died in all.
-geo-seed-1-1024 e571 The Slizz Mob laid claim to Boarfall Woods, held by the Lousstwo Court.
-geo-seed-1-1024 e577 For 246 years, from 5334 to 5579, the land was quiet, and 11 realms kept the peace.
-geo-seed-1-1024 e582 The Skrot Mob laid claim to the Wintry Leas, held by the Gub Horde.
-geo-seed-1-1024 e599 The Slizz Mob laid claim to Douredge Woods, held by the House of Glaefaenn.
-geo-seed-1-1024 e600 The Slizz Mob laid claim to Fernhurst, held by the Kingdom of Alid.
-geo-seed-1-1024 e603 The Skreegg Horde laid claim to Fernhurst, held by the Kingdom of Alid.
-geo-seed-1-1024 e607 The Skrot Mob laid claim to Chillhorn Wood, held by the Bugnob Horde.
-geo-seed-1-1024 e608 The Bugnob Horde laid claim to Boarfall Woods, held by the Lousstwo Court.
-geo-seed-1-1024 e609 The Bugnob Horde laid claim to Fernhurst, held by the Kingdom of Alid.
-geo-seed-1-1024 e615 The Warband of Daak laid claim to the Woods of Ashes, held by the Hodmal League.
-geo-seed-1-1024 e616 The Slizz Mob declared war on the Lousstwo Court over Boarfall Woods.
-geo-seed-1-1024 e617 Plague broke out in Iennrer and spread to three other settlements; 1,098 died in all.
-geo-seed-1-1024 e622 The Slizz Mob laid claim to Thief's Plain, held by the Skreegg Horde.
-geo-seed-1-1024 e624 The Lousstwo Court raised Faetee Watch in Boarfall Woods against the Slizz Mob.
-geo-seed-1-1024 e626 The Slizz Mob raised Slank-Nirk Stockade in Bellgrove against the Lousstwo Court.
-geo-seed-1-1024 e627 Plague broke out in Geezink; 329 died.
-geo-seed-1-1024 e628 The Slizz Mob searched Boarfall Woods for the Lousstwo Court and found no one; the war ended after seven years.
-geo-seed-1-1024 e631 The Skrot Mob laid claim to Douredge Woods, held by the House of Glaefaenn.
-geo-seed-1-1024 e636 The Warband of Daak laid claim to Zug's Shadow, held by the House of Glaefaenn.
-geo-seed-1-1024 e637 The Skrot Mob laid claim to Fernhurst, held by the Kingdom of Alid.
-geo-seed-1-1024 e638 Plague broke out in Iatha; 217 died.
-geo-seed-1-1024 e641 Plague broke out in Elomaell and spread to four other settlements; 1,099 died in all.
-geo-seed-1-1024 e646 Plague broke out in Skuskrix Hole and spread to two other settlements; 863 died in all.
-geo-seed-1-1024 e653 The Kingdom of Alid laid claim to Teaselgill Sward, held by the Skreegg Horde.
-geo-seed-1-1024 e654 The Kingdom of Alid laid claim to Collier's Weald, held by the Slizz Mob.
-geo-seed-1-1024 e655 The Kingdom of Alid laid claim to Chillhorn Wood, held by the Bugnob Horde.
-geo-seed-1-1024 e656 The Warrens of Zeez laid claim to Thief's Plain, held by the Skreegg Horde.
-geo-seed-1-1024 e660 The Warrens of Zeez laid claim to Collier's Weald, held by the Slizz Mob.
-geo-seed-1-1024 e662 Plague broke out in Iennrer and spread to one other settlement; 228 died in all.
-geo-seed-1-1024 e664 Plague broke out in Ashuntham; 644 died.
-geo-seed-1-1024 e667 The Warrens of Zeez laid claim to Fernhurst, held by the Kingdom of Alid.
-geo-seed-1-1024 e669 Plague broke out in Asholdstead; 4,012 died.
-geo-seed-1-1024 e670 After the plague, Fernhurst became known as the Silent Wood.
-geo-seed-1-1024 e671 Plague broke out in Ashirstead and spread to one other settlement; 1,957 died in all.
-geo-seed-1-1024 e673 The Bugnob Horde laid claim to the Leas of Chains, held by the Skrot Mob.
-geo-seed-1-1024 e674 Plague broke out in Skrogg-Kob Pit; 215 died.
-geo-seed-1-1024 e675 The Khirnhu Throne laid claim to the Wintry Leas, held by the Gub Horde.
-geo-seed-1-1024 e680 Plague broke out in Backham and spread to one other settlement; 2,689 died in all.
-geo-seed-1-1024 e683 The Bugnob Horde laid claim to Douredge Woods, held by the House of Glaefaenn.
-geo-seed-1-1024 e684 Plague broke out in Tiewia and spread to two other settlements; 1,103 died in all.
-geo-seed-1-1024 e689 The Kingdom of Alid declared war on the Skreegg Horde over Teaselgill Sward.
-geo-seed-1-1024 e691 Plague broke out in Skrogg-Kob Pit and spread to one other settlement; 447 died in all.
-geo-seed-1-1024 e694 Plague broke out in Skruz and spread to one other settlement; 611 died in all.
-geo-seed-1-1024 e696 The Skreegg Horde defeated the Kingdom of Alid in Teaselgill Sward; 799 of the defeated and 130 of the victors fell.
-geo-seed-1-1024 e697 Plague broke out in Edodstead and spread to one other settlement; 1,238 died in all.
-geo-seed-1-1024 e699 The Kingdom of Alid defeated the Skreegg Horde in the Silent Wood; 454 of the defeated and 156 of the victors fell.
-geo-seed-1-1024 e700 The Skreegg Horde defeated the Kingdom of Alid in Teaselgill Sward; 1,078 of the defeated and 168 of the victors fell.
-geo-seed-1-1024 e701 The Khirnhu Throne laid claim to Witch's Barrow, held by the Skrot Mob.
-geo-seed-1-1024 e702 The Warband of Daak declared war on the House of Glaefaenn over Zug's Shadow.
-geo-seed-1-1024 e703 The Kingdom of Alid defeated the Skreegg Horde in the Silent Wood; 383 of the defeated and 166 of the victors fell.
-geo-seed-1-1024 e704 The Kingdom of Alid defeated the Skreegg Horde in Teaselgill Sward; 480 of the defeated and 122 of the victors fell.
-geo-seed-1-1024 e705 The Kingdom of Alid besieged Drax-Snagg Pit of the Skreegg Horde; it fell.
-geo-seed-1-1024 e706 The Kingdom of Alid sacked Drax-Snagg Pit of the Skreegg Horde; 356 died and 833 fled.
-geo-seed-1-1024 e707 The Kingdom of Alid raised Widedock Tower in the Silent Wood against the Skreegg Horde.
-geo-seed-1-1024 e709 The Warband of Daak defeated the House of Glaefaenn in Zug's Shadow; 1,342 of the defeated and 250 of the victors fell.
-geo-seed-1-1024 e710 The Warband of Daak besieged Aeglaes of the House of Glaefaenn; it held.
-geo-seed-1-1024 e712 The House of Glaefaenn defeated the Warband of Daak in Zug's Shadow; 788 of the defeated and 260 of the victors fell.
-geo-seed-1-1024 e714 The Gub Horde laid claim to Witch's Barrow, held by the Skrot Mob.
-geo-seed-1-1024 e715 The Kingdom of Alid defeated the Skreegg Horde in Teaselgill Sward; 384 of the defeated and 145 of the victors fell.
-geo-seed-1-1024 e716 The Kingdom of Alid besieged Zeegneeg Pit of the Skreegg Horde; it fell.
-geo-seed-1-1024 e717 The Kingdom of Alid sacked Zeegneeg Pit of the Skreegg Horde; 520 died and 1,216 fled.
-geo-seed-1-1024 e718 The House of Glaefaenn defeated the Warband of Daak in the Bleached Leas; 707 of the defeated and 258 of the victors fell.
-geo-seed-1-1024 e719 The House of Glaefaenn besieged Grarz Fort of the Warband of Daak; it held.
-geo-seed-1-1024 e721 The Warband of Daak defeated the House of Glaefaenn in the Bleached Leas; 1,117 of the defeated and 207 of the victors fell.
-geo-seed-1-1024 e722 The House of Glaefaenn sued the Warband of Daak for peace after 11 years of war.
-geo-seed-1-1024 e723 The House of Glaefaenn ceded Zug's Shadow to the Warband of Daak.
-geo-seed-1-1024 e726 The Lousstwo Court laid claim to Thief's Plain, held by the Skreegg Horde.
-geo-seed-1-1024 e727 The Khirnhu Throne declared war on the Gub Horde over the Wintry Leas.
-geo-seed-1-1024 e728 The Skreegg Horde defeated the Kingdom of Alid in Teaselgill Sward; 1,043 of the defeated and 119 of the victors fell.
-geo-seed-1-1024 e729 The Skreegg Horde and the Kingdom of Alid made peace after 32 years of war, neither the victor.
-geo-seed-1-1024 e731 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 568 of the defeated and 171 of the victors fell.
-geo-seed-1-1024 e732 The Khirnhu Throne besieged Slok of the Gub Horde; it fell.
-geo-seed-1-1024 e733 The Khirnhu Throne sacked Slok of the Gub Horde; 542 died and 1,266 fled.
-geo-seed-1-1024 e734 The Kingdom of Alid declared war on the Slizz Mob over Collier's Weald.
-geo-seed-1-1024 e735 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 543 of the defeated and 155 of the victors fell.
-geo-seed-1-1024 e736 The Khirnhu Throne besieged Kut-Gnoz Hole of the Gub Horde; it fell.
-geo-seed-1-1024 e737 The Khirnhu Throne sacked Kut-Gnoz Hole of the Gub Horde; 854 died and 1,994 fled.
-geo-seed-1-1024 e738 The Kingdom of Alid defeated the Slizz Mob in Collier's Weald; 474 of the defeated and 189 of the victors fell.
-geo-seed-1-1024 e739 The Kingdom of Alid besieged Taelousia of the Slizz Mob; it fell.
-geo-seed-1-1024 e740 The Kingdom of Alid sacked Taelousia of the Slizz Mob; 2,284 died and 5,332 fled.
-geo-seed-1-1024 e741 The Kingdom of Alid prevailed over the Slizz Mob after one year of war.
-geo-seed-1-1024 e742 The Slizz Mob ceded Bellgrove to the Kingdom of Alid.
-geo-seed-1-1024 e743 The Slizz Mob abandoned Slank-Nirk Stockade, the land being lost.
-geo-seed-1-1024 e745 Plague broke out in Asholdstead; 2,975 died.
-geo-seed-1-1024 e746 The Kingdom of Alid declared war on the Bugnob Horde over Chillhorn Wood.
-geo-seed-1-1024 e747 The Gub Horde defeated the Khirnhu Throne in the Wintry Leas; 891 of the defeated and 135 of the victors fell.
-geo-seed-1-1024 e749 The Khirnhu Throne defeated the Gub Horde in South Fells; 456 of the defeated and 156 of the victors fell.
-geo-seed-1-1024 e750 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 133 of the defeated and 47 of the victors fell.
-geo-seed-1-1024 e751 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it held.
-geo-seed-1-1024 e753 Plague broke out in Grarz Fort; 1,300 died.
-geo-seed-1-1024 e754 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 393 of the defeated and 169 of the victors fell.
-geo-seed-1-1024 e755 The Khirnhu Throne besieged Snink-Grozz Hole of the Gub Horde; it held.
-geo-seed-1-1024 e757 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 395 of the defeated and 154 of the victors fell.
-geo-seed-1-1024 e758 The Khirnhu Throne besieged Snink-Grozz Hole of the Gub Horde; it fell.
-geo-seed-1-1024 e759 The Khirnhu Throne sacked Snink-Grozz Hole of the Gub Horde; 545 died and 1,272 fled.
-geo-seed-1-1024 e760 The Gub Horde sued the Khirnhu Throne for peace after 16 years of war.
-geo-seed-1-1024 e761 The Gub Horde ceded the Wintry Leas to the Khirnhu Throne.
-geo-seed-1-1024 e763 Plague broke out in Ashirstead and spread to two other settlements; 1,936 died in all.
-geo-seed-1-1024 e766 Plague broke out in Kraakh; 112 died.
-geo-seed-1-1024 e770 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 147 of the defeated and 53 of the victors fell.
-geo-seed-1-1024 e771 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it held.
-geo-seed-1-1024 e774 Plague broke out in Krak and spread to one other settlement; 360 died in all.
-geo-seed-1-1024 e777 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 168 of the defeated and 49 of the victors fell.
-geo-seed-1-1024 e778 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it held.
-geo-seed-1-1024 e779 After the slaughter and the sack, the dead of Teaselgill Sward rose as the Restless of Stead.
-geo-seed-1-1024 e780 The Khirnhu Throne declared war on the Skrot Mob over Witch's Barrow.
-geo-seed-1-1024 e781 The Bugnob Horde let the claim against the Lousstwo Court over Boarfall Woods lapse.
-geo-seed-1-1024 e782 The Restless of Stead fell upon Skreex Pit; 112 died.
-geo-seed-1-1024 e783 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 124 of the defeated and 51 of the victors fell.
-geo-seed-1-1024 e784 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it fell.
-geo-seed-1-1024 e785 The Kingdom of Alid sacked Skeenk of the Bugnob Horde; 1,091 died and 2,548 fled.
-geo-seed-1-1024 e788 The Skrot Mob let the claim against the Lousstwo Court over Boarfall Woods lapse.
-geo-seed-1-1024 e789 Plague broke out in Krog Pit and spread to two other settlements; 734 died in all.
-geo-seed-1-1024 e792 The Khirnhu Throne defeated the Skrot Mob in Witch's Barrow; 559 of the defeated and 136 of the victors fell.
-geo-seed-1-1024 e793 The Khirnhu Throne besieged Gnink of the Skrot Mob; it fell.
-geo-seed-1-1024 e794 The Khirnhu Throne took Gnink from the Skrot Mob; 480 died.
-geo-seed-1-1024 e795 The Khirnhu Throne prevailed over the Skrot Mob after two years of war.
-geo-seed-1-1024 e796 The Skrot Mob ceded Central Downs to the Khirnhu Throne.
-geo-seed-1-1024 e797 The Skrot Mob laid claim to the Darkening Plain, held by the Gub Horde.
-geo-seed-1-1024 e798 The Skrot Mob declared war on the Gub Horde over the Darkening Plain.
-geo-seed-1-1024 e799 The Hodmal League laid claim to Zug's Shadow, held by the Warband of Daak.
-geo-seed-1-1024 e800 The Skrot Mob defeated the Gub Horde in the Darkening Plain; 361 of the defeated and 81 of the victors fell.
-geo-seed-1-1024 e801 The Skrot Mob besieged Skrutch Pit of the Gub Horde; it held.
-geo-seed-1-1024 e803 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 112 of the defeated and 34 of the victors fell.
-geo-seed-1-1024 e804 The Kingdom of Alid besieged Gnuzuz Pit of the Bugnob Horde; it held.
-geo-seed-1-1024 e805 The Bugnob Horde sued the Kingdom of Alid for peace after 20 years of war.
-geo-seed-1-1024 e806 The Bugnob Horde paid tribute to the Kingdom of Alid; 610 were carried off.
-geo-seed-1-1024 e807 The Gub Horde defeated the Skrot Mob in the Darkening Plain; 274 of the defeated and 106 of the victors fell.
-geo-seed-1-1024 e810 The Gub Horde defeated the Skrot Mob in the Grave of Sawy; 360 of the defeated and 109 of the victors fell.
-geo-seed-1-1024 e811 The Gub Horde besieged Tiewia of the Skrot Mob; it held.
-geo-seed-1-1024 e813 The Skrot Mob defeated the Gub Horde in the Grave of Sawy; 337 of the defeated and 101 of the victors fell.
-geo-seed-1-1024 e816 The Skrot Mob defeated the Gub Horde in the Darkening Plain; 388 of the defeated and 109 of the victors fell.
-geo-seed-1-1024 e817 The Skrot Mob besieged Skrutch Pit of the Gub Horde; it held.
-geo-seed-1-1024 e818 Plague broke out in Grix; 291 died.
-geo-seed-1-1024 e819 The Skrot Mob defeated the Gub Horde in the Darkening Plain; 313 of the defeated and 82 of the victors fell.
-geo-seed-1-1024 e820 The Skrot Mob besieged Skrutch Pit of the Gub Horde; it held.
-geo-seed-1-1024 e821 The Gub Horde sued the Skrot Mob for peace after 12 years of war.
-geo-seed-1-1024 e822 The Gub Horde paid tribute to the Skrot Mob; 1,717 were carried off.
-geo-seed-1-1024 e825 Plague broke out in Skork Pit and spread to one other settlement; 604 died in all.
-geo-seed-1-1024 e827 The Restless of Stead fell upon Kuskreeb Pit; 105 died.
-geo-seed-1-1024 e831 Plague broke out in Gneek Pit; 263 died.
-geo-seed-1-1024 e833 The Restless of Stead fell upon Drobkrit Hole; 131 died.
-geo-seed-1-1024 e837 Plague broke out in Backham; 1,008 died.
-geo-seed-1-1024 e838 The Restless of Stead fell upon Snitbux; 143 died.
-geo-seed-1-1024 e839 The Restless of Stead drove the people from Snitbux and made it its lair; 1,163 escaped.
-geo-seed-1-1024 e840 After the ravage, Central Downs became known as the Forsaken Downs.
-geo-seed-1-1024 e841 The Warband of Daak laid claim to Larchstrand, held by the House of Glaefaenn.
-geo-seed-1-1024 e842 The Warband of Daak declared war on the Hodmal League over the Woods of Ashes.
-geo-seed-1-1024 e843 The Kingdom of Alid laid claim to the Leas of Chains, held by the Skrot Mob.
-geo-seed-1-1024 e844 The Warband of Daak raised Maash Stockade in Zug's Shadow against the Hodmal League.
-geo-seed-1-1024 e847 The Skreegg Horde laid claim to Briarpike Tangle, held by the Lousstwo Court.
-geo-seed-1-1024 e848 The Kingdom of Alid laid claim to Briarpike Tangle, held by the Lousstwo Court.
-geo-seed-1-1024 e849 The Bugnob Horde laid claim to Briarpike Tangle, held by the Lousstwo Court.
-geo-seed-1-1024 e850 The Restless of Stead fell upon Geet; 30 died.
-geo-seed-1-1024 e851 The Bugnob Horde declared war on the Lousstwo Court over Briarpike Tangle.
-geo-seed-1-1024 e853 The Warband of Daak defeated the Hodmal League in the Woods of Ashes; 761 of the defeated and 213 of the victors fell.
-geo-seed-1-1024 e854 The Warband of Daak besieged Wantwick of the Hodmal League; it held.
-geo-seed-1-1024 e855 The Bugnob Horde searched Briarpike Tangle for the Lousstwo Court and found no one; the war ended after three years.
-geo-seed-1-1024 e857 The Restless of Stead fell upon Skork Pit; 69 died.
-geo-seed-1-1024 e858 The Warband of Daak defeated the Hodmal League in the Woods of Ashes; 734 of the defeated and 196 of the victors fell.
-geo-seed-1-1024 e859 The Warband of Daak besieged Wantwick of the Hodmal League; it fell.
-geo-seed-1-1024 e860 The Warband of Daak sacked Wantwick of the Hodmal League; 5,061 died and 11,812 fled.
-geo-seed-1-1024 e861 The Warband of Daak prevailed over the Hodmal League after 16 years of war.
-geo-seed-1-1024 e862 The Hodmal League paid tribute to the Warband of Daak; 3,004 were carried off.
-geo-seed-1-1024 e863 After the sack, the Woods of Ashes became known as the Burnt Wood.
-geo-seed-1-1024 e865 The Skreegg Horde laid claim to Ferrybrake, held by the Slizz Mob.
-geo-seed-1-1024 e866 Plague broke out in Zeerkkrib Hole and spread to one other settlement; 301 died in all.
-geo-seed-1-1024 e868 The Warband of Daak declared war on the House of Glaefaenn over Larchstrand.
-geo-seed-1-1024 e869 Plague broke out in Skrutch Pit; 1,156 died.
-geo-seed-1-1024 e870 The House of Glaefaenn raised the Spire of Isithas in the Torn Hurst against the Warband of Daak.
-geo-seed-1-1024 e872 Plague broke out in Edodstead; 2,007 died.
-geo-seed-1-1024 e873 The House of Glaefaenn defeated the Warband of Daak in Larchstrand; 1,372 of the defeated and 254 of the victors fell.
-geo-seed-1-1024 e875 The Warband of Daak defeated the House of Glaefaenn in Zug's Shadow; 843 of the defeated and 249 of the victors fell.
-geo-seed-1-1024 e877 The Restless of Stead fell upon Greerk; 155 died.
-geo-seed-1-1024 e878 The House of Glaefaenn defeated the Warband of Daak in Larchstrand; 1,196 of the defeated and 279 of the victors fell.
-geo-seed-1-1024 e881 The Warband of Daak defeated the House of Glaefaenn in Zug's Shadow; 847 of the defeated and 284 of the victors fell.
-geo-seed-1-1024 e882 The House of Glaefaenn and the Warband of Daak made peace after seven years of war, neither the victor.
-geo-seed-1-1024 e886 Plague broke out in Ermoll and spread to one other settlement; 328 died in all.
-geo-seed-1-1024 e889 The Kingdom of Alid let the claim against the Lousstwo Court over Briarpike Tangle lapse.
-geo-seed-1-1024 e890 The Khirnhu Throne hunted down and slew the Restless of Stead, a host of the restless dead, in the Forsaken Downs.
-geo-seed-1-1024 e891 The Bugnob Horde laid claim to the Forsaken Downs, held by the Khirnhu Throne.
-geo-seed-1-1024 e893 The Skreegg Horde laid claim to the Forsaken Downs, held by the Khirnhu Throne.
-geo-seed-1-1024 e894 After the slaughter and the sack, the dead of the Wintry Leas rose as the Host of Alen.
-geo-seed-1-1024 e896 Plague broke out in Kuskreeb Pit; 315 died.
-geo-seed-1-1024 e905 Plague broke out in Wealdrumford and spread to one other settlement; 1,348 died in all.
-geo-seed-1-1024 e907 Plague broke out in Gnink; 1,343 died.
-geo-seed-1-1024 e908 The Host of Alen fell upon Gnink; 200 died.
-geo-seed-1-1024 e911 The Host of Alen fell upon Skakragg Hole; 69 died.
-geo-seed-1-1024 e912 The Host of Alen drove the people from Skakragg Hole and made it its lair; 759 escaped.
-geo-seed-1-1024 e915 Plague broke out in Greerk and spread to two other settlements; 800 died in all.
-geo-seed-1-1024 e918 The Warband of Daak laid claim to Larchstrand, held by the House of Glaefaenn.
-geo-seed-1-1024 e919 The Warband of Daak laid claim to the Burnt Wood, held by the Hodmal League.
-geo-seed-1-1024 e921 The Host of Alen fell upon Druzz; 100 died.
-geo-seed-1-1024 e928 The Warband of Daak declared war on the House of Glaefaenn over Larchstrand.
-geo-seed-1-1024 e929 After the slaughter and the sack, the dead of the Burnt Wood rose as the Host of Deard.
-geo-seed-1-1024 e931 Plague broke out in Asheackham; 390 died.
-geo-seed-1-1024 e932 The Host of Deard fell upon Uraash; 112 died.
-geo-seed-1-1024 e933 The House of Glaefaenn defeated the Warband of Daak in Larchstrand; 1,972 of the defeated and 229 of the victors fell.
-geo-seed-1-1024 e934 After the slaughter, Larchstrand became known as the Weeping Wood.
-geo-seed-1-1024 e935 Plague broke out in Virole; 366 died.
-geo-seed-1-1024 e937 The Host of Alen fell upon Druzz; 42 died.
-geo-seed-1-1024 e938 The House of Glaefaenn defeated the Warband of Daak in Zug's Shadow; 1,665 of the defeated and 299 of the victors fell.
-geo-seed-1-1024 e939 The House of Glaefaenn besieged Aeglaes of the Warband of Daak; it fell.
-geo-seed-1-1024 e940 The House of Glaefaenn sacked Aeglaes of the Warband of Daak; 341 died and 798 fled.
-geo-seed-1-1024 e943 The Warband of Daak defeated the House of Glaefaenn in Zug's Shadow; 806 of the defeated and 313 of the victors fell.
-geo-seed-1-1024 e946 The Warband of Daak defeated the House of Glaefaenn in the Weeping Wood; 831 of the defeated and 272 of the victors fell.
-geo-seed-1-1024 e947 The Warband of Daak besieged Vasitha of the House of Glaefaenn; it held.
-geo-seed-1-1024 e948 The House of Glaefaenn and the Warband of Daak made peace after 10 years of war, neither the victor.
-geo-seed-1-1024 e949 Plague broke out in Iatha; 197 died.
-geo-seed-1-1024 e950 The Warband of Daak declared war on the Hodmal League over the Burnt Wood.
-geo-seed-1-1024 e951 The Hodmal League raised Edar Watch in the Burnt Wood against the Warband of Daak.
-geo-seed-1-1024 e954 The Host of Deard fell upon Uraash; 50 died.
-geo-seed-1-1024 e956 The Warband of Daak defeated the Hodmal League in the Burnt Wood; 559 of the defeated and 171 of the victors fell.
-geo-seed-1-1024 e957 The Warband of Daak besieged Ashanthurford of the Hodmal League; it held.
-geo-seed-1-1024 e960 The Hodmal League defeated the Warband of Daak in the Burnt Wood; 1,032 of the defeated and 135 of the victors fell.
-geo-seed-1-1024 e961 The Host of Deard fell upon Vasitha; 43 died.
-geo-seed-1-1024 e962 The Hodmal League raised Wembir Watch in Reekdown against the Warband of Daak.
-geo-seed-1-1024 e964 The Warrens of Zurkdriz laid claim to the Wintry Leas, held by the Khirnhu Throne.
-geo-seed-1-1024 e965 The Warband of Daak raised Gruld Stockade in the Bleached Leas against the Hodmal League.
-geo-seed-1-1024 e966 The Host of Deard fell upon Ghuum Camp; 80 died.
-geo-seed-1-1024 e967 The Warband of Daak defeated the Hodmal League in Zug's Shadow; 383 of the defeated and 134 of the victors fell.
-geo-seed-1-1024 e968 The Warband of Daak defeated the Hodmal League in the Burnt Wood; 452 of the defeated and 141 of the victors fell.
-geo-seed-1-1024 e969 The Warband of Daak besieged Ashanthurford of the Hodmal League; it fell.
-geo-seed-1-1024 e970 The Warband of Daak sacked Ashanthurford of the Hodmal League; 457 died and 1,067 fled.
-geo-seed-1-1024 e971 The Warband of Daak prevailed over the Hodmal League after nine years of war.
-geo-seed-1-1024 e972 The Hodmal League paid tribute to the Warband of Daak; 1,881 were carried off.
-geo-seed-1-1024 e973 The Hodmal League abandoned Edar Watch, the land being lost.
-geo-seed-1-1024 e975 Plague broke out in Tarngrou Hold; 285 died.
-geo-seed-1-1024 e978 Plague broke out in Uraash; 102 died.
-geo-seed-1-1024 e980 The Host of Deard fell upon Ghuum Camp; 30 died.
-geo-seed-1-1024 e982 The Kingdom of Alid declared war on the Skrot Mob over the Leas of Chains.
-geo-seed-1-1024 e983 The Skrot Mob declared war on the Bugnob Horde over Chillhorn Wood.
-geo-seed-1-1024 e984 The Bugnob Horde raised Skreek Stockade in Chillhorn Wood against the Skrot Mob.
-geo-seed-1-1024 e988 The Skrot Mob defeated the Kingdom of Alid in the Leas of Chains; 311 of the defeated and 47 of the victors fell.
-geo-seed-1-1024 e989 The Lousstwo Court abandoned Faetee Watch, the frontier having fallen quiet.
-geo-seed-1-1024 e990 The Bugnob Horde defeated the Skrot Mob in Chillhorn Wood; 158 of the defeated and 54 of the victors fell.
-geo-seed-1-1024 e991 The Kingdom of Alid defeated the Skrot Mob in the Silent Wood; 160 of the defeated and 46 of the victors fell.
-geo-seed-1-1024 e992 The Skrot Mob defeated the Bugnob Horde in the Leas of Chains; 143 of the defeated and 55 of the victors fell.
-geo-seed-1-1024 e993 The Kingdom of Alid defeated the Skrot Mob in the Leas of Chains; 156 of the defeated and 44 of the victors fell.
-geo-seed-1-1024 e994 The Kingdom of Alid besieged Gnitch-Zork of the Skrot Mob; it fell.
-geo-seed-1-1024 e995 The Kingdom of Alid took Gnitch-Zork from the Skrot Mob; 81 died.
-geo-seed-1-1024 e996 Plague broke out in Skub Pit and spread to two other settlements; 684 died in all.
-geo-seed-1-1024 e999 The Skrot Mob raised Bozz Stockade in the Leas of Chains against the Bugnob Horde.
-geo-seed-1-1024 e1000 The Kingdom of Alid defeated the Skrot Mob in the Leas of Chains; 130 of the defeated and 42 of the victors fell.
-geo-seed-1-1024 e1001 The Kingdom of Alid besieged Gnax-Greenk Hole of the Skrot Mob; it fell.
-geo-seed-1-1024 e1002 The Kingdom of Alid sacked Gnax-Greenk Hole of the Skrot Mob; 243 died and 570 fled.
-geo-seed-1-1024 e1003 The Bugnob Horde defeated the Skrot Mob in Chillhorn Wood; 123 of the defeated and 44 of the victors fell.
-geo-seed-1-1024 e1005 Plague broke out in Grix and spread to two other settlements; 843 died in all.
-geo-seed-1-1024 e1008 The Bugnob Horde defeated the Skrot Mob in the Leas of Chains; 162 of the defeated and 50 of the victors fell.
-geo-seed-1-1024 e1009 The Bugnob Horde besieged Drig-Skib of the Skrot Mob; it held.
-geo-seed-1-1024 e1010 The Kingdom of Alid defeated the Skrot Mob in the Leas of Chains; 151 of the defeated and 51 of the victors fell.
-geo-seed-1-1024 e1011 The Kingdom of Alid besieged Drig-Skib of the Skrot Mob; it fell.
-geo-seed-1-1024 e1012 The Kingdom of Alid sacked Drig-Skib of the Skrot Mob; 378 died and 882 fled.
-geo-seed-1-1024 e1015 The Skrot Mob defeated the Bugnob Horde in the Leas of Chains; 152 of the defeated and 45 of the victors fell.
-geo-seed-1-1024 e1016 The Skrot Mob defeated the Bugnob Horde in Chillhorn Wood; 127 of the defeated and 49 of the victors fell.
-geo-seed-1-1024 e1017 The Skrot Mob besieged Gnuzuz Pit of the Bugnob Horde; it held.
-geo-seed-1-1024 e1018 The Bugnob Horde defeated the Skrot Mob in Chillhorn Wood; 131 of the defeated and 43 of the victors fell.
-geo-seed-1-1024 e1019 The Bugnob Horde prevailed over the Skrot Mob after 19 years of war.
-geo-seed-1-1024 e1020 The Skrot Mob ceded the Leas of Chains to the Bugnob Horde.
-geo-seed-1-1024 e1021 The Skrot Mob abandoned Bozz Stockade, the land being lost.
-geo-seed-1-1024 e1022 The Kingdom of Alid prevailed over the Skrot Mob after 24 years of war.
-geo-seed-1-1024 e1023 The Skrot Mob paid tribute to the Kingdom of Alid; 1,211 were carried off.
-geo-seed-1-1024 e1024 The Bugnob Horde laid claim to Teaselgill Sward, held by the Skreegg Horde.
-geo-seed-1-1024 e1025 The Host of Alen fell upon Druzz; 84 died.
-geo-seed-1-1024 e1027 After the rise of a realm's seat, the Wood of Silence became known as the Heart of Brod.
-geo-seed-1-1024 e1028 The Kingdom of Alid abandoned Widedock Tower, the frontier having fallen quiet.
-geo-seed-1-1024 e1031 Plague broke out in Uraash; 125 died.
-geo-seed-1-1024 e1033 The Warrens of Zurkdriz laid claim to Knight's Sward, held by the Gub Horde.
-geo-seed-1-1024 e1034 The Host of Deard fell upon Aevinndell; 124 died.
-geo-seed-1-1024 e1035 The Warband of Daak laid claim to the Weeping Wood, held by the House of Glaefaenn.
-geo-seed-1-1024 e1036 The Host of Alen fell upon Grix; 124 died.
-geo-seed-1-1024 e1037 The Host of Alen fell upon Grix; 133 died.
-geo-seed-1-1024 e1039 The House of Glaefaenn laid claim to Thief's Plain, held by the Skreegg Horde.
-geo-seed-1-1024 e1040 The Host of Alen fell upon Borksluzz; 30 died.
-geo-seed-1-1024 e1041 Plague broke out in Alurstead; 223 died.
-geo-seed-1-1024 e1042 The Skreegg Horde laid claim to the Silent Wood, held by the Kingdom of Alid.
-geo-seed-1-1024 e1043 Plague broke out in Skreex Pit; 361 died.
-geo-seed-1-1024 e1044 The Host of Deard sank into sleep in Deard's Howe.
-geo-seed-1-1024 e1047 The Gub Horde laid claim to the Wintry Leas, held by the Khirnhu Throne.
-geo-seed-1-1024 e1050 The Host of Deard woke again in the Burnt Wood.
-geo-seed-1-1024 e1052 The Warband of Daak laid claim to Reekdown, held by the Hodmal League.
-geo-seed-1-1024 e1054 Plague broke out in Kraakh and spread to one other settlement; 424 died in all.
-geo-seed-1-1024 e1056 The Skrot Mob laid claim to the Forsaken Downs, held by the Khirnhu Throne.
-geo-seed-1-1024 e1057 The Host of Alen sank into sleep in the Barrows of Alen.
-geo-seed-1-1024 e1058 Plague broke out in Alantbury and spread to one other settlement; 1,805 died in all.
-geo-seed-1-1024 e1060 The House of Glaefaenn drove the Host of Deard back to its lair in the Burnt Wood.
-geo-seed-1-1024 e1064 Plague broke out in Faethaithodell; 210 died.
-geo-seed-1-1024 e1065 The Gub Horde laid claim to Harewold, held by the Warrens of Zurkdriz.
-geo-seed-1-1024 e1066 The Bugnob Horde laid claim to the Silent Wood, held by the Kingdom of Alid.
-geo-seed-1-1024 e1068 The Slizz Mob laid claim to Bellgrove, held by the Duchy of Brod.
-geo-seed-1-1024 e1071 Plague broke out in Breackdumwick and spread to one other settlement; 1,577 died in all.
-geo-seed-1-1024 e1074 The Kingdom of Alid laid claim to Teaselgill Sward, held by the Skreegg Horde.
-geo-seed-1-1024 e1076 The Skreegg Horde laid claim to Collier's Weald, held by the Duchy of Brod.
-geo-seed-1-1024 e1077 The Warband of Daak declared war on the House of Glaefaenn over the Weeping Wood.
+geo-seed-1-1024 e417 The Host of Sarcant drove the people from Nifiell and made it its lair; 897 escaped.
+geo-seed-1-1024 e425 Plague broke out in Aeglaes and spread to one other settlement; 1,796 died in all.
+geo-seed-1-1024 e431 The Host of Sarcant fell upon Faethaithodell; 114 died.
+geo-seed-1-1024 e432 Plague broke out in Gneek Pit; 282 died.
+geo-seed-1-1024 e433 The Host of Sarcant fell upon Aethglen; 70 died.
+geo-seed-1-1024 e434 Plague broke out in Skub Pit and spread to four other settlements; 1,371 died in all.
+geo-seed-1-1024 e439 The Host of Sarcant fell upon Iennrer; 43 died.
+geo-seed-1-1024 e443 Plague broke out in Buskug and spread to one other settlement; 961 died in all.
+geo-seed-1-1024 e445 The Host of Sarcant fell upon Aethglen; 106 died.
+geo-seed-1-1024 e446 The Host of Sarcant fell upon Iennrer; 79 died.
+geo-seed-1-1024 e447 The House of Glaefaenn hunted down and slew the Host of Sarcant, a host of the restless dead, in the Grove of the Moon.
+geo-seed-1-1024 e449 Plague broke out in Gnok-Skeex; 584 died.
+geo-seed-1-1024 e450 Plague broke out in Skub Pit and spread to two other settlements; 645 died in all.
+geo-seed-1-1024 e453 For 50 years, from 5084 to 5133, the land was quiet, and eight realms kept the peace.
+geo-seed-1-1024 e456 The Skreegg Horde laid claim to Briarpike Tangle, held by the Lousstwo Court.
+geo-seed-1-1024 e457 The Warrens of Zeez laid claim to Boarfall Woods, held by the Lousstwo Court.
+geo-seed-1-1024 e459 The Warrens of Zeez declared war on the Lousstwo Court over Boarfall Woods.
+geo-seed-1-1024 e460 The Lousstwo Court defeated the Warrens of Zeez in Boarfall Woods; 178 of the defeated and 22 of the victors fell.
+geo-seed-1-1024 e461 Plague broke out in Aeglaes and spread to three other settlements; 903 died in all.
+geo-seed-1-1024 e466 The Warrens of Zeez defeated the Lousstwo Court in Kaz's Fall; 68 of the defeated and 23 of the victors fell.
+geo-seed-1-1024 e468 Plague broke out in Grix and spread to two other settlements; 1,169 died in all.
+geo-seed-1-1024 e471 The Lousstwo Court defeated the Warrens of Zeez in Boarfall Woods; 158 of the defeated and 30 of the victors fell.
+geo-seed-1-1024 e472 The Warrens of Zeez defeated the Lousstwo Court in Kaz's Fall; 68 of the defeated and 19 of the victors fell.
+geo-seed-1-1024 e474 Plague broke out in Sostha and spread to two other settlements; 1,183 died in all.
+geo-seed-1-1024 e478 The Lousstwo Court defeated the Warrens of Zeez in Boarfall Woods; 197 of the defeated and 30 of the victors fell.
+geo-seed-1-1024 e479 The Warrens of Zeez defeated the Lousstwo Court in Kaz's Fall; 85 of the defeated and 26 of the victors fell.
+geo-seed-1-1024 e480 The Warrens of Zeez and the Lousstwo Court made peace after 24 years of war, neither the victor.
+geo-seed-1-1024 e489 The Hodmal League laid claim to Larchstrand, held by the House of Glaefaenn.
+geo-seed-1-1024 e490 The Kingdom of Alid laid claim to Briarpike Tangle, held by the Lousstwo Court.
+geo-seed-1-1024 e491 After the rise of a realm's seat, Reekdown became known as Hodmalland.
+geo-seed-1-1024 e493 The Skreegg Horde declared war on the Warrens of Zeez over Kaz's Fall.
+geo-seed-1-1024 e497 The Warrens of Zeez laid claim to Douredge Woods, held by the House of Glaefaenn.
+geo-seed-1-1024 e498 The Warrens of Zeez defeated the Skreegg Horde in Kaz's Fall; 477 of the defeated and 56 of the victors fell.
+geo-seed-1-1024 e499 The Skreegg Horde defeated the Warrens of Zeez in Starkden; 173 of the defeated and 78 of the victors fell.
+geo-seed-1-1024 e500 Plague broke out in Skakragg Hole and spread to two other settlements; 648 died in all.
+geo-seed-1-1024 e503 The Warrens of Zeez defeated the Skreegg Horde in Kaz's Fall; 495 of the defeated and 76 of the victors fell.
+geo-seed-1-1024 e504 The Skreegg Horde defeated the Warrens of Zeez in Starkden; 204 of the defeated and 70 of the victors fell.
+geo-seed-1-1024 e505 Plague broke out in Nik Pit and spread to two other settlements; 1,218 died in all.
+geo-seed-1-1024 e508 The Skreegg Horde defeated the Warrens of Zeez in Kaz's Fall; 170 of the defeated and 72 of the victors fell.
+geo-seed-1-1024 e509 The Skreegg Horde besieged Skrukkreek of the Warrens of Zeez; it held.
+geo-seed-1-1024 e510 The Warrens of Zeez defeated the Skreegg Horde in Kaz's Fall; 467 of the defeated and 62 of the victors fell.
+geo-seed-1-1024 e511 The Skreegg Horde raised Slank-Nirk Stockade in Ferrybrake against the Warrens of Zeez.
+geo-seed-1-1024 e513 The Skreegg Horde defeated the Warrens of Zeez in Starkden; 164 of the defeated and 68 of the victors fell.
+geo-seed-1-1024 e514 The Skreegg Horde and the Warrens of Zeez made peace after 35 years of war, neither the victor.
+geo-seed-1-1024 e515 Plague broke out in Hurk; 754 died.
+geo-seed-1-1024 e521 The Skrot Mob laid claim to the Brambled Weald, held by the Khirnhu Throne.
+geo-seed-1-1024 e523 The Skreegg Horde declared war on the Lousstwo Court over Briarpike Tangle.
+geo-seed-1-1024 e524 The Kingdom of Alid declared war on the Lousstwo Court over Briarpike Tangle.
+geo-seed-1-1024 e525 In Collier's Weald the wolves grew bold, and travellers from Taelousia went in fear; two died on the roads.
+geo-seed-1-1024 e528 The Skreegg Horde searched Briarpike Tangle for the Lousstwo Court and found no one; the war ended after three years.
+geo-seed-1-1024 e530 The Kingdom of Alid searched Briarpike Tangle for the Lousstwo Court and found no one; the war ended after seven years.
+geo-seed-1-1024 e533 The Skreegg Horde abandoned Slank-Nirk Stockade, the land being lost.
+geo-seed-1-1024 e538 The Skrot Mob laid claim to Collier's Weald, held by the Lousstwo Court.
+geo-seed-1-1024 e545 Plague broke out in Backham; 2,244 died.
+geo-seed-1-1024 e549 Plague broke out in Thaili Hold and spread to one other settlement; 692 died in all.
+geo-seed-1-1024 e553 The Gub Horde laid claim to South Fells, held by the Khirnhu Throne.
+geo-seed-1-1024 e556 Plague broke out in Gaggkot Pit and spread to two other settlements; 506 died in all.
+geo-seed-1-1024 e563 For 246 years, from 5334 to 5579, the land was quiet, and 11 realms kept the peace.
+geo-seed-1-1024 e567 The Skrot Mob laid claim to the Wintry Leas, held by the Gub Horde.
+geo-seed-1-1024 e579 The Slizz Mob laid claim to Collier's Weald, held by the Lousstwo Court.
+geo-seed-1-1024 e581 The Slizz Mob laid claim to Douredge Woods, held by the House of Glaefaenn.
+geo-seed-1-1024 e584 The Skreegg Horde laid claim to Fernhurst, held by the Kingdom of Alid.
+geo-seed-1-1024 e588 The Skrot Mob laid claim to Chillhorn Wood, held by the Bugnob Horde.
+geo-seed-1-1024 e589 The Bugnob Horde laid claim to Collier's Weald, held by the Lousstwo Court.
+geo-seed-1-1024 e590 The Bugnob Horde laid claim to Fernhurst, held by the Kingdom of Alid.
+geo-seed-1-1024 e593 The Warrens of Zeez laid claim to Ferrybrake, held by the Slizz Mob.
+geo-seed-1-1024 e594 The Slizz Mob laid claim to Thief's Plain, held by the Skreegg Horde.
+geo-seed-1-1024 e598 The Warband of Daak laid claim to the Woods of Ashes, held by the Hodmal League.
+geo-seed-1-1024 e599 Plague broke out in Iennrer and spread to three other settlements; 1,098 died in all.
+geo-seed-1-1024 e605 Plague broke out in Geezink; 329 died.
+geo-seed-1-1024 e608 The Skrot Mob laid claim to Douredge Woods, held by the House of Glaefaenn.
+geo-seed-1-1024 e613 The Warband of Daak laid claim to Zug's Shadow, held by the House of Glaefaenn.
+geo-seed-1-1024 e614 The Warrens of Zeez laid claim to Collier's Weald, held by the Lousstwo Court.
+geo-seed-1-1024 e615 The Skrot Mob laid claim to Fernhurst, held by the Kingdom of Alid.
+geo-seed-1-1024 e616 The Skreegg Horde laid claim to Collier's Weald, held by the Lousstwo Court.
+geo-seed-1-1024 e617 Plague broke out in Iatha; 219 died.
+geo-seed-1-1024 e620 Plague broke out in Elomaell and spread to three other settlements; 909 died in all.
+geo-seed-1-1024 e624 Plague broke out in Skuskrix Hole and spread to two other settlements; 863 died in all.
+geo-seed-1-1024 e630 The Kingdom of Alid laid claim to Teaselgill Sward, held by the Skreegg Horde.
+geo-seed-1-1024 e631 The Kingdom of Alid laid claim to Chillhorn Wood, held by the Bugnob Horde.
+geo-seed-1-1024 e632 The Slizz Mob declared war on the Lousstwo Court over Collier's Weald.
+geo-seed-1-1024 e633 The Slizz Mob searched Collier's Weald for the Lousstwo Court and found no one; the war ended after three years.
+geo-seed-1-1024 e636 The Warrens of Zeez laid claim to Thief's Plain, held by the Skreegg Horde.
+geo-seed-1-1024 e638 Plague broke out in Iennrer and spread to one other settlement; 228 died in all.
+geo-seed-1-1024 e640 Plague broke out in Ashuntham; 644 died.
+geo-seed-1-1024 e642 The Warrens of Zeez laid claim to Fernhurst, held by the Kingdom of Alid.
+geo-seed-1-1024 e643 The Slizz Mob laid claim to Fernhurst, held by the Kingdom of Alid.
+geo-seed-1-1024 e644 Plague broke out in Asholdstead; 979 died.
+geo-seed-1-1024 e645 Plague broke out in Ashirstead; 1,184 died.
+geo-seed-1-1024 e646 The Bugnob Horde laid claim to the Leas of Chains, held by the Skrot Mob.
+geo-seed-1-1024 e648 The Khirnhu Throne laid claim to the Wintry Leas, held by the Gub Horde.
+geo-seed-1-1024 e653 The Kingdom of Alid laid claim to Boarfall Woods, held by the Lousstwo Court.
+geo-seed-1-1024 e654 Plague broke out in Backham; 1,284 died.
+geo-seed-1-1024 e656 The Bugnob Horde laid claim to Douredge Woods, held by the House of Glaefaenn.
+geo-seed-1-1024 e657 Plague broke out in Tiewia and spread to two other settlements; 1,129 died in all.
+geo-seed-1-1024 e662 The Kingdom of Alid declared war on the Skreegg Horde over Teaselgill Sward.
+geo-seed-1-1024 e664 Plague broke out in Skruz and spread to one other settlement; 611 died in all.
+geo-seed-1-1024 e666 The Skreegg Horde defeated the Kingdom of Alid in Teaselgill Sward; 1,042 of the defeated and 176 of the victors fell.
+geo-seed-1-1024 e667 Plague broke out in Burk-Zut Hole and spread to one other settlement; 403 died in all.
+geo-seed-1-1024 e669 The Kingdom of Alid defeated the Skreegg Horde in Fernhurst; 532 of the defeated and 182 of the victors fell.
+geo-seed-1-1024 e670 The Kingdom of Alid defeated the Skreegg Horde in Teaselgill Sward; 524 of the defeated and 160 of the victors fell.
+geo-seed-1-1024 e671 The Kingdom of Alid besieged Drax-Snagg Pit of the Skreegg Horde; it fell.
+geo-seed-1-1024 e672 The Kingdom of Alid sacked Drax-Snagg Pit of the Skreegg Horde; 359 died and 840 fled.
+geo-seed-1-1024 e674 The Kingdom of Alid defeated the Skreegg Horde in Teaselgill Sward; 538 of the defeated and 139 of the victors fell.
+geo-seed-1-1024 e675 The Kingdom of Alid besieged Zeegneeg Pit of the Skreegg Horde; it held.
+geo-seed-1-1024 e676 The Khirnhu Throne laid claim to Witch's Barrow, held by the Skrot Mob.
+geo-seed-1-1024 e677 The Warband of Daak declared war on the House of Glaefaenn over Zug's Shadow.
+geo-seed-1-1024 e678 The Kingdom of Alid defeated the Skreegg Horde in Teaselgill Sward; 532 of the defeated and 123 of the victors fell.
+geo-seed-1-1024 e679 The Kingdom of Alid besieged Zeegneeg Pit of the Skreegg Horde; it fell.
+geo-seed-1-1024 e680 The Kingdom of Alid sacked Zeegneeg Pit of the Skreegg Horde; 551 died and 1,287 fled.
+geo-seed-1-1024 e681 The Skreegg Horde sued the Kingdom of Alid for peace after 15 years of war.
+geo-seed-1-1024 e682 The Skreegg Horde ceded Teaselgill Sward to the Kingdom of Alid.
+geo-seed-1-1024 e684 The Warband of Daak defeated the House of Glaefaenn in Zug's Shadow; 1,096 of the defeated and 269 of the victors fell.
+geo-seed-1-1024 e685 The Warband of Daak besieged Aeglaes of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e686 The Warband of Daak sacked Aeglaes of the House of Glaefaenn; 1,548 died and 3,614 fled.
+geo-seed-1-1024 e687 The Warband of Daak prevailed over the House of Glaefaenn after three years of war.
+geo-seed-1-1024 e688 The House of Glaefaenn ceded Larchstrand to the Warband of Daak.
+geo-seed-1-1024 e690 The Hodmal League laid claim to the Long Hurst, held by the House of Glaefaenn.
+geo-seed-1-1024 e691 The Hodmal League declared war on the House of Glaefaenn over the Long Hurst.
+geo-seed-1-1024 e693 The Hodmal League defeated the House of Glaefaenn in the Long Hurst; 649 of the defeated and 197 of the victors fell.
+geo-seed-1-1024 e694 The Hodmal League besieged Ilathdell of the House of Glaefaenn; it held.
+geo-seed-1-1024 e695 The Gub Horde laid claim to Witch's Barrow, held by the Skrot Mob.
+geo-seed-1-1024 e696 The Kingdom of Alid declared war on the Bugnob Horde over Chillhorn Wood.
+geo-seed-1-1024 e697 The Bugnob Horde laid claim to Boarfall Woods, held by the Lousstwo Court.
+geo-seed-1-1024 e698 The Bugnob Horde declared war on the Lousstwo Court over Boarfall Woods.
+geo-seed-1-1024 e699 The House of Glaefaenn defeated the Hodmal League in the Long Hurst; 743 of the defeated and 172 of the victors fell.
+geo-seed-1-1024 e700 The Kingdom of Alid raised Widedock Tower in Fernhurst against the Bugnob Horde.
+geo-seed-1-1024 e701 The House of Glaefaenn defeated the Hodmal League in the Woods of Ashes; 713 of the defeated and 225 of the victors fell.
+geo-seed-1-1024 e702 The House of Glaefaenn besieged Geackham of the Hodmal League; it held.
+geo-seed-1-1024 e703 The Warband of Daak declared war on the Hodmal League over the Woods of Ashes.
+geo-seed-1-1024 e705 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 72 of the defeated and 21 of the victors fell.
+geo-seed-1-1024 e706 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it held.
+geo-seed-1-1024 e708 The Hodmal League defeated the House of Glaefaenn in the Woods of Ashes; 734 of the defeated and 112 of the victors fell.
+geo-seed-1-1024 e709 The House of Glaefaenn sued the Hodmal League for peace after 11 years of war.
+geo-seed-1-1024 e710 The House of Glaefaenn ceded the Long Hurst to the Hodmal League.
+geo-seed-1-1024 e711 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 58 of the defeated and 23 of the victors fell.
+geo-seed-1-1024 e712 The Kingdom of Alid besieged Skeenk of the Bugnob Horde; it fell.
+geo-seed-1-1024 e713 The Kingdom of Alid took Skeenk from the Bugnob Horde; 367 died.
+geo-seed-1-1024 e715 The Bugnob Horde searched Boarfall Woods for the Lousstwo Court and found no one; the war ended after five years.
+geo-seed-1-1024 e716 The Warband of Daak defeated the Hodmal League in the Woods of Ashes; 874 of the defeated and 254 of the victors fell.
+geo-seed-1-1024 e717 The Warband of Daak besieged Geackham of the Hodmal League; it fell.
+geo-seed-1-1024 e718 The Warband of Daak sacked Geackham of the Hodmal League; 4,923 died and 11,487 fled.
+geo-seed-1-1024 e719 The Warband of Daak prevailed over the Hodmal League after three years of war.
+geo-seed-1-1024 e720 The Hodmal League ceded the Long Hurst to the Warband of Daak.
+geo-seed-1-1024 e721 After the sack, the Woods of Ashes became known as the Ashes of Geackham.
+geo-seed-1-1024 e723 The Khirnhu Throne declared war on the Gub Horde over the Wintry Leas.
+geo-seed-1-1024 e724 The Kingdom of Alid defeated the Bugnob Horde in Chillhorn Wood; 76 of the defeated and 19 of the victors fell.
+geo-seed-1-1024 e725 The Kingdom of Alid besieged Snagg Hole of the Bugnob Horde; it fell.
+geo-seed-1-1024 e726 The Kingdom of Alid sacked Snagg Hole of the Bugnob Horde; 380 died and 888 fled.
+geo-seed-1-1024 e728 After the sack, Chillhorn Wood became known as the Fallen Wood.
+geo-seed-1-1024 e731 The Kingdom of Alid defeated the Bugnob Horde in the Fallen Wood; 71 of the defeated and 18 of the victors fell.
+geo-seed-1-1024 e732 The Kingdom of Alid besieged Skog-Skib Pit of the Bugnob Horde; it fell.
+geo-seed-1-1024 e733 The Kingdom of Alid sacked Skog-Skib Pit of the Bugnob Horde; 592 died and 1,384 fled.
+geo-seed-1-1024 e735 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 427 of the defeated and 201 of the victors fell.
+geo-seed-1-1024 e736 The Khirnhu Throne besieged Slok of the Gub Horde; it fell.
+geo-seed-1-1024 e737 The Khirnhu Throne sacked Slok of the Gub Horde; 545 died and 1,273 fled.
+geo-seed-1-1024 e739 The Kingdom of Alid defeated the Bugnob Horde in the Fallen Wood; 46 of the defeated and 15 of the victors fell.
+geo-seed-1-1024 e740 The Kingdom of Alid besieged Burk-Zut Hole of the Bugnob Horde; it fell.
+geo-seed-1-1024 e741 The Kingdom of Alid sacked Burk-Zut Hole of the Bugnob Horde; 751 died and 1,754 fled.
+geo-seed-1-1024 e742 The Bugnob Horde fell to the Kingdom of Alid.
+geo-seed-1-1024 e744 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 559 of the defeated and 174 of the victors fell.
+geo-seed-1-1024 e745 The Khirnhu Throne besieged Kut-Gnoz Hole of the Gub Horde; it fell.
+geo-seed-1-1024 e746 The Khirnhu Throne took Kut-Gnoz Hole from the Gub Horde; 241 died.
+geo-seed-1-1024 e753 Plague broke out in Gox and spread to two other settlements; 535 died in all.
+geo-seed-1-1024 e757 Plague broke out in Ashirstead and spread to one other settlement; 1,671 died in all.
+geo-seed-1-1024 e760 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 495 of the defeated and 123 of the victors fell.
+geo-seed-1-1024 e761 The Khirnhu Throne besieged Snink-Grozz Hole of the Gub Horde; it fell.
+geo-seed-1-1024 e762 The Khirnhu Throne took Snink-Grozz Hole from the Gub Horde; 177 died.
+geo-seed-1-1024 e765 After the slaughter and the sack, the dead of the Ashes of Geackham rose as the Restless of Stead.
+geo-seed-1-1024 e767 In Zug's Shadow the wolves grew bold, and travellers from Niethraedell went in fear; one died on the roads.
+geo-seed-1-1024 e768 Plague broke out in Krak; 313 died.
+geo-seed-1-1024 e770 The Gub Horde defeated the Khirnhu Throne in the Wintry Leas; 722 of the defeated and 127 of the victors fell.
+geo-seed-1-1024 e772 After the slaughter and the sack, the dead of Teaselgill Sward rose as the Host of Alen.
+geo-seed-1-1024 e773 The Kingdom of Alid laid claim to the Leas of Chains, held by the Skrot Mob.
+geo-seed-1-1024 e775 The Skreegg Horde declared war on the House of Glaefaenn over Douredge Woods.
+geo-seed-1-1024 e776 The Restless of Stead fell upon Ruredun; 181 died.
+geo-seed-1-1024 e777 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 479 of the defeated and 133 of the victors fell.
+geo-seed-1-1024 e778 The Gub Horde defeated the Khirnhu Throne in the Wintry Leas; 844 of the defeated and 118 of the victors fell.
+geo-seed-1-1024 e779 The Gub Horde and the Khirnhu Throne made peace after 28 years of war, neither the victor.
+geo-seed-1-1024 e781 The House of Glaefaenn defeated the Skreegg Horde in Douredge Woods; 366 of the defeated and 146 of the victors fell.
+geo-seed-1-1024 e784 Plague broke out in Grix; 309 died.
+geo-seed-1-1024 e786 The Skreegg Horde defeated the House of Glaefaenn in Thief's Plain; 489 of the defeated and 122 of the victors fell.
+geo-seed-1-1024 e787 Plague broke out in Skork Pit and spread to one other settlement; 348 died in all.
+geo-seed-1-1024 e789 The Host of Alen fell upon Geeb Pit; 196 died.
+geo-seed-1-1024 e790 The Restless of Stead fell upon Niethraedell; eight died.
+geo-seed-1-1024 e791 The Restless of Stead drove the people from Niethraedell and made it its lair; 110 escaped.
+geo-seed-1-1024 e792 The House of Glaefaenn defeated the Skreegg Horde in Douredge Woods; 420 of the defeated and 145 of the victors fell.
+geo-seed-1-1024 e794 The Skreegg Horde defeated the House of Glaefaenn in Thief's Plain; 462 of the defeated and 131 of the victors fell.
+geo-seed-1-1024 e795 The House of Glaefaenn sued the Skreegg Horde for peace after 17 years of war.
+geo-seed-1-1024 e796 The House of Glaefaenn ceded Douredge Woods to the Skreegg Horde.
+geo-seed-1-1024 e797 The House of Glaefaenn abandoned the Spire of Vare, the land being lost.
+geo-seed-1-1024 e800 Plague broke out in Gneek Pit; 263 died.
+geo-seed-1-1024 e801 The Warband of Daak laid claim to the Grove of the Moon, held by the House of Glaefaenn.
+geo-seed-1-1024 e802 The Skreegg Horde let the claim against the Lousstwo Court over Collier's Weald lapse.
+geo-seed-1-1024 e803 The Restless of Stead fell upon Ermoll; 133 died.
+geo-seed-1-1024 e806 The Host of Alen fell upon Dreebsleeg; 150 died.
+geo-seed-1-1024 e807 The Host of Alen drove the people from Dreebsleeg and made it its lair; 1,322 escaped.
+geo-seed-1-1024 e808 The Warband of Daak declared war on the House of Glaefaenn over the Grove of the Moon.
+geo-seed-1-1024 e809 Plague broke out in Backham; 978 died.
+geo-seed-1-1024 e810 The Restless of Stead fell upon Glaethaes; 93 died.
+geo-seed-1-1024 e811 The Skrot Mob hunted down and slew the Host of Alen, a host of the restless dead, in Central Downs.
+geo-seed-1-1024 e812 The Warband of Daak defeated the House of Glaefaenn in the Grove of the Moon; 318 of the defeated and 83 of the victors fell.
+geo-seed-1-1024 e813 The Warband of Daak besieged Faethaithodell of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e814 The Warband of Daak sacked Faethaithodell of the House of Glaefaenn; 303 died and 707 fled.
+geo-seed-1-1024 e816 The Warband of Daak defeated the House of Glaefaenn in the Grove of the Moon; 243 of the defeated and 67 of the victors fell.
+geo-seed-1-1024 e817 The Warband of Daak besieged Aethglen of the House of Glaefaenn; it held.
+geo-seed-1-1024 e819 The Warrens of Zeez laid claim to the Grove of the Moon, held by the House of Glaefaenn.
+geo-seed-1-1024 e820 The Warrens of Zeez declared war on the House of Glaefaenn over the Grove of the Moon.
+geo-seed-1-1024 e821 The Kingdom of Alid let the claim against the Lousstwo Court over Boarfall Woods lapse.
+geo-seed-1-1024 e822 The House of Glaefaenn defeated the Warrens of Zeez in the Grove of the Moon; 208 of the defeated and 32 of the victors fell.
+geo-seed-1-1024 e823 The House of Glaefaenn defeated the Warband of Daak in the Grove of the Moon; 242 of the defeated and 42 of the victors fell.
+geo-seed-1-1024 e824 The House of Glaefaenn and the Warband of Daak made peace after 10 years of war, neither the victor.
+geo-seed-1-1024 e825 The Warrens of Zeez defeated the House of Glaefaenn in Kaz's Fall; 244 of the defeated and 72 of the victors fell.
+geo-seed-1-1024 e826 The House of Glaefaenn defeated the Warrens of Zeez in the Grove of the Moon; 193 of the defeated and 63 of the victors fell.
+geo-seed-1-1024 e827 The House of Glaefaenn defeated the Warrens of Zeez in Kaz's Fall; 245 of the defeated and 78 of the victors fell.
+geo-seed-1-1024 e828 The House of Glaefaenn besieged Skrukkreek of the Warrens of Zeez; it held.
+geo-seed-1-1024 e829 The Warrens of Zeez defeated the House of Glaefaenn in Kaz's Fall; 277 of the defeated and 52 of the victors fell.
+geo-seed-1-1024 e830 The House of Glaefaenn and the Warrens of Zeez made peace after seven years of war, neither the victor.
+geo-seed-1-1024 e831 The Warrens of Zeez let the claim against the Lousstwo Court over Collier's Weald lapse.
+geo-seed-1-1024 e832 The Warband of Daak laid claim to the Ashes of Geackham, held by the Hodmal League.
+geo-seed-1-1024 e833 The Restless of Stead fell upon Glaethaes; 59 died.
+geo-seed-1-1024 e835 The Warrens of Zeez declared war on the Slizz Mob over Ferrybrake.
+geo-seed-1-1024 e837 The Skreegg Horde laid claim to Briarpike Tangle, held by the Lousstwo Court.
+geo-seed-1-1024 e838 The Kingdom of Alid laid claim to Briarpike Tangle, held by the Lousstwo Court.
+geo-seed-1-1024 e839 The Warrens of Zeez defeated the Slizz Mob in Ferrybrake; 116 of the defeated and 35 of the victors fell.
+geo-seed-1-1024 e840 The Warrens of Zeez besieged Bizz Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e841 The Slizz Mob raised Gnizeeb Lookout in Ferrybrake against the Warrens of Zeez.
+geo-seed-1-1024 e842 The Khirnhu Throne declared war on the Skrot Mob over Witch's Barrow.
+geo-seed-1-1024 e843 The Restless of Stead fell upon Sennfe; 72 died.
+geo-seed-1-1024 e844 The Khirnhu Throne defeated the Skrot Mob in Witch's Barrow; 492 of the defeated and 132 of the victors fell.
+geo-seed-1-1024 e845 The Khirnhu Throne besieged Gnink of the Skrot Mob; it fell.
+geo-seed-1-1024 e846 The Khirnhu Throne took Gnink from the Skrot Mob; 120 died.
+geo-seed-1-1024 e849 The Skreegg Horde laid claim to Ferrybrake, held by the Slizz Mob.
+geo-seed-1-1024 e850 The Gub Horde declared war on the Skrot Mob over Witch's Barrow.
+geo-seed-1-1024 e851 The Warband of Daak declared war on the Hodmal League over the Ashes of Geackham.
+geo-seed-1-1024 e852 The Slizz Mob defeated the Warrens of Zeez in Ferrybrake; 195 of the defeated and 41 of the victors fell.
+geo-seed-1-1024 e853 Plague broke out in Zeerkkrib Hole; 190 died.
+geo-seed-1-1024 e854 The Skreegg Horde declared war on the Lousstwo Court over Briarpike Tangle.
+geo-seed-1-1024 e855 Plague broke out in Skrutch Pit; 881 died.
+geo-seed-1-1024 e856 The Skrot Mob let the claim against the Lousstwo Court over Collier's Weald lapse.
+geo-seed-1-1024 e857 The Khirnhu Throne defeated the Skrot Mob in Witch's Barrow; 220 of the defeated and 64 of the victors fell.
+geo-seed-1-1024 e858 The Khirnhu Throne besieged Kuskreeb Pit of the Skrot Mob; it fell.
+geo-seed-1-1024 e859 The Khirnhu Throne sacked Kuskreeb Pit of the Skrot Mob; 283 died and 662 fled.
+geo-seed-1-1024 e860 The Lousstwo Court defeated the Skreegg Horde in Briarpike Tangle; 131 of the defeated and 52 of the victors fell.
+geo-seed-1-1024 e861 The Gub Horde defeated the Skrot Mob in Witch's Barrow; 247 of the defeated and 83 of the victors fell.
+geo-seed-1-1024 e862 The Gub Horde besieged Snitbux of the Skrot Mob; it held.
+geo-seed-1-1024 e863 The Lousstwo Court defeated the Skreegg Horde in Douredge Woods; 339 of the defeated and 50 of the victors fell.
+geo-seed-1-1024 e864 The Lousstwo Court besieged Sostha of the Skreegg Horde; it held.
+geo-seed-1-1024 e865 The Skrot Mob defeated the Khirnhu Throne in Witch's Barrow; 383 of the defeated and 82 of the victors fell.
+geo-seed-1-1024 e866 The Skreegg Horde defeated the Lousstwo Court in Douredge Woods; 192 of the defeated and 48 of the victors fell.
+geo-seed-1-1024 e867 The Restless of Stead fell upon Vomethidell; 41 died.
+geo-seed-1-1024 e868 The Slizz Mob defeated the Warrens of Zeez in Kaz's Fall; 200 of the defeated and 35 of the victors fell.
+geo-seed-1-1024 e869 The Slizz Mob besieged Skrukkreek of the Warrens of Zeez; it held.
+geo-seed-1-1024 e870 The Lousstwo Court defeated the Skreegg Horde in Briarpike Tangle; 129 of the defeated and 44 of the victors fell.
+geo-seed-1-1024 e871 The Skrot Mob raised Skugskreeb Stockade in Witch's Barrow against the Gub Horde.
+geo-seed-1-1024 e872 The Slizz Mob defeated the Warrens of Zeez in Kaz's Fall; 215 of the defeated and 35 of the victors fell.
+geo-seed-1-1024 e873 The Slizz Mob besieged Skrukkreek of the Warrens of Zeez; it held.
+geo-seed-1-1024 e874 The Khirnhu Throne defeated the Skrot Mob in South Fells; 252 of the defeated and 78 of the victors fell.
+geo-seed-1-1024 e875 The Gub Horde defeated the Skrot Mob in Witch's Barrow; 252 of the defeated and 89 of the victors fell.
+geo-seed-1-1024 e876 The Gub Horde besieged Snitbux of the Skrot Mob; it fell.
+geo-seed-1-1024 e877 The Gub Horde took Snitbux from the Skrot Mob; 145 died.
+geo-seed-1-1024 e878 The Skrot Mob defeated the Khirnhu Throne in Witch's Barrow; 523 of the defeated and 77 of the victors fell.
+geo-seed-1-1024 e879 The Warband of Daak defeated the Hodmal League in the Ashes of Geackham; 539 of the defeated and 157 of the victors fell.
+geo-seed-1-1024 e880 The Warband of Daak besieged Cardford of the Hodmal League; it fell.
+geo-seed-1-1024 e881 The Warband of Daak took Cardford from the Hodmal League; 328 died.
+geo-seed-1-1024 e882 The Warband of Daak prevailed over the Hodmal League after 12 years of war.
+geo-seed-1-1024 e883 The Hodmal League paid tribute to the Warband of Daak; 1,851 were carried off.
+geo-seed-1-1024 e884 The Khirnhu Throne defeated the Skrot Mob in South Fells; 235 of the defeated and 72 of the victors fell.
+geo-seed-1-1024 e886 The Gub Horde defeated the Skrot Mob in Witch's Barrow; 217 of the defeated and 70 of the victors fell.
+geo-seed-1-1024 e887 The Gub Horde besieged Giz of the Skrot Mob; it fell.
+geo-seed-1-1024 e888 The Gub Horde took Giz from the Skrot Mob; 62 died.
+geo-seed-1-1024 e889 The Gub Horde prevailed over the Skrot Mob after 14 years of war.
+geo-seed-1-1024 e890 The Skrot Mob ceded Central Downs to the Gub Horde.
+geo-seed-1-1024 e891 The Skrot Mob abandoned Skugskreeb Stockade, the land being lost.
+geo-seed-1-1024 e892 The Skrot Mob defeated the Khirnhu Throne in the Grave of Sawy; 665 of the defeated and 80 of the victors fell.
+geo-seed-1-1024 e893 The Khirnhu Throne and the Skrot Mob made peace after 18 years of war, neither the victor.
+geo-seed-1-1024 e894 The Skreegg Horde defeated the Lousstwo Court in Douredge Woods; 174 of the defeated and 45 of the victors fell.
+geo-seed-1-1024 e895 The Kingdom of Alid let the claim against the Lousstwo Court over Briarpike Tangle lapse.
+geo-seed-1-1024 e897 The Warrens of Zeez defeated the Slizz Mob in Kaz's Fall; 115 of the defeated and 34 of the victors fell.
+geo-seed-1-1024 e898 The Skreegg Horde defeated the Lousstwo Court in Briarpike Tangle; 198 of the defeated and 49 of the victors fell.
+geo-seed-1-1024 e899 The Skreegg Horde besieged Twaelifli of the Lousstwo Court; it held.
+geo-seed-1-1024 e900 The Skreegg Horde and the Lousstwo Court made peace after 16 years of war, neither the victor.
+geo-seed-1-1024 e901 The Warrens of Zeez defeated the Slizz Mob in Ferrybrake; 120 of the defeated and 40 of the victors fell.
+geo-seed-1-1024 e902 The Warrens of Zeez besieged Bizz Pit of the Slizz Mob; it fell.
+geo-seed-1-1024 e903 The Warrens of Zeez sacked Bizz Pit of the Slizz Mob; 930 died and 2,171 fled.
+geo-seed-1-1024 e905 After the sack, Ferrybrake became known as Bizz's Fall.
+geo-seed-1-1024 e908 The Slizz Mob defeated the Warrens of Zeez in Bizz's Fall; 204 of the defeated and 34 of the victors fell.
+geo-seed-1-1024 e909 The Warrens of Zeez and the Slizz Mob made peace after 32 years of war, neither the victor.
+geo-seed-1-1024 e910 The Kingdom of Alid laid claim to Bizz's Fall, held by the Slizz Mob.
+geo-seed-1-1024 e911 The Skreegg Horde declared war on the Slizz Mob over Bizz's Fall.
+geo-seed-1-1024 e912 The Slizz Mob defeated the Skreegg Horde in Bizz's Fall; 217 of the defeated and 35 of the victors fell.
+geo-seed-1-1024 e914 The Skreegg Horde defeated the Slizz Mob in Starkden; 95 of the defeated and 28 of the victors fell.
+geo-seed-1-1024 e915 The Slizz Mob laid claim to the Torn Hurst, held by the House of Glaefaenn.
+geo-seed-1-1024 e916 The Slizz Mob declared war on the House of Glaefaenn over the Torn Hurst.
+geo-seed-1-1024 e918 The House of Glaefaenn defeated the Slizz Mob in the Torn Hurst; 46 of the defeated and 19 of the victors fell.
+geo-seed-1-1024 e920 The Skreegg Horde defeated the Slizz Mob in Bizz's Fall; 63 of the defeated and 17 of the victors fell.
+geo-seed-1-1024 e921 The Skreegg Horde besieged Gnudrig Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e922 The Slizz Mob defeated the House of Glaefaenn in Bizz's Fall; 126 of the defeated and 16 of the victors fell.
+geo-seed-1-1024 e928 The Slizz Mob defeated the Skreegg Horde in Bizz's Fall; 103 of the defeated and 15 of the victors fell.
+geo-seed-1-1024 e929 The House of Glaefaenn defeated the Slizz Mob in the Torn Hurst; 49 of the defeated and 18 of the victors fell.
+geo-seed-1-1024 e930 The Warband of Daak laid claim to the Torn Hurst, held by the House of Glaefaenn.
+geo-seed-1-1024 e931 The Restless of Stead fell upon Ilathdell; 69 died.
+geo-seed-1-1024 e932 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 44 of the defeated and 19 of the victors fell.
+geo-seed-1-1024 e933 The House of Glaefaenn besieged Gnudrig Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e934 The Skreegg Horde defeated the Slizz Mob in Starkden; 50 of the defeated and 14 of the victors fell.
+geo-seed-1-1024 e935 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 49 of the defeated and 18 of the victors fell.
+geo-seed-1-1024 e936 The House of Glaefaenn besieged Gnudrig Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e937 The Skreegg Horde defeated the Slizz Mob in Bizz's Fall; 55 of the defeated and 18 of the victors fell.
+geo-seed-1-1024 e938 The Skreegg Horde besieged Gnudrig Pit of the Slizz Mob; it fell.
+geo-seed-1-1024 e939 The Skreegg Horde took Gnudrig Pit from the Slizz Mob; 306 died.
+geo-seed-1-1024 e941 The Restless of Stead fell upon Iennrer; 62 died.
+geo-seed-1-1024 e942 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 18 of the defeated and 6 of the victors fell.
+geo-seed-1-1024 e943 The House of Glaefaenn besieged Nogg Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e944 The Skreegg Horde defeated the Slizz Mob in Bizz's Fall; 24 of the defeated and 6 of the victors fell.
+geo-seed-1-1024 e945 The Skreegg Horde besieged Nogg Pit of the Slizz Mob; it held.
+geo-seed-1-1024 e946 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 23 of the defeated and 6 of the victors fell.
+geo-seed-1-1024 e947 The House of Glaefaenn besieged Nogg Pit of the Slizz Mob; it fell.
+geo-seed-1-1024 e948 The House of Glaefaenn sacked Nogg Pit of the Slizz Mob; 320 died and 747 fled.
+geo-seed-1-1024 e951 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 14 of the defeated and 5 of the victors fell.
+geo-seed-1-1024 e952 The House of Glaefaenn besieged Bix of the Slizz Mob; it fell.
+geo-seed-1-1024 e953 The House of Glaefaenn sacked Bix of the Slizz Mob; 504 died and 1,178 fled.
+geo-seed-1-1024 e956 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 11 of the defeated and 4 of the victors fell.
+geo-seed-1-1024 e957 The House of Glaefaenn besieged Drutslik Hole of the Slizz Mob; it held.
+geo-seed-1-1024 e958 The Restless of Stead fell upon Riethithe; 74 died.
+geo-seed-1-1024 e959 The Warband of Daak declared war on the House of Glaefaenn over the Torn Hurst.
+geo-seed-1-1024 e960 The House of Glaefaenn defeated the Slizz Mob in Bizz's Fall; 11 of the defeated and 4 of the victors fell.
+geo-seed-1-1024 e961 The House of Glaefaenn besieged Drutslik Hole of the Slizz Mob; it fell.
+geo-seed-1-1024 e962 The House of Glaefaenn sacked Drutslik Hole of the Slizz Mob; 431 died and 1,006 fled.
+geo-seed-1-1024 e963 The Slizz Mob fell to the House of Glaefaenn.
+geo-seed-1-1024 e964 The Slizz Mob abandoned Gnizeeb Lookout, its realm having fallen.
+geo-seed-1-1024 e967 The Warband of Daak defeated the House of Glaefaenn in the Torn Hurst; 259 of the defeated and 78 of the victors fell.
+geo-seed-1-1024 e968 The Warband of Daak besieged Elomaell of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e969 The Warband of Daak sacked Elomaell of the House of Glaefaenn; 432 died and 1,010 fled.
+geo-seed-1-1024 e971 After the sack, the Torn Hurst became known as Elomaell's Fall.
+geo-seed-1-1024 e974 The Skreegg Horde laid claim to Bizz's Fall, held by the Warrens of Zeez.
+geo-seed-1-1024 e975 The Kingdom of Alid laid claim to Bizz's Fall, held by the Warrens of Zeez.
+geo-seed-1-1024 e976 The Skreegg Horde declared war on the Warrens of Zeez over Bizz's Fall.
+geo-seed-1-1024 e977 The Warband of Daak defeated the House of Glaefaenn in Elomaell's Fall; 206 of the defeated and 71 of the victors fell.
+geo-seed-1-1024 e978 The Warband of Daak besieged Aeitheitho of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e979 The Warband of Daak sacked Aeitheitho of the House of Glaefaenn; 472 died and 1,104 fled.
+geo-seed-1-1024 e981 The House of Glaefaenn sued the Warband of Daak for peace after seven years of war.
+geo-seed-1-1024 e982 The House of Glaefaenn ceded the Grove of the Moon to the Warband of Daak.
+geo-seed-1-1024 e983 The Skreegg Horde defeated the Warrens of Zeez in Bizz's Fall; 234 of the defeated and 74 of the victors fell.
+geo-seed-1-1024 e984 The Skreegg Horde besieged Keeg Pit of the Warrens of Zeez; it fell.
+geo-seed-1-1024 e985 The Skreegg Horde took Keeg Pit from the Warrens of Zeez; 21 died.
+geo-seed-1-1024 e986 The Skreegg Horde prevailed over the Warrens of Zeez after three years of war.
+geo-seed-1-1024 e987 The Warrens of Zeez paid tribute to the Skreegg Horde; 998 were carried off.
+geo-seed-1-1024 e989 The Restless of Stead fell upon Thiennve; 53 died.
+geo-seed-1-1024 e991 The Kingdom of Alid declared war on the Skrot Mob over the Leas of Chains.
+geo-seed-1-1024 e992 Plague broke out in Greerk and spread to one other settlement; 734 died in all.
+geo-seed-1-1024 e994 The Skrot Mob defeated the Kingdom of Alid in the Leas of Chains; 540 of the defeated and 105 of the victors fell.
+geo-seed-1-1024 e995 The Kingdom of Alid defeated the Skrot Mob in the Fallen Wood; 343 of the defeated and 90 of the victors fell.
+geo-seed-1-1024 e996 The Skrot Mob defeated the Kingdom of Alid in the Leas of Chains; 673 of the defeated and 86 of the victors fell.
+geo-seed-1-1024 e998 The Kingdom of Alid defeated the Skrot Mob in the Fallen Wood; 284 of the defeated and 97 of the victors fell.
+geo-seed-1-1024 e1000 After the slaughter and the sack, the dead of Bizz's Fall rose as the Host of Deard.
+geo-seed-1-1024 e1001 The Kingdom of Alid defeated the Skrot Mob in the Leas of Chains; 274 of the defeated and 74 of the victors fell.
+geo-seed-1-1024 e1002 The Kingdom of Alid besieged Gnitch-Zork of the Skrot Mob; it fell.
+geo-seed-1-1024 e1003 The Kingdom of Alid took Gnitch-Zork from the Skrot Mob; 78 died.
+geo-seed-1-1024 e1006 The Warband of Daak laid claim to Hodmalland, held by the Hodmal League.
+geo-seed-1-1024 e1007 The Kingdom of Alid defeated the Skrot Mob in the Leas of Chains; 281 of the defeated and 93 of the victors fell.
+geo-seed-1-1024 e1008 The Kingdom of Alid besieged Skork Pit of the Skrot Mob; it fell.
+geo-seed-1-1024 e1009 The Kingdom of Alid sacked Skork Pit of the Skrot Mob; 221 died and 518 fled.
+geo-seed-1-1024 e1010 The Skrot Mob sued the Kingdom of Alid for peace after 14 years of war.
+geo-seed-1-1024 e1011 The Skrot Mob ceded the Leas of Chains to the Kingdom of Alid.
+geo-seed-1-1024 e1014 The Host of Deard fell upon Taelousia; 167 died.
+geo-seed-1-1024 e1015 The Host of Deard drove the people from Taelousia and made it its lair; 1,332 escaped.
+geo-seed-1-1024 e1016 Plague broke out in Sleek; 344 died.
+geo-seed-1-1024 e1018 The Warband of Daak declared war on the Hodmal League over Hodmalland.
+geo-seed-1-1024 e1019 The Restless of Stead fell upon Asholdstead; 149 died.
+geo-seed-1-1024 e1020 The Kingdom of Alid let the claim against the Warrens of Zeez over Bizz's Fall lapse.
+geo-seed-1-1024 e1021 The Warband of Daak defeated the Hodmal League in Hodmalland; 422 of the defeated and 147 of the victors fell.
+geo-seed-1-1024 e1022 The Warband of Daak besieged Backham of the Hodmal League; it held.
+geo-seed-1-1024 e1024 Plague broke out in Iatha; 181 died.
+geo-seed-1-1024 e1026 The Restless of Stead fell upon Ermoll; 111 died.
+geo-seed-1-1024 e1027 The Hodmal League defeated the Warband of Daak in Hodmalland; 658 of the defeated and 147 of the victors fell.
+geo-seed-1-1024 e1030 The Host of Deard fell upon Iatha; 47 died.
+geo-seed-1-1024 e1032 The Warband of Daak defeated the Hodmal League in the Ashes of Geackham; 405 of the defeated and 120 of the victors fell.
+geo-seed-1-1024 e1034 The Host of Deard fell upon Glietwie Glade; 49 died.
+geo-seed-1-1024 e1035 The Hodmal League raised Wembir Watch in Hodmalland against the Warband of Daak.
+geo-seed-1-1024 e1036 The Warband of Daak defeated the Hodmal League in Hodmalland; 347 of the defeated and 108 of the victors fell.
+geo-seed-1-1024 e1037 The Warband of Daak besieged Backham of the Hodmal League; it held.
+geo-seed-1-1024 e1038 The Warband of Daak raised Gruld Stockade in the Bleached Leas against the Hodmal League.
+geo-seed-1-1024 e1039 The Host of Deard fell upon Keeg Pit; 41 died.
+geo-seed-1-1024 e1040 The Warrens of Zurkdriz laid claim to Teaselgill Sward, held by the Kingdom of Alid.
+geo-seed-1-1024 e1041 The Lousstwo Court drove the Host of Deard back to its lair in Collier's Weald.
+geo-seed-1-1024 e1042 Plague broke out in Tarngrou Hold; 276 died.
+geo-seed-1-1024 e1043 The Hodmal League defeated the Warband of Daak in Hodmalland; 655 of the defeated and 119 of the victors fell.
+geo-seed-1-1024 e1044 The Warband of Daak defeated the Hodmal League in the Ashes of Geackham; 469 of the defeated and 147 of the victors fell.
+geo-seed-1-1024 e1045 The Hodmal League sued the Warband of Daak for peace after 22 years of war.
+geo-seed-1-1024 e1046 The Hodmal League paid tribute to the Warband of Daak; 1,712 were carried off.
+geo-seed-1-1024 e1048 The Kingdom of Alid abandoned Widedock Tower, the frontier having fallen quiet.
+geo-seed-1-1024 e1049 The Warband of Daak laid claim to Elomaell's Fall, held by the House of Glaefaenn.
+geo-seed-1-1024 e1052 The Restless of Stead fell upon Thiennve; 76 died.
+geo-seed-1-1024 e1053 The Restless of Stead fell upon Glaethaes; 55 died.
+geo-seed-1-1024 e1054 The Warband of Daak declared war on the House of Glaefaenn over Elomaell's Fall.
+geo-seed-1-1024 e1055 Plague broke out in Skub Pit and spread to one other settlement; 655 died in all.
+geo-seed-1-1024 e1057 The Restless of Stead fell upon Thiennve; 35 died.
+geo-seed-1-1024 e1058 The Warband of Daak defeated the House of Glaefaenn in Elomaell's Fall; 93 of the defeated and 30 of the victors fell.
+geo-seed-1-1024 e1059 The Warband of Daak besieged Iennrer of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e1060 The Warband of Daak sacked Iennrer of the House of Glaefaenn; 544 died and 1,272 fled.
+geo-seed-1-1024 e1064 The Warband of Daak defeated the House of Glaefaenn in Elomaell's Fall; 85 of the defeated and 22 of the victors fell.
+geo-seed-1-1024 e1065 The Warband of Daak besieged Vomethidell of the House of Glaefaenn; it fell.
+geo-seed-1-1024 e1066 The Warband of Daak sacked Vomethidell of the House of Glaefaenn; 536 died and 1,251 fled.
+geo-seed-1-1024 e1067 The survivors of Vomethidell fled into hiding and founded Vanoae in Collier's Weald.
+geo-seed-1-1024 e1068 Vanoae lay hidden from 5936 to 5999.
+geo-seed-1-1024 e1070 The Warband of Daak prevailed over the House of Glaefaenn after seven years of war.
+geo-seed-1-1024 e1071 Plague broke out in Grix and spread to one other settlement; 811 died in all.
+geo-seed-1-1024 e1074 Plague broke out in Sleek; 299 died.
+geo-seed-1-1024 e1075 The Skreegg Horde laid claim to Outlaw's Shaw, held by the Kingdom of Alid.
+geo-seed-1-1024 e1077 Plague broke out in Vanoae; 180 died.
+geo-seed-1-1024 e1080 Plague broke out in Skeenk and spread to two other settlements; 1,457 died in all.
+geo-seed-1-1024 e1085 The Skreegg Horde laid claim to Teaselgill Sward, held by the Duchy of Brod.
+geo-seed-1-1024 e1086 Plague broke out in Alurstead and spread to one other settlement; 342 died in all.
+geo-seed-1-1024 e1088 Plague broke out in Skreex Pit; 883 died.
+geo-seed-1-1024 e1094 The Gub Horde laid claim to Snink-Grozz Hole and Kut-Gnoz Hole of the Khirnhu Throne in the Wintry Leas.
+geo-seed-1-1024 e1095 The Restless of Stead fell upon Sennfe; 78 died.
+geo-seed-1-1024 e1096 The Warband of Daak laid claim to Hodmalland, held by the Hodmal League.
+geo-seed-1-1024 e1097 Plague broke out in Giz and spread to one other settlement; 568 died in all.
+geo-seed-1-1024 e1103 The Warrens of Zurkdriz laid claim to Teaselgill Sward, held by the Duchy of Brod.
+geo-seed-1-1024 e1105 The Warrens of Zurkdriz laid claim to the Brambled Weald, held by the Khirnhu Throne.
+geo-seed-1-1024 e1106 The Gub Horde declared war on the Khirnhu Throne over the Wintry Leas.
+geo-seed-1-1024 e1107 The Gub Horde defeated the Khirnhu Throne in the Wintry Leas; 1,102 of the defeated and 166 of the victors fell.
+geo-seed-1-1024 e1108 The Gub Horde besieged Snink-Grozz Hole of the Khirnhu Throne; it held.
+geo-seed-1-1024 e1109 The Khirnhu Throne defeated the Gub Horde in the Wintry Leas; 435 of the defeated and 176 of the victors fell.
+geo-seed-1-1024 e1110 The Khirnhu Throne defeated the Gub Horde in the Darkening Plain; 494 of the defeated and 156 of the victors fell.
+geo-seed-1-1024 e1111 The Khirnhu Throne besieged Skrutch Pit of the Gub Horde; it fell.
+geo-seed-1-1024 e1112 The Khirnhu Throne sacked Skrutch Pit of the Gub Horde; 1,007 died and 2,351 fled.
+geo-seed-1-1024 e1114 The Khirnhu Throne raised the Tower of Bikmoud in South Fells against the Gub Horde.
+geo-seed-1-1024 e1115 The Khirnhu Throne defeated the Gub Horde in the Darkening Plain; 441 of the defeated and 175 of the victors fell.
+geo-seed-1-1024 e1116 The Khirnhu Throne besieged Zoz-Krat Pit of the Gub Horde; it fell.
+geo-seed-1-1024 e1117 The Khirnhu Throne took Zoz-Krat Pit from the Gub Horde; 110 died.
+geo-seed-1-1024 e1119 The Gub Horde defeated the Khirnhu Throne in the Darkening Plain; 769 of the defeated and 126 of the victors fell.
+geo-seed-1-1024 e1120 The Gub Horde and the Khirnhu Throne made peace after nine years of war, neither the victor.
+geo-seed-1-1024 e1121 The Restless of Stead fell upon Glaethaes; 29 died.
+geo-seed-1-1024 e1123 Plague broke out in Skeenk; 1,938 died.
+geo-seed-1-1024 e1124 The Restless of Stead fell upon Riethithe; 87 died.
 world hist-span-2000-512 7 512 2000 all normal auto normal
 hist-span-2000-512 input_region 6cbb147f09f56431f92f7539208755b01224337a7a132ed72726ee70ea0e196c
 hist-span-2000-512 table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
@@ -7074,24 +7168,24 @@ hist-conflict-turbulent-512 e841 A succession crisis at Buuzmom Camp shook the U
 world hist-conflict-civs4-512 42 512 6000 all normal 4 normal
 hist-conflict-civs4-512 input_region ef34e36f0cc06dee0d1127580067a832ff50aa9445f0e7990c37c30a0f459279
 hist-conflict-civs4-512 table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
-hist-conflict-civs4-512 table beast_population 712369472d708820a63b85adff72ebc5de5c41ed70663c8925374267657bee5c
-hist-conflict-civs4-512 table civilization a37ed327a0a0d70d754887024a83c9384a42de11d184b3bc54e590de54c5638b
-hist-conflict-civs4-512 table event c6d8b7f5eddf7f61e24d8d14088b143c1e8b97d6f9662deed1c5f6bd28bbf3f8
-hist-conflict-civs4-512 table event_cause 51c97a37f73d60676b5f588d956b2368751b5630c2e34045ebee2ac752f5119d
+hist-conflict-civs4-512 table beast_population 2907b8830e4891a4293cf704b83fe2f3550a02cd3b88c62490f25eb58e6038f3
+hist-conflict-civs4-512 table civilization 78ec6b159beada7d978034ffb5d4752c695de07ffbe038ae9dc4361c5e8460a9
+hist-conflict-civs4-512 table event 32cdd45bc65caa52cbb7bb0905ec2777bc79f286b341953ddb27771c34eca906
+hist-conflict-civs4-512 table event_cause 370f348356b03c0e363bbf684ee66ec470e9a344dbf48039ce92af990f3348b7
 hist-conflict-civs4-512 table event_kind e29f4e009816a61336ec02603e33e8a31c595adfa462398e89b7903b025878b6
 hist-conflict-civs4-512 table event_kind_role 5e69dd770ca8047ff4f4925f0417c8969d4a5f7b88a3cfad1cbe50f359f305c0
 hist-conflict-civs4-512 table event_kind_value 800461fae6225a2f5c9f4602c9b686e3e1254dbc1f972791f0f741c100296e80
-hist-conflict-civs4-512 table event_participant 42c9ff232ae33b6a0373d32c00b58307fa277ebd19e18411514056908821ce86
-hist-conflict-civs4-512 table event_value 09d549527128486a849e4c43a87a7b7be2f5a7b483ff1706514ef06c80c6b9f2
-hist-conflict-civs4-512 table monster 1f34d741fd3d279e37c85054e9fb4679a970648f9aa9fbf590308dfa4cdaa103
+hist-conflict-civs4-512 table event_participant d57c3e668fe9283376ed7ae86828cd7ff99beec70927927b48369b4754ef710a
+hist-conflict-civs4-512 table event_value 07cb00e6d6b784d302a79385bf28c9a0577f5b440e4978cd0115aa3cfb7cefba
+hist-conflict-civs4-512 table monster 87649991054f4834c8ba6e3d9ff6a420381f2567fd28f6eb2ec51b00315d3b29
 hist-conflict-civs4-512 table monster_kind 0924769b215e6edf9f8576b8eafa2cc19e0b31440a0476b7848b6f3c300594c8
 hist-conflict-civs4-512 table phase 91114e753dcfddb773a49344eab518fb22f0a94261aede46f972302a5e9670de
-hist-conflict-civs4-512 table region_control 95c9bbe9253131b681dd2905828edb299c204d51a58f60003acf70cedb5c4a00
+hist-conflict-civs4-512 table region_control d67b0a6f3acad9c52f04902ffa181c64178e4754e1f7d3febb6f93f8c6f8311c
 hist-conflict-civs4-512 table region_name 3254cbee3895e1dd038fe4f5267685a19c8a39a637814ee7199e70c4c7c8492b
-hist-conflict-civs4-512 table relation 1686c001ed251f1e93f0dc20efacab221040c9eb3fb7c7804e490f103928dd8d
-hist-conflict-civs4-512 table settlement bf72904624ff6ad58c4dbccf467df7fbc74ed291771471b452367000da6f6b13
-hist-conflict-civs4-512 table settlement_census 0cc2cacd642cf77a3ccff8346b8f67c2072954bfa44c1009ad92330efcb3987f
-hist-conflict-civs4-512 table site 6124564c49dfbcd9bf5ef8bc86fbf8cbd5c22494ba15f1f8967fb19b90b967b9
+hist-conflict-civs4-512 table relation ded91bd7a8d4cf73a8edd37f450ed63a50832252cefa8837bde8aba2cebe3e50
+hist-conflict-civs4-512 table settlement 5e71ff9c50adbc7fba6133f64fcbcf43d917b43011aaa145834822a9a90c071b
+hist-conflict-civs4-512 table settlement_census a5111bb67aa77fce1fe31e8bffa9b18fb09ba9487160efdf9563ef20e46810ab
+hist-conflict-civs4-512 table site fd7a8f165d0499f2267ad6b95ede29370e8dc5e70b01285de8a7e49f1324a316
 hist-conflict-civs4-512 report end_year = 6000
 hist-conflict-civs4-512 report phases_opening = 6
 hist-conflict-civs4-512 report phases_quiet = 10
@@ -7099,40 +7193,40 @@ hist-conflict-civs4-512 report phases_flare = 6
 hist-conflict-civs4-512 report phases_final = 1
 hist-conflict-civs4-512 report simulated_years = 1430
 hist-conflict-civs4-512 report simulated_permille = 238
-hist-conflict-civs4-512 report events = 1063
+hist-conflict-civs4-512 report events = 1058
 hist-conflict-civs4-512 report events_awakening = 6
 hist-conflict-civs4-512 report events_civ_founded = 9
 hist-conflict-civs4-512 report events_settlement_founded = 9
 hist-conflict-civs4-512 report events_quiet_era = 0
 hist-conflict-civs4-512 report events_flare_up = 6
-hist-conflict-civs4-512 report events_colony_founded = 69
+hist-conflict-civs4-512 report events_colony_founded = 70
 hist-conflict-civs4-512 report events_became_village = 34
 hist-conflict-civs4-512 report events_became_town = 32
 hist-conflict-civs4-512 report events_became_city = 1
 hist-conflict-civs4-512 report events_settlement_dwindled = 17
-hist-conflict-civs4-512 report events_famine = 38
+hist-conflict-civs4-512 report events_famine = 39
 hist-conflict-civs4-512 report events_plague = 0
 hist-conflict-civs4-512 report events_plague_spread = 21
 hist-conflict-civs4-512 report events_succession_crisis = 20
 hist-conflict-civs4-512 report events_civ_seceded = 3
 hist-conflict-civs4-512 report events_settlement_abandoned = 0
-hist-conflict-civs4-512 report events_capital_moved = 19
+hist-conflict-civs4-512 report events_capital_moved = 16
 hist-conflict-civs4-512 report events_civ_ended = 0
 hist-conflict-civs4-512 report events_ruin_faded = 15
 hist-conflict-civs4-512 report events_claim = 93
-hist-conflict-civs4-512 report events_war_declared = 56
-hist-conflict-civs4-512 report events_battle = 223
+hist-conflict-civs4-512 report events_war_declared = 55
+hist-conflict-civs4-512 report events_battle = 231
 hist-conflict-civs4-512 report events_battle_at_pass = 0
-hist-conflict-civs4-512 report events_siege = 112
+hist-conflict-civs4-512 report events_siege = 106
 hist-conflict-civs4-512 report events_sacked = 26
-hist-conflict-civs4-512 report events_settlement_captured = 24
+hist-conflict-civs4-512 report events_settlement_captured = 19
 hist-conflict-civs4-512 report events_peace = 19
-hist-conflict-civs4-512 report events_truce = 9
-hist-conflict-civs4-512 report events_region_ceded = 19
-hist-conflict-civs4-512 report events_civ_conquered = 3
+hist-conflict-civs4-512 report events_truce = 10
+hist-conflict-civs4-512 report events_region_ceded = 18
+hist-conflict-civs4-512 report events_civ_conquered = 2
 hist-conflict-civs4-512 report events_settlement_abandoned_to = 5
 hist-conflict-civs4-512 report events_refugees_settled = 0
-hist-conflict-civs4-512 report events_tribute = 16
+hist-conflict-civs4-512 report events_tribute = 17
 hist-conflict-civs4-512 report events_war_won = 20
 hist-conflict-civs4-512 report events_search_abandoned = 0
 hist-conflict-civs4-512 report events_refuge_held = 11
@@ -7148,69 +7242,69 @@ hist-conflict-civs4-512 report events_undead_rose = 1
 hist-conflict-civs4-512 report events_monster_woke = 1
 hist-conflict-civs4-512 report events_monster_slept = 1
 hist-conflict-civs4-512 report events_monster_raid = 14
-hist-conflict-civs4-512 report events_settlement_overrun = 1
+hist-conflict-civs4-512 report events_settlement_overrun = 2
 hist-conflict-civs4-512 report events_monster_slain = 0
 hist-conflict-civs4-512 report events_monster_driven_off = 2
 hist-conflict-civs4-512 report events_monster_died = 1
 hist-conflict-civs4-512 report events_beasts_bold = 0
 hist-conflict-civs4-512 report events_outpost_built = 26
-hist-conflict-civs4-512 report events_outpost_abandoned = 18
+hist-conflict-civs4-512 report events_outpost_abandoned = 17
 hist-conflict-civs4-512 report civilizations = 12
-hist-conflict-civs4-512 report civilizations_alive = 9
-hist-conflict-civs4-512 report settlements = 78
+hist-conflict-civs4-512 report civilizations_alive = 10
+hist-conflict-civs4-512 report settlements = 79
 hist-conflict-civs4-512 report settlements_standing = 46
 hist-conflict-civs4-512 report regions_held = 14
-hist-conflict-civs4-512 report census_rows = 1118
+hist-conflict-civs4-512 report census_rows = 1113
 hist-conflict-civs4-512 report relations = 119
 hist-conflict-civs4-512 report region_names = 2
 hist-conflict-civs4-512 report beasts = 5
 hist-conflict-civs4-512 report monster_kinds = 6
 hist-conflict-civs4-512 report beast_populations = 397
 hist-conflict-civs4-512 report monsters = 2
-hist-conflict-civs4-512 report sites = 29
-hist-conflict-civs4-512 report population = 69980
-hist-conflict-civs4-512 report population_elf = 3258
-hist-conflict-civs4-512 report population_goblin = 12545
-hist-conflict-civs4-512 report population_dwarf = 29949
+hist-conflict-civs4-512 report sites = 30
+hist-conflict-civs4-512 report population = 67374
+hist-conflict-civs4-512 report population_elf = 3266
+hist-conflict-civs4-512 report population_goblin = 25762
+hist-conflict-civs4-512 report population_dwarf = 17586
 hist-conflict-civs4-512 report population_faerie = 400
 hist-conflict-civs4-512 report population_human = 10264
-hist-conflict-civs4-512 report population_orc = 13564
+hist-conflict-civs4-512 report population_orc = 10096
 hist-conflict-civs4-512 report settlements_standing_elf = 5
-hist-conflict-civs4-512 report settlements_standing_goblin = 11
-hist-conflict-civs4-512 report settlements_standing_dwarf = 19
-hist-conflict-civs4-512 report settlements_standing_faerie = 2
+hist-conflict-civs4-512 report settlements_standing_goblin = 16
+hist-conflict-civs4-512 report settlements_standing_dwarf = 14
+hist-conflict-civs4-512 report settlements_standing_faerie = 1
 hist-conflict-civs4-512 report settlements_standing_human = 2
-hist-conflict-civs4-512 report settlements_standing_orc = 7
+hist-conflict-civs4-512 report settlements_standing_orc = 8
 hist-conflict-civs4-512 report regions_held_elf = 2
-hist-conflict-civs4-512 report regions_held_goblin = 3
-hist-conflict-civs4-512 report regions_held_dwarf = 5
+hist-conflict-civs4-512 report regions_held_goblin = 4
+hist-conflict-civs4-512 report regions_held_dwarf = 4
 hist-conflict-civs4-512 report regions_held_faerie = 1
 hist-conflict-civs4-512 report regions_held_human = 1
 hist-conflict-civs4-512 report regions_held_orc = 2
-hist-conflict-civs4-512 stats civ_settlements_max = 15
-hist-conflict-civs4-512 stats settlements_colonies = 69
+hist-conflict-civs4-512 stats civ_settlements_max = 10
+hist-conflict-civs4-512 stats settlements_colonies = 70
 hist-conflict-civs4-512 stats civilizations_seceded = 3
 hist-conflict-civs4-512 stats relations_enmity = 15
-hist-conflict-civs4-512 stats relations_peace = 48
-hist-conflict-civs4-512 stats war_years_total = 766
+hist-conflict-civs4-512 stats relations_peace = 49
+hist-conflict-civs4-512 stats war_years_total = 797
 hist-conflict-civs4-512 stats war_years_max = 40
-hist-conflict-civs4-512 stats civilizations_conquered = 3
+hist-conflict-civs4-512 stats civilizations_conquered = 2
 hist-conflict-civs4-512 stats settlements_sacked = 12
-hist-conflict-civs4-512 stats settlements_captured = 18
-hist-conflict-civs4-512 stats regions_conquered = 24
+hist-conflict-civs4-512 stats settlements_captured = 14
+hist-conflict-civs4-512 stats regions_conquered = 22
 hist-conflict-civs4-512 stats races_alive = 6
-hist-conflict-civs4-512 stats wars_attacker_elf = 1
-hist-conflict-civs4-512 stats wars_attacker_goblin = 41
-hist-conflict-civs4-512 stats wars_attacker_dwarf = 5
+hist-conflict-civs4-512 stats wars_attacker_elf = 0
+hist-conflict-civs4-512 stats wars_attacker_goblin = 40
+hist-conflict-civs4-512 stats wars_attacker_dwarf = 6
 hist-conflict-civs4-512 stats wars_attacker_faerie = 0
 hist-conflict-civs4-512 stats wars_attacker_human = 0
 hist-conflict-civs4-512 stats wars_attacker_orc = 9
-hist-conflict-civs4-512 stats wars_hollow = 7
-hist-conflict-civs4-512 stats wars_hollow_permille = 125
+hist-conflict-civs4-512 stats wars_hollow = 9
+hist-conflict-civs4-512 stats wars_hollow_permille = 163
 hist-conflict-civs4-512 stats wars_same_goal_max = 4
 hist-conflict-civs4-512 stats wars_same_goal_unchanged_max = 3
-hist-conflict-civs4-512 stats race_population_share_max_permille = 427
-hist-conflict-civs4-512 stats race_regions_share_max_permille = 357
+hist-conflict-civs4-512 stats race_population_share_max_permille = 382
+hist-conflict-civs4-512 stats race_regions_share_max_permille = 285
 hist-conflict-civs4-512 stats wars_unfound = 0
 hist-conflict-civs4-512 stats refuges_held_no_destination = 11
 hist-conflict-civs4-512 war e69 2449-2453 c3 c1 rg12 claim e40 battles 1 sacked 1 taken 0 goal-lost won-c3-tribute
@@ -7264,15 +7358,14 @@ hist-conflict-civs4-512 war e947 5816-5856 c5 c9 rg13 claim e946 battles 5 sacke
 hist-conflict-civs4-512 war e952 5822-5835 c12 c7 rg14 claim e917 battles 3 sacked 0 taken 1 exhaustion won-c12-ceded
 hist-conflict-civs4-512 war e969 5838-5850 c12 c3 rg5 claim e934 battles 3 sacked 1 taken 1 aim won-c12-tribute
 hist-conflict-civs4-512 war e981 5851-5875 c12 c10 rg4 claim e961 battles 4 sacked 2 taken 0 exhaustion won-c12-tribute
-hist-conflict-civs4-512 war e1016 5938-5949 c12 c3 rg9 claim e1010 battles 4 sacked 0 taken 4 conquest -
-hist-conflict-civs4-512 war e1026 5945-5949 c1 c3 rg9 claim e366 battles 2 sacked 0 taken 0 conquest -
-hist-conflict-civs4-512 war e1036 5948-5949 c4 c3 rg9 claim e1035 battles 0 sacked 0 taken 0 conquest -
-hist-conflict-civs4-512 war e1044 5962-5966 c12 c6 rg7 claim e1043 battles 2 sacked 0 taken 0 exhaustion won-c6-ceded
-hist-conflict-civs4-512 war e1053 5982-5989 c6 c9 rg13 claim e988 battles 3 sacked 0 taken 1 goal-lost won-c6-tribute
+hist-conflict-civs4-512 war e1017 5938-5956 c12 c3 rg9 claim e1010 battles 7 sacked 0 taken 0 exhaustion truce
+hist-conflict-civs4-512 war e1031 5962-5980 c12 c6 rg2 claim e1006 battles 3 sacked 0 taken 0 exhaustion won-c6-tribute
+hist-conflict-civs4-512 war e1038 5980-5984 c7 c3 rg9 claim e1028 battles 3 sacked 0 taken 0 exhaustion won-c7-tribute
+hist-conflict-civs4-512 war e1043 5982-open c6 c9 rg13 claim e988 battles 6 sacked 0 taken 0 open -
 hist-conflict-civs4-512 r17 quick_aim_wins 0 foothold_cessions 1 held_goal_wars 3/0/0/0
 hist-conflict-civs4-512 r19 t11 44 first_orc_war 44 claims39 4/5/0 cessions40 1 goal_differs 0
-hist-conflict-civs4-512 r22 fresh 9/1 dropped 3 refuge_hidden 0 repeated_tolls 11 mixed_tolls 0
-hist-conflict-civs4-512 r22 open_claims e671,e773,e913,e919,e993,e1008,e1012
+hist-conflict-civs4-512 r22 fresh 7/1 dropped 3 refuge_hidden 0 repeated_tolls 11 mixed_tolls 0
+hist-conflict-civs4-512 r22 open_claims e217,e366,e671,e773,e855,e913,e919,e932,e993,e1008,e1013,e1030
 hist-conflict-civs4-512 r22 hidden_refuges -
 hist-conflict-civs4-512 r21 renamings 2 7:3244:capital_sack:e229,13:4055:capital_sack:e429
 hist-conflict-civs4-512 q150 0 e0
@@ -7513,12 +7606,11 @@ hist-conflict-civs4-512 note e947 The claim, since 5607, was to Slikreek in the 
 hist-conflict-civs4-512 note e952 Claimed since 5756. The second war between them.
 hist-conflict-civs4-512 note e969 The claim, since 5792, was to Nank Pit and Skreek Pit in the Tainted Barrows.
 hist-conflict-civs4-512 note e981 Claimed since 5833. The third war between them.
-hist-conflict-civs4-512 note e1016 Claimed since 5922. The second war between them.
-hist-conflict-civs4-512 note e1026 Claimed since 3792. The fourth war between them.
-hist-conflict-civs4-512 note e1036 Claimed since 3149.
-hist-conflict-civs4-512 note e1044 Claimed since 5917. The second war between them.
-hist-conflict-civs4-512 note e1053 The claim, since 5864, was to Slikreek in the Fallen Wood. The second war between them.
-hist-conflict-civs4-512 summary threshold 46 shown 250 ages 8,43,62,23,26,88
+hist-conflict-civs4-512 note e1017 Claimed since 5922. The second war between them.
+hist-conflict-civs4-512 note e1031 Claimed since 5917. The second war between them.
+hist-conflict-civs4-512 note e1038 Claimed since 5958. The sixth war between them.
+hist-conflict-civs4-512 note e1043 The claim, since 5864, was to Slikreek in the Fallen Wood. The second war between them.
+hist-conflict-civs4-512 summary threshold 41 shown 250 ages 8,45,64,24,28,81
 hist-conflict-civs4-512 e1 Fielie awakened the Elves in Gull's Portion.
 hist-conflict-civs4-512 e2 The Elves founded the House of Finen in Gull's Portion.
 hist-conflict-civs4-512 e3 The House of Finen founded Voeledell in Gull's Portion.
@@ -8530,58 +8622,53 @@ hist-conflict-civs4-512 e1008 The Gidruz Horde laid claim to Leper's Debt, held 
 hist-conflict-civs4-512 e1009 After the slaughter and the sack, the dead of the Plain of Shades rose as the Restless of Ashis.
 hist-conflict-civs4-512 e1010 The Daald Horde laid claim to Central Downs, held by the Grork Horde.
 hist-conflict-civs4-512 e1011 The Restless of Ashis fell upon Flonly Hollow; eight died.
-hist-conflict-civs4-512 e1012 The Gidruz Horde laid claim to Slikreek of the Warrens of Skeebdrot in the Fallen Wood.
-hist-conflict-civs4-512 e1013 The Restless of Ashis fell upon Flonly Hollow; three died.
-hist-conflict-civs4-512 e1014 The Shaesia Ring drove the Restless of Ashis back to its lair in the Plain of Shades.
-hist-conflict-civs4-512 e1015 A succession crisis at Groz shook the Warrens of Gnunk.
-hist-conflict-civs4-512 e1016 The Daald Horde declared war on the Grork Horde over Central Downs.
-hist-conflict-civs4-512 e1017 Voeledell grew into a town of 1,500.
-hist-conflict-civs4-512 e1018 The Daald Horde defeated the Grork Horde in Central Downs; 325 of the defeated and 88 of the victors fell.
-hist-conflict-civs4-512 e1019 The Daald Horde besieged Snugg of the Grork Horde; it fell.
-hist-conflict-civs4-512 e1020 The Daald Horde took Snugg from the Grork Horde; 715 died.
-hist-conflict-civs4-512 e1021 The seat of the Grork Horde moved to Beedrux Pit.
-hist-conflict-civs4-512 e1022 The Daald Horde defeated the Grork Horde in Central Downs; 140 of the defeated and 45 of the victors fell.
-hist-conflict-civs4-512 e1023 The Daald Horde besieged Beedrux Pit of the Grork Horde; it fell.
-hist-conflict-civs4-512 e1024 The Daald Horde took Beedrux Pit from the Grork Horde; 237 died.
-hist-conflict-civs4-512 e1025 The seat of the Grork Horde moved to Keeskeegg Hole.
-hist-conflict-civs4-512 e1026 The House of Finen declared war on the Grork Horde over Central Downs.
-hist-conflict-civs4-512 e1027 The Daald Horde defeated the Grork Horde in Central Downs; 52 of the defeated and 13 of the victors fell.
-hist-conflict-civs4-512 e1028 The Daald Horde besieged Keeskeegg Hole of the Grork Horde; it fell.
-hist-conflict-civs4-512 e1029 The Daald Horde took Keeskeegg Hole from the Grork Horde; 241 died.
-hist-conflict-civs4-512 e1030 The seat of the Grork Horde moved to Druk.
-hist-conflict-civs4-512 e1031 The House of Finen defeated the Grork Horde in Central Downs; 19 of the defeated and 5 of the victors fell.
-hist-conflict-civs4-512 e1032 The House of Finen besieged Druk of the Grork Horde; it held.
-hist-conflict-civs4-512 e1033 The House of Finen defeated the Grork Horde in Central Downs; 18 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e1034 The House of Finen besieged Druk of the Grork Horde; it held.
-hist-conflict-civs4-512 e1035 The Gidruz Horde laid claim to Central Downs, held by the Grork Horde.
-hist-conflict-civs4-512 e1036 The Gidruz Horde declared war on the Grork Horde over Central Downs.
-hist-conflict-civs4-512 e1037 The Daald Horde defeated the Grork Horde in Central Downs; 12 of the defeated and 4 of the victors fell.
-hist-conflict-civs4-512 e1038 The Daald Horde besieged Druk of the Grork Horde; it fell.
-hist-conflict-civs4-512 e1039 The Daald Horde took Druk from the Grork Horde; 234 died.
-hist-conflict-civs4-512 e1040 The Grork Horde fell to the Daald Horde.
-hist-conflict-civs4-512 e1041 The Grork Horde abandoned Grakrab Lookout, its realm having fallen.
-hist-conflict-civs4-512 e1042 Minno grew into a town of 1,502.
-hist-conflict-civs4-512 e1043 The Daald Horde laid claim to Mofaesi's Fall, held by the Tourdbaim Throne.
-hist-conflict-civs4-512 e1044 The Daald Horde declared war on the Tourdbaim Throne over Mofaesi's Fall.
-hist-conflict-civs4-512 e1045 Famine struck Groz; 188 died.
-hist-conflict-civs4-512 e1046 The Daald Horde defeated the Tourdbaim Throne in Mofaesi's Fall; 970 of the defeated and 372 of the victors fell.
-hist-conflict-civs4-512 e1047 The Daald Horde besieged Skidrazz of the Tourdbaim Throne; it held.
-hist-conflict-civs4-512 e1048 The Tourdbaim Throne defeated the Daald Horde in Mofaesi's Fall; 1,814 of the defeated and 354 of the victors fell.
-hist-conflict-civs4-512 e1049 The Tourdbaim Throne prevailed over the Daald Horde after four years of war.
-hist-conflict-civs4-512 e1050 The Daald Horde ceded Central Downs to the Tourdbaim Throne.
-hist-conflict-civs4-512 e1051 Plague broke out in Elalcie; 82 died.
-hist-conflict-civs4-512 e1052 Famine struck Nomafiedell; 35 died.
-hist-conflict-civs4-512 e1053 The Tourdbaim Throne declared war on the Warrens of Skeebdrot over the Fallen Wood.
-hist-conflict-civs4-512 e1054 Famine struck Krazz; 73 died.
-hist-conflict-civs4-512 e1055 The Warrens of Skeebdrot defeated the Tourdbaim Throne in the Fallen Wood; 194 of the defeated and 33 of the victors fell.
-hist-conflict-civs4-512 e1056 The Tourdbaim Throne defeated the Warrens of Skeebdrot in Central Downs; 100 of the defeated and 34 of the victors fell.
-hist-conflict-civs4-512 e1057 Plague broke out in Voeledell; 211 died.
-hist-conflict-civs4-512 e1058 The Tourdbaim Throne defeated the Warrens of Skeebdrot in the Fallen Wood; 82 of the defeated and 29 of the victors fell.
-hist-conflict-civs4-512 e1059 The Tourdbaim Throne besieged Slikreek of the Warrens of Skeebdrot; it fell.
-hist-conflict-civs4-512 e1060 The Tourdbaim Throne took Slikreek from the Warrens of Skeebdrot; 57 died.
-hist-conflict-civs4-512 e1061 The Tourdbaim Throne prevailed over the Warrens of Skeebdrot after seven years of war.
-hist-conflict-civs4-512 e1062 The Warrens of Skeebdrot paid tribute to the Tourdbaim Throne; 411 were carried off.
-hist-conflict-civs4-512 e1063 A succession crisis at Zaxdrork shook the Gidruz Horde.
+hist-conflict-civs4-512 e1012 The Restless of Ashis drove the people from Flonly Hollow and made it its lair; 92 escaped.
+hist-conflict-civs4-512 e1013 The Gidruz Horde laid claim to Slikreek of the Warrens of Skeebdrot in the Fallen Wood.
+hist-conflict-civs4-512 e1014 The Restless of Ashis fell upon Barn Hold; 61 died.
+hist-conflict-civs4-512 e1015 The Shaesia Ring drove the Restless of Ashis back to its lair in Blackstrand Wolds.
+hist-conflict-civs4-512 e1016 A succession crisis at Groz shook the Warrens of Gnunk.
+hist-conflict-civs4-512 e1017 The Daald Horde declared war on the Grork Horde over Central Downs.
+hist-conflict-civs4-512 e1018 Voeledell grew into a town of 1,500.
+hist-conflict-civs4-512 e1019 The Grork Horde defeated the Daald Horde in Central Downs; 587 of the defeated and 104 of the victors fell.
+hist-conflict-civs4-512 e1020 The Daald Horde defeated the Grork Horde in the Tainted Barrows; 240 of the defeated and 100 of the victors fell.
+hist-conflict-civs4-512 e1021 The Grork Horde defeated the Daald Horde in Central Downs; 576 of the defeated and 96 of the victors fell.
+hist-conflict-civs4-512 e1022 The Daald Horde defeated the Grork Horde in the Tainted Barrows; 253 of the defeated and 84 of the victors fell.
+hist-conflict-civs4-512 e1023 The Grork Horde defeated the Daald Horde in Central Downs; 573 of the defeated and 94 of the victors fell.
+hist-conflict-civs4-512 e1024 The Daald Horde defeated the Grork Horde in the Tainted Barrows; 266 of the defeated and 92 of the victors fell.
+hist-conflict-civs4-512 e1025 The Daald Horde defeated the Grork Horde in Central Downs; 232 of the defeated and 72 of the victors fell.
+hist-conflict-civs4-512 e1026 The Daald Horde besieged Snugg of the Grork Horde; it held.
+hist-conflict-civs4-512 e1027 The Grork Horde and the Daald Horde made peace after 18 years of war, neither the victor.
+hist-conflict-civs4-512 e1028 Clan Thraim laid claim to Central Downs, held by the Grork Horde.
+hist-conflict-civs4-512 e1029 Minno grew into a town of 1,502.
+hist-conflict-civs4-512 e1030 The Warrens of Gnunk laid claim to Central Downs, held by the Grork Horde.
+hist-conflict-civs4-512 e1031 The Daald Horde declared war on the Tourdbaim Throne over Northwest Fells.
+hist-conflict-civs4-512 e1032 Famine struck Groz; 188 died.
+hist-conflict-civs4-512 e1033 The Tourdbaim Throne defeated the Daald Horde in Northwest Fells; 1,509 of the defeated and 285 of the victors fell.
+hist-conflict-civs4-512 e1034 The Daald Horde defeated the Tourdbaim Throne in the Tainted Barrows; 978 of the defeated and 373 of the victors fell.
+hist-conflict-civs4-512 e1035 Plague broke out in Elalcie; 82 died.
+hist-conflict-civs4-512 e1036 Famine struck Nomafiedell; 35 died.
+hist-conflict-civs4-512 e1037 Famine struck Beedrux Pit; 392 died.
+hist-conflict-civs4-512 e1038 Clan Thraim declared war on the Grork Horde over Central Downs.
+hist-conflict-civs4-512 e1039 The Tourdbaim Throne defeated the Daald Horde in Northwest Fells; 1,094 of the defeated and 390 of the victors fell.
+hist-conflict-civs4-512 e1040 The Tourdbaim Throne prevailed over the Daald Horde after 18 years of war.
+hist-conflict-civs4-512 e1041 The Daald Horde paid tribute to the Tourdbaim Throne; 993 were carried off.
+hist-conflict-civs4-512 e1042 The Grork Horde defeated Clan Thraim in Central Downs; 191 of the defeated and 61 of the victors fell.
+hist-conflict-civs4-512 e1043 The Tourdbaim Throne declared war on the Warrens of Skeebdrot over the Fallen Wood.
+hist-conflict-civs4-512 e1044 Clan Thraim defeated the Grork Horde in Sorreldown; 308 of the defeated and 53 of the victors fell.
+hist-conflict-civs4-512 e1045 The Warrens of Skeebdrot defeated the Tourdbaim Throne in the Fallen Wood; 170 of the defeated and 36 of the victors fell.
+hist-conflict-civs4-512 e1046 Famine struck Krazz; 73 died.
+hist-conflict-civs4-512 e1047 Clan Thraim defeated the Grork Horde in Central Downs; 313 of the defeated and 58 of the victors fell.
+hist-conflict-civs4-512 e1048 Clan Thraim besieged Snugg of the Grork Horde; it held.
+hist-conflict-civs4-512 e1049 Clan Thraim prevailed over the Grork Horde after four years of war.
+hist-conflict-civs4-512 e1050 The Grork Horde paid tribute to Clan Thraim; 1,300 were carried off.
+hist-conflict-civs4-512 e1051 The Daald Horde sent settlers from Dashthosh Camp to found Kaakh Camp in the Tainted Barrows.
+hist-conflict-civs4-512 e1052 The Tourdbaim Throne defeated the Warrens of Skeebdrot in Mofaesi's Fall; 80 of the defeated and 32 of the victors fell.
+hist-conflict-civs4-512 e1053 Plague broke out in Voeledell; 212 died.
+hist-conflict-civs4-512 e1054 The Warrens of Skeebdrot defeated the Tourdbaim Throne in the Fallen Wood; 200 of the defeated and 32 of the victors fell.
+hist-conflict-civs4-512 e1055 A succession crisis at Zaxdrork shook the Gidruz Horde.
+hist-conflict-civs4-512 e1056 The Tourdbaim Throne defeated the Warrens of Skeebdrot in Mofaesi's Fall; 97 of the defeated and 35 of the victors fell.
+hist-conflict-civs4-512 e1057 The Warrens of Skeebdrot defeated the Tourdbaim Throne in the Fallen Wood; 179 of the defeated and 32 of the victors fell.
+hist-conflict-civs4-512 e1058 The Tourdbaim Throne defeated the Warrens of Skeebdrot in Mofaesi's Fall; 78 of the defeated and 24 of the victors fell.
 world hist-conflict-flight 1 512 6000 all normal auto normal
 hist-conflict-flight input_region ec59865362f38b2784387d71faa9380d6b59e0fb557c2ceac580627e9cf73788
 hist-conflict-flight table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
@@ -9503,24 +9590,24 @@ hist-conflict-flight e544 The Warrens of Zutskreeb took Geezink from the Gub Hor
 world hist-conflict-73-1024 73 1024 6000 all normal auto normal
 hist-conflict-73-1024 input_region 5b31a5b86f4b477a6cf982fd9d4ff6daf075a0341660e4cee78b5bc43aa2ac61
 hist-conflict-73-1024 table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
-hist-conflict-73-1024 table beast_population ad385e86f70fdc4934279a32b8a20d0166a55c90b65e224b6b0a56fd5a93da66
-hist-conflict-73-1024 table civilization 864faa99f6abf9216b302b47f44863e6827f2ad8a648c81ded171cd27190a305
-hist-conflict-73-1024 table event 38a814869f2f8a399f8f2d30b23a1206bba0b937a21570bec9dcd534a70d76e4
-hist-conflict-73-1024 table event_cause c5af5ee83a04714d98700700064f94e0aa58301d7252242b97e319d3ec664148
+hist-conflict-73-1024 table beast_population fbb788c369880ec6e1c5ca54c298a475384af3ed430d8d929b7d5f15c9aca591
+hist-conflict-73-1024 table civilization 33d53ba8fd459bca3aa064b499fa23230b40baa8ca7229284069b927604bc1ac
+hist-conflict-73-1024 table event 9d810fe11f90780d9661d6216406a75b6d945881e46008cf4782ddafa25dfbb7
+hist-conflict-73-1024 table event_cause 9dcc97c5ca45312e9d9afab04f0c4244d61ea716ed18b21b75d5c85829dccdb2
 hist-conflict-73-1024 table event_kind e29f4e009816a61336ec02603e33e8a31c595adfa462398e89b7903b025878b6
 hist-conflict-73-1024 table event_kind_role 5e69dd770ca8047ff4f4925f0417c8969d4a5f7b88a3cfad1cbe50f359f305c0
 hist-conflict-73-1024 table event_kind_value 800461fae6225a2f5c9f4602c9b686e3e1254dbc1f972791f0f741c100296e80
-hist-conflict-73-1024 table event_participant 08912c473270ee1abf548dc8ebddc6cd52fb543956c98614fac63cace343d6c4
-hist-conflict-73-1024 table event_value bab1afa88fec66ac942f236be35bb77844e2a06a1b0475ab7dd5088e31ca12c2
-hist-conflict-73-1024 table monster c4efefbb1addfe7d4a094ad14ec2d21202076010a8905b2763377758f717c7e8
+hist-conflict-73-1024 table event_participant 336d31d95352215f9d9f685d15e5a5805684914d5a8d3c9fd276687dd2caa2da
+hist-conflict-73-1024 table event_value fb84aa60836b0f2cd3289192fe2e5a74ed12cb73a610ead5531bd0571c2e0601
+hist-conflict-73-1024 table monster 3dd37b9ecb5aad058cac85bfdc8abe5f6bd21defd96f4a306c856bcad54e7455
 hist-conflict-73-1024 table monster_kind 0924769b215e6edf9f8576b8eafa2cc19e0b31440a0476b7848b6f3c300594c8
 hist-conflict-73-1024 table phase 261c69543ea1f496be350b8499f6acd132de7e8267c2c067b40905c5f37534df
-hist-conflict-73-1024 table region_control 7cae69b83be26d746e3daa288f4539823dc375cf279ae7cbf41344980c153964
-hist-conflict-73-1024 table region_name ad7c67c578d22c6db03cddec5bb0e89425c4e41aca3823cd83fba35b5f25f461
-hist-conflict-73-1024 table relation c1cd005b9e5dc640cc8ee95bf77bfe1687babd076e258418056d12f9f7e45241
-hist-conflict-73-1024 table settlement 925c5485d75c94a6ffb33995c7f92ec04dc965face7dfac9b321208966d576f1
-hist-conflict-73-1024 table settlement_census 9fe2d4d636e15f87b134894f7d2b7f90e5210b2b5e3bbc3a981c83f5e7f5fd2f
-hist-conflict-73-1024 table site a59244936dd6bfcf2755ff088cd92b765a50d738558639f39aac82c94f50e4cd
+hist-conflict-73-1024 table region_control 118a3d0b3329b0d06fd57056bba764cf5ff0b883ef03db4dfba910423a5b4234
+hist-conflict-73-1024 table region_name 93374ee6c93485e3c2504fbda7b083e1e6b5f8082cd764003bc5a07c75d2cb63
+hist-conflict-73-1024 table relation f471b82a34ebbdf5739e98f3c062afca38b703b0b52ea7a30b770784f1b8f618
+hist-conflict-73-1024 table settlement ce253a0efa9db1d87db27330b4013e7240a40656e08a7675cf602f9e68f3180b
+hist-conflict-73-1024 table settlement_census 09656a6f563446a6e1a1b899c079ce24c1213154f005257d56c6e42fcdbf24fe
+hist-conflict-73-1024 table site 8b64010b98f82edc2d3a203ebee1416f5b7386b92d9bb40f4b8cd5f314c76f0f
 hist-conflict-73-1024 report end_year = 6000
 hist-conflict-73-1024 report phases_opening = 6
 hist-conflict-73-1024 report phases_quiet = 11
@@ -9528,118 +9615,118 @@ hist-conflict-73-1024 report phases_flare = 7
 hist-conflict-73-1024 report phases_final = 1
 hist-conflict-73-1024 report simulated_years = 1476
 hist-conflict-73-1024 report simulated_permille = 246
-hist-conflict-73-1024 report events = 1263
+hist-conflict-73-1024 report events = 1278
 hist-conflict-73-1024 report events_awakening = 6
 hist-conflict-73-1024 report events_civ_founded = 8
 hist-conflict-73-1024 report events_settlement_founded = 8
 hist-conflict-73-1024 report events_quiet_era = 0
 hist-conflict-73-1024 report events_flare_up = 7
-hist-conflict-73-1024 report events_colony_founded = 113
+hist-conflict-73-1024 report events_colony_founded = 114
 hist-conflict-73-1024 report events_became_village = 26
-hist-conflict-73-1024 report events_became_town = 98
+hist-conflict-73-1024 report events_became_town = 106
 hist-conflict-73-1024 report events_became_city = 1
-hist-conflict-73-1024 report events_settlement_dwindled = 31
-hist-conflict-73-1024 report events_famine = 75
+hist-conflict-73-1024 report events_settlement_dwindled = 38
+hist-conflict-73-1024 report events_famine = 71
 hist-conflict-73-1024 report events_plague = 0
-hist-conflict-73-1024 report events_plague_spread = 115
+hist-conflict-73-1024 report events_plague_spread = 114
 hist-conflict-73-1024 report events_succession_crisis = 14
 hist-conflict-73-1024 report events_civ_seceded = 3
 hist-conflict-73-1024 report events_settlement_abandoned = 0
-hist-conflict-73-1024 report events_capital_moved = 8
+hist-conflict-73-1024 report events_capital_moved = 9
 hist-conflict-73-1024 report events_civ_ended = 0
 hist-conflict-73-1024 report events_ruin_faded = 7
-hist-conflict-73-1024 report events_claim = 70
+hist-conflict-73-1024 report events_claim = 69
 hist-conflict-73-1024 report events_war_declared = 46
-hist-conflict-73-1024 report events_battle = 194
+hist-conflict-73-1024 report events_battle = 196
 hist-conflict-73-1024 report events_battle_at_pass = 0
-hist-conflict-73-1024 report events_siege = 80
-hist-conflict-73-1024 report events_sacked = 32
+hist-conflict-73-1024 report events_siege = 77
+hist-conflict-73-1024 report events_sacked = 27
 hist-conflict-73-1024 report events_settlement_captured = 21
-hist-conflict-73-1024 report events_peace = 11
-hist-conflict-73-1024 report events_truce = 18
-hist-conflict-73-1024 report events_region_ceded = 16
+hist-conflict-73-1024 report events_peace = 10
+hist-conflict-73-1024 report events_truce = 14
+hist-conflict-73-1024 report events_region_ceded = 21
 hist-conflict-73-1024 report events_civ_conquered = 2
-hist-conflict-73-1024 report events_settlement_abandoned_to = 3
+hist-conflict-73-1024 report events_settlement_abandoned_to = 4
 hist-conflict-73-1024 report events_refugees_settled = 0
 hist-conflict-73-1024 report events_tribute = 5
-hist-conflict-73-1024 report events_war_won = 11
+hist-conflict-73-1024 report events_war_won = 16
 hist-conflict-73-1024 report events_search_abandoned = 4
 hist-conflict-73-1024 report events_refuge_held = 0
 hist-conflict-73-1024 report events_plague_outbreak = 102
 hist-conflict-73-1024 report events_quiet_stretch = 9
-hist-conflict-73-1024 report events_claim_settlements = 3
+hist-conflict-73-1024 report events_claim_settlements = 4
 hist-conflict-73-1024 report events_settlements_ceded = 0
 hist-conflict-73-1024 report events_claim_dropped = 0
 hist-conflict-73-1024 report events_refuge_hidden = 0
-hist-conflict-73-1024 report events_region_renamed = 4
+hist-conflict-73-1024 report events_region_renamed = 5
 hist-conflict-73-1024 report events_monster_appeared = 6
 hist-conflict-73-1024 report events_undead_rose = 3
 hist-conflict-73-1024 report events_monster_woke = 5
 hist-conflict-73-1024 report events_monster_slept = 7
-hist-conflict-73-1024 report events_monster_raid = 37
-hist-conflict-73-1024 report events_settlement_overrun = 1
-hist-conflict-73-1024 report events_monster_slain = 4
-hist-conflict-73-1024 report events_monster_driven_off = 1
+hist-conflict-73-1024 report events_monster_raid = 36
+hist-conflict-73-1024 report events_settlement_overrun = 2
+hist-conflict-73-1024 report events_monster_slain = 5
+hist-conflict-73-1024 report events_monster_driven_off = 0
 hist-conflict-73-1024 report events_monster_died = 3
-hist-conflict-73-1024 report events_beasts_bold = 3
+hist-conflict-73-1024 report events_beasts_bold = 5
 hist-conflict-73-1024 report events_outpost_built = 24
 hist-conflict-73-1024 report events_outpost_abandoned = 18
 hist-conflict-73-1024 report civilizations = 11
 hist-conflict-73-1024 report civilizations_alive = 9
-hist-conflict-73-1024 report settlements = 121
-hist-conflict-73-1024 report settlements_standing = 85
-hist-conflict-73-1024 report regions_held = 29
-hist-conflict-73-1024 report census_rows = 2193
+hist-conflict-73-1024 report settlements = 122
+hist-conflict-73-1024 report settlements_standing = 89
+hist-conflict-73-1024 report regions_held = 32
+hist-conflict-73-1024 report census_rows = 2208
 hist-conflict-73-1024 report relations = 105
-hist-conflict-73-1024 report region_names = 4
+hist-conflict-73-1024 report region_names = 5
 hist-conflict-73-1024 report beasts = 5
 hist-conflict-73-1024 report monster_kinds = 6
-hist-conflict-73-1024 report beast_populations = 988
+hist-conflict-73-1024 report beast_populations = 1006
 hist-conflict-73-1024 report monsters = 9
-hist-conflict-73-1024 report sites = 34
-hist-conflict-73-1024 report population = 171831
-hist-conflict-73-1024 report population_elf = 15416
-hist-conflict-73-1024 report population_goblin = 115039
-hist-conflict-73-1024 report population_dwarf = 2286
-hist-conflict-73-1024 report population_faerie = 3777
+hist-conflict-73-1024 report sites = 35
+hist-conflict-73-1024 report population = 182463
+hist-conflict-73-1024 report population_elf = 17819
+hist-conflict-73-1024 report population_goblin = 94820
+hist-conflict-73-1024 report population_dwarf = 2087
+hist-conflict-73-1024 report population_faerie = 2117
 hist-conflict-73-1024 report population_human = 18182
-hist-conflict-73-1024 report population_orc = 17131
-hist-conflict-73-1024 report settlements_standing_elf = 16
-hist-conflict-73-1024 report settlements_standing_goblin = 50
+hist-conflict-73-1024 report population_orc = 47438
+hist-conflict-73-1024 report settlements_standing_elf = 18
+hist-conflict-73-1024 report settlements_standing_goblin = 42
 hist-conflict-73-1024 report settlements_standing_dwarf = 3
-hist-conflict-73-1024 report settlements_standing_faerie = 4
+hist-conflict-73-1024 report settlements_standing_faerie = 3
 hist-conflict-73-1024 report settlements_standing_human = 4
-hist-conflict-73-1024 report settlements_standing_orc = 8
-hist-conflict-73-1024 report regions_held_elf = 6
-hist-conflict-73-1024 report regions_held_goblin = 15
+hist-conflict-73-1024 report settlements_standing_orc = 19
+hist-conflict-73-1024 report regions_held_elf = 7
+hist-conflict-73-1024 report regions_held_goblin = 13
 hist-conflict-73-1024 report regions_held_dwarf = 1
-hist-conflict-73-1024 report regions_held_faerie = 2
+hist-conflict-73-1024 report regions_held_faerie = 1
 hist-conflict-73-1024 report regions_held_human = 1
-hist-conflict-73-1024 report regions_held_orc = 4
-hist-conflict-73-1024 stats civ_settlements_max = 30
-hist-conflict-73-1024 stats settlements_colonies = 113
+hist-conflict-73-1024 report regions_held_orc = 9
+hist-conflict-73-1024 stats civ_settlements_max = 26
+hist-conflict-73-1024 stats settlements_colonies = 114
 hist-conflict-73-1024 stats civilizations_seceded = 3
 hist-conflict-73-1024 stats relations_enmity = 15
 hist-conflict-73-1024 stats relations_peace = 44
-hist-conflict-73-1024 stats war_years_total = 704
+hist-conflict-73-1024 stats war_years_total = 739
 hist-conflict-73-1024 stats war_years_max = 40
 hist-conflict-73-1024 stats civilizations_conquered = 2
-hist-conflict-73-1024 stats settlements_sacked = 25
+hist-conflict-73-1024 stats settlements_sacked = 20
 hist-conflict-73-1024 stats settlements_captured = 16
-hist-conflict-73-1024 stats regions_conquered = 19
+hist-conflict-73-1024 stats regions_conquered = 24
 hist-conflict-73-1024 stats races_alive = 6
-hist-conflict-73-1024 stats wars_attacker_elf = 2
-hist-conflict-73-1024 stats wars_attacker_goblin = 38
+hist-conflict-73-1024 stats wars_attacker_elf = 3
+hist-conflict-73-1024 stats wars_attacker_goblin = 36
 hist-conflict-73-1024 stats wars_attacker_dwarf = 1
 hist-conflict-73-1024 stats wars_attacker_faerie = 0
 hist-conflict-73-1024 stats wars_attacker_human = 0
-hist-conflict-73-1024 stats wars_attacker_orc = 5
-hist-conflict-73-1024 stats wars_hollow = 6
-hist-conflict-73-1024 stats wars_hollow_permille = 142
+hist-conflict-73-1024 stats wars_attacker_orc = 6
+hist-conflict-73-1024 stats wars_hollow = 5
+hist-conflict-73-1024 stats wars_hollow_permille = 119
 hist-conflict-73-1024 stats wars_same_goal_max = 3
 hist-conflict-73-1024 stats wars_same_goal_unchanged_max = 3
-hist-conflict-73-1024 stats race_population_share_max_permille = 669
-hist-conflict-73-1024 stats race_regions_share_max_permille = 517
+hist-conflict-73-1024 stats race_population_share_max_permille = 519
+hist-conflict-73-1024 stats race_regions_share_max_permille = 406
 hist-conflict-73-1024 stats wars_unfound = 4
 hist-conflict-73-1024 stats refuges_held_no_destination = 0
 hist-conflict-73-1024 war e103 2641-2657 c3 c1 rg11 claim e52 battles 5 sacked 2 taken 0 exhaustion won-c1-ceded
@@ -9677,23 +9764,23 @@ hist-conflict-73-1024 war e916 5636-5652 c1 c3 rg19 claim e883 battles 6 sacked 
 hist-conflict-73-1024 war e944 5650-5669 c3 c6 rg27 claim e885 battles 4 sacked 0 taken 0 goal-lost truce
 hist-conflict-73-1024 war e969 5663-5668 c4 c6 rg27 claim e888 battles 2 sacked 1 taken 1 exhaustion won-c4-ceded
 hist-conflict-73-1024 war e988 5670-5702 c4 c3 rg28 claim e893 battles 6 sacked 0 taken 2 exhaustion won-c4-ceded
-hist-conflict-73-1024 war e1045 5753-5762 c10 c1 rg4 claim e903 battles 4 sacked 1 taken 0 exhaustion won-c1
-hist-conflict-73-1024 war e1057 5770-5789 c3 c7 rg48 claim e1014 battles 5 sacked 1 taken 1 exhaustion truce
-hist-conflict-73-1024 war e1066 5783-5792 c6 c1 rg19 claim e1026 battles 1 sacked 0 taken 0 exhaustion won-c1-ceded
-hist-conflict-73-1024 war e1110 5855-5862 c10 c6 rg19 claim e892 battles 2 sacked 0 taken 0 exhaustion truce
-hist-conflict-73-1024 war e1119 5866-5883 c10 c1 rg19 claim e1094 battles 5 sacked 2 taken 0 goal-lost won-c10-ceded
-hist-conflict-73-1024 war e1121 5868-5894 c11 c1 rg25 claim e1105 battles 10 sacked 4 taken 0 exhaustion truce
-hist-conflict-73-1024 war e1172 5895-5903 c4 c1 rg25 claim e1160 battles 2 sacked 0 taken 0 goal-lost truce
-hist-conflict-73-1024 war e1177 5900-5902 c3 c1 rg25 claim e1176 battles 1 sacked 1 taken 0 goal-lost won-c3-ceded
-hist-conflict-73-1024 war e1193 5925-5926 c11 c6 rg19 claim e1147 battles 1 sacked 1 taken 0 goal-lost won-c11-tribute
-hist-conflict-73-1024 war e1226 5961-5978 c10 c1 rg7 claim e1209 battles 4 sacked 2 taken 0 exhaustion truce
-hist-conflict-73-1024 war e1251 5986-5987 c10 c6 rg13 claim e1211 battles 1 sacked 0 taken 1 exhaustion won-c10-tribute
-hist-conflict-73-1024 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
-hist-conflict-73-1024 r19 t11 6 first_orc_war 147 claims39 0/2/1 cessions40 0 goal_differs 0
+hist-conflict-73-1024 war e1044 5753-5755 c10 c1 rg4 claim e903 battles 1 sacked 1 taken 0 goal-lost won-c10-ceded
+hist-conflict-73-1024 war e1056 5770-5800 c3 c7 rg48 claim e1014 battles 6 sacked 0 taken 0 exhaustion won-c3-ceded
+hist-conflict-73-1024 war e1065 5783-5788 c6 c1 rg25 claim e1064 battles 3 sacked 0 taken 1 exhaustion won-c1-ceded
+hist-conflict-73-1024 war e1066 5783-5788 c10 c6 rg19 claim e892 battles 0 sacked 0 taken 0 aim won-c10-tribute
+hist-conflict-73-1024 war e1105 5827-5840 c10 c1 rg25 claim e1102 battles 4 sacked 2 taken 0 exhaustion won-c10-ceded
+hist-conflict-73-1024 war e1140 5868-5882 c11 c1 rg19 claim e1126 battles 6 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e1143 5871-5874 c10 c6 rg13 claim e1135 battles 2 sacked 1 taken 1 exhaustion won-c10-tribute
+hist-conflict-73-1024 war e1175 5905-5909 c10 c1 rg19 claim e1173 battles 1 sacked 1 taken 0 aim won-c10-ceded
+hist-conflict-73-1024 war e1190 5933-5973 c4 c1 rg9 claim e1185 battles 5 sacked 0 taken 0 length won-c1-ceded
+hist-conflict-73-1024 war e1205 5946-5974 c1 c3 rg39 claim e1184 battles 8 sacked 0 taken 0 exhaustion won-c1-ceded
+hist-conflict-73-1024 war e1254 5984-5991 c10 c1 rg7 claim e1233 battles 2 sacked 2 taken 0 goal-lost won-c10-ceded
+hist-conflict-73-1024 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 2/0/0/0
+hist-conflict-73-1024 r19 t11 6 first_orc_war 147 claims39 1/3/0 cessions40 0 goal_differs 0
 hist-conflict-73-1024 r22 fresh 6/0 dropped 0 refuge_hidden 0 repeated_tolls 0 mixed_tolls 0
-hist-conflict-73-1024 r22 open_claims e188,e880,e1192,e1201,e1228,e1252,e1253
+hist-conflict-73-1024 r22 open_claims e188,e880,e1191,e1193,e1255,e1256
 hist-conflict-73-1024 r22 hidden_refuges -
-hist-conflict-73-1024 r21 renamings 4 18:2649:great_sack:e111,19:5018:conquest:e717,20:5278:heartland:e865,36:4251:conquest:e451
+hist-conflict-73-1024 r21 renamings 5 13:5873:capital_sack:e1150,18:2649:great_sack:e111,19:5018:conquest:e717,20:5278:heartland:e865,36:4251:conquest:e451
 hist-conflict-73-1024 q150 0 e0
 hist-conflict-73-1024 q175 0 e0
 hist-conflict-73-1024 q200 0 e0
@@ -9915,18 +10002,18 @@ hist-conflict-73-1024 note e916 Claimed since 5503. The sixth war between them.
 hist-conflict-73-1024 note e944 Claimed since 5503. The third war between them.
 hist-conflict-73-1024 note e969 Claimed since 5553. The third war between them.
 hist-conflict-73-1024 note e988 Claimed since 5607. The fourth war between them.
-hist-conflict-73-1024 note e1045 Claimed since 5625.
-hist-conflict-73-1024 note e1057 Claimed since 5705. The second war between them.
-hist-conflict-73-1024 note e1066 Claimed since 5729.
-hist-conflict-73-1024 note e1110 The claim, since 5606, was to Kuggsleerk in Hirinnun's Grave.
-hist-conflict-73-1024 note e1119 Claimed since 5825. The second war between them.
-hist-conflict-73-1024 note e1121 Claimed since 5841.
-hist-conflict-73-1024 note e1172 Claimed since 5886. The seventh war between them.
-hist-conflict-73-1024 note e1177 Claimed since 5876. The seventh war between them.
-hist-conflict-73-1024 note e1193 The claim, since 5878, was to Kuggsleerk in Hirinnun's Grave.
-hist-conflict-73-1024 note e1226 Claimed since 5943. The third war between them.
-hist-conflict-73-1024 note e1251 Claimed since 5946. The second war between them.
-hist-conflict-73-1024 summary threshold 41 shown 243 ages 15,29,24,69,27,79
+hist-conflict-73-1024 note e1044 Claimed since 5625.
+hist-conflict-73-1024 note e1056 Claimed since 5705. The second war between them.
+hist-conflict-73-1024 note e1065 Claimed since 5729.
+hist-conflict-73-1024 note e1066 The claim, since 5606, was to Kuggsleerk in Hirinnun's Grave.
+hist-conflict-73-1024 note e1105 Claimed since 5818. The second war between them.
+hist-conflict-73-1024 note e1140 The claim, since 5841, was to Kuggsleerk in Hirinnun's Grave.
+hist-conflict-73-1024 note e1143 Claimed since 5862. The second war between them.
+hist-conflict-73-1024 note e1175 The claim, since 5900, was to Kuggsleerk in Hirinnun's Grave. The third war between them.
+hist-conflict-73-1024 note e1190 Claimed since 5915. The seventh war between them.
+hist-conflict-73-1024 note e1205 Claimed since 5914. The seventh war between them.
+hist-conflict-73-1024 note e1254 Claimed since 5968. The fourth war between them.
+hist-conflict-73-1024 summary threshold 41 shown 249 ages 15,29,24,69,27,85
 hist-conflict-73-1024 e7 For 600 years, from 150 to 749, the land was quiet, and two realms kept the peace.
 hist-conflict-73-1024 e9 Tukbamm, a giant of the mountains, made its lair in the Hoary Spires.
 hist-conflict-73-1024 e12 For 1,241 years, from 800 to 2040, the land was quiet, and two realms kept the peace.
@@ -10513,163 +10600,166 @@ hist-conflict-73-1024 e1014 The Snonugg Mob laid claim to the Mossgrown Wood, he
 hist-conflict-73-1024 e1015 After the slaughter and the sack, the dead of Hirinnun's Grave rose as the Host of Alerd.
 hist-conflict-73-1024 e1016 Plague broke out in Zeegg-Kork Hole and spread to three other settlements; 1,260 died in all.
 hist-conflict-73-1024 e1020 The Host of Alerd fell upon Semaen; 23 died.
-hist-conflict-73-1024 e1021 Plague broke out in Bozork and spread to one other settlement; 585 died in all.
-hist-conflict-73-1024 e1023 The Host of Alerd fell upon Dreezoz; 200 died.
-hist-conflict-73-1024 e1024 Plague broke out in Edom; 1,739 died.
-hist-conflict-73-1024 e1025 The Host of Alerd fell upon Semaen; 35 died.
-hist-conflict-73-1024 e1026 Clan Mirntak laid claim to Hirinnun's Grave, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1028 The Host of Alerd fell upon Semaen; 18 died.
-hist-conflict-73-1024 e1030 Plague broke out in Skeeb Pit and spread to one other settlement; 836 died in all.
-hist-conflict-73-1024 e1033 The Host of Alerd fell upon Kuggsleerk; 32 died.
+hist-conflict-73-1024 e1021 The Host of Alerd drove the people from Semaen and made it its lair; 435 escaped.
+hist-conflict-73-1024 e1022 Plague broke out in Bozork and spread to one other settlement; 585 died in all.
+hist-conflict-73-1024 e1024 The Host of Alerd fell upon Neet Pit; 200 died.
+hist-conflict-73-1024 e1025 Plague broke out in Edom; 1,739 died.
+hist-conflict-73-1024 e1026 The Host of Alerd fell upon Uruld'kraaz Camp; 90 died.
+hist-conflict-73-1024 e1027 Clan Mirntak laid claim to Hirinnun's Grave, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1029 The Host of Alerd fell upon Uruld'kraaz Camp; 48 died.
+hist-conflict-73-1024 e1031 Plague broke out in Skeeb Pit and spread to one other settlement; 836 died in all.
+hist-conflict-73-1024 e1033 The Host of Alerd fell upon Skrox-Kreet; 50 died.
 hist-conflict-73-1024 e1034 Plague broke out in Zigg Hole and spread to two other settlements; 740 died in all.
-hist-conflict-73-1024 e1041 The Host of Alerd fell upon Skut; 153 died.
-hist-conflict-73-1024 e1043 Plague broke out in Druggeenk Hole and spread to one other settlement; 664 died in all.
-hist-conflict-73-1024 e1045 The Krash'dag Horde declared war on the Realm of Ielasie over Roothowe Shaw.
-hist-conflict-73-1024 e1046 The Realm of Ielasie defeated the Krash'dag Horde in Roothowe Shaw; 960 of the defeated and 229 of the victors fell.
-hist-conflict-73-1024 e1047 The Host of Alerd fell upon Kotch; 48 died.
-hist-conflict-73-1024 e1048 The Realm of Ielasie defeated the Krash'dag Horde in Tansyridge Plain; 867 of the defeated and 286 of the victors fell.
-hist-conflict-73-1024 e1049 The Realm of Ielasie besieged Uruld'kraaz Camp of the Krash'dag Horde; it fell.
-hist-conflict-73-1024 e1050 The Realm of Ielasie sacked Uruld'kraaz Camp of the Krash'dag Horde; 414 died and 967 fled.
-hist-conflict-73-1024 e1051 The Krash'dag Horde defeated the Realm of Ielasie in Adder's Weald; 573 of the defeated and 165 of the victors fell.
+hist-conflict-73-1024 e1040 The Host of Alerd fell upon Nog-Drux; 200 died.
+hist-conflict-73-1024 e1041 Plague broke out in Druggeenk Hole and spread to one other settlement; 664 died in all.
+hist-conflict-73-1024 e1044 The Krash'dag Horde declared war on the Realm of Ielasie over Roothowe Shaw.
+hist-conflict-73-1024 e1045 The Snonugg Mob hunted down and slew the Host of Alerd, a host of the restless dead, in Hirinnun's Grave.
+hist-conflict-73-1024 e1046 The Krash'dag Horde defeated the Realm of Ielasie in Roothowe Shaw; 1,032 of the defeated and 227 of the victors fell.
+hist-conflict-73-1024 e1047 The Krash'dag Horde besieged Aelraldell of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1048 The Krash'dag Horde sacked Aelraldell of the Realm of Ielasie; 900 died and 2,100 fled.
+hist-conflict-73-1024 e1049 The Krash'dag Horde prevailed over the Realm of Ielasie after two years of war.
+hist-conflict-73-1024 e1050 The Realm of Ielasie ceded Hirinnun's Grave to the Krash'dag Horde.
 hist-conflict-73-1024 e1053 Plague broke out in Faess Hollow and spread to one other settlement; 140 died in all.
-hist-conflict-73-1024 e1055 The Realm of Ielasie defeated the Krash'dag Horde in Roothowe Shaw; 683 of the defeated and 177 of the victors fell.
-hist-conflict-73-1024 e1056 The Krash'dag Horde sued the Realm of Ielasie for peace after nine years of war.
-hist-conflict-73-1024 e1057 The Snonugg Mob declared war on the Tolouglae Ring over the Mossgrown Wood.
-hist-conflict-73-1024 e1059 The Droz Horde drove the Host of Alerd back to its lair in Hirinnun's Grave.
-hist-conflict-73-1024 e1060 The Tolouglae Ring defeated the Snonugg Mob in the Mossgrown Wood; 50 of the defeated and 17 of the victors fell.
-hist-conflict-73-1024 e1061 The Tolouglae Ring defeated the Snonugg Mob in the Grave of Gank-Drat; 199 of the defeated and 32 of the victors fell.
-hist-conflict-73-1024 e1062 The Tolouglae Ring besieged Krork of the Snonugg Mob; it fell.
-hist-conflict-73-1024 e1063 The Tolouglae Ring took Krork from the Snonugg Mob; 248 died and 1,401 fled.
-hist-conflict-73-1024 e1065 The Snonugg Mob defeated the Tolouglae Ring in the Burnt Downs; 25 of the defeated and 6 of the victors fell.
-hist-conflict-73-1024 e1066 Clan Mirntak declared war on the Realm of Ielasie over Hirinnun's Grave.
-hist-conflict-73-1024 e1068 The Snonugg Mob defeated the Tolouglae Ring in the Grave of Gank-Drat; 113 of the defeated and 44 of the victors fell.
-hist-conflict-73-1024 e1069 The Snonugg Mob besieged Krork of the Tolouglae Ring; it held.
-hist-conflict-73-1024 e1071 Plague broke out in Dreezoz and spread to two other settlements; 1,050 died in all.
-hist-conflict-73-1024 e1075 The Snonugg Mob defeated the Tolouglae Ring in the Grave of Gank-Drat; 114 of the defeated and 41 of the victors fell.
-hist-conflict-73-1024 e1076 The Snonugg Mob besieged Krork of the Tolouglae Ring; it fell.
-hist-conflict-73-1024 e1077 The Snonugg Mob sacked Krork of the Tolouglae Ring; 96 died and 224 fled.
-hist-conflict-73-1024 e1078 The Snonugg Mob and the Tolouglae Ring made peace after 19 years of war, neither the victor.
-hist-conflict-73-1024 e1079 Plague broke out in Skignab and spread to three other settlements; 806 died in all.
-hist-conflict-73-1024 e1083 The Realm of Ielasie defeated Clan Mirntak in Hirinnun's Grave; 959 of the defeated and 237 of the victors fell.
-hist-conflict-73-1024 e1084 Clan Mirntak sued the Realm of Ielasie for peace after nine years of war.
-hist-conflict-73-1024 e1085 Clan Mirntak ceded Faminestone Spires to the Realm of Ielasie.
-hist-conflict-73-1024 e1087 Plague broke out in Twask Hollow and spread to one other settlement; 426 died in all.
-hist-conflict-73-1024 e1091 Plague broke out in Woia Glade; 73 died.
-hist-conflict-73-1024 e1094 The Krash'dag Horde laid claim to Hirinnun's Grave, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1095 Plague broke out in Snarkdriz Pit and spread to five other settlements; 1,316 died in all.
-hist-conflict-73-1024 e1103 Plague broke out in Gatch Pit; 301 died.
-hist-conflict-73-1024 e1105 The Warrens of Skaslix laid claim to Pitchbank Sward, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1107 Plague broke out in Zeegg-Kork Hole; 457 died.
-hist-conflict-73-1024 e1110 The Krash'dag Horde declared war on Clan Mirntak over Hirinnun's Grave.
-hist-conflict-73-1024 e1111 Plague broke out in Slizork Pit and spread to one other settlement; 264 died in all.
-hist-conflict-73-1024 e1113 Clan Mirntak defeated the Krash'dag Horde in Hirinnun's Grave; 693 of the defeated and 190 of the victors fell.
-hist-conflict-73-1024 e1114 Plague broke out in Edom; 1,248 died.
-hist-conflict-73-1024 e1115 The Krash'dag Horde defeated Clan Mirntak in Adder's Weald; 433 of the defeated and 159 of the victors fell.
-hist-conflict-73-1024 e1116 Clan Mirntak and the Krash'dag Horde made peace after seven years of war, neither the victor.
-hist-conflict-73-1024 e1118 Plague broke out in Fathsiedell; 110 died.
-hist-conflict-73-1024 e1119 The Krash'dag Horde declared war on the Realm of Ielasie over Hirinnun's Grave.
-hist-conflict-73-1024 e1121 The Warrens of Skaslix declared war on the Realm of Ielasie over Pitchbank Sward.
-hist-conflict-73-1024 e1122 Plague broke out in Khargirn Deep; 68 died.
-hist-conflict-73-1024 e1123 The Realm of Ielasie defeated the Krash'dag Horde in Hirinnun's Grave; 660 of the defeated and 158 of the victors fell.
-hist-conflict-73-1024 e1124 Plague broke out in Kotch; 449 died.
-hist-conflict-73-1024 e1125 Plague broke out in Gatch Pit and spread to one other settlement; 584 died in all.
-hist-conflict-73-1024 e1128 The Krash'dag Horde defeated the Realm of Ielasie in Tansyridge Plain; 529 of the defeated and 143 of the victors fell.
-hist-conflict-73-1024 e1129 The Krash'dag Horde raised the Watch of Azul'buum in Tansyridge Plain against the Realm of Ielasie.
-hist-conflict-73-1024 e1131 The Krash'dag Horde defeated the Realm of Ielasie in Hirinnun's Grave; 510 of the defeated and 171 of the victors fell.
-hist-conflict-73-1024 e1132 The Krash'dag Horde besieged Skut of the Realm of Ielasie; it held.
-hist-conflict-73-1024 e1133 The Warrens of Skaslix defeated the Realm of Ielasie in Pitchbank Sward; 238 of the defeated and 78 of the victors fell.
-hist-conflict-73-1024 e1134 The Warrens of Skaslix besieged Kakskox of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1135 The Warrens of Skaslix sacked Kakskox of the Realm of Ielasie; 98 died and 231 fled.
-hist-conflict-73-1024 e1136 The Krash'dag Horde defeated the Realm of Ielasie in Hirinnun's Grave; 449 of the defeated and 151 of the victors fell.
-hist-conflict-73-1024 e1137 The Krash'dag Horde besieged Skut of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1138 The Krash'dag Horde sacked Skut of the Realm of Ielasie; 342 died and 800 fled.
-hist-conflict-73-1024 e1139 The Warrens of Skaslix defeated the Realm of Ielasie in Pitchbank Sward; 243 of the defeated and 56 of the victors fell.
-hist-conflict-73-1024 e1140 The Warrens of Skaslix besieged Zurk-Greex Pit of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1141 The Warrens of Skaslix sacked Zurk-Greex Pit of the Realm of Ielasie; 333 died and 780 fled.
-hist-conflict-73-1024 e1142 The Snonugg Mob laid claim to Hirinnun's Grave, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1143 The Warrens of Skaslix raised Gnuzz Lookout in Northeast Downs against the Realm of Ielasie.
-hist-conflict-73-1024 e1144 The Warrens of Skaslix defeated the Realm of Ielasie in Pitchbank Sward; 168 of the defeated and 78 of the victors fell.
-hist-conflict-73-1024 e1145 The Warrens of Skaslix besieged Lavaen of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1146 The Warrens of Skaslix sacked Lavaen of the Realm of Ielasie; 290 died and 679 fled.
-hist-conflict-73-1024 e1147 The Warrens of Skaslix laid claim to Kuggsleerk of Clan Mirntak in Hirinnun's Grave.
-hist-conflict-73-1024 e1148 The Realm of Ielasie defeated the Warrens of Skaslix in Pitchbank Sward; 331 of the defeated and 56 of the victors fell.
-hist-conflict-73-1024 e1149 The Krash'dag Horde defeated the Realm of Ielasie in Hirinnun's Grave; 489 of the defeated and 170 of the victors fell.
-hist-conflict-73-1024 e1150 The Krash'dag Horde besieged Semaen of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1151 The Krash'dag Horde sacked Semaen of the Realm of Ielasie; 141 died and 331 fled.
-hist-conflict-73-1024 e1152 The Realm of Ielasie sued the Krash'dag Horde for peace after 17 years of war.
-hist-conflict-73-1024 e1153 The Realm of Ielasie ceded Wolflow to the Krash'dag Horde.
-hist-conflict-73-1024 e1154 The Realm of Ielasie abandoned Faniesie Watch, the land being lost.
-hist-conflict-73-1024 e1156 The Realm of Ielasie defeated the Warrens of Skaslix in Northeast Downs; 565 of the defeated and 163 of the victors fell.
-hist-conflict-73-1024 e1157 The Realm of Ielasie besieged Skeegriz Hole of the Warrens of Skaslix; it fell.
-hist-conflict-73-1024 e1158 The Realm of Ielasie sacked Skeegriz Hole of the Warrens of Skaslix; 117 died and 274 fled.
-hist-conflict-73-1024 e1159 The Warrens of Skaslix abandoned Gnuzz Lookout, the land being lost.
-hist-conflict-73-1024 e1160 The Droz Horde laid claim to Pitchbank Sward, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1161 Plague broke out in Dreezoz; 430 died.
-hist-conflict-73-1024 e1162 Dundthou Stonehand woke again in Southwest Wood.
-hist-conflict-73-1024 e1163 The Warrens of Skaslix defeated the Realm of Ielasie in Sourlea; 435 of the defeated and 164 of the victors fell.
-hist-conflict-73-1024 e1166 The Realm of Ielasie defeated the Warrens of Skaslix in Pitchbank Sward; 532 of the defeated and 96 of the victors fell.
-hist-conflict-73-1024 e1167 The Warrens of Skaslix defeated the Realm of Ielasie in Sourlea; 375 of the defeated and 128 of the victors fell.
-hist-conflict-73-1024 e1168 The Warrens of Skaslix defeated the Realm of Ielasie in Pitchbank Sward; 228 of the defeated and 95 of the victors fell.
-hist-conflict-73-1024 e1169 The Warrens of Skaslix besieged Drogig Pit of the Realm of Ielasie; it held.
-hist-conflict-73-1024 e1170 The Realm of Ielasie defeated the Warrens of Skaslix in Pitchbank Sward; 568 of the defeated and 89 of the victors fell.
-hist-conflict-73-1024 e1171 The Realm of Ielasie and the Warrens of Skaslix made peace after 26 years of war, neither the victor.
-hist-conflict-73-1024 e1172 The Droz Horde declared war on the Realm of Ielasie over Pitchbank Sward.
-hist-conflict-73-1024 e1173 Plague broke out in Nakdrig; 505 died.
-hist-conflict-73-1024 e1174 The Realm of Ielasie defeated the Droz Horde in Pitchbank Sward; 517 of the defeated and 87 of the victors fell.
-hist-conflict-73-1024 e1175 The Droz Horde defeated the Realm of Ielasie in the Ochre Plain; 52 of the defeated and 14 of the victors fell.
-hist-conflict-73-1024 e1176 The Snonugg Mob laid claim to Pitchbank Sward, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1177 The Snonugg Mob declared war on the Realm of Ielasie over Pitchbank Sward.
-hist-conflict-73-1024 e1178 The Snonugg Mob defeated the Realm of Ielasie in Pitchbank Sward; 113 of the defeated and 39 of the victors fell.
-hist-conflict-73-1024 e1179 The Snonugg Mob besieged Drogig Pit of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1180 The Snonugg Mob sacked Drogig Pit of the Realm of Ielasie; 405 died and 945 fled.
-hist-conflict-73-1024 e1181 The Snonugg Mob prevailed over the Realm of Ielasie after two years of war.
-hist-conflict-73-1024 e1182 The Realm of Ielasie ceded Wraithcombe Grove to the Snonugg Mob.
-hist-conflict-73-1024 e1183 The Realm of Ielasie and the Droz Horde made peace after eight years of war, neither the victor.
-hist-conflict-73-1024 e1186 Weakened by famine, Vendithe was abandoned; 450 survivors went to Fathsiedell.
-hist-conflict-73-1024 e1192 The Snonugg Mob laid claim to Kuggsleerk of Clan Mirntak in Hirinnun's Grave.
-hist-conflict-73-1024 e1193 The Warrens of Skaslix declared war on Clan Mirntak over Hirinnun's Grave.
-hist-conflict-73-1024 e1194 The Warrens of Skaslix defeated Clan Mirntak in Hirinnun's Grave; 492 of the defeated and 170 of the victors fell.
-hist-conflict-73-1024 e1195 The Warrens of Skaslix besieged Kuggsleerk of Clan Mirntak; it fell.
-hist-conflict-73-1024 e1196 The Warrens of Skaslix sacked Kuggsleerk of Clan Mirntak; 114 died and 266 fled.
-hist-conflict-73-1024 e1197 Clan Mirntak sued the Warrens of Skaslix for peace after one year of war.
-hist-conflict-73-1024 e1198 Clan Mirntak paid tribute to the Warrens of Skaslix; 529 were carried off.
-hist-conflict-73-1024 e1201 The Droz Horde laid claim to the Grave of Gank-Drat, held by the Warrens of Skaslix.
-hist-conflict-73-1024 e1202 Plague broke out in Fathsiedell; 136 died.
-hist-conflict-73-1024 e1203 Weakened by plague, Fathsiedell was abandoned; 480 survivors went to Endnill.
-hist-conflict-73-1024 e1204 Plague broke out in Boskratch Pit; 919 died.
-hist-conflict-73-1024 e1205 Plague broke out in Skignab and spread to one other settlement; 565 died in all.
-hist-conflict-73-1024 e1207 Plague broke out in Sluz and spread to one other settlement; 813 died in all.
-hist-conflict-73-1024 e1209 The Krash'dag Horde laid claim to Faminestone Spires, held by the Realm of Ielasie.
-hist-conflict-73-1024 e1210 Dundthou Stonehand sank into sleep in Dundthou's Seat.
-hist-conflict-73-1024 e1211 The Krash'dag Horde laid claim to Hailscar, held by Clan Mirntak.
-hist-conflict-73-1024 e1212 Plague broke out in Slozgit and spread to one other settlement; 988 died in all.
-hist-conflict-73-1024 e1214 Plague broke out in Sluz; 301 died.
-hist-conflict-73-1024 e1217 Plague broke out in Zigrink Pit and spread to two other settlements; 2,021 died in all.
-hist-conflict-73-1024 e1220 Plague broke out in Skeeb Pit and spread to one other settlement; 488 died in all.
-hist-conflict-73-1024 e1226 The Krash'dag Horde declared war on the Realm of Ielasie over Faminestone Spires.
-hist-conflict-73-1024 e1227 Plague broke out in Shaaghbaaz Fort; 206 died.
-hist-conflict-73-1024 e1228 The Warrens of Skaslix laid claim to Barleycross Plain, held by the Droz Horde.
-hist-conflict-73-1024 e1229 The Realm of Ielasie raised Lathonn Watch in Goatherd's Thicket against the Krash'dag Horde.
-hist-conflict-73-1024 e1232 The Realm of Ielasie defeated the Krash'dag Horde in Faminestone Spires; 568 of the defeated and 127 of the victors fell.
-hist-conflict-73-1024 e1233 Plague broke out in Glithordell and spread to one other settlement; 483 died in all.
-hist-conflict-73-1024 e1235 The Realm of Ielasie defeated the Krash'dag Horde in Spindlewood; 1,298 of the defeated and 144 of the victors fell.
-hist-conflict-73-1024 e1236 The Realm of Ielasie besieged Shaaghbaaz Fort of the Krash'dag Horde; it fell.
-hist-conflict-73-1024 e1237 The Realm of Ielasie sacked Shaaghbaaz Fort of the Krash'dag Horde; 243 died and 568 fled.
-hist-conflict-73-1024 e1239 The Krash'dag Horde defeated the Realm of Ielasie in Tansyridge Plain; 513 of the defeated and 173 of the victors fell.
-hist-conflict-73-1024 e1240 The Krash'dag Horde defeated the Realm of Ielasie in Faminestone Spires; 348 of the defeated and 100 of the victors fell.
-hist-conflict-73-1024 e1241 The Krash'dag Horde besieged Khargirn Deep of the Realm of Ielasie; it fell.
-hist-conflict-73-1024 e1242 The Krash'dag Horde sacked Khargirn Deep of the Realm of Ielasie; 39 died and 91 fled.
-hist-conflict-73-1024 e1243 The Realm of Ielasie and the Krash'dag Horde made peace after 17 years of war, neither the victor.
-hist-conflict-73-1024 e1244 Plague broke out in Thielinn; 380 died.
-hist-conflict-73-1024 e1248 Plague broke out in Zigrink Pit and spread to one other settlement; 707 died in all.
-hist-conflict-73-1024 e1251 The Krash'dag Horde declared war on Clan Mirntak over Hailscar.
-hist-conflict-73-1024 e1252 The Snonugg Mob laid claim to Barleycross Plain, held by the Droz Horde.
-hist-conflict-73-1024 e1253 The Droz Horde laid claim to the Faded Steppes, held by the Snonugg Mob.
-hist-conflict-73-1024 e1255 The Krash'dag Horde defeated Clan Mirntak in Hailscar; 518 of the defeated and 142 of the victors fell.
-hist-conflict-73-1024 e1256 The Krash'dag Horde besieged Thombarin of Clan Mirntak; it fell.
-hist-conflict-73-1024 e1257 The Krash'dag Horde took Thombarin from Clan Mirntak; 206 died.
-hist-conflict-73-1024 e1259 Clan Mirntak sued the Krash'dag Horde for peace after one year of war.
-hist-conflict-73-1024 e1260 Clan Mirntak paid tribute to the Krash'dag Horde; 247 were carried off.
+hist-conflict-73-1024 e1056 The Snonugg Mob declared war on the Tolouglae Ring over the Mossgrown Wood.
+hist-conflict-73-1024 e1057 The Tolouglae Ring defeated the Snonugg Mob in the Mossgrown Wood; 40 of the defeated and 15 of the victors fell.
+hist-conflict-73-1024 e1061 The Snonugg Mob defeated the Tolouglae Ring in the Grave of Gank-Drat; 122 of the defeated and 39 of the victors fell.
+hist-conflict-73-1024 e1062 The Snonugg Mob defeated the Tolouglae Ring in the Mossgrown Wood; 106 of the defeated and 13 of the victors fell.
+hist-conflict-73-1024 e1063 The Snonugg Mob besieged Twask Hollow of the Tolouglae Ring; it held.
+hist-conflict-73-1024 e1064 Clan Mirntak laid claim to Pitchbank Sward, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1065 Clan Mirntak declared war on the Realm of Ielasie over Pitchbank Sward.
+hist-conflict-73-1024 e1066 The Krash'dag Horde declared war on Clan Mirntak over Hirinnun's Grave.
+hist-conflict-73-1024 e1068 The Tolouglae Ring defeated the Snonugg Mob in the Mossgrown Wood; 47 of the defeated and 12 of the victors fell.
+hist-conflict-73-1024 e1069 The Tolouglae Ring defeated the Snonugg Mob in the Grave of Gank-Drat; 164 of the defeated and 26 of the victors fell.
+hist-conflict-73-1024 e1070 The Tolouglae Ring besieged Krork of the Snonugg Mob; it held.
+hist-conflict-73-1024 e1071 Clan Mirntak defeated the Realm of Ielasie in Pitchbank Sward; 397 of the defeated and 106 of the victors fell.
+hist-conflict-73-1024 e1072 Clan Mirntak besieged Kakskox of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e1074 Plague broke out in Dreezoz and spread to two other settlements; 1,060 died in all.
+hist-conflict-73-1024 e1077 The Realm of Ielasie defeated Clan Mirntak in Pitchbank Sward; 368 of the defeated and 127 of the victors fell.
+hist-conflict-73-1024 e1078 The Realm of Ielasie defeated Clan Mirntak in Hirinnun's Grave; 432 of the defeated and 167 of the victors fell.
+hist-conflict-73-1024 e1079 The Realm of Ielasie besieged Kuggsleerk of Clan Mirntak; it fell.
+hist-conflict-73-1024 e1080 The Realm of Ielasie took Kuggsleerk from Clan Mirntak; 41 died.
+hist-conflict-73-1024 e1081 Clan Mirntak sued the Realm of Ielasie for peace after five years of war.
+hist-conflict-73-1024 e1082 Clan Mirntak ceded Faminestone Spires to the Realm of Ielasie.
+hist-conflict-73-1024 e1083 The Krash'dag Horde prevailed over Clan Mirntak after five years of war.
+hist-conflict-73-1024 e1084 Clan Mirntak paid tribute to the Krash'dag Horde; 879 were carried off.
+hist-conflict-73-1024 e1086 Plague broke out in Skignab and spread to three other settlements; 802 died in all.
+hist-conflict-73-1024 e1091 The Snonugg Mob defeated the Tolouglae Ring in the Grave of Gank-Drat; 123 of the defeated and 26 of the victors fell.
+hist-conflict-73-1024 e1092 The Tolouglae Ring sued the Snonugg Mob for peace after 30 years of war.
+hist-conflict-73-1024 e1093 The Tolouglae Ring ceded Brinewood to the Snonugg Mob.
+hist-conflict-73-1024 e1094 Plague broke out in Twask Hollow and spread to one other settlement; 365 died in all.
+hist-conflict-73-1024 e1100 In Northeast Downs the giant spiders grew bold, and travellers from Zaarzurok Fort went in fear; five died on the roads.
+hist-conflict-73-1024 e1101 Plague broke out in Woia Glade; 70 died.
+hist-conflict-73-1024 e1102 The Krash'dag Horde laid claim to Pitchbank Sward, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1105 The Krash'dag Horde declared war on the Realm of Ielasie over Pitchbank Sward.
+hist-conflict-73-1024 e1106 The Krash'dag Horde raised the Watch of Og'azum in Northeast Downs against the Realm of Ielasie.
+hist-conflict-73-1024 e1107 The Krash'dag Horde defeated the Realm of Ielasie in Pitchbank Sward; 466 of the defeated and 114 of the victors fell.
+hist-conflict-73-1024 e1108 The Krash'dag Horde besieged Kakskox of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1109 The Krash'dag Horde sacked Kakskox of the Realm of Ielasie; 100 died and 236 fled.
+hist-conflict-73-1024 e1110 Plague broke out in Snarkdriz Pit and spread to five other settlements; 1,316 died in all.
+hist-conflict-73-1024 e1116 The Realm of Ielasie defeated the Krash'dag Horde in Pitchbank Sward; 702 of the defeated and 116 of the victors fell.
+hist-conflict-73-1024 e1118 Plague broke out in Gatch Pit; 301 died.
+hist-conflict-73-1024 e1119 The Krash'dag Horde defeated the Realm of Ielasie in Spindlewood; 960 of the defeated and 284 of the victors fell.
+hist-conflict-73-1024 e1121 The Krash'dag Horde defeated the Realm of Ielasie in Pitchbank Sward; 363 of the defeated and 135 of the victors fell.
+hist-conflict-73-1024 e1122 The Krash'dag Horde besieged Drogig Pit of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1123 The Krash'dag Horde sacked Drogig Pit of the Realm of Ielasie; 141 died and 329 fled.
+hist-conflict-73-1024 e1124 The Realm of Ielasie sued the Krash'dag Horde for peace after 13 years of war.
+hist-conflict-73-1024 e1125 The Realm of Ielasie ceded Pitchbank Sward to the Krash'dag Horde.
+hist-conflict-73-1024 e1126 The Warrens of Skaslix laid claim to Kuggsleerk of the Realm of Ielasie in Hirinnun's Grave.
+hist-conflict-73-1024 e1129 Plague broke out in Zeegg-Kork Hole; 387 died.
+hist-conflict-73-1024 e1132 In Gauntwood the giant spiders grew bold, and travellers from Muk'kakh Camp went in fear; five died on the roads.
+hist-conflict-73-1024 e1134 Plague broke out in Edom; 1,248 died.
+hist-conflict-73-1024 e1135 The Krash'dag Horde laid claim to Hailscar, held by Clan Mirntak.
+hist-conflict-73-1024 e1136 Plague broke out in Fathsiedell; 110 died.
+hist-conflict-73-1024 e1140 The Warrens of Skaslix declared war on the Realm of Ielasie over Hirinnun's Grave.
+hist-conflict-73-1024 e1141 Plague broke out in Khargirn Deep; 49 died.
+hist-conflict-73-1024 e1142 The Realm of Ielasie defeated the Warrens of Skaslix in Hirinnun's Grave; 468 of the defeated and 170 of the victors fell.
+hist-conflict-73-1024 e1143 The Krash'dag Horde declared war on Clan Mirntak over Hailscar.
+hist-conflict-73-1024 e1144 Plague broke out in Kotch; 449 died.
+hist-conflict-73-1024 e1145 Plague broke out in Gatch Pit and spread to one other settlement; 584 died in all.
+hist-conflict-73-1024 e1148 The Krash'dag Horde defeated Clan Mirntak in Hailscar; 418 of the defeated and 124 of the victors fell.
+hist-conflict-73-1024 e1149 The Krash'dag Horde besieged Thombarin of Clan Mirntak; it fell.
+hist-conflict-73-1024 e1150 The Krash'dag Horde sacked Thombarin of Clan Mirntak; 702 died and 1,640 fled.
+hist-conflict-73-1024 e1152 After the sack, Hailscar became known as the Fallen Peaks.
+hist-conflict-73-1024 e1155 The Warrens of Skaslix defeated the Realm of Ielasie in Sourlea; 434 of the defeated and 173 of the victors fell.
+hist-conflict-73-1024 e1156 The Krash'dag Horde defeated Clan Mirntak in the Fallen Peaks; 375 of the defeated and 143 of the victors fell.
+hist-conflict-73-1024 e1157 The Krash'dag Horde besieged Toktu Deep of Clan Mirntak; it fell.
+hist-conflict-73-1024 e1158 The Krash'dag Horde took Toktu Deep from Clan Mirntak; 228 died.
+hist-conflict-73-1024 e1160 Clan Mirntak sued the Krash'dag Horde for peace after three years of war.
+hist-conflict-73-1024 e1161 Clan Mirntak paid tribute to the Krash'dag Horde; 164 were carried off.
+hist-conflict-73-1024 e1162 The Snonugg Mob laid claim to Mothwell Grove, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1163 The Realm of Ielasie defeated the Warrens of Skaslix in Hirinnun's Grave; 581 of the defeated and 188 of the victors fell.
+hist-conflict-73-1024 e1164 The Warrens of Skaslix defeated the Realm of Ielasie in Sourlea; 430 of the defeated and 178 of the victors fell.
+hist-conflict-73-1024 e1165 The Realm of Ielasie defeated the Warrens of Skaslix in Hirinnun's Grave; 405 of the defeated and 136 of the victors fell.
+hist-conflict-73-1024 e1166 The Warrens of Skaslix defeated the Realm of Ielasie in Sourlea; 552 of the defeated and 158 of the victors fell.
+hist-conflict-73-1024 e1167 The Realm of Ielasie and the Warrens of Skaslix made peace after 14 years of war, neither the victor.
+hist-conflict-73-1024 e1168 Plague broke out in Dreezoz; 457 died.
+hist-conflict-73-1024 e1169 Dundthou Stonehand woke again in Southwest Wood.
+hist-conflict-73-1024 e1172 Plague broke out in Nakdrig; 505 died.
+hist-conflict-73-1024 e1173 The Krash'dag Horde laid claim to Kuggsleerk of the Realm of Ielasie in Hirinnun's Grave.
+hist-conflict-73-1024 e1175 The Krash'dag Horde declared war on the Realm of Ielasie over Hirinnun's Grave.
+hist-conflict-73-1024 e1177 Weakened by famine, Vendithe was abandoned; 450 survivors went to Fathsiedell.
+hist-conflict-73-1024 e1178 The Krash'dag Horde defeated the Realm of Ielasie in Hirinnun's Grave; 833 of the defeated and 259 of the victors fell.
+hist-conflict-73-1024 e1179 The Krash'dag Horde besieged Kuggsleerk of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1180 The Krash'dag Horde sacked Kuggsleerk of the Realm of Ielasie; 120 died and 281 fled.
+hist-conflict-73-1024 e1181 The Krash'dag Horde prevailed over the Realm of Ielasie after four years of war.
+hist-conflict-73-1024 e1182 The Realm of Ielasie ceded Wolflow to the Krash'dag Horde.
+hist-conflict-73-1024 e1183 The Realm of Ielasie abandoned Faniesie Watch, the land being lost.
+hist-conflict-73-1024 e1184 The Realm of Ielasie laid claim to the Faded Steppes, held by the Snonugg Mob.
+hist-conflict-73-1024 e1185 The Droz Horde laid claim to Bittershaw, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1190 The Droz Horde declared war on the Realm of Ielasie over Bittershaw.
+hist-conflict-73-1024 e1191 The Warrens of Skaslix laid claim to Barleycross Plain, held by the Droz Horde.
+hist-conflict-73-1024 e1192 The Realm of Ielasie defeated the Droz Horde in Bittershaw; 286 of the defeated and 81 of the victors fell.
+hist-conflict-73-1024 e1193 The Droz Horde laid claim to the Grave of Gank-Drat, held by the Warrens of Skaslix.
+hist-conflict-73-1024 e1194 Plague broke out in Fathsiedell; 136 died.
+hist-conflict-73-1024 e1195 Weakened by plague, Fathsiedell was abandoned; 480 survivors went to Endnill.
+hist-conflict-73-1024 e1196 Plague broke out in Boskratch Pit; 915 died.
+hist-conflict-73-1024 e1197 Plague broke out in Skignab and spread to one other settlement; 567 died in all.
+hist-conflict-73-1024 e1199 The Droz Horde defeated the Realm of Ielasie in the Faded Steppes; 315 of the defeated and 88 of the victors fell.
+hist-conflict-73-1024 e1200 Plague broke out in Sluz and spread to one other settlement; 812 died in all.
+hist-conflict-73-1024 e1203 The Realm of Ielasie defeated the Droz Horde in Bittershaw; 260 of the defeated and 56 of the victors fell.
+hist-conflict-73-1024 e1204 Dundthou Stonehand sank into sleep in Dundthou's Seat.
+hist-conflict-73-1024 e1205 The Realm of Ielasie declared war on the Snonugg Mob over the Faded Steppes.
+hist-conflict-73-1024 e1206 The Droz Horde defeated the Realm of Ielasie in the Faded Steppes; 157 of the defeated and 59 of the victors fell.
+hist-conflict-73-1024 e1207 The Realm of Ielasie defeated the Droz Horde in Bittershaw; 261 of the defeated and 73 of the victors fell.
+hist-conflict-73-1024 e1208 The Snonugg Mob defeated the Realm of Ielasie in the Faded Steppes; 134 of the defeated and 42 of the victors fell.
+hist-conflict-73-1024 e1210 Plague broke out in Slozgit and spread to two other settlements; 1,130 died in all.
+hist-conflict-73-1024 e1213 The Snonugg Mob defeated the Realm of Ielasie in Bittershaw; 232 of the defeated and 80 of the victors fell.
+hist-conflict-73-1024 e1214 The Snonugg Mob besieged Thielinn of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e1216 Plague broke out in Sluz; 298 died.
+hist-conflict-73-1024 e1218 The Realm of Ielasie defeated the Snonugg Mob in Bittershaw; 428 of the defeated and 106 of the victors fell.
+hist-conflict-73-1024 e1221 The Snonugg Mob defeated the Realm of Ielasie in the Faded Steppes; 175 of the defeated and 42 of the victors fell.
+hist-conflict-73-1024 e1222 Plague broke out in Zigrink Pit and spread to two other settlements; 1,844 died in all.
+hist-conflict-73-1024 e1225 Plague broke out in Skeeb Pit and spread to one other settlement; 421 died in all.
+hist-conflict-73-1024 e1228 Plague broke out in Ricil; 25 died.
+hist-conflict-73-1024 e1229 Weakened by plague, Ricil was abandoned; 109 survivors went to Niecaer.
+hist-conflict-73-1024 e1231 The Realm of Ielasie raised Lathonn Watch in Wraithcombe Grove against the Snonugg Mob.
+hist-conflict-73-1024 e1232 The Realm of Ielasie defeated the Snonugg Mob in Bittershaw; 443 of the defeated and 100 of the victors fell.
+hist-conflict-73-1024 e1233 The Krash'dag Horde laid claim to Faminestone Spires, held by the Realm of Ielasie.
+hist-conflict-73-1024 e1234 The Snonugg Mob defeated the Realm of Ielasie in the Faded Steppes; 142 of the defeated and 57 of the victors fell.
+hist-conflict-73-1024 e1235 The Realm of Ielasie prevailed over the Droz Horde after 40 years of war.
+hist-conflict-73-1024 e1236 The Droz Horde ceded the Torn Vale to the Realm of Ielasie.
+hist-conflict-73-1024 e1237 The Realm of Ielasie defeated the Snonugg Mob in the Torn Vale; 390 of the defeated and 124 of the victors fell.
+hist-conflict-73-1024 e1238 The Droz Horde abandoned Krizdrunk Stockade, the land being lost.
+hist-conflict-73-1024 e1239 The Realm of Ielasie defeated the Snonugg Mob in the Faded Steppes; 394 of the defeated and 141 of the victors fell.
+hist-conflict-73-1024 e1240 The Realm of Ielasie besieged Skrotskizz of the Snonugg Mob; it held.
+hist-conflict-73-1024 e1241 The Realm of Ielasie prevailed over the Snonugg Mob after 28 years of war.
+hist-conflict-73-1024 e1242 The Snonugg Mob ceded the Faded Steppes to the Realm of Ielasie.
+hist-conflict-73-1024 e1244 Plague broke out in Thielinn; 347 died.
+hist-conflict-73-1024 e1250 Plague broke out in Zigrink Pit and spread to one other settlement; 597 died in all.
+hist-conflict-73-1024 e1254 The Krash'dag Horde declared war on the Realm of Ielasie over Faminestone Spires.
+hist-conflict-73-1024 e1255 The Snonugg Mob laid claim to Barleycross Plain, held by the Droz Horde.
+hist-conflict-73-1024 e1256 The Droz Horde laid claim to Krork of the Snonugg Mob in the Grave of Gank-Drat.
+hist-conflict-73-1024 e1257 The Krash'dag Horde defeated the Realm of Ielasie in Faminestone Spires; 211 of the defeated and 65 of the victors fell.
+hist-conflict-73-1024 e1258 The Krash'dag Horde besieged Niecaer of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1259 The Krash'dag Horde sacked Niecaer of the Realm of Ielasie; 57 died and 136 fled.
+hist-conflict-73-1024 e1260 The Krash'dag Horde raised Ukh'thuld Stockade in Pitchbank Sward against the Realm of Ielasie.
+hist-conflict-73-1024 e1267 The Krash'dag Horde defeated the Realm of Ielasie in Faminestone Spires; 249 of the defeated and 72 of the victors fell.
+hist-conflict-73-1024 e1268 The Krash'dag Horde besieged Khargirn Deep of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e1269 The Krash'dag Horde sacked Khargirn Deep of the Realm of Ielasie; 88 died and 208 fled.
+hist-conflict-73-1024 e1270 The Krash'dag Horde prevailed over the Realm of Ielasie after seven years of war.
+hist-conflict-73-1024 e1271 The Realm of Ielasie ceded the Faded Steppes to the Krash'dag Horde.
+hist-conflict-73-1024 e1273 Plague broke out in Dournthru Hold; 22 died.
+hist-conflict-73-1024 e1278 Plague broke out in Uruld'kraaz Camp; 928 died.
 synthetic syn-0 0 2000 all auto normal
 syn-0 table beast 6c9a6d6e84029da7c19e7bd1923c2f3c29ed94b5be9ad702fc41b0063c1368b8
 syn-0 table beast_population 669c288f466f91bebe2d0bd33b9199ed35aaafbad30cca779ac27b0cacd24172

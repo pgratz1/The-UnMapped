@@ -1599,6 +1599,14 @@ the calibrated rates), `p3-07-report.txt` (the r1 histories, 12.9, H13's culture
 histories, the not-yet-founded settlement line), `p4-04-markers.txt` (0.23.0). Not moved: `p3-02-names.txt`,
 `p3-04-engine.txt`, `core_vectors.txt`, `p1-*`, `p3-03-chronology.txt`. The world-hash files are validation's.
 
+### 0.23.0, integration D1 (holds_settlement)
+
+Lead ruling on integration difference D1: `holds_settlement` is set only by an overrun (6.4.3), not when an undead
+host rises at a ruined settlement (6.3.2), so such a host may still overrun once. `Monsters.appear` of
+`p5_02_monsters_reference.py` now starts every monster with `holds` false. Goldens re-recorded from the references
+with the commands of the 0.23.0 section (report, timeline and markers with `--inputs` the report inputs rebuilt by
+`build-inputs` into `~/.cache/the-unmapped/out/p5-02-fix/report-inputs`).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

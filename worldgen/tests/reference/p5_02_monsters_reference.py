@@ -455,7 +455,9 @@ class Monsters:
                                ended_year=None, ending_event=0, ending=OPEN, hostile=None))
         self.monsters.append(dict(id=m, kind=k, name=name, root=root, status=AWAKE, born=w.year, born_event=e,
                                   lair=s, waking=e, sleeping=0, drive_until=0, hoard=0,
-                                  holds=at_settlement != 0, raids={}, died=None, death_event=0, slayer=0,
+                                  # holds: set only by an overrun (6.4.3; the lead's ruling on integration D1):
+                                  # a host risen at a ruin (6.3.2) may still overrun once
+                                  holds=False, raids={}, died=None, death_event=0, slayer=0,
                                   overrun=0))
         self.created_this_step = True
         if quiet and self.kind(k)["flare"]:
