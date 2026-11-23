@@ -518,7 +518,7 @@ def year_dump(h, y):
         out.append("hold %d %d %d %d" % h.holder(r, y))
     for s in h.settlements:
         st = h.settlement_state(s[0], y)
-    out.append(("settlement" + " %d" * len(st)) % st)
+        out.append(("settlement" + " %d" * len(st)) % st)
     for i in h.relations_in_force(y):
         out.append("relation %d" % i)
     for c in h.alive(y):
@@ -1405,7 +1405,9 @@ def check_t1(c):
     c.eq("T1 r6", [hold(6, y) for y in (0, 1000, E)], [(6, 0, 0, 0)] * 3)
     c.eq("T1 r1 0", hold(1, 0), (1, 1, 0, 2))
     c.eq("T1 change years", h.change_years(), [0, 300, 1000, 1010, 1200, 1300, 1600, 1800])
-    st = h.settlement_state
+
+    def st(sid, y):   # P5-02 13: the eighth field, ending, is checked by the r4 cases of check_r4
+        return h.settlement_state(sid, y)[:7]
     c.eq("T1 s1 148", st(1, 148), (1, 1, 1, 1, 1, 200, 0))
     c.eq("T1 s1 149", st(1, 149), (1, 1, 1, 2, 1, 600, 149))
     c.eq("T1 s1 1000 (gap)", st(1, 1000), (1, 1, 1, 2, 1, 600, 149))
