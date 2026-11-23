@@ -90,35 +90,42 @@ T1_DIR = os.path.join(REPO, "worldgen", "tests", "data", "timeline")
 INPUTS_P4_01 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-01-tests", "inputs")
 INPUTS_P4_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-03-tests", "inputs")
 INPUTS_P5_12 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-int", "inputs")
+# P5-02 (0.23.0): the report reference's reference-built worlds (p3_report_reference.py build-inputs)
+INPUTS_P5_02 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-tests", "report-inputs")
 SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
 # 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
 # (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p4-03a"
-RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a")
+RULES = "p5-02"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02")
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12", "p4-03a")
+    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02")
 
 
 def p403a():
     """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
-    return RULES == "p4-03a"
+    return RULES in ("p4-03a", "p5-02")
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES in ("p5-12", "p4-03a")
+    return RULES in ("p5-12", "p4-03a", "p5-02")
+
+
+def r4():
+    """P4-01 r4 (P5-02 13): sites, monsters, beasts and settlement endings in the dumps (READINGS P5)."""
+    return RULES == "p5-02"
 
 
 def default_inputs():
-    return INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -290,6 +297,10 @@ class History:
             has_names = conn.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND "
                                      "name = 'region_name'").fetchone()[0] == 1
             t["region_name"] = prr.pk_rows(conn, "region_name")[1] if has_names else []
+            has_sites = conn.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND "
+                                     "name = 'site'").fetchone()[0] == 1
+            for tn in ("beast", "monster_kind", "beast_population", "monster", "site"):
+                t[tn] = prr.pk_rows(conn, tn)[1] if has_sites else []
         finally:
             conn.close()
         self.E = int(self.meta["history_end_year"])
@@ -323,6 +334,19 @@ class History:
             for y in range(e[1], e[2] + 1):
                 self.by_year.setdefault(y, []).append(e[0])
         self.civ_index = {c[0]: i for i, c in enumerate(self.civs)}
+        # P5-02 13 (schema 9)
+        self.sites = t["site"]             # id, name, kind, region, x, y, settlement, founder, monster, oy, oe, ey, ee, ending
+        self.monsters = t["monster"]       # id, name, kind, lair_site, born, born_event, died, death_event, slain_by, status, hoard
+        self.beast_rows = t["beast_population"]
+        self.kind_key = {}
+        self.kind_ids = {}
+        conn2 = prr.connect(path)
+        try:
+            for k in conn2.execute("SELECT id, key FROM event_kind ORDER BY id"):
+                self.kind_key[k[0]] = k[1]
+                self.kind_ids[k[1]] = k[0]
+        finally:
+            conn2.close()
 
     # --- section 4, at year Y ---------------------------------------------------------------------
 
@@ -355,7 +379,48 @@ class History:
             if c[1] <= y and (best is None or c[1] > best[1]):
                 best = c
         assert best is not None, "settlement %d has no census row at or before %d" % (s, y)
+        if r4():   # P5-02 13: SettlementState gains ending, 0 while standing at Y, else settlement.ending
+            return (s, 1, best[2], best[3], best[4], best[5], best[1], 0 if best[4] in (1, 2) else row[14])
         return (s, 1, best[2], best[3], best[4], best[5], best[1])
+
+    # --- P5-02 13: sites, monsters, beasts at year Y -----------------------------------------------------
+
+    def sites_existing(self, y):
+        return [x[0] for x in self.sites if x[9] <= y]
+
+    def site_at(self, sid, y):
+        """SiteState: (site, kind, region, x, y, settlement, monster, founder, open, ending); open iff ended_year
+        NULL or Y < ended_year."""
+        x = self.sites[sid - 1]
+        op = x[11] is None or y < x[11]
+        return (x[0], x[2], x[3], x[4], x[5], x[6], x[8], x[7], 1 if op else 0, 0 if op else x[13])
+
+    def monster_at(self, mid, y):
+        """MonsterState: (monster, kind, alive, awake, lair_site, region) by 13's definitions."""
+        m = self.monsters[mid - 1]
+        alive = m[4] <= y and (m[6] is None or y < m[6])
+        awake = False
+        wake = {"monster_appeared", "undead_rose", "monster_woke"}
+        sleep = {"monster_slept", "monster_driven_off"}
+        for e in self.events:
+            if e[1] > y:
+                break
+            key = self.kind_key.get(e[3])
+            if key in wake or key in sleep:
+                if any(p[3] == 8 and p[4] == mid and p[2] == 1 for p in self.parts.get(e[0], [])):
+                    awake = key in wake
+        lair, region = 0, 0
+        for x in self.sites:
+            if x[2] == 1 and x[8] == mid and x[9] <= y and (x[11] is None or y < x[11]):
+                lair, region = x[0], x[3]
+        return (mid, m[2], 1 if alive else 0, 1 if (alive and awake) else 0, lair, region)
+
+    def beast_count(self, region, beast, y):
+        best = 0
+        for r in self.beast_rows:
+            if r[0] == region and r[1] == beast and r[2] <= y:
+                best = r[3]
+        return best
 
     def relations_in_force(self, y):
         return [i for i, r in enumerate(self.relations) if r[5] <= y and (r[6] is None or y < r[6])]
@@ -461,6 +526,15 @@ def year_dump(h, y):
         out.append("event %d" % e)
     for e in h.events_starting(y):
         out.append("start %d" % e)
+    if r4():   # P5-02 13 (READINGS P5): the open sites and the living monsters with their awake flag
+        for sid in h.sites_existing(y):
+            st = h.site_at(sid, y)
+            if st[8]:
+                out.append("site %d" % sid)
+        for m in h.monsters:
+            ms = h.monster_at(m[0], y)
+            if ms[2]:
+                out.append("monster %d %d %d %d" % (m[0], ms[3], ms[4], ms[5]))
     return ("\n".join(out) + "\n").encode("ascii")
 
 
@@ -502,6 +576,15 @@ def static_dump(h):
             out.append("name %d %d %s" % (row[0], row[1], row[2]))
     for s in h.settlements:
         out.append("settlement %d %s" % (s[0], ids(set_ev[s[0]])))
+    if r4():   # P5-02 13 (READINGS P5): site, monster and beast lines after the settlement lines
+        for x in h.sites:
+            out.append("site %d %d %d %d %d %d %d %d %d %s %d" % (x[0], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9],
+                                                               "-" if x[11] is None else str(x[11]), x[13]))
+        for m in h.monsters:
+            out.append("monster %d %d %d %s %d %d" % (m[0], m[2], m[4], "-" if m[6] is None else str(m[6]), m[9],
+                                                     m[3]))
+        for r in h.beast_rows:
+            out.append("beast %d %d %d %d" % tuple(r))
     for e in h.events:
         out.append("effects %d %s" % (e[0], ids(eff[e[0]])))
     return ("\n".join(out) + "\n").encode("ascii")
@@ -927,6 +1010,13 @@ def golden_text(inputs):
         if r3():
             first.append("# Region names by year (P4-01 r3 16): S gains a line `name <region> <from_year> <name>` per "
                          "region_name row.")
+        if r4():
+            first.append("# P5-02 13 (P4-01 r4): S gains `site <id> <kind> <region> <x> <y> <settlement> <founder> "
+                         "<monster> <origin_year> <ended_year|-> <ending>`,")
+            first.append("# `monster <id> <kind> <born> <died|-> <status> <lair_site>` and `beast <region> <beast> "
+                         "<year> <count>` after the settlement lines;")
+            first.append("# D(Y)'s settlement lines gain the ending at Y, and D(Y) ends with `site <id>` per open site "
+                         "and `monster <id> <awake> <lair> <region>`.")
     else:
         first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s."
                  % generator_version()]
@@ -1592,6 +1682,8 @@ def main(argv):
             prr.use_version("0.20.0")   # the P3-07 fixtures' meta as P4-01 recorded them
         elif RULES == "p4-03":
             prr.use_version("0.21.0")
+        elif RULES in ("p5-12", "p4-03a"):
+            prr.use_version("0.22.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "distances":
         return cmd_distances(rest)

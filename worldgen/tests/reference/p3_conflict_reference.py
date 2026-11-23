@@ -2486,6 +2486,12 @@ def history_note(res, inp, eid, view=None, idx=None):
         return note
     if e[3] == K["flare_up"]:
         cs = sorted(causes.get(eid, []))
+        if FLAGS["monsters"] and cs and kind[cs[0]] == K.get("monster_appeared"):
+            # P3-07 (P5-02 12.7): a flare-up whose first cause is a monster's appearance; names mid-sentence
+            view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
+            m = [p_[4] for p_ in parts[cs[0]] if p_[3] == pe.MONSTER][0]
+            return "The waking of %s, %s, stirred the land." % (mid(view["name"](pe.MONSTER, m, "name")),
+                                                                 view["name"](pe.MONSTER, m, "kind"))
         if not cs or kind[cs[0]] not in CLAIMS:
             return ""
         c = cs[0]

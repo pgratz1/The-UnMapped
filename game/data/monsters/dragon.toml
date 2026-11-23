@@ -1,4 +1,3 @@
-# Monster kind dragon (spec P5-02 4.2). Generator 0.23.0; rates interim until the calibration sweep (P5-02 17).
 [monster.dragon]
 name = "Dragon"
 noun = "a dragon of the old world"

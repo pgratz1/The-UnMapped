@@ -635,8 +635,15 @@ HEADER = """\
 """
 
 
+HEADER_023 = """\
+# Generator 0.23.0 (P5-02, docs/specs/p5-02-beasts-monsters.md r0 9.3 and 21.2): rule 7 ravage (settlement_overrun,
+# {name} the monster's root), the slot {stem} and the possessive rule, the forms of rules 2 to 5; the shipped history
+# carries the monsters subsystem; the rename-small fixtures are the monsters-small data with the renaming edits.
+"""
+
+
 def golden_text(inputs):
-    o = [HEADER.rstrip("\n")]
+    o = [(HEADER_023 + HEADER).rstrip("\n") if r23() else HEADER.rstrip("\n")]
     dat = pcr.data()
     for name, seed, size, span, races, detail, civs, intensity in pcr.world_cases():
         res = pcr.world_case(name, seed, size, span, races, detail, inputs, dat, civs, intensity)

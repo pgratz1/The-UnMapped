@@ -87,13 +87,17 @@ SCHEMA_MD = os.path.join(REPO, "docs", "specs", "schema.md")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-01-tests", "report-inputs")
 INPUTS_020 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-07-tests", "inputs")
 DEFAULT_INPUTS_021 = DEFAULT_INPUTS
+DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-tests",
+                                  "report-inputs")
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
-GENERATOR_VERSION = "0.22.0"
+GENERATOR_VERSION = "0.23.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
 V3 = True   # P3-07 r21 26 (format v3, generator 0.22.0); V3 implies V2's rules
+V4 = True   # P5-02 12 (format v4, generator 0.23.0, schema 9); V4 implies V3's rules
+SUMMARY_MONSTER_LINES = 2   # P5-02 12.4: a constant of P3-07 section 8
 
 READINGS = """
 R1 6.6 milestones: a milestone line carries the note of history_note(view, event, c) in the form of 21.4,
@@ -189,25 +193,28 @@ MILESTONE_CAL_KINDS = ("famine", "plague", "plague_outbreak", "plague_spread", "
 ISLET_MAX_DRY_CELLS = 1172
 SHARE_LEVELS = (500, 600, 700, 800, 900)
 RACE, GOD, CIV, SETTLEMENT, REGION = 1, 2, 3, 4, 5
+MONSTER, SITE = 8, 9   # P5-02 11.2
 
 assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == (20, 20, 250)
 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0"):
+    global GENERATOR_VERSION, V2, V3, V4, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0")
-    V3 = v == "0.22.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else INPUTS_020
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0")
+    V3 = v in ("0.22.0", "0.23.0")
+    V4 = v == "0.23.0"
+    DEFAULT_INPUTS = DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+        INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.22.0")
+use_version("0.23.0")
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -255,7 +262,8 @@ def load_world(path):
     conn = connect(path)
     try:
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
-        t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ())}
+        t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ()) +
+             (pe.NEW_TABLES_023 if V4 else ())}
     finally:
         conn.close()
     return World(meta, t)
@@ -370,6 +378,14 @@ class World:
             self.res["region_name"] = t["region_name"]
             for r in t["region_name"]:
                 self.renames.setdefault(r[0], []).append(r)
+        self.monster, self.site, self.mkind, self.beast = {}, {}, {}, {}
+        if V4:   # P5-02 11: the five tables (the view renders names of types 8 and 9, kind, @beast)
+            for tn in pe.NEW_TABLES_023:
+                self.res[tn] = t[tn]
+            self.monster = {m[0]: m for m in t["monster"]}
+            self.site = {x[0]: x for x in t["site"]}
+            self.mkind = {k[0]: k for k in t["monster_kind"]}
+            self.beast = {b[0]: b for b in t["beast"]}
         self.inp = Inputs(self)
         self.view = pe.view_from_rows(self.res, [(r[0], r[1]) for r in t["region"]], t["race"], t["god"])
         self._bind()
@@ -415,6 +431,10 @@ class World:
             return self.settlement[i][1]
         if typ == REGION:
             return self.present_name(i) if i in self.region else None
+        if V4 and typ == MONSTER:   # P5-02 12.2
+            return self.monster[i][1] if i in self.monster else None
+        if V4 and typ == SITE:
+            return self.site[i][1] if i in self.site else None
         return None
 
     def present_name(self, rid):
@@ -856,8 +876,8 @@ class Digest:
 def report(w, level):
     d = Digest(w)
     t = w.t
-    o = ["# worldgen history v3" if V3 else "# worldgen history v2" if V2 else "# worldgen history v1",
-         "level = %s" % level]
+    o = ["# worldgen history v4" if V4 else "# worldgen history v3" if V3 else "# worldgen history v2" if V2 else
+         "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
     for key, mk in (("seed", "seed"), ("seed_phrase", "seed_phrase"), ("map_size", "param.map_size"),
@@ -918,6 +938,9 @@ def report(w, level):
     for c in t["civilization"]:
         o += civ_block(w, d, c, level)
     o += present(w, d, level)
+    if V4:   # P5-02 12.4, 12.5
+        o += monster_lines(w, level)
+        o += site_lines(w, level)
     o.append("[stats]")
     o += ["%s = %d" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
     return "".join(finish(line) + "\n" for line in o).encode("latin-1")
@@ -1112,6 +1135,8 @@ def present(w, d, level):
     o.append("largest settlement: %s, population %d" % (w.ref(SETTLEMENT, big[0]), big[11]) if big else
              "largest settlement: none")
     o += present_lists(w)
+    if V4 and level == "full":   # P5-02 12.3: appended at the end of [present], full only
+        o.append(beast_totals_line(w))
     return o
 
 
@@ -1123,8 +1148,13 @@ def present_lists(w):
     o.append("ruins: %d" % len(ruins))
     for s in ruins:
         if V2:
-            o.append("  s%d %s in %s: ruined %d, e%d %s; last held by %s" % (
-                s[0], s[1], w.ref(REGION, s[4]), s[12], s[13], ruin_how(w, s[13]), last_held_by(w, s[0])))
+            then = ""
+            if V4:   # P5-02 12.3: the region's name at the ruined year when it differs from its present name
+                at = pe.region_at_year({r: x[1] for r, x in w.region.items()}, w.t["region_name"], s[4], s[12])
+                if at != w.present_name(s[4]):
+                    then = ", then called %s" % at
+            o.append("  s%d %s in %s%s: ruined %d, e%d %s; last held by %s" % (
+                s[0], s[1], w.ref(REGION, s[4]), then, s[12], s[13], ruin_how(w, s[13], s), last_held_by(w, s[0])))
             continue
         by = role_ids(w, s[13], "attacker")
         o.append("  s%d %s in %s: ruined %d, e%d %s%s; last held by %s" % (
@@ -1169,6 +1199,81 @@ def present_lists(w):
     return o
 
 
+def beast_totals_line(w):
+    """P5-02 12.3: `beasts: <plural> <n>, ...`, the world totals at E (the last row of each (region, beast)),
+    every species in ascending id."""
+    last = {}
+    for r, b, _y, n in w.t["beast_population"]:
+        last[(r, b)] = n
+    tot = {b: 0 for b in w.beast}
+    for (r, b), n in last.items():
+        tot[b] = tot.get(b, 0) + n
+    return "beasts: " + ", ".join("%s %d" % (w.beast[b][3], tot[b]) for b in sorted(w.beast))
+
+
+MONSTER_STATUS = {1: "awake", 2: "asleep", 3: "slain", 4: "died"}
+SITE_ENDING_WORD = {1: "slain", 2: "died", 3: "moved", 4: "lost", 5: "fell", 6: "quiet"}
+
+
+def monster_raids(w):
+    """{monster id: (raids, killed)} over the monster_raid events."""
+    out = {}
+    rk = w.K["monster_raid"]
+    for e in w.t["event"]:
+        if e[3] != rk:
+            continue
+        m = role_ids(w, e[0], "monster")[0]
+        dead = [v[2] for v in w.vals.get(e[0], []) if v[1] == 1]
+        r, k = out.get(m, (0, 0))
+        out[m] = (r + 1, k + (dead[0] if dead else 0))
+    return out
+
+
+def monster_lines(w, level):
+    """P5-02 12.4: [monsters]."""
+    ms = w.t["monster"]
+    o = ["[monsters]", "monsters: %d; awake %d, asleep %d, slain %d, died %d" % (
+        len(ms), sum(1 for m in ms if m[9] == 1), sum(1 for m in ms if m[9] == 2), sum(1 for m in ms if m[9] == 3),
+        sum(1 for m in ms if m[9] == 4))]
+    raids = monster_raids(w)
+    if level == "full":
+        shown, more = ms, 0
+    else:
+        alive = sorted((m for m in ms if m[9] in (1, 2)), key=lambda m: (-m[10], m[0]))
+        shown, more = alive[:SUMMARY_MONSTER_LINES], max(0, len(alive) - SUMMARY_MONSTER_LINES)
+    for m in shown:
+        st = "slain by %s" % w.ref(CIV, m[8]) if m[9] == 3 else MONSTER_STATUS[m[9]]
+        lair = w.site[m[3]]
+        r, k = raids.get(m[0], (0, 0))
+        line = "  m%d %s: %s, %s, lair %s in %s, since %d e%d, raids %d, killed %d, hoard %d" % (
+            m[0], m[1], w.mkind[m[2]][2], st, w.ref(SITE, m[3]), w.ref(REGION, lair[3]), m[4], m[5], r, k, m[10])
+        if m[6] is not None:
+            line += ", ended %d e%d" % (m[6], m[7])
+        o.append(line)
+    if more:
+        o.append("  and %d more" % more)
+    return o
+
+
+def site_lines(w, level):
+    """P5-02 12.5: [sites]."""
+    ss = w.t["site"]
+    o = ["[sites]", "sites: %d; open %d; lairs %d, outposts %d" % (
+        len(ss), sum(1 for x in ss if x[13] == 0), sum(1 for x in ss if x[2] == 1), sum(1 for x in ss if x[2] == 2))]
+    if level != "full":
+        return o
+    for x in ss:
+        line = "  si%d %s: %s in %s at %d %d, since %d e%d" % (x[0], x[1], "lair" if x[2] == 1 else "outpost",
+                                                              w.ref(REGION, x[3]), x[4], x[5], x[9], x[10])
+        if x[7]:
+            line += ", of %s" % w.ref(CIV, x[7])
+        if x[6]:
+            line += ", at %s" % w.ref(SETTLEMENT, x[6])
+        line += "; open" if x[13] == 0 else "; ended %d e%d %s" % (x[11], x[12], SITE_ENDING_WORD[x[13]])
+        o.append(line)
+    return o
+
+
 def refuge_hidden_end(w):
     """r21 26.3: settlement -> end_year of its refuge_hidden event with the smallest id."""
     out = {}
@@ -1208,17 +1313,24 @@ def renamed_region_lines(w):
     return o
 
 
-def ruin_how(w, eid):
-    """25.3 item 1: the <how> of a ruin event."""
+def ruin_how(w, eid, s=None):
+    """25.3 item 1: the <how> of a ruin event; P5-02 12.3: an overrun, and ` after plague` or ` after famine`
+    after `abandoned` when the settlement's ending is 3 or 4."""
     k = w.kind_key[w.ev[eid][3]]
     if k == "sacked":
         by = role_ids(w, eid, "attacker")
         return "sacked by %s" % w.ref(CIV, by[0]) if by else "sacked"
+    after = ""
+    if V4 and s is not None and len(s) > 14:
+        after = {3: " after plague", 4: " after famine"}.get(s[14], "")
     if k == "settlement_abandoned":
-        return "abandoned"
+        return "abandoned" + after
     if k == "settlement_abandoned_to":
         dest = role_ids(w, eid, "destination")
-        return "abandoned, survivors to %s" % w.ref(SETTLEMENT, dest[0]) if dest else "abandoned"
+        return "abandoned%s, survivors to %s" % (after, w.ref(SETTLEMENT, dest[0])) if dest else "abandoned" + after
+    if V4 and k == "settlement_overrun":
+        m = role_ids(w, eid, "monster")
+        return "overrun by %s" % w.ref(MONSTER, m[0]) if m else "overrun"
     return k
 
 
@@ -1361,6 +1473,20 @@ def stats(w, d):
         refs, hid = hidden_refuges(w)
         o += [("region_names", len(t["region_name"])), ("regions_renamed", len({r[0] for r in t["region_name"]})),
               ("refuges", len(refs)), ("refuges_hidden", len(hid))]
+    if V4:   # P5-02 12.6, at the end of the list (full only: SUMMARY_STATS unchanged)
+        ms, ss = t["monster"], t["site"]
+        raids = monster_raids(w)
+        o += [("beasts", len(t["beast"])), ("monster_kinds", len(t["monster_kind"])),
+              ("beast_populations", len(t["beast_population"])), ("monsters", len(ms)), ("sites", len(ss)),
+              ("monsters_alive", sum(1 for m in ms if m[9] in (1, 2))), ("monsters_slain", sum(1 for m in ms if m[9] == 3)),
+              ("monsters_died", sum(1 for m in ms if m[9] == 4)), ("monster_raids", sum(r for r, _k in raids.values())),
+              ("monster_killed", sum(k for _r, k in raids.values())),
+              ("settlements_overrun", by_kind.get(K["settlement_overrun"], 0)),
+              ("undead_risen", by_kind.get(K["undead_rose"], 0)), ("outposts", sum(1 for x in ss if x[2] == 2)),
+              ("outposts_open", sum(1 for x in ss if x[2] == 2 and x[13] == 0)),
+              ("beasts_bold", by_kind.get(K["beasts_bold"], 0)),
+              ("settlements_left", sum(1 for x in st if len(x) > 14 and x[14] in (3, 4, 5))),
+              ("regions_shunned", len({x[3] for x in ss if x[2] == 1 and x[13] == 0 and x[6] != 0}))]
     return o
 
 
@@ -1380,10 +1506,11 @@ FIXTURE_NAMES = ("h1-war-and-ruin", "h2-minimal", "h3-runaway", "h3b-runaway-100
                  "h5-saturated", "h6-notes", "h7-runs", "h8-frames", "h9-realms", "h10-floor")
 FIXTURE_NAMES_V2 = FIXTURE_NAMES + ("h11-v2",)   # r19 25.13 item 11: H11 holds the v2 cases
 FIXTURE_NAMES_V3 = FIXTURE_NAMES_V2 + ("h12-v3",)   # r21 26.8 item 9: H12 holds the v3 cases 2 to 5
+FIXTURE_NAMES_V4 = FIXTURE_NAMES_V3 + ("h13-v4",)   # P5-02 19.1 item 15: H13 holds the v4 cases
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -1425,6 +1552,17 @@ def expand_fixture(fx):
     rows["region"] = _sorted_rows("region", regs)
     if V3:   # schema 8: [region, from_year, name, culture, event] (P5-12 7.2)
         rows["region_name"] = sorted(tuple(r) for r in tb.get("region_name", []))
+    if V4:   # schema 9 (P5-02 11.2): the five tables as given ([] when absent; -1 is NULL in monster.died and
+        # site.ended_year); settlement.ending derived from the log when a row has 14 columns (below)
+        null = {"monster": 6, "site": 11}
+        for tn in pe.NEW_TABLES_023:
+            rs = []
+            for r in tb.get(tn, []):
+                r = list(r)
+                if tn in null and r[null[tn]] == -1:
+                    r[null[tn]] = None
+                rs.append(tuple(r))
+            rows[tn] = sorted(rs, key=lambda r: tuple(r[:3]) if tn == "beast_population" else (r[0],))
     kinds, kroles, kvalues = [], [], []
     by_key = {}
     for i, k in enumerate(fx.get("kind", [])):
@@ -1466,6 +1604,9 @@ def expand_fixture(fx):
             add(len(events) + 1, b["year"], b["year"], b["kind"], b["phase"], 0, 0, sal, [], vs, [])
     rows.update(event_kind=kinds, event_kind_role=kroles, event_kind_value=kvalues, event=events,
                 event_participant=parts, event_value=vals, event_cause=causes)
+    if V4 and rows["settlement"] and len(rows["settlement"][0]) == 14:
+        en = pe.endings_from_rows(rows)
+        rows["settlement"] = [tuple(s) + (en[s[0]],) for s in rows["settlement"]]
     m = fx["meta"]
     meta = {"content_hash": hashlib.sha256(b"").hexdigest(), "format": "the-unmapped-world",
             "generator_version": GENERATOR_VERSION, "history_end_year": str(m["history_span"]),
@@ -1473,7 +1614,7 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "8" if V3 else "7", "seed": str(m["seed"]),
+            "param.races": m["races"], "schema_version": "9" if V4 else "8" if V3 else "7", "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows
 
@@ -1486,6 +1627,10 @@ def ddl_statements():
     out = [s for s in block.splitlines() if s.startswith("CREATE TABLE")]
     if not V3:   # schema 7 before 0.22.0: no region_name (P3-04 r21 23.4)
         out = [s for s in out if not s.startswith("CREATE TABLE region_name ")]
+    if V4:   # schema 9 (P5-02 11.1), from the spec's text while schema.md (the engineer's) still holds 8
+        out = [pe.SETTLEMENT_DDL_023 if s.startswith("CREATE TABLE settlement (") else s for s in out]
+        have = {s.split(" ")[2] for s in out}
+        out += [s for s in pe.DDL_023_NEW if s.split(" ")[2] not in have]
     return out
 
 
@@ -1945,6 +2090,7 @@ def build_input(src, dst):
     tmp = dst + ".tmp"
     shutil.copyfile(src, tmp)
     p1r.rename_db(src, tmp)
+    use_version(GENERATOR_VERSION)   # rename_db serves p1_regions_reference's version of the data (0.22.0)
     conn = pchr.open_world(tmp)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
     p = pchr.params_from_meta(meta)
@@ -1958,6 +2104,14 @@ def build_input(src, dst):
             c.execute(pe.REGION_NAME_DDL)   # schema 8 (P3-04 r21 23.4) on a schema 7 source
             c.execute("UPDATE meta SET value = '8' WHERE key = 'schema_version'")
             c.execute("PRAGMA user_version = 8")
+        if V4 and not c.execute("SELECT 1 FROM sqlite_master WHERE name = 'site'").fetchone():
+            # schema 9 (P5-02 11.1) on a schema 8 source: settlement's statement replaced, five tables appended
+            c.execute("DROP TABLE settlement")
+            c.execute(pe.SETTLEMENT_DDL_023)
+            for ddl in pe.DDL_023_NEW:
+                c.execute(ddl)
+            c.execute("UPDATE meta SET value = '9' WHERE key = 'schema_version'")
+            c.execute("PRAGMA user_version = 9")
         for t in pchr.TABLES:
             c.execute('DELETE FROM "%s"' % t)
             n = pchr.COLUMNS[t]

@@ -1,0 +1,646 @@
+# P5-02 19.1 item 15: H13 v4 (format v4, schema 9). Two monsters: Old Grakh, a troll, appears (e15), raids Dunton
+# (e16), whose people then leave it (ending 5, `left`), and is slain by the Kingdom of Bel (e18); Saelith the Black,
+# a dragon, appears in a quiet step (e20) and starts a flare-up (e21, the note of 12.7), raids and overruns Arnwick
+# (e22, e23: ending 2, a lair at the settlement's cell, region 1 not released since Arnton stands there) and sleeps
+# (e24). Two outposts, one left when its frontier fell quiet (e33, ending 6). Ghost places of every ending: Corford
+# abandoned after plague (3, with survivors to Arnton), Belham after famine (4), Dunton after a raid (5); Eldstead
+# sacked (1) in Eld Wood, renamed The Red Wood after its ruin (the ruins list's `then called`). A boldness of the
+# wolves (e19, {@beast}). Beasts bear and wolf with rows at 0 and E - 1. Written by the test writer from the spec
+# (P5-02 10, 11, 12); format: README.md in this directory.
+
+[meta]
+seed = 1313
+seed_phrase = ""
+map_size = 512
+history_span = 2000
+history_detail = "normal"
+races = "human"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+region = [
+    [1, "Arn Vale", 1, 2000, 0, 1500],
+    [2, "Bel Downs", 1, 2000, 0, 1500],
+    [3, "Cor Fells", 1, 2000, 0, 1500],
+    [4, "Dun Heath", 1, 2000, 0, 1500],
+    [5, "Eld Wood", 1, 2000, 0, 1500],
+]
+race = [[1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1]]
+culture = [[1, "human", "Human", 1]]
+god = [[1, "Wealstuld", 1]]
+age = [[1, 1, 0, 1999, "The Age of Humans"]]
+phase = [
+    [1, 1, 1, 0, 949, 1],
+    [2, 1, 2, 950, 999, 0],
+    [3, 1, 3, 1000, 1049, 20],
+    [4, 1, 4, 1050, 1999, 0],
+]
+civilization = [
+    [1, "The Kingdom of Arn", 1, 1, 1, 1, 0, 2, -1, 0],
+    [2, "The Kingdom of Bel", 1, 1, 2, 4, 10, 4, -1, 0],
+]
+# Fourteen columns: settlement.ending (schema 9) is derived from the log by both builders (P5-02 8.3).
+settlement = [
+    [1, "Arnton", 10, 10, 1, 1, 0, 3, 1, 3, 1, 3150, -1, 0],
+    [2, "Arnwick", 14, 12, 1, 1, 20, 6, 0, 2, 3, 0, 1300, 23],
+    [3, "Corford", 30, 30, 3, 1, 30, 7, 0, 1, 3, 0, 400, 12],
+    [4, "Belford", 20, 20, 2, 2, 10, 5, 2, 3, 1, 2497, -1, 0],
+    [5, "Belham", 24, 24, 2, 2, 40, 8, 0, 1, 3, 0, 450, 14],
+    [6, "Dunton", 40, 40, 4, 2, 50, 9, 0, 1, 3, 0, 601, 17],
+    [7, "Eldstead", 50, 50, 5, 1, 60, 10, 0, 2, 3, 0, 1500, 29],
+]
+settlement_census = [
+    [1, 0, 1, 3, 1, 3000],
+    [2, 20, 1, 2, 1, 900],
+    [2, 1300, 0, 2, 3, 0],
+    [3, 30, 1, 1, 1, 250],
+    [3, 400, 0, 1, 3, 0],
+    [4, 10, 2, 3, 1, 2500],
+    [5, 40, 2, 1, 1, 170],
+    [5, 450, 0, 1, 3, 0],
+    [6, 50, 2, 1, 1, 50],
+    [6, 601, 0, 1, 3, 0],
+    [7, 60, 1, 2, 1, 700],
+    [7, 1500, 0, 2, 3, 0],
+]
+region_control = [
+    [1, 0, -1, 1, 3],
+    [2, 10, -1, 2, 5],
+    [3, 30, 400, 1, 7],
+    [4, 50, 601, 2, 9],
+    [5, 60, 1500, 1, 10],
+]
+relation = [
+    [3, 2, 3, 1, "war", 1450, -1, 26, 0],
+]
+region_name = [
+    [5, 1600, "The Red Wood", 2, 32],
+]
+# Schema 9 (P5-02 11.1, 11.2). beast: [id, key, name, plural, menace, food]; monster_kind: [id, key, name, noun,
+# grouped, wake, might]; beast_population: [region, beast, year, count]; monster: [id, name, kind, lair_site, born,
+# born_event, died (-1 NULL), death_event, slain_by, status, hoard]; site: [id, name, kind, region, x, y,
+# settlement, founder_civ, monster, origin_year, origin_event, ended_year (-1 NULL), ending_event, ending].
+beast = [
+    [1, "bear", "Bear", "bears", 30, 30],
+    [2, "wolf", "Wolf", "wolves", 10, 0],
+]
+monster_kind = [
+    [1, "dragon", "Dragon", "a dragon of the old world", 0, 1, 6000],
+    [2, "giant", "Giant", "a giant of the mountains", 0, 1, 1200],
+    [3, "ogre", "Ogre", "an ogre", 0, 1, 200],
+    [4, "troll", "Troll", "a troll of the hills", 0, 1, 300],
+    [5, "undead", "Undead", "a host of the restless dead", 1, 2, 1500],
+    [6, "wyvern", "Wyvern", "a brood of wyverns", 1, 1, 600],
+]
+beast_population = [
+    [1, 1, 0, 12],
+    [1, 2, 0, 40],
+    [1, 2, 1999, 35],
+    [2, 2, 0, 160],
+    [2, 2, 949, 150],
+    [3, 1, 0, 7],
+]
+monster = [
+    [1, "Old Grakh", 4, 1, 500, 15, 700, 18, 2, 3, 1],
+    [2, "Saelith the Black", 1, 3, 975, 20, -1, 0, 0, 2, 32],
+]
+site = [
+    [1, "Grakh's Hollow", 1, 3, 35, 35, 0, 0, 1, 500, 15, 700, 18, 1],
+    [2, "The Lair of Saelith", 1, 3, 36, 36, 0, 0, 2, 975, 20, 1300, 23, 3],
+    [3, "Saelith's Deep", 1, 1, 14, 12, 2, 0, 2, 1300, 23, -1, 0, 0],
+    [4, "Arn Watch", 2, 1, 12, 12, 0, 1, 0, 1460, 27, -1, 0, 0],
+    [5, "Bel Tower", 2, 2, 22, 22, 0, 2, 0, 1470, 28, 1700, 33, 6],
+]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "settlement_founded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 40
+template = "{founder} founded {settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "plague_outbreak"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 45
+template = "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?| in all| in all}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "population", "total", "reached"]
+
+[[kind]]
+key = "settlement_abandoned_to"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 55
+template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1], ["destination", 4, 1, 1]]
+values = ["settled", "lost"]
+
+[[kind]]
+key = "famine"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 25
+template = "Famine struck {settlement}; {dead} died."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "population"]
+
+[[kind]]
+key = "settlement_abandoned"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 55
+template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["survivors"]
+
+[[kind]]
+key = "monster_appeared"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 45
+template = "{monster}, {monster:kind}, made its lair in {@region}."
+roles = [["monster", 8, 1, 1], ["lair", 9, 1, 1]]
+
+[[kind]]
+key = "monster_raid"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 15
+template = "{monster} fell upon {@settlement}; {dead?no one died|one died|# died}."
+roles = [["monster", 8, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "plunder"]
+
+[[kind]]
+key = "monster_slain"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 55
+template = "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}."
+roles = [["monster", 8, 1, 1], ["slayer", 3, 1, 1]]
+values = ["hunters"]
+
+[[kind]]
+key = "beasts_bold"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 15
+template = "In {@region} the {@beast} grew bold, and travellers from {settlement} went in fear; {dead?none|one|#} died on the roads."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["beast", "dead"]
+
+[[kind]]
+key = "flare_up"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 50
+template = "In {@year} tensions flared into {years} {years?year|years} of upheaval."
+roles = []
+values = ["years"]
+
+[[kind]]
+key = "settlement_overrun"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 50
+template = "{monster} drove the people from {@settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}."
+roles = [["monster", 8, 1, 1], ["civilization", 3, 1, 1], ["lair", 9, 1, 1]]
+values = ["survivors"]
+
+[[kind]]
+key = "monster_slept"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 10
+template = "{monster} sank into sleep in {lair}."
+roles = [["monster", 8, 1, 1], ["lair", 9, 1, 1]]
+
+[[kind]]
+key = "claim"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {@region}, held by {holder}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "war_declared"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 70
+template = "{attacker} declared war on {defender} over {@region}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+
+[[kind]]
+key = "outpost_built"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 12
+template = "{civilization} raised {site} in {@region} against {enemy}."
+roles = [["civilization", 3, 1, 1], ["enemy", 3, 1, 1], ["site", 9, 1, 1]]
+
+[[kind]]
+key = "sacked"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 75
+template = "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+values = ["dead", "survivors"]
+
+[[kind]]
+key = "battle"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}."
+roles = [["winner", 3, 1, 1], ["loser", 3, 1, 1]]
+values = ["winner_dead", "loser_dead"]
+
+[[kind]]
+key = "region_renamed"
+caused = 1
+region_use = 1
+settlement_use = 2
+salience = 60
+template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}."
+roles = [["namer", 3, 0, 1]]
+
+[[kind]]
+key = "outpost_abandoned"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 10
+template = "{civilization} abandoned {site}{reason?, the frontier having fallen quiet|, the land being lost|, its realm having fallen}."
+roles = [["civilization", 3, 1, 1], ["site", 9, 1, 1]]
+values = ["reason"]
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 1
+settlement = 1
+parts = [["settlement", 1], ["founder", 1]]
+values = [3000]
+
+[[event]]
+id = 4
+year = 10
+kind = "civ_founded"
+phase = 1
+region = 2
+parts = [["civilization", 2], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 5
+year = 10
+kind = "settlement_founded"
+phase = 1
+region = 2
+settlement = 4
+parts = [["settlement", 4], ["founder", 2]]
+values = [2500]
+
+[[event]]
+id = 6
+year = 20
+kind = "settlement_founded"
+phase = 1
+region = 1
+settlement = 2
+parts = [["settlement", 2], ["founder", 1]]
+values = [900]
+
+[[event]]
+id = 7
+year = 30
+kind = "settlement_founded"
+phase = 1
+region = 3
+settlement = 3
+parts = [["settlement", 3], ["founder", 1]]
+values = [250]
+
+[[event]]
+id = 8
+year = 40
+kind = "settlement_founded"
+phase = 1
+region = 2
+settlement = 5
+parts = [["settlement", 5], ["founder", 2]]
+values = [170]
+
+[[event]]
+id = 9
+year = 50
+kind = "settlement_founded"
+phase = 1
+region = 4
+settlement = 6
+parts = [["settlement", 6], ["founder", 2]]
+values = [50]
+
+[[event]]
+id = 10
+year = 60
+kind = "settlement_founded"
+phase = 1
+region = 5
+settlement = 7
+parts = [["settlement", 7], ["founder", 1]]
+values = [700]
+
+# Ending 3: an abandonment caused by a plague (8.3); the ruins line says `abandoned after plague`.
+[[event]]
+id = 11
+year = 400
+kind = "plague_outbreak"
+phase = 1
+region = 3
+settlement = 3
+parts = [["settlement", 3], ["civilization", 1]]
+values = [100, 150, 100, 0]
+
+[[event]]
+id = 12
+year = 400
+kind = "settlement_abandoned_to"
+phase = 1
+region = 3
+settlement = 3
+parts = [["settlement", 3], ["civilization", 1], ["destination", 1]]
+values = [150, 0]
+causes = [11]
+
+# Ending 4: famine.
+[[event]]
+id = 13
+year = 450
+kind = "famine"
+phase = 1
+region = 2
+settlement = 5
+parts = [["settlement", 5], ["civilization", 2]]
+values = [50, 120]
+
+[[event]]
+id = 14
+year = 450
+kind = "settlement_abandoned"
+phase = 1
+region = 2
+settlement = 5
+parts = [["settlement", 5], ["civilization", 2]]
+values = [120]
+causes = [13]
+
+[[event]]
+id = 15
+year = 500
+kind = "monster_appeared"
+phase = 1
+region = 3
+parts = [["monster", 1], ["lair", 1]]
+
+[[event]]
+id = 16
+year = 600
+kind = "monster_raid"
+phase = 1
+region = 4
+settlement = 6
+parts = [["monster", 1], ["civilization", 2]]
+values = [30, 1]
+causes = [15]
+
+# Ending 5: an abandonment after a raid (`left`).
+[[event]]
+id = 17
+year = 601
+kind = "settlement_abandoned"
+phase = 1
+region = 4
+settlement = 6
+parts = [["settlement", 6], ["civilization", 2]]
+values = [20]
+causes = [16]
+
+[[event]]
+id = 18
+year = 700
+kind = "monster_slain"
+phase = 1
+region = 3
+parts = [["monster", 1], ["slayer", 2]]
+values = [25]
+causes = [16]
+
+[[event]]
+id = 19
+year = 800
+kind = "beasts_bold"
+phase = 1
+region = 2
+settlement = 4
+parts = [["settlement", 4], ["civilization", 2]]
+values = [2, 3]
+
+# A flare kind in a quiet step: the flare-up of 1000 is the monsters' (6.5), its note 12.7's.
+[[event]]
+id = 20
+year = 975
+kind = "monster_appeared"
+phase = 2
+region = 3
+parts = [["monster", 2], ["lair", 2]]
+
+[[event]]
+id = 21
+year = 1000
+kind = "flare_up"
+phase = 3
+values = [50]
+causes = [20]
+
+[[event]]
+id = 22
+year = 1300
+kind = "monster_raid"
+phase = 4
+region = 1
+settlement = 2
+parts = [["monster", 2], ["civilization", 1]]
+values = [100, 32]
+causes = [20]
+
+# Ending 2; the old lair ends with ending 3 (moved).
+[[event]]
+id = 23
+year = 1300
+kind = "settlement_overrun"
+phase = 4
+region = 1
+settlement = 2
+parts = [["monster", 2], ["civilization", 1], ["lair", 3]]
+values = [700]
+causes = [22]
+
+[[event]]
+id = 24
+year = 1400
+kind = "monster_slept"
+phase = 4
+region = 1
+parts = [["monster", 2], ["lair", 3]]
+causes = [20]
+
+[[event]]
+id = 25
+year = 1440
+kind = "claim"
+phase = 4
+region = 5
+parts = [["claimant", 2], ["holder", 1]]
+
+[[event]]
+id = 26
+year = 1450
+kind = "war_declared"
+phase = 4
+region = 5
+parts = [["attacker", 2], ["defender", 1]]
+causes = [25]
+
+[[event]]
+id = 27
+year = 1460
+kind = "outpost_built"
+phase = 4
+region = 1
+parts = [["civilization", 1], ["enemy", 2], ["site", 4]]
+causes = [26]
+
+[[event]]
+id = 28
+year = 1470
+kind = "outpost_built"
+phase = 4
+region = 2
+parts = [["civilization", 2], ["enemy", 1], ["site", 5]]
+causes = [26]
+
+# Ending 1 in Eld Wood, renamed after the ruin: `then called Eld Wood`.
+[[event]]
+id = 29
+year = 1500
+kind = "sacked"
+phase = 4
+region = 5
+settlement = 7
+parts = [["attacker", 2], ["defender", 1]]
+values = [500, 200]
+causes = [26]
+
+[[event]]
+id = 30
+year = 1550
+kind = "battle"
+phase = 4
+region = 5
+parts = [["winner", 2], ["loser", 1]]
+values = [10, 20]
+causes = [26]
+
+[[event]]
+id = 31
+year = 1600
+kind = "battle"
+phase = 4
+region = 5
+parts = [["winner", 2], ["loser", 1]]
+values = [8, 12]
+causes = [26]
+
+[[event]]
+id = 32
+year = 1600
+kind = "region_renamed"
+phase = 4
+region = 5
+parts = [["namer", 2]]
+causes = [31]
+
+# Left: the frontier fell quiet (reason 0, no cause).
+[[event]]
+id = 33
+year = 1700
+kind = "outpost_abandoned"
+phase = 4
+region = 2
+parts = [["civilization", 2], ["site", 5]]
+values = [0]

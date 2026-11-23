@@ -536,6 +536,7 @@ TEST_CASE("P3-01 3 race_awakening_order: a race of order k is compared with the 
         Files g = history_data::shipped_files();
         g.erase("races/dwarf.toml");
         g.erase("cultures/dwarven.toml");
+        history_data::prune_monster_files(g);   // P5-02 4.2: the giants' naming culture
         g = edited(g, "races/faerie.toml", "awakening_share = \"0.70\"", "awakening_share = \"0.30\"");
         at_directory(only_error(load(g)), "races", "race_order_dense", "race",
                      "orders must be 1 to 5 without gaps; 3 is missing");
@@ -547,6 +548,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         Files f = history_data::shipped_files();
         f.erase("races/dwarf.toml");
         f.erase("cultures/dwarven.toml");
+        history_data::prune_monster_files(f);   // P5-02 4.2: the giants' naming culture
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 5 without gaps; 3 is missing");
     }
@@ -560,6 +562,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
+        history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
     }
@@ -570,6 +573,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         }
         f.erase("cultures/goblin.toml");
         f.erase("cultures/faerie.toml");
+        history_data::prune_monster_files(f);   // P5-02 4.2: the trolls' and wyverns' naming culture
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 4 without gaps; 2 is missing");
     }
@@ -583,6 +587,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
+        history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         const Load l = load(f);
         INFO(dump(l));
         CHECK(l.ok());

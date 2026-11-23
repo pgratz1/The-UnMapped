@@ -321,6 +321,7 @@ forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr",
 god_forms = ["{root}"]
 civilization_forms = ["The Hold of {root}", "Clan {root}", "The {root} Throne"]
 settlement_forms = ["{root}", "{root} Deep", "{root} Hold", "{root}"]
+site_forms = ["{root} Watch", "The Tower of {root}"]
 )";
 
 inline constexpr std::string_view ELVEN_NAMING = R"(onsets = ["", "l", "th", "s", "f", "n", "m", "r", "v", "gl", "c", "el", "ith"]
@@ -334,6 +335,7 @@ forbidden = ["aea", "iei", "iae", "eae", "aa", "ii", "ee", "thth", "lll", "nnn",
 god_forms = ["{root}"]
 civilization_forms = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
 settlement_forms = ["{root}", "{root}", "{root}", "{root}dell"]
+site_forms = ["{root} Watch", "The Spire of {root}"]
 )";
 
 inline constexpr std::string_view FAERIE_NAMING = R"(onsets = ["", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"]
@@ -347,6 +349,7 @@ forbidden = ["eee", "iee", "yy", "ouou", "shsh", "ass"]
 god_forms = ["{root}"]
 civilization_forms = ["The {root} Ring", "The Circle of {root}", "The {root} Court"]
 settlement_forms = ["{root}", "{root} Glade", "{root} Hollow", "{root}"]
+site_forms = ["{root} Watch", "The Thorn of {root}"]
 )";
 
 inline constexpr std::string_view GOBLIN_NAMING = R"(onsets = ["g", "gr", "sn", "k", "kr", "z", "sk", "b", "n", "gn", "dr", "sl", "skr"]
@@ -360,6 +363,7 @@ forbidden = ["eee", "ggg", "zzz", "xg", "xk"]
 god_forms = ["{root}"]
 civilization_forms = ["The {root} Horde", "The Warrens of {root}", "The {root} Mob"]
 settlement_forms = ["{root}", "{root}", "{root} Pit", "{root} Hole"]
+site_forms = ["{root} Lookout", "{root} Stockade"]
 )";
 
 inline constexpr std::string_view HUMAN_NAMING = R"(onsets = ["b", "c", "d", "g", "h", "m", "r", "s", "t", "w", "st", "br", "al", "ed", "ash"]
@@ -373,6 +377,7 @@ forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]
 god_forms = ["{root}"]
 civilization_forms = ["The Kingdom of {root}", "The {root} League", "The Duchy of {root}"]
 settlement_forms = ["{root}", "{root}ford", "{root}ton", "{root}bury", "{root}wick", "{root}ham", "{root}stead"]
+site_forms = ["{root} Watch", "{root} Tower"]
 )";
 
 inline constexpr std::string_view ORCISH_NAMING = R"(onsets = ["gh", "gr", "ug", "m", "k", "z", "sh", "b", "d", "th", "kr", "ur", "az"]
@@ -386,6 +391,7 @@ forbidden = ["aaa", "uuu", "ghgh", "shsh"]
 god_forms = ["{root}"]
 civilization_forms = ["The {root} Horde", "Clan {root}", "The Warband of {root}"]
 settlement_forms = ["{root}", "{root} Camp", "{root}", "{root} Fort"]
+site_forms = ["{root} Stockade", "The Watch of {root}"]
 )";
 
 // --- Chronology (P3-01 5.1) -------------------------------------------------------
@@ -456,13 +462,27 @@ events = [
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
-  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became known as {@region}." },
+  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}." },
+  { kind = "monster_appeared", salience = 45, template = "{monster}, {monster:kind}, made its lair in {@region}." },
+  { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead of {@region} rose as {monster}." },
+  { kind = "monster_woke", salience = 25, template = "{monster} woke again in {@region}." },
+  { kind = "monster_slept", salience = 10, template = "{monster} sank into sleep in {lair}." },
+  { kind = "monster_raid", salience = 15, template = "{monster} fell upon {@settlement}; {dead?no one died|one died|# died}." },
+  { kind = "settlement_overrun", salience = 50, template = "{monster} drove the people from {@settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}." },
+  { kind = "monster_slain", salience = 55, template = "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}." },
+  { kind = "monster_driven_off", salience = 30, template = "{civilization} drove {monster} back to its lair in {@region}." },
+  { kind = "monster_died", salience = 30, template = "{monster}, {monster:kind}, died of great age in {@region}." },
+  { kind = "beasts_bold", salience = 15, template = "In {@region} the {@beast} grew bold, and travellers from {settlement} went in fear; {dead?none|one|#} died on the roads." },
+  { kind = "outpost_built", salience = 12, template = "{civilization} raised {site} in {@region} against {enemy}." },
+  { kind = "outpost_abandoned", salience = 10, template = "{civilization} abandoned {site}{reason?, the frontier having fallen quiet|, the land being lost|, its realm having fallen}." },
 ]
 )";
 
 // --- history.renaming (P5-12 4 and 4.1, P3-01 r16 5.4; generator 0.22.0) ---
 
-inline constexpr std::string_view RENAMING_TOML = R"([history.renaming]
+inline constexpr std::string_view RENAMING_TOML = R"(# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 21.2
+# and rule 7 (P5-02 9.3), generator 0.23.0.
+[history.renaming]
 region_max = 2
 region_gap_years = 300
 world_max_permille = 150
@@ -495,7 +515,7 @@ chance_permille = 700
 weight = 90
 name_role = "settlement"
 namer_role = "attacker"
-forms = ["{name}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "{name} Waste"]
+forms = ["{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"]
 
 [[history.renaming.rules]]
 key = "great_sack"
@@ -509,7 +529,7 @@ chance_permille = 500
 weight = 80
 name_role = "settlement"
 namer_role = "attacker"
-forms = ["{name}'s Pyre", "The Ashes of {name}", "{name} Waste", "The Burnt {noun}"]
+forms = ["{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"]
 
 [[history.renaming.rules]]
 key = "slaughter"
@@ -523,7 +543,7 @@ chance_permille = 600
 weight = 70
 name_role = "loser"
 namer_role = "winner"
-forms = ["The Red {noun}", "The Bloody {noun}", "{name}'s Bane", "The {noun} of the Slain"]
+forms = ["The Red {noun}", "The Bloody {noun}", "The Rout of {name}", "The {noun} of the Slain", "The Weeping {noun}", "The Grim {noun}"]
 
 [[history.renaming.rules]]
 key = "plague"
@@ -537,7 +557,7 @@ chance_permille = 400
 weight = 60
 name_role = "settlement"
 namer_role = "civilization"
-forms = ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{name}'s Grave"]
+forms = ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{stem}'s Grave", "The Pale {noun}", "The Hollow {noun}"]
 
 [[history.renaming.rules]]
 key = "heartland"
@@ -552,7 +572,332 @@ weight = 50
 name_role = "civilization"
 namer_role = "civilization"
 forms = ["{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"]
+
+[[history.renaming.rules]]
+key = "ravage"
+kinds = ["settlement_overrun"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 600
+weight = 75
+name_role = "monster"
+namer_role = "civilization"
+forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"]
 )";
+
+
+// --- P5-02 4.1 to 4.3 (generator 0.23.0): kinds beast and monster, history.monsters; the files of game/data
+// (both fixture roots hold identical copies). The rates are interim (P5-02 17 step 9): after the engineer's
+// calibration these listings follow the data files.
+
+inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P3-01, next revision). Generator 0.23.0; rates interim until the
+# calibration sweep (P5-02 17).
+[history.monsters]
+pressure = { low = 500, normal = 1000, high = 1600 }
+living_permille = 100
+undead_min_dead = 4000
+undead_window_years = 100
+hunt_hops = 2
+hunt_levy_permille = 50
+hunt_permille = 150
+hunt_memory_years = 30
+slay_max_permille = 900
+drive_permille = 300
+drive_years = 100
+displace_per_kpeople = 100
+displace_max_permille = 900
+beast_decline_permille = 200
+people_floor = 100
+drag_k = 100
+drag_max_permille = 200
+feed_k = 2
+feed_max_permille = 100
+bold_on_permille = 1500
+bold_off_permille = 800
+bold_permille = 100
+bold_toll_permille = 10
+outpost_permille = 30
+outpost_max = 2
+outpost_quiet_years = 200
+)";
+
+inline constexpr std::string_view BEAST_BEAR_TOML = R"([beast.bear]
+name = "Bear"
+plural = "bears"
+habitat = [
+  { biome = "temperate_forest", weight = 900 },
+  { biome = "wet_woodland", weight = 700 },
+  { biome = "highland_moor", weight = 400 },
+  { biome = "alpine", weight = 500 },
+  { biome = "heath", weight = 200 },
+]
+density = 5
+growth_permille = 60
+menace = 30
+food = 30
+)";
+inline constexpr std::string_view BEAST_BOAR_TOML = R"([beast.boar]
+name = "Boar"
+plural = "boar"
+habitat = [
+  { biome = "temperate_forest", weight = 800 },
+  { biome = "wet_woodland", weight = 900 },
+  { biome = "grassland", weight = 300 },
+  { biome = "heath", weight = 300 },
+  { biome = "marsh", weight = 400 },
+  { biome = "fen", weight = 300 },
+]
+density = 40
+growth_permille = 250
+menace = 3
+food = 100
+)";
+inline constexpr std::string_view BEAST_DEER_TOML = R"([beast.deer]
+name = "Deer"
+plural = "deer"
+habitat = [
+  { biome = "temperate_forest", weight = 900 },
+  { biome = "wet_woodland", weight = 600 },
+  { biome = "grassland", weight = 800 },
+  { biome = "heath", weight = 600 },
+  { biome = "steppe", weight = 500 },
+  { biome = "highland_moor", weight = 500 },
+  { biome = "alpine", weight = 200 },
+  { biome = "marsh", weight = 200 },
+  { biome = "fen", weight = 200 },
+]
+density = 100
+growth_permille = 250
+menace = 0
+food = 60
+)";
+inline constexpr std::string_view BEAST_GIANT_SPIDER_TOML = R"([beast.giant_spider]
+name = "Giant spider"
+plural = "giant spiders"
+habitat = [
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "temperate_forest", weight = 400 },
+  { biome = "marsh", weight = 600 },
+  { biome = "fen", weight = 500 },
+  { biome = "blighted_waste", weight = 900 },
+]
+density = 10
+growth_permille = 200
+menace = 40
+food = 0
+)";
+inline constexpr std::string_view BEAST_WOLF_TOML = R"([beast.wolf]
+name = "Wolf"
+plural = "wolves"
+habitat = [
+  { biome = "temperate_forest", weight = 700 },
+  { biome = "wet_woodland", weight = 500 },
+  { biome = "grassland", weight = 400 },
+  { biome = "heath", weight = 600 },
+  { biome = "steppe", weight = 700 },
+  { biome = "highland_moor", weight = 800 },
+  { biome = "alpine", weight = 400 },
+  { biome = "marsh", weight = 100 },
+  { biome = "fen", weight = 100 },
+  { biome = "blighted_waste", weight = 200 },
+]
+density = 20
+growth_permille = 150
+menace = 10
+food = 0
+)";
+inline constexpr std::string_view MONSTER_DRAGON_TOML = R"([monster.dragon]
+name = "Dragon"
+noun = "a dragon of the old world"
+grouped = false
+wake = "wild"
+biomes = [
+  { biome = "alpine", weight = 800 },
+  { biome = "highland_moor", weight = 400 },
+  { biome = "blighted_waste", weight = 600 },
+]
+wake_rate = 6
+naming_culture = "elven"
+name_forms = ["{root} the Black", "{root} the Pale", "{root}"]
+lair_forms = ["The Lair of {root}", "{root}'s Deep"]
+might = 6000
+range_hops = 2
+raid_permille = 30
+toll_min_permille = 50
+toll_max_permille = 200
+kill_max = 600
+overruns = ["hamlet", "village", "town"]
+overrun_permille = 150
+active_years = 40
+rewake_ppm = 2000
+lifespan_years = 0
+max_alive = 1
+flare = true
+hoard_permille = 40
+)";
+inline constexpr std::string_view MONSTER_GIANT_TOML = R"([monster.giant]
+name = "Giant"
+noun = "a giant of the mountains"
+grouped = false
+wake = "wild"
+biomes = [
+  { biome = "alpine", weight = 900 },
+  { biome = "highland_moor", weight = 500 },
+]
+wake_rate = 14
+naming_culture = "dwarven"
+name_forms = ["{root} Stonehand", "{root}"]
+lair_forms = ["{root}'s Seat", "The Hall of {root}"]
+might = 1200
+range_hops = 1
+raid_permille = 40
+toll_min_permille = 30
+toll_max_permille = 100
+kill_max = 150
+overruns = ["hamlet", "village"]
+overrun_permille = 60
+active_years = 150
+rewake_ppm = 3000
+lifespan_years = 2500
+max_alive = 2
+flare = true
+hoard_permille = 8
+)";
+inline constexpr std::string_view MONSTER_OGRE_TOML = R"([monster.ogre]
+name = "Ogre"
+noun = "an ogre"
+grouped = false
+wake = "wild"
+biomes = [
+  { biome = "grassland", weight = 400 },
+  { biome = "heath", weight = 600 },
+  { biome = "steppe", weight = 700 },
+  { biome = "highland_moor", weight = 300 },
+]
+wake_rate = 10
+naming_culture = "orcish"
+name_forms = ["{root} the Glutton", "{root}"]
+lair_forms = ["{root}'s Larder", "The Pit of {root}"]
+might = 200
+range_hops = 1
+raid_permille = 100
+toll_min_permille = 20
+toll_max_permille = 60
+kill_max = 40
+overruns = ["hamlet"]
+overrun_permille = 80
+active_years = 80
+rewake_ppm = 8000
+lifespan_years = 300
+max_alive = 3
+flare = false
+hoard_permille = 3
+)";
+inline constexpr std::string_view MONSTER_TROLL_TOML = R"([monster.troll]
+name = "Troll"
+noun = "a troll of the hills"
+grouped = false
+wake = "wild"
+biomes = [
+  { biome = "highland_moor", weight = 800 },
+  { biome = "alpine", weight = 600 },
+  { biome = "temperate_forest", weight = 400 },
+  { biome = "heath", weight = 300 },
+]
+wake_rate = 17
+naming_culture = "goblin"
+name_forms = ["Old {root}", "{root}"]
+lair_forms = ["{root}'s Hollow", "The Den of {root}"]
+might = 300
+range_hops = 1
+raid_permille = 80
+toll_min_permille = 20
+toll_max_permille = 80
+kill_max = 60
+overruns = ["hamlet", "village"]
+overrun_permille = 100
+active_years = 120
+rewake_ppm = 5000
+lifespan_years = 800
+max_alive = 3
+flare = false
+hoard_permille = 5
+)";
+inline constexpr std::string_view MONSTER_UNDEAD_TOML = R"([monster.undead]
+name = "Undead"
+noun = "a host of the restless dead"
+grouped = true
+wake = "dead"
+biomes = []
+wake_rate = 9000
+naming_culture = "human"
+name_forms = ["The Host of {root}", "The Restless of {root}"]
+lair_forms = ["The Barrows of {root}", "{root}'s Howe"]
+might = 1500
+range_hops = 1
+raid_permille = 60
+toll_min_permille = 30
+toll_max_permille = 120
+kill_max = 200
+overruns = ["hamlet", "village"]
+overrun_permille = 120
+active_years = 200
+rewake_ppm = 3000
+lifespan_years = 1000
+max_alive = 2
+flare = false
+hoard_permille = 5
+)";
+inline constexpr std::string_view MONSTER_WYVERN_TOML = R"([monster.wyvern]
+name = "Wyvern"
+noun = "a brood of wyverns"
+grouped = true
+wake = "wild"
+biomes = [
+  { biome = "alpine", weight = 700 },
+  { biome = "heath", weight = 500 },
+  { biome = "highland_moor", weight = 600 },
+]
+wake_rate = 17
+naming_culture = "goblin"
+name_forms = ["The {root} Brood", "The Brood of {root}"]
+lair_forms = ["The Eyrie of {root}", "{root}'s Crag"]
+might = 600
+range_hops = 2
+raid_permille = 80
+toll_min_permille = 20
+toll_max_permille = 80
+kill_max = 50
+overruns = ["hamlet"]
+overrun_permille = 50
+active_years = 60
+rewake_ppm = 10000
+lifespan_years = 300
+max_alive = 2
+flare = false
+hoard_permille = 2
+)";
+
+// The files of the two kinds as "<directory>/<file name>" -> text.
+inline const std::vector<std::pair<std::string, std::string_view>>& monster_files() {
+    static const std::vector<std::pair<std::string, std::string_view>> v = {
+        {"beasts/bear.toml", BEAST_BEAR_TOML},
+        {"beasts/boar.toml", BEAST_BOAR_TOML},
+        {"beasts/deer.toml", BEAST_DEER_TOML},
+        {"beasts/giant_spider.toml", BEAST_GIANT_SPIDER_TOML},
+        {"beasts/wolf.toml", BEAST_WOLF_TOML},
+        {"monsters/dragon.toml", MONSTER_DRAGON_TOML},
+        {"monsters/giant.toml", MONSTER_GIANT_TOML},
+        {"monsters/ogre.toml", MONSTER_OGRE_TOML},
+        {"monsters/troll.toml", MONSTER_TROLL_TOML},
+        {"monsters/undead.toml", MONSTER_UNDEAD_TOML},
+        {"monsters/wyvern.toml", MONSTER_WYVERN_TOML},
+    };
+    return v;
+}
 
 // --- history.conflict (P3-06 12.1, the listing; generator 0.16.0; r9 20.9 from 0.18.0) ---
 
@@ -697,6 +1042,8 @@ colony_new_region_salience = 30
 plague_small_salience = 25
 plague_major_dead = 1000
 crisis_small_salience = 25
+ghost_permille = 200
+ghost_max_population = 300
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -726,6 +1073,39 @@ inline std::string culture_toml(const CultureListing& c) {
 
 using Files = std::map<std::string, std::string>;
 
+// P5-02 (generator 0.23.0): the required kinds beast and monster and the fixed id history.monsters, which every
+// hand-made set of files needs from 0.23.0 on. A monster kind is added only when the files hold its naming
+// culture (the named check monster_culture, P5-02 4.2), so that a set with a subset of the cultures still loads.
+inline void prune_monster_files(Files& f);
+
+inline void add_monster_files(Files& f) {
+    f["history/monsters.toml"] = std::string(MONSTERS_TOML);
+    for (const auto& [path, text] : monster_files()) {
+        const std::string_view key = "naming_culture = \"";
+        const std::size_t at = text.find(key);
+        if (at != std::string_view::npos) {
+            const std::size_t from = at + key.size();
+            const std::string culture(text.substr(from, text.find('"', from) - from));
+            if (f.count("cultures/" + culture + ".toml") == 0U) {
+                continue;
+            }
+        }
+        f[path] = std::string(text);
+    }
+}
+
+// Removes the monster files whose naming culture the files no longer hold (a test that erases a culture).
+inline void prune_monster_files(Files& f) {
+    for (const auto& [path, text] : monster_files()) {
+        const std::string_view key = "naming_culture = \"";
+        const std::size_t at = text.find(key);
+        if (at == std::string_view::npos) continue;
+        const std::size_t from = at + key.size();
+        const std::string culture(text.substr(from, text.find('"', from) - from));
+        if (f.count("cultures/" + culture + ".toml") == 0U) f.erase(path);
+    }
+}
+
 inline Files shipped_files() {
     Files f;
     f["races/dwarf.toml"] = std::string(DWARF_TOML);
@@ -743,6 +1123,7 @@ inline Files shipped_files() {
     f["history/peoples.toml"] = std::string(PEOPLES_TOML);
     f["history/renaming.toml"] = std::string(RENAMING_TOML);
     f["history/report.toml"] = std::string(REPORT_TOML);
+    add_monster_files(f);   // P5-02 4.1 to 4.3
     return f;
 }
 
@@ -751,6 +1132,8 @@ inline std::string_view kind_of_directory(std::string_view directory) {
     if (directory == "races") return "race";
     if (directory == "cultures") return "culture";
     if (directory == "history") return "history";
+    if (directory == "beasts") return "beast";      // P5-02 4.1
+    if (directory == "monsters") return "monster";  // P5-02 4.2
     return {};
 }
 
@@ -876,7 +1259,8 @@ inline const std::vector<std::string_view>& culture_fields() {
 inline const std::vector<std::string_view>& naming_fields() {
     static const std::vector<std::string_view> v = {"onsets",          "nuclei",      "codas",     "patterns", "god_patterns",
                                                      "min_letters",     "max_letters", "forbidden", "god_forms",
-                                                     "civilization_forms", "settlement_forms"};
+                                                     "civilization_forms", "settlement_forms",
+                                                     "site_forms"};   // P5-02 4.4
     return v;
 }
 inline const std::vector<std::string_view>& chronology_fields() {

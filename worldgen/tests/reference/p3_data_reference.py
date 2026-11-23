@@ -2047,9 +2047,8 @@ def _habitat_text(name, rows):
 
 def beast_file_023(row):
     i, n, p, h, d, g, m, f = row
-    return ("# Beast %s (spec P5-02 4.1). Generator 0.23.0; values interim until the calibration sweep (P5-02 17).\n"
-            "[beast.%s]\nname = \"%s\"\nplural = \"%s\"\n%sdensity = %d\ngrowth_permille = %d\nmenace = %d\nfood = %d\n"
-            % (i, i, n, p, _habitat_text("habitat", h), d, g, m, f))
+    return ("[beast.%s]\nname = \"%s\"\nplural = \"%s\"\n%sdensity = %d\ngrowth_permille = %d\nmenace = %d\nfood = %d\n"
+            % (i, n, p, _habitat_text("habitat", h), d, g, m, f))
 
 
 MONSTER_FIELD_NAMES = [n for n, _ in MONSTER]
@@ -2065,8 +2064,7 @@ def monster_dict_023(row):
 
 def monster_file_023(row):
     d = monster_dict_023(row)
-    out = ["# Monster kind %s (spec P5-02 4.2). Generator 0.23.0; rates interim until the calibration sweep "
-           "(P5-02 17).\n[monster.%s]\n" % (d["id"], d["id"])]
+    out = ["[monster.%s]\n" % d["id"]]
     for n in MONSTER_FIELD_NAMES:
         if n == "biomes":
             out.append(_habitat_text("biomes", [(b["biome"], b["weight"]) for b in d["biomes"]]))

@@ -1,4 +1,3 @@
-# Monster kind ogre (spec P5-02 4.2). Generator 0.23.0; rates interim until the calibration sweep (P5-02 17).
 [monster.ogre]
 name = "Ogre"
 noun = "an ogre"
