@@ -196,7 +196,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                                      {2, 0, 0, 2, 1, 1, 0, 80},
                                      {3, 0, 0, 3, 1, 1, 1, 40},
                                      {4, 50, 499, 38, 2, 0, 0, 20},
-                                     {5, 150, 150, 44, 2, 0, 0, 10},  // the test kind: 44 from 0.22.0 (43 at 0.21.0)
+                                     {5, 150, 150, 56, 2, 0, 0, 10},  // the test kind: 56 from 0.23.0 (44 at 0.22.0)
                                      {6, 500, 500, 5, 3, 0, 0, 50},
                                      {7, 517, 999, 38, 4, 0, 0, 20},
                                      {8, 1000, 1000, 1, 5, 1, 0, 100},
@@ -222,7 +222,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                      {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {11, 2, 1, 3, 2}, {13, 1, 1, 3, 1}, {13, 2, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
     REQUIRE(t.event_kind.size() == 56U);  // 55 kinds from 0.23.0 (P5-02 10.1); 43 kinds from 0.22.0 (P3-04 r21 23.2; 42 from 0.21.0), then the test kind
-    CHECK(t.event_kind[43][1].bytes == "test_change");
+    CHECK(t.event_kind[55][1].bytes == "test_change");   // P5-02 10.1: kind 56
 }
 
 TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet step leaves one stretch per quiet row") {
@@ -248,7 +248,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet s
     }
     CHECK(vals == std::vector<std::int64_t>{1800, 1});
     // The charged events are separate events dated inside the stretch (36 of the 72 quiet steps).
-    CHECK(rows_where_kind(t, 44).size() == 36U);  // the test kind, 44 from 0.22.0 (43 at 0.21.0)
+    CHECK(rows_where_kind(t, 56).size() == 36U);  // the test kind, 56 from 0.23.0 (44 at 0.22.0)
 }
 
 TEST_CASE("P3-04 r12 20.1, 20.6 item 1: a civilization ended in a quiet step stays a participant of its row's stretch") {

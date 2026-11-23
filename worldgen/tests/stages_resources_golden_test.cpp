@@ -714,7 +714,7 @@ TEST_CASE("P1-05 2, 10.1 test 5: each precondition is fatal with its message, le
 
 TEST_CASE("P1-05 3, P1-04 3: the biome table keeps five columns (no forage column); schema version 6 (P3-03)") {
     CHECK(worldgen::db::SCHEMA_VERSION == 9);
-    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 27U);  // schema 8: region_name (P5-12 7.2)
+    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 32U);  // schema 9: P5-02 11.1; schema 8: region_name (P5-12 7.2)
     CHECK(worldgen::db::DDL_STATEMENTS[3] ==
           "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER "
           "NOT NULL, water INTEGER NOT NULL) STRICT");

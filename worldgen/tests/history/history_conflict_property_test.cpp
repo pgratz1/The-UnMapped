@@ -88,7 +88,10 @@ TEST_CASE("P3-06 16.2 item 18a (r7): below the first claim the log equals the pe
         CAPTURE(g.name);
         const wd::ContentSet& c = content_of(g);
         const eng::HistoryInputs in = synthetic_inputs(g);
-        const Tables t = eng::history_stage(c, in);
+        // P5-02 7.5 (0.23.0): with the monsters installed the history differs from the peoples-only one from the
+        // first monster step on (beasts slow growth, raids), so the prefix property of P3-06 holds for the
+        // configuration without the monsters; the monsters' own identity is I0 (history_monsters_golden_test.cpp).
+        const Tables t = ConflictConfig(c, false).run(c, in);
         peoples_test::PeoplesConfig cfg(c);
         const Tables pt = eng::run_engine(c, in, cfg.get());
         (void)check_peoples_prefix(t, pt);

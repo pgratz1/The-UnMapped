@@ -92,6 +92,8 @@ const std::vector<Range>& ranges() {
         {"ruin_fade_years", 1, 100000}, {"colony_new_region_salience", 0, 100}, {"plague_small_salience", 0, 100},
         // r6 (0.17.0, P3-08): after plague_small_salience
         {"plague_major_dead", 0, 1000000}, {"crisis_small_salience", 0, 100},
+        // P5-02 4.5 (0.23.0): after crisis_small_salience
+        {"ghost_permille", 0, 1000}, {"ghost_max_population", 0, 1000000},
     };
     return v;
 }
@@ -107,7 +109,7 @@ std::string listing_line(std::string_view field) {
 
 }  // namespace
 
-TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 71 fields in table order and values (r12: 0.19.0)") {
+TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 73 fields in table order and values (r12: 0.19.0)") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -137,7 +139,7 @@ TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 71 fiel
     // r12 22.2, 22.5 (0.19.0)
     CHECK(r.get_int("cause_memory_years") == 50);
     CHECK(r.get_int("inland_cap") == 20);
-    CHECK(r.size() == 71U);
+    CHECK(r.size() == 73U);
     // the shipped content (game/data) holds the same record (12.1: identical copies)
     CHECK(peoples_record(shipped_content()) == r);
 }
@@ -333,5 +335,5 @@ TEST_CASE("P3-06 12.2, 16.1 item 13 / P3-01 r7: prowess_permille and goblin aggr
     for (const wd::Definition& d : hist->definitions) {
         ids.push_back(d.id);
     }
-    CHECK(ids == std::vector<std::string>{"chronology", "conflict", "engine", "peoples", "renaming", "report"});
+    CHECK(ids == std::vector<std::string>{"chronology", "conflict", "engine", "monsters", "peoples", "renaming", "report"});
 }

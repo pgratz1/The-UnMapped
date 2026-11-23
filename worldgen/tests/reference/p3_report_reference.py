@@ -2105,7 +2105,7 @@ def check_budget_r1(c):
     c.eq("12.9 B: L - O - F at 250 exactly", summary_budget(10, 790 - 4 - 6 - 62 - 250, 6, 31), 250)
     c.eq("12.9 B: SUMMARY_BUDGET_MIN when L - O - F < 100", summary_budget(10, 700, 6, 31), 100)
     c.eq("12.9 B: L - O - F at 100 exactly", summary_budget(10, 790 - 72 - 100, 6, 31), 100)
-    c.eq("12.9 L grows by 40 a realm above 16: C 20, O 900", summary_budget(20, 900, 6, 31), 950 - 900 - 72)
+    c.eq("12.9 L grows by 40 a realm above 16: C 20, O 700", summary_budget(20, 700, 6, 31), 950 - 700 - 72)
     c.eq("12.9 L capped at SUMMARY_LINES_CAP 1390: C 40, O 1200", summary_budget(40, 1200, 6, 31), 1390 - 1200 - 72)
     if not V4:
         return
@@ -2119,9 +2119,9 @@ def check_budget_r1(c):
         c.eq("H4 with a small L (seam): B = L - O - F = 200", d2.budget, 200)
         T2, shown2 = summary24(w, d2.frames, budget=200)
         c.eq("H4 with B = 200: the set chosen with B", (d2.T, d2.shown), (T2, shown2))
-        c.ok("H4 with B = 200: at most 200 events shown, threshold above 77", len(d2.shown) <= 200 and d2.T > 77)
+        c.eq("H4 with B = 200: at most 200 events shown, threshold above 77", len(d2.shown) <= 200 and d2.T > 77, True)
         text = report(w, "summary").decode("latin-1").splitlines()
-        c.ok("H4 with B = 200: the summary has at most L lines", len(text) <= LINES_MAX_SEAM[0])
+        c.eq("H4 with B = 200: the summary has at most L lines", len(text) <= LINES_MAX_SEAM[0], True)
         LINES_MAX_SEAM[0] = 0
         c.eq("H4 with L = 0 (seam): B = SUMMARY_BUDGET_MIN", Digest(w).budget, SUMMARY_BUDGET_MIN)
     finally:

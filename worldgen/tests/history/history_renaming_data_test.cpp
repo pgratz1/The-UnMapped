@@ -239,7 +239,7 @@ TEST_CASE("P5-12 4: grammar rename_form") {
         CAPTURE(bad);
         const wd::LoadError e = one_error(load(with_renaming_edit(first, "forms = [\"" + std::string(bad) + "\", ")));
         CHECK(e.path == "history/renaming.toml");
-        CHECK(has(e.message, "a region name form (letters, spaces, ' and the slots {name} and {noun})"));
+        CHECK(has(e.message, "a region name form (letters, spaces, ' and the slots {name} or {stem}, and {noun})"));
     }
     for (const char* good : {"The Ashes", "{name} and {noun}", "{noun}'s End of {name}"}) {
         CAPTURE(good);

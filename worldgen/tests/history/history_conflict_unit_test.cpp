@@ -154,7 +154,7 @@ TEST_CASE("P3-06 5.4, 8.3 item 2, 16.1 item 5: the tension asked in Q5 equals th
         rec.inner = p->pair->tension();
         rec.log = &seen;
         eng::EngineConfig ec = cfg.get();
-        REQUIRE(ec.tension.size() == 1U);
+        REQUIRE(ec.tension.size() == 2U);   // conflict, then the monsters (P5-02 6.5); the golden tension is conflict's
         ec.tension[0] = &rec;
         const Tables t = cfg.run(c, synthetic_inputs(g), ec);
         CHECK(table_hashes(t) == g.tables);  // the probe changes nothing

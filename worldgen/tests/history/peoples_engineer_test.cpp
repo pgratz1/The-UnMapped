@@ -265,7 +265,7 @@ TEST_CASE("P3-05 engineer, audit A2: [history] reports a stored population outsi
         worldgen::inspect::HistoryTables t;
         t.rows[3] = {{iv(1), iv(1), iv(1), iv(0), iv(9), iv(0)}};  // one phase, 0 to E - 1
         t.rows[9] = {{iv(1), tv("S"), iv(0), iv(0), iv(1), iv(1), iv(0), iv(1), iv(1), iv(1), iv(1), iv(bad), nv(),
-                      iv(0)}};
+                      iv(0), iv(0)}};   // P5-02 11.1: ending
         const worldgen::inspect::HistoryStatsResult r = worldgen::inspect::history_stats(t, 10);
         REQUIRE(r.problem.has_value());
         CHECK(*r.problem == "corrupt table 'settlement': row 1: population " + std::to_string(bad) +
@@ -274,7 +274,7 @@ TEST_CASE("P3-05 engineer, audit A2: [history] reports a stored population outsi
     worldgen::inspect::HistoryTables ok;
     ok.rows[3] = {{iv(1), iv(1), iv(1), iv(0), iv(9), iv(0)}};
     ok.rows[9] = {{iv(1), tv("S"), iv(0), iv(0), iv(1), iv(1), iv(0), iv(1), iv(1), iv(1), iv(1), iv(2147483647), nv(),
-                   iv(0)}};
+                   iv(0), iv(0)}};
     const worldgen::inspect::HistoryStatsResult r = worldgen::inspect::history_stats(ok, 10);
     CHECK_FALSE(r.problem.has_value());
     CHECK(r.stats.population == 2147483647);

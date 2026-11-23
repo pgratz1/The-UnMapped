@@ -65,6 +65,7 @@
 #include "worldgen/history/engine.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/inputs.hpp"
+#include "worldgen/history/monsters.hpp"   // P5-02: beast_defs_from, monster_kind_defs_from
 #include "worldgen/history/stubs.hpp"    // GUESS (StubAwakening)
 // ForcedTension is declared in worldgen/history/stubs.hpp (integration).
 #include "worldgen/stages/history.hpp"
@@ -242,8 +243,23 @@ inline Tables history_stage(const worldgen::data::ContentSet& c, const HistoryIn
     return tables_of(worldgen::stages::history_stage(c, in));
 }
 
+// P5-02 r1 25 item 18: the beast and monster_kind tables are written from the data by every run of the history
+// stage; the test configurations that run the engine without the stage (stub, peoples-only, conflict without
+// monsters) fill them the same way, as the references do (p3_engine_reference.beast_rows, monster_kind_rows).
+inline h::HistoryResult with_data_rows(const worldgen::data::ContentSet& c, h::HistoryResult r) {
+    r.beasts.clear();
+    for (const h::BeastDef& b : h::beast_defs_from(c)) {
+        r.beasts.push_back(db::BeastRow{b.id, b.key, b.name, b.plural, b.menace, b.food});
+    }
+    r.monster_kinds.clear();
+    for (const h::MonsterKindDef& k : h::monster_kind_defs_from(c)) {
+        r.monster_kinds.push_back(db::MonsterKindRow{k.id, k.key, k.name, k.noun, k.grouped ? 1 : 0, k.wake, k.might});
+    }
+    return r;
+}
+
 inline Tables run_engine(const worldgen::data::ContentSet& c, const HistoryInputs& in, const EngineConfig& cfg) {
-    return tables_of(h::run_engine(c, in, cfg));
+    return tables_of(with_data_rows(c, h::run_engine(c, in, cfg)));
 }
 
 inline HistoryInputs inputs_from_world(const db::WorldReader& r, const worldgen::data::ContentSet& c) {
@@ -295,7 +311,7 @@ inline void run_stub_history(worldgen::stages::StageContext& ctx) {
     config.awakening = &stub;
     config.interventions = &none;
     config.catalogue = &catalogue;
-    worldgen::stages::write_history_result(ctx, h::run_engine(ctx.content(), in, config));
+    worldgen::stages::write_history_result(ctx, with_data_rows(ctx.content(), h::run_engine(ctx.content(), in, config)));
 }
 inline worldgen::stages::StageInfo stub_stage_info() {
     return worldgen::stages::StageInfo{"history", &run_stub_history};

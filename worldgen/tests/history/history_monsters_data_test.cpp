@@ -8,10 +8,12 @@
 //
 // Written from the spec before the implementation (test-writer rule): it needs no new library name and fails
 // until the 0.23.0 kinds are registered. The messages the spec does not give (monster_culture,
-// monster_toll_ordered, monster_overruns_unique, monsters_bold_ordered) are checked by check name and
-// definition only (ambiguity A3 of the test writer's report).
+// monster_toll_ordered, monster_overruns_unique, monsters_bold_ordered) are the built ones (r1 25 items 1 and 6,
+// the lead's ruling at integration).
 
 #include <doctest/doctest.h>
+
+#include "worldgen/history/data_checks.hpp"
 
 #include <cstdint>
 #include <string>
@@ -35,6 +37,19 @@ Files with_edit(const std::string& path, std::string_view from, std::string_view
     REQUIRE_MESSAGE(at != std::string::npos, std::string(from) << " not in " << path);
     it->second.replace(at, from.size(), to);
     return f;
+}
+
+// r1 25 item 1: the checks that need another kind (every biome names a biome; naming_culture names a culture)
+// run after every kind is loaded, in the history data checks (check_history_data), which the stage and the CLI
+// run on the loaded content. A load that passes the loader goes through them here.
+Load load_checked(const Files& files) {
+    Load l = load(files);
+    if (!l.ok()) return l;
+    std::vector<wd::LoadError> e = worldgen::history::check_history_data(*l.content);
+    if (e.empty()) return l;
+    Load out;
+    out.errors = std::move(e);
+    return out;
 }
 
 wd::LoadError one_error(const Load& l) {
@@ -139,26 +154,26 @@ struct Monster {
 const std::vector<Monster>& monsters() {
     static const std::vector<Monster> v = {
         {"dragon", "Dragon", "a dragon of the old world", false, "wild",
-         {{"alpine", 800}, {"highland_moor", 400}, {"blighted_waste", 600}}, 6, "elven",
-         {"{root} the Black", "{root} the Pale", "{root}"}, {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 30, 50,
-         200, 600, {"hamlet", "village", "town"}, 150, 40, 2000, 0, 1, true, 40},
-        {"giant", "Giant", "a giant of the mountains", false, "wild", {{"alpine", 900}, {"highland_moor", 500}}, 14,
-         "dwarven", {"{root} Stonehand", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 40, 30, 100,
-         150, {"hamlet", "village"}, 60, 150, 3000, 2500, 2, true, 8},
+         {{"alpine", 800}, {"highland_moor", 400}, {"blighted_waste", 600}}, 60, "elven",
+         {"{root} the Black", "{root} the Pale", "{root}"}, {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 60, 50,
+         200, 600, {"hamlet", "village", "town"}, 600, 40, 2000, 0, 1, true, 40},
+        {"giant", "Giant", "a giant of the mountains", false, "wild", {{"alpine", 900}, {"highland_moor", 500}}, 25,
+         "dwarven", {"{root} Stonehand", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 100, 30, 100,
+         150, {"hamlet", "village"}, 900, 150, 3000, 2500, 2, true, 8},
         {"ogre", "Ogre", "an ogre", false, "wild",
-         {{"grassland", 400}, {"heath", 600}, {"steppe", 700}, {"highland_moor", 300}}, 10, "orcish",
-         {"{root} the Glutton", "{root}"}, {"{root}'s Larder", "The Pit of {root}"}, 200, 1, 100, 20, 60, 40,
-         {"hamlet"}, 80, 80, 8000, 300, 3, false, 3},
+         {{"grassland", 400}, {"heath", 600}, {"steppe", 700}, {"highland_moor", 300}}, 40, "orcish",
+         {"{root} the Glutton", "{root}"}, {"{root}'s Larder", "The Pit of {root}"}, 200, 1, 150, 20, 60, 40,
+         {"hamlet"}, 900, 80, 8000, 1000, 3, false, 3},
         {"troll", "Troll", "a troll of the hills", false, "wild",
-         {{"highland_moor", 800}, {"alpine", 600}, {"temperate_forest", 400}, {"heath", 300}}, 17, "goblin",
-         {"Old {root}", "{root}"}, {"{root}'s Hollow", "The Den of {root}"}, 300, 1, 80, 20, 80, 60,
-         {"hamlet", "village"}, 100, 120, 5000, 800, 3, false, 5},
-        {"undead", "Undead", "a host of the restless dead", true, "dead", {}, 9000, "human",
-         {"The Host of {root}", "The Restless of {root}"}, {"The Barrows of {root}", "{root}'s Howe"}, 1500, 1, 60, 30,
-         120, 200, {"hamlet", "village"}, 120, 200, 3000, 1000, 2, false, 5},
+         {{"highland_moor", 800}, {"alpine", 600}, {"temperate_forest", 400}, {"heath", 300}}, 50, "goblin",
+         {"Old {root}", "{root}"}, {"{root}'s Hollow", "The Den of {root}"}, 300, 1, 150, 20, 80, 60,
+         {"hamlet", "village"}, 900, 120, 5000, 2000, 3, false, 5},
+        {"undead", "Undead", "a host of the restless dead", true, "dead", {}, 15000, "human",
+         {"The Host of {root}", "The Restless of {root}"}, {"The Barrows of {root}", "{root}'s Howe"}, 1500, 1, 80, 30,
+         120, 200, {"hamlet", "village"}, 900, 200, 3000, 1000, 2, false, 5},
         {"wyvern", "Wyvern", "a brood of wyverns", true, "wild", {{"alpine", 700}, {"heath", 500}, {"highland_moor", 600}},
-         17, "goblin", {"The {root} Brood", "The Brood of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
-         80, 20, 80, 50, {"hamlet"}, 50, 60, 10000, 300, 2, false, 2},
+         50, "goblin", {"The {root} Brood", "The Brood of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
+         120, 20, 80, 50, {"hamlet"}, 900, 60, 10000, 1000, 2, false, 2},
     };
     return v;
 }
@@ -182,17 +197,28 @@ const std::vector<Field>& tuning_fields() {
     static const std::vector<Field> v = {
         {"living_permille", 0, 1000, 100},       {"undead_min_dead", 1, 1000000000, 4000},
         {"undead_window_years", 1, 100000, 100}, {"hunt_hops", 0, 8, 2},
-        {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 150},
+        {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 20},
         {"hunt_memory_years", 1, 100000, 30},    {"slay_max_permille", 0, 1000, 900},
         {"drive_permille", 0, 1000, 300},        {"drive_years", 0, 100000, 100},
         {"displace_per_kpeople", 0, 1000, 100},  {"displace_max_permille", 0, 1000, 900},
         {"beast_decline_permille", 1, 1000, 200}, {"people_floor", 1, 100000, 100},
-        {"drag_k", 0, 10000, 100},               {"drag_max_permille", 0, 500, 200},
+        {"drag_k", 0, 10000, 40},                {"drag_max_permille", 0, 500, 100},
         {"feed_k", 0, 10000, 2},                 {"feed_max_permille", 0, 500, 100},
         {"bold_on_permille", 1, 1000000, 1500},  {"bold_off_permille", 0, 1000000, 800},
         {"bold_permille", 0, 1000, 100},         {"bold_toll_permille", 0, 1000, 10},
         {"outpost_permille", 0, 1000, 30},       {"outpost_max", 0, 16, 2},
         {"outpost_quiet_years", 1, 100000, 200},
+    };
+    return v;
+}
+
+// r1 4.3: the four int fields after prey_weight
+const std::vector<Field>& prey_fields() {
+    static const std::vector<Field> v = {
+        {"prey_capital_permille", 0, 1000, 250},
+        {"prey_hop_permille", 0, 1000, 500},
+        {"prey_might_ref", 1, 10000000, 1500},
+        {"prey_might_max_permille", 0, 10000, 4000},
     };
     return v;
 }
@@ -286,7 +312,7 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     const Load l = load(history_data::shipped_files());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
-    REQUIRE(t.size() == tuning_fields().size() + 1U);
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U);   // pressure first; r1 4.3: prey_* last
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();
     REQUIRE(p.size() == 3U);
@@ -301,6 +327,22 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
         CHECK(t.name_at(i + 1) == tuning_fields()[i].name);
         CHECK(t.get_int(tuning_fields()[i].name) == tuning_fields()[i].shipped);
     }
+    // r1 4.3 (6.4.1): prey_weight {hamlet, village, town, city, fortress}, then four ints, after outpost_quiet_years
+    const std::size_t at = tuning_fields().size() + 1U;
+    CHECK(t.name_at(at) == "prey_weight");
+    const wd::Record& pw = t.value_at(at).as_record();
+    REQUIRE(pw.size() == 5U);
+    const std::vector<std::pair<std::string_view, std::int64_t>> kinds = {
+        {"hamlet", 1000}, {"village", 600}, {"town", 150}, {"city", 40}, {"fortress", 20}};
+    for (std::size_t i = 0; i < kinds.size(); ++i) {
+        CHECK(pw.name_at(i) == kinds[i].first);
+        CHECK(pw.get_int(kinds[i].first) == kinds[i].second);
+    }
+    for (const Field& f : prey_fields()) {
+        CAPTURE(f.name);
+        CHECK(t.name_at(at + 1U + static_cast<std::size_t>(&f - prey_fields().data())) == f.name);
+        CHECK(t.get_int(f.name) == f.shipped);
+    }
     // 4.4: site_forms after settlement_forms, in every culture
     const std::vector<std::pair<std::string_view, std::vector<std::string>>> site = {
         {"dwarven", {"{root} Watch", "The Tower of {root}"}}, {"elven", {"{root} Watch", "The Spire of {root}"}},
@@ -314,14 +356,14 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
         CHECK(n.name_at(11) == "site_forms");
         CHECK(strings(n.value_at(11)) == forms);
     }
-    // 4.5: ghost_permille 200, ghost_max_population 300 appended after crisis_small_salience
+    // 4.5: ghost_permille 200, ghost_max_population 600 (r1) appended after crisis_small_salience
     const wd::Record& pe = definition(*l.content, "history", "peoples").record;
     REQUIRE(pe.size() >= 3U);
     CHECK(pe.name_at(pe.size() - 3) == "crisis_small_salience");
     CHECK(pe.name_at(pe.size() - 2) == "ghost_permille");
     CHECK(pe.name_at(pe.size() - 1) == "ghost_max_population");
     CHECK(pe.get_int("ghost_permille") == 200);
-    CHECK(pe.get_int("ghost_max_population") == 300);
+    CHECK(pe.get_int("ghost_max_population") == 600);
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
         CAPTURE(root);
         const Load d = load_disk(source_root() / root);
@@ -411,9 +453,9 @@ TEST_CASE("P5-02 4.1: every beast field required; ranges one step outside; gramm
 
 TEST_CASE("P5-02 4.1 beast_habitat_biomes: an unknown biome, a biome listed twice (messages of 4.1)") {
     const std::string path = beast_path("bear");
-    check_failure(one_error(load(with_edit(path, "{ biome = \"heath\", weight = 200 }",
-                                           "{ biome = \"moon\", weight = 200 }"))),
-                  path, "beast_habitat_biomes", "beast.bear", "habitat[4].biome 'moon' is not a biome");
+    check_failure(one_error(load_checked(with_edit(path, "{ biome = \"heath\", weight = 200 }",
+                                                   "{ biome = \"moon\", weight = 200 }"))),
+                  "beasts", "beast_habitat_biomes", "beast.bear", "habitat[4].biome 'moon' is not a biome");   // r1 25 item 1: at the kind's directory
     check_failure(one_error(load(with_edit(path, "{ biome = \"heath\", weight = 200 }",
                                            "{ biome = \"alpine\", weight = 200 }"))),
                   path, "beast_habitat_biomes", "beast.bear", "habitat[4].biome 'alpine' is listed twice");
@@ -438,10 +480,10 @@ TEST_CASE("P5-02 4.2: every monster field required; ranges one step outside; enu
         std::string_view field;
         std::int64_t lo, hi, shipped;
     };
-    for (const R& r : {R{"wake_rate", 0, 10000000, 17}, R{"might", 1, 10000000, 300}, R{"range_hops", 0, 4, 1},
-                       R{"raid_permille", 0, 1000, 80}, R{"kill_max", 0, 10000000, 60},
-                       R{"overrun_permille", 0, 1000, 100}, R{"active_years", 1, 100000, 120},
-                       R{"rewake_ppm", 0, 1000000, 5000}, R{"lifespan_years", 0, 100000, 800},
+    for (const R& r : {R{"wake_rate", 0, 10000000, 50}, R{"might", 1, 10000000, 300}, R{"range_hops", 0, 4, 1},
+                       R{"raid_permille", 0, 1000, 150}, R{"kill_max", 0, 10000000, 60},
+                       R{"overrun_permille", 0, 1000, 900}, R{"active_years", 1, 100000, 120},
+                       R{"rewake_ppm", 0, 1000000, 5000}, R{"lifespan_years", 0, 100000, 2000},
                        R{"max_alive", 0, 64, 3}, R{"hoard_permille", 0, 1000, 5}}) {
         CAPTURE(r.field);
         for (const std::int64_t v : {r.lo - 1, r.hi + 1}) {
@@ -484,9 +526,9 @@ TEST_CASE("P5-02 4.2: every monster field required; ranges one step outside; enu
 TEST_CASE("P5-02 4.2: the named checks of kind monster in order, with the messages the spec gives") {
     const std::string troll = monster_path("troll");
     // monster_biomes: as beast_habitat_biomes, on biomes
-    check_failure(one_error(load(with_edit(troll, "{ biome = \"heath\", weight = 300 }",
-                                           "{ biome = \"sky\", weight = 300 }"))),
-                  troll, "monster_biomes", "monster.troll", "biomes[3].biome 'sky' is not a biome");
+    check_failure(one_error(load_checked(with_edit(troll, "{ biome = \"heath\", weight = 300 }",
+                                                   "{ biome = \"sky\", weight = 300 }"))),
+                  "monsters", "monster_biomes", "monster.troll", "biomes[3].biome 'sky' is not a biome");   // r1 25 item 1
     check_failure(one_error(load(with_edit(troll, "{ biome = \"heath\", weight = 300 }",
                                            "{ biome = \"alpine\", weight = 300 }"))),
                   troll, "monster_biomes", "monster.troll", "biomes[3].biome 'alpine' is listed twice");
@@ -504,17 +546,17 @@ TEST_CASE("P5-02 4.2: the named checks of kind monster in order, with the messag
         const Load l = load(history_data::shipped_files());
         CHECK(l.ok());
     }
-    // monster_culture: naming_culture names a culture definition (message not given by the spec)
-    check_failure(one_error(load(with_edit(troll, "naming_culture = \"goblin\"", "naming_culture = \"trollish\""))),
-                  troll, "monster_culture", "monster.troll");
+    // monster_culture: naming_culture names a culture definition (r1 25 item 1: at the kind's directory)
+    check_failure(one_error(load_checked(with_edit(troll, "naming_culture = \"goblin\"", "naming_culture = \"trollish\""))),
+                  "monsters", "monster_culture", "monster.troll", "naming_culture 'trollish' is not a culture");
     // monster_toll_ordered: toll_min_permille <= toll_max_permille
     check_failure(one_error(load(with_edit(troll, "toll_min_permille = 20", "toll_min_permille = 81"))), troll,
-                  "monster_toll_ordered", "monster.troll");
+                  "monster_toll_ordered", "monster.troll", "toll_min_permille 81 is above toll_max_permille 80");
     CHECK(load(with_edit(troll, "toll_min_permille = 20", "toll_min_permille = 80")).ok());
     // monster_overruns_unique
     check_failure(one_error(load(with_edit(troll, "overruns = [\"hamlet\", \"village\"]",
                                            "overruns = [\"hamlet\", \"hamlet\"]"))),
-                  troll, "monster_overruns_unique", "monster.troll");
+                  troll, "monster_overruns_unique", "monster.troll", "overruns[1] 'hamlet' repeats overruns[0]");
     // monster_bare_form_last
     check_failure(one_error(load(with_edit(troll, "name_forms = [\"Old {root}\", \"{root}\"]",
                                            "name_forms = [\"{root}\", \"Old {root}\"]"))),
@@ -524,7 +566,9 @@ TEST_CASE("P5-02 4.2: the named checks of kind monster in order, with the messag
 
 TEST_CASE("P5-02 4.3: history.monsters every field one step outside its range, required; monsters_bold_ordered") {
     const std::string path = "history/monsters.toml";
-    for (const Field& fd : tuning_fields()) {
+    std::vector<Field> all = tuning_fields();
+    all.insert(all.end(), prey_fields().begin(), prey_fields().end());   // r1 4.3
+    for (const Field& fd : all) {
         CAPTURE(fd.name);
         for (const std::int64_t v : {fd.lo - 1, fd.hi + 1}) {
             if (fd.name == "bold_off_permille" && v > 1500) continue;   // would fail monsters_bold_ordered instead
@@ -556,7 +600,7 @@ TEST_CASE("P5-02 4.3: history.monsters every field one step outside its range, r
                          "pressure = { low = 0, normal = 0, high = 10000 }")).ok());
     // monsters_bold_ordered: bold_off_permille <= bold_on_permille (message not given by the spec)
     check_failure(one_error(load(with_edit(path, "bold_off_permille = 800", "bold_off_permille = 1501"))), path,
-                  "monsters_bold_ordered", "history.monsters");
+                  "monsters_bold_ordered", "history.monsters", "bold_off_permille 1501 is above bold_on_permille 1500");
     CHECK(load(with_edit(path, "bold_off_permille = 800", "bold_off_permille = 1500")).ok());
 }
 
@@ -579,7 +623,7 @@ TEST_CASE("P5-02 4.4, 4.5: site_forms required, name_form grammar, 1 to 8 forms;
     CHECK(load(with_edit(path, "site_forms = [\"{root} Watch\", \"{root} Tower\"]",
                          "site_forms = [\"{root}'s Watch\", \"The Watch-Tower of {root}\"]")).ok());
     const std::string pe = "history/peoples.toml";
-    for (const Field& fd : {Field{"ghost_permille", 0, 1000, 200}, Field{"ghost_max_population", 0, 1000000, 300}}) {
+    for (const Field& fd : {Field{"ghost_permille", 0, 1000, 200}, Field{"ghost_max_population", 0, 1000000, 600}}) {
         CAPTURE(fd.name);
         for (const std::int64_t v : {fd.lo - 1, fd.hi + 1}) {
             const wd::LoadError e = one_error(load(with_edit(pe, line_of(fd.name, fd.shipped), line_of(fd.name, v))));

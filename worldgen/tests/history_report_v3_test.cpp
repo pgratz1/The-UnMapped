@@ -111,7 +111,9 @@ TEST_CASE("P3-07 r21 26.2, 26.8 item 2: renamed regions, a region renamed twice 
         // 26.2: appended after `standing claims` (its one claim line), the last lines of [present]
         CHECK(from(present, "standing claims: 1", 2).size() == 2);
         CHECK(present.size() >= 4);
-        CHECK(present[present.size() - 4] == "renamed regions: 3");
+        // P5-02 12.3 (v4): at full the `beasts:` line follows, the last line of [present]
+        const std::size_t tail = present.back().rfind("beasts:", 0) == 0 ? 5U : 4U;
+        CHECK(present[present.size() - tail] == "renamed regions: 3");
     }
     // n = 0 prints the count line: H2 has no region_name row
     CHECK(contains_line(block(hrtest::report_of(hrtest::fixture_world("h2-minimal"), HistoryLevel::summary),
@@ -163,6 +165,9 @@ TEST_CASE("P3-07 r21 26.4, 26.8 item 4: references by the present name, sentence
         if (l.rfind("  rg", 0) == 0 && l.find(" since ") != std::string::npos && l.find("formerly") != std::string::npos) {
             continue;   // the renamed-regions lines name the former names on purpose
         }
+        if (l.find(", then called ") != std::string::npos) {
+            continue;   // P5-02 12.3 (v4): a ruin's region named as at its ruined_year, on purpose
+        }
         CHECK(l.find("The Holt of Yews") == std::string::npos);
         CHECK(l.find("Belford's Fall") == std::string::npos);
         const bool rg4_ok = l.find("(rg4)") == std::string::npos || l.find("The Bloody Wold (rg4)") != std::string::npos;
@@ -189,7 +194,8 @@ TEST_CASE("P3-07 r21 26.5, 26.8 item 5: a renaming and its deed are shown togeth
 TEST_CASE("P3-07 r21 26.5 item 2: the four [stats] keys at full, 17 summary keys") {
     const auto full = hrtest::stats_list(text(HistoryLevel::full));
     std::vector<std::string> tail;
-    for (std::size_t i = full.size() - 4; i < full.size(); ++i) tail.push_back(full[i].first);
+    // P5-02 12.6 (v4): the seventeen keys of 12.6 follow; the four of r21 26.5 come right before them
+    for (std::size_t i = full.size() - 4 - 17; i < full.size() - 17; ++i) tail.push_back(full[i].first);
     CHECK(tail == std::vector<std::string>{"region_names", "regions_renamed", "refuges", "refuges_hidden"});
     const auto st = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(st.at("region_names") == 3);
@@ -299,8 +305,9 @@ TEST_CASE("P3-07 r22 26.4, 26.2: a claim note names a region renamed after the d
         CHECK(contains_line(present, "  rg3: The Grey Downs since 1800, e1022; formerly Bel Downs"));
     }
     CHECK(contains_line(block(full, "[present]"), "  rg3 The Grey Downs: The Kingdom of Bel (c2) since 801"));
-    CHECK(hrtest::sha_hex(summary) == "9bcb5bb3ce21ab3f79c2c4eda9fda350092087aab45998d6100d5588cb7baea6");
-    CHECK(hrtest::sha_hex(full) == "91d23b8bcfb3e3940d89115613881398be54e712c427125972133f2ae0c6ee33");
+    // P5-02 12 (format v4, generator 0.23.0): the reference's text of the same world at v4
+    CHECK(hrtest::sha_hex(summary) == "3a91c87f94d65fb63063244c4cdeaee2a2d61476958b62ff4e4f9bccec6f08e0");
+    CHECK(hrtest::sha_hex(full) == "a74ba5ab1d88e78474f1b22a2fbb10a4b34c7e076d68236970adb4d9c6149d54");
 }
 
 }  // TEST_SUITE

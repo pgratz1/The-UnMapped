@@ -81,7 +81,7 @@ relation = [
     [3, 2, 3, 1, "war", 1450, -1, 26, 0],
 ]
 region_name = [
-    [5, 1600, "The Red Wood", 2, 32],
+    [5, 1600, "The Red Wood", 1, 32],
 ]
 # Schema 9 (P5-02 11.1, 11.2). beast: [id, key, name, plural, menace, food]; monster_kind: [id, key, name, noun,
 # grouped, wake, might]; beast_population: [region, beast, year, count]; monster: [id, name, kind, lair_site, born,

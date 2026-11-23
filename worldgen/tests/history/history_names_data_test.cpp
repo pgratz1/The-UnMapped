@@ -25,6 +25,7 @@
 #include <functional>
 #include <set>
 #include <sstream>
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -100,6 +101,14 @@ std::string culture_toml(std::string_view id, std::string_view race, std::string
     o << "god_forms = " << toml_array(n.god_forms) << "\n";
     o << "civilization_forms = " << toml_array(n.civilization_forms) << "\n";
     o << "settlement_forms = " << toml_array(n.settlement_forms) << "\n";
+    // P5-02 4.4 (0.23.0): the required site_forms after settlement_forms, the culture's shipped forms
+    const std::map<std::string_view, std::vector<std::string>> site_forms = {
+        {"dwarven", {"{root} Watch", "The Tower of {root}"}}, {"elven", {"{root} Watch", "The Spire of {root}"}},
+        {"faerie", {"{root} Watch", "The Thorn of {root}"}},  {"goblin", {"{root} Lookout", "{root} Stockade"}},
+        {"human", {"{root} Watch", "{root} Tower"}},          {"orcish", {"{root} Stockade", "The Watch of {root}"}}};
+    const auto it = site_forms.find(id);
+    o << "site_forms = " << toml_array(it != site_forms.end() ? it->second : std::vector<std::string>{"{root} Watch"})
+      << "\n";
     return o.str();
 }
 

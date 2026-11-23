@@ -38,7 +38,7 @@ fs::path source_root() { return fs::path(UNMAPPED_TEST_SOURCE_ROOT); }
 const char* const ALL_STAGES = "elevation,hydrology,climate,biomes,resources,regions,chronology,history";
 const std::vector<std::string> NEW_TABLES = {
     "civilization", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-    "event_value", "phase", "region_control", "relation", "settlement", "settlement_census"};
+    "event_value", "phase", "region_control", "relation", "settlement", "settlement_census", "site"};
 
 std::string section(const std::string& text, const std::string& header) {
     const std::size_t at = text.find(header + "\n");

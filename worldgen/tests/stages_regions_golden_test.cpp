@@ -950,7 +950,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     CHECK(dbtest::read_file(dir.file("e.db")).size() == 176128U);   // P5-02 11.1 (r1): 43 pages
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"42"}});
+    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"43"}});
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"9"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
@@ -985,7 +985,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
           std::vector<std::vector<std::string>>{{"0"}});
 }
 
-TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 8") {
+TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 9") {
     dbtest::TempDir dir("regions-schema4");
     for (const char* sql : {"PRAGMA user_version = 4", "UPDATE meta SET value = '4' WHERE key = 'schema_version'"}) {
         CAPTURE(std::string_view(sql));
@@ -997,7 +997,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world s
         const auto r = worldgen::db::WorldReader::open(path);
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == worldgen::db::ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 4, this build reads 8");
+        CHECK(r.error().message == "world schema version 4, this build reads 9");
     }
 }
 

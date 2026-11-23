@@ -79,7 +79,9 @@ const char* const RENAMES =
     "UPDATE region SET name = 'The Scarred Downs' WHERE id = 4;"
     "UPDATE region SET name = 'The Grove of the Hunt' WHERE id = 5;"
     "UPDATE region SET name = 'West Wood' WHERE id = 6;"
-    "UPDATE region SET name = 'The Ashen Downs' WHERE id = 7;";
+    "UPDATE region SET name = 'The Ashen Downs' WHERE id = 7;"
+    // 0.23.0: the 512 world renames region 7 (P5-12) before the cases' year; its later names read the same
+    "UPDATE region_name SET name = 'The Ashen Downs' WHERE region = 7;";
 
 struct Built {
     std::string path;

@@ -220,12 +220,12 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
         }
         hex[l[0] + " " + l[1]] = l[2];
     }
-    CHECK(tables == std::vector<std::string>{"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                             "event_value", "god", "layer", "meta", "pass", "phase", "race",
+                                             "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                              "race_biome", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
-                                             "settlement_census"});
+                                             "settlement_census", "site"});
     REQUIRE_FALSE(layers.empty());
     CHECK(layers.back() == "region");
     CHECK(hex["layer region"] == gold.at("region"));
@@ -254,7 +254,9 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
             "table race_biome",   "table civilization",      "table event",        "table event_cause",
             "table event_kind",   "table event_kind_role",   "table event_kind_value", "table event_participant",
             "table event_value",  "table phase",             "table region_control", "table relation",
-            "table settlement",   "table settlement_census", "table region_name"};  // chronology (P3-03) and history (P3-04, P5-12)
+            "table settlement",   "table settlement_census", "table region_name",
+            "table beast",        "table monster_kind",      "table beast_population", "table monster",
+            "table site"};  // chronology (P3-03) and history (P3-04, P5-12, P5-02)
         if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
         }
@@ -291,7 +293,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(contains(r.out, "\npass = 0\nphase = "));
     CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
-    CHECK(contains(r.out, "\nschema_version = 8\n"));
+    CHECK(contains(r.out, "\nschema_version = 9\n"));
 }
 
 TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and no region keys") {
@@ -306,7 +308,7 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     CHECK(read_bytes(e).size() == 176128U);   // P5-02 11.1 (r1): 43 pages
     const ProcessResult re = w.sb.cli({"report", "--db", u8(e)});
     REQUIRE(re.exit_code == EXIT_OK);
-    CHECK(contains(re.out, "\n[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\n"
+    CHECK(contains(re.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\n"
                            "region_biome = 0\nregion_border = 0\n"));
 }
 

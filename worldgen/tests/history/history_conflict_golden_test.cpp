@@ -232,7 +232,8 @@ TEST_CASE("P3-06 21.6 (D1): hist-conflict-73-1024, a check where aim and exhaust
 
 TEST_CASE("P3-06 16.3 item 20, 16.2 item 18a (r7): seed 42 at 1024 below its first claim is the peoples-only log") {
     const CCase& g = conflict_case("hist-conflict-42-1024");
-    const Tables t = tables_of_world(open_world(world_path(g)));
+    // P5-02 7.5 (0.23.0): the configuration without the monsters (see history_conflict_property_test.cpp)
+    const Tables t = ConflictConfig(shipped(), false).run(shipped(), eng::inputs_from_world(open_world(world_path(g, 1, "chronology")), shipped()));
     const GCase& pg = peoples_test::golden_case("hist-peoples-42-1024");
     chrono_api::Params p = chrono_test::params_with(pg.span, chrono_test::races_of_text(pg.races));
     const Tables pt = tables_of_world(open_world(peoples_test::peoples_world(pg.name, 42, "", 1024, p)));

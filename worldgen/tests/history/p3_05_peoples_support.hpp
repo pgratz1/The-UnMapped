@@ -652,7 +652,8 @@ struct PeoplesConfig {
 inline void run_peoples_history(worldgen::stages::StageContext& ctx) {
     const eng::HistoryInputs in = eng::inputs_from_context(ctx);
     PeoplesConfig cfg(ctx.content());
-    worldgen::stages::write_history_result(ctx, worldgen::history::run_engine(ctx.content(), in, cfg.get()));
+    worldgen::stages::write_history_result(
+        ctx, eng::with_data_rows(ctx.content(), worldgen::history::run_engine(ctx.content(), in, cfg.get())));
 }
 inline worldgen::stages::StageInfo peoples_stage_info() {
     return worldgen::stages::StageInfo{"history", &run_peoples_history};

@@ -232,7 +232,8 @@ TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4, P3-06 12.1): an unknown history id lists
     wd::MemoryDataRoot root = chrono_test::shipped_memory_root();
     for (wd::MemoryDirectory& d : root.directories) {
         if (d.name == "history") {
-            d.entries.push_back(wd::MemoryEntry{"monsters.toml", "[history.monsters]\nx = 1\n", false});
+            // P5-02 4.3: monsters is registered from 0.23.0; a future id (deities) is not
+            d.entries.push_back(wd::MemoryEntry{"deities.toml", "[history.deities]\nx = 1\n", false});
         }
     }
     const auto r = wd::load_content_from_memory(wd::builtin_kinds(), root);

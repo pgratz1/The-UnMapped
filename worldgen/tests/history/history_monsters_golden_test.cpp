@@ -14,6 +14,7 @@
 
 #include "p3_06_conflict_support.hpp"
 #include "p5_02_monsters_api.hpp"
+#include "p5_02_monsters_content.hpp"
 
 #include <doctest/doctest.h>
 
@@ -125,62 +126,10 @@ const MCase& mcase(const char* name) {
 
 // --- Content edits (the reference's monsters_small_data and zero_data) -----------------------------------------
 
-// history.monsters with fields replaced, and every monster kind's fields replaced by `kind_edit` (past the loader).
-wd::ContentSet with_monsters(const wd::ContentSet& base, const std::map<std::string, wd::Value>& tuning,
-                             const std::map<std::string, std::int64_t>& kind_scale,
-                             const std::map<std::string, wd::Value>& kind_set,
-                             const std::map<std::string, wd::Value>& peoples = {}) {
-    wd::ContentSet c = base;
-    for (wd::KindContent& k : c.kinds) {
-        if (k.kind == "history") {
-            for (wd::Definition& d : k.definitions) {
-                const std::map<std::string, wd::Value>* edits =
-                    d.id == "monsters" ? &tuning : d.id == "peoples" ? &peoples : nullptr;
-                if (edits == nullptr || edits->empty()) continue;
-                wd::Record r;
-                for (std::size_t i = 0; i < d.record.size(); ++i) {
-                    const auto it = edits->find(d.record.name_at(i));
-                    r.add(d.record.name_at(i), it != edits->end() ? it->second : d.record.value_at(i));
-                }
-                d.record = std::move(r);
-            }
-        }
-        if (k.kind == "monster" && (!kind_scale.empty() || !kind_set.empty())) {
-            for (wd::Definition& d : k.definitions) {
-                wd::Record r;
-                for (std::size_t i = 0; i < d.record.size(); ++i) {
-                    const std::string& n = d.record.name_at(i);
-                    if (const auto s = kind_scale.find(n); s != kind_scale.end()) {
-                        r.add(n, wd::Value::integer(std::min<std::int64_t>(10000000, d.record.value_at(i).as_int() *
-                                                                                          s->second)));
-                    } else if (const auto v = kind_set.find(n); v != kind_set.end()) {
-                        r.add(n, v->second);
-                    } else {
-                        r.add(n, d.record.value_at(i));
-                    }
-                }
-                d.record = std::move(r);
-            }
-        }
-    }
-    return c;
-}
+using monsters_content::monsters_small_content;
+using monsters_content::pressure_of;
+using monsters_content::with_monsters;
 
-wd::Value pressure_of(std::int64_t low, std::int64_t normal, std::int64_t high) {
-    wd::Record r;
-    r.add("low", wd::Value::integer(low));
-    r.add("normal", wd::Value::integer(normal));
-    r.add("high", wd::Value::integer(high));
-    return wd::Value::record(std::move(r));
-}
-
-// 19.3 monsters-small (reading X1 of the reference: the stress content with the monster edits).
-const wd::ContentSet& monsters_small_content() {
-    static const wd::ContentSet c =
-        with_monsters(conflict_test::stress_content(), {{"living_permille", wd::Value::integer(1000)}},
-                      {{"wake_rate", 2000}}, {{"overrun_permille", wd::Value::integer(1000)}});
-    return c;
-}
 // 7.5 zero: every pressure factor 0, drag and feed caps 0, bold_permille 0, outpost_permille 0, ghost_permille 0.
 const wd::ContentSet& zero_content() {
     static const wd::ContentSet c = with_monsters(
@@ -522,7 +471,7 @@ TEST_CASE("P5-02 7.5 I0: with the zero tuning the history tables equal those wit
         const eng::HistoryInputs in = inputs_of(make_synthetic(seed), seed, settings_of(c), zero_content());
         const Tables with = eng::history_stage(zero_content(), in);
         const eng::HistoryInputs in2 = inputs_of(make_synthetic(seed), seed, settings_of(c), no_ghost_content());
-        const ConflictConfig cfg(no_ghost_content());   // peoples, conflict, renaming; no monsters, no view
+        const ConflictConfig cfg(no_ghost_content(), false);   // peoples, conflict, renaming; no monsters, no view
         const Tables without = cfg.run(no_ghost_content(), in2);
         for (const std::string& name : i0_tables()) {
             CAPTURE(name);

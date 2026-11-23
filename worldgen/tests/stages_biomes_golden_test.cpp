@@ -655,7 +655,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
 
 TEST_CASE("P1-04 3, 10.1 test 9: SCHEMA_VERSION 4; DDL of meta, layer, pass, biome (schema 3), climate (schema 4)") {
     CHECK(worldgen::db::SCHEMA_VERSION == 9);  // P3-03 5.1; 9 since P5-02
-    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 27U);  // schema 8: region_name (P5-12 7.2)
+    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 32U);  // schema 9: P5-02 11.1; schema 8: region_name (P5-12 7.2)
     CHECK(worldgen::db::DDL_STATEMENTS[0].substr(0, 18) == "CREATE TABLE meta ");
     CHECK(worldgen::db::DDL_STATEMENTS[1].substr(0, 19) == "CREATE TABLE layer ");
     CHECK(worldgen::db::DDL_STATEMENTS[2].substr(0, 18) == "CREATE TABLE pass ");
@@ -701,12 +701,15 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                                              "event_kind", "event_kind_role", "event_kind_value", "phase", "event",
                                              "event_participant", "event_cause", "event_value", "civilization",
                                              "settlement", "settlement_census", "region_control",
-                                             "relation", "region_name"});  // schema 8 (P3-04 9.1, P5-12 7.2)
+                                             "relation", "region_name", "beast", "monster_kind", "beast_population",
+                                             "monster", "site"});  // schema 9 (P3-04 9.1, P5-12 7.2, P5-02 11.1)
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' ORDER BY name") ==
-          std::vector<std::vector<std::string>>{{"sqlite_autoindex_biome_1"},
+          std::vector<std::vector<std::string>>{{"sqlite_autoindex_beast_1"},
+                                                {"sqlite_autoindex_biome_1"},
                                                 {"sqlite_autoindex_culture_1"},
                                                 {"sqlite_autoindex_event_kind_1"},
                                                 {"sqlite_autoindex_layer_1"},
+                                                {"sqlite_autoindex_monster_kind_1"},
                                                 {"sqlite_autoindex_race_1"}});
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});

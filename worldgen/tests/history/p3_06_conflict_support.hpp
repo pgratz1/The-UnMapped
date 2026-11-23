@@ -9,6 +9,7 @@
 // with probe subsystems. Library API of P3-06 only through
 // p3_06_conflict_api.hpp.
 
+#include "worldgen/history/monsters.hpp"
 #include "worldgen/history/renaming.hpp"
 #include "p3_05_peoples_support.hpp"
 #include "p3_06_conflict_api.hpp"
@@ -49,6 +50,8 @@ inline bool is_claim(std::int64_t k) { return k == k_claim || k == k_claim_settl
 inline bool is_cede(std::int64_t k) { return k == k_region_ceded || k == k_settlements_ceded; }
 // P3-04 r19 22.2 / P3-06 r22 24.3, 24.4 (P5-01, generator 0.21.0): kinds 41 and 42; and the peace-like endings.
 inline constexpr std::int64_t k_claim_dropped = 41, k_refuge_hidden = 42;
+// P5-02 10.1 (generator 0.23.0): the monsters' appearance (a flare-up's trigger, 7.4) and the overrun (a ruin, 6.4.3).
+inline constexpr std::int64_t k_monster_appeared = 44, k_settlement_overrun = 49;
 
 // --- Golden file ------------------------------------------------------------------------------------
 
@@ -704,7 +707,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     for (const Row& s : t.settlement) {
         if (at(s, 10) == ruined) {
             CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_settlement_abandoned_to ||
-                   x.kind(at(s, 13)) == k_sacked));
+                   x.kind(at(s, 13)) == k_sacked || x.kind(at(s, 13)) == k_settlement_overrun));   // P5-02 6.4.3
         }
     }
     // 5 territory
@@ -724,9 +727,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     }
     // P3-05 14 r6 items (6 as D1 reads it, 11, 12, 13) with conflict installed
     check_invariants_r6(t, 40, nullptr);
-    // 8 every flare-up's trigger is a claim
+    // 8 every flare-up's trigger is a claim, or (P5-02 6.5, 7.4) a monster's appearance in a quiet step
     for (const Row& p : t.phase) {
-        if (at(p, 2) == 3) CHECK(is_claim(x.kind(at(p, 5))));
+        if (at(p, 2) == 3) CHECK((is_claim(x.kind(at(p, 5))) || x.kind(at(p, 5)) == k_monster_appeared));
     }
     // 8.3 item 4 (N2, r7): "a cession in a quiet step never transfers a colony founded earlier in the same step"
     // no longer holds: P3-06 r13 20.27 passes every settlement of the loser standing in the ceded region, a
@@ -871,7 +874,8 @@ inline std::vector<std::string> cession_violations(const Tables& t) {
             }
         } else if (k == k_settlement_captured) {
             owner[at(e, 6)] = x.role1(eid, 1);
-        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to) {
+        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to ||
+                   k == k_settlement_overrun) {   // P5-02 6.4.3: an overrun ruins its settlement
             owner[at(e, 6)] = 0;
             standing[at(e, 6)] = false;
         } else if (is_cede(k)) {
@@ -1424,7 +1428,8 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
             }
         } else if (k == k_settlement_captured) {
             owner[at(e, 6)] = x.role1(id, 1);
-        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to) {
+        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to ||
+                   k == k_settlement_overrun) {   // P5-02 6.4.3: an overrun ruins its settlement
             owner[at(e, 6)] = 0;
             standing[at(e, 6)] = false;
         } else if (k == k_capital_moved) {
@@ -1763,8 +1768,11 @@ inline void check_r17(const Tables& t, const wd::ContentSet& c, const CCase& g) 
 
 namespace conflict_test {
 
-// The shipped configuration (peoples, conflict; conflict the tension source) with probe subsystems before
-// peoples, between peoples and conflict, and after conflict.
+// The shipped configuration (P3-06 8.3 item 3, P5-12 6, P5-02 6.1): peoples, conflict, renaming and (from
+// 0.23.0) the monsters after renaming, with conflict then the monsters the tension sources, peoples reading the
+// monsters' wild view and renaming their names; with probe subsystems before peoples, between peoples and
+// conflict, and after the monsters. `with_monsters` false leaves the monsters out (peoples reads no view: 7.5's
+// configuration "without the subsystem").
 struct ConflictConfig {
     std::unique_ptr<cfl::Conflict> pair;
     std::vector<std::unique_ptr<FnSubsystem>> before, between, after;
@@ -1773,13 +1781,18 @@ struct ConflictConfig {
     // P5-12 6: the renaming subsystem, installed after conflict as the history stage installs it (its rows are
     // HistoryResult::region_names only through run() below; run_engine leaves them empty, P3-04 r21 23.4).
     std::unique_ptr<worldgen::history::RenamingSubsystem> renaming;
+    std::unique_ptr<worldgen::history::MonstersSubsystem> monsters;
 
-    explicit ConflictConfig(const wd::ContentSet& c)
+    explicit ConflictConfig(const wd::ContentSet& c, bool with_monsters = true)
         : pair(std::make_unique<cfl::Conflict>(c)), catalogue(eng::catalogue_of(c)),
-          // P5-02 9.3: no monsters subsystem is installed here (RenamingSubsystem::set_monsters is not called, so a
-          // monster name_role gives no {name})
           renaming(std::make_unique<worldgen::history::RenamingSubsystem>(
-              *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue)) {}
+              *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue)) {
+        if (with_monsters) {
+            monsters = std::make_unique<worldgen::history::MonstersSubsystem>(*pair->peoples.sub, c);
+            pair->peoples.sub->set_wild(monsters.get());
+            renaming->set_monsters(monsters.get());
+        }
+    }
     void add_before(std::vector<eng::Step> steps, FnSubsystem::Fn fn) {
         before.push_back(std::make_unique<FnSubsystem>(std::move(steps), std::move(fn)));
     }
@@ -1797,17 +1810,26 @@ struct ConflictConfig {
         for (const auto& s : between) c.subsystems.push_back(s.get());
         c.subsystems.push_back(pair->subsystem());
         c.subsystems.push_back(renaming.get());
+        if (monsters) c.subsystems.push_back(monsters.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
+        if (monsters) c.tension.push_back(monsters.get());
         c.interventions = interventions.get();
         c.catalogue = &catalogue;
         return c;
     }
-    // run_engine with get() (or `ec`), the tables with the renaming rows filled in as the history stage fills them.
+    // run_engine with get() (or `ec`), the tables with the renaming and monster rows filled in as the history
+    // stage fills them. One run per configuration (the subsystems keep their state).
     [[nodiscard]] Tables run(const wd::ContentSet& c, const eng::HistoryInputs& in) const { return run(c, in, get()); }
     [[nodiscard]] Tables run(const wd::ContentSet& c, const eng::HistoryInputs& in, const eng::EngineConfig& ec) const {
-        worldgen::history::HistoryResult r = worldgen::history::run_engine(c, in, ec);
+        worldgen::history::HistoryResult r = eng::with_data_rows(c, worldgen::history::run_engine(c, in, ec));
         r.region_names = renaming->sorted_rows();
+        if (monsters) {
+            monsters->finish(in.params.span);
+            r.beast_populations = monsters->beast_population_rows();
+            r.monsters = monsters->monster_rows();
+            r.sites = monsters->site_rows();
+        }
         return eng::tables_of(r);
     }
 };

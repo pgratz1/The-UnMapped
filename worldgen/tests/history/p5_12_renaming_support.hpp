@@ -6,6 +6,7 @@
 // off) as edited content. Written from the specs before the implementation (test-writer rule); every library
 // name used here is older than P5-12 except the table region_name (rows_of) and the event kind 43.
 
+#include "p5_02_monsters_content.hpp"
 #include <doctest/doctest.h>
 
 #include <algorithm>
@@ -37,7 +38,8 @@ inline const std::vector<RRule>& shipped_rule_kinds() {
     static const std::vector<RRule> v = {{"conquest", {"civ_conquered"}, 100}, {"capital_sack", {"sacked"}, 90},
                                          {"great_sack", {"sacked"}, 80},
                                          {"slaughter", {"battle", "battle_at_pass"}, 70},
-                                         {"plague", {"plague_outbreak"}, 60}, {"heartland", {"became_city"}, 50}};
+                                         {"plague", {"plague_outbreak"}, 60}, {"heartland", {"became_city"}, 50},
+                                         {"ravage", {"settlement_overrun"}, 75}};   // P5-02 9.3: rule 7
     return v;
 }
 
@@ -103,7 +105,7 @@ inline const wd::ContentSet& rename_small_content() {
     static const wd::ContentSet c = with_renaming(
         {{"world_max_permille", wd::Value::integer(1000)}, {"century_max_permille", wd::Value::integer(1000)}},
         {{"min_magnitude", wd::Value::integer(1)}, {"chance_permille", wd::Value::integer(1000)}},
-        conflict_test::stress_content());
+        monsters_content::monsters_small_content());   // P5-02 (0.23.0): the monsters-small edits, so that rule 7 renames
     return c;
 }
 // 13: region_max 0 (the subsystem off), on the shipped content.

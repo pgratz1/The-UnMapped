@@ -373,7 +373,7 @@ class History:
         row = self.settlements[s - 1]
         assert row[0] == s
         if row[6] > y:
-            return (s, 0, 0, 0, 0, 0, 0)
+            return (s, 0, 0, 0, 0, 0, 0, 0) if r4() else (s, 0, 0, 0, 0, 0, 0)   # r4: the ending field too
         best = None
         for c in self.census.get(s, []):
             if c[1] <= y and (best is None or c[1] > best[1]):

@@ -121,7 +121,7 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
                                         "seed = 101", "seed_phrase =", "map_size = 512", "history_span = 3000",
                                         "history_detail = normal", "races = elf,goblin", "civs_per_race = auto",
                                         "event_intensity = normal", "monster_pressure = normal",
-                                        "divine_activity = normal", "divine_script =", "generator_version = 0.22.0"});
+                                        "divine_activity = normal", "divine_script =", "generator_version = 0.23.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
               "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "
@@ -355,7 +355,7 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
               "hidden refuges: 0 of 0 founded by flight",   // P3-07 r21 26.3
               "open wars: 0",
               "standing claims: 0",
-              "renamed regions: 0"});   // r21 26.2
+              "renamed regions: 0", "beasts:"});   // r21 26.2; P5-02 12.3 (full only; no beast rows)
 }
 
 TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
@@ -442,7 +442,7 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                    "settlements: 0; thriving 0, declining 0, ruined 0, faded 0",
                                    "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
                                    "largest settlement: none", "ruins: 0", "hidden refuges: 0 of 0 founded by flight",
-                                   "open wars: 0", "standing claims: 0", "renamed regions: 0"});
+                                   "open wars: 0", "standing claims: 0", "renamed regions: 0", "beasts:"});   // P5-02 12.3
     const auto st = hrtest::stats_of(full("h2-minimal"));
     CHECK(st.at("simulated_years") == 2000);
     CHECK(st.at("simulated_permille") == 1000);

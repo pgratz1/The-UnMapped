@@ -67,6 +67,13 @@ R11 (peoples-only) the renaming subsystem is installed only in the shipped confi
 # 3: the land noun of a region from stored rows (P1-06 RG11 3 a to d)
 # ---------------------------------------------------------------------------
 
+
+
+def ROLE_WORDS():
+    """P5-12's renaming_rules message: 'a civilization or settlement' (0.22.0); r1 25 item 7 (0.23.0): 'a civilization,
+    settlement or monster'."""
+    return "a civilization, settlement or monster" if r23() else "a civilization or settlement"
+
 def land_nouns(inp):
     """{region id: noun} by P1-06 RG11 3 rules a to d (R1)."""
     t = rg.shipped_tuning()
@@ -442,13 +449,13 @@ def stage_check_message(rules, catalogue):
             nr = rule["name_role"]
             if nr == "settlement":
                 if k["settlement_use"] == 0:
-                    return bad("name_role 'settlement' is not a civilization or settlement role of kind '%s'" % kk)
+                    return bad("name_role 'settlement' is not %s role of kind '%s'" % (ROLE_WORDS(), kk))
             elif nr != "":
-                # P5-02 9.3: from 0.23.0 a monster role too (the message is unchanged: READINGS of p5_02 R1)
+                # P5-02 9.3: from 0.23.0 a monster role too; r1 25 item 7: the message names it
                 types = (CIV, SETTLEMENT, pe.MONSTER) if r23() else (CIV, SETTLEMENT)
                 rs = [r for r in k["roles"] if r["role"] == nr and r["type"] in types]
                 if not rs:
-                    return bad("name_role '%s' is not a civilization or settlement role of kind '%s'" % (nr, kk))
+                    return bad("name_role '%s' is not %s role of kind '%s'" % (nr, ROLE_WORDS(), kk))
             if rule["namer_role"] != "":
                 rs = [r for r in k["roles"] if r["role"] == rule["namer_role"] and r["type"] == CIV]
                 if not rs:
@@ -772,10 +779,10 @@ def check_units(c):
             (lambda rs: rs[2].update(values=["toll"]), "history: renaming rule 'great_sack': value 'toll' is not a "
                                                        "value of kind 'sacked'"),
             (lambda rs: rs[3].update(name_role="holder"), "history: renaming rule 'slaughter': name_role 'holder' is "
-                                                          "not a civilization or settlement role of kind 'battle'"),
+                                                          "not %s role of kind 'battle'" % ROLE_WORDS()),
             (lambda rs: rs[0].update(name_role="settlement"), "history: renaming rule 'conquest': name_role "
-                                                              "'settlement' is not a civilization or settlement role "
-                                                              "of kind 'civ_conquered'"),
+                                                              "'settlement' is not %s role "
+                                                              "of kind 'civ_conquered'" % ROLE_WORDS()),
             (lambda rs: rs[1].update(namer_role="defenderx"), "history: renaming rule 'capital_sack': namer_role "
                                                               "'defenderx' is not a civilization role of kind "
                                                               "'sacked'"),

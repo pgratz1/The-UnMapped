@@ -411,8 +411,10 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
     refused("bp-repeat", "INSERT INTO beast_population VALUES (" + R + ", 1, 3, 777777);"
                          "INSERT INTO beast_population VALUES (" + R + ", 1, 4, 777777);",
             bp + R + ", 1, 4): count equals the previous row of this region and beast");
-    refused("ending", "UPDATE settlement SET ending = 1 WHERE id = 1;",
-            "corrupt table 'settlement': row 1: ending 1 is not its ruin's ending 0");
+    // settlement 1 of geo-seed-42-512 is faded after its sacking (ending 1, derived through its ruin_faded's cause,
+    // r1 25 item 3)
+    refused("ending", "UPDATE settlement SET ending = 4 WHERE id = 1;",
+            "corrupt table 'settlement': row 1: ending 4 is not its ruin's ending 1");
     // events: a participant of type 8 with no row; a kind 44 without its site; a value beast with no row (R4)
     {
         const auto e = eng::view_error(open_world(corrupt(

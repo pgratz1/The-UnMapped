@@ -84,9 +84,9 @@ TEST_CASE("P3-01 r16 5.4: each problem of renaming_rules, with its text") {
         {"a value of another kind", 3, [](wh::RenameRule& r) { r.values = {"winner_dead", "dead"}; }, "slaughter",
          "value 'dead' is not a value of kind 'battle'"},
         {"name_role no role", 3, [](wh::RenameRule& r) { r.name_role = "victim"; }, "slaughter",
-         "name_role 'victim' is not a civilization or settlement role of kind 'battle'"},
+         "name_role 'victim' is not a civilization, settlement or monster role of kind 'battle'"},
         {"name_role settlement without settlement_use", 3, [](wh::RenameRule& r) { r.name_role = "settlement"; },
-         "slaughter", "name_role 'settlement' is not a civilization or settlement role of kind 'battle'"},
+         "slaughter", "name_role 'settlement' is not a civilization, settlement or monster role of kind 'battle'"},
         {"namer_role no role", 3, [](wh::RenameRule& r) { r.namer_role = "victor"; }, "slaughter",
          "namer_role 'victor' is not a civilization role of kind 'battle'"},
         {"capital without a settlement", 3, [](wh::RenameRule& r) { r.capital = true; }, "slaughter",
@@ -141,7 +141,7 @@ TEST_CASE("P3-01 r16 5.4: renaming_rules reports the first problem: rules in ord
               std::optional<std::string>(msg("slaughter", "value 'dead' is not a value of kind 'battle'")));
         t.rules[3].values = {};
         CHECK(problem_with(t) == std::optional<std::string>(msg(
-                                     "slaughter", "name_role 'victim' is not a civilization or settlement role of kind "
+                                     "slaughter", "name_role 'victim' is not a civilization, settlement or monster role of kind "
                                                   "'battle'")));
         t.rules[3].name_role = "loser";
         CHECK(problem_with(t) ==

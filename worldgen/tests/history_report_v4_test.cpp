@@ -181,10 +181,10 @@ TEST_CASE("P5-02 r1 12.9: the summary budget B at its three branches and L's cap
     CHECK(wh::summary_budget(10, 700, 6, 31) == 100);                       // SUMMARY_BUDGET_MIN
     CHECK(wh::summary_budget(10, 790 - 72 - 100, 6, 31) == 100);
     CHECK(wh::summary_budget(10, 790 - 72 - 101, 6, 31) == 101);
-    CHECK(wh::summary_budget(20, 900, 6, 31) == 950 - 900 - 72);            // 40 lines a realm above 16
+    CHECK(wh::summary_budget(20, 700, 6, 31) == 950 - 700 - 72);            // 40 lines a realm above 16
     CHECK(wh::summary_budget(16, 600, 6, 31) == 790 - 600 - 72);            // C = 16 adds nothing
     CHECK(wh::summary_budget(40, 1200, 6, 31) == 1390 - 1200 - 72);         // L capped at 1390 (not 1750)
-    CHECK(wh::summary_budget(10, 400, 6, 31, 500) == 500 - 400 - 72);       // the lines_max seam
+    CHECK(wh::summary_budget(10, 200, 6, 31, 500) == 500 - 200 - 72);       // the lines_max seam
 }
 
 TEST_CASE("P5-02 r1 12.9: on H13 (four realms) the summary stays within L = 790 and keeps its [monsters] lines") {

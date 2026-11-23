@@ -345,10 +345,11 @@ inline const std::set<std::string>& summary_stat_keys() {
 // The invariants of r17 24.10 (items 1 to 7 as far as they are checks on the text; item 7's standing claims
 // are spelled out per fixture by the tests) on the summary and full texts of one world.
 inline void check_invariants(const db::WorldReader& r, const std::string& summary, const std::string& full) {
-    const std::vector<std::string> heads_s = {"[settings]", "[ages]", "[chronicle]", "[civilizations]", "[present]",
-                                              "[stats]"};
-    const std::vector<std::string> heads_f = {"[settings]", "[ages]", "[phases]", "[chronicle]", "[civilizations]",
-                                              "[present]", "[stats]"};
+    // P5-02 12.4, 12.5 (v4): [monsters] and [sites] after [present]
+    const std::vector<std::string> heads_s = {"[settings]", "[ages]",     "[chronicle]", "[civilizations]",
+                                              "[present]",  "[monsters]", "[sites]",     "[stats]"};
+    const std::vector<std::string> heads_f = {"[settings]", "[ages]",    "[phases]", "[chronicle]", "[civilizations]",
+                                              "[present]",  "[monsters]", "[sites]",  "[stats]"};
     for (const std::string* text : {&summary, &full}) {
         const bool is_full = text == &full;
         CAPTURE(is_full);
@@ -461,7 +462,8 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
                                  l.find(' ', 4) < l.find(':');
         const bool settlement_line = l.rfind("  s", 0) == 0 && l.size() > 3 && l[3] >= '0' && l[3] <= '9' &&
                                      l.find(", at ") != std::string::npos;
-        if (!region_line && !settlement_line) present_f.push_back(l);
+        const bool beasts_line = l.rfind("beasts:", 0) == 0;   // P5-02 12.3: the world's beasts, full only
+        if (!region_line && !settlement_line && !beasts_line) present_f.push_back(l);
     }
     CHECK(present_f == block(summary, "[present]"));
     // 13 item 6: [history] of the world report is a subset of [stats]
