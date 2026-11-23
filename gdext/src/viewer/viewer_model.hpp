@@ -20,8 +20,15 @@
 // The model also gives the legend of the selected view and a description of
 // any cell (value in display units, biome and region names), both from the
 // world file's tables and worldgen's palettes.
+//
+// History (spec P4-03): when the world has a history, open_world reads it
+// once (HistoryState); the model then holds a year Y in [0, E], opening at
+// the present E, and a composite view `territory`, the first composite,
+// whose image is redrawn in place when the holders at Y change. Every
+// history method answers without history as P4-03 3.2 states.
 
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -30,8 +37,10 @@
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/packed_int64_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
+#include "viewer/history_state.hpp"
 #include "world_file.hpp"
 #include "world_layer.hpp"
 
@@ -50,6 +59,9 @@ public:
     //   world_closed()
     //   view_selected(index: int)
     //   view_failed(index: int, code: String, message: String)
+    //   year_changed(year: int)
+    //   view_image_changed(index: int)   the image of a view was redrawn in
+    //                                    place (same Image, same size)
 
     // Opens a world file (read-only). Emits world_opened, then selects the
     // first view if there is one; or world_open_failed.
@@ -109,6 +121,54 @@ public:
     // The underlying data-access object.
     [[nodiscard]] godot::Ref<WorldFile> get_world() const;
 
+    // --- History (P4-03 3.2) --------------------------------------------------
+    // "none", "loaded" or "failed" ("none" with no world open).
+    [[nodiscard]] godot::String get_history_status() const;
+    [[nodiscard]] bool has_history() const;
+    // worldgen's code name and message when failed; empty otherwise.
+    [[nodiscard]] godot::String get_history_error_code() const;
+    [[nodiscard]] godot::String get_history_error_message() const;
+    // E and Y; -1 without history.
+    [[nodiscard]] int64_t get_end_year() const;
+    [[nodiscard]] int64_t get_year() const;
+    // False (nothing changes) without history or for y outside [0, E].
+    // Otherwise true; if y differs from Y, Y = y, the territory image is
+    // redrawn when the holders changed (view_image_changed), the legend of
+    // a selected territory view is rebuilt, and year_changed is emitted once.
+    bool set_year(int64_t year);
+    bool step_year(int64_t delta);
+    // direction -1 or +1: the previous / next event start year.
+    bool step_event(int64_t direction);
+    // direction -1 or +1: the previous / next year in which a holder changes.
+    bool step_holder_change(int64_t direction);
+    [[nodiscard]] bool has_previous_event() const;
+    [[nodiscard]] bool has_next_event() const;
+    [[nodiscard]] bool has_previous_change() const;
+    [[nodiscard]] bool has_next_change() const;
+    // P4-03 3.5; empty without history.
+    [[nodiscard]] godot::Dictionary get_year_info() const;
+    // Array of Dictionary {year, kind, label} (P4-03 5.4).
+    [[nodiscard]] godot::Array get_year_marks() const;
+    // {region, civilization, name, since, event} at Y; empty for a region the
+    // timeline does not have.
+    [[nodiscard]] godot::Dictionary get_region_holding(int64_t region) const;
+    // {id, name, race, race_key, race_name, race_plural, colour (0xRRGGBB),
+    // founded_year, ended_year (-1 while none)}; empty for an unknown id.
+    [[nodiscard]] godot::Dictionary get_civilization_info(int64_t civilization) const;
+    // The civilizations alive at Y, ascending id.
+    [[nodiscard]] godot::PackedInt64Array get_civilizations_alive() const;
+    // The view index of `territory`, or -1.
+    [[nodiscard]] int64_t get_territory_view() const;
+
+    // --- C++ only (timings for --bench; presentation side) ---------------------
+    struct TerritoryTimings {
+        int64_t first_image_usec = -1;  // building the base and the first image
+        int64_t redraws = 0;            // in-place redraws since the world opened
+        int64_t slowest_redraw_usec = 0;
+    };
+    [[nodiscard]] const TerritoryTimings& territory_timings() const noexcept { return timings_; }
+    [[nodiscard]] const HistoryState& history_state() const noexcept { return history_; }
+
 protected:
     static void _bind_methods();
 
@@ -119,9 +179,17 @@ private:
     // The grid of a layer by name, decoded on first use; null if absent or
     // unreadable.
     const worldgen::db::LayerGrid* layer_grid(std::string_view name);
+    bool build_territory_image(int64_t view_index);
+    void redraw_territory();
+    void rebuild_legend();
+    // The composite of a composite view; nullopt for territory or a layer.
+    [[nodiscard]] std::optional<worldgen::inspect::Composite> composite_of(int64_t view_index) const;
 
     godot::Ref<WorldFile> world_;
-    std::vector<worldgen::inspect::Composite> composites_;
+    // Per composite view: the composite, or nullopt for territory (first).
+    std::vector<std::optional<worldgen::inspect::Composite>> composites_;
+    HistoryState history_;
+    TerritoryTimings timings_;
     std::vector<godot::Ref<WorldLayer>> layers_;   // per layer
     std::vector<godot::Ref<godot::Image>> images_;  // per view
     godot::Array legend_;                           // of the selected view

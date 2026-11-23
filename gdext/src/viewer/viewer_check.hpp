@@ -23,11 +23,18 @@
 //   - hovering a cell of a region describes it: coordinates, elevation in
 //     metres, biome name, region id and name from table `region`;
 //   - opening a missing file and a non-SQLite file give the reader's
-//     distinct errors (file_unreadable, not_sqlite) with a message.
+//     distinct errors (file_unreadable, not_sqlite) with a message;
+//   - with --expect-history none, the checks N1 to N3 of spec P4-03 10.2
+//     (no territory view, the year bar disabled, no holding in the hover
+//     text); with --expect-history loaded, H1 to H8 (the year bar, the
+//     territory image at each year of --expect-years against
+//     territory-<Y>.png, the readouts and the legend against the history
+//     report, steps, keys, hover, colours, year marks).
 // Prints one line per check and "UNMAPPED-CHECK: PASS" or "UNMAPPED-CHECK:
 // FAIL", and returns the process exit code (0 or 1).
 
 #include <cstdint>
+#include <vector>
 
 #include <godot_cpp/variant/string.hpp>
 
@@ -39,6 +46,11 @@ struct ViewerCheckOptions {
     godot::String reference_dir;
     int64_t expect_layers = -1;      // -1: not checked
     int64_t expect_composites = -1;  // -1: not checked
+    // P4-03 10.2: "none" (checks N1 to N3), "loaded" (H1 to H8) or empty.
+    godot::String expect_history;
+    int64_t expect_end_year = -1;
+    std::vector<int64_t> expect_years;  // compared with <reference dir>/territory-<Y>.png
+    godot::String history_report;       // `report --history --level full` of the world
     bool wired = false;
 };
 
