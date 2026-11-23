@@ -200,9 +200,11 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
     CHECK(a.size() == 8U);
     CHECK(b.size() == 8U);
     CHECK(a != b);
-    // the House of Nife leads with its own deeds: its sacks of Baskeeb towns; the Baskeeb Mob with its won wars
-    // and the cession of e59 (the spec's example)
-    CHECK(std::find(b.begin(), b.end(), "    2897 e59 region_ceded") != b.end());
+    // the House of Nife leads with its own deeds: its sacks of Baskeeb towns; the Baskeeb Mob with its won wars.
+    // The spec's example (the cession e59 of 2897) is of the 0.21.0 history; from 0.22.0 the renamings shift the
+    // event ids and the war of 2893 ends with the peace e58 without a cession (P5-12 6, "Effect on the rest of
+    // history"), so the won war is checked by its peace.
+    CHECK(std::find(b.begin(), b.end(), "    2897 e58 peace") != b.end());
     std::int64_t sacks = 0;
     for (const std::string& x : a) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
     CHECK(sacks == 2);
