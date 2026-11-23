@@ -532,6 +532,9 @@ TEST_CASE("P4-03 11.1 item 7 (audit A3): Timeline::build refuses overlapping or 
     // engineer's reading of 9.4, accepted by the lead)
     CHECK(build_text({rc[0], row(2, 300, 300, 3, 4), row(2, 200, std::nullopt, 3, 14), rc[3], rc[4], rc[5]}) ==
           "timeline: region_control row (2, 300) ends at 300, not after it starts");
+    // r overlaps p and fails its own check: r's own check comes before the pair check of p with r
+    CHECK(build_text({rc[0], row(2, 300, 1400, 3, 4), row(2, 1300, 1300, 3, 14), rc[3], rc[4], rc[5]}) ==
+          "timeline: region_control row (2, 1300) ends at 1300, not after it starts");
     // p.to_year = r.from_year is accepted, and the holder changes in that year
     {
         wh::HistoryTables tb = base;

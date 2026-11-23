@@ -120,10 +120,11 @@ T7 13.2 item 3 "a region freed (since = its last to_year)": the free since of a 
    from_year <= Y" because rows of a region do not overlap.
 P4-03 readings:
 A3a 9.4: a region's "run" is a maximal sequence of consecutive rows (in table order) with that region; the
-    rows of a region split into two runs are not joined. Rows are visited in order; a row's own check
-    (to_year <= from_year) runs before its overlap check with the next row (the engineer's order, accepted
-    by the lead). The sequence own(p0), pair(p0, p1), own(p1), pair(p1, p2), ... is what
-    control_run_error does; timeline_borders_test.cpp asserts it on a row that fails both.
+    rows of a region split into two runs are not joined (the C++ refuses them earlier, "region_control
+    row of region <r> out of order", P4-01). Rows are visited in order; for each row r, r's own check
+    (to_year <= from_year) runs before the overlap check of the row before it with r (the engineer's
+    order, accepted by the lead): own(r0), own(r1), pair(r0, r1), own(r2), pair(r1, r2), ...
+    timeline_borders_test.cpp asserts it on rows where both orders would differ.
 A3b 9.4: the texts are exactly those of the spec with the integers in decimal; nothing else is checked.
 P1  8.2: a border cell that is drawn by step 3 or 4 (a lake or river cell), or has e < 0, is kind 0: its
     pixel is B (black), its region, east and south 0 (9.2: "v when kind is 1 or 2, else 0").
@@ -348,15 +349,15 @@ class History:
 def control_run_error(rows):
     """P4-03 9.4: the FatalError text Timeline::build gives for these region_control rows (region, from,
     to or None, civ, event) in table order, or None. A run is a maximal sequence of consecutive rows of one
-    region. Rows in order; a row's own check (to <= from) before its overlap check with the next row
-    (p open, or p.to > r.from: overlap at r.from). Readings A3a, A3b."""
+    region. Rows in order; for each row r: first r's own check (to <= from), then the pair check of the
+    row before it with r (p open, or p.to > r.from: overlap at r.from). Readings A3a, A3b."""
     prev = None
     for r in rows:
+        if r[2] is not None and not r[2] > r[1]:
+            return "timeline: region_control row (%d, %d) ends at %d, not after it starts" % (r[0], r[1], r[2])
         if prev is not None and prev[0] == r[0]:
             if prev[2] is None or prev[2] > r[1]:
                 return "timeline: region_control rows of region %d overlap at year %d" % (r[0], r[1])
-        if r[2] is not None and not r[2] > r[1]:
-            return "timeline: region_control row (%d, %d) ends at %d, not after it starts" % (r[0], r[1], r[2])
         prev = r
     return None
 
@@ -1043,6 +1044,9 @@ def check_control_runs(c):
     both = [t1[0], (2, 300, 300, 3, 4), (2, 200, None, 3, 14)] + t1[3:]
     c.eq("A3 a row failing its own check before the overlap with the next", control_run_error(both),
          "timeline: region_control row (2, 300) ends at 300, not after it starts")
+    later = [t1[0], (2, 300, 1400, 3, 4), (2, 1300, 1300, 3, 14)] + t1[3:]
+    c.eq("A3 the later row's own check before the pair check", control_run_error(later),
+         "timeline: region_control row (2, 1300) ends at 1300, not after it starts")
     e = t1[:5] + [(4, 1010, 900, 4, 9)]
     c.eq("A3 to_year before from_year", control_run_error(e),
          "timeline: region_control row (4, 1010) ends at 900, not after it starts")
