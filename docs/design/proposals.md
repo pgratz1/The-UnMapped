@@ -1246,5 +1246,6 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: P5-01's target T16 bounds the battles that repeat an earlier battle's sides and both tolls exactly at **at most 10** over the 100 default 1024 worlds (measured 9 at 0.21.0). P5-12 changes no battle rule, but its renamings shift the event ids that conflict keys its draws by, and the engineer measured **13 of 8,935 battles** at 0.22.0. A fixed count grows with the number of battles a sweep holds, so it measures the sweep as much as the rule.
 - Proposal: restate T16 as a rate: **at most 2 repeated battles per thousand battles** of the sweep (13 of 8,935 is 1.5‰; 0.21.0's 9 was about 1‰). The second half of T16 (no battle sentence with a digit toll and a word toll in one clause: 0) is unchanged.
 - Interim choice: none; the bound of 10 is not changed by the spec, and validation reports T16 as missed at 0.22.0 until Paul decides.
+- Decision (Paul, 2026-11-23): "2 per thousand sounds pretty low, should be fine." T16 is at most 2 repeated battles per thousand battles of the default sweep; validation measured 13 of 8,935 (1.45 per thousand) at 0.22.0, so the target is met. The P5-02 spec states it so.
 
-- Status: open
+- Status: decided
