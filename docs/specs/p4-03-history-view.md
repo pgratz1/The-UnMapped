@@ -1,8 +1,8 @@
 # P4-03 History binding, year bar and territory in the viewer
 
-Status: **r2, 2026-11-23** (r1 draft 2026-11-22; revision notes at the end), for approval by the lead. Phase P4 Viewer v1, stage 3 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-03", 3.2, rules V1 to V10, 6.3, 7, 8, 10). Builds on P4-01 r2 (`docs/specs/p4-01-timeline.md`: `worldgen/history/timeline.hpp`, `worldgen/inspect/territory.hpp`), P4-02 r2 (`docs/specs/p4-02-layer-catalogue.md`, the library catalogue the viewer already uses), the P4-01 audit (`docs/reviews/p4-01-timeline-audit.md`, advisories A2 and A3), P0-04 amendment 18 (e) (the `regions` composite and its border rule) and P2 as documented in `gdext/README.md`. Design doc sections 10 ("World viewer") and 13 (P4 row: "timeline scrubber, territory overlay by year"). Paul's decisions of 2026-11-22 (proposals, "the P4 overview's questions go with their recommendations"): the viewer opens at the present, year E; one hue family per race, shades per civilization.
+Status: **r3, 2026-11-23** (r1 draft 2026-11-22, r2 2026-11-23; revision notes at the end), for approval by the lead. Phase P4 Viewer v1, stage 3 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-03", 3.2, rules V1 to V10, 6.3, 7, 8, 10). Builds on P4-01 r2 (`docs/specs/p4-01-timeline.md`: `worldgen/history/timeline.hpp`, `worldgen/inspect/territory.hpp`), P4-02 r2 (`docs/specs/p4-02-layer-catalogue.md`, the library catalogue the viewer already uses), the P4-01 audit (`docs/reviews/p4-01-timeline-audit.md`, advisories A2 and A3), P0-04 amendment 18 (e) (the `regions` composite and its border rule) and P2 as documented in `gdext/README.md`. Design doc sections 10 ("World viewer") and 13 (P4 row: "timeline scrubber, territory overlay by year"). Paul's decisions of 2026-11-22 (proposals, "the P4 overview's questions go with their recommendations"): the viewer opens at the present, year E; one hue family per race, shades per civilization.
 
-Numbers quoted for the 512 world are from `worldgen-cli generate --seed 42 --map-size 512 --data game/data` at generator 0.20.0 (the headless check's real world): E = 6000, 10 civilizations of which 2 ended, ages starting at 0, 2074, 3242, 4243, 4969 and 5596, 30 wars, 15 ruined settlements, the first `region_ceded` event in year 2483, 13 regions held at E.
+Numbers quoted for the 512 world are from `worldgen-cli generate --seed 42 --map-size 512 --data game/data` at generator 0.21.0 (the headless check's real world, its `history.txt` from the viewer part's check run): E = 6000, 11 civilizations of which 1 ended, ages starting at 0, 2074, 3242, 4243, 4969 and 5596, 32 wars, 10 ruined settlements, the first `region_ceded` event in year 2483, 14 of 15 regions held at E. (At 0.20.0: 10 civilizations of which 2 ended, 30 wars, 15 ruined settlements, 13 regions held at E; E, the age starts and F were the same.) Timings quoted from P4-01 (3.1, 3.4, 8.1) are as measured at 0.20.0.
 
 **No world byte changes.** P4-03 itself changes no world byte; its base is generator **0.21.0** (P5-01 merges with this stage), schema stays **7**. The library changes of section 9 change the pixels of `render --composite territory` and the golden file `worldgen/tests/golden/p4-01-timeline.txt` (section 9.6), nothing else that is recorded.
 
@@ -33,7 +33,7 @@ Order of work: the library part (section 9) is one branch, merged first (generat
 
 The history is read **once, when a world opens**, inside `ViewerModel::open_world`, after `WorldFile::open` succeeds and before `world_opened` is emitted:
 
-1. `WorldFile` gains a C++-only accessor `const worldgen::db::WorldReader* reader() const noexcept` (null when closed). No SQL is added to the extension (V3).
+1. `WorldFile` gains a C++-only accessor `WorldFile::reader()`, `const worldgen::db::WorldReader* reader() const noexcept` (null when closed). No SQL is added to the extension (V3).
 2. The model calls `worldgen::history::load_history(*reader)` (P4-01 5.2) and keeps the result in a `HistoryState` (section 3.3).
 3. Outcome, by the returned value:
    - success: history status `loaded`; year Y = E;
@@ -147,6 +147,8 @@ Tooltips on the buttons name the action and the key (4.3). The scene holds no lo
 
 Handled in `ViewerScreen::_unhandled_key_input`, so a focused text field (the year field, the file dialog) keeps its keys; `accept_event` after a handled key.
 
+**Focus rule.** Godot's focus navigation takes the arrow keys (`ui_left`, `ui_right`) before `_unhandled_key_input` whenever a focusable Control has keyboard focus. So the year buttons, `%YearSlider` and the map view (`%MapView`) take no focus (`focus_mode` none in `viewer.tscn`; the legend list already takes none), and the arrow keys reach `_unhandled_key_input` while none of the focusable controls holds focus. The layer list and the meta tree keep their focus behaviour: while one of them has focus (after a click on it) the arrow keys act on that control, not on the year; the year field likewise keeps its keys while focused. The other keys of the table are not taken by focus navigation.
+
 | Key | Action |
 | --- | --- |
 | Left / Right | `step_year(−1)` / `step_year(+1)` |
@@ -165,7 +167,7 @@ Without history these keys do nothing.
 Year <Y> of <E>[ (the present)]   |   <age name>   |   phase p<id> <kind word>, <start>-<end>
 ```
 
-`(the present)` only when Y = E. The age part is left out when age is 0. At E (phase 0) the phase part reads `no phase`. Separators are three spaces, `|`, three spaces, as in the cell description. Example: `Year 2477 of 6000   |   The Age of Goblins   |   phase p5 flare_up, 2474-2523`.
+`(the present)` only when Y = E. The age part is the `YearState::age` of the timeline, left out when age is 0. At E the timeline gives the **last age** (P4-01 section 4 puts the present year in the last age), so the age part is present at E although the report's `[ages]` line of the last age ends at E − 1. At E (phase 0) the phase part reads `no phase`. Example at E for seed 42 at 512: `Year 6000 of 6000 (the present)   |   The Age of Orcs   |   no phase`. Separators are three spaces, `|`, three spaces, as in the cell description. Example: `Year 2477 of 6000   |   The Age of Goblins   |   phase p5 flare_up, 2474-2523`.
 
 `%YearCounts`, with history:
 
@@ -175,7 +177,7 @@ Year <Y> of <E>[ (the present)]   |   <age name>   |   phase p<id> <kind word>, 
 
 singular exactly when the number is 1.
 
-Without history: `%YearLabel` is `No history in this world.` and `%YearCounts` empty. Status `failed`: `%YearLabel` is `History not read: <code>: <message>` and `%YearCounts` empty.
+Without history: `%YearLabel` is `No history in this world.` and `%YearCounts` empty. Status `failed`: `%YearLabel` is `History not read: <code>: <message>` (worldgen's code name and message as kept by `HistoryState`, 3.1 step 3; `corrupt_layer` with the FatalError's text for a failure of `civilization_colours`, 3.1 step 4) and `%YearCounts` empty; the file label gains its line of 4.6.
 
 ### 4.5 Marks under the slider
 
@@ -187,8 +189,8 @@ Without history: `%YearLabel` is `No history in this world.` and `%YearCounts` e
 
 ### 4.7 Command line (arguments after `--`)
 
-- `--year <Y>`: after the world opens, `set_year(Y)`. With no history, or Y not a decimal integer in [0, E], the status label shows `--year <text>: not a year of this world (0 to <E>)` (or `... this world has no history`) as an error and the viewer stays at E.
-- `--bench`: section 11.2.
+- `--year Y`: after the world opens, `set_year(Y)`. With no history, or Y not a decimal integer in [0, E], the status label shows `--year <text>: not a year of this world (0 to <E>)` (or `... this world has no history`) as an error and the viewer stays at E.
+- `--bench`: section 11.2 (prints `UNMAPPED-BENCH:` lines and quits).
 - Check options: section 10.
 
 ## 5. Views and lists
@@ -241,7 +243,7 @@ The viewer never decides who holds what: holders come from `territory_holders` a
 
 1. For each race with at least one civilization alive at Y, in ascending race id: a heading row, label `<race plural>` (the `race` row's `plural`), colours empty; then each civilization of that race alive at Y, ascending id: label `<civilization name>`, colours `[colour]` (section 7).
 2. `border between holders`, colours `[0x000000]`.
-3. `border within a realm`, colours empty (the colour depends on the realm; section 8).
+3. `border within a realm (the realm's colour, darker)`, colours empty: no swatch, since the colour depends on the realm (section 8: dim of the realm's fill).
 4. A heading row `free land`, colours empty; then every row of `composite_legend(Composite::regions, biomes)` except its `region border` row, in its order (biome rows of land biomes, then the water rows W of P4-02 4.4).
 
 The screen shows a row with empty colours as a non-selectable heading with no swatch. The legend is rebuilt on every year change while `territory` is selected (step 4 of 3.4).
@@ -420,13 +422,13 @@ Everything it checks today stays, with the same messages, except where a count o
 2. **New: geography-only world**: `worldgen-cli generate --seed 42 --map-size 512 --data <repo>/game/data --until regions` into `<work>/geo/`; its layers listed and rendered as for the real world, composites `map`, `biomes`, `regions`. Viewer run with `--expect-composites 3 --expect-history none`.
 3. Real world (`--seed 42 --map-size 512`), as today, plus:
    - `worldgen-cli report --db <world> --history --level full --out <real>/history.txt`;
-   - from it (cmake string parsing): E from the `[settings]`/`[stats]` line `end_year = <E>`; the age start years from the `[ages]` lines `a<id> <name>: <start>-<end>, …`; the year F of the first chronicle line matching `^([0-9]+)(-[0-9]+)? e[0-9]+ region_ceded/`;
+   - from it (cmake string parsing): E from the `[stats]` line `end_year = <E>` only (`[settings]` has `history_span`, not `end_year`); the age start years from the `[ages]` lines `a<id> <name>: <start>-<end>, …`; the year F of the first chronicle line matching `^([0-9]+)(-[0-9]+)? e[0-9]+ region_ceded/`;
    - **world content asserts** (P4-00 7), each a FATAL_ERROR naming the missing feature and saying "choose another seed and record it in gdext/README.md": `[stats]` `events_region_ceded` ≥ 1, `wars` ≥ 1, `settlements_ruined` ≥ 1, `civilizations_ended` ≥ 1;
    - the year list L = {0, every age start, F − 1, F, floor(E / 2), E − 1, E}, ascending, each once;
    - `render --composite territory --out <real>/composite.territory.png` (default year E: the existing per-view loop compares the view at the opening year with it), and for each Y in L `render --composite territory --year Y --out <real>/territory-<Y>.png`;
    - the viewer run adds `--expect-composites 4` (was 3), `--expect-history loaded`, `--expect-end-year <E>`, `--expect-years <L comma-separated>`, `--history-report <real>/history.txt`.
 
-Seed 42 at 512 gives L = {0, 2074, 2482, 2483, 3000, 3242, 4243, 4969, 5596, 5999, 6000} at 0.20.0 (11 renders, about half a second).
+Seed 42 at 512 gives L = {0, 2074, 2482, 2483, 3000, 3242, 4243, 4969, 5596, 5999, 6000} at 0.21.0, as at 0.20.0 (11 renders, about half a second).
 
 ### 10.2 New checks in the viewer (`viewer_check.cpp`)
 
@@ -439,10 +441,10 @@ With `--expect-history none` (pattern and geography-only worlds):
 With `--expect-history loaded` (real world):
 
 - H1 status `loaded`; `get_end_year()` = `--expect-end-year`; the slider's min 0, max E; the world opened at Y = E (`get_year()`, slider value and field value all E); the selected view is `territory` and is the first entry under Composites.
-- H2 For each Y in `--expect-years`, set through the slider (`%YearSlider.set_value(Y)`, so the screen's wiring is exercised): `get_year()` = Y; the map view's image equals `territory-<Y>.png` pixel for pixel (the existing `compare_images`); `%YearLabel` equals the text of 4.4 with the age name and phase taken from the report's `[ages]` and `[phases]` lines covering Y (phase: the `p<id> a<age> <kind> <start>-<end>, …` line with start ≤ Y ≤ end; none at E); the territory legend's civilization rows are exactly the civilizations alive at Y according to the report's `[civilizations]` blocks (`c<id> <name>`, `  founded: <f> …`, `  fate: ended in <e>, …` or `  fate: alive in …`: alive iff f ≤ Y and not ended at or before Y), by name, in the order of 6.4, each under the heading of its race (`  race: <Name> (ra<id>)`).
+- H2 For each Y in `--expect-years`, set through the slider (`%YearSlider.set_value(Y)`, so the screen's wiring is exercised): `get_year()` = Y; the map view's image equals `territory-<Y>.png` pixel for pixel (the existing `compare_images`); `%YearLabel` equals the text of 4.4 with the age name and phase taken from the report's `[ages]` and `[phases]` lines covering Y (age: the `[ages]` line with start ≤ Y ≤ end, and at Y = E the last `[ages]` line, 4.4; phase: the `p<id> a<age> <kind> <start>-<end>, …` line with start ≤ Y ≤ end; none at E); the territory legend's civilization rows are exactly the civilizations alive at Y according to the report's `[civilizations]` blocks (`c<id> <name>`, `  founded: <f> …`, `  fate: ended in <e>, …` or `  fate: alive in …`: alive iff f ≤ Y and not ended at or before Y), by name, in the order of 6.4, each under the heading of its race (`  race: <Name> (ra<id>)`).
 - H3 At E: for every `[present]` line `c<id> <name>: <n> region[s], …`, the number of regions whose `get_region_holding` names civilization `<id>` equals n; the regions held by no civilization of `[present]` are free.
-- H4 Steps, from Y = E: `step_event(+1)` is false; `step_event(−1)` gives the year of the last chronicle event line (the largest start year in `history.txt`); from Y = 0, `step_holder_change(+1)` gives the smallest year > 0 at which some region's `get_region_holding` differs from the year before (found by the check stepping `set_year` year by year from 0, through the model), and it is ≤ F; `step_holder_change(−1)` from F + 1 gives F; `step_year(+25)` from E − 10 gives E; `step_year(−25)` from 10 gives 0. Each step emitted `year_changed` exactly once (counted by a connected callable), and a `set_year` to the current year emitted none.
-- H5 Keyboard: with no text field focused, Right from E − 1 gives E; Shift+Left from E gives E − 25; Home gives 0; End gives E; Page Up from E gives the same year as H4's `step_event(−1)`.
+- H4 Steps, from Y = E: `step_event(+1)` is false; `step_event(−1)` gives the year of the last chronicle event line (the largest start year in `history.txt`); from Y = 0, `step_holder_change(+1)` gives the smallest year > 0 at which some region's `get_region_holding` differs from the year before (found by the check stepping `set_year` year by year from 0, through the model), and it is ≤ F, where the viewer check takes F itself from `--history-report`: the start year of the first chronicle line of kind `region_ceded` (the same line 10.1 reads); `step_holder_change(−1)` from F + 1 gives F; `step_year(+25)` from E − 10 gives E; `step_year(−25)` from 10 gives 0. Each step emitted `year_changed` exactly once (counted by a connected callable), and a `set_year` to the current year emitted none.
+- H5 Keyboard: with no control focused (the check releases focus first, 4.3 focus rule), Right from E − 1 gives E; Shift+Left from E gives E − 25; Home gives 0; End gives E; Page Up from E gives the same year as H4's `step_event(−1)`.
 - H6 Hover: at Y = E, the first cell in row-major order whose region is held (by `get_region_holding`) and the first whose region is free; each description ends with the text of 6.1 for that holding (civilization name from the report's `[civilizations]` block of that id; `since` as the model's holding); the same held cell at Y = 0 ends with the 6.1 text of its holding at 0. Then `hover_cell(−1, −1)` restores the prompt, as today.
 - H7 Colours: for every civilization, `get_civilization_info(c).colour` equals the colour the library gives (`civilization_colours` of the check's own `load_history` of the same file; the check may call the library directly, P4-00 7: library correctness is doctest's job, the check proves the wiring); and every swatch of the territory legend equals its civilization's colour.
 - H8 Year marks: `get_year_marks()` holds one `awakening` per age start year of `[ages]`, one `phase` per `[phases]` line at its start, and one `present` at E, in ascending year.
@@ -511,3 +513,14 @@ r2 (2026-11-23, after library integration on `p4/03-int`; corrections to match t
 4. 8.2, 9.2: a cell drawn by step 3 or 4, or with e < 0, is kind 0 with region, east and south 0; the dimmed colour is `fill[v]` of the cell's own region.
 5. 9.5: `history_report.cpp` still prints `?` for a kind whose `phase_kind_word` is empty.
 6. 3.5, 9.5: the named constants `SettlementStatus` and `PhaseKind` are given beside the numbers.
+
+r3 (2026-11-23, after the viewer part on `p4/03-viewer`; corrections to match the code, one legend text changed):
+
+1. 4.4, H2: the age of the present is the last age, as the timeline gives it (P4-01 section 4); the readout at E reads e.g. `Year 6000 of 6000 (the present)   |   The Age of Orcs   |   no phase`, and H2 takes the last `[ages]` line at E (proposals, "Viewer v1, P4-03: the year readout at the present").
+2. 10.1: E is read from the `[stats]` line `end_year` only; `[settings]` has `history_span`.
+3. H4: the viewer check takes F from the report's chronicle, the first `region_ceded` line.
+4. Header, 10.1: the 512 world's figures at 0.21.0 (11 civilizations, 1 ended, 32 wars, 10 ruined settlements, 14 of 15 regions held at E); E, the age starts, F and L unchanged from 0.20.0; P4-01 timings stay as measured at 0.20.0.
+5. 4.3, H5: the focus rule: the year buttons, the slider and the map view take no focus, so the arrow keys reach `_unhandled_key_input`; while the layer list or the meta tree has focus the arrows act on it.
+6. 4.4: the `failed` texts as built, `History not read: <code>: <message>` and the file label line `history: <code>: <message>` (4.6), with `corrupt_layer` for a failure of `civilization_colours`.
+7. 3.1, 4.7: `WorldFile::reader()`, `--year Y` and `--bench` named as built (`HistoryState` and `YearMarks` were already named in 2, 3.3 and 4.5).
+8. 6.4: the legend row reads `border within a realm (the realm's colour, darker)`, still without a swatch (a code change: the viewer currently writes `border within a realm`).
