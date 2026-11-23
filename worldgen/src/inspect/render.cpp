@@ -860,6 +860,7 @@ RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::L
     out.border.assign(out.colour.size(), 0U);
     out.east.assign(out.colour.size(), 0U);
     out.south.assign(out.colour.size(), 0U);
+    out.unbordered.assign(out.colour.size(), Rgb{0, 0, 0});
     // P0-04 amendment 18 (e): a cell with region v > 0 whose E or S
     // neighbour has a region w > 0, w != v, becomes black.
     const std::vector<std::uint16_t>& ids = *region.get_if<std::uint16_t>();
@@ -875,6 +876,7 @@ RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::L
             const bool east = x + 1U < w && ids[i + 1U] != 0U && ids[i + 1U] != v;
             const bool south = y + 1U < h && ids[i + w] != 0U && ids[i + w] != v;
             if (east || south) {
+                out.unbordered[i] = out.colour[i];
                 out.colour[i] = Rgb{0, 0, 0};
                 out.border[i] = 1U;
                 // P4-03 8.2: the neighbour values that made it a border.

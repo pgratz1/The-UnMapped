@@ -380,7 +380,7 @@ void check_without_history(Checker& check, ViewerScreen& screen, const godot::St
                  "N3 the hover text names no holding: " + hover_text);
 }
 
-// --- H1 to H8 -------------------------------------------------------------------
+// --- H1 to H9 -------------------------------------------------------------------
 
 void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options) {
     godot::Ref<ViewerModel> model = screen.get_model();
@@ -637,6 +637,70 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
             swatches_ok = swatches_ok && found;
         }
         check.expect(swatches_ok, "H7 every swatch of the territory legend is its civilization's colour");
+
+        // H9 (P4-03 r4 10.2): the rows after the last civilization row, at E,
+        // against the regions legend of the same world.
+        std::vector<std::pair<std::string, std::vector<int64_t>>> want = {
+            {"border between holders", {0}},
+            {"border within a realm (the realm's colour, darker)", {}},
+            {"border between free regions (the land's colour, half strength)", {}},
+            {"free land", {}},
+        };
+        std::vector<worldgen::inspect::LegendEntry> regions_rows;
+        if (world.is_valid()) {
+            regions_rows =
+                worldgen::inspect::composite_legend(worldgen::inspect::Composite::regions, world->biome_records());
+        }
+        constexpr std::size_t water_rows = 3;
+        const bool regions_shape = regions_rows.size() >= 1U + water_rows && regions_rows[0].label == "region border";
+        if (regions_shape) {
+            const auto add = [&want](const worldgen::inspect::LegendEntry& row) {
+                std::vector<int64_t> colours;
+                for (const std::uint32_t c : row.colours) {
+                    colours.push_back(int64_t{c});
+                }
+                want.emplace_back(row.label, std::move(colours));
+            };
+            const std::size_t water = regions_rows.size() - water_rows;
+            for (std::size_t i = 1; i < water; ++i) {
+                add(regions_rows[i]);
+            }
+            want.emplace_back("water", std::vector<int64_t>{});
+            for (std::size_t i = water; i < regions_rows.size(); ++i) {
+                add(regions_rows[i]);
+            }
+        }
+        int64_t tail = -1;
+        for (int64_t i = 0; i < legend.size(); ++i) {
+            const godot::Dictionary row = legend[i];
+            if (to_utf8(row["label"]) == "border between holders") {
+                tail = i;
+                break;
+            }
+        }
+        std::string tail_diff;
+        if (!regions_shape) {
+            tail_diff = "the regions legend does not have its border row and three water rows";
+        } else if (tail < 0) {
+            tail_diff = "no row 'border between holders'";
+        } else if (legend.size() - tail != static_cast<int64_t>(want.size())) {
+            tail_diff = std::to_string(legend.size() - tail) + " rows, want " + std::to_string(want.size());
+        } else {
+            for (std::size_t k = 0; k < want.size() && tail_diff.empty(); ++k) {
+                const godot::Dictionary row = legend[tail + static_cast<int64_t>(k)];
+                const std::string label = to_utf8(row["label"]);
+                const godot::PackedInt32Array colours = row["colours"];
+                bool same = label == want[k].first && colours.size() == static_cast<int64_t>(want[k].second.size());
+                for (int64_t j = 0; same && j < colours.size(); ++j) {
+                    same = (int64_t{colours[j]} & 0xFFFFFF) == want[k].second[static_cast<std::size_t>(j)];
+                }
+                if (!same) {
+                    tail_diff = "row " + std::to_string(k) + " '" + label + "', want '" + want[k].first + "'";
+                }
+            }
+        }
+        check.expect(tail_diff.empty(), "H9 the territory legend ends with the border, free land and water rows" +
+                                            (tail_diff.empty() ? godot::String() : ": " + to_godot(tail_diff)));
     }
 
     // H8: year marks.
@@ -859,7 +923,23 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
             ok = ok && record != nullptr && text.contains(godot::String("biome ") + to_godot(record->name));
         }
         if (region_id > 0) {
-            const godot::String region_name = world->get_region_name(region_id);
+            // P4-01 r3 16.5: with history the name in force at the year shown,
+            // from the check's own read of the file; else the geographic name.
+            godot::String region_name = world->get_region_name(region_id);
+            if (model->has_history()) {
+                try {
+                    auto reader = worldgen::db::WorldReader::open(to_utf8(model->get_world_path()));
+                    if (reader.ok()) {
+                        auto loaded = worldgen::history::load_history(reader.value());
+                        if (loaded.ok()) {
+                            region_name = to_godot(
+                                std::string(loaded.value().timeline.region_name(region_id, model->get_year())));
+                        }
+                    }
+                } catch (const std::exception&) {
+                    region_name = godot::String();  // fails the check below
+                }
+            }
             ok = ok && !region_name.is_empty() &&
                  text.contains(godot::String("region {0} {1}").format(godot::Array::make(region_id, region_name)));
         }

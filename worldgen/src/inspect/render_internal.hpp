@@ -63,6 +63,9 @@ struct RegionsCells {
     // neighbour makes it a border cell, else 0 (P4-03 8.2); 0 elsewhere.
     std::vector<std::uint16_t> east;
     std::vector<std::uint16_t> south;
+    // On a border cell, the colour it had before the border pass blackened
+    // it (P4-03a: the unbordered colour U of 8.2 rule 3); (0, 0, 0) elsewhere.
+    std::vector<Rgb> unbordered;
 };
 [[nodiscard]] RegionsCells regions_composite_cells(const db::LayerGrid& elevation, const db::LayerGrid* water,
                                                    const db::LayerGrid* river, const db::LayerGrid* flow_dir,
