@@ -78,7 +78,7 @@ std::string event_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history-report") {
 
-TEST_CASE("P3-07 r19 25.13 item 1: the header is `# worldgen history v2` at both levels") {
+TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v3` at both levels") {
     // the spec names no library constant for the header: the text is checked
     for (const std::string& t : {summary(), full()}) {
         const std::vector<std::string> lines = hrtest::lines_of(t);
@@ -233,17 +233,15 @@ TEST_CASE("P3-07 r19 25.13 item 8: the claim note dates the grievance from the r
     CHECK_FALSE(event_line(f, 39).empty());
 }
 
-TEST_CASE("P3-07 r19 25.13 item 9: refuges marked hidden or found; dropped claims are not standing (25.9)") {
+TEST_CASE("P3-07 r19 25.13 item 9, r21 26.3: only the refuges hidden at E are listed; dropped claims are not standing") {
     const std::vector<std::string> p = block(summary(), "[present]");
-    CHECK(from(p, "refuges: 3", 4) ==
+    // r21 26.3 (v3): s16's refuge_hidden ends at E - 1 (listed); s17's ended earlier and s18 has none (counted only)
+    CHECK(from(p, "hidden refuges: 1 of 3 founded by flight", 2) ==
           std::vector<std::string>{
-              "refuges: 3",
+              "hidden refuges: 1 of 3 founded by flight",
               "  s16 Hidden Hole in Dun Sike (rg9): Grok (c7), population 150, founded 1850 by flight from Grokmire "
-              "(s15), e53; hidden",
-              "  s17 Found Hole in Bel Moor (rg3): Grok (c7), population 150, founded 1860 by flight from Belmoor (s3), "
-              "e55; found 1991",
-              "  s18 Plain Hole in Grok Fell (rg8): Grok (c7), population 100, founded 1870 by flight from Fenwold "
-              "(s14), e57"});
+              "(s15), e53"});
+    CHECK_FALSE(contains_line(p, "refuges: 3"));
     // e37 is closed by its claim_dropped (test (iv)); e31 and e32 by the declarations of their pairs (ii); the fresh
     // claims are pursued; e58 stands
     CHECK(from(p, "standing claims: 1", 2) ==

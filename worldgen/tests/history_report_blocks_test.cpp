@@ -315,9 +315,10 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
                                    "ruins: 1",
                                    "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked by Finen (c1); "
                                    "last held by The Skib Horde (c2)",
-                                   "refuges: 0",
+                                   "hidden refuges: 0 of 0 founded by flight",   // P3-07 r21 26.3
                                    "open wars: 0",
-                                   "standing claims: 0"});
+                                   "standing claims: 0",
+                                   "renamed regions: 0"});   // r21 26.2
     CHECK(block(full("h1-war-and-ruin"), "[present]") ==
           std::vector<std::string>{
               "year: 3000",
@@ -351,9 +352,10 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
               "ruins: 1",
               "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked by Finen (c1); last held by "
               "The Skib Horde (c2)",
-              "refuges: 0",
+              "hidden refuges: 0 of 0 founded by flight",   // P3-07 r21 26.3
               "open wars: 0",
-              "standing claims: 0"});
+              "standing claims: 0",
+              "renamed regions: 0"});   // r21 26.2
 }
 
 TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
@@ -431,16 +433,16 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                        "regions: 2; held 0, free 2",
                                        "settlements: 0; thriving 0, declining 0, ruined 0, faded 0",
                                        "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
-                                       "largest settlement: none", "ruins: 0", "refuges: 0", "open wars: 0",
-                                       "standing claims: 0"});
+                                       "largest settlement: none", "ruins: 0", "hidden refuges: 0 of 0 founded by flight",
+                                       "open wars: 0", "standing claims: 0", "renamed regions: 0"});
     CHECK(block(full("h2-minimal"), "[present]") ==
           std::vector<std::string>{"year: 2000", "civilizations alive: 1 of 1",
                                    "c1 The Kingdom of Alird: 0 regions, 0 settlements, population 0",
                                    "regions: 2; held 0, free 2", "  rg1 Northeast Downs: free", "  rg2 Isle of Rest: free",
                                    "settlements: 0; thriving 0, declining 0, ruined 0, faded 0",
                                    "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
-                                   "largest settlement: none", "ruins: 0", "refuges: 0", "open wars: 0",
-                                   "standing claims: 0"});
+                                   "largest settlement: none", "ruins: 0", "hidden refuges: 0 of 0 founded by flight",
+                                   "open wars: 0", "standing claims: 0", "renamed regions: 0"});
     const auto st = hrtest::stats_of(full("h2-minimal"));
     CHECK(st.at("simulated_years") == 2000);
     CHECK(st.at("simulated_permille") == 1000);

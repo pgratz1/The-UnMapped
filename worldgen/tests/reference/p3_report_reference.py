@@ -1466,7 +1466,7 @@ def ddl_statements():
     with open(SCHEMA_MD, encoding="utf-8") as f:
         text = f.read()
     import re
-    block = re.split(r"## 1\. DDL at version \d+", text, 1)[1].split("```", 2)[1]
+    block = re.split(r"## 1\. DDL at version \d+", text, maxsplit=1)[1].split("```", 2)[1]
     out = [s for s in block.splitlines() if s.startswith("CREATE TABLE")]
     if not V3:   # schema 7 before 0.22.0: no region_name (P3-04 r21 23.4)
         out = [s for s in out if not s.startswith("CREATE TABLE region_name ")]

@@ -123,20 +123,18 @@ TEST_CASE("P3-07 r17 24.2, 24.3, 24.11 items 1 and 6 on H8: units, the summary s
 
 TEST_CASE("P3-07 r17 24.7 with r19 25.3, 24.11 item 10 on H8: ruins by sack and by abandonment, refuges") {
     const std::vector<std::string> p = block(summary("h8-frames"), "[present]");
-    const std::vector<std::string> tail(p.end() - 9, p.end());
+    // P3-07 r21 26.3 (v3): no refuge_hidden in this fixture, so both refuges are counted and none is listed
+    const std::vector<std::string> tail(p.end() - 8, p.end());
     CHECK(tail == std::vector<std::string>{
                       "ruins: 3",
                       "  s3 Branfield in Bran Downs (rg2): ruined 1005, e21 sacked by Alird (c1); last held by "
                       "Brannock (c2)",
                       "  s7 Dunwick in Dun Moor (rg4): ruined 1203, e33 sacked by Alird (c1); last held by Dunmark (c4)",
                       "  s9 Old Alird in Alird Vale (rg1): ruined 500, e14 abandoned; last held by Alird (c1)",
-                      "refuges: 2",
-                      "  s5 Hidden Brook in Bran Downs (rg2): Brannock (c2), population 40, founded 1006 by flight from "
-                      "Branfield (s3), e23",
-                      "  s10 Dun Hollow in Dun Moor (rg4): Dunmark (c4), population 30, founded 1204 by flight from "
-                      "Dunwick (s7), e35",
+                      "hidden refuges: 0 of 2 founded by flight",
                       "open wars: 0",
-                      "standing claims: 0"});
+                      "standing claims: 0",
+                      "renamed regions: 0"});
     CHECK(contains_line(block(full("h8-frames"), "[present]"),
                         "  s9 Old Alird: hamlet, ruined, population 0, no owner, at 90 90 in Alird Vale (rg1), founded 0 "
                         "by Alird (c1), ruined 500, e14, last held by Alird (c1)"));
@@ -242,9 +240,7 @@ TEST_CASE("P3-07 r17 24.3 item 7, 24.7, 24.11 items 3 and 10 on H9: claims, ruin
               "  s5 Branford in Bran Downs (rg2): ruined 1205, e32 sacked by Alird (c1); last held by Dunmark (c4)",
               "  s7 Cenwick in Cen Wold (rg3): ruined 900, e30 abandoned; last held by Cendrel (c3)",
               "  s10 Skabpit in Skab Hollow (rg6): ruined 2650, e53 sacked by Alird (c1); last held by Skab (c6)",
-              "refuges: 1",
-              "  s11 Deep Hole in Skab Hollow (rg6): Skab (c6), population 20, founded 2651 by flight from Skabpit "
-              "(s10), e54",
+              "hidden refuges: 0 of 1 founded by flight",   // r21 26.3: no refuge_hidden in this fixture
               "open wars: 2",
               "  e51 Mog (c7) against Ruk (c8) over Ruk Crag (rg8), since 2500",
               "  e52 Alird (c1) against Skab (c6) over Skab Hollow (rg6), since 2600",
@@ -254,7 +250,8 @@ TEST_CASE("P3-07 r17 24.3 item 7, 24.7, 24.11 items 3 and 10 on H9: claims, ruin
               "standing claims: 3",
               "  e47 2000 Skab (c6) on Mog (c7): Mog Heath (rg7), for Mogfort (s12), Mogbrook (s13)",
               "  e48 2100 Mog (c7) on Skab (c6): Skab Hollow (rg6)",
-              "  e55 2700 Cendrel (c3) on Brannock (c2): Bran Downs (rg2)"});
+              "  e55 2700 Cendrel (c3) on Brannock (c2): Bran Downs (rg2)",
+              "renamed regions: 0"});   // r21 26.2
 }
 
 TEST_CASE("P3-07 r17 24.3 item 3, 24.11 item 5 on H10: the age floor takes the age's own race first") {
