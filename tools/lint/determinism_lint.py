@@ -109,7 +109,7 @@ SUPPRESS_RE = re.compile(r"determinism-lint\s*:\s*allow\s*\(([^)]*)\)\s*(?:--\s*
 SUPPRESS_MARK_RE = re.compile(r"determinism-lint\s*:")
 
 # Kinds of rule.
-CODE, SQL, CMAKE, REPO = "code", "sql", "cmake", "repo"
+CODE, SQL, LITERAL, CMAKE, REPO = "code", "sql", "literal", "cmake", "repo"
 
 
 @dataclass(frozen=True)
@@ -838,6 +838,19 @@ RULES: tuple = (
         "reason the order cannot matter (one row, an aggregate, ORDER BY appended later)",
         kind=SQL, only_dirs=SQL_DIRS, areas=LIB_AREAS, review=True,
     ),
+    # Source encoding (added by the P4-02 audit): a byte of 0x80 or more
+    # written directly in a literal is turned into execution bytes through
+    # the compiler's source and execution character sets (/utf-8 on MSVC,
+    # the UTF-8 default of GCC and Clang, overridable by -finput-charset or
+    # an editor saving in another encoding). Escapes fix the bytes.
+    Rule(
+        "non-ascii-literal",
+        "a character of U+0080 or above (or an invalid UTF-8 byte) inside a string or character literal, raw "
+        "strings and prefixed literals included; comments are not checked",
+        "non-ASCII character in a literal: its bytes depend on the source encoding; write the UTF-8 bytes as "
+        "hex escapes, splitting the literal after the last one (\"\\xC2\\xB0\" \"C\", P4-02 8)",
+        kind=LITERAL,
+    ),
     # Build configuration.
     Rule(
         "cmake-fp-flag",
@@ -888,6 +901,7 @@ class Lexed:
     code: str  # same length/lines as input; comments and literal bodies are spaces
     comments: list = field(default_factory=list)
     strings: list = field(default_factory=list)  # StringLit, string literals only (not char)
+    chars: list = field(default_factory=list)  # StringLit, character literals
 
 
 def _is_ident(c: str) -> bool:
@@ -907,6 +921,7 @@ def lex(src: str) -> Lexed:
     out = list(src)
     comments: list = []
     strings: list = []
+    chars: list = []
     n = len(src)
     i = 0
     line = 1
@@ -1024,11 +1039,13 @@ def lex(src: str) -> Lexed:
             end = j + 1 if j < n and src[j] == c else j
             if c == '"':
                 strings.append(StringLit(i, end, src[i + 1:min(j, n)], False))
+            else:
+                chars.append(StringLit(i, end, src[i + 1:min(j, n)], False))
             blank(i + 1, min(j, n))
             i = end
             continue
         i += 1
-    return Lexed("".join(out), comments, strings)
+    return Lexed("".join(out), comments, strings, chars)
 
 
 # ---------------------------------------------------------------------------
@@ -1272,7 +1289,7 @@ def scan_text(src: str, relpath: str) -> list:
         lo = bisect.bisect_right(line_starts, pos) - 1
         return lo + 1, pos - line_starts[lo] + 1
 
-    active = [r for r in RULES if r.kind in (CODE, SQL) and r.applies(relpath)]
+    active = [r for r in RULES if r.kind in (CODE, SQL, LITERAL) and r.applies(relpath)]
     active_names = {r.name for r in active}
     raw: list = []
     includes = [(m.group(1).strip(), m.start(1) - 1) for m in _INCLUDE_LINE.finditer(code)]
@@ -1299,6 +1316,16 @@ def scan_text(src: str, relpath: str) -> list:
             if rule in active_names:
                 ln, col = pos_to_line_col(pos)
                 raw.append(Finding(relpath, ln, col, rule, f"{RULES_BY_NAME[rule].message} [{what}]"))
+
+    if "non-ascii-literal" in active_names:
+        msg = RULES_BY_NAME["non-ascii-literal"].message
+        for lit in sorted(lx.strings + lx.chars, key=lambda x: x.start):
+            body_start = src.find("(", lit.start) + 1 if lit.raw else lit.start + 1
+            for k, ch in enumerate(lit.body):
+                if ord(ch) >= 0x80:
+                    ln, col = pos_to_line_col(body_start + k)
+                    raw.append(Finding(relpath, ln, col, "non-ascii-literal", msg))
+                    break
 
     sups, problems = _parse_suppressions(lx, code_lines, relpath)
     kept: list = []

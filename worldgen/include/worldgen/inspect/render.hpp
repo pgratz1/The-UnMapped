@@ -65,7 +65,9 @@ inline constexpr std::array<Palette, 12> ALL_PALETTES = {
 // (P1-03 9), biome -> biome (P1-04 9), fertility, ore, timber, fresh_water,
 // forage, habitability -> score and walk_area -> ids (P1-05 9), region ->
 // ids (P1-06 9); every other
-// layer (water_depth included) -> gray.
+// layer (water_depth included) -> gray. Read from the layer catalogue
+// (worldgen/inspect/layer_catalogue.hpp, LayerSpec::palette; P4-02 4.2),
+// the one place the mapping is defined.
 [[nodiscard]] Palette registered_palette(std::string_view layer_name) noexcept;
 
 // Whether a palette suits a grid (P0-04 amendment 16b: "a named palette

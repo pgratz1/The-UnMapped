@@ -137,6 +137,12 @@ line of the first literal of the group.
 | `sql-real` | `REAL`, `FLOAT`, `DOUBLE`, `NUMERIC`, `DECIMAL` as words in SQL (a column type or a `CAST`) |
 | `sql-unordered-select` | **review**: a `SELECT` with no `ORDER BY` in the same joined text. Suppress with the reason order cannot matter: at most one row (unique key, aggregate without `GROUP BY`), or `ORDER BY` appended to a built string later |
 
+### Source encoding
+
+| Rule | Reports | Applies to |
+| --- | --- | --- |
+| `non-ascii-literal` | a character of U+0080 or above (or a byte that is not valid UTF-8) inside a string or character literal, including raw strings and literals with a prefix (`u8`, `u`, `U`, `L`); one finding per literal, at its first such character. Comments are not checked. The bytes of such a literal depend on the compiler's source and execution character sets (`/utf-8` on MSVC, the UTF-8 default of GCC and Clang, which `-finput-charset` or an editor re-saving the file can change). Write the UTF-8 bytes as hex escapes and split the literal after the last one, because a hex digit would otherwise extend the escape: `"\xC2\xB0" "C"`, not `"\xC2\xB0C"` (added by the P4-02 audit) | library, CLI |
+
 ### Build configuration
 
 | Rule | Reports | Applies to |
@@ -237,6 +243,7 @@ but `history-sequential-rng`, `history-live-iteration` and `history-held-referen
 | `bad_suppressions.cpp` | valid suppressions silence; malformed, reasonless, unknown-rule and unused ones are reported |
 | `bad_concurrency.cpp` | `thread`, `shared-state`, `thread-identity`, `hardware-concurrency`, `unordered-reduction`, `heap-order` (and a suppressed heap) |
 | `bad_platform_io.cpp` | `fp-pragma`, `environment`, `directory-iteration`, `number-text`, `stream-format`, `sqlite-value-type`, `unchecked-write`, `two-draws` |
+| `bad_encoding.cpp` | `non-ascii-literal` in plain, joined, raw, prefixed and character literals; near misses (non-ASCII in comments, the hex-escape and `\u` forms, an escaped quote before the character) |
 | `bad_sql.cpp` | the SQL rules, as a file of `worldgen/src/db/`; joined and raw literals; near misses (`VACUUM INTO`, `journal_mode = MEMORY`, `'real'` in an SQL string, `REAL` in a message, lower-case prose) |
 | `bad_history.cpp` | `history-sequential-rng`, as a file of `worldgen/src/history/`: the `rng.hpp` include, `Rng` and `Rng::from_state`, `splitmix64_next(`; near misses (keyed draws, `Rng` in a comment and a literal, identifiers containing the names) |
 | `bad_history_live.cpp` | `history-live-iteration`, as a file of `worldgen/src/history/`: range-for over `civs()`, `settlements()` (a body without braces), `relations()` (structured bindings) and `civs_`; near misses (a loop that only reads, ids up to a count taken first, changes collected and applied after the loop, a founding after the loop, the pattern in a comment and a literal) |

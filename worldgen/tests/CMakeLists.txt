@@ -71,6 +71,16 @@ target_sources(worldgen-tests PRIVATE
 # Output-location handling after the P0-04 audit (dangling symbolic links).
 target_sources(worldgen-tests PRIVATE generate_output_test.cpp)
 
+# The layer catalogue and region names in the library (spec P4-02 section 9):
+# the table, palettes, display forms, cell_value, legends, available
+# composites and region names on hand-made inputs (-other), and the
+# generated-world checks of invariant 2 (shard layer-catalogue: the shipped
+# seed-42 512 world, a --until hydrology world and the test-pattern world).
+target_sources(worldgen-tests PRIVATE
+    inspect_layer_catalogue_test.cpp
+    inspect_layer_catalogue_worlds_test.cpp
+)
+
 # P1 inspection tools before any geography stage (spec P1-00 section 10.2
 # and 10.3 with appendix C, P0-04 amendment 16): the render palettes, the
 # composite map, report v2 [geography], codec_name and the render_rgb
@@ -436,6 +446,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
     SHARD balance 20 "*history_balance_*"
     SHARD history-report 20 "*history_report_*"
+    SHARD layer-catalogue 8 "*inspect_layer_catalogue_worlds_test.cpp"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
