@@ -1,6 +1,7 @@
 // The generator engineer's checks of spec P4-03 (not the stage's tests, which
 // are the timeline_* files): the 4 x 2 example of 8.2, entries of the table of
-// 7.2 and phase_kind_word of 9.5.
+// 7.2 and phase_kind_word of 9.5; and of P4-03a (P4-03 r4): the examples of
+// 8.2 for free-land borders and the luma split.
 
 #include <doctest/doctest.h>
 
@@ -49,8 +50,8 @@ TEST_CASE("P4-03 8.2: the 4 x 2 example") {
     for (std::uint32_t y = 0; y < 2U; ++y) {
         CHECK(pixel(img, 4, 0, y) == Rgb{30, 142, 52});
         CHECK(pixel(img, 4, 1, y) == Rgb{0, 0, 0});
-        CHECK(pixel(img, 4, 2, y) == Rgb{150, 230, 150});
-        CHECK(pixel(img, 4, 3, y) == Rgb{150, 230, 150});
+        CHECK(pixel(img, 4, 2, y) == Rgb{130, 215, 130});
+        CHECK(pixel(img, 4, 3, y) == Rgb{130, 215, 130});
     }
     // No holders: every border black (P4-01's image).
     const std::vector<std::uint8_t> plain = wi::render_territory(base, fill, {}, 1);
@@ -63,11 +64,51 @@ TEST_CASE("P4-03 8.2: the 4 x 2 example") {
 TEST_CASE("P4-03 7.2: some entries, the wrap and the fallback") {
     CHECK(wi::race_civilization_colour("human", 0) == Rgb{0, 190, 195});
     CHECK(wi::race_civilization_colour("orc", 6) == Rgb{135, 15, 20});
-    CHECK(wi::race_civilization_colour("goblin", 3) == Rgb{205, 160, 60});
+    CHECK(wi::race_civilization_colour("goblin", 3) == Rgb{140, 155, 30});
+    CHECK(wi::race_civilization_colour("goblin", 1) == Rgb{235, 215, 90});
+    CHECK(wi::race_civilization_colour("human", 5) == Rgb{100, 215, 215});
     CHECK(wi::race_base_colour("faerie") == Rgb{175, 70, 225});
     CHECK(wi::race_civilization_colour("troll", 2) ==
           wi::civilization_shade(wi::race_base_colour("troll"), 2));
     CHECK_THROWS_AS((void)wi::race_civilization_colour("elf", -1), worldgen::FatalError);
+}
+
+TEST_CASE("P4-03a: free-land borders at half strength, the luma split") {
+    db::LayerGrid elevation = db::make_layer_grid(db::ElementType::i16, 4, 2);
+    elevation.values = std::vector<std::int16_t>(8, 10);
+    db::LayerGrid biome = db::make_layer_grid(db::ElementType::u8, 4, 2);
+    biome.values = std::vector<std::uint8_t>(8, 1);
+    db::LayerGrid region = db::make_layer_grid(db::ElementType::u16, 4, 2);
+    region.values = std::vector<std::uint16_t>{1, 2, 3, 3, 1, 2, 3, 3};
+    const std::vector<wi::BiomeColour> table = {{1, 0xE0D296}};  // steppe (224, 210, 150)
+    const wi::TerritoryBase base = wi::TerritoryBase::build(elevation, nullptr, nullptr, nullptr, biome, region, table);
+    const std::vector<std::optional<Rgb>> none(4);
+    // Every region free: borders half((224, 210, 150)) = (112, 105, 75).
+    const std::vector<std::uint8_t> all_free = wi::render_territory(base, none, std::vector<std::int64_t>(4, 0), 1);
+    for (std::uint32_t y = 0; y < 2U; ++y) {
+        CHECK(pixel(all_free, 4, 0, y) == Rgb{112, 105, 75});
+        CHECK(pixel(all_free, 4, 1, y) == Rgb{112, 105, 75});
+        CHECK(pixel(all_free, 4, 2, y) == Rgb{224, 210, 150});
+    }
+    // Holders empty: black, the regions composite.
+    CHECK(wi::render_territory(base, none, {}, 1) ==
+          wi::render_composite_regions(elevation, nullptr, nullptr, nullptr, biome, region, 1, table));
+    // Region 3 held, 1 and 2 free: (0, y) half, (1, y) black (one side held).
+    std::vector<std::optional<Rgb>> fill(4);
+    fill[3] = wi::race_civilization_colour("goblin", 1);
+    const std::vector<std::uint8_t> one = wi::render_territory(base, fill, std::vector<std::int64_t>{0, 0, 0, 1}, 2);
+    CHECK(pixel(one, 8, 1, 1) == Rgb{112, 105, 75});
+    CHECK(pixel(one, 8, 2, 3) == Rgb{0, 0, 0});
+    CHECK(pixel(one, 8, 5, 0) == Rgb{235, 215, 90});
+    // Inner border of goblin 1 (L 206): n = 10; of orc 0 (L 82): n = 12.
+    fill[1] = fill[2] = wi::race_civilization_colour("goblin", 1);
+    const std::vector<std::int64_t> same = {0, 1, 1, 2};
+    CHECK(pixel(wi::render_territory(base, fill, same, 1), 4, 0, 0) == Rgb{146, 134, 56});
+    fill[1] = fill[2] = wi::race_civilization_colour("orc", 0);
+    CHECK(pixel(wi::render_territory(base, fill, same, 1), 4, 0, 1) == Rgb{153, 22, 22});
+    // Held with no fill: black.
+    fill[1] = std::nullopt;
+    CHECK(pixel(wi::render_territory(base, fill, same, 1), 4, 0, 0) == Rgb{0, 0, 0});
 }
 
 TEST_CASE("P4-03 9.5: phase_kind_word") {

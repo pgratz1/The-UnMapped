@@ -9,7 +9,9 @@
 // TerritoryBase (kind, factor, region, E and S neighbour values) and every pixel of render_territory with
 // the holders are recomputed here from the layers (the cells drawn by steps 3 and 4 of the composite map
 // included) and the year state; item 4 (territory_holders) and item 6 (no holders, all free) on the same
-// worlds; the colours are race_civilization_colour's (7.4).
+// worlds; the colours are race_civilization_colour's (7.4). P4-03 r4 (P4-03a 7 item 6): dim is n = 10 when the
+// realm colour's luma L > 175, else 12; a kind-2 cell whose sides are all free is half(U), U its pixel in the
+// biomes composite; TerritoryBase's `half` is that value on kind-2 cells and black elsewhere.
 
 #include <doctest/doctest.h>
 
@@ -136,9 +138,16 @@ std::vector<bool> drawn_cells(const WorldLayers& l) {
     return drawn;
 }
 
+// P4-03 r4 7.5: L(c) = floor((77 R + 150 G + 29 B) / 256); 8.2: dim by 10/16 when L > 175, else 12/16.
+int luma(wi::Rgb c) { return (77 * c.r + 150 * c.g + 29 * c.b) / 256; }
 wi::Rgb dim(wi::Rgb c) {
-    return wi::Rgb{static_cast<std::uint8_t>(c.r * 12 / 16), static_cast<std::uint8_t>(c.g * 12 / 16),
-                   static_cast<std::uint8_t>(c.b * 12 / 16)};
+    const int n = luma(c) > 175 ? 10 : 12;
+    return wi::Rgb{static_cast<std::uint8_t>(c.r * n / 16), static_cast<std::uint8_t>(c.g * n / 16),
+                   static_cast<std::uint8_t>(c.b * n / 16)};
+}
+wi::Rgb half(wi::Rgb u) {
+    return wi::Rgb{static_cast<std::uint8_t>(u.r * 8 / 16), static_cast<std::uint8_t>(u.g * 8 / 16),
+                   static_cast<std::uint8_t>(u.b * 8 / 16)};
 }
 
 // P4-03 11.1 items 4, 6 and 9 on a world: territory_holders against the year state; TerritoryBase's cells
@@ -150,6 +159,10 @@ void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
     const WorldLayers layers = read_layers(r);
     const wi::TerritoryBase base = territory_base(layers);
     const std::vector<std::uint8_t> b1 = regions_composite(layers, 1);
+    const std::vector<std::uint8_t> u1 = wi::render_composite_biomes(
+        layers.elevation, layers.biome, layers.biome_table, layers.water ? &*layers.water : nullptr,
+        layers.river ? &*layers.river : nullptr, layers.flow_dir ? &*layers.flow_dir : nullptr, 1);
+    REQUIRE(u1.size() == b1.size());
     CHECK(wi::render_territory(base, {}, {}, 1) == b1);
     const std::vector<wi::Rgb> colours = wi::civilization_colours(h.tables);
     const auto* elev = layers.elevation.get_if<std::int16_t>();
@@ -180,8 +193,10 @@ void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
             const wi::TerritoryBase::Cell& c = base.cells()[i];
             const wi::Rgb b{b1[3 * i], b1[3 * i + 1], b1[3 * i + 2]};
             const std::uint32_t f = kind[i] != 0 ? wi::hillshade_factor(*elev, w, hh, cx, cy) : 0U;
+            const wi::Rgb want_half = kind[i] == 2 ? half(wi::Rgb{u1[3 * i], u1[3 * i + 1], u1[3 * i + 2]})
+                                                   : wi::Rgb{0, 0, 0};
             const bool ok = c.base == b && c.kind == kind[i] && std::uint32_t{c.factor} == f && c.region == (kind[i] != 0 ? v : 0) &&
-                            c.east == east[i] && c.south == south[i];
+                            c.east == east[i] && c.south == south[i] && c.half == want_half;
             if (!ok && ++bad_cells <= 5) {
                 FAIL_CHECK("TerritoryBase cell (" << cx << ", " << cy << "): kind " << int{c.kind} << " want "
                                                   << int{kind[i]} << ", region " << c.region << ", east " << c.east
@@ -208,7 +223,7 @@ void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
         const auto hold = [&](std::uint16_t v) { return v < holders.size() ? holders[v] : std::int64_t{0}; };
         const std::vector<std::uint8_t> img = wi::render_territory(base, fill, holders, 1);
         REQUIRE(img.size() == b1.size());
-        std::int64_t bad = 0, dimmed = 0;
+        std::int64_t bad = 0, dimmed = 0, halved = 0;
         for (std::uint32_t cy = 0; cy < hh; ++cy) {
             for (std::uint32_t cx = 0; cx < w; ++cx) {
                 const std::size_t i = std::size_t{cy} * w + cx;
@@ -221,6 +236,10 @@ void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
                            (south[i] == 0 || hold(south[i]) == hold(v))) {
                     want = wi::shade_colour(dim(*fill[v]), wi::hillshade_factor(*elev, w, hh, cx, cy));
                     ++dimmed;
+                } else if (kind[i] == 2 && hold(v) == 0 && (east[i] == 0 || hold(east[i]) == 0) &&
+                           (south[i] == 0 || hold(south[i]) == 0)) {
+                    want = half(wi::Rgb{u1[3 * i], u1[3 * i + 1], u1[3 * i + 2]});
+                    ++halved;
                 }
                 const wi::Rgb got{img[3 * i], img[3 * i + 1], img[3 * i + 2]};
                 if (!(got == want) && ++bad <= 5) {
@@ -229,11 +248,22 @@ void check_territory(const db::WorldReader& r, const wh::LoadedHistory& h) {
             }
         }
         CHECK(bad == 0);
-        MESSAGE("dimmed inner-border cells at " << y << ": " << dimmed);
-        // item 6: all free with all-zero holders is the regions composite; no holders draws every border black
+        MESSAGE("dimmed inner-border cells at " << y << ": " << dimmed << ", half-strength cells: " << halved);
+        // item 6: all free with all-zero holders is the regions composite but on kind-2 cells, half(U) (r4);
+        // no holders draws every border black
         const std::vector<std::optional<wi::Rgb>> none(fill.size());
         const std::vector<std::int64_t> zeros(holders.size(), 0);
-        CHECK(wi::render_territory(base, none, zeros, 1) == b1);
+        {
+            const std::vector<std::uint8_t> z = wi::render_territory(base, none, zeros, 1);
+            REQUIRE(z.size() == b1.size());
+            std::int64_t bad_free = 0;
+            for (std::size_t i = 0; i < n; ++i) {
+                const wi::Rgb want = kind[i] == 2 ? half(wi::Rgb{u1[3 * i], u1[3 * i + 1], u1[3 * i + 2]})
+                                                  : wi::Rgb{b1[3 * i], b1[3 * i + 1], b1[3 * i + 2]};
+                if (!(wi::Rgb{z[3 * i], z[3 * i + 1], z[3 * i + 2]} == want)) ++bad_free;
+            }
+            CHECK(bad_free == 0);
+        }
         const std::vector<std::uint8_t> p401 = wi::render_territory(base, fill, {}, 1);
         std::int64_t not_black = 0;
         for (std::size_t i = 0; i < n; ++i) {

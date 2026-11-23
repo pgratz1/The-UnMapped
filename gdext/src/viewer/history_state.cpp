@@ -47,7 +47,6 @@ void HistoryState::reset() {
     year_ = 0;
     state_ = {};
     holders_.clear();
-    fill_.clear();
     drawn_holders_.clear();
     drawn_valid_ = false;
 }
@@ -113,7 +112,6 @@ bool HistoryState::set_year(std::int64_t y) {
     const auto& timeline = history_->timeline;
     timeline.year_state(year_, state_);
     holders_ = worldgen::inspect::territory_holders(timeline, year_);
-    fill_ = worldgen::inspect::territory_fill(timeline, colours_, year_);
     return true;
 }
 
@@ -152,6 +150,13 @@ std::optional<worldgen::history::RegionHolding> HistoryState::holding(std::int64
         return std::nullopt;
     }
     return *it;
+}
+
+std::optional<std::string> HistoryState::region_name(std::int64_t region) const {
+    if (region <= 0 || !holding(region)) {  // holding: the timeline has the region
+        return std::nullopt;
+    }
+    return std::string(history_->timeline.region_name(region, year_));
 }
 
 std::string HistoryState::holding_text(std::int64_t region) const {
@@ -284,17 +289,44 @@ std::vector<worldgen::inspect::LegendEntry> HistoryState::legend(
             out.push_back(LegendEntry{civ->name, {static_cast<std::uint32_t>(colour < 0 ? 0 : colour)}});
         }
     }
-    // 2, 3. The two borders.
+    // 2 to 4. The three borders (P4-03 r4 6.4).
     out.push_back(LegendEntry{"border between holders", {0x000000U}});
-    out.push_back(LegendEntry{"border within a realm", {}});
-    // 4. Free land: the regions composite's rows without its border row.
+    out.push_back(LegendEntry{"border inside a realm", {}});
+    out.push_back(LegendEntry{"border in free land", {}});
+    // 5. Free land: the regions composite's rows after its border row and
+    // before its last three rows (the land biomes). 6. Water: its last three
+    // rows (ocean, lake, river) under their own heading.
+    std::vector<LegendEntry> rows = worldgen::inspect::composite_legend(worldgen::inspect::Composite::regions, biomes);
+    std::size_t first = 0;
+    while (first < rows.size() && rows[first].label != "region border") {
+        ++first;
+    }
+    first = first < rows.size() ? first + 1U : 0U;
+    constexpr std::size_t WATER_ROWS = 3;
+    const std::size_t water = rows.size() >= first + WATER_ROWS ? rows.size() - WATER_ROWS : rows.size();
     out.push_back(LegendEntry{"free land", {}});
-    for (auto& row : worldgen::inspect::composite_legend(worldgen::inspect::Composite::regions, biomes)) {
-        if (row.label != "region border") {
-            out.push_back(std::move(row));
-        }
+    for (std::size_t i = first; i < water; ++i) {
+        out.push_back(std::move(rows[i]));
+    }
+    out.push_back(LegendEntry{"water", {}});
+    for (std::size_t i = water; i < rows.size(); ++i) {
+        out.push_back(std::move(rows[i]));
     }
     return out;
+}
+
+std::string_view HistoryState::legend_tooltip(std::string_view label) noexcept {
+    // P4-03 r4 6.4: the longer explanation of the three border rows.
+    if (label == "border between holders") {
+        return "black, between regions of different holders";
+    }
+    if (label == "border inside a realm") {
+        return "the realm's colour, darker";
+    }
+    if (label == "border in free land") {
+        return "the land's colour, darker";
+    }
+    return {};
 }
 
 std::optional<std::string> HistoryState::build_base(const TerritoryLayers& layers,
@@ -330,7 +362,7 @@ void HistoryState::draw(std::span<std::uint8_t> out) {
     if (!base_ || !loaded()) {
         return;
     }
-    worldgen::inspect::render_territory(*base_, fill_, holders_, 1U, out);
+    worldgen::inspect::render_territory(*base_, history_->timeline, colours_, year_, 1U, out);
     drawn_holders_ = holders_;
     drawn_valid_ = true;
 }

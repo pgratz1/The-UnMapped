@@ -1,10 +1,10 @@
 # P4-03 History binding, year bar and territory in the viewer
 
-Status: **r3, 2026-11-23** (r1 draft 2026-11-22, r2 2026-11-23; revision notes at the end), for approval by the lead. Phase P4 Viewer v1, stage 3 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-03", 3.2, rules V1 to V10, 6.3, 7, 8, 10). Builds on P4-01 r2 (`docs/specs/p4-01-timeline.md`: `worldgen/history/timeline.hpp`, `worldgen/inspect/territory.hpp`), P4-02 r2 (`docs/specs/p4-02-layer-catalogue.md`, the library catalogue the viewer already uses), the P4-01 audit (`docs/reviews/p4-01-timeline-audit.md`, advisories A2 and A3), P0-04 amendment 18 (e) (the `regions` composite and its border rule) and P2 as documented in `gdext/README.md`. Design doc sections 10 ("World viewer") and 13 (P4 row: "timeline scrubber, territory overlay by year"). Paul's decisions of 2026-11-22 (proposals, "the P4 overview's questions go with their recommendations"): the viewer opens at the present, year E; one hue family per race, shades per civilization.
+Status: **r4, 2026-11-23** (r1 draft 2026-11-22, r2 and r3 2026-11-23; r4 the territory colour and border follow-ups of `docs/specs/p4-03a-territory-colour-followups.md`; revision notes at the end), for approval by the lead. Phase P4 Viewer v1, stage 3 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-03", 3.2, rules V1 to V10, 6.3, 7, 8, 10). Builds on P4-01 r2 (`docs/specs/p4-01-timeline.md`: `worldgen/history/timeline.hpp`, `worldgen/inspect/territory.hpp`), P4-02 r2 (`docs/specs/p4-02-layer-catalogue.md`, the library catalogue the viewer already uses), the P4-01 audit (`docs/reviews/p4-01-timeline-audit.md`, advisories A2 and A3), P0-04 amendment 18 (e) (the `regions` composite and its border rule) and P2 as documented in `gdext/README.md`. Design doc sections 10 ("World viewer") and 13 (P4 row: "timeline scrubber, territory overlay by year"). Paul's decisions of 2026-11-22 (proposals, "the P4 overview's questions go with their recommendations"): the viewer opens at the present, year E; one hue family per race, shades per civilization.
 
 Numbers quoted for the 512 world are from `worldgen-cli generate --seed 42 --map-size 512 --data game/data` at generator 0.21.0 (the headless check's real world, its `history.txt` from the viewer part's check run): E = 6000, 11 civilizations of which 1 ended, ages starting at 0, 2074, 3242, 4243, 4969 and 5596, 32 wars, 10 ruined settlements, the first `region_ceded` event in year 2483, 14 of 15 regions held at E. (At 0.20.0: 10 civilizations of which 2 ended, 30 wars, 15 ruined settlements, 13 regions held at E; E, the age starts and F were the same.) Timings quoted from P4-01 (3.1, 3.4, 8.1) are as measured at 0.20.0.
 
-**No world byte changes.** P4-03 itself changes no world byte; its base is generator **0.21.0** (P5-01 merges with this stage), schema stays **7**. The library changes of section 9 change the pixels of `render --composite territory` and the golden file `worldgen/tests/golden/p4-01-timeline.txt` (section 9.6), nothing else that is recorded.
+**No world byte changes.** P4-03 itself changes no world byte; its base is generator **0.21.0** (P5-01 merges with this stage), schema stays **7**. The library changes of section 9 change the pixels of `render --composite territory` and the golden file `worldgen/tests/golden/p4-01-timeline.txt` (section 9.6), nothing else that is recorded. The r4 changes (P4-03a) likewise change no world byte and leave `GENERATOR_VERSION` as it is on their base (0.22.0, P4-03a section 6).
 
 ## 1. Purpose
 
@@ -75,15 +75,15 @@ No method throws into Godot. A FatalError from the library for a year or id (P4-
 
 ### 3.3 `HistoryState` (C++ only)
 
-Owned by the model, in `gdext/src/viewer/history_state.hpp`. Holds: the `LoadedHistory` (tables, view, timeline), the colour vector, the `TerritoryBase` once built, the current Y, the reused `YearState` (filled with the reusing overload `year_state(Y, out)`), the current holder vector and fill (section 6.2), and the holder vector the territory image was last drawn with. It has no Godot types except where it hands an `Image` to the model. Nothing in it is cached across a change of Y except the drawn holder vector, which only decides whether the image needs rebuilding (V6).
+Owned by the model, in `gdext/src/viewer/history_state.hpp`. Holds: the `LoadedHistory` (tables, view, timeline), the colour vector, the `TerritoryBase` once built, the current Y, the reused `YearState` (filled with the reusing overload `year_state(Y, out)`), the current holder vector (section 6.2), and the holder vector the territory image was last drawn with (r4: no fill vector; the image is drawn with the timeline form of 9.2). It has no Godot types except where it hands an `Image` to the model. Nothing in it is cached across a change of Y except the drawn holder vector, which only decides whether the image needs rebuilding (V6).
 
 ### 3.4 One year change
 
 `set_year(y)` with y ≠ Y, in order, synchronously:
 
 1. Y = y; `timeline.year_state(Y, state)`.
-2. holders = `territory_holders(timeline, Y)`; fill = `territory_fill(timeline, colours, Y)` (section 9.2).
-3. If the territory view's image exists and holders differ from the drawn holder vector: `render_territory(base, fill, holders, 1, buffer)` into the existing `Image`'s buffer (P4-01 5.3 form, section 9.2 signature), drawn vector = holders, emit `view_image_changed(territory view)`. If the image does not exist yet (the view was never shown or failed), nothing is drawn now; it is drawn on its next selection.
+2. holders = `territory_holders(timeline, Y)` (section 9.2).
+3. If the territory view's image exists and holders differ from the drawn holder vector: `render_territory(base, timeline, colours, Y, 1, buffer)` into the existing `Image`'s buffer (the timeline form of 9.2), drawn vector = holders, emit `view_image_changed(territory view)`. If the image does not exist yet (the view was never shown or failed), nothing is drawn now; it is drawn on its next selection.
 4. If the selected view is `territory`, its legend is rebuilt (section 6.4).
 5. Emit `year_changed(Y)`.
 
@@ -201,7 +201,7 @@ A world with history status `loaded` whose `available_composites` include `regio
 
 Model-side, the view list keeps `Composite` values for the three geography composites and marks the territory view separately (it is not a `Composite` enumerator, P4-01 5.4).
 
-Its image is the RGB8 `Image` of `render_territory(base, fill, holders, 1)` at the current Y: the same bytes as `worldgen-cli render --composite territory --year Y --scale 1` (V4). It is created on first selection and then redrawn in place (3.4). `get_cell_text` for it is `elevation <value>`, as for every composite.
+Its image is the RGB8 `Image` of `render_territory(base, timeline, colours, Y, 1)` at the current Y: the same bytes as `worldgen-cli render --composite territory --year Y --scale 1` (V4). It is created on first selection and then redrawn in place (3.4). `get_cell_text` for it is `elevation <value>`, as for every composite.
 
 ### 5.2 Without history
 
@@ -242,9 +242,13 @@ The viewer never decides who holds what: holders come from `territory_holders` a
 ### 6.4 Legend rows (`get_legend()` while `territory` is selected), in this order
 
 1. For each race with at least one civilization alive at Y, in ascending race id: a heading row, label `<race plural>` (the `race` row's `plural`), colours empty; then each civilization of that race alive at Y, ascending id: label `<civilization name>`, colours `[colour]` (section 7).
-2. `border between holders`, colours `[0x000000]`.
-3. `border within a realm (the realm's colour, darker)`, colours empty: no swatch, since the colour depends on the realm (section 8: dim of the realm's fill).
-4. A heading row `free land`, colours empty; then every row of `composite_legend(Composite::regions, biomes)` except its `region border` row, in its order (biome rows of land biomes, then the water rows W of P4-02 4.4).
+2. `border between holders`, colours `[0x000000]`, tooltip `black, between regions of different holders`.
+3. `border inside a realm`, colours empty: no swatch, since the colour depends on the realm (section 8: dim of the realm's fill); tooltip `the realm's colour, darker`.
+4. `border in free land`, colours empty: no swatch, since the colour depends on the land (8.2, half); tooltip `the land's colour, darker`.
+
+The three border labels are short so that they fit the legend's width; the longer explanation is the row's tooltip (`get_legend()` row key `tooltip`, empty on every other row; the list shows it on hover).
+5. A heading row `free land`, colours empty; then the rows of `composite_legend(Composite::regions, biomes)` after its `region border` row and before its last three rows, in its order (the biome rows of land biomes).
+6. A heading row `water`, colours empty; then the last three rows of that legend, in its order: the water rows W of P4-02 4.4 (`ocean, 0 to 3000 m deep`, `lake`, `river, class 1 to 6+`). The ocean is not free land.
 
 The screen shows a row with empty colours as a non-selectable heading with no swatch. The legend is rebuilt on every year change while `territory` is selected (step 4 of 3.4).
 
@@ -260,14 +264,14 @@ Each shipped race gets **four explicit colours**, saturated, so that held land r
 
 | Key | k mod 4 = 0 | 1 | 2 | 3 | min to B | min within race |
 | --- | --- | --- | --- | --- | --- | --- |
-| `elf` (green) | (40, 190, 70) | (150, 230, 150) | (0, 140, 40) | (130, 205, 40) | 109 | 126 |
-| `goblin` (yellow) | (230, 195, 20) | (250, 235, 110) | (170, 125, 0) | (205, 160, 60) | 88 | 100 |
+| `elf` (green) | (40, 190, 70) | (130, 215, 130) | (0, 140, 40) | (130, 205, 40) | 109 | 126 |
+| `goblin` (yellow) | (230, 195, 20) | (235, 215, 90) | (170, 125, 0) | (140, 155, 30) | 89 | 89 |
 | `dwarf` (orange-brown) | (220, 105, 25) | (245, 165, 105) | (150, 65, 15) | (195, 80, 55) | 93 | 78 |
 | `faerie` (violet) | (175, 70, 225) | (215, 160, 250) | (115, 35, 165) | (200, 110, 200) | 127 | 97 |
-| `human` (teal) | (0, 190, 195) | (125, 235, 230) | (0, 120, 130) | (50, 215, 175) | 98 | 94 |
+| `human` (teal) | (0, 190, 195) | (100, 215, 215) | (0, 120, 130) | (50, 215, 175) | 96 | 94 |
 | `orc` (red) | (205, 30, 30) | (240, 120, 110) | (135, 15, 20) | (230, 50, 80) | 165 | 93 |
 
-Entry 0 is the race's base colour: `race_base_colour(key)` returns it for these six keys. The closest pair across races is dwarf 1 / orc 1 at 90.
+This is the **one place** that holds the 24 values (r4; P4-03a). r4 changed four entries: goblin 3 (205, 160, 60) to olive (140, 155, 30), a hue apart from goblin 0 and 2 (critic finding 1); goblin 1 (250, 235, 110), elf 1 (150, 230, 150) and human 1 (125, 235, 230) darkened by about 15 per cent by the test of 7.5 (critic finding 2). Entry 0 is the race's base colour: `race_base_colour(key)` returns it for these six keys. The closest pair across races is dwarf 1 / orc 1 at 90; the closest pair of one race is dwarf 0 / dwarf 3 at 78 (goblin 2 / goblin 3: 89).
 
 **Any other key** keeps P4-01 5.5 unchanged: the base from the key's hash (`TAG_COLOUR`), the shade by `civilization_shade(base, k)` (base, light, dark, deep). Such colours carry no distance guarantee; a race added by P5 gets its own row here when it ships.
 
@@ -294,7 +298,7 @@ Required for the 24 entries of 7.2:
 | C2 two entries of one race | D ≥ 256 · 70² (1,254,400) |
 | C3 two entries of different races | D ≥ 256 · 80² |
 
-The table passes with the margins shown (worst: goblin 1 against steppe, 88). A change to the shipped biome colours that breaks C1 fails the test, which is intended: the two palettes are judged together.
+The table passes with the margins shown (worst: goblin 1 against steppe, 89; within a race, dwarf 0 / dwarf 3, 78). A change to the shipped biome colours that breaks C1 fails the test, which is intended: the two palettes are judged together.
 
 ### 7.4 API
 
@@ -308,6 +312,21 @@ The table passes with the margins shown (worst: goblin 1 against steppe, 88). A 
 
 `civilization_colours` uses it. `race_base_colour` returns entry 0 for the six keys and the hash base otherwise; `civilization_shade` is unchanged (it is now used only for keys without a row).
 
+### 7.5 Luma and pale entries (r4)
+
+Luma of a colour c = (R, G, B), integer: **L(c) = floor((77 R + 150 G + 29 B) / 256)**.
+
+It is used twice: by the inner-border dim of 8.2 (bound L > 175) and, as a design test only, to pick the entries of 7.2 that were too pale (L > 190 on the r3 table: goblin 1 225, human 1 201, elf 1 196, each darkened by about 15 per cent in r4; the test chooses what to change and is not required of the result). L of the r4 table:
+
+| Key | 0 | 1 | 2 | 3 |
+| --- | --- | --- | --- | --- |
+| `elf` | 131 | 179 | 86 | 163 |
+| `goblin` | 185 | 206 | 124 | 136 |
+| `dwarf` | 130 | 182 | 84 | 111 |
+| `faerie` | 119 | 186 | 73 | 147 |
+| `human` | 133 | 180 | 85 | 160 |
+| `orc` | 82 | 154 | 51 | 107 |
+
 ## 8. Realm borders (decided: drawn)
 
 ### 8.1 Decision and reasons
@@ -316,7 +335,8 @@ The `regions` composite draws every region border black (P0-04 amendment 18 (e))
 
 - The realm reads as one shape at a glance, which is the point of the view.
 - It is what separates two neighbouring realms whose colours are close or equal: shades of one race after a secession, and the fifth and later civilizations of one race, which reuse colours (k mod 4).
-- It adds no line width and no new pixel position: only the colour of cells that are already border cells changes. Free land is unchanged (both sides free: black, as in `regions`), so `render_territory` with no holders still equals the `regions` composite (P4-00 6.3).
+- It adds no line width and no new pixel position: only the colour of cells that are already border cells changes. `render_territory` with an empty holder vector still equals the `regions` composite (P4-00 6.3).
+- r4 (critic finding 3): a border with both sides free is drawn at half strength, half the land colour, so that the free land is not a web of black lines as strong as the realm outlines; black is kept wherever a holder is on at least one side. P4-00 6.3's "free land shows the `regions` composite unchanged" now holds for the fill of free land; its land borders are softened when holders are given.
 - Cost: `TerritoryBase` keeps two more `uint16` region values and a kind byte per cell (12 bytes a cell instead of 8: 12 MB at 1024, 48 MB at 2048); `render_territory` does at most two more holder lookups on border cells (a few per cent of cells). Expected well under 1 ms at 1024 on top of 3.9 ms.
 
 ### 8.2 The rule, pixel by pixel (extends P4-01 5.6)
@@ -327,11 +347,18 @@ A cell drawn by steps 3 or 4 of the composite map, or with e < 0, is neither fil
 
 A cell (x, y) with region value v, elevation e, is an **inner border candidate** iff all of: v > 0; e ≥ 0; it is not drawn by steps 3 or 4 of the composite map (the same painted flag as "fillable"); and it **is** a border cell of amendment 18 (e) (its E neighbour or its S neighbour has a region w > 0, w ≠ v). Its **other regions** O are the E neighbour's value when that neighbour makes it a border cell, and the S neighbour's value when that one does (one or two values).
 
-Pixel of a candidate: if `holders[v]` = c ≠ 0, `holders[w]` = c for every w in O, v < `fill.size()` and `fill[v]` holds colour C (the fill of the cell's own region v; the regions of O are compared by holder only, their fill is not used): `shade_colour(dim(C), factor)`, with dim(C) = (floor(R · 12 / 16), floor(G · 12 / 16), floor(B · 12 / 16)) and factor the cell's `hillshade_factor`. Otherwise B(x, y), which is black.
+Pixel of a candidate, in this order (r4):
+
+1. `holders` is empty: B(x, y), which is black. (An empty vector means no holder information; the image is P4-01's, and with an empty fill the `regions` composite.)
+2. `holders[v]` = c ≠ 0, `holders[w]` = c for every w in O, v < `fill.size()` and `fill[v]` holds colour C (the fill of the cell's own region v; the regions of O are compared by holder only, their fill is not used): `shade_colour(dim(C), factor)`, with factor the cell's `hillshade_factor` and dim(C) = (floor(R · n / 16), floor(G · n / 16), floor(B · n / 16)), **n = 10 when L(C) > 175, n = 12 otherwise** (L of 7.5, of the unshaded C). On r4's table n = 10 for goblin 1, faerie 1, goblin 0, dwarf 1, human 1 and elf 1, and n = 12 for the other 18 entries; keys without a row follow the same test.
+3. `holders[v]` = 0 and `holders[w]` = 0 for every w in O (both sides free; `holders[u]` is 0 for u ≥ `holders.size()`): **half(U)** = (floor(U.r · 8 / 16), floor(U.g · 8 / 16), floor(U.b · 8 / 16)), where U = `shade_colour(biome_colour(biome table, biome(x, y)), factor)` is the cell's unbordered colour, the pixel the cell has in the `biomes` composite (step 2 of the composite map; shaded first, then halved). fill is not consulted.
+4. Otherwise (a holder on at least one side but not the same on all, or c ≠ 0 with `fill[v]` missing): B(x, y), black.
+
+A border cell of kind 0 (a lake cell, a river-painted cell, or e < 0) stays black in every case. A half-strength cell is never next to held land along an edge: a free cell whose E or S neighbour is held falls under 4, and a held W or N neighbour is itself a black border cell. So C1 of 7.3 needs no half-strength colours in B.
 
 Every other cell is as P4-01 5.6 (fillable cells filled, the rest B).
 
-Example (4 × 2, no water layers, elevation 10 everywhere, factor 256): `region` row 0 `1 2 3 3`, row 1 `1 2 3 3`; regions 1 and 2 held by an elf civilization with ordinal 0, region 3 by a second elf civilization (ordinal 1). Cells (0, 0) and (0, 1): border cells (E neighbour 2), both sides held by the same civilization: dim((40, 190, 70)) = (30, 142, 52). Cells (1, 0) and (1, 1): E neighbour 3 held by another civilization: black. Cells (2, ·) and (3, ·): (150, 230, 150) (cell 2 has E neighbour 3 = v, not a border).
+Example (4 × 2, no water layers, elevation 10 everywhere, factor 256): `region` row 0 `1 2 3 3`, row 1 `1 2 3 3`; regions 1 and 2 held by an elf civilization with ordinal 0, region 3 by a second elf civilization (ordinal 1). Cells (0, 0) and (0, 1): border cells (E neighbour 2), both sides held by the same civilization: dim((40, 190, 70)) = (30, 142, 52). Cells (1, 0) and (1, 1): E neighbour 3 held by another civilization: black. Cells (2, ·) and (3, ·): (130, 215, 130) (r4 elf 1; cell 2 has E neighbour 3 = v, not a border). With the same layers, region 3 free and regions 1 and 2 held as before: cells (1, ·) black (one side held). With every region free (holders all 0) and biome colour (224, 210, 150) (steppe): cells (0, ·) and (1, ·) half((224, 210, 150)) = (112, 105, 75); with holders empty they are black. An inner border of a goblin civilization of ordinal 1 (L 206): dim((235, 215, 90)) = (146, 134, 56) (n = 10).
 
 ## 9. Library items
 
@@ -355,6 +382,7 @@ public:
     // build: unchanged signature and errors.
     struct Cell {
         Rgb base;                  // B(x, y)
+        Rgb half;                  // r4: kind 2: half(U) of 8.2 rule 3; else (0, 0, 0)
         std::uint8_t kind = 0;     // 0 drawn as B only (v = 0, e < 0, or drawn by step 3 or 4), 1 fillable,
                                    // 2 inner border candidate (8.2)
         std::uint16_t factor = 0;  // hillshade factor (160..352) when kind is 1 or 2, else 0
@@ -371,10 +399,21 @@ public:
                                                          std::span<const std::int64_t> holders, std::uint32_t scale);
 void render_territory(const TerritoryBase&, std::span<const std::optional<Rgb>> fill,
                       std::span<const std::int64_t> holders, std::uint32_t scale, std::span<std::uint8_t> out);
+
+// r4 (audit A1): fill and holders from one timeline and year, so that they cannot disagree. Equal to
+// render_territory(base, territory_fill(timeline, colours, year), territory_holders(timeline, year),
+// scale[, out]), with the same FatalErrors in the same order (year, missing colour, then scale and size).
+[[nodiscard]] std::vector<std::uint8_t> render_territory(const TerritoryBase&, const history::Timeline& timeline,
+                                                         std::span<const Rgb> colours, std::int64_t year,
+                                                         std::uint32_t scale);
+void render_territory(const TerritoryBase&, const history::Timeline& timeline, std::span<const Rgb> colours,
+                      std::int64_t year, std::uint32_t scale, std::span<std::uint8_t> out);
 }
 ```
 
-The P4-01 overloads without `holders` are **removed** (one behaviour, one function); `worldgen-cli render --composite territory` calls the new form with `territory_holders(timeline, Y)`. The CLI's options, messages, exit codes and help text are unchanged (P0-04 amendment 23 stands; the help line "the regions composite with each region held in the year in the colour of its holder" remains true).
+The two-vector overloads stay (tests and hand-made holders use them); the CLI and the viewer use the timeline form (r4). `Cell` is 16 bytes with `half` (16 MB at 1024, 64 MB at 2048); it is never hashed or serialized. `TerritoryBase::build` sets `half` from the composite's own unbordered colour of the cell (the shaded colour before the border pass blackens it), not by re-deriving it.
+
+The P4-01 overloads without `holders` are **removed** (one behaviour, one function); `worldgen-cli render --composite territory` calls the timeline form (r4; r1 to r3: the two-vector form with `territory_holders(timeline, Y)`). The CLI's options, messages, exit codes and help text are unchanged (P0-04 amendment 23 stands; the help line "the regions composite with each region held in the year in the colour of its holder" remains true).
 
 `TerritoryBase::build` takes kind, east and south from the composite's own border pass (`detail::regions_composite_cells` gains the two neighbour values per border cell; the black rule itself and every `regions` pixel are unchanged).
 
@@ -448,6 +487,7 @@ With `--expect-history loaded` (real world):
 - H6 Hover: at Y = E, the first cell in row-major order whose region is held (by `get_region_holding`) and the first whose region is free; each description ends with the text of 6.1 for that holding (civilization name from the report's `[civilizations]` block of that id; `since` as the model's holding); the same held cell at Y = 0 ends with the 6.1 text of its holding at 0. Then `hover_cell(−1, −1)` restores the prompt, as today.
 - H7 Colours: for every civilization, `get_civilization_info(c).colour` equals the colour the library gives (`civilization_colours` of the check's own `load_history` of the same file; the check may call the library directly, P4-00 7: library correctness is doctest's job, the check proves the wiring); and every swatch of the territory legend equals its civilization's colour.
 - H8 Year marks: `get_year_marks()` holds one `awakening` per age start year of `[ages]`, one `phase` per `[phases]` line at its start, and one `present` at E, in ascending year.
+- H9 (r4) Territory legend tail: at E, the rows after the last civilization row are exactly, label and colours: `border between holders` [0x000000]; `border inside a realm` []; `border in free land` []; `free land` []; the rows of the `regions` view's legend between its `region border` row and its last three rows, in order; `water` []; the last three rows of the `regions` legend, in order. The three border rows carry the tooltips of 6.4, every other row of the tail an empty one.
 
 The existing checks (every layer and composite pixel-equal to the CLI, legends, the biome rows of `biomes` and `regions`, the hover on the first composite entry, reader errors, units) run unchanged; on the real world the composite list now has four entries and the first-entry hover is on `territory`, whose text still contains everything the existing hover check asks for.
 
@@ -461,15 +501,16 @@ A history that `load_history` refuses (status `failed`): no world in the check h
 
 ### 11.1 Library tests (test writer, `worldgen-tests-timeline`; independent reference)
 
-1. `race_civilization_colour` for the six keys, k = 0 … 7 (wrap), against 7.2; `race_base_colour` gives entry 0; `troll` and the empty key unchanged from P4-01 5.5; FatalError for k = −1.
-2. Rules C1, C2, C3 of 7.3 over the 24 entries, B built as 7.3 (the biome rows read from a shipped-data world's table `biome`), with D computed in `int64`.
+1. `race_civilization_colour` for the six keys, k = 0 … 7 (wrap), against 7.2 (r4 values); `race_base_colour` gives entry 0; `troll` and the empty key unchanged from P4-01 5.5; FatalError for k = −1.
+2. Rules C1, C2, C3 of 7.3 over the 24 entries, B built as 7.3 (the biome rows read from a shipped-data world's table `biome`), with D computed in `int64`; r4: the two "min" columns of 7.2 reproduced exactly, and L of 7.5 for every entry, with L > 175 exactly for the six entries named in 8.2.
 3. `civilization_colours` on the interleaved two-race fixture (new expected values).
 4. `territory_holders` equals `YearState::regions` holders at every year of T1, with the size and id rules of `territory_fill`.
-5. Inner borders on hand-made layers (T1 extended, at most 8 × 6): a border between two regions of one realm (dimmed), two realms (black), a realm and free land (black), two free regions (black), a border cell that is also a lake cell (black), a cell whose E neighbour is of the same realm and whose S neighbour is of another (black), a border cell whose region is held but whose fill is missing (black); scale 2; expected pixels written in the test.
-6. `render_territory(base, {}, {}, k)` and `render_territory(base, fill_with_all_free, holders_all_zero, k)` equal `render_composite_regions` at k = 1, 3; `render_territory(base, fill, {}, k)` draws every border black (P4-01's image).
+5. Inner borders on hand-made layers (T1 extended, at most 8 × 6): a border between two regions of one realm (dimmed, once with a realm colour of L > 175 at n = 10 and once with L ≤ 175 at n = 12), two realms (black), a realm and free land (black), two free regions (r4: half(U)), a free-free border cell that is also a lake cell or river-painted (black), a cell whose E neighbour is free and whose S neighbour is held (black), a cell whose E neighbour is of the same realm and whose S neighbour is of another (black), a border cell whose region is held but whose fill is missing (black); scales 1 and 2; expected pixels written in the test.
+6. `render_territory(base, {}, {}, k)` equals `render_composite_regions` at k = 1, 3; r4: `render_territory(base, fill_with_all_free, holders_all_zero, k)` equals it except on kind-2 cells, which are half(U); `render_territory(base, fill, {}, k)` draws every border black (P4-01's image).
+6a. r4: the timeline form equals the two-vector form with `territory_fill` and `territory_holders` of the same year, at every year of T1 and at the golden years of the 512 world cases, scale 1 and 3, both the vector and the `out` form; and gives the same FatalError text for a bad year, a short colour vector, a bad scale and a wrong `out` size.
 7. A3: `Timeline::build` on hand-made `HistoryTables` with (a) one region's rows with `from_year` descending, (b) p.`to_year` > r.`from_year`, (c) p open followed by another row, (d) `to_year` = `from_year`: each FatalError text of 9.4; and no error for p.`to_year` = r.`from_year`.
 8. `phase_kind_word` for 0 … 5; the P3-07 report goldens still pass (no new test needed).
-9. Property (P4-01 13.5 item 8, revised invariant 9): every pixel of `render_territory` is B, a fill colour shaded on a kind-1 cell of a held region, or a dimmed fill colour shaded on a kind-2 cell whose rule 8.2 holds; kind 2 exactly on border cells that would otherwise be fillable.
+9. Property (P4-01 13.5 item 8, revised invariant 9): every pixel of `render_territory` is B, a fill colour shaded on a kind-1 cell of a held region, a dimmed fill colour shaded on a kind-2 cell whose rule 8.2 item 2 holds, or (r4) half(U) on a kind-2 cell whose rule 8.2 item 3 holds; kind 2 exactly on border cells that would otherwise be fillable.
 10. Golden: section 9.6.
 11. Bench `timeline-bench`: `render_territory` with holders at 1024 seed 42 (prints only).
 
@@ -492,7 +533,7 @@ The library change only (the viewer adds nothing to `worldgen`): the constants o
 ## 12. Open questions for Paul
 
 1. **Humans in teal.** Every saturated blue is within 80 of a river colour, so humans move to teal (7.2). Recommendation: accept teal. If Paul wants blue humans, the alternative is to darken the river and lake colours, which changes every composite image and their golden vectors.
-2. **Inner borders.** Borders inside one realm are drawn in the realm's colour dimmed to 3/4, so region outlines stay faintly visible (8). The other choice is to leave them out (each realm a flat patch; hover still names the region). Recommendation: the dimmed line.
+2. **Inner borders.** Borders inside one realm are drawn in the realm's colour dimmed to 3/4 (r4: 10/16 for colours with L > 175, P4-03a open point 1), so region outlines stay faintly visible (8). The other choice is to leave them out (each realm a flat patch; hover still names the region). Recommendation: the dimmed line.
 3. **Saturated realm colours.** The new table is deliberately brighter than the biome palette, so held land reads as political colour; on a dark-fantasy map it may look loud. Recommendation: judge it in the walkthrough; if too loud, lower all 24 entries together while keeping rules C1 to C3, a change of golden values only.
 
 ## 13. Readings chosen
@@ -524,3 +565,12 @@ r3 (2026-11-23, after the viewer part on `p4/03-viewer`; corrections to match th
 6. 4.4: the `failed` texts as built, `History not read: <code>: <message>` and the file label line `history: <code>: <message>` (4.6), with `corrupt_layer` for a failure of `civilization_colours`.
 7. 3.1, 4.7: `WorldFile::reader()`, `--year Y` and `--bench` named as built (`HistoryState` and `YearMarks` were already named in 2, 3.3 and 4.5).
 8. 6.4: the legend row reads `border within a realm (the realm's colour, darker)`, still without a swatch (a code change: the viewer currently writes `border within a realm`).
+
+r4 (2026-11-23, the change spec `docs/specs/p4-03a-territory-colour-followups.md`: the world critic's findings 1 to 5 and the library audit's A1; the lead's decisions after Paul saw the images):
+
+1. 7.2: goblin 3 to (140, 155, 30); goblin 1, elf 1, human 1 to (235, 215, 90), (130, 215, 130), (100, 215, 215); the min columns of goblin (89, 89) and human (96) updated; 7.3's worst margins restated. The table is the one place that holds the colours.
+2. 7.5 new: the integer luma L and the r4 table's L values; the pale test L > 190 on the r3 table that chose the darkened entries.
+3. 8.1, 8.2: a border with both sides free is half(U), half the cell's unbordered land colour; the inner-border dim is 10/16 when L(C) > 175, else 12/16; an empty holder vector still draws every border black; a worked example for each.
+4. 9.2: `Cell::half`; the timeline form of `render_territory`, used by the CLI and the viewer (3.3, 3.4, 5.1); the two-vector forms stay.
+5. 6.4: the free-land border row and a `water` heading before the water rows; 10.2 H9 checks the legend tail. Later in r4 (lead's ruling, the long rows were cut off at the legend's width): the border rows read `border between holders`, `border inside a realm`, `border in free land`, with the longer text as tooltips; H9 checks labels and tooltips.
+6. 11.1 items 1, 2, 5, 6, 6a, 9: tests for the above.

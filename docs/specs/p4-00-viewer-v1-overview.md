@@ -107,6 +107,8 @@ No P4 stage changes a world byte, so P4 bumps no `GENERATOR_VERSION` and no sche
 
 Colours are a `worldgen` function of the stored world, not stored in it, the same in the CLI and the viewer: each race has a hue family (interim: elves green, goblins yellow-brown, dwarves red-brown, faeries violet, humans blue, orcs red), and the civilizations of a race take distinct shades of it by ascending id. A map then reads first as peoples, then as realms. P4-01 fixes the RGB values and the shade rule (at least four distinguishable shades per race; a fifth and later civilization of one race reuses shades in order). Free land shows the `regions` composite unchanged.
 
+Pointer (P4-03a, `docs/specs/p4-03a-territory-colour-followups.md`; P4-03 r4 8.2): "free land unchanged" holds for the fill only; a border between two free regions is drawn at half strength when holders are given.
+
 ## 7. The headless check, stage by stage
 
 The check runs the real viewer scene on generated worlds without a display (`gdext/README.md`, "Headless check"). It can assert what the model holds and hands to Controls: images, list contents, texts, states, signals; it cannot judge layout or legibility (proposals, P2 item 7). Its real world (`--seed 42 --map-size 512`, kept) has history worth checking: at 0.20.0, 630 events, 10 civilizations of which 2 ended, 30 wars, 21 ruined settlements and 12 regions that changed hands. From P4-03 the check asserts that the world has at least one region changing hands, one war, one ruin and one ended civilization, so that a generator change that removes them fails the check instead of weakening it (the remedy is another seed, chosen by the viewer engineer and recorded in `gdext/README.md`).

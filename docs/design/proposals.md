@@ -1246,7 +1246,9 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: P5-01's target T16 bounds the battles that repeat an earlier battle's sides and both tolls exactly at **at most 10** over the 100 default 1024 worlds (measured 9 at 0.21.0). P5-12 changes no battle rule, but its renamings shift the event ids that conflict keys its draws by, and the engineer measured **13 of 8,935 battles** at 0.22.0. A fixed count grows with the number of battles a sweep holds, so it measures the sweep as much as the rule.
 - Proposal: restate T16 as a rate: **at most 2 repeated battles per thousand battles** of the sweep (13 of 8,935 is 1.5‰; 0.21.0's 9 was about 1‰). The second half of T16 (no battle sentence with a digit toll and a word toll in one clause: 0) is unchanged.
 - Interim choice: none; the bound of 10 is not changed by the spec, and validation reports T16 as missed at 0.22.0 until Paul decides.
-- Status: open
+- Decision (Paul, 2026-11-23): "2 per thousand sounds pretty low, should be fine." T16 is at most 2 repeated battles per thousand battles of the default sweep; validation measured 13 of 8,935 (1.45 per thousand) at 0.22.0, so the target is met. The P5-02 spec states it so.
+
+- Status: decided
 
 ### History: beasts and monsters, P5-02 (readings and scope)
 
@@ -1275,3 +1277,18 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Answer in P5-02: (a) a monster may **overrun** a small settlement and make it its lair: the settlement dies (ending `overrun`), the region is released when it was its owner's last there, and no realm founds a settlement in it while the monster lives; (b) a **ghost rule**: a hamlet or village struck below 300 by famine or plague may be abandoned and left standing, and every dead settlement records **how it ended** (`settlement.ending`: sacked, overrun, plague, famine, left) beside the unchanged status; (c) the first **sites**: lairs, and **watchtowers** raised on a frontier in war and left when the land is lost, the realm falls or the frontier is quiet, each with founder, years, ending code and ending event; (d) the timeline answers by year which sites stand, which monsters live and how each dead place ended. Targets: a median of at least three ghost places per default world, a monster-held place open at E in at least half of the worlds, standing settlements at E at least 95% of 0.22.0's.
 - Later stages add: mines and forges worked out or lost (P5-04), lost holds and delvings (P5-07), shrines marked by gods (P5-08), towers and libraries (P5-09), each as a `site` kind with its own ending codes; P6 derives battlefields, barrows, tombs and dungeon records.
 - Interim choice: as answered.
+
+### Paul's decisions of 2026-11-23 on P5-02's open questions
+
+- Date: 2026-11-23
+- Raised by: lead, recording Paul's answers to the open questions of `docs/specs/p5-02-beasts-monsters.md` r0
+- Design doc section: 5 (flare-ups; beasts and monsters; sites), 13 (P5 validation targets)
+- Decisions, in Paul's words "1. I accept the narrowing, 2. That's fine to drop, 3. Now is good if it's easy now, 4. And 5. I take the recommendation":
+  1. A flare-up started by a monster (a dragon or giant appearing in a quiet stretch) forces no war; design 5's "a flare-up always brings its war" holds for flare-ups of strain between realms. The design doc should say so.
+  2. If the `civs4` summary median passes 1,100 lines, the monster lines are dropped from the summary on those worlds (they stay in the full report); the bound is not raised.
+  3. Outposts (watchtowers) are built in this stage, if that is easy; if it proves costly the engineer says so and they move to a later stage.
+  4. How a settlement ended is a recorded cause (column `settlement.ending`), not a new settlement status.
+  5. Ancient renamings: no change in this stage; later, death-toll thresholds relative to the population of the time.
+- Also decided the same day: the territory colours of P4-03a stand ("the colors look good to me"); the share of renamings by capital sack stays ("if the capital is sacked the conquerors will want to rename it"); in P4-04 the spec writer's open questions take their recommended choices unless Paul says otherwise.
+
+- Status: decided

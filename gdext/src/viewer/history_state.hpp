@@ -5,9 +5,9 @@
 //
 // Read once when a world opens (load_history, P4-01 5.2), with the
 // civilization colours (P4-03 7). Holds the current year Y and what depends
-// on it: the year state, the holder vector and the fill of the territory
-// image (both from worldgen: the viewer never decides who holds what, P4-03
-// 6.2), the year-independent base of the territory image once it is built,
+// on it: the year state and the holder vector (from worldgen: the viewer
+// never decides who holds what, P4-03 6.2; the image is drawn with the
+// timeline form of render_territory, r4 9.2), the year-independent base of the territory image once it is built,
 // and the holder vector the image was last drawn with, which alone decides
 // whether the image has to be redrawn (P4-00 V6). Nothing else is cached
 // across a change of Y.
@@ -19,6 +19,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/db/reader.hpp"
@@ -68,7 +69,7 @@ public:
     [[nodiscard]] std::int64_t year() const noexcept { return loaded() ? year_ : -1; }
     [[nodiscard]] bool valid_year(std::int64_t y) const noexcept;
 
-    // Y = y and the year state, holders and fill recomputed (3.4 steps 1, 2).
+    // Y = y and the year state and holders recomputed (3.4 steps 1, 2).
     // False and nothing changed without history or for an invalid year.
     bool set_year(std::int64_t y);
 
@@ -92,6 +93,9 @@ public:
     // ("   |   held by <name> since <Y>", "   |   free since <Y>", "   |   free"),
     // empty when nothing is appended.
     [[nodiscard]] std::string holding_text(std::int64_t region) const;
+    // The name of region v at Y (Timeline::region_name, P4-01 r3 16.5,
+    // P5-12): nullopt without history or for a region the timeline lacks.
+    [[nodiscard]] std::optional<std::string> region_name(std::int64_t region) const;
 
     // Counts of P4-03 3.5 at Y.
     [[nodiscard]] std::int64_t regions_held() const noexcept;
@@ -111,6 +115,9 @@ public:
     // `biome`.
     [[nodiscard]] std::vector<worldgen::inspect::LegendEntry> legend(
         std::span<const worldgen::inspect::BiomeRecord> biomes) const;
+    // The tooltip of a territory legend row (P4-03 r4 6.4): the longer
+    // explanation of a border row, empty for every other label.
+    [[nodiscard]] static std::string_view legend_tooltip(std::string_view label) noexcept;
 
     // --- The territory image -------------------------------------------------
     // Builds the year-independent base once (P4-03 3.1 step 5). Returns
@@ -124,7 +131,7 @@ public:
     // Whether the image drawn last is not the one of Y (never drawn, or the
     // holders differ).
     [[nodiscard]] bool needs_draw() const noexcept;
-    // render_territory(base, fill, holders, 1) into out (3 width height
+    // render_territory(base, timeline, colours, Y, 1) into out (3 width height
     // bytes); the drawn holder vector becomes Y's. FatalError from worldgen
     // passes through (a size mismatch: a caller's bug).
     void draw(std::span<std::uint8_t> out);
@@ -141,7 +148,6 @@ private:
     std::int64_t year_ = 0;
     worldgen::history::YearState state_;
     std::vector<std::int64_t> holders_;
-    std::vector<std::optional<worldgen::inspect::Rgb>> fill_;
     std::vector<std::int64_t> drawn_holders_;
     bool drawn_valid_ = false;
 };

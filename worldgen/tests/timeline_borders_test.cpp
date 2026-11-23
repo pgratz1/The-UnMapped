@@ -7,6 +7,11 @@
 // (phase_kind_word; the report's phase words). Items 9 and 10 are in timeline_property_test.cpp and
 // timeline_golden_test.cpp; the P4-01 tests whose colours or calls changed are adjusted in place.
 //
+// P4-03 r4 (P4-03a, docs/specs/p4-03a-territory-colour-followups.md): the r4 table (goblin 3 olive, entries 1
+// of goblin, elf and human darkened) and its "min" columns, n = 12 for elf 0 (L 131), the free-free border
+// of the 8 x 6 layers drawn at half strength, and every region free giving half(U) on kind-2 cells. The
+// other P4-03a items are in timeline_colours_p403a_test.cpp.
+//
 // Written from the spec only; the expected pixels were worked out by hand and are also checked by
 // `p4_timeline_reference.py check` (check_example_82, check_inner_borders, check_control_runs,
 // check_distances).
@@ -65,11 +70,11 @@ struct RaceRow {
 
 const std::array<RaceRow, 6>& table_72() {
     static const std::array<RaceRow, 6> t = {{
-        {"elf", {{{40, 190, 70}, {150, 230, 150}, {0, 140, 40}, {130, 205, 40}}}, 109, 126},
-        {"goblin", {{{230, 195, 20}, {250, 235, 110}, {170, 125, 0}, {205, 160, 60}}}, 88, 100},
+        {"elf", {{{40, 190, 70}, {130, 215, 130}, {0, 140, 40}, {130, 205, 40}}}, 109, 126},
+        {"goblin", {{{230, 195, 20}, {235, 215, 90}, {170, 125, 0}, {140, 155, 30}}}, 89, 89},
         {"dwarf", {{{220, 105, 25}, {245, 165, 105}, {150, 65, 15}, {195, 80, 55}}}, 93, 78},
         {"faerie", {{{175, 70, 225}, {215, 160, 250}, {115, 35, 165}, {200, 110, 200}}}, 127, 97},
-        {"human", {{{0, 190, 195}, {125, 235, 230}, {0, 120, 130}, {50, 215, 175}}}, 98, 94},
+        {"human", {{{0, 190, 195}, {100, 215, 215}, {0, 120, 130}, {50, 215, 175}}}, 96, 94},
         {"orc", {{{205, 30, 30}, {240, 120, 110}, {135, 15, 20}, {230, 50, 80}}}, 165, 93},
     }};
     return t;
@@ -110,7 +115,8 @@ Rgb rgb_of(std::int64_t c) {
 //     3 3 4 4 4 4 0 0
 //     3 3 4 4 4 4 0 0
 // Holders: 1, 2, 3 and 7 by civilization 1, 4 by civilization 2, 5 and 6 free. Fill: 1, 2, 3 elf 0
-// (40, 190, 70), 4 dwarf 0 (220, 105, 25); 7 none (held, no fill). dim(elf 0) = (30, 142, 52).
+// (40, 190, 70), 4 dwarf 0 (220, 105, 25); 7 none (held, no fill). dim(elf 0) = (30, 142, 52) (L 131, n = 12).
+// r4: the 5 | 6 border cells (6, 0 ... 2), both sides free, are half((128, 128, 0)) = (64, 64, 0).
 
 constexpr std::uint32_t BW = 8, BH = 6;
 const std::vector<std::uint16_t>& border_regions() {
@@ -150,6 +156,7 @@ const Rgb DWARF0{220, 105, 25};
 const Rgb DIM_ELF0{30, 142, 52};
 const Rgb BLACK{0, 0, 0};
 const Rgb GROUND{128, 128, 0};
+const Rgb HALF_GROUND{64, 64, 0};
 
 std::vector<std::optional<Rgb>> border_fill() {
     std::vector<std::optional<Rgb>> f(8);
@@ -206,7 +213,7 @@ TEST_CASE("P4-03 11.1 item 3: civilization_colours on T1 (two races interleaved 
     REQUIRE(c.size() == 4U);
     CHECK(c[0] == Rgb{40, 190, 70});    // c1 elf, ordinal 0
     CHECK(c[1] == Rgb{220, 105, 25});   // c2 dwarf, ordinal 0
-    CHECK(c[2] == Rgb{150, 230, 150});  // c3 elf, ordinal 1
+    CHECK(c[2] == Rgb{130, 215, 130});  // c3 elf, ordinal 1
     CHECK(c[3] == Rgb{245, 165, 105});  // c4 dwarf, ordinal 1
     // five civilizations of one race: the fifth reuses entry 0
     wh::HistoryTables tb = t1().h.tables;
@@ -286,7 +293,7 @@ TEST_CASE("P4-03 11.1 item 2: rules C1, C2 and C3 of 7.3 against the background 
         CHECK(units(race_min_b) == row.min_to_b);
         CHECK(units(race_min_in) == row.min_in_race);
     }
-    CHECK(units(worst_b) == 88);
+    CHECK(units(worst_b) == 89);
     CHECK(worst_b_what == "goblin 1 / biome steppe");
     CHECK(units(closest_across) == 90);
     CHECK(closest_across_what == "dwarf 1 / orc 1");
@@ -346,8 +353,8 @@ TEST_CASE("P4-03 8.2: the 4 x 2 example") {
         CAPTURE(y);
         CHECK(pixel(img, 4, 0, y) == Rgb{30, 142, 52});    // E neighbour 2, same civilization: dim
         CHECK(pixel(img, 4, 1, y) == BLACK);               // E neighbour 3, another civilization
-        CHECK(pixel(img, 4, 2, y) == Rgb{150, 230, 150});  // E neighbour 3 = v: not a border
-        CHECK(pixel(img, 4, 3, y) == Rgb{150, 230, 150});
+        CHECK(pixel(img, 4, 2, y) == Rgb{130, 215, 130});  // E neighbour 3 = v: not a border (r4 elf 1)
+        CHECK(pixel(img, 4, 3, y) == Rgb{130, 215, 130});
     }
     // the cells of 9.2
     REQUIRE(base.cells().size() == 8U);
@@ -366,7 +373,7 @@ TEST_CASE("P4-03 8.2: the 4 x 2 example") {
     // without holders P4-01's image: the inner border black
     const std::vector<std::uint8_t> p401 = wi::render_territory(base, fill, {}, 1);
     CHECK(pixel(p401, 4, 0, 0) == BLACK);
-    CHECK(pixel(p401, 4, 2, 0) == Rgb{150, 230, 150});
+    CHECK(pixel(p401, 4, 2, 0) == Rgb{130, 215, 130});
 }
 
 TEST_CASE("P4-03 11.1 item 5: inner borders on hand-made layers") {
@@ -377,10 +384,10 @@ TEST_CASE("P4-03 11.1 item 5: inner borders on hand-made layers") {
     const auto fill = border_fill();
     const std::vector<std::uint8_t> img = wi::render_territory(base, fill, BORDER_HOLDERS, 1);
     REQUIRE(img.size() == 3U * BW * BH);
-    const Rgb E = ELF0, D = DWARF0, d = DIM_ELF0, K = BLACK, G = GROUND;
-    const Rgb want[BH][BW] = {{E, d, E, K, D, K, K, G},  //
-                              {K, d, d, K, K, K, K, G},  //
-                              {d, d, K, K, K, K, K, G},  //
+    const Rgb E = ELF0, D = DWARF0, d = DIM_ELF0, K = BLACK, G = GROUND, H = HALF_GROUND;
+    const Rgb want[BH][BW] = {{E, d, E, K, D, K, H, G},  //
+                              {K, d, d, K, K, K, H, G},  //
+                              {d, d, K, K, K, K, H, G},  //
                               {K, K, D, D, D, D, G, G},  //
                               {E, K, D, D, D, D, G, G},  //
                               {E, K, D, D, D, D, G, G}};
@@ -397,7 +404,7 @@ TEST_CASE("P4-03 11.1 item 5: inner borders on hand-made layers") {
     CHECK(pixel(img, BW, 0, 2) == DIM_ELF0);  // S 7 of the realm (7 has no fill; the cell's own region has)
     CHECK(pixel(img, BW, 3, 0) == BLACK);     // regions 2 | 4: two realms
     CHECK(pixel(img, BW, 5, 0) == BLACK);     // region 4 | 5: a realm and free land
-    CHECK(pixel(img, BW, 6, 0) == BLACK);     // regions 5 | 6: two free regions
+    CHECK(pixel(img, BW, 6, 0) == HALF_GROUND);  // regions 5 | 6: two free regions (r4: half strength)
     CHECK(pixel(img, BW, 0, 1) == BLACK);     // a lake cell on a border inside the realm
     CHECK(pixel(img, BW, 2, 2) == BLACK);     // E 2 of the realm, S 4 of another
     CHECK(pixel(img, BW, 0, 3) == BLACK);     // region 7 held by the realm, S 3 of the realm, no fill for 7
@@ -461,7 +468,7 @@ TEST_CASE("P4-03 11.1 item 5: inner borders on hand-made layers") {
     CHECK(out == img2);
 }
 
-TEST_CASE("P4-03 11.1 item 6: no holders, or every region free, is the regions composite") {
+TEST_CASE("P4-03 11.1 item 6: no holders is the regions composite; every region free is it but on kind-2 cells") {
     const BorderLayers L;
     const wi::TerritoryBase base = L.base();
     const std::vector<std::optional<Rgb>> none(8);
@@ -470,7 +477,26 @@ TEST_CASE("P4-03 11.1 item 6: no holders, or every region free, is the regions c
         CAPTURE(k);
         const std::vector<std::uint8_t> want = L.regions(k);
         CHECK(wi::render_territory(base, {}, {}, k) == want);
-        CHECK(wi::render_territory(base, none, zeros, k) == want);
+        CHECK(wi::render_territory(base, none, {}, k) == want);
+        // r4: every region free (all-zero holders): the regions composite except on kind-2 cells, which are
+        // half(U) = (64, 64, 0) here (biome (128, 128, 0), factor 256 everywhere)
+        {
+            const std::vector<std::uint8_t> free_img = wi::render_territory(base, none, zeros, k);
+            REQUIRE(free_img.size() == want.size());
+            for (std::uint32_t y = 0; y < BH; ++y) {
+                for (std::uint32_t x = 0; x < BW; ++x) {
+                    CAPTURE(x);
+                    CAPTURE(y);
+                    const wi::TerritoryBase::Cell& c = base.cells()[std::size_t{y} * BW + x];
+                    const Rgb expect = c.kind == 2 ? HALF_GROUND : pixel(want, k * BW, k * x, k * y);
+                    for (std::uint32_t dy = 0; dy < k; ++dy) {
+                        for (std::uint32_t dx = 0; dx < k; ++dx) {
+                            CHECK(pixel(free_img, k * BW, k * x + dx, k * y + dy) == expect);
+                        }
+                    }
+                }
+            }
+        }
         // every border black without holders (P4-01's image): fillable cells filled, the rest B
         const std::vector<std::uint8_t> p401 = wi::render_territory(base, border_fill(), {}, k);
         for (std::uint32_t y = 0; y < BH; ++y) {
@@ -486,8 +512,19 @@ TEST_CASE("P4-03 11.1 item 6: no holders, or every region free, is the regions c
                 CHECK(pixel(p401, k * BW, k * x, k * y) == expect);
             }
         }
-        // holders that hold but a fill that has nothing: every border black, every cell B
-        CHECK(wi::render_territory(base, none, BORDER_HOLDERS, k) == want);
+        // holders that hold but a fill that has nothing: every border black but the free-free ones (r4: half),
+        // every other cell B
+        {
+            const std::vector<std::uint8_t> img = wi::render_territory(base, none, BORDER_HOLDERS, k);
+            for (std::uint32_t y = 0; y < BH; ++y) {
+                for (std::uint32_t x = 0; x < BW; ++x) {
+                    CAPTURE(x);
+                    CAPTURE(y);
+                    const bool free_free = x == 6 && y <= 2;
+                    CHECK(pixel(img, k * BW, k * x, k * y) == (free_free ? HALF_GROUND : pixel(want, k * BW, k * x, k * y)));
+                }
+            }
+        }
     }
 }
 

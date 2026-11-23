@@ -1,7 +1,7 @@
 #pragma once
 
 // Civilization colours and the year-dependent image `territory` (spec P4-01
-// 5.3, 5.5, 5.6, amended by P4-03 7, 8 and 9.2). Integer arithmetic only; the RGB buffer is part of the
+// 5.3, 5.5, 5.6, amended by P4-03 r4 7, 8 and 9.2, after P4-03a). Integer arithmetic only; the RGB buffer is part of the
 // cross-platform contract, as every composite's (P0-04 10).
 
 #include <cstddef>
@@ -83,6 +83,7 @@ public:
 
     struct Cell {
         Rgb base;                  // B(x, y)
+        Rgb half;                  // kind 2: half(U) of P4-03 r4 8.2 rule 3; else (0, 0, 0)
         std::uint8_t kind = 0;     // KIND_*
         std::uint16_t factor = 0;  // hillshade factor (160..352) when kind is 1 or 2, else 0
         std::uint16_t region = 0;  // v when kind is 1 or 2, else 0
@@ -102,19 +103,31 @@ private:
 // overflows std::size_t.
 [[nodiscard]] std::size_t territory_rgb_size(const TerritoryBase& base, std::uint32_t scale);
 
-// The territory image (P4-01 5.6 with P4-03 8.2), laid out as render_rgb.
-// holders[v] is the holder of region v, 0 when free or v >= holders.size();
-// holders may be empty (then no inner border is drawn). Per cell: on a
-// fillable cell whose region v < fill.size() has fill[v] = C,
-// shade_colour(C, factor); on an inner border candidate whose region v and
-// every other region w of it have the same holder c != 0 and fill[v] = C,
-// shade_colour(dim(C), factor) with dim the channels times 12 / 16, floored;
-// otherwise B. FatalError: scale outside 1..16, size overflow, out.size() !=
-// territory_rgb_size(base, scale).
+// The territory image (P4-01 5.6 with P4-03 r4 8.2), laid out as
+// render_rgb. holders[v] is the holder of region v, 0 when free or v >=
+// holders.size(); holders may be empty (then every inner border candidate is
+// B, black). Per cell: on a fillable cell whose region v < fill.size() has
+// fill[v] = C, shade_colour(C, factor); on an inner border candidate with a
+// non-empty holders, when its region v and every other region w of it have
+// the same holder c: c != 0 and fill[v] = C gives shade_colour(dim(C),
+// factor), dim the channels times n / 16, floored, n = 10 when L(C) =
+// floor((77 R + 150 G + 29 B) / 256) > 175 and 12 otherwise; c = 0 gives
+// Cell::half; otherwise B. FatalError: scale outside 1..16, size overflow,
+// out.size() != territory_rgb_size(base, scale).
 [[nodiscard]] std::vector<std::uint8_t> render_territory(const TerritoryBase& base,
                                                          std::span<const std::optional<Rgb>> fill,
                                                          std::span<const std::int64_t> holders, std::uint32_t scale);
 void render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill,
                       std::span<const std::int64_t> holders, std::uint32_t scale, std::span<std::uint8_t> out);
+
+// The territory image at a year from one timeline (P4-03 r4 9.2, audit A1):
+// equal to render_territory(base, territory_fill(timeline, colours, year),
+// territory_holders(timeline, year), scale[, out]), with the same FatalErrors
+// in the same order (year, missing colour, then scale and size).
+[[nodiscard]] std::vector<std::uint8_t> render_territory(const TerritoryBase& base, const history::Timeline& timeline,
+                                                         std::span<const Rgb> colours, std::int64_t year,
+                                                         std::uint32_t scale);
+void render_territory(const TerritoryBase& base, const history::Timeline& timeline, std::span<const Rgb> colours,
+                      std::int64_t year, std::uint32_t scale, std::span<std::uint8_t> out);
 
 }  // namespace worldgen::inspect
