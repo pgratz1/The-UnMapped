@@ -143,7 +143,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen history statements, fourteenth to "
           "thirty-second (settlement with ending; region_name; beast, monster_kind, beast_population, monster, site)") {
-    CHECK(eng::schema_version() == 9);
+    CHECK(eng::schema_version() == 10);
     const std::vector<std::string> ddl = eng::ddl_statements();
     REQUIRE(ddl.size() == 32U);
     REQUIRE(new_ddl().size() == 19U);
@@ -171,7 +171,7 @@ TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen hi
                   "'settlement_census', 'region_control', 'relation', 'event_kind_role', 'event_kind_value', "
                   "'region_name', 'beast_population', 'monster', 'site')") ==
           std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
 }
 
 TEST_CASE("P3-04 9.4, 16.1 item 12: 17 required meta keys, history_end_year fourth") {
@@ -194,7 +194,7 @@ TEST_CASE("P3-04 9.6, 16.5: the empty world's size (34 pages, unconfirmed; EMPTY
     CHECK(static_cast<std::int64_t>(dbtest::be32(bytes, 28)) == EMPTY_WORLD_PAGES);  // header page count
 }
 
-TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schema version <v>, this build reads 9") {
+TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schema version <v>, this build reads 10") {
     dbtest::TempDir dir("engine-v6");
     int k = 0;
     for (const char* v : {"6", "8"}) {
@@ -207,7 +207,7 @@ TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schem
             const auto r = db::WorldReader::open(path);
             REQUIRE_FALSE(r.ok());
             CHECK(r.code() == db::ErrorCode::unsupported_schema_version);
-            CHECK(r.error().message == std::string("world schema version ") + v + ", this build reads 9");
+            CHECK(r.error().message == std::string("world schema version ") + v + ", this build reads 10");
         }
     }
 }

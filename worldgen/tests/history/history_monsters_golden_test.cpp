@@ -443,7 +443,7 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
         if (c.kind != "world" || c.pressure != "normal") continue;
         CAPTURE(c.name);
         const CCase& cc = conflict_case(c.name.c_str());
-        for (const char* t : {"beast_population", "monster", "site"}) CHECK(cc.tables.at(t) == c.tables.at(t).second);
+        for (const char* t : {"beast_population", "monster", "site", "race_relation", "settlement_race"}) CHECK(cc.tables.at(t) == c.tables.at(t).second);
     }
 }
 

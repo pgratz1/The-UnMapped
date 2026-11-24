@@ -369,7 +369,7 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // and two key indexes, 18 pages (P3-03 5.1); schema version 7 the
     // thirteen history tables, 34 pages (P3-04 9.6); schema version 8 the
     // root of region_name, 35 pages (P5-12 12).
-    CHECK(fs::file_size(out) == 176128U);   // P5-02 11.1 (r1): 43 pages
+    CHECK(fs::file_size(out) == 184320U);   // P5-02 11.1 (r1): 43 pages
 }
 
 TEST_CASE("cli 12.2: test pattern") {

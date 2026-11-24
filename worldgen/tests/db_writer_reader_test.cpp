@@ -136,7 +136,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 9);  // schema 9 (P5-02 11.1)
+    CHECK(dbtest::be32(b, 60) == 10);  // schema 9 (P5-02 11.1)
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -216,7 +216,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     // the thirteen history tables, the key index of event_kind and two
     // sqlite_schema leaf pages, so 34 (P3-04 9.6); schema version 8 adds the
     // root page of table region_name, so 35 (P5-12 12).
-    CHECK(dbtest::read_file(path).size() == 176128);   // P5-02 11.1 (r1): 43 pages (39 roots, sqlite_schema 1 interior + 3 leaves)
+    CHECK(dbtest::read_file(path).size() == 184320);   // P5-02 11.1 (r1): 43 pages (39 roots, sqlite_schema 1 interior + 3 leaves)
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());
@@ -261,7 +261,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(worldgen::db::DDL_CLIMATE == std::string_view(SPEC_DDL_CLIMATE));
     CHECK(db.rows("SELECT count(*) FROM biome") == Rows{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == Rows{{"0"}});
-    CHECK(worldgen::db::SCHEMA_VERSION == 9);
+    CHECK(worldgen::db::SCHEMA_VERSION == 10);
 
     // meta: exactly 17 rows (8 history keys since schema 6, P3-03 4.2;
     // history_end_year since schema 7, P3-04 9.4), in key order, all TEXT.
@@ -290,7 +290,7 @@ TEST_CASE("empty world through the reader (9)") {
     REQUIRE_MESSAGE(opened.ok(), (opened.ok() ? std::string() : opened.error().message));
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
-    CHECK(reader.schema_version() == 9);
+    CHECK(reader.schema_version() == 10);
     CHECK(reader.generator_version() == "0.23.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
@@ -816,37 +816,37 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         // "world schema version X, this build reads Y"
-        CHECK(r.error().message == "world schema version 10, this build reads 9");
+        CHECK(r.error().message == "world schema version 10, this build reads 10");
     }
     SUBCASE("user_version 8: a schema-8 (0.22.0) world is refused (P5-02 11.1)") {
         const auto r = WorldReader::open(variant("uv8.db", "PRAGMA user_version = 8"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 8, this build reads 9");
+        CHECK(r.error().message == "world schema version 8, this build reads 10");
     }
     SUBCASE("user_version 7: a schema-7 (0.14.0 to 0.21.0) world is refused (P3-04 r21 23.4)") {
         const auto r = WorldReader::open(variant("uv7.db", "PRAGMA user_version = 7"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 7, this build reads 9");
+        CHECK(r.error().message == "world schema version 7, this build reads 10");
     }
     SUBCASE("user_version 6: a schema-6 (0.13.0) world is refused (P3-04 9.5)") {
         const auto r = WorldReader::open(variant("uv6.db", "PRAGMA user_version = 6"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 6, this build reads 9");
+        CHECK(r.error().message == "world schema version 6, this build reads 10");
     }
     SUBCASE("user_version 5: a schema-5 (0.11.0 to 0.12.0) world is refused (P3-03 4.4)") {
         const auto r = WorldReader::open(variant("uv5.db", "PRAGMA user_version = 5"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 5, this build reads 9");
+        CHECK(r.error().message == "world schema version 5, this build reads 10");
     }
     SUBCASE("user_version 4: a schema-4 (0.9.0 to 0.10.0) world is refused (P0-02 amendment 17)") {
         const auto r = WorldReader::open(variant("uv4.db", "PRAGMA user_version = 4"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 4, this build reads 9");
+        CHECK(r.error().message == "world schema version 4, this build reads 10");
     }
     SUBCASE("meta.schema_version 10, 7 and 4") {
         CHECK(open_code(variant("msv10.db", "UPDATE meta SET value = '10' WHERE key = 'schema_version'")) ==

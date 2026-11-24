@@ -61,7 +61,7 @@ inline const std::vector<std::string>& ddl_tables() {
         "event_kind", "event_kind_role", "event_kind_value", "phase",      "event",
         "event_participant", "event_cause", "event_value", "civilization", "settlement",
         "settlement_census", "region_control", "relation", "region_name",   // region_name: schema 8 (r21 23.4)
-        "beast", "monster_kind", "beast_population", "monster", "site"};    // P5-02 11.1 (schema 9)
+        "beast", "monster_kind", "beast_population", "monster", "site", "race_relation", "settlement_race"};    // P5-02 11.1 (schema 9)
     return v;
 }
 inline const std::vector<std::string>& hash_tables() {

@@ -923,7 +923,7 @@ TEST_CASE("P1-06 r3 4.1, 10.5 data: the fixture roots hold byte-identical copies
 
 TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after geo.regions.cost, 52 names") {
     const auto& names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 72U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
+    CHECK(names.size() == 76U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
     // P5-12 3 (0.22.0): hist.renaming.chance and hist.renaming.name appended after hist.conflict.toll, in that order;
     // P5-02 3 (0.23.0) fifteen more after them, then (r1) hist.monsters.raid_target.
     CHECK(names[names.size() - 19] == "hist.conflict.toll");

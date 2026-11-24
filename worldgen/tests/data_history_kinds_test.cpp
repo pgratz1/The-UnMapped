@@ -264,7 +264,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 7U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+    REQUIRE(history.id_schemas.size() == 8U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
                                                // renaming P5-12 (r16 5.4); monsters P5-02 4.3
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "conflict");

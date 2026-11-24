@@ -292,7 +292,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 72U);   // P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    REQUIRE(names.size() == 76U);   // P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;

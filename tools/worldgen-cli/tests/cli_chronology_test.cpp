@@ -387,7 +387,7 @@ TEST_CASE("cli P3-03 4.2, 14.1 item 8: each setting value reaches its meta key")
     CHECK(contains(meta, "\nparam.civs_per_race = auto\nparam.divine_activity = normal\nparam.divine_script =\n"
                          "param.event_intensity = normal\nparam.history_detail = normal\nparam.history_span = 6000\n"
                          "param.map_size = 1024\nparam.monster_pressure = normal\nparam.races = " +
-                             std::string(ALL_RACES) + "\nschema_version = 9\n"));
+                             std::string(ALL_RACES) + "\nschema_version = 10\n"));
 }
 
 TEST_CASE("cli P3-03 4.1, P3-01 8.2 test 7: file values are recorded, and a flag wins over its file key") {

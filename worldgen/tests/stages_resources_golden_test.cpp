@@ -608,7 +608,7 @@ TEST_CASE("P1-05 2, 3, R7: the stage entry reads the seven layers as stored and 
     // it (empty); P1-05 changed no schema (version 6 since P3-03).
     const dbtest::SqliteFile db(dir.file("ok.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"9"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
 }
 
@@ -713,8 +713,8 @@ TEST_CASE("P1-05 2, 10.1 test 5: each precondition is fatal with its message, le
 }
 
 TEST_CASE("P1-05 3, P1-04 3: the biome table keeps five columns (no forage column); schema version 6 (P3-03)") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 9);
-    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 32U);  // schema 9: P5-02 11.1; schema 8: region_name (P5-12 7.2)
+    CHECK(worldgen::db::SCHEMA_VERSION == 10);
+    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 34U);  // schema 9: P5-02 11.1; schema 8: region_name (P5-12 7.2)
     CHECK(worldgen::db::DDL_STATEMENTS[3] ==
           "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER "
           "NOT NULL, water INTEGER NOT NULL) STRICT");
