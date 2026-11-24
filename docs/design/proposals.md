@@ -1382,3 +1382,10 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Readings now in force: a pair's memory is bounded at ±500 and returns toward 0 at 20 a century, and each war, conquest, sack, capture, expulsion and shelter moves it three times r1's amount; peoples meet when their realms lie within eight borders (in practice every pair that can reach the other); an abandonment's survivors go only to a settlement of their realm in the same region, else they are displaced and may find shelter with another people; a small place flees a monster after two raids in fifty years; hunts grow more likely by a small step per remembered raid. The report counts a settlement as mixed at the end by a fixed share of 100 per mille, independent of the tuning. A rendered event sentence always starts with a capital letter. With these values a default world has a median of one change of band between peoples: most pairs keep the feeling their camps give them.
 - Interim choice: as built. Open for Paul in the spec (28): whether relations should move more (question 7, after the world critic's review) and the bound for lairs on former settlements (question 8).
 - Status: open.
+
+### Paul's review of P4 Viewer v1 (2026-11-24)
+
+- Section: 13 (phase P4); specs P4-04 section 16, P4-05 section 14, P4-06 section 14.
+- Problem: the three viewer specs left eighteen choices open for Paul to judge in the running viewer (marker size by kind, one ring per event place, no markers without history, hidden refuges shown, markers on by default; the browser in a right-hand pane, follow on the filtered list, one level for list and block, highlight by dimming, the glyph changes, a click selects; quiet years at ten times the speed, playback of the browser's list, scrubbing pauses, the ticker over the map, the defaults, the two-row year bar, AVI recording).
+- Decision (Paul, 2026-11-24, after using the viewer on seed 42 at generator 0.24.0): "the viewer works great, no concerns with it." The phase is approved and every interim choice stands as built. The lead's lean towards a ticker strip below the map is dropped. Recording on Windows remains untried.
+
