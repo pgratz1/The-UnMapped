@@ -2373,6 +2373,17 @@ def build_input(src, dst):
                 c.execute(ddl)
             c.execute("UPDATE meta SET value = '9' WHERE key = 'schema_version'")
             c.execute("PRAGMA user_version = 9")
+        if V5 and not c.execute("SELECT 1 FROM sqlite_master WHERE name = 'race_relation'").fetchone():
+            # schema 10 (P5-03 16.1) on a schema 9 source: beast's and monster_kind's statements replaced, two
+            # tables appended (integration phase 2: the 0.23.0 report inputs are the sources)
+            for t in ("beast", "monster_kind"):
+                c.execute('DROP TABLE "%s"' % t)
+            for ddl in pe.DDL_024_REPLACED.values():
+                c.execute(ddl)
+            for ddl in pe.DDL_024_NEW:
+                c.execute(ddl)
+            c.execute("UPDATE meta SET value = '10' WHERE key = 'schema_version'")
+            c.execute("PRAGMA user_version = 10")
         for t in pchr.TABLES:
             c.execute('DELETE FROM "%s"' % t)
             n = pchr.COLUMNS[t]

@@ -37,21 +37,21 @@ inline void insert_after_line(std::string& text, std::string_view head, const st
     text.insert(b + 1, lines + "\n");
 }
 
-// 4.2, shipped values in the order of the table.
+// 4.2, shipped values in the order of the table (the engineer's calibration, 22 step 10).
 inline constexpr std::string_view RELATIONS_TOML = R"([history.relations]
 hatred_max = -500
 friend_min = 150
 band_margin = 50
-memory_min = -250
-memory_max = 250
-memory_decay_per_century = 40
-war_memory = 25
-conquest_memory = 50
-sack_memory = 10
-capture_memory = 5
-expel_memory = 30
-shelter_memory = 15
-meet_hops = 3
+memory_min = -500
+memory_max = 500
+memory_decay_per_century = 20
+war_memory = 75
+conquest_memory = 150
+sack_memory = 30
+capture_memory = 15
+expel_memory = 90
+shelter_memory = 45
+meet_hops = 8
 migrate_hops = 2
 migrate_min = 40
 welcome_min = -200
@@ -60,7 +60,7 @@ conquest_settlers_permille = 100
 drift_permille_per_century = 100
 fade_permille = 20
 mixed_min_permille = 100
-expel_permille = 30
+expel_permille = 3
 expel_share_max = 500
 )";
 
@@ -71,31 +71,31 @@ struct RelField {
 inline const std::vector<RelField>& relations_fields() {
     static const std::vector<RelField> v = {
         {"hatred_max", -2000, 0, -500},        {"friend_min", 0, 2000, 150},
-        {"band_margin", 0, 500, 50},           {"memory_min", -2000, 0, -250},
-        {"memory_max", 0, 2000, 250},          {"memory_decay_per_century", 0, 10000, 40},
-        {"war_memory", 0, 1000, 25},           {"conquest_memory", 0, 1000, 50},
-        {"sack_memory", 0, 1000, 10},          {"capture_memory", 0, 1000, 5},
-        {"expel_memory", 0, 1000, 30},         {"shelter_memory", 0, 1000, 15},
-        {"meet_hops", -1, 8, 3},               {"migrate_hops", 0, 8, 2},
+        {"band_margin", 0, 500, 50},           {"memory_min", -2000, 0, -500},
+        {"memory_max", 0, 2000, 500},          {"memory_decay_per_century", 0, 10000, 20},
+        {"war_memory", 0, 1000, 75},           {"conquest_memory", 0, 1000, 150},
+        {"sack_memory", 0, 1000, 30},          {"capture_memory", 0, 1000, 15},
+        {"expel_memory", 0, 1000, 90},         {"shelter_memory", 0, 1000, 45},
+        {"meet_hops", -1, 8, 8},               {"migrate_hops", 0, 8, 2},
         {"migrate_min", 1, 100000, 40},        {"welcome_min", -2000, 2001, -200},
         {"subject_years", 0, 100000, 200},     {"conquest_settlers_permille", 0, 1000, 100},
         {"drift_permille_per_century", 0, 1000, 100}, {"fade_permille", 0, 1000, 20},
-        {"mixed_min_permille", 1, 1001, 100},  {"expel_permille", 0, 1000, 30},
+        {"mixed_min_permille", 1, 1001, 100},  {"expel_permille", 0, 1000, 3},
         {"expel_share_max", 0, 1000, 500}};
     return v;
 }
 
 // 9.4, after prey_might_max_permille.
 inline const std::vector<RelField>& monsters_fields_024() {
-    static const std::vector<RelField> v = {{"raid_chain_years", 1, 100000, 100}, {"toll_over_permille", 0, 1000, 250},
-                                            {"hunt_raid_permille", 0, 1000, 60},  {"hunt_max_permille", 0, 1000, 400},
-                                            {"fear_raids", 1, 100, 3},            {"fear_years", 1, 100000, 50},
-                                            {"fear_permille", 0, 1000, 300},      {"overrun_people_ref", 1, 1000000, 800}};
+    static const std::vector<RelField> v = {{"raid_chain_years", 1, 100000, 300}, {"toll_over_permille", 0, 1000, 250},
+                                            {"hunt_raid_permille", 0, 1000, 5},   {"hunt_max_permille", 0, 1000, 200},
+                                            {"fear_raids", 1, 100, 2},            {"fear_years", 1, 100000, 50},
+                                            {"fear_permille", 0, 1000, 400},      {"overrun_people_ref", 1, 1000000, 800}};
     return v;
 }
 // 11.1, after ghost_max_population.
 inline const std::vector<RelField>& peoples_fields_024() {
-    static const std::vector<RelField> v = {{"abandon_reach_hops", 0, 16, 2},
+    static const std::vector<RelField> v = {{"abandon_reach_hops", 0, 16, 0},
                                             {"abandon_loss_min_permille", 0, 1000, 50},
                                             {"abandon_loss_max_permille", 0, 1000, 200},
                                             {"ghost_fade_years", 0, 100000, 0}};

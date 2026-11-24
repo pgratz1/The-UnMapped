@@ -15,6 +15,7 @@
 #include "p3_06_conflict_support.hpp"
 #include "p5_02_monsters_api.hpp"
 #include "p5_02_monsters_content.hpp"
+#include "p5_03_relations_api.hpp"
 
 #include <doctest/doctest.h>
 
@@ -138,6 +139,13 @@ const wd::ContentSet& zero_content() {
          {"feed_max_permille", wd::Value::integer(0)}, {"bold_permille", wd::Value::integer(0)},
          {"outpost_permille", wd::Value::integer(0)}},
         {}, {}, {{"ghost_permille", wd::Value::integer(0)}});
+    return c;
+}
+// From 0.24.0 the history stage also runs P5-03's relations subsystem: I0 of P5-02 compares the stage with the
+// zero monsters tuning and P5-03's zero relations tuning (P5-03 7.4: equal to the subsystem not installed) with
+// the configuration that installs neither.
+const wd::ContentSet& zero_both_content() {
+    static const wd::ContentSet c = p503api::zero_of(zero_content());
     return c;
 }
 // The shipped content with ghost_permille 0 (the configuration without the subsystem of I0).
@@ -468,8 +476,8 @@ TEST_CASE("P5-02 7.5 I0: with the zero tuning the history tables equal those wit
     for (const std::uint64_t seed : {0U, 1U, 2U, 3U}) {
         CAPTURE(seed);
         const CCase& c = conflict_case(("stress-" + std::to_string(seed)).c_str());   // p3-06-conflict.txt's grid
-        const eng::HistoryInputs in = inputs_of(make_synthetic(seed), seed, settings_of(c), zero_content());
-        const Tables with = eng::history_stage(zero_content(), in);
+        const eng::HistoryInputs in = inputs_of(make_synthetic(seed), seed, settings_of(c), zero_both_content());
+        const Tables with = eng::history_stage(zero_both_content(), in);
         const eng::HistoryInputs in2 = inputs_of(make_synthetic(seed), seed, settings_of(c), no_ghost_content());
         const ConflictConfig cfg(no_ghost_content(), false);   // peoples, conflict, renaming; no monsters, no view
         const Tables without = cfg.run(no_ghost_content(), in2);

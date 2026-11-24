@@ -1,31 +1,19 @@
 #pragma once
 
-// The one place of the P5-03 tests' guesses at library names the spec (docs/specs/p5-03-race-relations.md r1)
-// does not give. Names the spec declares are used as declared:
-//   5, 6.6  RelationsSubsystem (worldgen/history/relations.hpp), installed after MonstersSubsystem
-//   6.4.1   PeopleLedger (peoples.hpp) with moved(from, to, people) and displaced(from, race, people, cause);
-//           PeoplesSubsystem::set_ledger(PeopleLedger*), ledger(); PeoplesSubsystem::abandon(ctx, t, causes) (9.4)
-//   7.1     DispositionView (conflict.hpp) with disposition(race_a, race_b) and hatred_event(race_a, race_b);
-//           ConflictSubsystem::set_dispositions(const DispositionView*), camp_table()
-//   7.3     Settlement::owner_event
-//   12.2    RenamingSubsystem::name_now(region)
-//   18      Timeline::race_relation_at, settlement_races; RaceRelationState, RaceShare
-// Every other name is marked GUESS here and is the first thing to check at integration (phase 2):
-//   GUESS (5)    RelationsSubsystem derives from Subsystem, PeopleLedger and DispositionView (6.6 item 3 passes
-//                &relations to both setters) and is constructed as
-//                RelationsSubsystem(const PeoplesSubsystem&, const ConflictSubsystem&, const data::ContentSet&)
-//                (it reads lying_low and camp_table, const reads, 3).
-//   GUESS (6.7)  RelationsSubsystem::finish(std::int64_t end_year) writes the rows of the run's end (as
-//                MonstersSubsystem::finish); race_relation_rows() and settlement_race_rows() return them in key
-//                order as std::vector<db::RaceRelationRow> and std::vector<db::SettlementRaceRow>.
-//   GUESS (16.2) db::RaceRelationRow {race_a, race_b, year, disposition, band} and
-//                db::SettlementRaceRow {settlement, race, year, share, standing}, members named as the columns;
-//                HistoryResult::race_relations and settlement_races; StageContext::write_race_relation and
-//                write_settlement_race (as write_site).
-//   GUESS (12.2) MonstersSubsystem::set_region_names(const RenamingSubsystem*) installs name_now's source.
-//   GUESS (16.1) db::BeastRow::bold_phrases and db::MonsterKindRow::raid_phrases (std::string, joined with |).
-//   GUESS (18)   RaceRelationState and RaceShare are declared at namespace scope in timeline.hpp (as YearState).
-//   GUESS (6.4.1) PeopleLedger's two calls are pure virtual, return void, take std::int64_t arguments.
+// The one place of the P5-03 tests' names of library API the spec (docs/specs/p5-03-race-relations.md r1) does
+// not give. Phase 1 guessed them; at integration (phase 2) each was checked against the engineer's headers:
+//   5, 6.6  RelationsSubsystem (worldgen/history/relations.hpp), a Subsystem, PeopleLedger and DispositionView,
+//           RelationsSubsystem(PeoplesSubsystem&, const ConflictSubsystem&, const data::ContentSet&)
+//   6.4.1   PeopleLedger (peoples.hpp): moved(state, from, to, people, cause), displaced(state, from, race, people,
+//           cause) (lead ruling 6); PeoplesSubsystem::set_ledger, ledger(); abandon(context, settlement, cause)
+//   6.7     RelationsSubsystem::finish(end_year), race_relation_rows(), settlement_race_rows()
+//   7.1     DispositionView (conflict.hpp): disposition(a, b), hatred_event(a, b); ConflictSubsystem::
+//           set_dispositions(const DispositionView*), camp_table()
+//   12.2    MonstersSubsystem::set_region_names(const RenamingSubsystem*); RenamingSubsystem::name_now(context, region)
+//   16.1    db::BeastRow::bold_phrases, db::MonsterKindRow::raid_phrases (joined with |)
+//   16.2    db::RaceRelationRow, db::SettlementRaceRow (members as the columns); HistoryResult::race_relations,
+//           settlement_races
+//   18      Timeline::race_relation_at, settlement_races; RaceRelationState, RaceShare at namespace scope
 //
 // The configuration of a run (RelConfig) is the history stage's of 6.6 item 3: peoples, conflict, renaming,
 // monsters, relations, with the ledger and the disposition view set; each of the three may be left out (I0 of
@@ -45,7 +33,7 @@
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/peoples.hpp"
-#include "worldgen/history/relations.hpp"   // GUESS: the header named in 5
+#include "worldgen/history/relations.hpp"
 #include "worldgen/history/renaming.hpp"
 #include "worldgen/history/timeline.hpp"
 
@@ -77,10 +65,9 @@ inline const std::vector<std::pair<std::int64_t, std::string>>& new_kinds() {
 using RelationsSubsystem = h::RelationsSubsystem;
 using PeopleLedger = h::PeopleLedger;
 using DispositionView = h::DispositionView;
-using RaceRelationState = h::RaceRelationState;   // GUESS: namespace scope (18)
-using RaceShare = h::RaceShare;                   // GUESS: namespace scope (18)
+using RaceRelationState = h::RaceRelationState;
+using RaceShare = h::RaceShare;
 
-// GUESS (5): the constructor.
 inline std::unique_ptr<RelationsSubsystem> make_relations(h::PeoplesSubsystem& peoples, h::ConflictSubsystem& conflict,
                                                           const wd::ContentSet& c) {
     return std::make_unique<RelationsSubsystem>(peoples, conflict, c);
@@ -93,14 +80,14 @@ struct RTables {
     std::vector<Row> race_relation, settlement_race;
 };
 
-inline Row rr_row(const db::RaceRelationRow& x) {   // GUESS member names
+inline Row rr_row(const db::RaceRelationRow& x) {
     return {eng::I(x.race_a), eng::I(x.race_b), eng::I(x.year), eng::I(x.disposition), eng::I(x.band)};
 }
-inline Row sr_row(const db::SettlementRaceRow& x) {   // GUESS member names
+inline Row sr_row(const db::SettlementRaceRow& x) {
     return {eng::I(x.settlement), eng::I(x.race), eng::I(x.year), eng::I(x.share), eng::I(x.standing)};
 }
 
-// The history stage's result as rows (GUESS HistoryResult::race_relations, settlement_races).
+// The history stage's result as rows.
 inline RTables history_stage(const wd::ContentSet& c, const eng::HistoryInputs& in) {
     const h::HistoryResult r = worldgen::stages::history_stage(c, in);
     RTables out;
@@ -128,10 +115,13 @@ struct LedgerCall {
 };
 class RecordingLedger final : public PeopleLedger {
 public:
-    void moved(std::int64_t from, std::int64_t to, std::int64_t people) override {   // GUESS signature
-        calls.push_back({true, from, to, 0, people, 0});
+    // Lead ruling 6 (integration): a move carries its cause; both calls see the state.
+    void moved(const h::State& /*state*/, std::int64_t from, std::int64_t to, std::int64_t people,
+               std::int64_t cause) override {
+        calls.push_back({true, from, to, 0, people, cause});
     }
-    void displaced(std::int64_t from, std::int64_t race, std::int64_t people, std::int64_t cause) override {
+    void displaced(const h::State& /*state*/, std::int64_t from, std::int64_t race, std::int64_t people,
+                   std::int64_t cause) override {
         calls.push_back({false, from, 0, race, people, cause});
     }
     std::vector<LedgerCall> calls;
@@ -175,7 +165,7 @@ struct RelConfig {
             monsters = std::make_unique<h::MonstersSubsystem>(*pair->peoples.sub, c);
             pair->peoples.sub->set_wild(monsters.get());
             renaming->set_monsters(monsters.get());
-            monsters->set_region_names(renaming.get());   // GUESS (12.2)
+            monsters->set_region_names(renaming.get());
         }
         if (o.relations) relations = make_relations(*pair->peoples.sub, *pair->sub, c);
         if (o.other_ledger != nullptr) {
@@ -220,7 +210,7 @@ struct RelConfig {
         RTables out;
         out.t = eng::tables_of(r);
         if (relations) {
-            relations->finish(in.params.span);   // GUESS (6.7)
+            relations->finish(in.params.span);
             for (const auto& x : relations->race_relation_rows()) out.race_relation.push_back(rr_row(x));
             for (const auto& x : relations->settlement_race_rows()) out.settlement_race.push_back(sr_row(x));
         }

@@ -2332,9 +2332,9 @@ def check_spec_023(c, races, cultures):
 
 # ---------------------------------------------------------------------------
 # The 0.24.0 listings (P5-03, docs/specs/p5-03-race-relations.md r1: 4.1, 4.2, 8.2, 9.2, 9.4, 9.5, 11.1, 11.3, 12,
-# 13), derived from the 0.23.0 ones by the edits the spec states. The shipped rates are interim (22 step 10): after
-# the engineer's calibration, RELATIONS_TUNING_024, MONSTERS_NEW_024, PEOPLES_NEW_024 and the tables below are the
-# one place to edit, then `golden`.
+# 13), derived from the 0.23.0 ones by the edits the spec states, at the engineer's calibrated values (22 step 10,
+# integration phase 2): RELATIONS_RANGES_024, MONSTERS_NEW_RANGES_024, PEOPLES_NEW_RANGES_024 and the tables below
+# are the one place to edit, then `golden`.
 # ---------------------------------------------------------------------------
 # 4.1: race field stances after culture (the last field).
 STANCE = REC(fields("race:S value:I"))
@@ -2360,13 +2360,13 @@ RACE_FILES_024 = {n: _race_024(n, t) for n, t in RACE_FILES_020.items()}
 # 4.2: history.relations, every field required, in this order (name, lo, hi, shipped).
 RELATIONS_RANGES_024 = (
     ("hatred_max", -2000, 0, -500), ("friend_min", 0, 2000, 150), ("band_margin", 0, 500, 50),
-    ("memory_min", -2000, 0, -250), ("memory_max", 0, 2000, 250), ("memory_decay_per_century", 0, 10000, 40),
-    ("war_memory", 0, 1000, 25), ("conquest_memory", 0, 1000, 50), ("sack_memory", 0, 1000, 10),
-    ("capture_memory", 0, 1000, 5), ("expel_memory", 0, 1000, 30), ("shelter_memory", 0, 1000, 15),
-    ("meet_hops", -1, 8, 3), ("migrate_hops", 0, 8, 2), ("migrate_min", 1, 100000, 40),
+    ("memory_min", -2000, 0, -500), ("memory_max", 0, 2000, 500), ("memory_decay_per_century", 0, 10000, 20),
+    ("war_memory", 0, 1000, 75), ("conquest_memory", 0, 1000, 150), ("sack_memory", 0, 1000, 30),
+    ("capture_memory", 0, 1000, 15), ("expel_memory", 0, 1000, 90), ("shelter_memory", 0, 1000, 45),
+    ("meet_hops", -1, 8, 8), ("migrate_hops", 0, 8, 2), ("migrate_min", 1, 100000, 40),
     ("welcome_min", -2000, 2001, -200), ("subject_years", 0, 100000, 200),
     ("conquest_settlers_permille", 0, 1000, 100), ("drift_permille_per_century", 0, 1000, 100),
-    ("fade_permille", 0, 1000, 20), ("mixed_min_permille", 1, 1001, 100), ("expel_permille", 0, 1000, 30),
+    ("fade_permille", 0, 1000, 20), ("mixed_min_permille", 1, 1001, 100), ("expel_permille", 0, 1000, 3),
     ("expel_share_max", 0, 1000, 500))
 RELATIONS_024 = tuple((n, INT) for n, _, _, _ in RELATIONS_RANGES_024)
 RELATIONS_TUNING_024 = {n: v for n, _, _, v in RELATIONS_RANGES_024}
@@ -2376,13 +2376,13 @@ RELATIONS_ZERO_024 = dict(RELATIONS_TUNING_024, war_memory=0, conquest_memory=0,
                           mixed_min_permille=1001, expel_permille=0)
 # 9.4 (and 9.1, 9.2, 9.3, 14.1): history.monsters fields after prey_might_max_permille.
 MONSTERS_NEW_RANGES_024 = (
-    ("raid_chain_years", 1, 100000, 100), ("toll_over_permille", 0, 1000, 250), ("hunt_raid_permille", 0, 1000, 60),
-    ("hunt_max_permille", 0, 1000, 400), ("fear_raids", 1, 100, 3), ("fear_years", 1, 100000, 50),
-    ("fear_permille", 0, 1000, 300), ("overrun_people_ref", 1, 1000000, 800))
+    ("raid_chain_years", 1, 100000, 300), ("toll_over_permille", 0, 1000, 250), ("hunt_raid_permille", 0, 1000, 5),
+    ("hunt_max_permille", 0, 1000, 200), ("fear_raids", 1, 100, 2), ("fear_years", 1, 100000, 50),
+    ("fear_permille", 0, 1000, 400), ("overrun_people_ref", 1, 1000000, 800))
 MONSTERS_024 = MONSTERS_023 + tuple((n, INT) for n, _, _, _ in MONSTERS_NEW_RANGES_024)
 MONSTERS_TUNING_024 = dict(MONSTERS_TUNING_023, **{n: v for n, _, _, v in MONSTERS_NEW_RANGES_024})
 # 11.1 and 11.2: history.peoples fields after ghost_max_population.
-PEOPLES_NEW_RANGES_024 = (("abandon_reach_hops", 0, 16, 2), ("abandon_loss_min_permille", 0, 1000, 50),
+PEOPLES_NEW_RANGES_024 = (("abandon_reach_hops", 0, 16, 0), ("abandon_loss_min_permille", 0, 1000, 50),
                           ("abandon_loss_max_permille", 0, 1000, 200), ("ghost_fade_years", 0, 100000, 0))
 PEOPLES_RANGES_024 = PEOPLES_RANGES_023 + tuple((n, lo, hi) for n, lo, hi, _ in PEOPLES_NEW_RANGES_024)
 PEOPLES_024 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_024)
@@ -2484,14 +2484,14 @@ def _renaming_file_024():
 
 def relations_file_024(t=None):
     t = RELATIONS_TUNING_024 if t is None else t
-    return ("# Race relations, mixed settlements and migrations (spec P5-03 4.2). Generator 0.24.0; values interim\n"
-            "# until the calibration sweep (P5-03 22 step 10).\n[history.relations]\n" +
+    return ("# Race relations, mixed settlements and migrations (spec P5-03 4.2). Generator 0.24.0; values of the\n"
+            "# calibration sweep (P5-03 22 step 10).\n[history.relations]\n" +
             "".join("%s = %d\n" % (n, t[n]) for n, _ in RELATIONS_024))
 
 
 def monsters_file_024():
-    return ("# Beasts and monsters (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0; rates interim until the calibration\n"
-            "# sweep (P5-03 22 step 10).\n[history.monsters]\n" +
+    return ("# Beasts and monsters (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0; rates of the calibration sweep\n"
+            "# (P5-03 22 step 10).\n[history.monsters]\n" +
             "".join("%s = %s\n" % (k, _toml_value(v)) for k, v in MONSTERS_TUNING_024.items()))
 
 

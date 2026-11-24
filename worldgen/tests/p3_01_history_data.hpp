@@ -58,7 +58,9 @@
 // quarrel_strength_permille 1000 and toll_spread_permille 200 after
 // quarrel_min_settlements, history.engine flare_min_years 10 after
 // quiet_min_years, the became_city template, the entries of kinds 41 and 42
-// after settlements_ceded. Mirrors SPEC_FILES_021.
+// after settlements_ceded. Mirrors SPEC_FILES_021. P5-02 (generator 0.23.0) and P5-03 (generator 0.24.0;
+// race stances, history.relations, the new history.monsters and history.peoples fields, the phrases,
+// forms and report entries): the texts are those of SPEC_FILES_024 at the calibrated values.
 
 #include <cstdint>
 #include <map>
@@ -110,6 +112,7 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
+stances = [{ race = "faerie", value = 200 }]
 )";
 
 inline constexpr std::string_view GOBLIN_TOML = R"([race.goblin]
@@ -149,6 +152,7 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
+stances = [{ race = "dwarf", value = -100 }]
 )";
 
 inline constexpr std::string_view DWARF_TOML = R"([race.dwarf]
@@ -187,6 +191,7 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
+stances = [{ race = "goblin", value = -100 }]
 )";
 
 inline constexpr std::string_view FAERIE_TOML = R"([race.faerie]
@@ -227,6 +232,7 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
+stances = [{ race = "elf", value = 200 }]
 )";
 
 inline constexpr std::string_view HUMAN_TOML = R"([race.human]
@@ -266,6 +272,7 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
+stances = []
 )";
 
 inline constexpr std::string_view ORC_TOML = R"([race.orc]
@@ -306,6 +313,7 @@ hidden_years = 100
 awakening_population = 1200
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
+stances = []
 )";
 
 // --- Naming blocks (P3-02 5, verbatim) ---------------------------------------------
@@ -467,21 +475,28 @@ events = [
   { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead of {@region} rose as {monster}." },
   { kind = "monster_woke", salience = 25, template = "{monster} woke again in {@region}." },
   { kind = "monster_slept", salience = 10, template = "{monster} sank into sleep in {lair}." },
-  { kind = "monster_raid", salience = 15, template = "{monster} fell upon {@settlement}; {dead?no one died|one died|# died}." },
+  { kind = "monster_raid", salience = 15, template = "{monster} {monster:raid} {@settlement}; {dead?no one died|one died|# died}." },
   { kind = "settlement_overrun", salience = 50, template = "{monster} drove the people from {@settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}." },
   { kind = "monster_slain", salience = 55, template = "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}." },
   { kind = "monster_driven_off", salience = 30, template = "{civilization} drove {monster} back to its lair in {@region}." },
   { kind = "monster_died", salience = 30, template = "{monster}, {monster:kind}, died of great age in {@region}." },
-  { kind = "beasts_bold", salience = 15, template = "In {@region} the {@beast} grew bold, and travellers from {settlement} went in fear; {dead?none|one|#} died on the roads." },
+  { kind = "beasts_bold", salience = 15, template = "In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died." },
   { kind = "outpost_built", salience = 12, template = "{civilization} raised {site} in {@region} against {enemy}." },
   { kind = "outpost_abandoned", salience = 10, template = "{civilization} abandoned {site}{reason?, the frontier having fallen quiet|, the land being lost|, its realm having fallen}." },
+  { kind = "settlement_fled", salience = 45, template = "For fear of {monster}, the people of {@settlement} left their homes." },
+  { kind = "peoples_met", salience = 25, template = "The {race_a:plural} first met the {race_b:plural} in {@region}{band?, and hated them from the first|, and were wary of them|, and were glad of them}." },
+  { kind = "disposition_turned", salience = 55, template = "{@causes:war_won=the wars,peace=the wars,truce=the wars,civ_conquered=the conquests,sacked=the sacks,settlement_captured=the conquests,people_expelled=the expulsions,refugees_arrived=years of shelter given|After |, }the {race_a:plural} and the {race_b:plural} {band?came to hate one another|grew wary of one another|became friends}." },
+  { kind = "refugees_arrived", salience = 25, template = "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the expulsion|After |, }{people} {race:plural} from {origin} found shelter in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their own kin of} {civilization}." },
+  { kind = "settlement_mixed", salience = 25, template = "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the cession|After |, }the {race:plural} and the {ruling:plural} lived side by side in {settlement}." },
+  { kind = "standing_changed", salience = 15, template = "In {settlement}, {civilization} {standing?held the|tolerated the|accepted the} {race:plural}{standing? as subjects|| as equals}." },
+  { kind = "people_expelled", salience = 40, template = "{civilization} drove the {race:plural} out of {settlement}; {people} left." },
 ]
 )";
 
 // --- history.renaming (P5-12 4 and 4.1, P3-01 r16 5.4; generator 0.22.0) ---
 
 inline constexpr std::string_view RENAMING_TOML = R"(# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 21.2
-# and rule 7 (P5-02 9.3), generator 0.23.0.
+# and rule 7 (P5-02 9.3), generator 0.23.0; rule 7's {name}'s Waste (P5-03 12.3), generator 0.24.0.
 [history.renaming]
 region_max = 2
 region_gap_years = 300
@@ -585,7 +600,7 @@ chance_permille = 600
 weight = 75
 name_role = "monster"
 namer_role = "civilization"
-forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"]
+forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"]
 )";
 
 
@@ -593,8 +608,8 @@ forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The H
 // (both fixture roots hold identical copies). The rates are interim (P5-02 17 step 9): after the engineer's
 // calibration these listings follow the data files.
 
-inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P3-01, next revision). Generator 0.23.0; rates interim until the
-# calibration sweep (P5-02 17).
+inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0; rates of the calibration sweep
+# (P5-03 22 step 10).
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
 living_permille = 100
@@ -627,6 +642,14 @@ prey_capital_permille = 250
 prey_hop_permille = 500
 prey_might_ref = 1500
 prey_might_max_permille = 4000
+raid_chain_years = 300
+toll_over_permille = 250
+hunt_raid_permille = 5
+hunt_max_permille = 200
+fear_raids = 2
+fear_years = 50
+fear_permille = 400
+overrun_people_ref = 800
 )";
 
 inline constexpr std::string_view BEAST_BEAR_TOML = R"([beast.bear]
@@ -643,6 +666,7 @@ density = 5
 growth_permille = 60
 menace = 30
 food = 30
+bold_phrases = ["broke into the stores of", "came down on the herds of"]
 )";
 inline constexpr std::string_view BEAST_BOAR_TOML = R"([beast.boar]
 name = "Boar"
@@ -659,6 +683,7 @@ density = 40
 growth_permille = 250
 menace = 3
 food = 100
+bold_phrases = ["trampled the fields of", "tore up the gardens of"]
 )";
 inline constexpr std::string_view BEAST_DEER_TOML = R"([beast.deer]
 name = "Deer"
@@ -678,6 +703,7 @@ density = 100
 growth_permille = 250
 menace = 0
 food = 60
+bold_phrases = ["strayed into the fields of"]
 )";
 inline constexpr std::string_view BEAST_GIANT_SPIDER_TOML = R"([beast.giant_spider]
 name = "Giant spider"
@@ -693,6 +719,7 @@ density = 10
 growth_permille = 200
 menace = 40
 food = 0
+bold_phrases = ["spun their webs across the paths of", "lay in wait on the roads from"]
 )";
 inline constexpr std::string_view BEAST_WOLF_TOML = R"([beast.wolf]
 name = "Wolf"
@@ -713,6 +740,7 @@ density = 20
 growth_permille = 150
 menace = 10
 food = 0
+bold_phrases = ["hunted the roads from", "grew bold and stalked the herds of"]
 )";
 inline constexpr std::string_view MONSTER_DRAGON_TOML = R"([monster.dragon]
 name = "Dragon"
@@ -726,7 +754,7 @@ biomes = [
 ]
 wake_rate = 60
 naming_culture = "elven"
-name_forms = ["{root} the Black", "{root} the Pale", "{root}"]
+name_forms = ["{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing", "{root} the Gold-Eyed", "{root}"]
 lair_forms = ["The Lair of {root}", "{root}'s Deep"]
 might = 6000
 range_hops = 2
@@ -742,6 +770,7 @@ lifespan_years = 0
 max_alive = 1
 flare = true
 hoard_permille = 40
+raid_phrases = ["fell in fire upon", "burned the fields of", "came down in flame on"]
 )";
 inline constexpr std::string_view MONSTER_GIANT_TOML = R"([monster.giant]
 name = "Giant"
@@ -754,7 +783,7 @@ biomes = [
 ]
 wake_rate = 25
 naming_culture = "dwarven"
-name_forms = ["{root} Stonehand", "{root}"]
+name_forms = ["{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"]
 lair_forms = ["{root}'s Seat", "The Hall of {root}"]
 might = 1200
 range_hops = 1
@@ -770,6 +799,7 @@ lifespan_years = 2500
 max_alive = 2
 flare = true
 hoard_permille = 8
+raid_phrases = ["came down from the heights upon", "hurled stones upon", "fell upon"]
 )";
 inline constexpr std::string_view MONSTER_OGRE_TOML = R"([monster.ogre]
 name = "Ogre"
@@ -784,7 +814,7 @@ biomes = [
 ]
 wake_rate = 40
 naming_culture = "orcish"
-name_forms = ["{root} the Glutton", "{root}"]
+name_forms = ["{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat", "{root}"]
 lair_forms = ["{root}'s Larder", "The Pit of {root}"]
 might = 200
 range_hops = 1
@@ -800,6 +830,7 @@ lifespan_years = 1000
 max_alive = 3
 flare = false
 hoard_permille = 3
+raid_phrases = ["fell upon", "plundered the stores of", "carried off the herds of"]
 )";
 inline constexpr std::string_view MONSTER_TROLL_TOML = R"([monster.troll]
 name = "Troll"
@@ -814,7 +845,7 @@ biomes = [
 ]
 wake_rate = 50
 naming_culture = "goblin"
-name_forms = ["Old {root}", "{root}"]
+name_forms = ["Old {root}", "{root} the Grey", "{root} Stonehide", "{root} of the Fells", "Mossback {root}", "{root}"]
 lair_forms = ["{root}'s Hollow", "The Den of {root}"]
 might = 300
 range_hops = 1
@@ -830,6 +861,7 @@ lifespan_years = 2000
 max_alive = 3
 flare = false
 hoard_permille = 5
+raid_phrases = ["came down by night on", "fell upon", "prowled the edges of"]
 )";
 inline constexpr std::string_view MONSTER_UNDEAD_TOML = R"([monster.undead]
 name = "Undead"
@@ -839,8 +871,8 @@ wake = "dead"
 biomes = []
 wake_rate = 15000
 naming_culture = "human"
-name_forms = ["The Host of {root}", "The Restless of {root}"]
-lair_forms = ["The Barrows of {root}", "{root}'s Howe"]
+name_forms = ["The Host of {place}", "The Restless of {place}", "The Dead of {place}"]
+lair_forms = ["The Barrows of {root}", "The Howes of {root}"]
 might = 1500
 range_hops = 1
 raid_permille = 80
@@ -854,7 +886,8 @@ rewake_ppm = 3000
 lifespan_years = 1000
 max_alive = 2
 flare = false
-hoard_permille = 5
+hoard_permille = 0
+raid_phrases = ["came out of the barrows against", "walked by night in", "crept into"]
 )";
 inline constexpr std::string_view MONSTER_WYVERN_TOML = R"([monster.wyvern]
 name = "Wyvern"
@@ -868,7 +901,7 @@ biomes = [
 ]
 wake_rate = 50
 naming_culture = "goblin"
-name_forms = ["The {root} Brood", "The Brood of {root}"]
+name_forms = ["The {root} Brood", "The Brood of {root}", "The Screamers of {root}"]
 lair_forms = ["The Eyrie of {root}", "{root}'s Crag"]
 might = 600
 range_hops = 2
@@ -883,7 +916,8 @@ rewake_ppm = 10000
 lifespan_years = 1000
 max_alive = 2
 flare = false
-hoard_permille = 2
+hoard_permille = 0
+raid_phrases = ["stooped on", "swept down on", "came screaming down on"]
 )";
 
 // The files of the two kinds as "<directory>/<file name>" -> text.
@@ -903,6 +937,36 @@ inline const std::vector<std::pair<std::string, std::string_view>>& monster_file
     };
     return v;
 }
+
+// --- history.relations (P5-03 4.2; generator 0.24.0, the calibrated values) ---
+
+inline constexpr std::string_view RELATIONS_TOML = R"(# Race relations, mixed settlements and migrations (spec P5-03 4.2). Generator 0.24.0; values of the
+# calibration sweep (P5-03 22 step 10).
+[history.relations]
+hatred_max = -500
+friend_min = 150
+band_margin = 50
+memory_min = -500
+memory_max = 500
+memory_decay_per_century = 20
+war_memory = 75
+conquest_memory = 150
+sack_memory = 30
+capture_memory = 15
+expel_memory = 90
+shelter_memory = 45
+meet_hops = 8
+migrate_hops = 2
+migrate_min = 40
+welcome_min = -200
+subject_years = 200
+conquest_settlers_permille = 100
+drift_permille_per_century = 100
+fade_permille = 20
+mixed_min_permille = 100
+expel_permille = 3
+expel_share_max = 500
+)";
 
 // --- history.conflict (P3-06 12.1, the listing; generator 0.16.0; r9 20.9 from 0.18.0) ---
 
@@ -1049,6 +1113,10 @@ plague_major_dead = 1000
 crisis_small_salience = 25
 ghost_permille = 200
 ghost_max_population = 600
+abandon_reach_hops = 0
+abandon_loss_min_permille = 50
+abandon_loss_max_permille = 200
+ghost_fade_years = 0
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -1127,6 +1195,7 @@ inline Files shipped_files() {
     f["history/engine.toml"] = std::string(ENGINE_TOML);
     f["history/peoples.toml"] = std::string(PEOPLES_TOML);
     f["history/renaming.toml"] = std::string(RENAMING_TOML);
+    f["history/relations.toml"] = std::string(RELATIONS_TOML);   // P5-03 4.2
     f["history/report.toml"] = std::string(REPORT_TOML);
     add_monster_files(f);   // P5-02 4.1 to 4.3
     return f;
