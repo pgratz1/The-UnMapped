@@ -151,6 +151,9 @@ bool ViewerModel::playback_arrive(int64_t year) {
 void ViewerModel::playback_outside_change() {
     const int64_t y = history_.year();
     playback_.pause_at(y);
+    // A path step restores the selection before the year: the list of the
+    // new selection.
+    refresh_playback_source();
     playback_.clear_ticker();
     // 5.3: the ticker holds the entries of the new Y alone (no flashes).
     playback_arrive(y);

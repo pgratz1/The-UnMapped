@@ -604,8 +604,11 @@ void ViewerScreen::_input(const godot::Ref<godot::InputEvent>& event) {
         return;
     }
     if (key->get_keycode() == godot::KEY_ESCAPE && !key->is_ctrl_pressed() && !key->is_alt_pressed()) {
+        // P4-06 8.2: any focused control (a list, the search field, a spin
+        // box) gives up the focus first, so that Space and the other keys
+        // reach the screen again.
         godot::Control* focus = get_viewport()->gui_get_focus_owner();
-        if (focus != nullptr && right_pane_->is_ancestor_of(focus)) {
+        if (focus != nullptr) {
             focus->release_focus();
             get_viewport()->set_input_as_handled();
         } else if (model_->get_browser_available()) {
