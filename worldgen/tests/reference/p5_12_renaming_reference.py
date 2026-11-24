@@ -465,7 +465,76 @@ def stage_check_message(rules, catalogue):
     return None
 
 
-def rows_violations(res, t, geo_names, other_names, nouns=None):
+class RuleMatch:
+    """P5-03 15: the rule a region_name row came from, read from the rows. A rule qualifies for the row's cause
+    e (6.2 of P5-12) when e's kind is one of its kinds, the magnitude summed over its window (the values of the
+    events of its kinds in e's region with year > year(e) - window_years and id <= e, after the region's
+    previous renaming, which clears the windows) is at least min_magnitude, salience(e) >= min_salience, and,
+    for a capital rule, e's settlement is the capital of e's first civilization participant (read at E:
+    reading R15a). Of the qualifying rules, those whose chance draw D(hist.renaming.chance; e, r, i + 1) at
+    w0 = the row's from_year (the step's year) passes are the candidates, and the chosen one is the heaviest
+    (6.3). With no seed known, the heaviest qualifying rule (conditions only)."""
+
+    def __init__(self, res, t, seed):
+        self.t = t
+        self.rules = t["rules"]
+        self.kinds = {k[0]: k[1] for k in res["event_kind"]}
+        self.ev = {e[0]: e for e in res["event"]}
+        self.vkey = {(v[0], v[1]): v[2] for v in res["event_kind_value"]}
+        self.vals = {}
+        for (x, s, v) in res["event_value"]:
+            self.vals.setdefault(x, {})[self.vkey.get((self.ev[x][3], s))] = v
+        self.causes = {}
+        for x, c in res["event_cause"]:
+            self.causes.setdefault(x, []).append(c)
+        self.parts = {}
+        for p in res.get("event_participant", ()):
+            self.parts.setdefault(p[0], []).append(p)
+        self.capital = {c[0]: c[5] for c in res.get("civilization", ())}
+        self.by_region = {}
+        for e in res["event"]:
+            if e[5]:
+                self.by_region.setdefault(e[5], []).append(e)
+        self.key = None if seed is None else cr.stream_key(int(seed), "hist.renaming.chance")
+
+    def first_civ(self, e):
+        for p in sorted(self.parts.get(e, ())):
+            if p[3] == CIV:
+                return p[4]
+        return 0
+
+    def qualifies(self, i, rule, e, after):
+        x = self.ev[e]
+        if self.kinds[x[3]] not in rule["kinds"]:
+            return False
+        lo = x[1] - rule["window_years"]
+        S = 0
+        for y in self.by_region.get(x[5], ()):
+            if y[0] > e or y[0] <= after or y[1] <= lo or self.kinds[y[3]] not in rule["kinds"]:
+                continue
+            S += sum(self.vals.get(y[0], {}).get(v, 0) for v in rule["values"]) if rule["values"] else 1
+        if S < rule["min_magnitude"] or x[7] < rule["min_salience"]:
+            return False
+        if rule["capital"]:
+            c = self.first_civ(e)
+            if x[6] == 0 or c == 0 or self.capital.get(c) != x[6]:
+                return False
+        return True
+
+    def weight(self, row, prev):
+        cs = self.causes.get(row[4], [])
+        if len(cs) != 1:
+            return None
+        e = cs[0]
+        after = prev[4] if prev is not None else 0
+        q = [(i, r) for i, r in enumerate(self.rules) if self.qualifies(i, r, e, after)]
+        if self.key is not None:
+            q = [(i, r) for i, r in q
+                 if pnr_chance(pnr.draw(self.key, row[1], e, row[0], i + 1), r["chance_permille"])]
+        return max((r["weight"] for _i, r in q), default=None)
+
+
+def rows_violations(res, t, geo_names, other_names, nouns=None, seed=None):
     """Invariants 1 to 5 of section 8 on the history tables (res as p3_conflict_reference.history_stage gives
     them, or read from a world). geo_names: {region: region.name}; other_names: every other name of the world
     (ages, gods, civilizations, settlements). Returns a list of messages."""
@@ -496,15 +565,20 @@ def rows_violations(res, t, geo_names, other_names, nouns=None):
     per = {}
     for r in rows:
         per.setdefault(r[0], []).append(r)
+    met = RuleMatch(res, t, seed) if "event_value" in res and "event_kind_value" in res else None
     for rid, rs in per.items():
         if len(rs) > t["region_max"]:
             out.append("2: region %d has %d rows" % (rid, len(rs)))
-        for a, b in zip(rs, rs[1:]):
+        for i, (a, b) in enumerate(zip(rs, rs[1:])):
             if b[1] - a[1] < t["region_gap_years"]:
                 out.append("2: region %d rows %d and %d closer than the gap" % (rid, a[1], b[1]))
-            wa = max_weight(rule_by_kind, kinds, ev, causes.get(a[4], []))
-            wb = max_weight(rule_by_kind, kinds, ev, causes.get(b[4], []))
-            if not (wb > wa):
+            if met is not None:   # P5-03 15: the weight of the rule whose conditions the cause meets
+                wa = met.weight(a, rs[i - 1] if i > 0 else None)
+                wb = met.weight(b, a)
+            else:
+                wa = max_weight(rule_by_kind, kinds, ev, causes.get(a[4], []))
+                wb = max_weight(rule_by_kind, kinds, ev, causes.get(b[4], []))
+            if wa is None or wb is None or not (wb > wa):
                 out.append("2: region %d: the later row's rule weight %r is not above %r" % (rid, wb, wa))
     # 3
     R = len(geo_names)
@@ -684,7 +758,7 @@ def check_res(c, label, res, dat):
     inp = res["_inputs"]
     geo = {r["id"]: r["name"] for r in inp.regions}
     other = world_names_of(res) + [a[4] for a in inp.ages] + [g[1] for g in inp.gods]
-    for m in rows_violations(res, dat.renaming, geo, other):
+    for m in rows_violations(res, dat.renaming, geo, other, seed=inp.seed):
         c.ok("%s invariant %s" % (label, m), False)
     w = res["_world"]
     rn = w.renaming
@@ -1033,7 +1107,8 @@ def check_subsystem_units(c, dat):
 def read_world(path):
     conn = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
     res = {}
-    for t in ("event_kind", "event", "event_cause", "civilization", "settlement", "region_name"):
+    for t in ("event_kind", "event_kind_value", "event", "event_cause", "event_value", "event_participant",
+              "civilization", "settlement", "region_name"):
         res[t] = [tuple(r) for r in conn.execute('SELECT * FROM "%s" ORDER BY 1, 2' % t)]
     geo = {r[0]: r[1] for r in conn.execute("SELECT id, name FROM region ORDER BY id")}
     other = [r[0] for r in conn.execute("SELECT name FROM age")] + [r[0] for r in conn.execute("SELECT name FROM god")]
@@ -1048,7 +1123,7 @@ def cmd_check_world(paths):
     for p in paths:
         res, geo, other, meta = read_world(p)
         other = other + [c[1] for c in res["civilization"]] + [s[1] for s in res["settlement"]]
-        msgs = rows_violations(res, dat.renaming, geo, other)
+        msgs = rows_violations(res, dat.renaming, geo, other, seed=meta.get("seed"))
         # 4: validity by 5.2 items 1 to 3 (V8 needs the parts: the reference checks it on its own rows)
         for r in res["region_name"]:
             p2 = name_problem(r[2], [r[2]])
@@ -1079,9 +1154,46 @@ class Checker:
             print("FAIL: %s: got %r, want %r" % (what, got, want))
 
 
+def check_p503_15(c):
+    """P5-03 15 on hand-made rows: two rules on `sacked` (capital_sack weight 90, min_salience 90; great_sack
+    weight 80, dead >= 1500). Row 1's sack (salience 50, dead 2000) meets great_sack only; row 2's sack (salience
+    90, dead 100) meets capital_sack only: 80 then 90 is a valid order, which the largest weight over the kind
+    (90, 90) called a defect. A third case: a sack meeting both rules' conditions is decided by the chance draw
+    (seed 5 at 1024, --monster-pressure high, 0.23.0: event 339 meets both, capital_sack's draw fails, the row's
+    name is great_sack's `The Cinder Downs`)."""
+    t = dict(region_max=2, region_gap_years=1, world_max_permille=1000, century_max_permille=1000, century_years=100,
+             rules=[dict(key="capital_sack", kinds=["sacked"], values=[], min_magnitude=1, window_years=1,
+                         min_salience=90, capital=False, chance_permille=1000, weight=90),
+                    dict(key="great_sack", kinds=["sacked"], values=["dead"], min_magnitude=1500, window_years=1,
+                         min_salience=0, capital=False, chance_permille=1000, weight=80)])
+    res = dict(event_kind=[(25, "sacked"), (43, "region_renamed")], event_kind_value=[(25, 1, "dead")],
+               event=[(1, 100, 100, 25, 1, 7, 3, 50), (2, 100, 100, 43, 1, 7, 0, 30),
+                      (3, 500, 500, 25, 1, 7, 4, 90), (4, 500, 500, 43, 1, 7, 0, 30)],
+               event_value=[(1, 1, 2000), (3, 1, 100)], event_cause=[(2, 1), (4, 3)],
+               region_name=[(7, 100, "Aa", 1, 2), (7, 500, "Bb", 1, 4)])
+    m = RuleMatch(res, t, None)
+    rows = sorted(res["region_name"])
+    c.eq("P5-03 15 the lighter rule's conditions only", m.weight(rows[0], None), 80)
+    c.eq("P5-03 15 the heavier rule's conditions only", m.weight(rows[1], rows[0]), 90)
+    c.eq("P5-03 15 old max_weight calls it a defect", [max_weight({"sacked": t["rules"]}, {25: "sacked"},
+                                                                   {e[0]: e for e in res["event"]}, [x])
+                                                        for x in (1, 3)], [90, 90])
+    rules2 = [w for w in rows_violations(res, t, {7: "Zz"}, []) if w.startswith("2:")]
+    c.eq("P5-03 15 no invariant 2 message", rules2, [])
+    # both rules' conditions met: the chance draw (computed, not assumed) decides
+    t["rules"][0]["chance_permille"] = 0
+    res["event"][2] = (3, 500, 500, 25, 1, 7, 4, 90)
+    res["event_value"][1] = (3, 1, 2000)
+    m = RuleMatch(res, t, 1)
+    c.eq("P5-03 15 both met, the heavier's chance 0: the lighter's weight", m.weight(rows[1], rows[0]), 80)
+    m = RuleMatch(res, t, None)
+    c.eq("P5-03 15 both met, no seed: the heavier", m.weight(rows[1], rows[0]), 90)
+
+
 def cmd_check(argv):
     c = Checker()
     check_units(c)
+    check_p503_15(c)
     dat = pcr.data()
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else DEFAULT_INPUTS
     small = rename_small_data(dat)
