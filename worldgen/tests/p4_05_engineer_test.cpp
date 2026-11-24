@@ -219,7 +219,7 @@ TEST_CASE("P4-05 engineer: the browser index") {
     CHECK_THROWS_AS((void)b.event_detail(h, 0), worldgen::FatalError);
     CHECK_THROWS_AS((void)b.block(h, 0, wi::HistoryLevel::full), worldgen::FatalError);
     CHECK(b.search(h, "", 50).empty());
-    const std::string& first = b.civilizations().front().name;
+    const std::string first = b.civilizations().front().name;
     std::string q = first.substr(0, 3);
     for (char& c : q) c = (c >= 'a' && c <= 'z') ? static_cast<char>(c - 'a' + 'A') : c;
     const auto found = b.search(h, q, 50);
