@@ -29,6 +29,13 @@ constexpr double GLYPH_STEP_3 = 10.0;
 constexpr double SMALL_HIDDEN_BELOW = 0.5;
 // P4-05 12.3: the image is drawn as tiles of TILE x TILE cells.
 constexpr int32_t TILE = 128;
+// P4-05 5.5, 6.2: a click moves less than this many screen pixels; the
+// dimming alpha (0.45 of 255); the frame and place colours.
+constexpr float CLICK_SLOP = 4.0F;
+constexpr uint8_t DIM_ALPHA = 115;
+const godot::Color FRAME_GOLD(255.0F / 255.0F, 215.0F / 255.0F, 0.0F);
+const godot::Color FRAME_PLACE(0.0F, 230.0F / 255.0F, 1.0F);
+constexpr int32_t EVENT_PLACE_HALF = 12;  // half-size in glyph cells
 
 }  // namespace
 
@@ -133,6 +140,12 @@ void LayerMapView::clear_image() {
     image_.unref();
     tiles_.clear();
     shown_.clear();
+    mask_tiles_.clear();
+    mask_shown_.clear();
+    mask_size_ = godot::Vector2i();
+    gold_frames_.clear();
+    place_frame_ = -1;
+    event_place_ = godot::Vector2i(-1, -1);
     image_size_ = godot::Vector2i();
     hovered_ = godot::Vector2i(-1, -1);
     queue_redraw();
@@ -240,27 +253,158 @@ void LayerMapView::_draw() {
         const godot::Vector2 to = offset_ + godot::Vector2(tile.rect.position + tile.rect.size) * z;
         draw_texture_rect(tile.texture, godot::Rect2(from, to - from), false);
     }
-    if (markers_.empty()) {
-        return;
+    // P4-05 6.2 item 1: the dimming mask, when it fits the image.
+    if (mask_size_ == image_size_) {
+        for (const Tile& tile : mask_tiles_) {
+            const godot::Vector2 from = offset_ + godot::Vector2(tile.rect.position) * z;
+            const godot::Vector2 to = offset_ + godot::Vector2(tile.rect.position + tile.rect.size) * z;
+            draw_texture_rect(tile.texture, godot::Rect2(from, to - from), false);
+        }
     }
-    const auto start = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
     const int32_t g = glyph_cell_size();
     const int32_t half = g / 2;
-    for (const Marker& marker : markers_) {
-        if (!marker_drawn(marker)) {
-            continue;
+    if (!markers_.empty()) {
+        const auto start = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
+        for (const Marker& marker : markers_) {
+            if (!marker_drawn(marker)) {
+                continue;
+            }
+            const godot::Ref<godot::ImageTexture> texture = glyph_texture(marker, g);
+            if (texture.is_null()) {
+                continue;
+            }
+            const godot::Vector2i c = marker_centre(marker);
+            const int32_t r = marker.cells->radius;
+            draw_texture(texture, godot::Vector2(static_cast<float>(c.x - r * g - half),
+                                                 static_cast<float>(c.y - r * g - half)));
         }
-        const godot::Ref<godot::ImageTexture> texture = glyph_texture(marker, g);
-        if (texture.is_null()) {
-            continue;
-        }
-        const godot::Vector2i c = marker_centre(marker);
-        const int32_t r = marker.cells->radius;
-        draw_texture(texture, godot::Vector2(static_cast<float>(c.x - r * g - half),
-                                             static_cast<float>(c.y - r * g - half)));
+        last_marker_draw_usec_ = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec()) - start;
+        ++marker_draws_;
     }
-    last_marker_draw_usec_ = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec()) - start;
-    ++marker_draws_;
+    // 6.2 item 3: frames; item 4: the event place.
+    for (const int64_t index : gold_frames_) {
+        draw_marker_frame(index, FRAME_GOLD);
+    }
+    if (place_frame_ >= 0) {
+        draw_marker_frame(place_frame_, FRAME_PLACE);
+    }
+    if (event_place_.x >= 0 && event_place_.y >= 0 && event_place_.x < image_size_.x && event_place_.y < image_size_.y) {
+        const double cx = std::floor(static_cast<double>(offset_.x) + (static_cast<double>(event_place_.x) + 0.5) * zoom_);
+        const double cy = std::floor(static_cast<double>(offset_.y) + (static_cast<double>(event_place_.y) + 0.5) * zoom_);
+        const auto r = static_cast<float>(EVENT_PLACE_HALF * g);
+        const godot::Vector2 c(static_cast<float>(cx), static_cast<float>(cy));
+        // A 2 px line centred on the square's edge: white at half-size r,
+        // black just outside it.
+        draw_rect(godot::Rect2(c - godot::Vector2(r, r), godot::Vector2(2.0F * r, 2.0F * r)), godot::Color(1, 1, 1),
+                  false, 2.0F);
+        draw_rect(godot::Rect2(c - godot::Vector2(r + 2.0F, r + 2.0F), godot::Vector2(2.0F * r + 4.0F, 2.0F * r + 4.0F)),
+                  godot::Color(0, 0, 0), false, 2.0F);
+    }
+}
+
+void LayerMapView::draw_marker_frame(int64_t index, godot::Color colour) {
+    if (index < 0 || static_cast<std::size_t>(index) >= markers_.size()) {
+        return;
+    }
+    const Marker& marker = markers_[static_cast<std::size_t>(index)];
+    if (!marker_drawn(marker)) {
+        return;
+    }
+    const int32_t g = glyph_cell_size();
+    const int32_t half = g / 2;
+    const godot::Vector2i c = marker_centre(marker);
+    const int32_t r = marker.cells->radius;
+    // The glyph covers [c - r g - half, c - r g - half + (2r + 1) g); the
+    // frame is a 2 px line just outside it.
+    const auto x0 = static_cast<float>(c.x - r * g - half);
+    const auto y0 = static_cast<float>(c.y - r * g - half);
+    const auto side = static_cast<float>((2 * r + 1) * g);
+    draw_rect(godot::Rect2(x0 - 1.0F, y0 - 1.0F, side + 2.0F, side + 2.0F), colour, false, 2.0F);
+}
+
+// --- Highlight (P4-05 6.2) -----------------------------------------------------
+
+void LayerMapView::set_mask(const std::vector<uint8_t>& mask, uint32_t width, uint32_t height) {
+    const int64_t start = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
+    if (mask.empty() || width == 0 || height == 0 ||
+        mask.size() != static_cast<std::size_t>(width) * static_cast<std::size_t>(height)) {
+        mask_tiles_.clear();
+        mask_shown_.clear();
+        mask_size_ = godot::Vector2i();
+        queue_redraw();
+        last_mask_nsec_ = (static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec()) - start) * 1000;
+        return;
+    }
+    const godot::Vector2i size(static_cast<int32_t>(width), static_cast<int32_t>(height));
+    if (size != mask_size_ || mask_tiles_.empty()) {
+        mask_size_ = size;
+        mask_shown_ = mask;
+        mask_tiles_.clear();
+        for (int32_t ty = 0; ty < size.y; ty += TILE) {
+            for (int32_t tx = 0; tx < size.x; tx += TILE) {
+                Tile tile;
+                tile.rect = godot::Rect2i(tx, ty, std::min(TILE, size.x - tx), std::min(TILE, size.y - ty));
+                tile.texture = godot::ImageTexture::create_from_image(mask_tile_image(tile.rect));
+                mask_tiles_.push_back(std::move(tile));
+            }
+        }
+        mask_tiles_uploaded_ += static_cast<int64_t>(mask_tiles_.size());
+    } else {
+        for (Tile& tile : mask_tiles_) {
+            bool differs = false;
+            const int32_t y_end = tile.rect.position.y + tile.rect.size.y;
+            const auto row_bytes = static_cast<std::size_t>(tile.rect.size.x);
+            for (int32_t y = tile.rect.position.y; y < y_end && !differs; ++y) {
+                const std::size_t at = static_cast<std::size_t>(y) * width + static_cast<std::size_t>(tile.rect.position.x);
+                differs = std::memcmp(mask.data() + at, mask_shown_.data() + at, row_bytes) != 0;
+            }
+            if (!differs) {
+                continue;
+            }
+            for (int32_t y = tile.rect.position.y; y < y_end; ++y) {
+                const std::size_t at = static_cast<std::size_t>(y) * width + static_cast<std::size_t>(tile.rect.position.x);
+                std::memcpy(mask_shown_.data() + at, mask.data() + at, row_bytes);
+            }
+            tile.texture->update(mask_tile_image(tile.rect));
+            ++mask_tiles_uploaded_;
+        }
+    }
+    queue_redraw();
+    last_mask_nsec_ = (static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec()) - start) * 1000;
+}
+
+godot::Ref<godot::Image> LayerMapView::mask_tile_image(const godot::Rect2i& rect) const {
+    const auto width = static_cast<std::size_t>(mask_size_.x);
+    godot::PackedByteArray data;
+    data.resize(static_cast<int64_t>(rect.size.x) * rect.size.y * 2);
+    uint8_t* out = data.ptrw();
+    for (int32_t y = 0; y < rect.size.y; ++y) {
+        const uint8_t* in = mask_shown_.data() + static_cast<std::size_t>(rect.position.y + y) * width +
+                            static_cast<std::size_t>(rect.position.x);
+        for (int32_t x = 0; x < rect.size.x; ++x) {
+            out[0] = 0;
+            out[1] = in[x] != 0 ? DIM_ALPHA : 0;
+            out += 2;
+        }
+    }
+    return godot::Image::create_from_data(rect.size.x, rect.size.y, false, godot::Image::FORMAT_LA8, data);
+}
+
+void LayerMapView::set_frames(const std::vector<int64_t>& gold, int64_t place) {
+    if (gold == gold_frames_ && place == place_frame_) {
+        return;
+    }
+    gold_frames_ = gold;
+    place_frame_ = place;
+    queue_redraw();
+}
+
+void LayerMapView::set_event_place(godot::Vector2i cell) {
+    if (cell == event_place_) {
+        return;
+    }
+    event_place_ = cell;
+    queue_redraw();
 }
 
 // --- Markers (P4-04 8.4, 8.5) ------------------------------------------------
@@ -445,12 +589,32 @@ void LayerMapView::_gui_input(const godot::Ref<godot::InputEvent>& event) {
             }
             dragging_ = button->is_pressed();
             accept_event();
+            // P4-05 5.5: a left press and release without a drag is a click.
+            if (index == godot::MOUSE_BUTTON_LEFT) {
+                if (button->is_pressed()) {
+                    pressing_ = true;
+                    press_cancelled_ = button->is_double_click();
+                    press_position_ = button->get_position();
+                } else if (pressing_) {
+                    pressing_ = false;
+                    const bool moved = (button->get_position() - press_position_).length() >= CLICK_SLOP;
+                    if (!press_cancelled_ && !moved) {
+                        update_hover(button->get_position());
+                        const godot::Vector2i cell = cell_at(button->get_position());
+                        emit_signal("cell_clicked", cell.x, cell.y, marker_at(button->get_position()));
+                        return;
+                    }
+                }
+            }
         }
         update_hover(button->get_position());
         return;
     }
     const godot::Ref<godot::InputEventMouseMotion> motion = event;
     if (motion.is_valid()) {
+        if (pressing_ && (motion->get_position() - press_position_).length() >= CLICK_SLOP) {
+            press_cancelled_ = true;
+        }
         if (dragging_) {
             auto_fit_ = false;
             offset_ += motion->get_relative();
@@ -494,6 +658,8 @@ void LayerMapView::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_hovered_marker"), &LayerMapView::get_hovered_marker);
     ADD_SIGNAL(MethodInfo("cell_hovered", PropertyInfo(Variant::INT, "x"), PropertyInfo(Variant::INT, "y")));
     ADD_SIGNAL(MethodInfo("marker_hovered", PropertyInfo(Variant::INT, "index")));
+    ADD_SIGNAL(MethodInfo("cell_clicked", PropertyInfo(Variant::INT, "x"), PropertyInfo(Variant::INT, "y"),
+                          PropertyInfo(Variant::INT, "marker_index")));
 }
 
 }  // namespace unmapped

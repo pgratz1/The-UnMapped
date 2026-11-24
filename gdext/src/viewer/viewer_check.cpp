@@ -42,6 +42,7 @@
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "viewer/viewer_check_browser.hpp"
 #include "viewer/viewer_screen.hpp"
 #include "world_file.hpp"
 #include "worldgen/db/reader.hpp"
@@ -1884,6 +1885,7 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
     if (options.expect_history == "none") {
         check_without_history(check, screen, hover_text);
         check_markers_without_history(check, screen);
+        check_browser_without_history(screen, [&check](bool ok, const godot::String& what) { check.expect(ok, what); });
     } else if (options.expect_history == "loaded") {
         check_markers_at_open(check, screen);
         check_with_history(check, screen, options);
@@ -1891,6 +1893,12 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
         if (report.problem.empty()) {
             check_markers(check, screen, options, report);
         }
+        // P4-05 8.2: B1 to B12.
+        const int64_t browser_start = usec_now();
+        check_browser(screen, options, [&check](bool ok, const godot::String& what) { check.expect(ok, what); });
+        godot::UtilityFunctions::print("UNMAPPED-CHECK: info: browser checks ",
+                                       num((usec_now() - browser_start) / 1000), " ms, browser built at open in ",
+                                       num(model->browser_state().load_usec() / 1000), " ms");
     } else if (!options.expect_history.is_empty()) {
         check.expect(false, "--expect-history " + options.expect_history + ": expected none or loaded");
     }

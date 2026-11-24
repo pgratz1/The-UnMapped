@@ -26,6 +26,18 @@
 // their glyphs to %MapView. Key M toggles the markers. While the mouse is on
 // a marker, %CellLabel shows its description instead of the cell's.
 //
+// Browser (spec P4-05 6): the right pane %RightPane (a TabContainer with
+// the tabs Browser and Legend) holds %BrowserBack, %BrowserForward,
+// %BrowserSearch, %EntityTabs, %CivList, %SearchResults, %EventScope,
+// %EventGroup, %EventAll, %EventFrom, %EventTo, %EventThisYear,
+// %FollowToggle, %FollowFirst, %EventList and %BrowserDetail. Every control
+// calls the model; the screen mirrors the model on browser_selection_changed,
+// event_list_changed and highlight_changed, and hands the highlight to
+// %MapView (dimming mask, frames, event place). A click on the map selects
+// (5.5). Keys: F follow, Backspace / Shift+Backspace back / forward, Escape
+// releases a browser control's focus or clears the selection, Ctrl+F the
+// search field, B hides or shows the right pane.
+//
 // Command line (arguments after `--`):
 //   <world.db>                 open this world at start
 //   --view <name>              then show this layer or composite ("biome",
@@ -55,6 +67,15 @@
 //   --expect-marker-years <a,b,...>  with --check: the years compared with
 //                              <dir>/markers-<Y>.png (P4-04 9)
 //   --expect-passes <n>        with --check: the world report's passes
+//   --history-summary <file>   with --check: `report --history --level
+//                              summary` (P4-05 8.1)
+//   --select <target>          after opening, follow this link (c3, s12,
+//                              rg4, e57), as if clicked (for screenshots)
+//   --browser-group <word>     after opening, filter the events by group
+//   --browser-full             after opening, the level full ("All events")
+//   --search <text>            after opening, type this into the search field
+//   --tab <browser|legend>     after opening, show this tab of the right pane
+//   --size <w> <h>             with --screenshot: the window size
 
 #include <cstdint>
 #include <map>
@@ -71,6 +92,11 @@
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/item_list.hpp>
 #include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/line_edit.hpp>
+#include <godot_cpp/classes/option_button.hpp>
+#include <godot_cpp/classes/rich_text_label.hpp>
+#include <godot_cpp/classes/tab_bar.hpp>
+#include <godot_cpp/classes/tab_container.hpp>
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/classes/spin_box.hpp>
 #include <godot_cpp/classes/tree.hpp>
@@ -90,6 +116,7 @@ public:
 
     void _ready() override;
     void _unhandled_key_input(const godot::Ref<godot::InputEvent>& event) override;
+    void _input(const godot::Ref<godot::InputEvent>& event) override;
 
     // --- Bound to Godot ------------------------------------------------------
     [[nodiscard]] godot::Ref<ViewerModel> get_model() const;
@@ -121,6 +148,28 @@ public:
     [[nodiscard]] godot::CheckBox* mark_events() const noexcept { return mark_events_; }
     [[nodiscard]] godot::CheckBox* mark_passes() const noexcept { return mark_passes_; }
     [[nodiscard]] godot::ItemList* marker_legend() const noexcept { return marker_legend_; }
+    [[nodiscard]] godot::TabContainer* right_pane() const noexcept { return right_pane_; }
+    [[nodiscard]] godot::Button* browser_back_button() const noexcept { return browser_back_; }
+    [[nodiscard]] godot::Button* browser_forward_button() const noexcept { return browser_forward_; }
+    [[nodiscard]] godot::LineEdit* browser_search() const noexcept { return browser_search_; }
+    [[nodiscard]] godot::Tree* civ_list() const noexcept { return civ_list_; }
+    [[nodiscard]] godot::ItemList* search_results() const noexcept { return search_results_; }
+    [[nodiscard]] godot::OptionButton* event_scope() const noexcept { return event_scope_; }
+    [[nodiscard]] godot::OptionButton* event_group() const noexcept { return event_group_; }
+    [[nodiscard]] godot::CheckBox* event_all() const noexcept { return event_all_; }
+    [[nodiscard]] godot::SpinBox* event_from() const noexcept { return event_from_; }
+    [[nodiscard]] godot::SpinBox* event_to() const noexcept { return event_to_; }
+    [[nodiscard]] godot::CheckBox* event_this_year() const noexcept { return event_this_year_; }
+    [[nodiscard]] godot::CheckButton* follow_toggle() const noexcept { return follow_toggle_; }
+    [[nodiscard]] godot::Button* follow_first_button() const noexcept { return follow_first_; }
+    [[nodiscard]] godot::ItemList* event_list() const noexcept { return event_list_; }
+    [[nodiscard]] godot::RichTextLabel* browser_detail() const noexcept { return browser_detail_; }
+    // The browser's controls that can be disabled, for the check (B0).
+    [[nodiscard]] std::vector<godot::Control*> browser_controls() const;
+    // The time of the last %EventList rebuild and of the last highlight
+    // handler (mask upload, frames), nanoseconds.
+    [[nodiscard]] int64_t last_list_rebuild_nsec() const noexcept { return last_list_rebuild_nsec_; }
+    [[nodiscard]] int64_t last_highlight_nsec() const noexcept { return last_highlight_nsec_; }
     // The eight buttons of the year row, in their order in the row.
     [[nodiscard]] std::vector<godot::Button*> year_buttons() const;
     // The texts of %YearLabel and %YearCounts for the model's year (4.4).
@@ -169,6 +218,36 @@ private:
     void show_hover_text();
     void apply_view_options();
 
+    // Browser (P4-05 6).
+    void wire_browser();
+    void on_browser_selection_changed();
+    void on_event_list_changed();
+    void on_highlight_changed();
+    void on_cell_clicked(int64_t x, int64_t y, int64_t marker);
+    void on_civ_list_selected();
+    void on_event_row_selected(int64_t index);
+    void on_search_changed(const godot::String& text);
+    void on_search_result_selected(int64_t index);
+    void on_scope_selected(int64_t index);
+    void on_group_selected(int64_t index);
+    void on_event_all_toggled(bool on);
+    void on_event_years_changed(double value);
+    void on_this_year_toggled(bool on);
+    void on_follow_toggled(bool on);
+    void on_follow_first_pressed();
+    void on_browser_back_pressed();
+    void on_browser_forward_pressed();
+    void on_detail_meta_clicked(const godot::Variant& meta);
+    void browser_world_opened();
+    void browser_world_closed();
+    void update_browser_controls();
+    void show_browser_detail();
+    void push_highlight_frames();
+    void scroll_event_list();
+    void add_linked_text(const godot::Dictionary& linked, int64_t from_char = 0);
+    void add_link(const godot::String& target, const godot::String& text);
+    void apply_browser_options();
+
     void show_status(const godot::String& text, bool is_error);
     void show_legend();
     void update_year_bar(bool marks = true);
@@ -208,6 +287,38 @@ private:
     godot::CheckBox* mark_events_ = nullptr;
     godot::CheckBox* mark_passes_ = nullptr;
     godot::ItemList* marker_legend_ = nullptr;
+    godot::TabContainer* right_pane_ = nullptr;
+    godot::Button* browser_back_ = nullptr;
+    godot::Button* browser_forward_ = nullptr;
+    godot::LineEdit* browser_search_ = nullptr;
+    godot::TabBar* entity_tabs_ = nullptr;
+    godot::Tree* civ_list_ = nullptr;
+    godot::ItemList* search_results_ = nullptr;
+    godot::OptionButton* event_scope_ = nullptr;
+    godot::OptionButton* event_group_ = nullptr;
+    godot::CheckBox* event_all_ = nullptr;
+    godot::SpinBox* event_from_ = nullptr;
+    godot::SpinBox* event_to_ = nullptr;
+    godot::CheckBox* event_this_year_ = nullptr;
+    godot::CheckButton* follow_toggle_ = nullptr;
+    godot::Button* follow_first_ = nullptr;
+    godot::ItemList* event_list_ = nullptr;
+    godot::RichTextLabel* browser_detail_ = nullptr;
+    bool updating_browser_ = false;   // signals from our own updates are ignored
+    godot::PackedInt64Array event_ids_;  // the ids %EventList shows, row order
+    godot::Array search_rows_;           // the rows %SearchResults shows
+    godot::PackedStringArray group_words_;
+    std::map<int64_t, godot::Ref<godot::ImageTexture>> swatches_;  // by colour
+    int64_t mask_version_shown_ = -1;
+    int64_t last_list_rebuild_nsec_ = 0;
+    int64_t last_highlight_nsec_ = 0;
+    godot::String start_select_;
+    godot::String start_group_;
+    bool start_full_ = false;
+    godot::String start_search_;
+    godot::String start_tab_;
+    int64_t start_width_ = -1;
+    int64_t start_height_ = -1;
     int64_t hovered_marker_ = -1;
     godot::Dictionary marker_glyphs_;  // glyph name -> {radius, cells}, filled on first use
     godot::Array marker_legend_rows_;  // the key list's rows as last shown
@@ -231,6 +342,7 @@ private:
     godot::String check_expect_years_;
     godot::String check_history_report_;
     godot::String check_expect_marker_years_;
+    godot::String check_history_summary_;
     int64_t check_expect_passes_ = -1;
     double start_zoom_ = 0.0;
     int64_t start_centre_x_ = -1;
@@ -251,7 +363,10 @@ private:
         int64_t legend = 0;
         int64_t year_bar = 0;
         int64_t hover = 0;
+        int64_t highlight = 0;  // P4-05 7: the highlight_changed handler (mask upload, frames)
+        int64_t list = 0;       // P4-05 7: the event_list_changed handler (list rebuild)
     };
+    void bench_browser_filters();
     YearSteps year_steps_;
     // The windowed pass: one year change per frame, timed from set_year to
     // the next frame_post_draw.

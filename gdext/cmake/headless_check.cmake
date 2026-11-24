@@ -31,7 +31,9 @@
 #    and composite and compares its pixels with the PNGs, and checks the
 #    year bar and the territory view (gdext/src/viewer/viewer_check.hpp),
 #    and the markers (P4-04 9: markers-<Y>.png, markers-faded-<Y>.png and
-#    elevation-markers-<R0>.png rendered by worldgen-cli render --markers).
+#    elevation-markers-<R0>.png rendered by worldgen-cli render --markers),
+#    and the browser (P4-05 8: history-summary.txt from report --history
+#    --level summary; checks B0 to B12).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
@@ -132,6 +134,10 @@ set(_real_composite_count 4)  # territory, map, biomes, regions
 set(_history_report "${_real_dir}/history.txt")
 run_step("report --history" "${WORLDGEN_CLI}" report --db "${_real_world}" --history --level full
     --out "${_history_report}" QUIET)
+# P4-05 8.1: the summary report too.
+set(_history_summary "${_real_dir}/history-summary.txt")
+run_step("report --history --level summary" "${WORLDGEN_CLI}" report --db "${_real_world}" --history --level summary
+    --out "${_history_summary}" QUIET)
 file(READ "${_history_report}" _history_text)
 string(REPLACE ";" "\\;" _history_text "${_history_text}")
 string(REPLACE "\n" ";" _history_lines "${_history_text}")
@@ -240,5 +246,6 @@ viewer_check("test-pattern world" "${_pattern_world}" "${_pattern_dir}" ${_patte
 viewer_check("geography-only world" "${_geo_world}" "${_geo_dir}" ${_geo_count} 3 --expect-history none)
 viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_composite_count}
     --expect-history loaded --expect-end-year ${_end_year} --expect-years ${_years_arg}
-    --history-report "${_history_report}" --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes})
+    --history-report "${_history_report}" --history-summary "${_history_summary}"
+    --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes})
 message("headless check: PASS")

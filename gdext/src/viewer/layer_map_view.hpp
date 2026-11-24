@@ -21,6 +21,17 @@
 // glyphs in reverse draw order (a glyph cell of any class but 0; for small
 // entries and passes also a glyph cell within one cell of one, F6) and emits
 // marker_hovered(index), -1 when none, after cell_hovered.
+//
+// The browser's highlight (spec P4-05 6.2), drawn after the image in this
+// order: the dimming mask (black at alpha 0.45 over the cells it marks, as
+// tiles like the image, a new mask uploading only the tiles that changed),
+// the markers, the frames (a 2 px square in (255, 215, 0) around the glyph
+// of each framed marker, one in (0, 230, 255) around the place marker), and
+// the event place (two concentric 2 px squares, white inside, black
+// outside, of half-size 12 g). Nothing is drawn into the image.
+// A left press and release with less than CLICK_SLOP screen pixels of
+// movement between them emits cell_clicked(x, y, marker_index) (marker -1
+// when none); a drag still pans and a double click still fits (P4-05 5.5).
 
 #include <cstdint>
 #include <map>
@@ -75,6 +86,23 @@ public:
     // The marker hit at a position of the view, -1 when none.
     [[nodiscard]] int64_t marker_at(godot::Vector2 position) const;
 
+    // --- Highlight (P4-05 6.2), C++ only --------------------------------------
+    // The dimming mask: one byte per cell, non-zero = dimmed; empty for none.
+    void set_mask(const std::vector<uint8_t>& mask, uint32_t width, uint32_t height);
+    // Frames around markers (indexes into the list of set_markers): gold
+    // ones and the one place marker (-1 none).
+    void set_frames(const std::vector<int64_t>& gold, int64_t place);
+    // The selected event's place cell, (-1, -1) for none.
+    void set_event_place(godot::Vector2i cell);
+    [[nodiscard]] bool has_mask() const noexcept { return !mask_tiles_.empty(); }
+    [[nodiscard]] godot::Vector2i get_event_place() const noexcept { return event_place_; }
+    [[nodiscard]] const std::vector<int64_t>& gold_frames() const noexcept { return gold_frames_; }
+    [[nodiscard]] int64_t place_frame() const noexcept { return place_frame_; }
+    // Mask tile textures created or updated, and the time of the last
+    // set_mask (nanoseconds).
+    [[nodiscard]] int64_t mask_tiles_uploaded() const noexcept { return mask_tiles_uploaded_; }
+    [[nodiscard]] int64_t last_mask_nsec() const noexcept { return last_mask_nsec_; }
+
     // Shows cell (x, y) at the centre of the view at the given zoom (for
     // screenshots); stops fitting.
     void centre_on(godot::Vector2 cell, double zoom);
@@ -103,6 +131,7 @@ private:
     void zoom_about(godot::Vector2 anchor, double factor);
     void update_hover(godot::Vector2 position);
     void apply_fit();
+    void draw_marker_frame(int64_t index, godot::Color colour);
 
     struct GlyphCells {
         int32_t radius = 0;
@@ -142,6 +171,22 @@ private:
     [[nodiscard]] godot::Ref<godot::Image> tile_image(const godot::Rect2i& rect) const;
     std::vector<Tile> tiles_;
     std::vector<uint8_t> shown_;
+    // The dimming mask as tiles (the same rectangles as the image's), LA8,
+    // and the mask bytes they show.
+    [[nodiscard]] godot::Ref<godot::Image> mask_tile_image(const godot::Rect2i& rect) const;
+    std::vector<Tile> mask_tiles_;
+    std::vector<uint8_t> mask_shown_;
+    godot::Vector2i mask_size_;
+    int64_t mask_tiles_uploaded_ = 0;
+    int64_t last_mask_nsec_ = 0;
+    std::vector<int64_t> gold_frames_;
+    int64_t place_frame_ = -1;
+    godot::Vector2i event_place_{-1, -1};
+    // A left press not yet released: where, and whether it moved too far or
+    // was a double click (no click then).
+    bool pressing_ = false;
+    bool press_cancelled_ = false;
+    godot::Vector2 press_position_;
     int64_t tiles_uploaded_ = 0;
     godot::Vector2i image_size_;
     godot::Vector2 offset_;

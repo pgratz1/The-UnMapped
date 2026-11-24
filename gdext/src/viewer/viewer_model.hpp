@@ -43,6 +43,9 @@
 #include <godot_cpp/variant/packed_int64_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
+#include <godot_cpp/variant/packed_string_array.hpp>
+
+#include "viewer/browser_state.hpp"
 #include "viewer/history_state.hpp"
 #include "world_file.hpp"
 #include "world_layer.hpp"
@@ -190,6 +193,93 @@ public:
     // The fill of the key list's settlement icons, 0xRRGGBB (8.6).
     [[nodiscard]] static int64_t marker_legend_grey();
 
+    // --- Browser (P4-05 5.2) -------------------------------------------------
+    // Signals: browser_selection_changed(), event_list_changed() (the id list
+    // differs from the one before), highlight_changed().
+    // Every method answers empty, -1 or false without the browser.
+    // History, markers and the browser index loaded.
+    [[nodiscard]] bool get_browser_available() const;
+    [[nodiscard]] godot::String get_browser_error_code() const;
+    [[nodiscard]] godot::String get_browser_error_message() const;
+    // The group words in code order (worldgen's event_group_word over the
+    // codes of ALL_GROUPS); empty without the browser.
+    [[nodiscard]] godot::PackedStringArray get_event_groups() const;
+    // Array of {id, name, race, race_name, colour, founded_year, ended_year,
+    // fate ("alive" / "ended"), events}, ascending id.
+    [[nodiscard]] godot::Array get_civilization_list() const;
+    // Array of {text, links} at the current level; links Array of {start,
+    // length (characters), target, tagged}.
+    [[nodiscard]] godot::Array get_civilization_block(int64_t civilization) const;
+    [[nodiscard]] godot::PackedInt64Array get_event_ids() const;
+    [[nodiscard]] godot::PackedStringArray get_event_rows() const;
+    // Dictionary of 5.2; empty for an unknown id.
+    [[nodiscard]] godot::Dictionary get_event_detail(int64_t event) const;
+    // "all", "entity", "place"; false for another word.
+    bool set_browser_scope(const godot::String& scope);
+    // "all" or a group word.
+    bool set_browser_group(const godot::String& group);
+    // "summary" or "full".
+    bool set_browser_level(const godot::String& level);
+    // -1 for an open end; false for a year below -1 or above E.
+    bool set_browser_years(int64_t from, int64_t to);
+    bool set_browser_this_year(bool on);
+    // 0 clears. Scope entity, follow on (off when cleared), event and place
+    // cleared; pushes the path.
+    bool select_civilization(int64_t civilization);
+    // event = e and Y its year; pushes the path.
+    bool select_event(int64_t event);
+    // type 4 (settlement) or 5 (region); scope place, event cleared; pushes
+    // the path.
+    bool select_place(int64_t type, int64_t id);
+    // Everything cleared, scope all, follow off; pushes the path (key Escape).
+    bool clear_selection();
+    // c<id>, s<id>, rg<id>, e<id>; false for any other tag.
+    bool follow_link(const godot::String& target);
+    // Whether follow_link would follow a target of this form (c, s, rg, e).
+    [[nodiscard]] bool can_follow_link(const godot::String& target) const;
+    bool browser_back();
+    bool browser_forward();
+    [[nodiscard]] bool can_browser_back() const;
+    [[nodiscard]] bool can_browser_forward() const;
+    bool set_follow(bool on);
+    [[nodiscard]] bool get_follow() const;
+    bool follow_first();
+    // Array of {target, name, kind} from worldgen's search (at most 50).
+    [[nodiscard]] godot::Array search_names(const godot::String& query) const;
+    // 5.1's selection plus scope, group, level, from, to, this_year, follow.
+    [[nodiscard]] godot::Dictionary get_selection() const;
+    // {civilization, regions, settlements, place (Vector2i, (-1, -1) none),
+    // place_event, place_settlement, dim}.
+    [[nodiscard]] godot::Dictionary get_highlight() const;
+    // The heading of the place detail (3): the hover text of the selected
+    // settlement at Y, or "<region name at Y>   |   <holding>"; empty
+    // without a place.
+    [[nodiscard]] godot::String get_place_text() const;
+    // The row of the current list where the events of year Y begin (6.3).
+    [[nodiscard]] int64_t get_event_row_at_year(int64_t year) const;
+    // The value of layer `region` at a cell; 0 outside, -1 without the layer.
+    int64_t get_region_at(int64_t x, int64_t y);
+
+    // C++ only: the dimming mask of the highlight (one byte per cell, 1 =
+    // dimmed; empty when nothing is dimmed), its size, and a counter that
+    // changes whenever the mask is rebuilt.
+    [[nodiscard]] const std::vector<std::uint8_t>& highlight_mask() const noexcept { return mask_; }
+    [[nodiscard]] std::uint32_t highlight_mask_width() const noexcept { return mask_width_; }
+    [[nodiscard]] std::uint32_t highlight_mask_height() const noexcept { return mask_height_; }
+    [[nodiscard]] int64_t highlight_mask_version() const noexcept { return mask_version_; }
+    [[nodiscard]] const BrowserState& browser_state() const noexcept { return browser_; }
+    struct BrowserTimings {
+        int64_t list_changes = 0;       // event_list_changed emitted
+        int64_t highlight_changes = 0;  // highlight_changed emitted
+        int64_t mask_rebuilds = 0;
+        int64_t slowest_mask_nsec = 0;  // the model's part of a mask rebuild
+        int64_t last_mask_nsec = 0;
+        int64_t last_year_nsec = 0;     // the browser part of the last year change
+        int64_t slowest_year_nsec = 0;
+    };
+    [[nodiscard]] const BrowserTimings& browser_timings() const noexcept { return browser_timings_; }
+    void reset_browser_timings() noexcept { browser_timings_ = {}; }
+
     // --- C++ only (timings for --bench; presentation side) ---------------------
     struct TerritoryTimings {
         int64_t first_image_usec = -1;  // building the base and the first image
@@ -215,6 +305,8 @@ public:
         int64_t markers = 0;         // (d) markers_at, compare and draw order
         int64_t markers_signal = 0;  // (d) markers_changed handlers
         int64_t legend = 0;          // (e) HistoryState::legend and legend_array
+        int64_t browser = 0;         // P4-05 7: highlight, This year list, mask
+        int64_t browser_signal = 0;  // P4-05 7: highlight_changed, event_list_changed handlers
         int64_t year_signal = 0;     // (f, g, h) year_changed handlers
         int64_t total = 0;           // the whole set_year
     };
@@ -222,6 +314,7 @@ public:
 
 protected:
     static void _bind_methods();
+    static void bind_browser_methods();  // viewer_model_browser.cpp
 
 private:
     // One entry of get_markers(): which list of the current YearMarkers and
@@ -235,6 +328,19 @@ private:
     void update_markers();
     void rebuild_marker_order();
     [[nodiscard]] godot::Dictionary marker_dictionary(const MarkerRef& ref) const;
+
+    // The browser after a change of selection, filter or year: the list
+    // (event_list_changed when it differs), the highlight and its mask
+    // (highlight_changed when it differs). list: whether the list may have
+    // changed.
+    void refresh_browser(bool list);
+    void rebuild_mask();
+    // Restores a path entry (selection, scope, year).
+    void restore_path(const BrowserPathEntry& entry);
+    // The model side of a selection change: refresh, then
+    // browser_selection_changed.
+    void selection_changed(bool list);
+    [[nodiscard]] godot::Dictionary linked_dictionary(const worldgen::history::LinkedText& text) const;
 
     void reset_views();
     bool decode_layer(int64_t layer_index);
@@ -252,6 +358,13 @@ private:
     // Per composite view: the composite, or nullopt for territory (first).
     std::vector<std::optional<worldgen::inspect::Composite>> composites_;
     HistoryState history_;
+    BrowserState browser_;
+    BrowserTimings browser_timings_;
+    std::vector<std::uint8_t> mask_;
+    std::uint32_t mask_width_ = 0;
+    std::uint32_t mask_height_ = 0;
+    int64_t mask_version_ = 0;
+    bool in_year_change_ = false;
     TerritoryTimings timings_;
     MarkerTimings marker_timings_;
     YearChangeSteps year_steps_;

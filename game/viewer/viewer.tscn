@@ -116,25 +116,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 0
 
-[node name="LegendPanel" type="VBoxContainer" parent="Split/MapArea/MapRow"]
-custom_minimum_size = Vector2(250, 0)
-layout_mode = 2
-
-[node name="LegendTitle" type="Label" parent="Split/MapArea/MapRow/LegendPanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(250, 0)
-layout_mode = 2
-mouse_filter = 1
-text = "Legend"
-autowrap_mode = 3
-
-[node name="LegendList" type="ItemList" parent="Split/MapArea/MapRow/LegendPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-focus_mode = 0
-fixed_icon_size = Vector2i(40, 14)
-
 [node name="YearBar" type="VBoxContainer" parent="Split/MapArea"]
 layout_mode = 2
 
@@ -243,6 +224,161 @@ unique_name_in_owner = true
 layout_mode = 2
 text = " "
 text_overrun_behavior = 3
+
+[node name="RightPane" type="TabContainer" parent="Split"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.55
+current_tab = 0
+
+[node name="Browser" type="VBoxContainer" parent="Split/RightPane"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="BrowserTop" type="HBoxContainer" parent="Split/RightPane/Browser"]
+layout_mode = 2
+
+[node name="BrowserBack" type="Button" parent="Split/RightPane/Browser/BrowserTop"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Back along the path of selections (Backspace)"
+text = "<"
+
+[node name="BrowserForward" type="Button" parent="Split/RightPane/Browser/BrowserTop"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Forward along the path of selections (Shift+Backspace)"
+text = ">"
+
+[node name="BrowserSearch" type="LineEdit" parent="Split/RightPane/Browser/BrowserTop"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Search civilizations, settlements and regions by name (Ctrl+F)"
+placeholder_text = "Search names"
+clear_button_enabled = true
+
+[node name="EntityTabs" type="TabBar" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+current_tab = 0
+tab_count = 1
+tab_0/title = "Civilizations"
+
+[node name="CivList" type="Tree" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+columns = 4
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="SearchResults" type="ItemList" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+
+[node name="EventFilters" type="HBoxContainer" parent="Split/RightPane/Browser"]
+layout_mode = 2
+
+[node name="EventScope" type="OptionButton" parent="Split/RightPane/Browser/EventFilters"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Which events: all, those of the selected civilization, or those of the selected place"
+
+[node name="EventGroup" type="OptionButton" parent="Split/RightPane/Browser/EventFilters"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+tooltip_text = "Kinds of event"
+
+[node name="EventAll" type="CheckBox" parent="Split/RightPane/Browser/EventFilters"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "All events and the full block, as report --history --level full; off: the summary"
+text = "All events"
+
+[node name="EventYears" type="HBoxContainer" parent="Split/RightPane/Browser"]
+layout_mode = 2
+
+[node name="EventFrom" type="SpinBox" parent="Split/RightPane/Browser/EventYears"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Events that end in this year or later"
+rounded = true
+
+[node name="EventTo" type="SpinBox" parent="Split/RightPane/Browser/EventYears"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Events that start in this year or earlier"
+rounded = true
+
+[node name="EventThisYear" type="CheckBox" parent="Split/RightPane/Browser/EventYears"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Only the events of the year shown"
+text = "This year"
+
+[node name="FollowToggle" type="CheckButton" parent="Split/RightPane/Browser/EventYears"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "The event steps (Page Up, Page Down) walk this list (F)"
+text = "Follow"
+
+[node name="FollowFirst" type="Button" parent="Split/RightPane/Browser/EventYears"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Select the first event of the list and go to its year"
+text = "First"
+
+[node name="EventList" type="ItemList" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.4
+text_overrun_behavior = 3
+
+[node name="BrowserDetail" type="RichTextLabel" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+focus_mode = 2
+selection_enabled = true
+
+[node name="Legend" type="VBoxContainer" parent="Split/RightPane"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="LegendTitle" type="Label" parent="Split/RightPane/Legend"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+text = "Legend"
+autowrap_mode = 3
+
+[node name="LegendList" type="ItemList" parent="Split/RightPane/Legend"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+fixed_icon_size = Vector2i(40, 14)
 
 [node name="OpenDialog" type="FileDialog" parent="."]
 unique_name_in_owner = true

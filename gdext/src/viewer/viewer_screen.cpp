@@ -203,7 +203,30 @@ void ViewerScreen::_ready() {
     mark_events_ = require<godot::CheckBox>("MarkEvents");
     mark_passes_ = require<godot::CheckBox>("MarkPasses");
     marker_legend_ = require<godot::ItemList>("MarkerLegend");
-    wired_ = markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
+    right_pane_ = require<godot::TabContainer>("RightPane");
+    browser_back_ = require<godot::Button>("BrowserBack");
+    browser_forward_ = require<godot::Button>("BrowserForward");
+    browser_search_ = require<godot::LineEdit>("BrowserSearch");
+    entity_tabs_ = require<godot::TabBar>("EntityTabs");
+    civ_list_ = require<godot::Tree>("CivList");
+    search_results_ = require<godot::ItemList>("SearchResults");
+    event_scope_ = require<godot::OptionButton>("EventScope");
+    event_group_ = require<godot::OptionButton>("EventGroup");
+    event_all_ = require<godot::CheckBox>("EventAll");
+    event_from_ = require<godot::SpinBox>("EventFrom");
+    event_to_ = require<godot::SpinBox>("EventTo");
+    event_this_year_ = require<godot::CheckBox>("EventThisYear");
+    follow_toggle_ = require<godot::CheckButton>("FollowToggle");
+    follow_first_ = require<godot::Button>("FollowFirst");
+    event_list_ = require<godot::ItemList>("EventList");
+    browser_detail_ = require<godot::RichTextLabel>("BrowserDetail");
+    wired_ = right_pane_ != nullptr && browser_back_ != nullptr && browser_forward_ != nullptr &&
+             browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr &&
+             search_results_ != nullptr && event_scope_ != nullptr && event_group_ != nullptr &&
+             event_all_ != nullptr && event_from_ != nullptr && event_to_ != nullptr &&
+             event_this_year_ != nullptr && follow_toggle_ != nullptr && follow_first_ != nullptr &&
+             event_list_ != nullptr && browser_detail_ != nullptr &&
+             markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
              mark_passes_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
              meta_tree_ != nullptr && map_view_ != nullptr && status_label_ != nullptr && cell_label_ != nullptr &&
              legend_title_ != nullptr && legend_list_ != nullptr && year_slider_ != nullptr &&
@@ -248,7 +271,9 @@ void ViewerScreen::_ready() {
         year_forward1_->connect("pressed", callable_mp(this, &ViewerScreen::on_step_year).bind(int64_t{1}));
         year_forward25_->connect("pressed", callable_mp(this, &ViewerScreen::on_step_year).bind(int64_t{25}));
         update_year_bar();
+        wire_browser();
         set_process_unhandled_key_input(true);
+        set_process_input(true);
     }
 
     // Arguments after `--` on the Godot command line.
@@ -299,6 +324,21 @@ void ViewerScreen::_ready() {
             check_expect_marker_years_ = args[++i];
         } else if (arg == "--expect-passes" && i + 1 < args.size()) {
             check_expect_passes_ = args[++i].to_int();
+        } else if (arg == "--history-summary" && i + 1 < args.size()) {
+            check_history_summary_ = args[++i];
+        } else if (arg == "--select" && i + 1 < args.size()) {
+            start_select_ = args[++i];
+        } else if (arg == "--browser-group" && i + 1 < args.size()) {
+            start_group_ = args[++i];
+        } else if (arg == "--browser-full") {
+            start_full_ = true;
+        } else if (arg == "--search" && i + 1 < args.size()) {
+            start_search_ = args[++i];
+        } else if (arg == "--tab" && i + 1 < args.size()) {
+            start_tab_ = args[++i];
+        } else if (arg == "--size" && i + 2 < args.size()) {
+            start_width_ = args[++i].to_int();
+            start_height_ = args[++i].to_int();
         } else if (!arg.begins_with("--") && world_path.is_empty()) {
             world_path = arg;
         } else {
@@ -331,6 +371,9 @@ void ViewerScreen::_ready() {
         }
         if (opened && start_faded_) {
             model_->set_marker_option("faded", true);
+        }
+        if (opened) {
+            apply_browser_options();
         }
         if (start_hover_x_ >= 0 && start_hover_y_ >= 0) {
             hover_cell(start_hover_x_, start_hover_y_);
@@ -405,6 +448,7 @@ void ViewerScreen::run_check_deferred() {
         options.marker_years.push_back(marker_years[i].strip_edges().to_int());
     }
     options.expect_passes = check_expect_passes_;
+    options.history_summary = check_history_summary_;
     options.wired = wired_;
     const int exit_code = run_viewer_check(*this, options);
     get_tree()->quit(exit_code);
@@ -510,6 +554,7 @@ void ViewerScreen::push_markers() {
 void ViewerScreen::on_markers_changed() {
     const int64_t start = now_nsec();
     push_markers();
+    push_highlight_frames();  // the frames name entries of the new list
     update_marker_controls();
     show_hover_text();
     year_steps_.markers = now_nsec() - start;
@@ -571,6 +616,11 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
         file_text += godot::String("\nmarkers: ") + model_->get_markers_error_code() + godot::String(": ") +
                      model_->get_markers_error_message();
     }
+    // P4-05 5.1: a browser that could not be built likewise.
+    if (model_->get_markers_available() && !model_->get_browser_available()) {
+        file_text += godot::String("\nbrowser: ") + model_->get_browser_error_code() + godot::String(": ") +
+                     model_->get_browser_error_message();
+    }
     file_label_->set_text(file_text);
     file_label_->set_tooltip_text(file_text);
     hover_x_ = -1;
@@ -620,6 +670,7 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
     cell_label_->set_text("Point at the map to inspect a cell.");
     hovered_marker_ = -1;
     update_marker_controls();
+    browser_world_opened();
     if (count == 0) {
         map_view_->clear_image();
         show_status("This world has no layers.", false);
@@ -665,6 +716,7 @@ void ViewerScreen::on_world_closed() {
     hovered_marker_ = -1;
     update_year_bar();
     update_marker_controls();
+    browser_world_closed();
 }
 
 void ViewerScreen::on_view_selected(int64_t index) {
@@ -685,6 +737,7 @@ void ViewerScreen::on_view_selected(int64_t index) {
     push_markers();  // P4-04 8.4: over every view
     show_status(view_tooltip(info).replace("\n", "   "), false);
     show_legend();
+    on_highlight_changed();  // the mask fits the map of the world
 }
 
 void ViewerScreen::show_legend() {
@@ -820,6 +873,7 @@ void ViewerScreen::update_year_bar(bool marks) {
 void ViewerScreen::on_year_changed(int64_t /*year*/) {
     const int64_t start = now_nsec();
     update_year_bar(false);
+    scroll_event_list();  // P4-05 6.3: to the events of the year, no rebuild
     const int64_t bar = now_nsec();
     year_steps_.year_bar = bar - start;
     if (model_->get_selected_view() >= 0 && model_->get_selected_view() == model_->get_territory_view()) {
@@ -869,6 +923,31 @@ void ViewerScreen::_unhandled_key_input(const godot::Ref<godot::InputEvent>& eve
     const godot::Ref<godot::InputEventKey> key = event;
     if (!wired_ || key.is_null() || !key->is_pressed() || key->is_ctrl_pressed() || key->is_alt_pressed() ||
         key->is_meta_pressed()) {
+        return;
+    }
+    // P4-05 6.5: B hides or shows the right pane; F follow; Backspace and
+    // Shift+Backspace the path.
+    if (key->get_keycode() == godot::KEY_B && !key->is_shift_pressed() && !key->is_echo()) {
+        right_pane_->set_visible(!right_pane_->is_visible());
+        get_viewport()->set_input_as_handled();
+        return;
+    }
+    if (key->get_keycode() == godot::KEY_F && !key->is_shift_pressed() && !key->is_echo()) {
+        if (model_->get_browser_available()) {
+            model_->set_follow(!model_->get_follow());
+            get_viewport()->set_input_as_handled();
+        }
+        return;
+    }
+    if (key->get_keycode() == godot::KEY_BACKSPACE) {
+        if (model_->get_browser_available()) {
+            if (key->is_shift_pressed()) {
+                model_->browser_forward();
+            } else {
+                model_->browser_back();
+            }
+            get_viewport()->set_input_as_handled();
+        }
         return;
     }
     // P4-04 8.2: M toggles the markers (nothing happens when there are none).
@@ -961,6 +1040,22 @@ void ViewerScreen::run_bench() {
     const auto& timings = model_->territory_timings();
     godot::UtilityFunctions::print("UNMAPPED-BENCH: first territory image (base and image): ",
                                    ms(timings.first_image_usec));
+    // P4-05 7: the browser.
+    if (model_->get_browser_available()) {
+        godot::UtilityFunctions::print("UNMAPPED-BENCH: browser index and row texts at open: ",
+                                       ms(model_->browser_state().load_usec()), " (",
+                                       static_cast<int64_t>(model_->browser_state().index().events().size()),
+                                       " events, ", static_cast<int64_t>(model_->browser_state().index().civilizations().size()),
+                                       " civilizations)");
+        bench_browser_filters();
+        // The year changes below run with the first civilization selected and
+        // follow on, as in the walkthrough.
+        model_->select_civilization(model_->get_civilization_list().is_empty()
+                                        ? int64_t{0}
+                                        : int64_t(godot::Dictionary(model_->get_civilization_list()[0])["id"]));
+        model_->set_year(model_->get_end_year());
+        model_->reset_browser_timings();
+    }
     const int64_t redraws_before = timings.redraws;
     const ViewerModel::MarkerTimings markers_before = model_->marker_timings();
     const int64_t tiles_before = map_view_->tiles_uploaded();
@@ -973,7 +1068,7 @@ void ViewerScreen::run_bench() {
         int64_t max_year = -1;
         int64_t total = 0;
     };
-    std::array<Stat, 11> stats{{{"(a) year_state and holders"},
+    std::array<Stat, 14> stats{{{"(a) year_state and holders"},
                                 {"(b) render_territory into the image"},
                                 {"(c) view_image_changed: texture update"},
                                 {"(d) marker step (markers_at, compare, order)"},
@@ -983,7 +1078,10 @@ void ViewerScreen::run_bench() {
                                 {"(g) year bar (labels, buttons)"},
                                 {"(h) other year_changed work (hover text)"},
                                 {"model part (a + b + d + e)"},
-                                {"whole set_year"}}};
+                                {"whole set_year"},
+                                {"(i) browser: highlight, This year list, mask"},
+                                {"(j) browser: highlight_changed handler (mask upload, frames)"},
+                                {"(k) browser: event_list_changed handler (list rebuild)"}}};
     int64_t changes = 0;
     const auto change = [&](int64_t year) {
         year_steps_ = {};
@@ -991,9 +1089,10 @@ void ViewerScreen::run_bench() {
         const ViewerModel::YearChangeSteps& m = model_->last_year_change();
         const YearSteps& v = year_steps_;
         const int64_t other = std::max<int64_t>(0, m.year_signal - v.legend - v.year_bar);
-        const std::array<int64_t, 11> values{m.state,   m.draw,   v.image,    m.markers,
+        const std::array<int64_t, 14> values{m.state,   m.draw,   v.image,    m.markers,
                                              v.markers, m.legend, v.legend,   v.year_bar,
-                                             other,     m.state + m.draw + m.markers + m.legend, m.total};
+                                             other,     m.state + m.draw + m.markers + m.legend, m.total,
+                                             m.browser, v.highlight, v.list};
         for (std::size_t i = 0; i < stats.size(); ++i) {
             stats[i].total += values[i];
             if (values[i] > stats[i].max) {
@@ -1014,7 +1113,7 @@ void ViewerScreen::run_bench() {
     };
     const auto change_years =
         static_cast<int64_t>(model_->history_state().history().timeline.holder_change_years().size());
-    const Stat& whole = stats[10];
+    const Stat& whole = stats[10];  // the whole set_year
     godot::UtilityFunctions::print("UNMAPPED-BENCH: year changes 0..", end, " and back: ", changes, ", mean ",
                                    nms(whole.total / std::max<int64_t>(changes, 1), 3), ", slowest ",
                                    nms(whole.max, 2), " (to year ", whole.max_year, ")");
@@ -1041,6 +1140,15 @@ void ViewerScreen::run_bench() {
         " ms; markers_changed ", markers.changes - markers_before.changes, " over 0..", end, " and back");
     model_->set_year(end);
     godot::UtilityFunctions::print("UNMAPPED-BENCH: markers at the present: ", model_->get_markers().size());
+    if (model_->get_browser_available()) {
+        const ViewerModel::BrowserTimings& b = model_->browser_timings();
+        godot::UtilityFunctions::print(
+            "UNMAPPED-BENCH: browser over 0..", end, " and back with c",
+            model_->get_selection().get("entity_id", int64_t{0}), " selected and follow ",
+            model_->get_follow() ? "on" : "off", ": event_list_changed ", b.list_changes, ", highlight_changed ",
+            b.highlight_changes, ", mask rebuilds ", b.mask_rebuilds, ", slowest mask rebuild (model) ",
+            nms(b.slowest_mask_nsec, 3), ", slowest browser part of a year change ", nms(b.slowest_year_nsec, 3));
+    }
     if (godot::DisplayServer::get_singleton()->get_name() == "headless") {
         godot::UtilityFunctions::print("UNMAPPED-BENCH: frame times: headless, no frame is drawn");
         get_tree()->create_timer(0.3)->connect("timeout", callable_mp(this, &ViewerScreen::finish_bench));

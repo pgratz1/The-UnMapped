@@ -17,11 +17,15 @@ add_library(unmapped_gdext SHARED
     src/world_file.cpp
     src/world_layer.cpp
     src/viewer/history_state.cpp
+    src/viewer/browser_state.cpp
     src/viewer/viewer_model.cpp
+    src/viewer/viewer_model_browser.cpp
     src/viewer/year_marks.cpp
     src/viewer/layer_map_view.cpp
     src/viewer/viewer_screen.cpp
+    src/viewer/viewer_screen_browser.cpp
     src/viewer/viewer_check.cpp
+    src/viewer/viewer_check_browser.cpp
 )
 target_include_directories(unmapped_gdext PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(unmapped_gdext PRIVATE worldgen::worldgen unmapped::godot-cpp)

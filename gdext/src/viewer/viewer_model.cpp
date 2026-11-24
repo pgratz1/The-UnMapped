@@ -81,6 +81,12 @@ void ViewerModel::reset_views() {
     marker_timings_ = {};
     marker_order_.clear();
     markers_array_ = godot::Array();
+    browser_.reset();
+    browser_timings_ = {};
+    mask_.clear();
+    mask_width_ = 0;
+    mask_height_ = 0;
+    ++mask_version_;
 }
 
 bool ViewerModel::open_world(const godot::String& path) {
@@ -103,6 +109,16 @@ bool ViewerModel::open_world(const godot::String& path) {
     if (const worldgen::db::WorldReader* reader = world_->reader()) {
         history_.load(*reader);
         rebuild_marker_order();  // P4-04 8.1: the markers of E, computed by load
+        // P4-05 5.1: the browser, once history and markers are loaded; its
+        // failure leaves both working.
+        if (history_.markers_available()) {
+            browser_.load(history_.history());
+            if (browser_.available()) {
+                bool regions_changed = false;
+                browser_.refresh_list(history_.history(), history_.year());
+                browser_.refresh_highlight(history_, regions_changed);
+            }
+        }
     }
     const std::vector<worldgen::inspect::Composite> available = world_->composites();
     if (history_.loaded() &&
@@ -558,6 +574,7 @@ bool ViewerModel::set_year(int64_t year) {
     }
     year_steps_ = {};
     const int64_t start = now_nsec();
+    in_year_change_ = true;
     try {
         history_.set_year(year);
         year_steps_.state = now_nsec() - start;
@@ -568,10 +585,15 @@ bool ViewerModel::set_year(int64_t year) {
             legend_ = legend_array(history_.legend(world_->biome_records()), &HistoryState::legend_tooltip);
             year_steps_.legend = now_nsec() - legend_start;
         }
+        // P4-05 5.4, 6.3: the highlight of the new year, and the list only
+        // with This year on.
+        refresh_browser(browser_.filter.this_year);
     } catch (const std::exception& e) {
+        in_year_change_ = false;
         godot::UtilityFunctions::push_error(godot::String("ViewerModel.set_year: ") + e.what());
         return false;
     }
+    in_year_change_ = false;
     const int64_t signal_start = now_nsec();
     emit_signal("year_changed", year);
     const int64_t end = now_nsec();
@@ -596,6 +618,20 @@ bool ViewerModel::step_year(int64_t delta) {
 }
 
 bool ViewerModel::step_event(int64_t direction) {
+    // P4-05 5.3: with follow on and a list that is not empty, the step walks
+    // the list.
+    if (browser_.available() && browser_.follow && !browser_.ids().empty()) {
+        const auto next = browser_.follow_target(history_.year(), static_cast<int>(direction));
+        if (!next) {
+            return false;
+        }
+        browser_.selection.event = *next;
+        if (const auto* e = browser_.event(*next)) {
+            set_year(e->year);
+        }
+        selection_changed(false);
+        return true;
+    }
     std::optional<int64_t> target;
     try {
         if (direction == -1) {
@@ -621,6 +657,9 @@ bool ViewerModel::step_holder_change(int64_t direction) {
 }
 
 bool ViewerModel::has_previous_event() const {
+    if (browser_.available() && browser_.follow && !browser_.ids().empty()) {
+        return browser_.follow_target(history_.year(), -1).has_value();
+    }
     try {
         return history_.previous_event_year().has_value();
     } catch (const std::exception&) {
@@ -629,6 +668,9 @@ bool ViewerModel::has_previous_event() const {
 }
 
 bool ViewerModel::has_next_event() const {
+    if (browser_.available() && browser_.follow && !browser_.ids().empty()) {
+        return browser_.follow_target(history_.year(), 1).has_value();
+    }
     try {
         return history_.next_event_year().has_value();
     } catch (const std::exception&) {
@@ -859,6 +901,11 @@ void ViewerModel::update_markers() {
         ++marker_timings_.changes;
         emit_signal("markers_changed");
         year_steps_.markers_signal = now_nsec() - ordered;
+        // A toggle or option outside a year change: the frames follow the
+        // marker set (5.4). A year change refreshes the browser itself.
+        if (!in_year_change_) {
+            refresh_browser(false);
+        }
     }
 }
 
@@ -1141,6 +1188,7 @@ void ViewerModel::_bind_methods() {
     ADD_SIGNAL(MethodInfo("year_changed", PropertyInfo(Variant::INT, "year")));
     ADD_SIGNAL(MethodInfo("view_image_changed", PropertyInfo(Variant::INT, "index")));
     ADD_SIGNAL(MethodInfo("markers_changed"));
+    bind_browser_methods();
 }
 
 }  // namespace unmapped
