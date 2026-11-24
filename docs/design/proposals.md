@@ -1327,3 +1327,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: any large picture that changes in place (the viewer's map, later the in-game map with its fog and markers) is drawn as tiles, each its own RGBA8 texture, and only tiles whose pixels changed are uploaded. Speed checks of such a picture run with a renderer, not headless.
 - Interim choice: the viewer does this (`LayerMapView`, 128 by 128 cell tiles; the slowest year change is 21 ms, 34 ms to the next drawn frame, under a virtual display). Nothing in the design document changes; this is a note for the game's map.
 - Status: open. Listed as an open question in design.md section 12 (2026-11-23).
+
+### Paul's decisions of 2026-11-23 on P5-02 (undead in ruins, summary length)
+
+- Date: 2026-11-23
+- Raised by: lead, from the integration of P5-02 and its validation
+- Design doc section: 5 (history: monsters), 13 (P5)
+- Problem: (1) the P5-02 spec r1 said a monster may overrun a settlement only if its lair is not a settlement; the code applied that only to a lair won by an overrun, so an undead host that rises in a ruined settlement may still overrun one living settlement, and the accepted sweep figures were measured so. (2) The summary history report of worlds with four civilizations per race has a median of 1,101 lines on the spec's 20 worlds against T18's bound of 1,100 (1,089 on 30 worlds).
+- Decision (Paul, 2026-11-23): (1) "Keep that, makes them more scary." Spec r2 section 5 says so: `holds_settlement` is set only by an overrun. (2) "Fine": the one-line miss is accepted; T18's bound for that set is read as about 1,100.
+- Status: decided
