@@ -3,6 +3,7 @@
 #include "worldgen/history/timeline.hpp"
 
 #include <algorithm>
+#include <tuple>
 #include <cstddef>
 #include <cstdint>
 #include <new>
@@ -315,6 +316,45 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
         }
     }
 
+    // P5-03 18: race relations and shares.
+    for (const db::RaceRow& r : tables.races) {
+        t.race_ids_.push_back(r.id);
+    }
+    std::stable_sort(t.race_ids_.begin(), t.race_ids_.end());
+    {
+        const KindDef* met = view.catalogue().find("peoples_met");
+        for (const HistoryView::Event& e : view.events()) {
+            if (met == nullptr || e.row.kind != met->id) {
+                continue;
+            }
+            std::int64_t a = 0;
+            std::int64_t b = 0;
+            for (const db::EventParticipantRow& p : e.participants) {
+                (p.role == 1 ? a : b) = p.entity_id;
+            }
+            t.met_years_.emplace_back(std::min(a, b), std::max(a, b), e.row.year);
+        }
+        std::stable_sort(t.met_years_.begin(), t.met_years_.end());
+    }
+    t.race_relations_ = tables.race_relations;
+    t.settlement_races_ = tables.settlement_races;
+    t.share_offsets_.assign(t.settlement_founded_.size() + 1U, 0U);
+    {
+        std::size_t row = 0;
+        for (std::size_t i = 0; i < t.settlement_founded_.size(); ++i) {
+            t.share_offsets_[i] = row;
+            while (row < t.settlement_races_.size() &&
+                   t.settlement_races_[row].settlement == static_cast<std::int64_t>(i) + 1) {
+                ++row;
+            }
+        }
+        t.share_offsets_[t.settlement_founded_.size()] = row;
+        if (row != t.settlement_races_.size()) {
+            timeline_fatal("settlement_race row (" + num(t.settlement_races_[row].settlement) + ", " +
+                           num(t.settlement_races_[row].race) + ") out of order");
+        }
+    }
+
     // Events (index id - 1), per-entity lists and effects.
     const std::span<const HistoryView::Event> events = view.events();
     const std::size_t n = events.size();
@@ -605,6 +645,68 @@ SettlementState Timeline::settlement_state(std::int64_t settlement, std::int64_t
         timeline_fatal("no settlement " + num(settlement));
     }
     return settlement_at(*i, year);
+}
+
+RaceRelationState Timeline::race_relation_at(std::int64_t race_a, std::int64_t race_b, std::int64_t year) const {
+    require_year(year);
+    for (const std::int64_t r : {race_a, race_b}) {
+        if (!std::binary_search(race_ids_.begin(), race_ids_.end(), r)) {
+            timeline_fatal("no race " + num(r));
+        }
+    }
+    const std::int64_t a = std::min(race_a, race_b);
+    const std::int64_t b = std::max(race_a, race_b);
+    RaceRelationState out{a, b, false, 0, 0};
+    const auto m = std::lower_bound(met_years_.begin(), met_years_.end(), std::make_tuple(a, b, std::int64_t{0}));
+    if (m == met_years_.end() || std::get<0>(*m) != a || std::get<1>(*m) != b || std::get<2>(*m) > year) {
+        return out;
+    }
+    // The row of the largest year <= Y (binary search over the pair's rows).
+    const auto after = std::upper_bound(race_relations_.begin(), race_relations_.end(), std::make_tuple(a, b, year),
+                                        [](const std::tuple<std::int64_t, std::int64_t, std::int64_t>& k,
+                                           const db::RaceRelationRow& r) {
+                                            return k < std::make_tuple(r.race_a, r.race_b, r.year);
+                                        });
+    if (after == race_relations_.begin()) {
+        return out;
+    }
+    const db::RaceRelationRow& r = *(after - 1);
+    if (r.race_a != a || r.race_b != b) {
+        return out;  // not reached on checked data: the meeting's row exists
+    }
+    out.met = true;
+    out.disposition = r.disposition;
+    out.band = r.band;
+    return out;
+}
+
+std::vector<RaceShare> Timeline::settlement_races(std::int64_t settlement, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(settlement, settlement_founded_.size());
+    if (!i) {
+        timeline_fatal("no settlement " + num(settlement));
+    }
+    std::vector<RaceShare> out;
+    const SettlementState s = settlement_at(*i, year);
+    if (!s.exists || (s.status != 1 && s.status != 2)) {
+        return out;
+    }
+    std::size_t row = share_offsets_[*i];
+    const std::size_t last = share_offsets_[*i + 1U];
+    while (row < last) {
+        const std::int64_t race = settlement_races_[row].race;
+        const db::SettlementRaceRow* in_force = nullptr;
+        while (row < last && settlement_races_[row].race == race) {
+            if (settlement_races_[row].year <= year) {
+                in_force = &settlement_races_[row];
+            }
+            ++row;
+        }
+        if (in_force != nullptr && in_force->share > 0) {
+            out.push_back(RaceShare{race, in_force->share, in_force->standing});
+        }
+    }
+    return out;
 }
 
 void Timeline::year_state(std::int64_t year, YearState& out) const {

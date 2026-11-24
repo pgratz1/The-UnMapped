@@ -637,6 +637,15 @@ private:
         mt.values = values;
         mt.causes = causes;
         mt.catalogue = &cat;
+        // P5-03 16.4 (schema 10).
+        std::vector<std::int64_t> race_ids;
+        for (const db::RaceRow& r : t_.races) {
+            race_ids.push_back(r.id);
+        }
+        std::stable_sort(race_ids.begin(), race_ids.end());
+        mt.race_relations = t_.race_relations;
+        mt.settlement_races = t_.settlement_races;
+        mt.race_ids = race_ids;
         if (std::optional<std::string> why = monster_tables_problem(mt)) {
             throw Corrupt{*why};
         }
@@ -793,6 +802,13 @@ std::optional<std::string> history_reads_disagree(const HistoryView& view, const
         !std::equal(view.site_rows().begin(), view.site_rows().end(), t.sites.begin(), t.sites.end()) ||
         !std::equal(view.beast_rows().begin(), view.beast_rows().end(), t.beasts.begin(), t.beasts.end())) {
         return std::string("corrupt table 'event': the file changed while it was read");
+    }
+    // P5-03: the report and the timeline name the races of the tables'
+    // relation and share rows by the view's race rows.
+    for (const db::RaceRow& r : t.races) {
+        if (view.race_plural(r.id) == nullptr) {
+            return std::string("corrupt table 'event': the file changed while it was read");
+        }
     }
     return std::nullopt;
 }

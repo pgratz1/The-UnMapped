@@ -260,7 +260,9 @@ void RelationsSubsystem::run(StepContext& ctx) {
         meetings(ctx);
     }
     mixed(ctx);
-    last_year_ = ctx.year() + ctx.years() - 1;
+    // 6.7 (a reading): the rows of a step at its year, a quiet step's at its
+    // start, as the engine's census rows (P3-04 6.7).
+    last_year_ = ctx.year();
     write_settlement_rows(ctx.state(), last_year_);
 }
 

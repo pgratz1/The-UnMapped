@@ -58,7 +58,31 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
                                     {"feed_max_permille", wd::Value::integer(0)},
                                     {"bold_permille", wd::Value::integer(0)},
                                     {"outpost_permille", wd::Value::integer(0)}});
-    return with_fields(c, "peoples", {{"ghost_permille", wd::Value::integer(0)}});
+    c = with_fields(c, "peoples", {{"ghost_permille", wd::Value::integer(0)}});
+    // P5-03 7.4: the relations neutral too (the zero tuning, no stances), so
+    // that the stage without the monsters (and so without the relations)
+    // is the identity's other side.
+    c = with_fields(c, "relations",
+                    {{"war_memory", wd::Value::integer(0)}, {"conquest_memory", wd::Value::integer(0)},
+                     {"sack_memory", wd::Value::integer(0)}, {"capture_memory", wd::Value::integer(0)},
+                     {"expel_memory", wd::Value::integer(0)}, {"shelter_memory", wd::Value::integer(0)},
+                     {"meet_hops", wd::Value::integer(-1)}, {"welcome_min", wd::Value::integer(2001)},
+                     {"subject_years", wd::Value::integer(100000)}, {"mixed_min_permille", wd::Value::integer(1001)},
+                     {"expel_permille", wd::Value::integer(0)}});
+    for (wd::KindContent& k : c.kinds) {
+        if (k.kind != "race") {
+            continue;
+        }
+        for (wd::Definition& d : k.definitions) {
+            wd::Record r;
+            for (std::size_t i = 0; i < d.record.size(); ++i) {
+                r.add(d.record.name_at(i),
+                      d.record.name_at(i) == "stances" ? wd::Value::array({}) : d.record.value_at(i));
+            }
+            d.record = std::move(r);
+        }
+    }
+    return c;
 }
 
 // The shipped configuration without MonstersSubsystem and without a wild view.

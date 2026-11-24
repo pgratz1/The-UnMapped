@@ -244,12 +244,14 @@ inline Fixture load_fixture(const std::string& name) {
     }
     // Schema 9 (P5-02 11.1, 11.2): the five tables in column order; -1 is NULL in monster.died and site.ended_year.
     for (const toml::array* r : detail::rows(doc, "beast")) {
+        // Schema 10 (P5-03 16.1): bold_phrases; a v4 fixture row of six columns gets one phrase.
         fx.beasts.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), str(*r->get(3)), i64(*r->get(4)),
-                             i64(*r->get(5))});
+                             i64(*r->get(5)), r->size() > 6U ? str(*r->get(6)) : std::string("grew bold near")});
     }
     for (const toml::array* r : detail::rows(doc, "monster_kind")) {
         fx.monster_kinds.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), str(*r->get(3)),
-                                    i64(*r->get(4)), i64(*r->get(5)), i64(*r->get(6))});
+                                    i64(*r->get(4)), i64(*r->get(5)), i64(*r->get(6)),
+                                    r->size() > 7U ? str(*r->get(7)) : std::string("fell upon")});
     }
     for (const toml::array* r : detail::rows(doc, "beast_population")) {
         fx.beast_populations.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3))});

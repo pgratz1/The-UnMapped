@@ -167,7 +167,10 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
         {EventGroup::monsters,
          {"monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid", "settlement_overrun",
           "monster_slain", "monster_driven_off", "monster_died", "beasts_bold", "outpost_built",
-          "outpost_abandoned"}},
+          "outpost_abandoned", "settlement_fled"}},
+        // P5-03's kinds 57 to 62 (the engineer's reading, for the test writer to confirm)
+        {EventGroup::realms, {"peoples_met", "disposition_turned"}},
+        {EventGroup::settlements, {"refugees_arrived", "settlement_mixed", "standing_changed", "people_expelled"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {
@@ -177,14 +180,14 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 55U);
+    CHECK(n == 62U);
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() == 55U);
+    REQUIRE(kinds.size() == 62U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
         CHECK(brapi::event_group(k.key) != EventGroup::other);
-        CHECK((brapi::event_group(k.key) == EventGroup::monsters) == (k.id >= 44));
+        CHECK((brapi::event_group(k.key) == EventGroup::monsters) == (k.id >= 44 && k.id <= 56));
     }
     for (const std::string_view k : {std::string_view(""), std::string_view("warx"), std::string_view("Battle"),
                                      std::string_view("battle "), std::string_view("unknown_key"),

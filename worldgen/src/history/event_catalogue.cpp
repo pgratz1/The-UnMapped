@@ -1120,6 +1120,15 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             mt.values = values;
             mt.causes = causes;
             mt.catalogue = &v.catalogue_;
+            // P5-03 16.4 (schema 10).
+            const std::vector<db::RaceRelationRow> race_relations =
+                read(db::read_race_relation_rows(world), db::RACE_RELATION_TABLE);
+            const std::vector<db::SettlementRaceRow> settlement_races =
+                read(db::read_settlement_race_rows(world), db::SETTLEMENT_RACE_TABLE);
+            std::vector<std::int64_t> race_ids = v.race_ids();
+            mt.race_relations = race_relations;
+            mt.settlement_races = settlement_races;
+            mt.race_ids = race_ids;
             if (std::optional<std::string> why = monster_tables_problem(mt)) {
                 view_fail(*why);
             }
@@ -1456,6 +1465,166 @@ std::int64_t settlement_ending_code(std::string_view ruin_kind, std::span<const 
     return 5;
 }
 
+namespace {
+
+// P5-03 16.4: the tables race_relation and settlement_race and the events
+// of the race relations, after the checks of P5-02 11.4.
+template <class KindKey, class ParticipantOf>
+std::optional<std::string> relation_tables_problem(const MonsterTables& t, const KindKey& kind_key,
+                                                   const ParticipantOf& participant) {
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const std::string range = " outside 0 to " + int_text(t.end_year - 1);
+    // The peoples_met event of each pair (index into a small list).
+    std::vector<std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t>> met;  // (a, b, year, event)
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) != "peoples_met") {
+            continue;
+        }
+        const std::int64_t a = participant(e.id, "race_a");
+        const std::int64_t b = participant(e.id, "race_b");
+        for (const auto& [ma, mb, my, me] : met) {
+            if (ma == a && mb == b) {
+                return "corrupt table 'event': row " + int_text(e.id) + ": " + int_text(a) + "-" + int_text(b) +
+                       " met twice";
+            }
+            (void)my;
+            (void)me;
+        }
+        met.emplace_back(a, b, e.year, e.id);
+    }
+    const auto met_of = [&met](std::int64_t a, std::int64_t b) -> const std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t>* {
+        for (const auto& m : met) {
+            if (std::get<0>(m) == a && std::get<1>(m) == b) {
+                return &m;
+            }
+        }
+        return nullptr;
+    };
+    // race_relation.
+    const db::RaceRelationRow* prev = nullptr;
+    for (const db::RaceRelationRow& r : t.race_relations) {
+        const std::string at = "corrupt table 'race_relation': row (" + int_text(r.race_a) + ", " + int_text(r.race_b) +
+                               ", " + int_text(r.year) + "): ";
+        if (prev != nullptr && std::tie(r.race_a, r.race_b, r.year) <= std::tie(prev->race_a, prev->race_b, prev->year)) {
+            return at + "not above the previous row";
+        }
+        if (!sorted_has(t.race_ids, r.race_a)) return at + "unknown race " + int_text(r.race_a);
+        if (!sorted_has(t.race_ids, r.race_b)) return at + "unknown race " + int_text(r.race_b);
+        if (r.race_a >= r.race_b) {
+            return at + "race_a " + int_text(r.race_a) + " is not below race_b " + int_text(r.race_b);
+        }
+        if (r.year < 0 || r.year > t.end_year - 1) return at + "year " + int_text(r.year) + range;
+        if (r.disposition < -4000 || r.disposition > 4000) {
+            return at + "disposition " + int_text(r.disposition) + " outside -4000 to 4000";
+        }
+        if (r.band < 0 || r.band > 2) return at + "band " + int_text(r.band) + " outside 0 to 2";
+        const bool same_pair = prev != nullptr && prev->race_a == r.race_a && prev->race_b == r.race_b;
+        if (same_pair && prev->disposition == r.disposition && prev->band == r.band) {
+            return at + "equals the previous row of this pair";
+        }
+        if (!same_pair) {
+            const auto* m = met_of(r.race_a, r.race_b);
+            if (m == nullptr || std::get<2>(*m) != r.year) {
+                return at + "first row is not at its meeting";
+            }
+        }
+        prev = &r;
+    }
+    // settlement_race.
+    const auto n_settlements = static_cast<std::int64_t>(t.settlements.size());
+    const db::SettlementRaceRow* sp = nullptr;
+    std::size_t first_of_settlement = 0;
+    const auto in_force = [&t](std::size_t from, std::size_t to) -> std::optional<std::string> {
+        // Rows [from, to) of one settlement: at the year of each, the shares
+        // in force sum to 1000 with one ruling race.
+        std::vector<std::int64_t> years;
+        for (std::size_t i = from; i < to; ++i) {
+            years.push_back(t.settlement_races[i].year);
+        }
+        std::stable_sort(years.begin(), years.end());
+        years.erase(std::unique(years.begin(), years.end()), years.end());
+        for (const std::int64_t y : years) {
+            std::int64_t sum = 0;
+            std::int64_t ruling = 0;
+            std::size_t i = from;
+            while (i < to) {
+                const std::int64_t race = t.settlement_races[i].race;
+                const db::SettlementRaceRow* last = nullptr;
+                while (i < to && t.settlement_races[i].race == race) {
+                    if (t.settlement_races[i].year <= y) {
+                        last = &t.settlement_races[i];
+                    }
+                    ++i;
+                }
+                if (last != nullptr) {
+                    sum += last->share;
+                    ruling += last->standing == 3 ? 1 : 0;
+                }
+            }
+            const db::SettlementRaceRow& r0 = t.settlement_races[from];
+            const std::string at = "corrupt table 'settlement_race': row (" + int_text(r0.settlement) + ", " +
+                                   int_text(r0.race) + ", " + int_text(r0.year) + "): ";
+            if (sum != 1000) return at + "shares in force at " + int_text(y) + " sum to " + int_text(sum);
+            if (ruling != 1) return at + int_text(ruling) + " ruling races at " + int_text(y);
+        }
+        return std::nullopt;
+    };
+    for (std::size_t i = 0; i < t.settlement_races.size(); ++i) {
+        const db::SettlementRaceRow& r = t.settlement_races[i];
+        const std::string at = "corrupt table 'settlement_race': row (" + int_text(r.settlement) + ", " +
+                               int_text(r.race) + ", " + int_text(r.year) + "): ";
+        if (sp != nullptr && std::tie(r.settlement, r.race, r.year) <= std::tie(sp->settlement, sp->race, sp->year)) {
+            return at + "not above the previous row";
+        }
+        if (sp != nullptr && sp->settlement != r.settlement) {
+            if (std::optional<std::string> why = in_force(first_of_settlement, i)) {
+                return why;
+            }
+            first_of_settlement = i;
+        }
+        if (r.settlement < 1 || r.settlement > n_settlements ||
+            t.settlements[static_cast<std::size_t>(r.settlement - 1)].id != r.settlement) {
+            return at + "unknown settlement " + int_text(r.settlement);
+        }
+        if (!sorted_has(t.race_ids, r.race)) return at + "unknown race " + int_text(r.race);
+        const std::int64_t founded = t.settlements[static_cast<std::size_t>(r.settlement - 1)].founded_year;
+        if (r.year < founded || r.year > t.end_year - 1) {
+            return at + "year " + int_text(r.year) + " outside " + int_text(founded) + " to " + int_text(t.end_year - 1);
+        }
+        if (r.share < 0 || r.share > 1000) return at + "share " + int_text(r.share) + " outside 0 to 1000";
+        if (r.standing < 0 || r.standing > 3) return at + "standing " + int_text(r.standing) + " outside 0 to 3";
+        if (r.share == 0 && r.standing != 0) return at + "standing " + int_text(r.standing) + " with share 0";
+        if (sp != nullptr && sp->settlement == r.settlement && sp->race == r.race && sp->share == r.share &&
+            sp->standing == r.standing) {
+            return at + "equals the previous row of this settlement and race";
+        }
+        sp = &r;
+    }
+    if (!t.settlement_races.empty()) {
+        if (std::optional<std::string> why = in_force(first_of_settlement, t.settlement_races.size())) {
+            return why;
+        }
+    }
+    // Events.
+    for (const auto& [a, b, year, event] : met) {
+        (void)year;
+        const bool rows = std::any_of(t.race_relations.begin(), t.race_relations.end(),
+                                      [a = a, b = b](const db::RaceRelationRow& r) { return r.race_a == a && r.race_b == b; });
+        if (!rows) {
+            return "corrupt table 'event': row " + int_text(event) + ": peoples_met without its rows";
+        }
+    }
+    for (const db::EventParticipantRow& p : t.participants) {
+        if (p.entity_type == static_cast<std::int64_t>(EntityType::race) && !sorted_has(t.race_ids, p.entity_id)) {
+            return "corrupt table 'event': row " + int_text(p.event) + ": race " + int_text(p.entity_id) + " has no row";
+        }
+    }
+    (void)n_events;
+    return std::nullopt;
+}
+
+}  // namespace
+
 std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
     const EventCatalogue& cat = *t.catalogue;
     const std::int64_t n_events = static_cast<std::int64_t>(t.events.size());
@@ -1725,7 +1894,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
                    " is not a beast";
         }
     }
-    return std::nullopt;
+    return relation_tables_problem(t, kind_key, participant);
 }
 
 // --- render_event (8.5) ------------------------------------------------------------------

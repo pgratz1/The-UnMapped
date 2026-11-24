@@ -282,6 +282,11 @@ struct MonsterTables {
     std::span<const db::EventValueRow> values;
     std::span<const db::EventCauseRow> causes;
     const EventCatalogue* catalogue = nullptr;
+    // P5-03 16.4 (schema 10): checked after the tables of P5-02; race_ids
+    // ascending.
+    std::span<const db::RaceRelationRow> race_relations;
+    std::span<const db::SettlementRaceRow> settlement_races;
+    std::span<const std::int64_t> race_ids;
 };
 [[nodiscard]] std::optional<std::string> monster_tables_problem(const MonsterTables& t);
 

@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 55> GROUPS = {{
+constexpr std::array<GroupRow, 62> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -95,6 +95,16 @@ constexpr std::array<GroupRow, 55> GROUPS = {{
     {"beasts_bold", EventGroup::monsters},
     {"outpost_built", EventGroup::monsters},
     {"outpost_abandoned", EventGroup::monsters},
+    // P5-03 (a reading: P4-05's groups for the kinds of P5-03): the flight
+    // for fear with the monsters, the meetings and turns of peoples with the
+    // realms, the migrations and mixed settlements with the settlements.
+    {"settlement_fled", EventGroup::monsters},
+    {"peoples_met", EventGroup::realms},
+    {"disposition_turned", EventGroup::realms},
+    {"refugees_arrived", EventGroup::settlements},
+    {"settlement_mixed", EventGroup::settlements},
+    {"standing_changed", EventGroup::settlements},
+    {"people_expelled", EventGroup::settlements},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {

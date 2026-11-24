@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <tuple>
 #include <vector>
 
 #include "worldgen/db/reader.hpp"
@@ -59,6 +60,19 @@ struct MonsterState {
     bool alive, awake;
     std::int64_t lair_site, region;
     friend bool operator==(const MonsterState&, const MonsterState&) = default;
+};
+
+// P5-03 18 (P4-01 r5): a race pair's disposition at a year, and a race's
+// share and standing in a settlement.
+struct RaceRelationState {
+    std::int64_t race_a, race_b;
+    bool met;
+    std::int64_t disposition, band;
+    friend bool operator==(const RaceRelationState&, const RaceRelationState&) = default;
+};
+struct RaceShare {
+    std::int64_t race, share, standing;
+    friend bool operator==(const RaceShare&, const RaceShare&) = default;
 };
 
 // Everything that depends on the year (section 4).
@@ -108,6 +122,14 @@ public:
     [[nodiscard]] std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t year) const;
     [[nodiscard]] std::size_t site_count() const noexcept { return sites_.size(); }
     [[nodiscard]] std::size_t monster_count() const noexcept { return monsters_.size(); }
+    // P5-03 18: the pair's disposition at Y (met iff its peoples_met has year
+    // <= Y; then the race_relation row of the largest year <= Y; else met
+    // false, disposition and band 0); symmetric in its arguments. A standing
+    // settlement's shares at Y (per race the last row with year <= Y and
+    // share > 0, ascending race); empty when it does not stand at Y.
+    // FatalError "timeline: no race <r>" for a race the world does not have.
+    [[nodiscard]] RaceRelationState race_relation_at(std::int64_t race_a, std::int64_t race_b, std::int64_t year) const;
+    [[nodiscard]] std::vector<RaceShare> settlement_races(std::int64_t settlement, std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 
@@ -189,6 +211,14 @@ private:
     std::size_t beast_kinds_ = 0;
     std::vector<std::size_t> beast_offsets_;  // (position * beast_kinds_ + beast - 1), size + 1 entries
     std::vector<std::int64_t> settlement_ending_;  // index id - 1
+    // P5-03 18: the race ids (ascending), each pair's meeting year (by
+    // (a, b), ascending) and the rows of the two tables in primary-key order,
+    // the share rows per settlement by offsets (size + 1 entries).
+    std::vector<std::int64_t> race_ids_;
+    std::vector<std::tuple<std::int64_t, std::int64_t, std::int64_t>> met_years_;
+    std::vector<db::RaceRelationRow> race_relations_;
+    std::vector<db::SettlementRaceRow> settlement_races_;
+    std::vector<std::size_t> share_offsets_;
 };
 
 // Everything a reader of history needs, read once (P4-00 V3). Movable: the

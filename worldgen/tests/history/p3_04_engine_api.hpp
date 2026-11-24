@@ -249,11 +249,20 @@ inline Tables history_stage(const worldgen::data::ContentSet& c, const HistoryIn
 inline h::HistoryResult with_data_rows(const worldgen::data::ContentSet& c, h::HistoryResult r) {
     r.beasts.clear();
     for (const h::BeastDef& b : h::beast_defs_from(c)) {
-        r.beasts.push_back(db::BeastRow{b.id, b.key, b.name, b.plural, b.menace, b.food});
+        std::string phrases;  // P5-03 16.1: joined with '|'
+        for (const std::string& x : b.bold_phrases) {
+            phrases += phrases.empty() ? x : "|" + x;
+        }
+        r.beasts.push_back(db::BeastRow{b.id, b.key, b.name, b.plural, b.menace, b.food, phrases});
     }
     r.monster_kinds.clear();
     for (const h::MonsterKindDef& k : h::monster_kind_defs_from(c)) {
-        r.monster_kinds.push_back(db::MonsterKindRow{k.id, k.key, k.name, k.noun, k.grouped ? 1 : 0, k.wake, k.might});
+        std::string phrases;  // P5-03 16.1
+        for (const std::string& x : k.raid_phrases) {
+            phrases += phrases.empty() ? x : "|" + x;
+        }
+        r.monster_kinds.push_back(
+            db::MonsterKindRow{k.id, k.key, k.name, k.noun, k.grouped ? 1 : 0, k.wake, k.might, phrases});
     }
     return r;
 }
@@ -430,9 +439,9 @@ inline void write_row(db::StageWriter& w, std::string_view table, const Row& c) 
     } else if (table == "region_name") {   // P3-04 r21 23.4: write_region_name and db::RegionNameRow
         w.write_region_name(db::RegionNameRow{i(0), i(1), s(2), i(3), i(4)});
     } else if (table == "beast") {   // P5-02 11.1: GUESS the writers and rows (p5_02_monsters_api.hpp)
-        w.write_beast(db::BeastRow{i(0), s(1), s(2), s(3), i(4), i(5)});
+        w.write_beast(db::BeastRow{i(0), s(1), s(2), s(3), i(4), i(5), s(6)});  // P5-03: + bold_phrases
     } else if (table == "monster_kind") {
-        w.write_monster_kind(db::MonsterKindRow{i(0), s(1), s(2), s(3), i(4), i(5), i(6)});
+        w.write_monster_kind(db::MonsterKindRow{i(0), s(1), s(2), s(3), i(4), i(5), i(6), s(7)});  // + raid_phrases
     } else if (table == "beast_population") {
         w.write_beast_population(db::BeastPopulationRow{i(0), i(1), i(2), i(3)});
     } else if (table == "monster") {
