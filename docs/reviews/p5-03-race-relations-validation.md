@@ -10,7 +10,7 @@ Machine: 6 cores shared with two other agents (load 3 to 6), so `ctest` times ar
 
 | Preset | Build | `ctest` | Result |
 | --- | --- | --- | --- |
-| linux-gcc-release | 43 min (cold, 3 jobs) | 319 s first run | 41 of 43 before recording: `worldgen-tests-other` (hash constants) and `worldgen-tests-relations` (D1). After recording and a rebuild: 42 of 43, only D1 fails |
+| linux-gcc-release | cold, 3 jobs (not timed) | 319 s first run | 41 of 43 before recording: `worldgen-tests-other` (hash constants) and `worldgen-tests-relations` (D1). After recording and a rebuild: 42 of 43, only D1 fails |
 | linux-clang-release | 766 s | 459 s | 42 of 43 (D1 only) |
 | linux-gcc-debug | 575 s | 1,676 s | 42 of 43 (D1 only) |
 | linux-clang-debug | 364 s | 1,522 s | 42 of 43 (D1 only) |
@@ -56,7 +56,7 @@ All at the shipped data, gcc-release binary, 1024 unless stated: `default` seeds
 
 | Target | Bound | Measured | |
 | --- | --- | --- | --- |
-| RR1 pairs met | every pair of present races met in at least 90% of worlds; median at least 13 of 15 | median 15 of 15; **all 15 met in 84 worlds** (87 on seeds 100 to 199) | **missed** (the 16 other worlds each have a race that never meets any other, see RR3) |
+| RR1 pairs met | every pair of present races met in at least 90% of worlds; median at least 13 of 15 | median 15 of 15; **all 15 met in 84 worlds** (87 on seeds 100 to 199) | **missed** (of the 16 worlds with an unmet pair, 11 have a race that never meets any other, see RR3, and 5 have one to three unmet pairs: seeds 5, 20, 30, 42, 91; seeds 100 to 199: 7 and 6) |
 | RR2 `disposition_turned` | median 1 to 4, max at most 10, at least one in 50 worlds, every band entered | median 1, max 6, 73 worlds with one; turns into hatred 116, wariness 30, friendship 3 | met |
 | RR3 participation | every present race named by a P5 event in every world with two races | 10 worlds have a race with no P5 event (seeds 4, 6, 26, 36, 62, 74: dwarves; 49, 88: humans; 77, 87: elves), 5 more on seeds 100 to 199. **In every case that race has no `race_relation` row: it never meets another race** (an isolated race on its own land, which the spec says to report) | reported to the lead |
 | MX1 mixed standing settlements at E | median 3 to 12; at least one in 80 worlds | median 8 (report `[stats]`; 10 by final `settlement_race` rows with more than one race), 99 worlds | met |
