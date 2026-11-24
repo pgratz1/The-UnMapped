@@ -204,9 +204,13 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
     // The spec's example (the cession e59 of 2897) is of the 0.21.0 history; from 0.22.0 the renamings shift the
     // event ids and the war of 2893 ends with the peace e58 without a cession (P5-12 6, "Effect on the rest of
     // history"), so the won war is checked by its peace.
-    CHECK(std::find(b.begin(), b.end(), "    2897 e58 peace") != b.end());
+    // P5-02 (generator 0.23.0, test writer): the monsters move the history and the roles swap. The Baskeeb Mob
+    // (c2) now leads with its sacks of the House of Nife's towns (e141 of 3307, e144 of 3311), and the House of
+    // Nife (c1) with its won wars, the first by the Mob's peace e108 of 2920 (with the cession e109); report text
+    // confirmed byte for byte by p3_report_reference.py --version 0.23.0.
+    CHECK(std::find(a.begin(), a.end(), "    2920 e108 peace") != a.end());
     std::int64_t sacks = 0;
-    for (const std::string& x : a) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
+    for (const std::string& x : b) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
     CHECK(sacks == 2);
 }
 
