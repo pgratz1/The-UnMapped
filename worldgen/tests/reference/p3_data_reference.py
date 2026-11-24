@@ -1442,6 +1442,14 @@ def copied_files_019(path, directory, files):
     """The files of a copied kind directory for the served version, given what the disk holds (P3-10)."""
     if directory not in ("placenames", "name_filters"):
         return files
+    if directory == "name_filters" and name_filters_024(files) and not at_least("0.24.0"):
+        # P5-03 12.3: the disk holds 0.24.0 files; an older version reads them as at the P5-03 base
+        if os.path.normpath(path).startswith(os.path.normpath(REPO)):
+            return copied_files_019(path, directory, git_dir_files(P5_03_BASE_COMMIT, path))
+        raise DataError("%s: 0.24.0 files, cannot serve %s" % (path, DATA_VERSION))
+    if directory == "name_filters" and at_least("0.24.0") and not name_filters_024(files) and not pre21_any(files):
+        PRE_015_USED.add(path)   # 0.23.0 files on disk, 0.24.0 served: 12.3's word
+        return name_filters_add_024(files)
     pre21 = placenames_pre_021 if directory == "placenames" else name_filters_pre_021
     if not pre21(files):   # P5-01: the disk holds 0.21.0 files
         if at_least("0.21.0"):
@@ -2322,11 +2330,428 @@ def check_spec_023(c, races, cultures):
     for k in ("chronology", "conflict", "engine"):
         c.eq("history.%s as at 0.22.0" % k, h[k], tomllib.loads(HISTORY_FILES_022[k + ".toml"])["history"][k])
 
+# ---------------------------------------------------------------------------
+# The 0.24.0 listings (P5-03, docs/specs/p5-03-race-relations.md r1: 4.1, 4.2, 8.2, 9.2, 9.4, 9.5, 11.1, 11.3, 12,
+# 13), derived from the 0.23.0 ones by the edits the spec states. The shipped rates are interim (22 step 10): after
+# the engineer's calibration, RELATIONS_TUNING_024, MONSTERS_NEW_024, PEOPLES_NEW_024 and the tables below are the
+# one place to edit, then `golden`.
+# ---------------------------------------------------------------------------
+# 4.1: race field stances after culture (the last field).
+STANCE = REC(fields("race:S value:I"))
+RACE_024 = RACE_020 + (("stances", ARR(STANCE)),)
+assert RACE_020[-1][0] == "culture"
+STANCES_024 = {"elf": [("faerie", 200)], "faerie": [("elf", 200)], "dwarf": [("goblin", -100)],
+               "goblin": [("dwarf", -100)], "human": [], "orc": []}
+
+
+def stances_text(rows):
+    return "stances = [%s]" % ", ".join('{ race = "%s", value = %d }' % r for r in rows)
+
+
+def _race_024(n, text):
+    lines = text.rstrip("\n").split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("culture = ")]
+    assert len(i) == 1
+    lines.insert(i[0] + 1, stances_text(STANCES_024[n[:-5]]))
+    return "\n".join(lines) + "\n"
+
+
+RACE_FILES_024 = {n: _race_024(n, t) for n, t in RACE_FILES_020.items()}
+# 4.2: history.relations, every field required, in this order (name, lo, hi, shipped).
+RELATIONS_RANGES_024 = (
+    ("hatred_max", -2000, 0, -500), ("friend_min", 0, 2000, 150), ("band_margin", 0, 500, 50),
+    ("memory_min", -2000, 0, -250), ("memory_max", 0, 2000, 250), ("memory_decay_per_century", 0, 10000, 40),
+    ("war_memory", 0, 1000, 25), ("conquest_memory", 0, 1000, 50), ("sack_memory", 0, 1000, 10),
+    ("capture_memory", 0, 1000, 5), ("expel_memory", 0, 1000, 30), ("shelter_memory", 0, 1000, 15),
+    ("meet_hops", -1, 8, 3), ("migrate_hops", 0, 8, 2), ("migrate_min", 1, 100000, 40),
+    ("welcome_min", -2000, 2001, -200), ("subject_years", 0, 100000, 200),
+    ("conquest_settlers_permille", 0, 1000, 100), ("drift_permille_per_century", 0, 1000, 100),
+    ("fade_permille", 0, 1000, 20), ("mixed_min_permille", 1, 1001, 100), ("expel_permille", 0, 1000, 30),
+    ("expel_share_max", 0, 1000, 500))
+RELATIONS_024 = tuple((n, INT) for n, _, _, _ in RELATIONS_RANGES_024)
+RELATIONS_TUNING_024 = {n: v for n, _, _, v in RELATIONS_RANGES_024}
+# 4.2 / 7.4: the zero fixture tuning (with every race's stances empty).
+RELATIONS_ZERO_024 = dict(RELATIONS_TUNING_024, war_memory=0, conquest_memory=0, sack_memory=0, capture_memory=0,
+                          expel_memory=0, shelter_memory=0, meet_hops=-1, welcome_min=2001, subject_years=100000,
+                          mixed_min_permille=1001, expel_permille=0)
+# 9.4 (and 9.1, 9.2, 9.3, 14.1): history.monsters fields after prey_might_max_permille.
+MONSTERS_NEW_RANGES_024 = (
+    ("raid_chain_years", 1, 100000, 100), ("toll_over_permille", 0, 1000, 250), ("hunt_raid_permille", 0, 1000, 60),
+    ("hunt_max_permille", 0, 1000, 400), ("fear_raids", 1, 100, 3), ("fear_years", 1, 100000, 50),
+    ("fear_permille", 0, 1000, 300), ("overrun_people_ref", 1, 1000000, 800))
+MONSTERS_024 = MONSTERS_023 + tuple((n, INT) for n, _, _, _ in MONSTERS_NEW_RANGES_024)
+MONSTERS_TUNING_024 = dict(MONSTERS_TUNING_023, **{n: v for n, _, _, v in MONSTERS_NEW_RANGES_024})
+# 11.1 and 11.2: history.peoples fields after ghost_max_population.
+PEOPLES_NEW_RANGES_024 = (("abandon_reach_hops", 0, 16, 2), ("abandon_loss_min_permille", 0, 1000, 50),
+                          ("abandon_loss_max_permille", 0, 1000, 200), ("ghost_fade_years", 0, 100000, 0))
+PEOPLES_RANGES_024 = PEOPLES_RANGES_023 + tuple((n, lo, hi) for n, lo, hi, _ in PEOPLES_NEW_RANGES_024)
+PEOPLES_024 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_024)
+# 13: beast bold_phrases after food.
+BEAST_024 = BEAST + (("bold_phrases", ARR(STR)),)
+BOLD_PHRASES_024 = {
+    "bear": ["broke into the stores of", "came down on the herds of"],
+    "boar": ["trampled the fields of", "tore up the gardens of"],
+    "deer": ["strayed into the fields of"],
+    "giant_spider": ["spun their webs across the paths of", "lay in wait on the roads from"],
+    "wolf": ["hunted the roads from", "grew bold and stalked the herds of"]}
+# 9.5: monster raid_phrases after hoard_permille (the last field); 12.1, 12.2 name forms; 9.2 hoards of undead and
+# wyvern 0; 12.2 the undead lair forms.
+MONSTER_024 = MONSTER + (("raid_phrases", ARR(STR)),)
+assert MONSTER[-1][0] == "hoard_permille"
+RAID_PHRASES_024 = {
+    "dragon": ["fell in fire upon", "burned the fields of", "came down in flame on"],
+    "giant": ["came down from the heights upon", "hurled stones upon", "fell upon"],
+    "ogre": ["fell upon", "plundered the stores of", "carried off the herds of"],
+    "troll": ["came down by night on", "fell upon", "prowled the edges of"],
+    "undead": ["came out of the barrows against", "walked by night in", "crept into"],
+    "wyvern": ["stooped on", "swept down on", "came screaming down on"]}
+NAME_FORMS_024 = {
+    "dragon": ["{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing",
+               "{root} the Gold-Eyed", "{root}"],
+    "giant": ["{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"],
+    "ogre": ["{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat",
+             "{root}"],
+    "troll": ["Old {root}", "{root} the Grey", "{root} Stonehide", "{root} of the Fells", "Mossback {root}", "{root}"],
+    "wyvern": ["The {root} Brood", "The Brood of {root}", "The Screamers of {root}"],
+    "undead": ["The Host of {place}", "The Restless of {place}", "The Dead of {place}"]}
+LAIR_FORMS_024 = {"undead": ["The Barrows of {root}", "The Howes of {root}"]}
+HOARD_024 = {"undead": 0, "wyvern": 0}
+
+
+def _monster_row_024(row):
+    d = monster_dict_023(row)
+    k = d["id"]
+    d["name_forms"] = list(NAME_FORMS_024[k])
+    d["lair_forms"] = list(LAIR_FORMS_024.get(k, d["lair_forms"]))
+    d["hoard_permille"] = HOARD_024.get(k, d["hoard_permille"])
+    d["raid_phrases"] = list(RAID_PHRASES_024[k])
+    return d
+
+
+def monster_file_024(row):
+    d = _monster_row_024(row)
+    out = ["[monster.%s]\n" % d["id"]]
+    for n, _ in MONSTER_024:
+        if n == "biomes":
+            out.append(_habitat_text("biomes", [(b["biome"], b["weight"]) for b in d["biomes"]]))
+        else:
+            out.append("%s = %s\n" % (n, _toml_value(d[n])))
+    return "".join(out)
+
+
+def beast_file_024(row):
+    return beast_file_023(row) + "bold_phrases = %s\n" % _toml_value(BOLD_PHRASES_024[row[0]])
+
+
+# 8.2, 9.5, 11.3, 13: the report entries of kinds 56 to 62 after outpost_abandoned; kinds 48 and 53 reworded.
+REPORT_ENTRIES_024 = (
+    ("settlement_fled", 45, "For fear of {monster}, the people of {@settlement} left their homes."),
+    ("peoples_met", 25, "The {race_a:plural} first met the {race_b:plural} in {@region}{band?, and hated them from the "
+                        "first|, and were wary of them|, and were glad of them}."),
+    ("disposition_turned", 55, "{@causes:war_won=the wars,peace=the wars,truce=the wars,civ_conquered=the conquests,"
+                               "sacked=the sacks,settlement_captured=the conquests,people_expelled=the expulsions,"
+                               "refugees_arrived=years of shelter given|After |, }the {race_a:plural} and the "
+                               "{race_b:plural} {band?came to hate one another|grew wary of one another|became friends}."),
+    ("refugees_arrived", 25, "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,"
+                             "people_expelled=the expulsion|After |, }{people} {race:plural} from {origin} found shelter "
+                             "in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their "
+                             "own kin of} {civilization}."),
+    ("settlement_mixed", 25, "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the "
+                             "cession|After |, }the {race:plural} and the {ruling:plural} lived side by side in "
+                             "{settlement}."),
+    ("standing_changed", 15, "In {settlement}, {civilization} {standing?held the|tolerated the|accepted the} "
+                             "{race:plural}{standing? as subjects|| as equals}."),
+    ("people_expelled", 40, "{civilization} drove the {race:plural} out of {settlement}; {people} left."),
+)
+KIND48_TEMPLATE_024 = "{monster} {monster:raid} {@settlement}; {dead?no one died|one died|# died}."
+KIND53_TEMPLATE_024 = "In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died."
+# 12.3: rule 7's form The Hollow of {name} becomes {name}'s Waste.
+RENAME_RULE_7_024 = RENAME_RULE_7[:11] + (["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}",
+                                           "{name}'s Waste"],)
+RENAMING_RULES_024 = RENAMING_RULES_023[:6] + (RENAME_RULE_7_024,)
+
+
+def _renaming_file_024():
+    out = ["# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 "
+           "21.2\n# and rule 7 (P5-02 9.3), generator 0.23.0; rule 7's {name}'s Waste (P5-03 12.3), generator 0.24.0.\n",
+           "[history.renaming]\n"]
+    out += ["%s = %d\n" % kv for kv in RENAMING_HEAD_022.items()]
+    for r in renaming_rule_dicts(RENAMING_RULES_024):
+        out.append("\n[[history.renaming.rules]]\n")
+        out += ["%s = %s\n" % (n, _toml_value(v)) for n, v in r.items()]
+    return "".join(out)
+
+
+def relations_file_024(t=None):
+    t = RELATIONS_TUNING_024 if t is None else t
+    return ("# Race relations, mixed settlements and migrations (spec P5-03 4.2). Generator 0.24.0; values interim\n"
+            "# until the calibration sweep (P5-03 22 step 10).\n[history.relations]\n" +
+            "".join("%s = %d\n" % (n, t[n]) for n, _ in RELATIONS_024))
+
+
+def monsters_file_024():
+    return ("# Beasts and monsters (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0; rates interim until the calibration\n"
+            "# sweep (P5-03 22 step 10).\n[history.monsters]\n" +
+            "".join("%s = %s\n" % (k, _toml_value(v)) for k, v in MONSTERS_TUNING_024.items()))
+
+
+def _report_024(text):
+    old48 = REPORT_ENTRIES_023[5 - 1][2]
+    old53 = REPORT_ENTRIES_023[10 - 1][2]
+    assert old48.startswith("{monster} fell upon") and old53.startswith("In {@region} the {@beast} grew bold")
+    text = _edit(text, old48, KIND48_TEMPLATE_024)
+    text = _edit(text, old53, KIND53_TEMPLATE_024)
+    assert text.endswith("]\n")
+    return text[:-2] + "".join('  { kind = "%s", salience = %d, template = "%s" },\n' % e
+                               for e in REPORT_ENTRIES_024) + "]\n"
+
+
+HISTORY_FILES_024 = dict(HISTORY_FILES_023, **{
+    "peoples.toml": HISTORY_FILES_023["peoples.toml"] + "".join("%s = %d\n" % (n, v)
+                                                                 for n, _, _, v in PEOPLES_NEW_RANGES_024),
+    "report.toml": _report_024(HISTORY_FILES_023["report.toml"]), "renaming.toml": _renaming_file_024(),
+    "monsters.toml": monsters_file_024(), "relations.toml": relations_file_024()})
+BEAST_FILES_024 = {r[0] + ".toml": beast_file_024(r) for r in BEASTS_023}
+MONSTER_FILES_024 = {r[0] + ".toml": monster_file_024(r) for r in MONSTERS_KINDS_023}
+SPEC_FILES_024 = {"race": RACE_FILES_024, "culture": CULTURE_FILES_023, "history": HISTORY_FILES_024,
+                  "beast": BEAST_FILES_024, "monster": MONSTER_FILES_024}
+KINDS_024 = dict(KINDS_023)
+KINDS_024["race"] = ("races", RACE_024)
+KINDS_024["history"] = ("history", dict(KINDS_023["history"][1], peoples=PEOPLES_024, monsters=MONSTERS_024,
+                                        relations=RELATIONS_024))
+KINDS_024["beast"] = ("beasts", BEAST_024)
+KINDS_024["monster"] = ("monsters", MONSTER_024)
+# 12.3: bird in words.toml's whole list.
+FILTER_WORDS_024 = ("bird",)
+# The commit whose game/data holds the 0.23.0 files (origin/p5/03-spec, main at 0.23.0 plus the spec).
+P5_03_BASE_COMMIT = "87fbda9"
+
+
+def phrase_ok(s):
+    """Grammar phrase (9.5, 13): lower-case ASCII letters, single spaces, ' and -, starting and ending with a
+    letter; string(48)."""
+    return (0 < len(s.encode()) <= 48 and all(ch in " '-" or "a" <= ch <= "z" for ch in s)
+            and "a" <= s[0] <= "z" and "a" <= s[-1] <= "z" and "  " not in s)
+
+
+def monster_form_ok_024(s, dead):
+    """name_form (P3-02 4) with {place} for monster forms (12.2): a form of a dead kind holds {place} exactly once
+    and no {root}; a wild kind's forms as before."""
+    if "{place}" in s:
+        return s.count("{place}") == 1 and "{root}" not in s and name_form_ok(s.replace("{place}", "{root}"))
+    return name_form_ok(s)
+
+
+def race_stance_messages(rid, r, races):
+    """race_stances (4.1): the first failing entry only (the loader's error path)."""
+    seen = []
+    for i, s in enumerate(r["stances"]):
+        if s["race"] not in races:
+            return ["stances[%d].race '%s' is not a race" % (i, s["race"])]
+        if s["race"] == rid:
+            return ["stances[%d].race '%s' is the race itself" % (i, s["race"])]
+        if s["race"] in seen:
+            return ["stances[%d].race '%s' is listed twice" % (i, s["race"])]
+        seen.append(s["race"])
+    return []
+
+
+def race_stance_error(rid, r, races):
+    """The loader's text (4.1, P5-02 25 item 1's error path)."""
+    m = race_stance_messages(rid, r, races)
+    return "check 'race_stances' failed for 'race.%s': %s" % (rid, m[0]) if m else None
+
+
+def relations_check_messages(t):
+    """relations_bands (4.2); relations_memory holds by the types."""
+    out = []
+    if not (t["hatred_max"] + t["band_margin"] < t["friend_min"] - t["band_margin"]):
+        out.append("bands overlap: hatred_max %d and friend_min %d with band_margin %d"
+                   % (t["hatred_max"], t["friend_min"], t["band_margin"]))
+    return out
+
+
+def monsters_check_messages_024(t):
+    out = monsters_check_messages(t)
+    if t["hunt_permille"] > t["hunt_max_permille"]:
+        out.append("hunt_permille %d is above hunt_max_permille %d" % (t["hunt_permille"], t["hunt_max_permille"]))
+    return out
+
+
+def peoples_check_messages_024(t):
+    if t["abandon_loss_min_permille"] > t["abandon_loss_max_permille"]:
+        return ["abandon_loss_min_permille %d is above abandon_loss_max_permille %d"
+                % (t["abandon_loss_min_permille"], t["abandon_loss_max_permille"])]
+    return []
+
+
+def monster_place_messages(m):
+    """monster_place_forms (12.2), every message in order."""
+    out = []
+    for i, f in enumerate(m["name_forms"]):
+        if m["wake"] == "dead" and ("{place}" not in f or "{root}" in f):
+            out.append("name_forms[%d] '%s' of a dead kind needs {place} and no {root}" % (i, f))
+        elif m["wake"] == "wild" and "{place}" in f:
+            out.append("name_forms[%d] '%s' holds {place}, which only a dead kind may" % (i, f))
+    return out
+
+
+def monster_check_messages_024(m, biomes=BIOME_KEYS_023, cultures=tuple(SITE_FORMS_023)):
+    """4.2's named checks with monster_bare_form_last, then monster_place_forms (12.2)."""
+    return monster_check_messages(m, biomes, cultures) + monster_place_messages(m)
+
+
+def epithet(form):
+    """12.1: the form with {root} removed and outer spaces trimmed."""
+    return form.replace("{root}", "").strip(" ")
+
+
+def pre_024(path, kind):
+    """A race, history, beast or monster directory older than 0.24.0 (P5-03): no stances in a race file; no
+    relations.toml; no bold_phrases or raid_phrases."""
+    names = [n for n in os.listdir(path) if n.endswith(".toml")]
+    texts = {}
+    for n in names:
+        with open(os.path.join(path, n), encoding="utf-8") as f:
+            texts[n] = f.read()
+    if kind == "race":
+        return any("stances" not in t for t in texts.values())
+    if kind == "history":
+        return "relations.toml" not in names
+    if kind == "beast":
+        return any("bold_phrases" not in t for t in texts.values())
+    if kind == "monster":
+        return any("raid_phrases" not in t for t in texts.values())
+    return True
+
+
+def name_filters_024(files):
+    """True when a name_filters/ directory's files hold 12.3's word (0.24.0)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("name_filter", {})
+        if "words" in d:
+            return all(w in d["words"]["whole"] for w in FILTER_WORDS_024)
+    return False
+
+
+NAME_FILTER_EDITS_024 = {("words", "whole"): (list(FILTER_WORDS_024), [])}
+
+
+def name_filters_add_024(files):
+    return name_filters_019(files, NAME_FILTER_EDITS_024)
+
+
+def pre21_any(files):
+    return name_filters_pre_021(files)
+
+
+def check_spec_024(c, races, cultures):
+    """The 0.24.0 listings say what P5-03 4.1, 4.2, 8.2, 9.2, 9.4, 9.5, 11.1, 12 and 13 state."""
+    h = parsed_spec("history")
+    for rid, r in races.items():
+        check_record(RACE_024, r, "race." + rid)
+        c.eq("race.%s stances last (4.1)" % rid, list(r)[-2:], ["culture", "stances"])
+        c.eq("race.%s stances (4.1)" % rid, [(s["race"], s["value"]) for s in r["stances"]], STANCES_024[rid])
+        c.ok("race.%s 0 to 8 stances, values inside int(-500, 500)" % rid,
+             len(r["stances"]) <= 8 and all(-500 <= s["value"] <= 500 for s in r["stances"]))
+        c.eq("race.%s passes race_stances" % rid, race_stance_messages(rid, r, races), [])
+    old = {k: v for _, t in RACE_FILES_020.items() for k, v in tomllib.loads(t)["race"].items()}
+    c.eq("races as at 0.23.0 but for stances", {k: {a: b for a, b in v.items() if a != "stances"}
+                                                for k, v in races.items()}, old)
+    el = races["elf"]
+    for edit, want in (([dict(race="troll", value=1)], "stances[0].race 'troll' is not a race"),
+                       ([dict(race="faerie", value=1), dict(race="elf", value=2)], "stances[1].race 'elf' is the race itself"),
+                       ([dict(race="orc", value=1), dict(race="human", value=1), dict(race="orc", value=3)],
+                        "stances[2].race 'orc' is listed twice"),
+                       ([dict(race="elf", value=1), dict(race="troll", value=1)],
+                        "stances[0].race 'elf' is the race itself")):
+        c.eq("race_stances on %r" % edit, race_stance_error("elf", dict(el, stances=edit), races),
+             "check 'race_stances' failed for 'race.elf': " + want)
+    rl = h["relations"]
+    check_record(RELATIONS_024, rl, "history.relations")
+    c.eq("history.relations fields in order (4.2)", list(rl), [n for n, _ in RELATIONS_024])
+    c.eq("history.relations shipped values (4.2)", rl, RELATIONS_TUNING_024)
+    for n, lo, hi, _ in RELATIONS_RANGES_024:
+        c.ok("history.relations.%s inside int(%d, %d)" % (n, lo, hi), lo <= rl[n] <= hi)
+    c.eq("relations_bands passes", relations_check_messages(rl), [])
+    c.eq("relations_bands at the boundary (h + m = f - m)", relations_check_messages(dict(rl, friend_min=-400)),
+         ["bands overlap: hatred_max -500 and friend_min -400 with band_margin 50"])
+    c.eq("relations_bands passes one above", relations_check_messages(dict(rl, friend_min=-399)), [])
+    c.eq("zero tuning passes relations_bands", relations_check_messages(RELATIONS_ZERO_024), [])
+    c.eq("the shipped hatred_max equals enmity_max (4.2, 7.1)", rl["hatred_max"], h["conflict"]["enmity_max"])
+    c.eq("the shipped migrate_min equals abandon_min (4.2)", rl["migrate_min"], h["peoples"]["abandon_min"])
+    mo = h["monsters"]
+    check_record(MONSTERS_024, mo, "history.monsters")
+    c.eq("history.monsters fields in order (9.4)", list(mo), [n for n, _ in MONSTERS_024])
+    c.eq("history.monsters as at 0.23.0 before the new fields", {k: mo[k] for k in MONSTERS_TUNING_023},
+         MONSTERS_TUNING_023)
+    for n, lo, hi, v in MONSTERS_NEW_RANGES_024:
+        c.ok("history.monsters.%s inside int(%d, %d)" % (n, lo, hi), lo <= mo[n] <= hi)
+        c.eq("history.monsters.%s shipped" % n, mo[n], v)
+    c.eq("monsters_hunt_ordered passes", monsters_check_messages_024(mo), [])
+    c.eq("monsters_hunt_ordered message", monsters_check_messages_024(dict(mo, hunt_max_permille=19)),
+         ["hunt_permille 20 is above hunt_max_permille 19"])
+    c.eq("monsters_hunt_ordered at equality", monsters_check_messages_024(dict(mo, hunt_max_permille=20)), [])
+    pe_ = h["peoples"]
+    c.eq("history.peoples fields in order (11.1)", list(pe_), [n for n, _ in PEOPLES_024])
+    for n, lo, hi, v in PEOPLES_NEW_RANGES_024:
+        c.ok("history.peoples.%s inside int(%d, %d)" % (n, lo, hi), lo <= pe_[n] <= hi)
+        c.eq("history.peoples.%s shipped" % n, pe_[n], v)
+    c.eq("peoples_abandon_loss_ordered passes", peoples_check_messages_024(pe_), [])
+    c.eq("peoples_abandon_loss_ordered message", peoples_check_messages_024(dict(pe_, abandon_loss_min_permille=201)),
+         ["abandon_loss_min_permille 201 is above abandon_loss_max_permille 200"])
+    be = parsed_spec("beast")
+    for bid, b in be.items():
+        check_record(BEAST_024, b, "beast." + bid)
+        c.eq("beast.%s bold_phrases after food (13)" % bid, list(b)[-2:], ["food", "bold_phrases"])
+        c.eq("beast.%s bold_phrases (13)" % bid, b["bold_phrases"], BOLD_PHRASES_024[bid])
+        c.ok("beast.%s 1 to 4 phrases by phrase" % bid,
+             1 <= len(b["bold_phrases"]) <= 4 and all(phrase_ok(p) for p in b["bold_phrases"]))
+    mk = parsed_spec("monster")
+    for mid, m in mk.items():
+        check_record(MONSTER_024, m, "monster." + mid)
+        c.eq("monster.%s raid_phrases after hoard_permille (9.5)" % mid, list(m)[-2:], ["hoard_permille", "raid_phrases"])
+        c.eq("monster.%s raid_phrases (9.5)" % mid, m["raid_phrases"], RAID_PHRASES_024[mid])
+        c.ok("monster.%s 1 to 4 phrases by phrase" % mid,
+             1 <= len(m["raid_phrases"]) <= 4 and all(phrase_ok(p) for p in m["raid_phrases"]))
+        c.eq("monster.%s name_forms (12.1, 12.2)" % mid, m["name_forms"], NAME_FORMS_024[mid])
+        c.ok("monster.%s forms by name_form with {place} (12.2)" % mid,
+             all(monster_form_ok_024(f, m["wake"] == "dead") for f in m["name_forms"])
+             and all(name_form_ok(f) for f in m["lair_forms"]) and 1 <= len(m["name_forms"]) <= 8)
+        c.eq("monster.%s passes its named checks (0.24.0)" % mid, monster_check_messages_024(m), [])
+        eps = [epithet(f) for f in m["name_forms"] if "{root}" in f]
+        c.ok("monster.%s epithets distinct (12.1)" % mid, len(eps) == len(set(eps)))
+    c.eq("hoards of undead and wyvern 0 (9.2)", (mk["undead"]["hoard_permille"], mk["wyvern"]["hoard_permille"]), (0, 0))
+    c.eq("undead lair_forms (12.2)", mk["undead"]["lair_forms"], ["The Barrows of {root}", "The Howes of {root}"])
+    c.eq("monster_place_forms on a dead kind with {root}",
+         monster_place_messages(dict(mk["undead"], name_forms=["The Host of {place}", "The Host of {root}"])),
+         ["name_forms[1] 'The Host of {root}' of a dead kind needs {place} and no {root}"])
+    c.eq("monster_place_forms on a wild kind with {place}",
+         monster_place_messages(dict(mk["troll"], name_forms=["Old {root}", "The Troll of {place}"])),
+         ["name_forms[1] 'The Troll of {place}' holds {place}, which only a dead kind may"])
+    for p, ok in (("fell upon", True), ("Fell upon", False), ("fell  upon", False), ("fell upon ", False),
+                  ("o'er the hills", True), ("half-starved", True), ("-x", False), ("x" * 48, True), ("x" * 49, False)):
+        c.eq("phrase grammar %r" % p, phrase_ok(p), ok)
+    evl = h["report"]["events"]
+    c.eq("kinds 56-62 entries after outpost_abandoned (8.2, 11.3)",
+         [(e["kind"], e["salience"], e["template"]) for e in evl[-7:]], [tuple(e) for e in REPORT_ENTRIES_024])
+    c.eq("report lists 62 kinds", len(evl), 62)
+    c.eq("kind 48 template (9.5)", evl[47]["template"], KIND48_TEMPLATE_024)
+    c.eq("kind 53 template (13)", evl[52]["template"], KIND53_TEMPLATE_024)
+    rn = h["renaming"]
+    c.eq("rule 7's forms (12.3)", rn["rules"][6]["forms"], RENAME_RULE_7_024[11])
+    c.eq("renaming passes its four named checks (0.24.0)", renaming_check_messages(rn), [])
+    for k in ("chronology", "conflict", "engine"):
+        c.eq("history.%s as at 0.23.0" % k, h[k], tomllib.loads(HISTORY_FILES_023[k + ".toml"])["history"][k])
+    c.eq("cultures as at 0.23.0", cultures,
+         {k: v for _, t in CULTURE_FILES_023.items() for k, v in tomllib.loads(t)["culture"].items()})
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
 
 
 def at_least(v):
@@ -2336,8 +2761,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v == "0.23.0" else ("culture", "history", "race")
-    if v == "0.23.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0") else ("culture", "history", "race")
+    if v == "0.24.0":
+        KINDS, SPEC_FILES = KINDS_024, SPEC_FILES_024
+    elif v == "0.23.0":
         KINDS, SPEC_FILES = KINDS_023, SPEC_FILES_023
     elif v == "0.22.0":
         KINDS, SPEC_FILES = KINDS_022, SPEC_FILES_022
@@ -2358,7 +2785,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.23.0")
+use_version("0.24.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -2443,8 +2870,10 @@ def read_dir_files(path, directory):
 
 def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
-    if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2)
-        return "0.23.0"
+    if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2); phrases at 0.24.0 (P5-03 9.5, 13)
+        return "0.23.0" if pre_024(path, kind) else "0.24.0"
+    if kind in ("race", "history") and not pre_024(path, kind):
+        return "0.24.0"
     if kind in ("race", "history") and pre_015(path, kind):
         return "0.15.0"
     if pre_017(path, kind):
@@ -2472,6 +2901,8 @@ def same_version(kind, a, b):
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
     if kind == "race":   # races did not change at 0.21.0, 0.22.0 and 0.23.0
         a, b = ("0.20.0" if x in ("0.21.0", "0.22.0", "0.23.0") else x for x in (a, b))
+    if kind == "culture":   # cultures did not change at 0.24.0
+        a, b = ("0.23.0" if x == "0.24.0" else x for x in (a, b))
     return a == b
 
 
@@ -2746,7 +3177,17 @@ def fx_raw(v):
 
 
 def check_spec_invariants(c):
-    """At 0.23.0: every check of the 0.22.0 listings on them, then check_spec_023 on the 0.23.0 listings."""
+    """At 0.24.0: every check of the 0.23.0 listings on them, then check_spec_024 on the 0.24.0 listings."""
+    if at_least("0.24.0"):
+        use_version("0.23.0")
+        try:
+            check_spec_invariants(c)
+        finally:
+            use_version("0.24.0")
+        check_spec_024(c, parsed_spec("race"), parsed_spec("culture"))
+        c.eq("history ids (0.24.0)", sorted(parsed_spec("history")),
+             ["chronology", "conflict", "engine", "monsters", "peoples", "relations", "renaming", "report"])
+        return None
     if at_least("0.23.0"):
         use_version("0.22.0")
         try:
@@ -3239,8 +3680,9 @@ def check_copied_kinds(c):
     content = load_root("game/data", ["name_filter"])["name_filter"]
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
     if at_least("0.21.0"):   # P3-02 r17 15.1: slurs 33 / 17 / 5, crude 71 / 12 / 15, famous 0 / 0 / 103 (15.1 says 105)
-        sizes = dict(slurs=(33, 17, 5), crude=(71, 12, 15), words=(5, 1, 391), famous=(0, 0, 103))
-        effs = [109, 30, 514]
+        n24 = len(FILTER_WORDS_024) if at_least("0.24.0") else 0   # P5-03 12.3: bird in words.whole
+        sizes = dict(slurs=(33, 17, 5), crude=(71, 12, 15), words=(5, 1, 391 + n24), famous=(0, 0, 103))
+        effs = [109, 30, 514 + n24]
     elif at_least("0.20.0"):   # P3-02 r15 14.3: slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
         sizes = dict(slurs=(33, 18, 5), crude=(71, 12, 14), words=(5, 1, 391), famous=(0, 0, 101))
         effs = [109, 31, 511]
@@ -3377,9 +3819,9 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.23.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.24.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+        base = P5_03_BASE_COMMIT if DATA_VERSION == "0.23.0" else P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
             P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout

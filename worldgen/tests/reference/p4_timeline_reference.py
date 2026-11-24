@@ -97,35 +97,42 @@ SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
 # 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
 # (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p5-02"
-RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02")
+RULES = "p5-03"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03")
+# P5-03 (0.24.0): the 0.24.0 report inputs (p3_report_reference.py build-inputs at 0.24.0; phase 2)
+INPUTS_P5_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03-int", "report-inputs")
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02")
+    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03")
 
 
 def p403a():
     """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
-    return RULES in ("p4-03a", "p5-02")
+    return RULES in ("p4-03a", "p5-02", "p5-03")
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES in ("p5-12", "p4-03a", "p5-02")
+    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03")
 
 
 def r4():
     """P4-01 r4 (P5-02 13): sites, monsters, beasts and settlement endings in the dumps (READINGS P5)."""
-    return RULES == "p5-02"
+    return RULES in ("p5-02", "p5-03")
+
+
+def r5():
+    """P4-01 r5 (P5-03 18): race relations and settlement shares by year, and their dump lines."""
+    return RULES == "p5-03"
 
 
 def default_inputs():
-    return INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -301,6 +308,10 @@ class History:
                                      "name = 'site'").fetchone()[0] == 1
             for tn in ("beast", "monster_kind", "beast_population", "monster", "site"):
                 t[tn] = prr.pk_rows(conn, tn)[1] if has_sites else []
+            has_rr = conn.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND "
+                                  "name = 'race_relation'").fetchone()[0] == 1
+            for tn in ("race_relation", "settlement_race"):   # schema 10 (P5-03 16.1)
+                t[tn] = prr.pk_rows(conn, tn)[1] if has_rr else []
         finally:
             conn.close()
         self.E = int(self.meta["history_end_year"])
@@ -338,6 +349,8 @@ class History:
         self.sites = t["site"]             # id, name, kind, region, x, y, settlement, founder, monster, oy, oe, ey, ee, ending
         self.monsters = t["monster"]       # id, name, kind, lair_site, born, born_event, died, death_event, slain_by, status, hoard
         self.beast_rows = t["beast_population"]
+        self.race_relation = t.get("race_relation", [])      # race_a, race_b, year, disposition, band
+        self.settlement_race = t.get("settlement_race", [])  # settlement, race, year, share, standing
         self.kind_key = {}
         self.kind_ids = {}
         conn2 = prr.connect(path)
@@ -387,6 +400,43 @@ class History:
 
     def sites_existing(self, y):
         return [x[0] for x in self.sites if x[9] <= y]
+
+    # --- P5-03 18 (P4-01 r5)
+    def race_relation_at(self, a, b, y):
+        """RaceRelationState (race_a, race_b, met, disposition, band) at Y: met iff the pair's peoples_met has year
+        <= Y; then the row with the largest year <= Y; else 0, 0. Symmetric (the arguments ordered)."""
+        if a not in self.race_key or b not in self.race_key:
+            raise ValueError("unknown race")
+        if not 0 <= y <= self.E:
+            raise ValueError("year outside 0..E")
+        a, b = min(a, b), max(a, b)
+        met = False
+        for e in self.events:
+            if e[1] > y:
+                break
+            if self.kind_key.get(e[3]) == "peoples_met":
+                ps = sorted(self.parts.get(e[0], []))
+                if (ps[0][4], ps[1][4]) == (a, b):
+                    met = True
+        if not met:
+            return (a, b, 0, 0, 0)
+        best = None
+        for r in self.race_relation:
+            if (r[0], r[1]) == (a, b) and r[2] <= y:
+                best = r
+        return (a, b, 1, best[3], best[4]) if best is not None else (a, b, 1, 0, 0)
+
+    def settlement_races(self, s, y):
+        """[(race, share, standing)] of a settlement standing at Y (the census reading): per race the last row with
+        year <= Y and share > 0, ascending race; empty when not standing at Y."""
+        st = self.settlement_state(s, y)
+        if not (st[1] and st[4] in (1, 2)):
+            return []
+        last = {}
+        for r in self.settlement_race:
+            if r[0] == s and r[2] <= y:
+                last[r[1]] = r
+        return [(g, r[3], r[4]) for g, r in sorted(last.items()) if r[3] > 0]
 
     def site_at(self, sid, y):
         """SiteState: (site, kind, region, x, y, settlement, monster, founder, open, ending); open iff ended_year
@@ -536,6 +586,16 @@ def year_dump(h, y):
             ms = h.monster_at(m[0], y)
             if ms[2]:
                 out.append("monster %d %d %d %d" % (m[0], ms[3], ms[4], ms[5]))
+    if r5():   # P5-03 18: every pair ascending, then the mix of each standing settlement of more than one race
+        races = sorted(h.race_key)
+        for i, a in enumerate(races):
+            for b in races[i + 1:]:
+                out.append("races %d %d %d %d %d" % h.race_relation_at(a, b, y))
+        for s in h.settlements:
+            mx = h.settlement_races(s[0], y)
+            if len(mx) > 1:
+                for g, sh, st in mx:
+                    out.append("mix %d %d %d %d" % (s[0], g, sh, st))
     return ("\n".join(out) + "\n").encode("ascii")
 
 
@@ -586,6 +646,11 @@ def static_dump(h):
                                                      m[3]))
         for r in h.beast_rows:
             out.append("beast %d %d %d %d" % tuple(r))
+    if r5():   # P5-03 18: after the beast lines, every row of the two tables in key order
+        for r in h.race_relation:
+            out.append("relation %d %d %d %d %d" % tuple(r))
+        for r in h.settlement_race:
+            out.append("share %d %d %d %d %d" % tuple(r))
     for e in h.events:
         out.append("effects %d %s" % (e[0], ids(eff[e[0]])))
     return ("\n".join(out) + "\n").encode("ascii")
@@ -1585,6 +1650,30 @@ def check_invariants(c, name, path, every_year=True):
     c.eq("%s invariant 7 alive" % name, h.alive(E), [x[0] for x in h.civs if x[8] is None])
 
 
+def check_p503(c):
+    """P5-03 24.1 item 12 on fixture H14 (worldgen/tests/data/history-report/h14-v5.toml): race_relation_at before,
+    at and after a meeting and a turn; settlement_races around an arrival, a capture, a drift and a ruin."""
+    h = History(fixture_db("h14-v5"))
+    for (a, b, y), want in (((1, 2, 149), (1, 2, 0, 0, 0)), ((1, 2, 150), (1, 2, 1, -600, 0)),
+                            ((2, 1, 1998), (1, 2, 1, -600, 0)), ((1, 2, 1999), (1, 2, 1, -650, 0)),
+                            ((2, 3, 249), (2, 3, 0, 0, 0)), ((2, 3, 250), (2, 3, 1, -200, 1)),
+                            ((3, 2, 799), (2, 3, 1, -200, 1)), ((2, 3, 800), (2, 3, 1, -520, 0)),
+                            ((2, 3, 2000), (2, 3, 1, -450, 0)), ((1, 3, 1999), (1, 3, 0, 0, 0))):
+        c.eq("P5-03 18 race_relation_at(%d, %d, %d)" % (a, b, y), h.race_relation_at(a, b, y), want)
+    for (sid, y), want in (((4, 499), [(1, 1000, 3)]), ((4, 500), [(1, 900, 0), (2, 100, 3)]),
+                           ((4, 999), [(1, 900, 0), (2, 100, 3)]), ((4, 1000), [(1, 450, 0), (2, 550, 3)]),
+                           ((4, 1300), [(2, 1000, 3)]), ((3, 699), [(3, 1000, 3)]),
+                           ((3, 700), [(2, 200, 1), (3, 800, 3)]), ((3, 1300), [(1, 120, 1), (2, 160, 0), (3, 720, 3)]),
+                           ((5, 699), [(2, 1000, 3)]), ((5, 700), []), ((3, 199), [])):
+        c.eq("P5-03 18 settlement_races(%d, %d)" % (sid, y), h.settlement_races(sid, y), want)
+    for args, msg in (((9, 1, 0), "unknown race"), ((1, 2, 2001), "year outside 0..E")):
+        try:
+            h.race_relation_at(*args)
+            c.ok("P5-03 18 race_relation_at%r fails" % (args,), False)
+        except ValueError as ex:
+            c.eq("P5-03 18 race_relation_at%r fails" % (args,), str(ex), msg)
+
+
 def cmd_check(argv):
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else default_inputs()
     quick = "--quick" in argv
@@ -1602,6 +1691,8 @@ def cmd_check(argv):
         check_colours(c)
     check_example_56(c)
     check_t1(c)
+    if r5():
+        check_p503(c)
     for name in fixture_names_p3() + (T1_NAME,):
         check_invariants(c, name, fixture_db(name))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)
@@ -1687,6 +1778,8 @@ def main(argv):
             prr.use_version("0.21.0")
         elif RULES in ("p5-12", "p4-03a"):
             prr.use_version("0.22.0")
+        elif RULES == "p5-02":
+            prr.use_version("0.23.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "distances":
         return cmd_distances(rest)

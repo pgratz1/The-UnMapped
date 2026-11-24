@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.23.0"  # P5-02: kinds 44-55, form kind, {@beast}, names of types 8 and 9, schema 9 (P5-12: kind 43, {@region_former}, names at the event, schema 8 (P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
+GENERATOR_VERSION = "0.24.0"  # P5-03: kinds 56-62, form raid, {@beast:bold}, the four-word choice, schema 10 (P5-02: kinds 44-55, form kind, {@beast}, names of types 8 and 9, schema 9 (P5-12: kind 43, {@region_former}, names at the event, schema 8 (P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
 SCHEMA_VERSION = 9   # P5-02 11.1 (generator 0.23.0); 8 at 0.22.0 (P3-04 r21 23.4); 7 before
 
 
@@ -339,6 +339,22 @@ KINDS_023 = (
     kind_def(55, "outpost_abandoned", 0, 1, 0, (("civilization", CIV, 1, 1), ("site", SITE, 1, 1)), ("reason",)),
 )
 COMPILED_023 = COMPILED_022 + KINDS_023
+# P5-03 11.3 and 8.1 (generator 0.24.0): kind 56 settlement_fled (part B), then 57 to 62 (part A); every kind caused.
+KINDS_024 = (
+    kind_def(56, "settlement_fled", 1, 1, 1, (("monster", MONSTER, 1, 1), ("civilization", CIV, 1, 1)), ()),
+    kind_def(57, "peoples_met", 1, 1, 0, (("race_a", RACE, 1, 1), ("race_b", RACE, 1, 1)), ("disposition", "band")),
+    kind_def(58, "disposition_turned", 1, 0, 0, (("race_a", RACE, 1, 1), ("race_b", RACE, 1, 1)),
+             ("disposition", "band")),
+    kind_def(59, "refugees_arrived", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1),
+                                               ("origin", SETTLEMENT, 1, 1), ("race", RACE, 1, 1)), ("people", "standing")),
+    kind_def(60, "settlement_mixed", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1),
+                                               ("race", RACE, 1, 1), ("ruling", RACE, 1, 1)), ("share",)),
+    kind_def(61, "standing_changed", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1),
+                                               ("race", RACE, 1, 1)), ("standing", "share")),
+    kind_def(62, "people_expelled", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1),
+                                              ("race", RACE, 1, 1)), ("people",)),
+)
+COMPILED_024 = COMPILED_023 + KINDS_024
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -381,11 +397,16 @@ RENDER_R21 = True
 #                   monster role (monster_kind.noun), the placeholder {@beast} (beast.plural of the value beast);
 #                   schema 9 (11.1).
 RENDER_R23 = True
+# P5-03 (generator 0.24.0):
+#   RENDER_R24      9.5 the form `raid` of a monster role (phrase ((event id - 1) mod n) of its kind's raid_phrases), 13
+#                   the placeholder {@beast:bold} (of the beast's bold_phrases), 8.2 the four-word choice {v?w0|w1|w2|w3};
+#                   schema 10 (16.1).
+RENDER_R24 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
 
 
 def at_least(v):
@@ -400,27 +421,32 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
-    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, SCHEMA_VERSION
+    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, SCHEMA_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
-                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023}[v]
+                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
+                "0.24.0": COMPILED_024}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
-    RENDER_R17 = v in ("0.20.0", "0.21.0", "0.22.0", "0.23.0")
-    RENDER_R19 = FLARE_R19 = v in ("0.21.0", "0.22.0", "0.23.0")
-    RENDER_R21 = v in ("0.22.0", "0.23.0")
-    RENDER_R23 = v == "0.23.0"
+    i = VERSIONS.index(v)
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
+    RENDER_R17 = i >= VERSIONS.index("0.20.0")
+    RENDER_R19 = FLARE_R19 = i >= VERSIONS.index("0.21.0")
+    RENDER_R21 = i >= VERSIONS.index("0.22.0")
+    RENDER_R23 = i >= VERSIONS.index("0.23.0")
+    RENDER_R24 = i >= VERSIONS.index("0.24.0")
     global TABLES, COLUMNS
-    TABLES = TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21 else TABLES_021
-    COLUMNS = COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21 else COLUMNS_021
-    SCHEMA_VERSION = 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
+    TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
+              else TABLES_021)
+    COLUMNS = (COLUMNS_024 if RENDER_R24 else COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21
+               else COLUMNS_021)
+    SCHEMA_VERSION = 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0") else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if i >= VERSIONS.index("0.18.0") else pdr.NAME_FILTERS_017_COMMIT
     if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
         pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
@@ -460,7 +486,7 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all", "kind")   # kind: P5-02 10.3 (0.23.0)
+FORMS = ("name", "plural", "adjective", "all", "kind", "raid")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
 
 
 def _is_word(w):
@@ -564,9 +590,9 @@ def clause_digits(kind, templ, ev):
         if "?" in body:
             v, rest = body.split("?", 1)
             ws = rest.split("|")
-            if len(ws) == 3:
+            if len(ws) in (3, 4):
                 x = ev["values"][val_seq[v]]
-                w = ws[0] if x == 0 else ws[1] if x == 1 else ws[2]
+                w = ws[min(x, len(ws) - 1)] if 0 <= x else ws[-1]
                 nums[k] += [x] * w.count("#")
             continue
         if ":" in body or body in roles:
@@ -595,11 +621,13 @@ def placeholder_problem(kind, body, at):
                     else "{@settlement} needs a kind with a settlement at byte %d" % at)
         if RENDER_R23 and body == "@beast":   # P5-02 10.3
             return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
+        if RENDER_R24 and body == "@beast:bold":   # P5-03 13: template_problem as {@beast}'s
+            return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
         return unknown
     if "?" in body:
         v, rest = body.split("?", 1)
         bars = rest.count("|")
-        if v not in values or not (bars == 1 or (bars == 2 and RENDER_R10)):
+        if v not in values or not (bars == 1 or (bars == 2 and RENDER_R10) or (bars == 3 and RENDER_R24)):
             return unknown
         if not all(_is_word(w) for w in rest.split("|")):
             return unknown
@@ -608,13 +636,16 @@ def placeholder_problem(kind, body, at):
         return unknown
     if ":" in body:
         role, form = body.split(":", 1)
-        if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23):
+        if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23) or (
+                form == "raid" and not RENDER_R24):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
             return "form '%s' needs a race role at byte %d" % (form, at)
         if form == "kind" and r["type"] != MONSTER:   # P5-02 10.3, where the race-role form check is
             return "form 'kind' needs a monster role at byte %d" % at
+        if form == "raid" and r["type"] != MONSTER:   # P5-03 9.5
+            return "form 'raid' needs a monster role at byte %d" % at
         if form != "all" and r["min"] == 0:
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
@@ -784,6 +815,9 @@ def render(view, eid, links=None):
             put_name(view["name"](SETTLEMENT, ev["settlement"], "name"), SETTLEMENT, ev["settlement"])
         elif RENDER_R23 and body == "@beast":   # P5-02 10.3: beast.plural, as stored (no name rule)
             out.append(view["beast_plural"](ev["values"][val_seq["beast"]]))
+        elif RENDER_R24 and body == "@beast:bold":   # P5-03 13: phrase ((id - 1) mod n) of the beast's bold_phrases
+            ph = view["beast_bold"](ev["values"][val_seq["beast"]])
+            out.append(ph[(eid - 1) % len(ph)])
         elif RENDER_R12 and body.startswith("@causes:"):
             # r12 20.2: L = the entries' cwords of the causes' kind keys in ascending cause id, first
             # occurrence kept; nothing when L is empty; else word1, L joined as {role:all}, word2.
@@ -803,7 +837,10 @@ def render(view, eid, links=None):
             v, rest = body.split("?", 1)
             ws = rest.split("|")
             x = ev["values"][val_seq[v]]
-            if len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
+            if len(ws) == 4:   # P5-03 8.2: w0 for 0, w1 for 1, w2 for 2, w3 otherwise
+                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2] if x == 2 else ws[3])
+                           .replace("#", fmt_value(x, dg)))
+            elif len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
                 out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", fmt_value(x, dg)))
             else:
                 out.append(ws[0] if x == 1 else ws[1])
@@ -825,6 +862,10 @@ def render(view, eid, links=None):
             elif form == "name":
                 t, x = ps[0]
                 put_name(region_name(x, eid) if t == REGION else view["name"](t, x, form), t, x)
+            elif form == "raid":   # P5-03 9.5: phrase ((id - 1) mod n) of the first participant's kind; no link
+                t, x = ps[0]
+                ph = view["raid_phrases"](x)
+                out.append(ph[(eid - 1) % len(ph)])
             else:   # plural, adjective (a race, type 1), kind (P5-02: the monster, type 8)
                 t, x = ps[0]
                 nm = view["name"](t, x, form)
@@ -1559,6 +1600,10 @@ TABLES_022 = tuple(sorted(COLUMNS_022, key=lambda t: t.encode()))
 COLUMNS_023 = dict(COLUMNS_022, settlement=15, beast=6, monster_kind=7, beast_population=4, monster=11, site=14)
 TABLES_023 = tuple(sorted(COLUMNS_023, key=lambda t: t.encode()))
 NEW_TABLES_023 = ("beast", "monster_kind", "beast_population", "monster", "site")   # DDL order
+# P5-03 16.1 (schema 10): beast and monster_kind gain a phrase column; race_relation and settlement_race after site.
+COLUMNS_024 = dict(COLUMNS_023, beast=7, monster_kind=8, race_relation=5, settlement_race=5)
+TABLES_024 = tuple(sorted(COLUMNS_024, key=lambda t: t.encode()))
+NEW_TABLES_024 = ("race_relation", "settlement_race")
 TABLES = TABLES_021   # use_version sets it
 REGION_NAME_DDL = ("CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, "
                    "culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, "
@@ -1623,6 +1668,33 @@ DDL_023_NEW = (
 )
 
 
+DDL_024_REPLACED = {
+    "CREATE TABLE beast (":
+    "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
+    "menace INTEGER NOT NULL, food INTEGER NOT NULL, bold_phrases TEXT NOT NULL) STRICT",
+    "CREATE TABLE monster_kind (":
+    "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT NOT "
+    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL, raid_phrases TEXT NOT NULL) STRICT"}
+DDL_024_NEW = (
+    "CREATE TABLE race_relation (race_a INTEGER NOT NULL, race_b INTEGER NOT NULL, year INTEGER NOT NULL, disposition "
+    "INTEGER NOT NULL, band INTEGER NOT NULL, PRIMARY KEY (race_a, race_b, year)) STRICT, WITHOUT ROWID",
+    "CREATE TABLE settlement_race (settlement INTEGER NOT NULL, race INTEGER NOT NULL, year INTEGER NOT NULL, share "
+    "INTEGER NOT NULL, standing INTEGER NOT NULL, PRIMARY KEY (settlement, race, year)) STRICT, WITHOUT ROWID",
+)
+
+
+def ddl_024():
+    """The history DDL at schema 10 (P5-03 16.1): schema 9's with beast's and monster_kind's last columns, then
+    race_relation and settlement_race after site."""
+    out = []
+    for d in ddl_023():
+        for head, new in DDL_024_REPLACED.items():
+            if d.startswith(head):
+                d = new
+        out.append(d)
+    return tuple(out) + DDL_024_NEW
+
+
 def ddl_023():
     """The history DDL at schema 9 (11.1): P3-04 9's thirteen statements with settlement's new last column, then
     region_name's (P3-04 r21 23.4), then the five new statements in this order."""
@@ -1631,7 +1703,7 @@ def ddl_023():
 
 
 # P5-02 8.3: settlement.ending from the stored log.
-ENDING_WORDS = {0: "-", 1: "sacked", 2: "overrun", 3: "plague", 4: "famine", 5: "left"}
+ENDING_WORDS = {0: "-", 1: "sacked", 2: "overrun", 3: "plague", 4: "famine", 5: "left", 6: "fled"}   # 6: P5-03 11.3
 PLAGUE_KEYS = ("plague", "plague_spread", "plague_outbreak")
 
 
@@ -1649,6 +1721,8 @@ def settlement_ending(status, ruin_event, kind_key_of, causes_of):
         return 2
     if k in ("settlement_abandoned", "settlement_abandoned_to"):
         keys = [kind_key_of(c) for c in causes_of(ruin_event)]
+        if RENDER_R24 and "settlement_fled" in keys:   # P5-03 11.3: code 6 fled, before 3 and 4
+            return 6
         if any(x in PLAGUE_KEYS for x in keys):
             return 3
         if "famine" in keys:
@@ -1697,25 +1771,30 @@ def with_ending(res):
     if res["settlement"] and len(res["settlement"][0]) == 14:
         en = endings_from_rows(res)
         res["settlement"] = [tuple(s) + (en[s[0]],) for s in res["settlement"]]
-    for t in NEW_TABLES_023:
+    for t in NEW_TABLES_023 + (NEW_TABLES_024 if RENDER_R24 else ()):
         res.setdefault(t, [])
     return res
 
 
 def beast_rows(dat):
-    """11.2: (id, key, name, plural, menace, food), ids in canonical definition order."""
-    return [(i + 1, k, d["name"], d["plural"], d["menace"], d["food"]) for i, (k, d) in enumerate(dat.beasts)]
+    """11.2: (id, key, name, plural, menace, food), ids in canonical definition order; P5-03 16.1: + bold_phrases
+    joined with |."""
+    return [(i + 1, k, d["name"], d["plural"], d["menace"], d["food"]) + (("|".join(d["bold_phrases"]),) if RENDER_R24
+                                                                           else ())
+            for i, (k, d) in enumerate(dat.beasts)]
 
 
 def monster_kind_rows(dat):
-    """11.2: (id, key, name, noun, grouped, wake (1 wild, 2 dead), might)."""
+    """11.2: (id, key, name, noun, grouped, wake (1 wild, 2 dead), might); P5-03 16.1: + raid_phrases joined with |."""
     return [(i + 1, k, d["name"], d["noun"], 1 if d["grouped"] else 0, 1 if d["wake"] == "wild" else 2, d["might"])
+            + (("|".join(d["raid_phrases"]),) if RENDER_R24 else ())
             for i, (k, d) in enumerate(dat.monsters)]
 
 
 def table_hashes(res):
     cols = COLUMNS
-    return {t: pchr.table_hash(cols[t], res.get(t, []) if t in ("region_name",) + NEW_TABLES_023 else res[t])
+    return {t: pchr.table_hash(cols[t], res.get(t, []) if t in ("region_name",) + NEW_TABLES_023 + NEW_TABLES_024
+                               else res[t])
             for t in TABLES}
 
 
@@ -1747,6 +1826,9 @@ def report_lines(res, end_year, races=None):
         for t, key in (("beast", "beasts"), ("monster_kind", "monster_kinds"), ("beast_population", "beast_populations"),
                        ("monster", "monsters"), ("site", "sites")):
             o.append("%s = %d" % (key, len(res.get(t, []))))
+    if RENDER_R24:   # P5-03 16.3: after sites
+        o.append("race_relations = %d" % len(res.get("race_relation", [])))
+        o.append("settlement_races = %d" % len(res.get("settlement_race", [])))
     if races is not None:
         civ_race = {c[0]: c[2] for c in res["civilization"]}  # .get: a standing settlement may have no owner (0)
         standing = [x for x in res["settlement"] if x[10] in (1, 2)]
@@ -1809,6 +1891,11 @@ def view_from_rows(res, regions, races, gods):
     view = dict(catalogue=cat, events=evs, name=name)
     if RENDER_R23:
         view["beast_plural"] = lambda b: plural[b]
+    if RENDER_R24:   # P5-03 9.5, 13: the stored phrase lists
+        bold = {b[0]: b[6].split("|") for b in res.get("beast", [])}
+        raid = {k[0]: k[7].split("|") for k in res.get("monster_kind", [])}
+        view["beast_bold"] = lambda b: bold[b]
+        view["raid_phrases"] = lambda m: raid[mkind[m]]
     if RENDER_R21:
         view["region_at"] = region_at_event_fn(names[REGION], res.get("region_name", []))
     return view
@@ -2156,19 +2243,46 @@ TEMPLATE_CASES_R23 = tuple((k, t) for k, _, t in pdr.REPORT_ENTRIES_023) + (
 )
 
 
+# P5-03 8.2, 9.5, 11.3, 13: the form raid, {@beast:bold}, the four-word choice and their template_problem messages,
+# the 0.24.0 templates.
+TEMPLATE_CASES_R24 = tuple((k, t) for k, _, t in pdr.REPORT_ENTRIES_024) + (
+    ("monster_raid", pdr.KIND48_TEMPLATE_024),
+    ("beasts_bold", pdr.KIND53_TEMPLATE_024),
+    ("monster_raid", "{civilization:raid} {@settlement}."),
+    ("battle", "{winner:raid}."),
+    ("monster_raid", "{monster:raid}"),
+    ("monster_raid", "The {@beast:bold} came."),
+    ("beasts_bold", "{@beast:fierce} {settlement}."),
+    ("refugees_arrived", "{standing?a|b|c|d}"),
+    ("refugees_arrived", "{standing?a|b|c|d|e}"),
+    ("refugees_arrived", "{standing?a|b|c|#}"),
+    ("peoples_met", "{race_a:plural} {race_b:adjective} {band?x|y|z}."),
+    ("disposition_turned", "{@region}"),
+    ("settlement_mixed", "{ruling:kind}"),
+)
+
+
 def template_cases():
     return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
             + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ())
             + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ())
             + (TEMPLATE_CASES_R19 if at_least("0.21.0") else ())
             + (TEMPLATE_CASES_R21 if at_least("0.22.0") else ())
-            + (TEMPLATE_CASES_R23 if at_least("0.23.0") else ()))
+            + (TEMPLATE_CASES_R23 if at_least("0.23.0") else ())
+            + (TEMPLATE_CASES_R24 if at_least("0.24.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_024 = """\
+# P3-04 engine golden vectors for generator 0.24.0 (schema 10; P5-03): the stub engine (run_engine
+# with the stub configuration, which installs neither renaming, monsters nor relations) on the 0.24.0
+# catalogue of 62 kinds (P5-03 8.1, 11.3: kinds 56 to 62 appended; the form raid, {@beast:bold} and
+# the four-word choice, 8.2, 9.5, 13), the tables beast and monster_kind with their phrase columns,
+# race_relation and settlement_race (empty in every stub world), the [history] keys of 16.3, and
+# otherwise as at 0.23.0. Spec"""
 HEADER_023 = """\
 # P3-04 engine golden vectors for generator 0.23.0 (schema 9; P5-02): the stub engine (run_engine
 # with the stub configuration, which installs neither renaming nor monsters) on the 0.23.0 catalogue
@@ -2297,7 +2411,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.23.0":
+    if ENGINE_VERSION == "0.24.0":
+        head = HEADER_024 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.23.0":
         head = HEADER_023 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.22.0":
         head = HEADER_022 + "\n" + "\n".join(head.splitlines()[2:])
@@ -2659,7 +2775,8 @@ def check_example_r12(c, inputs):
              ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"]
              + (["events_claim_dropped", "events_refuge_hidden"] if at_least("0.21.0") else [])
              + (["events_region_renamed"] if at_least("0.22.0") else [])
-             + (["events_" + k["key"] for k in KINDS_023] if at_least("0.23.0") else []))
+             + (["events_" + k["key"] for k in KINDS_023] if at_least("0.23.0") else [])
+             + (["events_" + k["key"] for k in KINDS_024] if at_least("0.24.0") else []))
 
 
 class no_r19:
@@ -2709,8 +2826,16 @@ def check_render_r10(c):
     c.eq("r10 # in w0 and w1 replaced too", [r("flare_up", "{years?#a|#b|#c}", [], {1: v}) for v in (0, 1, 5)],
          ["0a", "1b", "5c"])
     c.eq("r10 # kept in the two-word form", [r("flare_up", "{years?#|##}", [], {1: v}) for v in (1, 3)], ["#", "##"])
-    c.eq("r10 four words unknown", template_problem(find_kind(COMPILED, "flare_up"), "{years?a|b|c|d}"),
-         "unknown placeholder '{years?a|b|c|d}' at byte 0")
+    if at_least("0.24.0"):   # P5-03 8.2: the four-word form; five words stay unknown
+        c.eq("P5-03 four words valid", template_problem(find_kind(COMPILED, "flare_up"), "{years?a|b|c|d}"), None)
+        c.eq("P5-03 four words: w0, w1, w2, w3 for 0, 1, 2 and every other value (# the value)",
+             [r("flare_up", "{years?n|o|t|# m}", [], {1: v}) for v in (0, 1, 2, 3, 12, -4)],
+             ["n", "o", "t", "3 m", "12 m", "-4 m"])   # r10's cases run without r17's number words
+        c.eq("P5-03 five words unknown", template_problem(find_kind(COMPILED, "flare_up"), "{years?a|b|c|d|e}"),
+             "unknown placeholder '{years?a|b|c|d|e}' at byte 0")
+    else:
+        c.eq("r10 four words unknown", template_problem(find_kind(COMPILED, "flare_up"), "{years?a|b|c|d}"),
+             "unknown placeholder '{years?a|b|c|d}' at byte 0")
     # names inside a sentence
     names.update({(GOD, 1): "Fielie", (RACE, 1): None, (REGION, 5): "The Scarred Downs", (CIV, 1): "The Skib Horde",
                   (CIV, 2): "The Hold of Durgarin", (REGION, 6): "The Grove of the Hunt", (CIV, 3): "The Court of Saene",
@@ -2823,6 +2948,89 @@ def r21_view(rows, events, geo=None):
     view = dict(catalogue=cat, events=evs, name=lambda t, x, form: geo[x] if t == REGION else names[(t, x)])
     view["region_at"] = region_at_event_fn(geo, rows)
     return view
+
+
+def check_render_r24(c):
+    """P5-03 24.1 item 9 in the reference: the form raid, {@beast:bold}, the four-word choice on the shipped
+    templates of kinds 48, 53, 56 to 62, with hand-made views (phrase number (id - 1) mod n)."""
+    shipped = {k["key"]: k for k in event_catalogue(spec_report())}
+    names = {(MONSTER, 3): "The Brood of Skarr", (SETTLEMENT, 4): "Nub Pit", (SETTLEMENT, 5): "Ashford",
+             (SETTLEMENT, 6): "Kazad Rune", (CIV, 1): "The Hold of Durn", (CIV, 2): "The House of Aelin",
+             (REGION, 7): "The Grey Fells", (SETTLEMENT, 8): "Fievos"}
+    races = {1: dict(name="Dwarf", plural="Dwarves", adjective="Dwarven"),
+             2: dict(name="Goblin", plural="Goblins", adjective="Goblin"),
+             3: dict(name="Human", plural="Humans", adjective="Human"),
+             4: dict(name="Elf", plural="Elves", adjective="Elven")}
+    raid = ["stooped on", "swept down on", "came screaming down on"]
+    bold = {5: ["hunted the roads from", "grew bold and stalked the herds of"], 3: ["strayed into the fields of"]}
+
+    def name(t, x, form):
+        return races[x][form] if t == RACE else names[(t, x)]
+
+    def view(eid, key, region, settlement, parts, values, causes=(), extra=None):
+        evs = {eid: dict(year=900, end_year=900, kind=shipped[key]["id"], region=region, settlement=settlement,
+                         participants=list(parts), values=dict(enumerate(values, 1)), causes=list(causes))}
+        for cid, ckey in (extra or {}).items():
+            evs[cid] = dict(year=800, end_year=800, kind=shipped[ckey]["id"], region=0, settlement=0, participants=[],
+                            values={}, causes=[])
+        return dict(catalogue={k["id"]: k for k in shipped.values()}, events=evs, name=name,
+                    raid_phrases=lambda m: raid, beast_bold=lambda b: bold[b], beast_plural=lambda b: "wolves")
+    # 9.5: event ids 1, 2, 3, 4 take phrases 0, 1, 2, 0
+    for eid, want in ((1, "stooped on"), (2, "swept down on"), (3, "came screaming down on"), (4, "stooped on")):
+        v = view(eid, "monster_raid", 7, 4, ((1, 1, MONSTER, 3), (2, 2, CIV, 1)), (12, 0))
+        c.eq("9.5 raid phrase of event %d" % eid, render(v, eid), "The Brood of Skarr %s Nub Pit; 12 died." % want)
+    v = view(5, "monster_raid", 7, 4, ((1, 1, MONSTER, 3), (2, 2, CIV, 1)), (1, 0))
+    c.eq("9.5 one died", render(v, 5), "The Brood of Skarr swept down on Nub Pit; one died.")
+    c.eq("9.5 template_problem of raid on a civilization role",
+         template_problem(shipped["monster_raid"], "{civilization:raid} {@settlement}."),
+         "form 'raid' needs a monster role at byte 0")
+    # 13: {@beast:bold}
+    for eid, want in ((1, "hunted the roads from"), (2, "grew bold and stalked the herds of")):
+        v = view(eid, "beasts_bold", 7, 4, ((1, 1, SETTLEMENT, 4), (2, 2, CIV, 1)), (5, 3))
+        c.eq("13 bold phrase of event %d" % eid, render(v, eid),
+             "In the Grey Fells the wolves %s Nub Pit; three died." % want if RENDER_R17 else "")
+    v = view(9, "beasts_bold", 7, 4, ((1, 1, SETTLEMENT, 4), (2, 2, CIV, 1)), (3, 0))
+    c.eq("13 one phrase, no one died", render(v, 9), "In the Grey Fells the wolves strayed into the fields of Nub Pit; "
+                                                    "no one died.")
+    c.eq("13 template_problem of {@beast:bold} without a beast value",
+         template_problem(shipped["monster_raid"], "The {@beast:bold} came."),
+         "{@beast} needs a kind with a value 'beast' at byte 4")
+    # 8.2: refugees_arrived's four-word standing, the samples of 8.2
+    for st, word in ((0, "held as subjects by"), (1, "tolerated by"), (2, "welcomed by"), (3, "among their own kin of"),
+                     (7, "among their own kin of")):
+        v = view(20, "refugees_arrived", 7, 6, ((1, 1, SETTLEMENT, 6), (2, 2, CIV, 1), (3, 3, SETTLEMENT, 5),
+                                                (4, 4, RACE, 3)), (240, st), causes=(11,), extra={11: "sacked"})
+        c.eq("8.2 refugees_arrived standing %d" % st, render(v, 20),
+             "After the sack, 240 Humans from Ashford found shelter in Kazad Rune, %s the Hold of Durn." % word)
+    v = view(20, "peoples_met", 7, 0, ((1, 1, RACE, 1), (2, 2, RACE, 2)), (-100, 1))
+    c.eq("8.2 peoples_met sample", render(v, 20), "The Dwarves first met the Goblins in the Grey Fells, and were wary "
+                                                  "of them.")
+    v = view(21, "disposition_turned", 0, 0, ((1, 1, RACE, 1), (2, 2, RACE, 2)), (-560, 0), causes=(11, 12),
+             extra={11: "war_won", 12: "sacked"})
+    c.eq("8.2 disposition_turned sample", render(v, 21), "After the wars and the sacks, the Dwarves and the Goblins came "
+                                                         "to hate one another.")
+    v = view(22, "disposition_turned", 0, 0, ((1, 1, RACE, 1), (2, 2, RACE, 2)), (160, 2), causes=(11,),
+             extra={11: "peoples_met"})
+    # READING (spec defect): a turn by decay alone cites its last turn or meeting, whose kinds have no cause word, and
+    # the template's literal `the` then starts the sentence in lower case (8.5 capitalises nothing); likewise a
+    # settlement_mixed whose cause is an arrival or an abandonment. The reference renders the template as written.
+    c.eq("8.2 disposition_turned by decay (a cause word not in the list)", render(v, 22),
+         "the Dwarves and the Goblins became friends.")
+    v = view(23, "settlement_mixed", 7, 8, ((1, 1, SETTLEMENT, 8), (2, 2, CIV, 2), (3, 3, RACE, 2), (4, 4, RACE, 4)),
+             (310,), causes=(11,), extra={11: "settlement_captured"})
+    c.eq("8.2 settlement_mixed sample", render(v, 23), "After the conquest, the Goblins and the Elves lived side by side "
+                                                       "in Fievos.")
+    v = view(24, "people_expelled", 7, 8, ((1, 1, SETTLEMENT, 8), (2, 2, CIV, 2), (3, 3, RACE, 2)), (310,))
+    c.eq("8.2 people_expelled sample", render(v, 24), "The House of Aelin drove the Goblins out of Fievos; 310 left.")
+    for st, want in ((0, "held the Goblins as subjects"), (1, "tolerated the Goblins"), (2, "accepted the Goblins as "
+                                                                                           "equals")):
+        v = view(25, "standing_changed", 7, 8, ((1, 1, SETTLEMENT, 8), (2, 2, CIV, 2), (3, 3, RACE, 2)), (st, 120))
+        c.eq("8.2 standing_changed %d" % st, render(v, 25), "In Fievos, the House of Aelin %s." % want)
+    v = view(26, "settlement_fled", 7, 4, ((1, 1, MONSTER, 3), (2, 2, CIV, 1)), ())
+    c.eq("11.3 settlement_fled", render(v, 26), "For fear of the Brood of Skarr, the people of Nub Pit left their homes.")
+    for k in ("settlement_fled", "peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed",
+              "standing_changed", "people_expelled", "monster_raid", "beasts_bold"):
+        c.eq("P5-03 template of %s passes template_problem" % k, template_problem(shipped[k], shipped[k]["templ"]), None)
 
 
 def check_render_r21(c):
@@ -3408,7 +3616,8 @@ def check_templates(c):
                                                  + (["claim_dropped", "refuge_hidden"]
                                                     if at_least("0.21.0") else [])
                                                  + (["region_renamed"] if at_least("0.22.0") else [])
-                                                 + ([k["key"] for k in KINDS_023] if at_least("0.23.0") else [])])
+                                                 + ([k["key"] for k in KINDS_023] if at_least("0.23.0") else [])
+                                                 + ([k["key"] for k in KINDS_024] if at_least("0.24.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -3585,6 +3794,8 @@ def cmd_check(argv):
                 check_flare_r19(c, inputs)
                 if RENDER_R21:
                     check_render_r21(c)
+                if RENDER_R24:
+                    check_render_r24(c)
             else:
                 check_render_r17(c)
         check_quiet_r12(c, inputs)
@@ -3757,7 +3968,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.23.0")
+use_version("0.24.0")
 
 
 def main(argv):

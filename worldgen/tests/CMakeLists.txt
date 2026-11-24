@@ -426,6 +426,30 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P5_02_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-02-monsters.txt"
 )
+# Race relations, mixed settlements and migrations; the P5-02 follow-ups (spec P5-03, generator 0.24.0, schema 10,
+# report v5): the data of 4, 9.4, 9.5, 11.1, 12 and 13; the formulas of 6, 9, 11 and 14 by hand; the rules on the
+# rows of the fixtures relations-small and monsters-small with fear (24.3); the ledger and disposition seams (7);
+# kinds 56 to 62, their sentences and the reader's checks of 16.4; report v5 on fixture H14; the timeline reads of
+# 18; the golden file golden/p5-03-relations.txt (reference/p5_03_relations_reference.py), the invariants of 19
+# and I0 (7.4). The adapter of the guessed names is history/p5_03_relations_api.hpp. Slow cases in the suite
+# "relations-slow". The part-B tests are history_monsters_p503_test.cpp and history_peoples_p503_test.cpp (shards
+# monsters and peoples).
+target_sources(worldgen-tests PRIVATE
+    history/history_relations_data_test.cpp
+    history/history_relations_unit_test.cpp
+    history/history_relations_ledger_test.cpp
+    history/history_relations_seams_test.cpp
+    history/history_relations_partb_test.cpp
+    history/history_relations_reader_test.cpp
+    history/history_relations_report_test.cpp
+    history/history_relations_timeline_test.cpp
+    history/history_relations_golden_test.cpp
+    history/history_monsters_p503_test.cpp
+    history/history_peoples_p503_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P5_03_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-03-relations.txt"
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -572,6 +596,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD monsters 30 "*history_monsters_*"
     SHARD markers 30 "*markers_*"
     SHARD browser 30 "*browser_*"
+    SHARD relations 30 "*history_relations_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -591,5 +616,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-monsters 600 "*-slow" "*history_monsters_*"
     SLOW slow-markers 1250 "*-slow" "*markers_*"
     SLOW slow-browser 300 "*-slow" "*browser_*"
+    SLOW slow-relations 300 "*-slow" "*history_relations_*"
     SLOW_REST slow-other 10 "*-slow"
 )

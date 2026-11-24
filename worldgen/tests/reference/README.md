@@ -1607,6 +1607,79 @@ host rises at a ruined settlement (6.3.2), so such a host may still overrun once
 with the commands of the 0.23.0 section (report, timeline and markers with `--inputs` the report inputs rebuilt by
 `build-inputs` into `~/.cache/the-unmapped/out/p5-02-fix/report-inputs`).
 
+## Generator 0.24.0 (P5-03: race relations, mixed settlements and migrations; P5-02 follow-ups)
+
+Written from `docs/specs/p5-03-race-relations.md` r1 (approved as one stage, section 28 by its recommendations)
+without the engineer's branch. Every reference serves 0.24.0 by default and keeps `--version 0.23.0` (timeline
+`--rules p5-02`), which reproduces the committed 0.23.0 goldens byte for byte (checked after the change for
+`p3-01-data.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt`, `p3-06-conflict.txt`, `p5-02-monsters.txt`,
+`p5-12-renaming.txt`, `p3-07-report.txt`, `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt`; the files
+of an older version are those of `87fbda9`, `P5_03_BASE_COMMIT`). The data of 4, 8.2, 9.2, 9.4, 9.5, 11.1, 11.3, 12
+and 13 are written into `game/data` and both fixture roots exactly as the spec states them (the spec's interim
+values; the engineer's calibration, 22 step 10, may move the rates).
+
+Phase 1 (this branch) records no golden: every world-dependent golden waits for the calibrated data (phase 2).
+
+- `p3_data_reference.py`: `KINDS_024` (race `stances`, history `relations` with `RELATIONS_RANGES_024`, the new
+  `history.monsters` and `history.peoples` fields, beast `bold_phrases`, monster `raid_phrases`), the listings
+  (`STANCES_024`, `RELATIONS_TUNING_024`, `RELATIONS_ZERO_024`, `MONSTERS_NEW_RANGES_024`, `PEOPLES_NEW_RANGES_024`,
+  `BOLD_PHRASES_024`, `RAID_PHRASES_024`, `NAME_FORMS_024`, `LAIR_FORMS_024`, `HOARD_024`, `REPORT_ENTRIES_024`,
+  kinds 48 and 53's templates, `RENAME_RULE_7_024`, `FILTER_WORDS_024`), the named checks with their messages
+  (`race_stance_messages`, `relations_check_messages`, `monsters_check_messages_024`, `peoples_check_messages_024`,
+  `monster_place_messages`, `phrase_ok`, `monster_form_ok_024`), `pre_024`, `name_filters_024`, `check_spec_024`.
+- `p3_engine_reference.py`: `KINDS_024` (56 to 62), `COMPILED_024`, `RENDER_R24` (form `raid`, `{@beast:bold}`, the
+  four-word choice and their `template_problem` messages), schema 10 (`COLUMNS_024`, `DDL_024_REPLACED`,
+  `DDL_024_NEW`, `ddl_024`), ending 6 `fled`, `[history]` keys `race_relations`, `settlement_races`,
+  `TEMPLATE_CASES_R24`, `check_render_r24` (the samples of 8.2 and 9.5).
+- `p3_peoples_reference.py`: flag `p503`: `in_reach` (11.1), the road losses (`road_loss_of`, stream
+  `hist.peoples.abandon_loss`), the ledger calls of the ruin procedure (7.2), `owner_event` (7.3), the public
+  `abandon(sid, cause, causes_given)` (9.4), fading only for a sacked ruin with no open site (11.2).
+- `p3_conflict_reference.py`: flag `relations`: `World.race_relations` (the subsystem after the monsters in T1, T4,
+  T6, Q1, Q4; `finish` at E - 1), `peoples_disposition` in `disp` (4.1) and the enmity rule on D with the hatred
+  turn (4.3), the ledger in `refugees` (capture and cession, readings R7 and R8) and the flight, `owner_event` on
+  captures and cessions, the fled companion in `unit`, the schema 10 gate of `check-world`.
+- `p5_02_monsters_reference.py`: part B behind `p503()` (the peoples flag): 9.1 raid causes, 9.2 tolls, 9.3 hunts
+  (reading H1), 9.4 `fear`, 12.1 epithets (`epithet`, `matched_form`), 12.2 hosts named for their place
+  (`place_name`, `place_of`; `monster_root_of` empty for a host), 13 the bold species draw, 14.1 and 14.2 the
+  overrun and undead scaling; `--version` (default 0.24.0).
+- `p5_12_renaming_reference.py`: default 0.24.0 (rule 7's `{name}'s Waste` from the data); section 15's test fix
+  (`RuleMatch`: the rule whose conditions the cause meets and whose chance draw passes; `check_p503_15`).
+- `p5_03_relations_reference.py` (new): `Relations` (5, 6), the formulas of 6 as functions, `invariant_violations`
+  (19's 1 to 6 and 8 to 10 on rows, also on a world file: `check-world DB`), `reader_problems` (16.4's messages),
+  `stats_of` (17.4), units on hand-checked values and stub worlds (`check_units`, `check_stub_units`,
+  `check_reader`), I0 (7.4: `i0_differences`, `zero_data`), the fixtures `relations-small` (readings X2, X3),
+  `monsters-small-fear` and `zero`, and `golden` (`p5-03-relations.txt`). Readings: `readings`.
+- `p3_report_reference.py`: format v5 (`V5`): the header, `[peoples]` (17.2, `peoples_lines`, `mixed_at_end`), the
+  monster floor (10.1, `monster_harm`, `monster_stories`), the ended monsters at summary (10.2), ` for fear of` in
+  the ruins (11.3), the `[stats]` keys of 17.4, fixture H14 (`h14-v5.toml`), the fixture DDL at schema 10.
+- `p4_timeline_reference.py`: rule set `p5-03` (default; `--rules p5-02` keeps the 0.23.0 file):
+  `race_relation_at`, `settlement_races`, the dump lines `relation`, `share` (S) and `races`, `mix` (D(Y)),
+  `check_p503` on H14.
+- `p4_markers_reference.py`: 0.24.0 by default (no marker rule change); `--version 0.23.0`.
+- `p4_browser_reference.py`: groups of 62 kinds (reading B13: 56 in `monsters`, 57 to 62 a new group `peoples`,
+  code 6, ALL_GROUPS 0x7F); `--version 0.23.0`.
+
+Phase 2 (after merging the engineer's branch with its calibrated data): set the listings of `p3_data_reference.py`
+to the calibrated values (the one place), rebuild the inputs and record, in this order:
+
+```
+I=~/.cache/the-unmapped/out/p5-02-tests/inputs
+python3 -B worldgen/tests/reference/p3_data_reference.py golden
+python3 -B worldgen/tests/reference/p3_names_reference.py golden
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p5_12_renaming_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p5_02_monsters_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p5_03_relations_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_report_reference.py build-inputs ~/.cache/the-unmapped/out/p3-07-tests/inputs \
+    ~/.cache/the-unmapped/out/p5-03-int/report-inputs
+python3 -B worldgen/tests/reference/p3_report_reference.py golden --inputs ~/.cache/the-unmapped/out/p5-03-int/report-inputs
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden
+python3 -B worldgen/tests/reference/p4_markers_reference.py golden
+python3 -B worldgen/tests/reference/p4_browser_reference.py golden
+```
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

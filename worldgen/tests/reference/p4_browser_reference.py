@@ -63,9 +63,10 @@ REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p4-05-browser.txt")
 T3_DIR = os.path.join(REPO, "worldgen", "tests", "data", "browser")
 T3_NAME = "t3-browser"
-INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
+INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
+INPUTS = tl.INPUTS_P5_03   # 0.24.0 (phase 2); --version 0.23.0 serves the committed file
 SCRATCH = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-05-a-tests", "fixtures-ref")
-GENERATOR_VERSION = "0.23.0"
+GENERATOR_VERSION = "0.24.0"
 WORLD_CASES = tl.WORLD_CASES
 SLOW_CASES = tuple(n for n in WORLD_CASES if n.endswith("-1024"))
 
@@ -108,6 +109,8 @@ B10 4.5 search, the name of a region: its name at E (the last region_name row wi
     first name tried that matches. NameMatch.name is that name as stored (not folded).
 B12 10.2 "T3 built through the writer API and through SQL as P4-01 13.3": the golden file carries `t3-browser
     table <name> <hex>` lines (hash --detail's table lines of this SQL copy), as P4-04's M10 did for T2.
+B13 (P5-03, 0.24.0) the spec names no browser group for kinds 56 to 62: 56 settlement_fled joins `monsters`;
+    57 to 62 form a new group `peoples`, code 6, ALL_GROUPS 0x7F, as P5-02 appended `monsters` (B8).
 B11 4.6 event_place: an event with settlement s != 0 is placed at s's (x, y); else with region r != 0 at r's
     (seed_x, seed_y); else none. Participants are not used (P4-04 reading M6).
 """
@@ -115,7 +118,7 @@ B11 4.6 event_place: an event with settlement s != 0 is placed at s's (x, y); el
 RACE, GOD, CIV, SETTLEMENT, REGION, FIGURE, FACTION, MONSTER, SITE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 
 # 4.4
-GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters")
+GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters", "peoples")
 GROUP_KEYS = {
     0: ("awakening", "civ_founded", "civ_seceded", "civ_ended", "civ_conquered", "capital_moved", "succession_crisis",
         "quiet_era", "quiet_stretch", "region_renamed"),
@@ -128,9 +131,30 @@ GROUP_KEYS = {
     5: ("monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid", "settlement_overrun",
         "monster_slain", "monster_driven_off", "monster_died", "beasts_bold", "outpost_built", "outpost_abandoned"),
 }
-GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
 ALL_GROUPS = 0x3F
-assert sum(len(v) for v in GROUP_KEYS.values()) == 55 and len(GROUP_OF) == 55
+GROUP_KEYS_023 = dict(GROUP_KEYS)
+# P5-03 (0.24.0; reading B13): kind 56 settlement_fled joins `monsters`; kinds 57 to 62 form the group `peoples`,
+# appended as code 6 with ALL_GROUPS 0x7F, as P5-02 appended `monsters` (the spec names no group).
+GROUP_KEYS_024 = dict(GROUP_KEYS)
+GROUP_KEYS_024.update({5: GROUP_KEYS[5] + ("settlement_fled",),
+                       6: ("peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed",
+                           "standing_changed", "people_expelled")})
+GROUP_VERSION = "0.24.0"
+
+
+def use_groups(v):
+    global GROUP_KEYS, GROUP_OF, ALL_GROUPS, GROUP_VERSION, GROUP_WORDS
+    GROUP_VERSION = v
+    GROUP_KEYS = GROUP_KEYS_024 if v == "0.24.0" else GROUP_KEYS_023
+    GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters") + (("peoples",) if v == "0.24.0"
+                                                                                       else ())
+    GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
+    ALL_GROUPS = 0x7F if v == "0.24.0" else 0x3F
+    n = 62 if v == "0.24.0" else 55
+    assert sum(len(x) for x in GROUP_KEYS.values()) == n and len(GROUP_OF) == n
+
+
+use_groups("0.24.0")
 
 
 def event_group(key):
@@ -1011,8 +1035,11 @@ def cmd_check(argv):
             c.eq("4.4 %s" % k, event_group(k), g)
     shipped = [k["key"] for k in pe.COMPILED_022]
     c.eq("4.4 the 43 kinds of 0.22.0 each have a row", [k for k in shipped if event_group(k) == 4], [])
-    c.eq("4.4 P5-02 kinds are monsters (reading B8)", [k["key"] for k in pe.COMPILED[43:] if event_group(k["key"]) != 5],
+    c.eq("4.4 P5-02 kinds are monsters (reading B8)", [k["key"] for k in pe.COMPILED[43:56] if event_group(k["key"]) != 5],
          [])
+    if len(pe.COMPILED) > 56:   # reading B13
+        c.eq("4.4 P5-03 kinds 57 to 62 are peoples (reading B13)",
+             [k["key"] for k in pe.COMPILED[56:] if event_group(k["key"]) != 6], [])
     c.eq("4.4 no compiled kind falls to other", [k["key"] for k in pe.COMPILED if event_group(k["key"]) == 4], [])
     c.eq("4.4 near misses", [event_group(k) for k in ("", "warx", "Battle", "battle ", "unknown_key")], [4] * 5)
     check_t3(c)
@@ -1039,6 +1066,18 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
+    global INPUTS, GENERATOR_VERSION
+    if "--version" in argv:   # 0.23.0: the committed P4-05 file (P5-02 rules, groups of 55 kinds, its inputs)
+        i = argv.index("--version")
+        v = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+        if v == "0.23.0":
+            prr.use_version("0.23.0")
+            tl.RULES = "p5-02"
+            use_groups("0.23.0")
+            INPUTS, GENERATOR_VERSION = INPUTS_023, "0.23.0"
+        elif v != "0.24.0":
+            raise SystemExit("--version: 0.23.0 or 0.24.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":

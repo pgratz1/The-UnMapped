@@ -69,8 +69,11 @@ T2_NAME = "t2-markers"
 # Generator 0.23.0 (P5-02, schema 9) by default: the world cases are the report inputs of the P5-02 integration
 # (r1 histories); `--version 0.22.0` serves the committed 0.22.0 file (inputs of P4-04, timeline rules p4-03a).
 INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-04-tests", "inputs")
-INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
-GENERATOR_VERSION = "0.23.0"
+INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
+# P5-03 (0.24.0, the default): no marker rule changes (11.2 keeps more ruins standing, which the rows carry); the
+# world cases are the 0.24.0 report inputs (phase 2); `--version 0.23.0` serves the committed P5-02 file.
+INPUTS = tl.INPUTS_P5_03
+GENERATOR_VERSION = "0.24.0"
 # Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
 # halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
 # (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
@@ -93,8 +96,12 @@ def use_version(v):
         GENERATOR_VERSION, INPUTS = "0.22.0", INPUTS_022
         tl.RULES = "p4-03a"
         prr.use_version("0.22.0")
-    elif v != "0.23.0":
-        raise SystemExit("--version: 0.22.0 or 0.23.0")
+    elif v == "0.23.0":
+        GENERATOR_VERSION, INPUTS = "0.23.0", INPUTS_023
+        tl.RULES = "p5-02"
+        prr.use_version("0.23.0")
+    elif v != "0.24.0":
+        raise SystemExit("--version: 0.22.0, 0.23.0 or 0.24.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """

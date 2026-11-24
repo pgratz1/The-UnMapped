@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.23.0"
+GENERATOR_VERSION = "0.24.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -147,6 +147,9 @@ FLAGS = dict(
     monsters=True,      # P5-02 5, 6: the monsters subsystem after renaming (p5_02_monsters_reference.py), the second
                         # tension source, the WildView of 7.1 set on peoples, settlement.ending, schema 9
     flare_claim=True,   # P5-02 7.4: a flare-up's forced declaration only when its trigger is a claim (20 or 39)
+    # P5-03 (generator 0.24.0)
+    relations=True,     # P5-03 5 to 7: the relations subsystem after the monsters (p5_03_relations_reference.py), the
+                        # ledger set on peoples, the dispositions read by conflict (4.1, 4.3), owner_event, schema 10
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -156,7 +159,8 @@ FLAGS_020 = ("claim39", "foot40")
 FLAGS_021 = ("fresh", "strength", "dropped", "hidden42", "toll")
 FLAGS_022 = ("rename",)
 FLAGS_023 = ("monsters", "flare_claim")
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
+FLAGS_024 = ("relations",)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
 
 
 
@@ -169,6 +173,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_024:
+        return i >= 8
     if k in FLAGS_023:
         return i >= 7
     if k in FLAGS_022:
@@ -190,7 +196,7 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0") or k not in pp.FLAGS_018)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0") or k not in pp.FLAGS_018)
             for k in pp.FLAGS}
 
 
@@ -209,7 +215,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.23.0")
+    use_version("0.16.0" if on else "0.24.0")
 
 
 class rules:
@@ -521,6 +527,7 @@ class Data(pp.Data):
         hist = dict(content["history"])
         self.conflict = hist.get("conflict")
         self.renaming = hist.get("renaming")   # P5-12 4 (0.22.0); an older root has none
+        self.relations = hist.get("relations")   # P5-03 4.2 (0.24.0); an older root has none
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -534,6 +541,8 @@ class Data(pp.Data):
             self.race[rid]["quarrel"] = t.get("awakening_quarrel", 0)
             # P3-01 r13 3.6 (0.19.0 r3): hidden_years per race; the default of hand-made data is 300
             self.race[rid]["hidden_years"] = t.get("hidden_years", 300)
+            # P5-03 4.1 (0.24.0): (race key, value) of the race's stances; an older root has none
+            self.race[rid]["stances"] = [(x["race"], x["value"]) for x in t.get("stances", [])]
 
 
 _DATA = {}
@@ -550,6 +559,7 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d.conflict = copy.deepcopy(dat.conflict)
     d.conflict.update(conflict or {})
     d.renaming = copy.deepcopy(getattr(dat, "renaming", None))
+    d.relations = copy.deepcopy(getattr(dat, "relations", None))
     return d
 
 
@@ -740,6 +750,12 @@ class World(pp.World):
             import p5_02_monsters_reference as p502
             self.monsters = p502.Monsters(self, dat.base, inp)
             self.set_wild(p502.WildView(self.monsters))
+        # P5-03: the relations subsystem after the monsters; the ledger on peoples, the dispositions on conflict
+        self.race_relations = None
+        if conflict and FLAGS["relations"] and getattr(dat, "relations", None) is not None:
+            import p5_03_relations_reference as p503
+            self.race_relations = p503.relations_of(dat, self)
+            self.set_ledger(self.race_relations)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -749,6 +765,8 @@ class World(pp.World):
         self.t1()
         if self.monsters is not None:
             self.monsters.t1()               # T1: monsters (same step, after peoples)
+        if self.race_relations is not None:
+            self.race_relations.t1()              # T1: relations (same step, after the monsters)
         self.foundings(quiet=False)          # T2: peoples
         if self.conflict_on:
             self.c_t2()                      # T2: conflict (same step)
@@ -756,6 +774,8 @@ class World(pp.World):
         self.t4()                            # T4
         if self.monsters is not None:
             self.monsters.t4()               # T4: monsters (same step, after peoples)
+        if self.race_relations is not None:
+            self.race_relations.t4()
         self.begin()                         # T5
         self.begin()                         # T6
         if self.conflict_on:
@@ -764,6 +784,8 @@ class World(pp.World):
             self.renaming.run(quiet=False)   # T6: renaming (same step, after conflict)
         if self.monsters is not None:
             self.monsters.t6()               # T6: monsters (same step, after renaming)
+        if self.race_relations is not None:
+            self.race_relations.t6()
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -778,6 +800,8 @@ class World(pp.World):
         self.q1()
         if self.monsters is not None:
             self.monsters.q1()  # Q1: monsters (same step, after peoples)
+        if self.race_relations is not None:
+            self.race_relations.q1()
         self.begin()          # Q2
         self.q3()
         self.foundings(quiet=True)          # Q4: peoples
@@ -787,6 +811,8 @@ class World(pp.World):
             self.renaming.run(quiet=True)   # Q4: renaming (same step, after conflict)
         if self.monsters is not None:
             self.monsters.q4()              # Q4: monsters (same step, after renaming)
+        if self.race_relations is not None:
+            self.race_relations.q4()
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -911,8 +937,14 @@ class World(pp.World):
         ka, kb = self.race[self.race_c(a)][5], self.race[self.race_c(b)][5]
         return self.ct["camp"][CAMP_FIELD[(min(ka, kb), max(ka, kb))]]
 
+    def peoples_disposition(self, a, b):
+        """P5-03 7.1: D(r_a, r_b) through the view (camp(a, b) without one)."""
+        if self.race_relations is not None:
+            return self.race_relations.disposition(self.race_c(a), self.race_c(b))
+        return self.camp(a, b)
+
     def disp(self, a, b):
-        return self.camp(a, b) - self.grudge.get((min(a, b), max(a, b)), 0)
+        return self.peoples_disposition(a, b) - self.grudge.get((min(a, b), max(a, b)), 0)
 
     def hostility(self, a, b):
         return max(0, -self.disp(a, b))
@@ -1223,9 +1255,12 @@ class World(pp.World):
                 self.add_grudge(p, c, self.ct["secession_grudge"])
         for i, a in enumerate(al):
             for b in al[i + 1:]:
-                if (a, b) in self.enmity_opened or self.camp(a, b) > self.ct["enmity_max"]:
+                if (a, b) in self.enmity_opened or self.peoples_disposition(a, b) > self.ct["enmity_max"]:
                     continue
-                self.open_rel(sym_key(a, b, "enmity"), self.civ(b)["founding_event"])
+                since = self.civ(b)["founding_event"]
+                if self.race_relations is not None:   # P5-03 7.1 4.3: the later of the founding and the hatred turn
+                    since = max(since, self.race_relations.hatred_event(self.race_c(a), self.race_c(b)))
+                self.open_rel(sym_key(a, b, "enmity"), since)
                 self.enmity_opened.add((a, b))
 
     def decay(self, years):
@@ -1599,17 +1634,26 @@ class World(pp.World):
             war["dead"][c] += dead
         return dead
 
-    def refugees(self, c, s, n):
-        """P3-05 8.5 item 2: n people of c leave s for c's nearest other standing settlement, room permitting."""
+    def refugees(self, c, s, n, cause=0):
+        """P3-05 8.5 item 2: n people of c leave s for c's nearest other standing settlement, room permitting;
+        P5-03 7.2: the ledger records the move and the displaced rest (cause: the capture or the cession, R7)."""
         if n <= 0:
             return
         race = self.civ(c)["race"]
         others = [t for t in self.standing_of(c) if t["id"] != s["id"]]
         if not others:
+            if self.ledger is not None:
+                self.ledger.displaced(s["id"], 0, n, cause)
             return
         t = min(others, key=lambda t: ((t["x"] - s["x"]) ** 2 + (t["y"] - s["y"]) ** 2, t["id"]))
         room = max(0, 2 * self.geo.capacity(t["region"], race) - t["population"])
-        t["population"] += min(n, room)
+        placed = min(n, room)
+        t["population"] += placed
+        if self.ledger is not None:
+            if placed >= 1:
+                self.ledger.moved(s["id"], t["id"], placed)
+            if n - placed >= 1:
+                self.ledger.displaced(s["id"], 0, n - placed, cause)
 
     def move_capital(self, c, e):
         others = self.standing_of(c)
@@ -1645,8 +1689,9 @@ class World(pp.World):
                             participants=(("attacker", CIV, x), ("defender", CIV, y)), values=(dead, excess),
                             causes=(siege_e,), salience=(t["capital_captured_salience"] if capital else None))
             t_s["population"] -= excess
-            self.refugees(y, t_s, excess)
+            self.refugees(y, t_s, excess, e)
             t_s["owner_civ"] = x
+            t_s["owner_event"] = e   # P5-03 7.3
             self.version += 1
             if self.owner[r][0] == y and not any(s["region"] == r for s in self.standing_of(y)):
                 self.set_owner(r, x, e)
@@ -1899,6 +1944,8 @@ class World(pp.World):
                          values=(n,), causes=(e,))
         got = self.found_settlement(sx, sy, d, y, self.founding_kind(race, d, n, sx, sy), n, name, e2)
         assert got == h
+        if self.ledger is not None:   # P5-03 7.2: moved(t, h, n) right after the refuge is founded
+            self.ledger.moved(ts["id"], h, n)
         self.site_how[h] = how
         self.set_owner(d, y, e2)
         self.hidden_until[h] = self.year + self.hidden_years_of(y)   # r17 22.2: the founder's race
@@ -2074,8 +2121,9 @@ class World(pp.World):
                 excess = max(0, s["population"] - 2 * self.geo.capacity(g, race_w))
                 if excess:
                     s["population"] -= excess
-                    self.refugees(L, s, excess)
+                    self.refugees(L, s, excess, ec)
                 s["owner_civ"] = winner
+                s["owner_event"] = ec   # P5-03 7.3
                 self.version += 1
             self.wrong(L, winner, g)
             war["ceded"] = True
@@ -2094,8 +2142,9 @@ class World(pp.World):
             excess = max(0, s["population"] - 2 * self.geo.capacity(g, race_w))
             if excess:
                 s["population"] -= excess
-                self.refugees(L, s, excess)
+                self.refugees(L, s, excess, ec)
             s["owner_civ"] = winner
+            s["owner_event"] = ec   # P5-03 7.3
             self.version += 1
         self.set_owner(g, winner, ec)
         self.wrong(L, winner, g)        # r9 20.5
@@ -2219,6 +2268,8 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
     en.run()
     if w.monsters is not None:
         w.monsters.finish(inp.params["span"])   # P5-02 6.2.2: the rows at E - 1
+    if w.race_relations is not None:
+        w.race_relations.finish(inp.params["span"])  # P5-03 6.7: the rows at E - 1
     res = dict(
         event_kind=[(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"], k["salience"], k["templ"])
                     for k in cat],
@@ -2248,6 +2299,9 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
             res["beast_population"] = w.monsters.beast_population_rows()
             res["monster"] = w.monsters.monster_rows()
             res["site"] = w.monsters.site_rows()
+        if w.race_relations is not None:   # schema 10 (P5-03 16.1)
+            res["race_relation"] = w.race_relations.race_relation_rows()
+            res["settlement_race"] = w.race_relations.settlement_race_rows()
         pe.with_ending(res)
     res["_world"] = w
     res["_engine"] = en
@@ -2551,6 +2605,8 @@ def unit(res, eid, idx=None):
     elif k in (K["sacked"], K["settlement_captured"]):
         out |= {x for x in kids.get(eid, []) if kind[x] in (K["capital_moved"], K["refugees_settled"],
                                                              K["civ_conquered"])}
+    if FLAGS["relations"] and k == K["settlement_fled"]:   # P5-03 11.3: the abandonment it caused
+        out |= {x for x in kids.get(eid, []) if kind[x] in (K["settlement_abandoned"], K["settlement_abandoned_to"])}
     if FLAGS["rename"]:   # P3-07 r21 26.5 item 1: a renaming with its cause, both ways
         out |= {x for x in kids.get(eid, []) if kind[x] == K["region_renamed"]}
         if k == K["region_renamed"]:
@@ -6968,7 +7024,7 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-02 11.1: schema 9
+    want_schema = "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))
