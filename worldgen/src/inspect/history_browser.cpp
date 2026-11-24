@@ -95,16 +95,15 @@ constexpr std::array<GroupRow, 62> GROUPS = {{
     {"beasts_bold", EventGroup::monsters},
     {"outpost_built", EventGroup::monsters},
     {"outpost_abandoned", EventGroup::monsters},
-    // P5-03 (a reading: P4-05's groups for the kinds of P5-03): the flight
-    // for fear with the monsters, the meetings and turns of peoples with the
-    // realms, the migrations and mixed settlements with the settlements.
+    // P5-03 (lead's ruling): the flight for fear with the monsters, kinds 57
+    // to 62 in the new group peoples (code 6).
     {"settlement_fled", EventGroup::monsters},
-    {"peoples_met", EventGroup::realms},
-    {"disposition_turned", EventGroup::realms},
-    {"refugees_arrived", EventGroup::settlements},
-    {"settlement_mixed", EventGroup::settlements},
-    {"standing_changed", EventGroup::settlements},
-    {"people_expelled", EventGroup::settlements},
+    {"peoples_met", EventGroup::peoples},
+    {"disposition_turned", EventGroup::peoples},
+    {"refugees_arrived", EventGroup::peoples},
+    {"settlement_mixed", EventGroup::peoples},
+    {"standing_changed", EventGroup::peoples},
+    {"people_expelled", EventGroup::peoples},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -158,6 +157,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::calamity: return "calamity";
         case EventGroup::other: return "other";
         case EventGroup::monsters: return "monsters";
+        case EventGroup::peoples: return "peoples";
     }
     return "other";
 }

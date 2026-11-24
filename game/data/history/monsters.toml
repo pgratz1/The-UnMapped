@@ -32,11 +32,11 @@ prey_hop_permille = 500
 prey_might_ref = 1500
 prey_might_max_permille = 4000
 # P5-03 9.1 to 9.4, 14.1 (generator 0.24.0).
-raid_chain_years = 100
+raid_chain_years = 300
 toll_over_permille = 250
-hunt_raid_permille = 60
-hunt_max_permille = 400
-fear_raids = 3
+hunt_raid_permille = 5
+hunt_max_permille = 200
+fear_raids = 2
 fear_years = 50
-fear_permille = 300
+fear_permille = 400
 overrun_people_ref = 800

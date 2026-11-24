@@ -168,9 +168,10 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
          {"monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid", "settlement_overrun",
           "monster_slain", "monster_driven_off", "monster_died", "beasts_bold", "outpost_built",
           "outpost_abandoned", "settlement_fled"}},
-        // P5-03's kinds 57 to 62 (the engineer's reading, for the test writer to confirm)
-        {EventGroup::realms, {"peoples_met", "disposition_turned"}},
-        {EventGroup::settlements, {"refugees_arrived", "settlement_mixed", "standing_changed", "people_expelled"}},
+        // P5-03's kinds 57 to 62: group peoples (lead's ruling)
+        {EventGroup::peoples,
+         {"peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed", "standing_changed",
+          "people_expelled"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {

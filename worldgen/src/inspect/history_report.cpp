@@ -1062,7 +1062,7 @@ private:
             (arrived ? sheltered : expelled) += std::max<std::int64_t>(0, people);
         }
         const std::vector<history::MixedSettlement> mixed = history::mixed_at_end(t_);
-        line("mixed: " + num(static_cast<std::int64_t>(mixed.size())) + " settlements at E; refugees: " +
+        line("mixed: " + pl(static_cast<std::int64_t>(mixed.size()), "settlement") + " at E; refugees: " +
              num(arrivals) + " arrivals, " + num(sheltered) + " people; expelled: " + num(expulsions) + " times, " +
              num(expelled) + " people");
         if (!full) {
