@@ -437,7 +437,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the viewer now shows each cell's value in display units (metres, degrees Celsius, millimetres a year, score out of 255) and the names of its biome and region. worldgen's public API names the palette of a layer but not its unit or meaning, so the viewer restates the layer catalogue of spec P1-00 section 4 (`gdext/src/viewer/layer_catalogue.cpp`); a unit change in the catalogue would not reach the viewer unless someone edits that copy. Likewise worldgen's `RegionRecord` (what `report` reads of table `region`) leaves out the name, so the viewer takes it from column 1 of the raw row after worldgen's `read_region_rows` has checked the rows. Smaller friction from the same work: in godot-cpp 10, `const godot::String + "literal"` is an ambiguous overload in some contexts and every such literal needs wrapping in `godot::String(...)`; and a legend is a hand-built `ItemList` with generated swatch textures, since Godot has no colour-legend control.
 - Proposal: worldgen gains a public, read-only layer catalogue (name, unit, decimal scale, special values) beside `registered_palette`, and the region record carries `name`. The create-world screen and the in-game map will need the same information, so it belongs with the data rather than in each screen.
 - Interim choice: the viewer keeps its copy of the units of P1-00 4 and reads the name column itself; a layer it does not know is shown under "Other" with its raw value.
-- Status: open; listed as an open question in design.md section 12 (2026-11-21)
+- Status: accepted by Paul on 2026-11-22 (P4 overview decision 1). Merged into design.md, 2026-11-23.
 
 ### Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted
 
@@ -629,7 +629,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: each race has one culture and one set of land preferences. Paul suggests that some elves could be dark elves living underground, and some dwarves hill dwarves living above ground in hillier country. The design doc has no notion of a branch of a race with different lands.
 - Proposal: allow a race several cultures, each with its own biome and site preferences, settlement kinds and name syllables; a civilization takes one culture at its founding (a second civilization of a race, or one born by secession, may take another). Hill dwarves fit the present geography (upland and hill regions above ground). Dark elves need somewhere underground: geography has no caves or underground layer, so either a first approximation (mountain and pass regions, settlements flagged as underground) or a later geography addition. Both touch the data kinds `race` and `culture` (schema of the data files, and table `culture`), so they need a spec.
 - Interim choice: none taken; P3 continues with one culture per race. Suggested home: P5 History depth, or an earlier small stage if Paul wants hill dwarves sooner.
-- Status: open for the design conversation; listed as an open question in design.md section 12 (2026-11-21)
+- Status: decided for P5 by Paul on 2026-11-22 (no sub-peoples inside P5's stages); the later options stay an open question in design.md section 12 (2026-11-23)
 
 ### Paul's decision of 2026-11-19: the remaining peoples questions go with their recommendations
 
@@ -889,7 +889,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. History renames regions: a region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
-- Status: accepted by Paul on 2026-11-22 for P5 History depth (see "Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples"); both listed as open questions in design.md section 12 (2026-11-21)
+- Status: accepted by Paul on 2026-11-22 for P5 History depth (see "Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples"); both listed as open questions in design.md section 12 (2026-11-21). Merged into design.md, 2026-11-23.
 
 ### Region names: the plain compass name, a second look
 
@@ -983,7 +983,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: Paul's words: "it would be nice to be able to visualize the rise and falls of civilizations using the godot 2d map, as a movie. Doesn't have to be soon, but something to put on the list". The viewer shows geography only; nothing shows how the realms grow, fight and fall over the years.
 - Proposal: a time control on the 2D map of the viewer: a year slider with play, pause and speed, which colours each region by the civilization that holds it in that year and marks the standing settlements, with battles, sackings and falls shown as they happen and the year's sentences beside the map. The data is already in the world file: `region_control` stores ownership intervals and `settlement_census` the settlement states by year, so any year is answered without replaying the log. Saving the playback as a video file is a second step, after the playback works on screen. Candidate for P4 Viewer v1.
 - Interim choice: none needed; not scheduled. To be placed when P4 is planned, after Paul's review of P3.
-- Status: open; listed in design.md as a candidate for phase P4 and as an open question in section 12 (2026-11-21)
+- Status: open; listed in design.md as a candidate for phase P4 and as an open question in section 12 (2026-11-21). Merged into design.md, 2026-11-23.
 
 ### Paul's decision of 2026-11-21: orcs at peace among goblins is accepted
 
@@ -1019,7 +1019,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - R1, targets at 1024 defaults (100 worlds): orcs with one standing settlement at the present in at most 10 worlds; orcs doing nothing after 5750 in at most 2; orc wins at least orc losses; the same reported for `calm` and `turbulent`.
   - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
 - Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
-- Status: confirmed by Paul on 2026-11-22 (see "Paul's decisions of 2026-11-22"); listed as an open question in design.md section 12 (2026-11-21)
+- Status: confirmed by Paul on 2026-11-22 (see "Paul's decisions of 2026-11-22"); listed as an open question in design.md section 12 (2026-11-21). Merged into design.md, 2026-11-23.
 
 ### History and names: P3-11 orc arrival, wording and names (scope)
 
@@ -1035,7 +1035,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Values one to nine are written as words in sentences.
   - One open question, non-blocking: a war fought over another region than the claim it cites (because that region became weary, was lost, or became the defender's capital) is kept as specified, and the report names the claim's region; the alternatives are a fresh claim at the declaration, or no war.
 - Interim choice: as proposed; the design document is not affected (the orcs' "coming opens the most recent age of conflict" is served, not changed; Paul's decisions on the orc age's length and on orcs at peace among goblins stand).
-- Status: scope record; the question of section 10 item 1 was decided by Paul on 2026-11-22: a fresh claim, option (b) (see "Paul's decisions of 2026-11-22")
+- Status: scope record; the question of section 10 item 1 was decided by Paul on 2026-11-22: a fresh claim, option (b) (see "Paul's decisions of 2026-11-22"). Merged into design.md, 2026-11-23.
 
 ### History: the P3-11 orc targets, the lead's ruling (awaiting Paul)
 
@@ -1047,7 +1047,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Left for a later balance pass, with the next change that alters world bytes: the first orc war is mostly declared with exactly two settlements and is then lost more often than won (29 lost, 19 won), so the quarrel war should be gated on strength (critic's F1); `shiva` joins the famous-name list; `fag` inside a word; the dwarven codas `din` and `rin` that hide stutters such as Clan Didin.
 - Questions for Paul (from the critic): (1) orcs now sometimes declare war on goblins (12 declarations in 9 worlds): is evil turning on evil welcome? (2) should faerie near-repeats such as Feefi and Flaefla also go (6.6% of faerie names)? (3) is an orc age that is a gamble between collapse and conquest the intended spread?
 - Interim choice: as ruled.
-- Status: confirmed by Paul on 2026-11-22; the three questions answered (see "Paul's decisions of 2026-11-22")
+- Status: confirmed by Paul on 2026-11-22; the three questions answered (see "Paul's decisions of 2026-11-22"). Merged into design.md, 2026-11-23.
 
 ### Paul's decisions of 2026-11-22: the orc rulings confirmed, and four questions answered
 
@@ -1062,7 +1062,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. The orc age as a gamble between collapse and conquest: fine. No change.
   6. A war fought over another region than the claim it cites: a fresh claim is written on the new goal at the declaration (option (b) of `docs/specs/p3-11-followups.md` section 10 item 1), so every war cites a claim on its own region. This replaces the shipped reading (a), the note "(The claim, since ..., was to ...)".
 - Interim choice: decision 6 adds an event per such war and so changes world bytes. It is scheduled with the next change that alters world bytes, together with the items of `docs/specs/p3-11-followups.md` section 12; until then generator 0.20.0 keeps reading (a) and the history report's note.
-- Status: accepted; decision 6 to be specified and implemented with the next balance change
+- Status: accepted; decision 6 to be specified and implemented with the next balance change. Merged into design.md, 2026-11-23.
 
 ### Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples
 
@@ -1076,7 +1076,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
      - The mines hold great dangers. Delving deep can wake something that wipes a hold or a whole realm out, leaving a lost hold as a ruin and a site. (Paul's example is the Balrog of The Lord of the Rings; the game needs its own deep horrors, from the monster data of design section 5.)
   3. The share of grim region names is lowered in data before P5, with the next change that alters world bytes.
 - Interim choice: 1 and 2 go to P5 History depth, to be specified there (events for delvings, forging, trade in arms, a woken danger and lost holds; a record of renamed places for the sites and quests of P6). 3 joins the items of `docs/specs/p3-11-followups.md` section 12.
-- Status: accepted; design doc sections 5 and 12 to be updated
+- Status: accepted; design doc sections 5 and 12 to be updated. Merged into design.md, 2026-11-23.
 
 ### Paul's approval of phase P3 History core, 2026-11-22
 
@@ -1085,7 +1085,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 13 (phases; the human checkpoint)
 - Decision: "they look great for this stage, ready to move to the next phase." P3 is approved. P4 Viewer v1 and P5 History depth start, in parallel.
 - Carried into P5 (first stage, since it alters world bytes): the items of `docs/specs/p3-11-followups.md` section 12 (a fresh claim at a declaration, the quarrel war gated on strength, fewer grim region names, the `became_city` wording, name-filter additions, a stored hidden-refuge flag and a recorded claim drop). Carried with it, without world changes: the world critic's notes on the history report (`docs/reviews/p3-07-history-report-world-critic-r17.md` B1 to B6) and the audit's advisory A3.
-- Status: accepted; design doc section 13's status line to be updated (P3 complete and approved on 2026-11-22)
+- Status: accepted; design doc section 13's status line to be updated (P3 complete and approved on 2026-11-22). Merged into design.md, 2026-11-23.
 
 ### Viewer v1: the library answers the year, the viewer draws it
 
@@ -1095,7 +1095,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists what viewer v1 shows (territory, settlements and sites as markers, a timeline scrubber, a browser for civilizations, figures and events with causes) but not which side computes it. Three readings are needed. (1) The viewer keeps its own copy of the layer catalogue's units and reads region names from a raw column (entry of 2026-11-18). (2) If the viewer computed holders by year, summary sets or event text itself, it could disagree with `report --history`, and every P5 change to a history table would need a second edit in the extension. (3) Sites arrive in P6 and figures in P5, so "site markers" and a figures browser have nothing to show in P4.
 - Proposal: (1) `worldgen` exposes the layer catalogue (group, unit, decimal scale, special values, display form, legends) and the region name in its public interface (spec P4-02), and the viewer's copy goes. (2) `worldgen` gains a read-only timeline over the history tables (holders, settlement states, relations, phase and events at a year; events by entity; the events an event caused), a civilization colour rule (a hue family per race, shades per civilization) and a year-dependent composite `territory` with `worldgen-cli render --composite territory --year Y` (spec P4-01); the extension reads history only through the library and issues no SQL of its own on history tables; event text stays in `render_event` and `history_note`. (3) Until P6, "site markers" are ruins, passes and the places of the year's events; the browser lists figures once P5 provides them through the library.
 - Interim choice: as proposed, in specs P4-01 to P4-05. No world byte changes; no generator or schema version bump.
-- Status: open (P4-00 open questions 1 and 4)
+- Status: accepted by Paul on 2026-11-22 with the P4 overview's recommendations. Merged into design.md, 2026-11-23.
 
 ### Viewer v1: the history movie is playback, recorded with Godot's Movie Maker
 
@@ -1105,7 +1105,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: where the movie falls in P4, and whether saving it as a video is wanted (entry "Viewer: a history movie on the 2D map"). An encoder in the extension would be a new vendored dependency.
 - Proposal: the movie is the last P4 stage (P4-06): play, pause, speed, skipping quiet years, and the year's sentences beside the map, on top of the scrubber, territory and markers. No video encoder is built: Godot's Movie Maker mode (`--write-movie`, AVI with MJPEG or a PNG sequence, fixed frame rate) records the viewer, and P4-06 adds command-line options to play a span and quit so that one command records a movie into the build root. If Movie Maker proves unusable, the fallback is a PNG frame dump, not an encoder.
 - Interim choice: as proposed.
-- Status: open (P4-00 open question 2)
+- Status: accepted by Paul on 2026-11-22 (P4 overview decision 2). Merged into design.md, 2026-11-23.
 
 ### History depth: the P5 overview's readings
 
@@ -1134,7 +1134,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   11. Budget: each stage adds at most 5 s at 1024; the whole default `generate` stays under 60 s at the end of P5 (about 9 s at generator 0.20.0).
   12. Exit check: "takes part" means a participant of at least one event; each race, camp and monster kind has a hard and a sweep target (P5-00 8.3); a bloc of allies and vassals is held to the runaway bound.
 - Interim choice: as proposed; the stage specs follow them. Four questions change the split or order and are put to Paul (P5-00 11): sites in P5, gods late with all five intervention kinds, renamed regions early, no sub-peoples in P5 (hill dwarves an optional stage after P5-07, dark elves after underground geography).
-- Status: accepted by Paul on 2026-11-22 (see "Paul's decision of 2026-11-22: the P5 overview's questions go with their recommendations")
+- Status: accepted by Paul on 2026-11-22 (see "Paul's decision of 2026-11-22: the P5 overview's questions go with their recommendations"). Merged into design.md, 2026-11-23.
 
 ### Paul's decision of 2026-11-22: the P4 overview's questions go with their recommendations
 
@@ -1147,7 +1147,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   3. The viewer opens at the present day (year E).
   4. Civilization colours: one hue family per race, a shade per civilization.
   5. The walkthrough world of the exit check is seed 42 at 1024.
-- Status: accepted; design doc section 12's two P4 questions to be marked decided
+- Status: accepted; design doc section 12's two P4 questions to be marked decided. Merged into design.md, 2026-11-23.
 
 ### Paul's decision of 2026-11-22: the P5 overview's questions go with their recommendations
 
@@ -1159,7 +1159,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   2. The gods come late, as stage P5-08, after monsters and figures, so that all five kinds of intervention arrive together.
   3. Regions renamed by history come right after P5-01 (stage P5-12 in the overview's numbering); which events can rename a region is set in data, so later stages add their own.
   4. Sub-peoples: none inside P5's stages; one culture per race. Hill dwarves may be a small optional stage after the mountain depths (P5-07); dark elves wait for underground geography.
-- Status: accepted; design doc sections 12 and 13 to be updated
+- Status: accepted; design doc sections 12 and 13 to be updated. Merged into design.md, 2026-11-23.
 
 ### The layer catalogue is code, not TOML data
 
@@ -1169,7 +1169,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: hard rule 4 puts hand-edited content (races, beasts, cultures, biomes, event rules) in TOML. P4-02 moves the layer catalogue of spec P1-00 section 4 (each layer's type, range, unit, display form and legend) into `worldgen`'s public interface. It could be a TOML data kind or code.
 - Proposal: code, a fixed table in `worldgen/inspect/layer_catalogue.hpp`. The catalogue is not tunable content: it describes what the stages' code writes, and changing a fixed layer's type, units or meaning is already a schema change (P1-00 4 rule 3), so a TOML copy could only disagree with the code. The palettes and ramps it uses are code already, and readers (the viewer, later the create-world screen and the in-game map) then need no data root to label a layer. Labels that do depend on data (biome and region names and colours) keep coming from the world's own tables.
 - Interim choice: as proposed, in P4-02.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).
 
 ### History and report: P5-01 carried-over follow-ups (scope)
 
@@ -1218,7 +1218,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   4. **`region.name` stays geographic**; the new names are rows of a new table `region_name`. Sentences name a region as at the event (an old event keeps the old name); references outside sentences in the history report use the present name; the layer catalogue's `region_name()` keeps the geographic name; the timeline answers the name at a year, and the viewer's hover text follows the shown year.
   5. F1: a settlement root may not end in a fused place suffix of its kind (or its first syllable), nor in the suffix's first letter; the human syllables forbid `ass`. F2: the name filter applies to region names at the joins of their parts only. F3: the report's `[present]` lists only the refuges still hidden at E. The history report becomes format v3.
 - Interim choice: as proposed. Questions for Paul (P5-12 17): the share of renamed regions; the wider F1 rule and V8's false positives (`Pinegrove`); English forms only, with the culture recorded for later per-culture lists.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).
 
 ### Schema 8: table `region_name` (P5-12)
 
@@ -1236,7 +1236,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 10 (world viewer)
 - Problem: (1) P4-03 4.4 leaves the age out of `%YearLabel` "when age is 0", and its check H2 takes the age from the report's `[ages]` line covering Y, which covers no line at E. But P4-01 section 4 puts the present in the last age, and the timeline gives that age at E, so the viewer reads "Year 6000 of 6000 (the present)   |   The Age of Orcs   |   no phase" while H2 as written expects no age part. (2) Writing the screen in C++ only, Godot's GUI focus navigation consumes the arrow keys (`ui_left`, `ui_right`) whenever a focusable Control has keyboard focus, before `_unhandled_key_input` sees them, so the year keys of P4-03 4.3 work only while no focusable control holds focus. A GDScript screen would hit the same; nothing in godot-cpp is missing. (3) Minor C++ friction: `godot::String + "literal"` is ambiguous in some expressions (a conditional operator with a `const String&`), so literals have to be wrapped in `godot::String(...)`; `Image::ptrw()` (godot-cpp low-level API) lets the territory image be redrawn in place without a copy.
 - Interim choice: (1) the viewer follows the timeline (the age of the present is the last age) and the check takes the last `[ages]` line at E; P4-03 4.4 and H2 should say so. (2) The year buttons, the slider and the map view have `focus_mode` none in `viewer.tscn`; the layer list and the meta tree keep their focus behaviour, and while one has focus the arrows act on it. A later screen may read the year keys in `_input`, skipping them while a text field or dialog has focus, if the focus behaviour proves annoying in the walkthrough.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).
 
 ### Viewer v1, P4-04: markers are a library answer, with a CLI overlay
 
@@ -1246,7 +1246,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: P4-00 3.1 had P4-04 draw markers in the extension and add nothing to `worldgen`. But which settlement is a capital in a year, when and by what a ruin fell (cleared from the row once it fades), where an event happened and which symbol it gets are rules over the history, and without a library answer the viewer would restate them (against V3) and no marker image could be made or compared without the viewer. The design also says nothing of marker shapes, sizes or of sites before P6.
 - Proposal: `worldgen/inspect/markers.hpp` answers the markers of a year (settlements with kind, status, owner, population and capital; ruins with their year and event; event places with a symbol by kind key; passes) and defines integer glyph grids and a rasteriser; `worldgen-cli render --markers [--faded] [--year Y]` draws them over any layer or composite (P0-04 amendment 24), and `world-hashes.sh` compares the marker images across compilers. The viewer draws the same glyphs at screen size. Shape and size by kind rather than by a separate population band; one coloured ring per event place; site and figure markers reserved in the API for P5-02 and P5-06.
 - Interim choice: as proposed, in P4-04 (open questions 1 to 5 there). No world byte changes; no generator or schema version bump.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).
 
 ### History: P5-01's T16 restated as a rate (P5-12)
 
@@ -1268,7 +1268,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the browser must show a civilization's block "as the history report shows it", with links, and must not parse report text (P4-00 V3). The report builds those lines in private code, so a second copy in the viewer, or in a browser module, would drift from the report.
 - Proposal: `worldgen` builds each block as structured lines (literal, text, entity reference, event reference, sentence), and the report prints its `[civilizations]` blocks from them (report bytes unchanged). Sentences get a linked form (`render_event_linked`), with `render_event` as its text. A browser index answers the civilization list, filtered event lists, event details, search by name and the place of an event. Event kind groups are a library table by key. Monsters, sites and figures become further lists of the same form when P5 provides them.
 - Interim choice: as proposed, in P4-05 (open questions 1 to 6 there). No world byte changes; no generator or schema version bump. The P4-04 world critic's F3 and F5 re-record `p4-04-markers.txt`.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).
 
 ### Godot: a large image that changes in place must be drawn as tiles (found in P4-05)
 
@@ -1278,4 +1278,4 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: Godot 4.7 has no partial update of an `ImageTexture`: `update()` uploads the whole image, and an RGB8 image is converted to RGBA8 on the way. The viewer's 1024 by 1024 territory picture was one texture, uploaded whole on every year change; with a real renderer the slowest change took 170 ms against the 50 ms budget (headless: 6 ms, so only a run with a renderer shows it).
 - Proposal: any large picture that changes in place (the viewer's map, later the in-game map with its fog and markers) is drawn as tiles, each its own RGBA8 texture, and only tiles whose pixels changed are uploaded. Speed checks of such a picture run with a renderer, not headless.
 - Interim choice: the viewer does this (`LayerMapView`, 128 by 128 cell tiles; the slowest year change is 21 ms, 34 ms to the next drawn frame, under a virtual display). Nothing in the design document changes; this is a note for the game's map.
-- Status: open
+- Status: open. Listed as an open question in design.md section 12 (2026-11-23).

@@ -301,9 +301,9 @@ These rules came out of building the history core and reading its output. Exact 
 
 *War*
 
-- **What a war is.** Neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant. Strain becomes a claim on one border region, and the war is fought for that region.
+- **What a war is.** Neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant. Strain becomes a claim on one border region, and the war is fought for that region. Every war cites a claim on its own region: when a war is re-aimed at its declaration, a fresh claim is written for the new goal.
 - **How a war ends.** When the attacker holds the region, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase. A side that has just won a battle does not sue for peace.
-- **Winning.** An attacker wins by its aim only if it holds the goal itself. Otherwise the war is decided by battles, counted by scale as well as number, and may end in a truce.
+- **Winning.** An attacker wins by its aim only when the goal changes hands to it during the war. Holding the region at the declaration does not count. A realm may claim a region it holds where another people keeps a town, and if it wins on the score, those settlements pass to it with the peace. Otherwise the war is decided by battles, counted by scale as well as number, and may end in a truce.
 - **Losing costs something.** The loser gives up the goal, or else its best outlying region within the winner's reach, or else a tribute of its people.
 - **Revenge.** A people that lost a settlement or region keeps a claim against the taker and will fight for it whatever its usual temper, so elves retake ruins and dwarves avenge their holds.
 - **Limits.** A people declares only wars whose odds, weighed by terrain, reach a minimum. A defender that has withstood three wars over one region is left alone there until it changes hands. Armies cross two borders, or three against the opposing camp.
@@ -313,13 +313,13 @@ These rules came out of building the history core and reading its output. Exact 
 
 *No race dies out*
 
-- **Flight.** When a race's last settlement falls, its survivors flee and found a hidden settlement up to three borders away, out of every army's sight for 300 years. While hidden it founds no colonies and declares no wars.
+- **Flight.** When a race's last settlement falls, its survivors flee and found a hidden settlement up to three borders away, out of every army's sight for 300 years. Orcs hide for 100, so a broken orc realm can act again inside its own age. While hidden it founds no colonies and declares no wars.
 - **Last resort.** Only when there is nowhere to flee does the last settlement hold.
 
 *Faeries and orcs*
 
 - **Faeries avoid battle.** An army entering their forest often finds no one. One failed search makes that wood weary for every claimant for a time. Faeries never strike back.
-- **Orcs awaken with a quarrel** with a neighbour, and declare war at shorter odds than other races. They do not fight their own camp or seek distant enemies, so in roughly three worlds in ten, orcs surrounded by goblins stay at peace. That is accepted.
+- **Orcs awaken with a quarrel** with a neighbour, and declare war at shorter odds than other races. They arrive in numbers: the first orc settlement starts large, and orcs act within years of awakening. The quarrel war itself waits until the orcs can meet that neighbour in a fair fight, and a realm with a single settlement holds it back. Orcs sometimes turn on goblins, since evil attacks evil at times. Their age is a gamble between collapse and conquest, and in some worlds orcs ringed by goblins stay at peace. All of this is accepted.
 
 *Balance*
 
@@ -330,7 +330,7 @@ These rules came out of building the history core and reading its output. Exact 
 
 - **Events store facts.** An event has a kind, years, a region, a settlement and a salience score, with participants, values and causes in their own tables. There is no stored summary sentence.
 - **Sentences are rendered** from templates, in the history report, the viewer and the game. The catalogue of event kinds, roles and templates is part of the schema contract, and each world carries the catalogue it was generated with.
-- **Readable history.** An abandonment names where the survivors went and the blow that began the decline. Numbers of 1,000 and more are written with separators, and a leading "The" in a name is lower-cased inside a sentence.
+- **Readable history.** An abandonment names where the survivors went and the blow that began the decline. Numbers from one to nine are written as words, numbers of 1,000 and more with separators, and a leading "The" in a name is lower-cased inside a sentence.
 - **The history report** is `report --history`. Its summary shows at most 250 events, none below a minimum salience, at least 20 per age, and every shown war with its ending.
 
 *Names*
@@ -338,7 +338,7 @@ These rules came out of building the history core and reading its output. Exact 
 - **Rules.** Names use ASCII letters, spaces, apostrophes and hyphens, and are unique across the whole world and across kinds.
 - **Filter.** A drawn name is redrawn when it spells a slur, a crude word, or a comic or modern-sounding word. Ordinary words that suit the setting stay, as in "Thorn Deep" or "Moss Hollow".
 - **Gods and realms.** Gods are named from each culture's longer name shapes, so no god has a one-syllable name. Every realm name has a realm form, such as "The House of" a name for elves.
-- **Faerie names** keep their light character without the sounds that read as baby talk.
+- **Faerie names** keep their light character without the sounds that read as baby talk. No name in any culture repeats a syllable twice in a row.
 - **Cultures.** Each race has one culture for now.
 
 *Waiting for phase P5*
@@ -349,6 +349,38 @@ These rules came out of building the history core and reading its output. Exact 
 - Magical artifacts, made in response to conflicts. Each has a maker, an occasion and a chain of holders and places, and where it lies in the present is a site and a quest hook.
 - Migrations of whole peoples as refugees, figures and factions, and mixed settlements.
 - Whether event rules move from code into data. In phase P3 the rules are code with every number in TOML.
+
+**The plan for phase P5, history depth**
+
+Phase P3 was approved on November 22, 2026, and phase P5 builds on it in twelve stages, one new subsystem per stage. The order is fixed by what depends on what; details are in `docs/specs/p5-00`.
+
+1. Carried-over follow-ups from phase P3.
+2. Regions renamed by history.
+3. Beasts and monsters, with the first sites.
+4. Race relations, mixed settlements and migrations.
+5. Wealth, trade and alliances, with mines and forges.
+6. Roads and improved passes.
+7. Figures.
+8. The mountain depths.
+9. The pantheon and its interventions.
+10. Casters and spells.
+11. Factions.
+12. Artifacts.
+
+Decisions that shape these stages:
+
+- **History renames regions.** A region's defining event (the fall of a realm, a great sack, a slaughter, a great plague, a seat becoming a city) can give it its present-day name, and the old name stays on record. Which events can rename a region is set in data, so later stages add their own. Renamings are rare.
+- **Dwarves are great forgers.** They make wealth and weapons and trade them to the other kingdoms, which ties the mountain peoples into trade and into the making of artifacts.
+- **The deep is dangerous.** Delving deep can wake something that wipes out a hold or a whole realm, leaving a lost hold as a ruin and a site. The game uses its own deep horrors, drawn from the monster data. If the realm held its race's last settlements, the survivors flee as from any last refuge, so no race dies out.
+- **Sites begin in phase P5.** History creates the places it acts on: lairs, mines, towers, marked shrines and lost holds. Phase P6 adds the sites derived from the event log, the dungeon records and the placement of spellbooks. Phase P5 records which books were written.
+- **The gods come late,** after monsters and figures, so that all five kinds of intervention arrive together.
+- **Mixed peoples.** A civilization keeps a principal race, and the racial mix is recorded per settlement.
+- **State by year.** Race relations and beast populations are stored by year beside their end-year tables, so the viewer's timeline can show them.
+- **Sub-peoples wait.** Each race keeps one culture through phase P5. Hill dwarves may follow as a small optional stage after the mountain depths, and dark elves wait for underground geography.
+- **Settings.** Monster pressure takes effect with the monsters stage and divine activity with the pantheon stage. The divine script stays refused through phase P5.
+- **Event rules** stay code with their numbers in TOML.
+- **Budget.** A default world still generates in under 60 seconds at the end of phase P5.
+- **Exit check.** Every race, god camp and monster kind is a participant in at least one event, and a bloc of allies and vassals is held to the same runaway bound as a single realm.
 
 **Tick loop (active phases)**
 
@@ -757,6 +789,15 @@ Conventions for the handoff:
 - **Later:** a 3D heightmap preview, which leads into terrain streaming; then the create-world screen and the in-game map grow out of it.
 - **Guardrails:** `worldgen` and `worldgen-cli` never depend on Godot. The command-line tool exports map images and a text history report from the start, for automated tests and for use before the viewer exists.
 
+**Viewer v1 decisions.**
+
+- **The library answers, the viewer draws.** `worldgen` exposes the layer catalogue, region names, and a read-only timeline over history: who holds each region in a year, settlement states, relations, and the events of a year or an entity. Event text is rendered in `worldgen`. The extension reads history only through the library, so the viewer and the history report cannot disagree.
+- **Opening view.** The viewer opens at the present day.
+- **Colours.** Each race has a hue family and each civilization a shade within it.
+- **Markers before phase P6.** Until sites exist, markers show settlements, ruins, passes and the places of the year's events. Figures appear in the browser once phase P5 provides them.
+- **History movie.** The last stage of the viewer phase plays history on the 2D map: play, pause, speed, skipping quiet years, with the year's sentences beside the map. Recording uses Godot's Movie Maker mode, and the project builds no video encoder of its own.
+- **Walkthrough world.** The exit check for the viewer phase is walked through on seed 42 at the default map size.
+
 **Running Godot.** Godot is always run on a copy of the project assembled under the build tree, holding links to the entries of `game/`, the extension's built library, and Godot's own cache. `game/` is never opened directly, which keeps generated files out of the repository. The extension is an optional part of the build, off by default, so `worldgen` and `worldgen-cli` never need Godot.
 
 **Working in C++ only.** Building the viewer showed what the no-GDScript rule costs, and the rule stays.
@@ -832,6 +873,12 @@ Decided so far:
 * **Names:** ASCII, unique, filtered for crude and modern-sounding words, with ordinary fitting words kept.
 * **Phase P5 additions:** alliances, trade and wealth; artifacts made in response to conflicts; roads and improved passes.
 
+- **History core approved:** phase P3 was approved on November 22, 2026.
+- **Orcs:** they arrive in numbers, may turn on goblins, and their age is a gamble between collapse and conquest.
+- **Phase P5 plan:** twelve stages, with renamed regions early, sites beginning in P5, the gods late, and no sub-peoples yet.
+- **Mountain peoples:** dwarves forge and trade, and the deep holds dangers that can end a hold or a realm.
+- **Viewer v1:** the library answers and the viewer draws; the history movie is the last stage, recorded with Godot's Movie Maker mode.
+
 Still open:
 
 - [x] **Name collision check.** Search Steam and itch.io for "The Unmapped". (Before any public repo)
@@ -873,16 +920,20 @@ Still open:
 - [ ] **Local fallback scope.** How much should the local pass attempt: full quest lines, or chronicles and rumours only? Decide from output quality. (Milestone 11)
 - [ ] **Bundled lore.** Should the project ship ready-made lore files for a few recommended seeds, so players without any model still see enriched worlds? (Milestone 11)
 
-* [ ] **Sub-peoples.** Should a race have several cultures with their own lands, such as hill dwarves above ground and dark elves underground? Hill dwarves fit the present geography; dark elves need somewhere underground, which geography does not yet have. (Phase P5, or earlier for hill dwarves)
-* [ ] **History renames regions.** Should a region's defining event (a great sack, a long war, a founding) give it its present-day name, with the old name kept on record? (Phase P5)
-* [ ] **Mountain peoples' own history.** Upland dwarves see few events unless someone brings a war to them. Should delvings, lost holds and mines be events of their own? (Phase P5)
-* [ ] **Layer catalogue in the library.** The viewer keeps its own copy of each layer's units and meaning. Should `worldgen` expose the catalogue, and region names, through its public interface? (Phase P4)
-* [ ] **History movie.** Playback of history on the 2D map is on the list for the viewer. Where does it fall in phase P4, and is saving it as a video wanted? (Phase P4)
-* [ ] **Two war rulings awaiting confirmation.** The lead proposes that a realm with one settlement holds back its awakening quarrel, that a fled orc refuge hides for 100 years where others hide for 300, and that a war is won by aim only when the goal changes hands during the war. (Phase P3, before P3-10 merges)
+* [x] **Two war rulings.** Decided: a realm with one settlement holds back its awakening quarrel, a fled orc refuge hides for 100 years where others hide for 300, and a war is won by aim only when the goal changes hands during the war.
+* [x] **History renames regions.** Decided: yes, in phase P5, with the old name kept on record.
+* [x] **Mountain peoples' own history.** Decided: yes, in phase P5. Dwarves are great forgers who trade wealth and weapons, and delving deep can wake dangers that destroy a hold or a realm.
+* [x] **Layer catalogue in the library.** Decided: `worldgen` exposes the layer catalogue and region names through its public interface.
+* [x] **History movie.** Decided: it is the last stage of the viewer phase, as playback recorded with Godot's Movie Maker mode.
+* [ ] **Sub-peoples.** Each race keeps one culture through phase P5. Still open for later: hill dwarves as a small optional stage after the mountain depths, and dark elves once geography has an underground.
+* [ ] **Renaming details.** The share of regions that history renames (a median of 4 of 49 at the default size in the first measurement), whether new names use English forms only for now, and a wider rule against doubled place suffixes in settlement names. (Phase P5, regions renamed by history)
+* [ ] **Layer catalogue as code.** The catalogue is proposed as a fixed table in code in place of a TOML data file, since it describes what the stages' code writes. (Phase P4)
+* [ ] **Viewer technical readings.** Three library additions await sign-off: markers answered by the library with a command-line overlay, the report's civilization blocks built from the same structured lines the browser shows, and the year readout and key handling at the present day. (Phase P4)
+* [ ] **Maps drawn as tiles.** Godot uploads a whole texture on any change, so a large picture that changes in place, such as the in-game map, should be drawn as tiles. A note for the game's map; nothing to decide until it is built. (Milestone 7)
 
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 21, 2026: P0, P1 and P2 are complete, and Paul approved P1 on November 19. P3 is in progress as a series of stages and follow-up changes, at generator 0.19.0.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 23, 2026: P0 through P3 are complete. Paul approved P1 on November 19 and P3 on November 22. P4 (viewer v1) and P5 (history depth) are running in parallel.
 
 ### Phases
 
@@ -892,9 +943,9 @@ The first block of work delivers milestones 0 and 1 plus the Godot viewer, in se
 | P1 Geography | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | Milestone 0 criteria: plausible maps, identical file hash on every platform, golden-seed tests per stage |
 | P2 Godot bring-up and viewer v0 | Godot version pinned; C++ extension building on Linux and Windows; `world.db` reader bound into Godot; 2D map with switchable layers | P0; runs alongside P1 | The viewer opens a world file from P1 and shows every layer |
 | P3 History core | TOML definitions for the six races and their cultures; ages and the awakening schedule; active phases, quiet intervals and flare-ups; civilizations, settlements, wars, ruin; the event log with causes; text history report | P1 | Default world generates in under 2 minutes; races appear in the fixed order at the scheduled times; golden-seed tests pass |
-| P4 Viewer v1 | Timeline scrubber, territory overlay by year, settlement and site markers, browser for civilizations and events with cause links; a candidate addition is playing history as a movie on the 2D map, with regions coloured by their holder year by year | P2, P3 | Paul can follow one civilization from awakening to the present without leaving the viewer |
-| P5 History depth | God interventions; beast populations; named monsters; figures and factions; race relations and mixed settlements; casters, invented spells and spellbooks; roads and improved passes; alliances, trade and wealth; artifacts made in response to conflicts; refugee migrations | P3 | Across a sweep of seeds, every race, god camp and monster kind takes part, and no world is empty or runaway |
-| P6 Derivation and polish | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings wired to the command line; 3D heightmap preview in the viewer | P4, P5 | Milestone 1 criteria complete; every quest hook points at real entities; history reads as coherent in the viewer |
+| P4 Viewer v1 | Timeline scrubber, territory overlay by year, settlement and site markers, browser for civilizations and events with cause links; the last stage plays history as a movie on the 2D map, with regions coloured by their holder year by year | P2, P3 | Paul can follow one civilization from awakening to the present without leaving the viewer |
+| P5 History depth | God interventions; beast populations; named monsters; figures and factions; race relations and mixed settlements; casters, invented spells and spellbooks; roads and improved passes; alliances, trade and wealth; artifacts made in response to conflicts; refugee migrations; regions renamed by history; mines, forges and the dangers of the deep; a site table for the places history acts on | P3 | Across a sweep of seeds, every race, god camp and monster kind takes part, and no world is empty or runaway |
+| P6 Derivation and polish | Sites, dungeon records, quest hooks and spellbook placement derived from history; 3D heightmap preview in the viewer | P4, P5 | Milestone 1 criteria complete; every quest hook points at real entities; history reads as coherent in the viewer |
 
 P1 and P2 run in parallel once P0 is done, as do P4 and P5 once P3 is done. P0 deserves care: every later phase inherits its determinism rules, and retrofitting them is expensive.
 
