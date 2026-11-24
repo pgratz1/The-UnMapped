@@ -1761,3 +1761,58 @@ keys, the 5.4 band against the capital city, the draw order of 6.1 on a 32 x 24 
 on the input worlds (invariant 4 included: seed 42 at 512 has 26,902 civilization-years, each with exactly one
 capital, the spec's figure), the `[present]` and `[civilizations]` comparison of P4-04 9.2 M2 against the CLI's
 report text, and the committed golden file. The readings are `READINGS` M1 to M11.
+
+### P4-05 12.2: the ruin, faded ruin and plague glyph changes (no world change)
+
+Written from `docs/specs/p4-05-browser.md` r1 12.1 F3 and F5. Rule set `p4-05` of `p4_markers_reference.py` is
+the new default: the ruin (base 8) has radius 4 and ink where max(|dx|, |dy|) <= 3 and ||dx| - |dy|| <= 1, then the
+halo rule (44 halo, 33 ink); the faded ruin (base 9) has radius 3, fill where |dx| = |dy| <= 2, then a halo on
+every empty cell with an 8-neighbour of class 2 (36 halo, 9 fill); the plague ring is (0, 190, 120). `check`
+compares both drawings with the spec's and the counts; the draw-order scene now has the ruin's bar at (4, 16) and
+its halo at (5, 16). `--rules p4-04` keeps P4-04's glyphs and colour, and `--version 0.22.0` implies it.
+
+```
+python3 -B worldgen/tests/reference/p4_markers_reference.py check --quick
+python3 -B worldgen/tests/reference/p4_markers_reference.py golden                    # p4-05 rules, 0.23.0 inputs
+python3 -B worldgen/tests/reference/p4_markers_reference.py --rules p4-04 golden -    # = the P5-02 file
+```
+
+The default inputs are now `~/.cache/the-unmapped/out/p5-02-fix/report-inputs` (the D1 rebuild that recorded the
+committed file). Checked: `--rules p4-04 golden` reproduces the file of `origin/p5/02-cand` (322049e) byte for
+byte. The re-record moved, against it, exactly the header line, the `glyphs` line, 19 of the 24 `overlay` lines
+and all 8 `overlay-scale3` lines of the world cases; no `static`, `markers`, `markers-years` or `table` line
+moved, as 12.2 says.
+
+## P4-05 browser of civilizations and events (Part A; generator 0.23.0, no world change)
+
+`p4_browser_reference.py` computes, from a world file (sqlite3 only), the library answers of
+`docs/specs/p4-05-browser.md` r1 section 4 by its definitions applied to the stored rows: the links of
+`render_event_linked` (4.1), the block lines of `civilization_block` with their report and display forms (4.2),
+the kind groups (4.4), the civilization entries, event details, row texts, `select` and `search` of
+`BrowserIndex` (4.5) and `event_place` (4.6). It builds on `p3_report_reference.py` (the world, the digest after
+P5-02 12.9's second choice of the summary set, which is the report's and so `history_report_digest`'s, the notes,
+and `civ_block`, which the block lines must reproduce) and on `p3_engine_reference.py`'s renderer, which takes an
+optional list that collects the links (its text is unchanged; `check` compares it with the sentence on every
+event of every case). Fixture T3 (`worldgen/tests/data/browser/t3-browser.toml`) is the P3-07 format with the
+`[markers]` region seed cells.
+
+```
+python3 -B worldgen/tests/reference/p4_browser_reference.py check [--quick]
+python3 -B worldgen/tests/reference/p4_browser_reference.py golden [PATH|-] [--inputs DIR]
+python3 -B worldgen/tests/reference/p4_browser_reference.py dump DB NAME      # civilizations, links, details,
+                                                                              # blocks-summary, blocks-full,
+                                                                              # filters, search; `dump - groups`
+python3 -B worldgen/tests/reference/p4_browser_reference.py fixture t3-browser OUT.db
+```
+
+`golden` writes `worldgen/tests/golden/p4-05-browser.txt` (about a minute) from the P3-07 fixtures, T1, T2, T3
+and the eight world cases in `--inputs DIR` (default `~/.cache/the-unmapped/out/p5-02-fix/report-inputs`, the
+0.23.0 report inputs); its fixture copies go to `~/.cache/the-unmapped/out/p4-05-a-tests/fixtures-ref/` (one file
+per process). `check` runs T3's hand-checked links, entries, details, row texts, filters, searches and block lines
+(the values of `browser_unit_test.cpp`), the table of 4.4, and on every case: linked text = sentence, links
+ascending, non-empty and covering the name they claim; the block lines' report form (finish applied) = the
+report's `[civilizations]` lines at both levels, byte for byte, and = `civ_block`; B4's transform of the display
+form = the report form; the summary flag = the summary chronicle's ids; `select` against a brute-force filter
+over 1,350 filters per case; search's order, limit and folding; `event_place` against the places of P4-04 3.4 in
+every year (512 cases and fixtures); and, unless `--quick`, the committed golden file. The readings are `READINGS`
+B1 to B12.

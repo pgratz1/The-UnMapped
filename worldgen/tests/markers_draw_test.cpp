@@ -1,3 +1,4 @@
+// P4-05 12.1 F3 and F5 replace the ruin and faded ruin glyphs and the plague colour.
 // Spec P4-04 10.2 item 4: draw_markers on a 32 x 24 canvas: each class colour (halo, fill by owner, no owner,
 // faded, ring by symbol, ink), clipping at all four edges (against a larger canvas with the markers shifted),
 // scale 1 and 3 (scale 3 equals scale 1 scaled; invariant 9), the order of 6.1 where a ring, a ruin and two
@@ -124,7 +125,8 @@ TEST_CASE("P4-04 10.2 item 4: the order of 6.1 and each class colour on a 32 x 2
         {10, 1, Rgb{200, 0, 200}, "ring band, sack colour"},
         {10, 0, wi::MARKER_INK, "ring outer ink (dy = -10)"},
         {3, 16, wi::MARKER_INK, "ruin over the ring's band"},
-        {4, 16, wi::MARKER_HALO, "ruin halo over the ring's ink"},
+        {4, 16, wi::MARKER_INK, "ruin: the thick X's bar (dx = 1, P4-05 12.1 F3)"},
+        {5, 16, wi::MARKER_HALO, "ruin halo over the ring's ink"},
         {0, 23, wi::MARKER_NO_OWNER, "unowned hamlet, clipped at two edges"},
         {30, 0, wi::MARKER_INK, "pass clipped at the top"},
         {31, 1, wi::MARKER_INK, "pass clipped at the right"},
@@ -155,7 +157,7 @@ TEST_CASE("P4-04 10.2 item 4: the order of 6.1 and each class colour on a 32 x 2
 
 TEST_CASE("P4-04 10.2 item 4: faded ruins and every ring colour") {
     const std::pair<EventSymbol, Rgb> symbols[] = {{EventSymbol::plain, Rgb{255, 255, 255}},
-                                                   {EventSymbol::plague, Rgb{150, 210, 0}},
+                                                   {EventSymbol::plague, Rgb{0, 190, 120}},  // P4-05 F5
                                                    {EventSymbol::battle, Rgb{230, 30, 30}},
                                                    {EventSymbol::siege, Rgb{255, 150, 0}},
                                                    {EventSymbol::sack, Rgb{200, 0, 200}}};
@@ -166,10 +168,14 @@ TEST_CASE("P4-04 10.2 item 4: faded ruins and every ring colour") {
         std::vector<std::uint8_t> img = canvas(32, 24, 1);
         wi::draw_markers(img, 32, 24, 1, m, COLOURS);
         CHECK(px(img, 32, 25, 12) == colour);           // the band, dx = 9
-        CHECK(px(img, 32, 16, 12) == wi::MARKER_FADED);  // the faded cross, no halo
+        CHECK(px(img, 32, 16, 12) == wi::MARKER_FADED);  // the faded cross
         CHECK(px(img, 32, 18, 14) == wi::MARKER_FADED);
-        CHECK(px(img, 32, 17, 12) == BG);
-        CHECK(px(img, 32, 18, 13) == BG);  // a faded ruin has no halo (next to the cross)
+        // P4-05 12.1 F3: a halo on every empty cell next to the cross, none in the four gaps
+        CHECK(px(img, 32, 17, 12) == wi::MARKER_HALO);
+        CHECK(px(img, 32, 18, 13) == wi::MARKER_HALO);
+        CHECK(px(img, 32, 19, 15) == wi::MARKER_HALO);
+        CHECK(px(img, 32, 16, 9) == BG);
+        CHECK(px(img, 32, 19, 12) == BG);
     }
 }
 
