@@ -1,4 +1,4 @@
-# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+# Monster kind (spec P5-02 4.2). Generator 0.23.0; P5-03 9.2, 9.5, 12, generator 0.24.0.
 [monster.ogre]
 name = "Ogre"
 noun = "an ogre"
@@ -7,7 +7,7 @@ wake = "wild"
 biomes = [{ biome = "grassland", weight = 400 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 700 }, { biome = "highland_moor", weight = 300 }]
 wake_rate = 40
 naming_culture = "orcish"
-name_forms = ["{root} the Glutton", "{root}"]
+name_forms = ["{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat", "{root}"]
 lair_forms = ["{root}'s Larder", "The Pit of {root}"]
 might = 200
 range_hops = 1
@@ -23,3 +23,4 @@ lifespan_years = 1000
 max_alive = 3
 flare = false
 hoard_permille = 3
+raid_phrases = ["fell upon", "plundered the stores of", "carried off the herds of"]

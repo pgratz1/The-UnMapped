@@ -1,4 +1,4 @@
-# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+# Monster kind (spec P5-02 4.2). Generator 0.23.0; P5-03 9.2, 9.5, 12, generator 0.24.0.
 [monster.undead]
 name = "Undead"
 noun = "a host of the restless dead"
@@ -7,8 +7,8 @@ wake = "dead"
 biomes = []
 wake_rate = 15000
 naming_culture = "human"
-name_forms = ["The Host of {root}", "The Restless of {root}"]
-lair_forms = ["The Barrows of {root}", "{root}'s Howe"]
+name_forms = ["The Host of {place}", "The Restless of {place}", "The Dead of {place}"]
+lair_forms = ["The Barrows of {root}", "The Howes of {root}"]
 might = 1500
 range_hops = 1
 raid_permille = 80
@@ -22,4 +22,5 @@ rewake_ppm = 3000
 lifespan_years = 1000
 max_alive = 2
 flare = false
-hoard_permille = 5
+hoard_permille = 0
+raid_phrases = ["came out of the barrows against", "walked by night in", "crept into"]

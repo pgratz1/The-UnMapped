@@ -72,3 +72,7 @@ plague_major_dead = 1000
 crisis_small_salience = 25
 ghost_permille = 200
 ghost_max_population = 600
+abandon_reach_hops = 2
+abandon_loss_min_permille = 50
+abandon_loss_max_permille = 200
+ghost_fade_years = 0

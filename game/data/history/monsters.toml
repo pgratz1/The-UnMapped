@@ -1,4 +1,4 @@
-# Beasts, monsters and sites (spec P5-02 4.3). Generator 0.23.0.
+# Beasts, monsters and sites (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0.
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
 living_permille = 100
@@ -31,3 +31,11 @@ prey_capital_permille = 250
 prey_hop_permille = 500
 prey_might_ref = 1500
 prey_might_max_permille = 4000
+raid_chain_years = 100
+toll_over_permille = 250
+hunt_raid_permille = 60
+hunt_max_permille = 400
+fear_raids = 3
+fear_years = 50
+fear_permille = 300
+overrun_people_ref = 800

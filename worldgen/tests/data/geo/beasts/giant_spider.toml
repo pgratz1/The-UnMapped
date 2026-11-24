@@ -1,4 +1,4 @@
-# Beast species (spec P5-02 4.1). Generator 0.23.0.
+# Beast species (spec P5-02 4.1). Generator 0.23.0; bold_phrases P5-03 13, generator 0.24.0.
 [beast.giant_spider]
 name = "Giant spider"
 plural = "giant spiders"
@@ -7,3 +7,4 @@ density = 10
 growth_permille = 200
 menace = 40
 food = 0
+bold_phrases = ["spun their webs across the paths of", "lay in wait on the roads from"]
