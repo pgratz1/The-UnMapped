@@ -256,7 +256,7 @@ TEST_CASE("P5-03a 7.1: {m:where} links the region exactly as {@region}; its and 
     const db::WorldReader r = chrono_test::open_world(s.path);
     const auto view = worldgen::history::HistoryView::load(r);
     REQUIRE(view.ok());
-    const worldgen::history::LinkedText t = worldgen::history::render_event_linked(*view, s.ev.at("driven-old"));
+    const worldgen::history::LinkedText t = worldgen::history::render_event_linked(view.value(), s.ev.at("driven-old"));
     std::int64_t region_links = 0;
     for (const worldgen::history::TextLink& l : t.links) {
         if (l.type == 5) {

@@ -1210,14 +1210,9 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
                 out.append("5: raid e%d dead %d" % (e[0], dead))
         elif dead < 0:   # P5-03 9.2 (P5-03a 12 item 4): above kill_max only at toll_over_permille of the rest
             out.append("5: raid e%d dead %d" % (e[0], dead))
-        elif dead > kd["kill_max"]:
-            # the toll above kill_max needs raw = P x tau div 1000 with dead = kill_max + (raw - kill_max) x
-            # toll_over_permille div 1000; P is bounded by the settlement's census rows up to the raid's year plus
-            # the raid's own dead (a census row of the raid's year may already be after it)
-            pops = [r[5] for r in x.census.get(e[6], ()) if r[1] <= e[1]]
-            P = (max(pops) if pops else 0) + dead
-            if dead > toll_dead(P, kd["toll_max_permille"], kd["kill_max"], tuning["toll_over_permille"]):
-                out.append("5: raid e%d dead %d above the toll of a settlement of at most %d" % (e[0], dead, P))
+        # (above kill_max: the toll of 9.2 needs the settlement's population at the raid, which the rows do not keep
+        # (a census row is the state at a step's end): reading M5, only dead >= 0 is checked from rows; the run's own
+        # tolls are checked against 9.2 in the replay)
     # 6
     for m in x.monsters:
         lair = x.sites[m[3] - 1]

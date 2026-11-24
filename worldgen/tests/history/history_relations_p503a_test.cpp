@@ -68,7 +68,7 @@ Files without(const std::string& path, const std::string& name) {
 
 std::string line(const std::string& name, std::int64_t v) { return name + " = " + std::to_string(v); }
 
-const wd::Record& record_of(const wd::ContentSet& c, const std::string& id) {
+const wd::Record& record_of(const wd::ContentSet& c, const char* id) {
     const wd::Definition* d = p503check::definition(c, "history", id);
     REQUIRE(d != nullptr);
     return d->record;

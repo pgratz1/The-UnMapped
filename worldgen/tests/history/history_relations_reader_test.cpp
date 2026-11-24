@@ -115,10 +115,11 @@ void refused_with(const std::string& name, const std::string& sql, const std::st
     CHECK(t.error().message == e->message);
 }
 
-// The event_value row of value `key` of the first event of kind `kind`, as SQL selecting it.
-std::string value_of(const std::string& kind, int seq) {
-    return "event_value WHERE event = (SELECT min(id) FROM event WHERE kind = (SELECT id FROM event_kind WHERE key = '" +
-           kind + "')) AND seq = " + std::to_string(seq);
+// SQL setting value `seq` of the first event of kind `kind` to v.
+std::string set_value(const std::string& kind, int seq, int v) {
+    return "UPDATE event_value SET value = " + std::to_string(v) +
+           " WHERE event = (SELECT min(id) FROM event WHERE kind = (SELECT id FROM event_kind WHERE key = '" + kind +
+           "')) AND seq = " + std::to_string(seq) + ";";
 }
 
 std::string where_rr(const std::vector<std::int64_t>& x) {
@@ -247,13 +248,13 @@ TEST_CASE("P5-03 16.4: phrase lists, the events' checks and settlement.ending 6"
 }
 
 TEST_CASE("P5-03a 10.4: the new values' ranges: sealed, standing and majority of kind 60, standing and years of 62") {
-    refused_with("sealed", "UPDATE " + value_of("peoples_met", 3).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+    refused_with("sealed", set_value("peoples_met", 3, 2),
                  "value sealed 2 outside 0 to 1");
     refused_with("mixed-standing",
-                 "UPDATE " + value_of("settlement_mixed", 2).replace("event_value WHERE", "event_value SET value = 3 WHERE") + ";",
+                 set_value("settlement_mixed", 2, 3),
                  "value standing 3 outside 0 to 2");
     refused_with("mixed-majority",
-                 "UPDATE " + value_of("settlement_mixed", 3).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+                 set_value("settlement_mixed", 3, 2),
                  "value majority 2 outside 0 to 1");
     // kind 62 is rare: checked when the world holds a people_expelled
     const db::WorldReader r = chrono_test::open_world(base_path());
@@ -268,10 +269,10 @@ TEST_CASE("P5-03a 10.4: the new values' ranges: sealed, standing and majority of
         return;
     }
     refused_with("expel-standing",
-                 "UPDATE " + value_of("people_expelled", 2).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+                 set_value("people_expelled", 2, 2),
                  "value standing 2 outside 0 to 1");
     refused_with("expel-years",
-                 "UPDATE " + value_of("people_expelled", 3).replace("event_value WHERE", "event_value SET value = -1 WHERE") + ";",
+                 set_value("people_expelled", 3, -1),
                  "value years -1 outside 0 to");
 }
 
