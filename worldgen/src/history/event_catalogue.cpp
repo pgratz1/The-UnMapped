@@ -1609,7 +1609,7 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
     for (const auto& [a, b, year, event] : met) {
         (void)year;
         const bool rows = std::any_of(t.race_relations.begin(), t.race_relations.end(),
-                                      [a = a, b = b](const db::RaceRelationRow& r) { return r.race_a == a && r.race_b == b; });
+                                      [ra = a, rb = b](const db::RaceRelationRow& r) { return r.race_a == ra && r.race_b == rb; });
         if (!rows) {
             return "corrupt table 'event': row " + int_text(event) + ": peoples_met without its rows";
         }
