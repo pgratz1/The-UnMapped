@@ -8,16 +8,20 @@
 // people, and expulsions.
 //
 // RelationsSubsystem runs in steps T1, T4, T6, Q1 and Q4 after monsters
-// (6.1). It is the people ledger of PeoplesSubsystem and the disposition
-// view of ConflictSubsystem (7.1, 7.2). Keyed draws only (stream
-// hist.relations.expel); integer arithmetic only; members hold ids. It
+// (6.1; P5-03a 3.6). It is the people ledger of PeoplesSubsystem and the disposition
+// view of ConflictSubsystem (7.1, 7.2). Keyed draws only (streams
+// hist.relations.expel and, P5-03a 5.1, hist.relations.settlers); integer arithmetic only; members hold ids. It
 // changes State only through set_population and
 // PeoplesSubsystem::note_reduction (6.6).
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
+#include <set>
 #include <span>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "worldgen/data/content.hpp"
@@ -38,6 +42,14 @@ struct RelationsTuning {
     std::int64_t subject_years = 200, conquest_settlers_permille = 100;
     std::int64_t drift_permille_per_century = 100, fade_permille = 20, mixed_min_permille = 100;
     std::int64_t expel_permille = 30, expel_share_max = 500;
+    // P5-03a 10.1 (generator 0.25.0). The defaults of a hand-made tuning
+    // switch the new rules off (no peace, no common enemy, no meeting by
+    // word, no settlers' span, no gap), so a 0.24.0 test tuning keeps its
+    // meaning.
+    std::int64_t peace_years = 100, peace_memory_per_century = 0, peace_memory_max = 0, contact_hops = 1;
+    std::int64_t foe_years = 100, foe_war_memory = 0, foe_monster_memory = 0;
+    std::int64_t meet_sealed_hops = -1, meet_sealed_years = 300;
+    std::int64_t conquest_settlers_span_permille = 0, expel_gap_years = 0;
 
     friend bool operator==(const RelationsTuning&, const RelationsTuning&) = default;
 };
@@ -80,6 +92,11 @@ public:
     // A test seam: a hand-made tuning; the stances are still read from the
     // content at the first step.
     RelationsSubsystem(PeoplesSubsystem& peoples, const ConflictSubsystem& conflict, RelationsTuning tuning);
+    // P5-03a 8 (A2): the shipped configuration with B(a, b) and the pairs
+    // computed at construction from the inputs and the content, so that
+    // disposition and hatred_event are valid before the first step.
+    RelationsSubsystem(PeoplesSubsystem& peoples, const ConflictSubsystem& conflict, const data::ContentSet& content,
+                       const HistoryInputs& inputs);
     RelationsSubsystem(const RelationsSubsystem&) = delete;
     RelationsSubsystem& operator=(const RelationsSubsystem&) = delete;
 
@@ -95,6 +112,15 @@ public:
     // read before the first step" before the subsystem's first step.
     [[nodiscard]] std::int64_t disposition(std::int64_t race_a, std::int64_t race_b) const override;
     [[nodiscard]] std::int64_t hatred_event(std::int64_t race_a, std::int64_t race_b) const override;
+    // P5-03a 13 (b): the pair's band code (the plain band of B before a
+    // meeting) and whether it has met.
+    [[nodiscard]] std::int64_t band(std::int64_t race_a, std::int64_t race_b) const override;
+    [[nodiscard]] bool met(std::int64_t race_a, std::int64_t race_b) const override;
+
+    // P5-03a 3.5: the one path by which an event moves a pair's memory. When
+    // the pair has met: M += units x 1000, clamped to its bounds, and the
+    // event is kept as a contribution of the sign of units (none for 0).
+    void credit(std::int64_t race_a, std::int64_t race_b, std::int64_t units, std::int64_t event);
 
     // 6.7: the rows of race_relation and settlement_race of year E - 1,
     // called by the stage once the engine has run. Idempotent.
@@ -110,10 +136,8 @@ public:
     [[nodiscard]] std::int64_t base(std::int64_t race_a, std::int64_t race_b) const;
     // The pair's memory in milli-units, 0 when unmet or unknown.
     [[nodiscard]] std::int64_t memory(std::int64_t race_a, std::int64_t race_b) const;
-    // The pair has met.
-    [[nodiscard]] bool met(std::int64_t race_a, std::int64_t race_b) const;
     // The band of 6.3.5 (the pair's band if met, else the plain band of B).
-    [[nodiscard]] Band band(std::int64_t race_a, std::int64_t race_b) const;
+    [[nodiscard]] Band band_of(std::int64_t race_a, std::int64_t race_b) const;
     struct Share {
         std::int64_t race = 0;
         std::int64_t share = 0;
@@ -133,7 +157,10 @@ private:
         Band band = Band::wariness;
         std::int64_t turn_year = 0, turn_event = 0;
         std::int64_t hatred_event = 0;
-        std::vector<std::int64_t> contributions;  // ascending, at most 8
+        // P5-03a 3.5: the last at most 8 contributions of each sign.
+        std::vector<std::int64_t> warmer, colder;
+        std::int64_t strife_year = 0;  // P5-03a 3.2
+        std::int64_t word_since = 0;   // P5-03a 4.2
     };
     struct Entry {
         std::int64_t race = 0;
@@ -163,6 +190,15 @@ private:
     };
 
     void prepare(const StepContext& context);
+    void prepare_from(const HistoryInputs& inputs, const data::ContentSet& content);
+    // P5-03a 4.1: hops on the border graph from `region` (index region - 1;
+    // -1 unreachable), cached per source region.
+    [[nodiscard]] const std::vector<std::int64_t>& border_hops(const GeoView& geo, std::int64_t region);
+    [[nodiscard]] const std::vector<std::int64_t>& within_contact(const GeoView& geo, std::int64_t region);
+    // Per region (index region - 1): the bits (race index) of the races
+    // present, over the alive visible civilizations (P5-03a 3.2).
+    [[nodiscard]] std::vector<std::uint64_t> race_presence(const StepContext& context) const;
+    [[nodiscard]] std::size_t race_index(std::int64_t race) const;
     void know_settlements(const State& state);
     [[nodiscard]] Pair* pair_of(std::int64_t a, std::int64_t b);
     [[nodiscard]] const Pair* pair_of(std::int64_t a, std::int64_t b) const;
@@ -182,6 +218,9 @@ private:
     void owner_changes(const StepContext& context);
     void expulsions(StepContext& context);
     void decay(std::int64_t years);
+    void war_foes(const StepContext& context);
+    void peace(const StepContext& context);
+    void monster_foe(const StepContext& context, std::int64_t event);
     void turns(StepContext& context);
     void meetings(StepContext& context);
     void drift(const StepContext& context);
@@ -198,6 +237,7 @@ private:
     bool prepared_ = false;
     bool finished_ = false;
     std::uint64_t expel_key_ = 0;
+    std::uint64_t settlers_key_ = 0;
     std::vector<std::int64_t> race_ids_;      // every race row, ascending
     std::vector<std::int64_t> race_camp_;     // same index
     std::vector<std::int64_t> race_awake_;    // same index: awakening year, -1 none
@@ -209,6 +249,17 @@ private:
     std::vector<std::uint8_t> ruined_;        // per settlement: seen ruined (no more rows)
     std::vector<Record> moves_, displacements_;
     std::int64_t cursor_ = 1;
+    // P5-03a 3.3: per (civilization or monster, race) the last year and
+    // event; the credited (race_a, race_b, enemy) triples.
+    struct Seen {
+        std::int64_t year = 0, event = 0;
+    };
+    std::map<std::pair<std::int64_t, std::int64_t>, Seen> civ_foes_, monster_foes_;
+    std::set<std::tuple<std::int64_t, std::int64_t, std::int64_t>> civ_credited_, monster_credited_;
+    std::vector<std::uint8_t> at_war_pairs_;  // per pair: an open war joins its races this step
+    std::vector<std::vector<std::int64_t>> border_hops_;  // per source region, empty until asked
+    std::vector<std::vector<std::int64_t>> within_;       // per region: within contact_hops (3.2)
+    std::map<std::int64_t, std::int64_t> last_expulsion_;  // per realm: the year of its last expulsion (5.3)
     std::int64_t last_drift_ = 0;
     std::int64_t last_phase_ = 0;
     std::int64_t last_year_ = 0;  // the last year a step ran (for finish)

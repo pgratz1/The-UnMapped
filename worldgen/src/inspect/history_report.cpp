@@ -1,5 +1,6 @@
-// The history report, format "# worldgen history v5" (spec P3-07 section 6
-// with amendments 21 to 26; P5-02 12, generator 0.23.0).
+// The history report, format "# worldgen history v6" (spec P3-07 section 6
+// with amendments 21 to 26; P5-02 12, generator 0.23.0; P5-03 17; P5-03a 9,
+// generator 0.25.0).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -195,10 +196,16 @@ public:
             add({lit("  fate: ended in " + num(*c.ended_year) + ", "), event_ref(c.ending_event), lit(": "),
                  sentence_of(c.ending_event)});
         }
-        add({lit("  milestones:")});
+        // P5-03a 9.2 (v6): at summary, the count of the full block's
+        // milestones, then the quiet stretches only.
+        const bool summary = level_ == HistoryLevel::summary;
+        add({lit(summary ? "  milestones: " + num(static_cast<std::int64_t>(d.milestones.size())) : "  milestones:")});
         for (const Id m : short_block ? d.milestones_ended : d.milestones) {
             const HistoryView::Event& e = v_.events()[static_cast<std::size_t>(m - 1)];
             const history::KindDef& k = *v_.catalogue().find_id(e.row.kind);  // checked by HistoryView::load
+            if (summary && k.key != "quiet_stretch") {
+                continue;
+            }
             BlockLine l{lit("    " + event_span(e.row) + " "), event_ref(m), lit(" "), txt(k.key), lit(": "),
                         sentence_of(m)};
             const std::string n = history::history_note(v_, m, c.id);
@@ -236,21 +243,14 @@ private:
             return;
         }
         add({lit("  adversaries: " + num(static_cast<std::int64_t>(d.adversaries.size())))});
-        std::int64_t without = 0;
-        std::int64_t enmity = 0;
+        // P5-03a 9.2 (v6): no line for the adversaries without war.
         for (const history::CivilizationDigest::Adversary& a : d.adversaries) {
             if (a.wars == 0) {
-                ++without;
-                enmity += a.state == "enmity" ? 1 : 0;
                 continue;
             }
             add({lit("    "), entity(a.type, a.id),
                  lit(": " + pl(a.wars, "war") + ", won " + num(a.won) + ", lost " + num(a.lost) + ", drawn " +
                      num(a.drawn) + ", open " + num(a.open) + ", " + span_of(a.first, a.last) + "; now " + a.state)});
-        }
-        if (without > 0) {
-            add({lit("    without war: " + num(without) + " (enmity " + num(enmity) + ", none " + num(without - enmity) +
-                     ")")});
         }
     }
 
@@ -314,7 +314,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V5));  // P5-03 17.1
+        line(std::string(HISTORY_REPORT_HEADER_V6));  // P5-03a 9.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -797,6 +797,13 @@ private:
         return c != nullptr && *c != 0 ? civ(*c) : std::string("no one");
     }
 
+    // The value of key `key` of event e, or `none` when its kind has none.
+    [[nodiscard]] std::int64_t value_of(const HistoryView::Event& e, std::string_view key, std::int64_t none) const {
+        const std::int64_t seq = kind_of(e).value_seq(key);
+        return seq >= 1 && static_cast<std::size_t>(seq) <= e.values.size() ? e.values[static_cast<std::size_t>(seq - 1)]
+                                                                            : none;
+    }
+
     // The first participant of `role` (by key) of event e, or 0.
     [[nodiscard]] Id role_of(const HistoryView::Event& e, std::string_view role) const {
         const history::RoleDef* r = kind_of(e).find_role(role);
@@ -819,6 +826,12 @@ private:
             }
         }
         line("ruins: " + num(static_cast<std::int64_t>(rows.size())));
+        std::int64_t more = 0;
+        if (level_ == HistoryLevel::summary && rows.size() > RUINS_LISTED_MAX) {
+            more = static_cast<std::int64_t>(rows.size());
+            rows = summary_ruins(std::move(rows));
+            more -= static_cast<std::int64_t>(rows.size());
+        }
         for (const db::SettlementRow* s : rows) {
             std::string l = "  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region);
             // P5-02 12.3: the region's name when it was ruined, if it differs.
@@ -836,6 +849,48 @@ private:
             }
             line(l + " last held by " + last_held_by(s->id));
         }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
+    }
+
+    // P5-03a 9.3: at summary, more than RUINS_LISTED_MAX ruins are listed as
+    // the union of the RUINS_EACH oldest, largest and most recent, ascending
+    // id. `rows` ascending id, each ruined (ruined_year set).
+    static constexpr std::size_t RUINS_LISTED_MAX = 15;
+    static constexpr std::size_t RUINS_EACH = 5;
+    [[nodiscard]] std::vector<const db::SettlementRow*> summary_ruins(std::vector<const db::SettlementRow*> rows) const {
+        std::vector<Id> largest(t_.settlements.size() + 1, 0);  // per settlement id: its largest census population
+        for (const db::SettlementCensusRow& c : t_.census) {
+            if (c.settlement >= 1 && static_cast<std::size_t>(c.settlement) < largest.size()) {
+                Id& x = largest[static_cast<std::size_t>(c.settlement)];
+                x = std::max(x, c.population);
+            }
+        }
+        const auto size_of = [&largest](const db::SettlementRow* r) {
+            return r->id >= 1 && static_cast<std::size_t>(r->id) < largest.size() ? largest[static_cast<std::size_t>(r->id)]
+                                                                                   : Id{0};
+        };
+        const auto year_of = [](const db::SettlementRow* r) { return r->ruined_year.value_or(0); };
+        std::vector<const db::SettlementRow*> chosen;
+        const auto take = [&](auto less) {
+            std::vector<const db::SettlementRow*> order = rows;
+            std::stable_sort(order.begin(), order.end(), less);
+            chosen.insert(chosen.end(), order.begin(), order.begin() + static_cast<std::ptrdiff_t>(RUINS_EACH));
+        };
+        take([&](const db::SettlementRow* a, const db::SettlementRow* b) {
+            return year_of(a) != year_of(b) ? year_of(a) < year_of(b) : a->id < b->id;
+        });
+        take([&](const db::SettlementRow* a, const db::SettlementRow* b) {
+            return size_of(a) != size_of(b) ? size_of(a) > size_of(b) : a->id < b->id;
+        });
+        take([&](const db::SettlementRow* a, const db::SettlementRow* b) {
+            return year_of(a) != year_of(b) ? year_of(a) > year_of(b) : a->id > b->id;
+        });
+        std::stable_sort(chosen.begin(), chosen.end(),
+                         [](const db::SettlementRow* a, const db::SettlementRow* b) { return a->id < b->id; });
+        chosen.erase(std::unique(chosen.begin(), chosen.end()), chosen.end());
+        return chosen;
     }
 
     // r19 25.3 item 1: how a settlement was ruined, by its ruin event's kind.
@@ -984,11 +1039,12 @@ private:
             const db::RaceRelationRow* last = nullptr;
             const HistoryView::Event* met = nullptr;
             const HistoryView::Event* turned = nullptr;
+            std::int64_t old_band = -1;  // P5-03a 9.4: the band before the last turn
         };
         std::vector<PairLine> pairs;
         for (std::size_t i = 0; i < present.size(); ++i) {
             for (std::size_t j = i + 1; j < present.size(); ++j) {
-                pairs.push_back(PairLine{present[i], present[j], nullptr, nullptr, nullptr});
+                pairs.push_back(PairLine{present[i], present[j], nullptr, nullptr, nullptr, -1});
             }
         }
         const auto find_pair = [&pairs](Id a, Id b) -> PairLine* {
@@ -1011,6 +1067,12 @@ private:
                 continue;
             }
             if (PairLine* p = find_pair(role_of(e, "race_a"), role_of(e, "race_b"))) {
+                // Bands change only at turns: the band before a turn is the
+                // previous turn's band, else the meeting's.
+                const HistoryView::Event* before = p->turned != nullptr ? p->turned : p->met;
+                if (turned) {
+                    p->old_band = before != nullptr ? value_of(*before, "band", -1) : -1;
+                }
                 (met ? p->met : p->turned) = &e;
             }
         }
@@ -1039,14 +1101,43 @@ private:
             } else {
                 l += std::string(word(BAND, p.last->band, 0)) + " " + num(p.last->disposition) + ", met " +
                      num(p.met->row.year) + " e" + num(p.met->row.id);
+                if (value_of(*p.met, "sealed", 0) == 1) {
+                    l += " by word";  // P5-03a 9.4
+                }
                 if (p.turned != nullptr) {
                     l += ", turned " + num(p.turned->row.year) + " e" + num(p.turned->row.id);
+                    if (p.old_band >= 0 && p.old_band <= 2) {
+                        l += " from " + std::string(word(BAND, p.old_band, 0));
+                    }
                 }
             }
             pair_lines.push_back(std::move(l));
         }
         for (std::string& l : pair_lines) {
             line(std::move(l));
+        }
+        // P5-03a 9.4: the races that met no one, then the other unmet pairs,
+        // at both levels.
+        const auto met_any = [&pairs](Id race) {
+            return std::any_of(pairs.begin(), pairs.end(), [race](const PairLine& p) {
+                return p.last != nullptr && p.met != nullptr && (p.a == race || p.b == race);
+            });
+        };
+        if (present.size() >= 2U) {
+            for (const Id r : present) {
+                if (!met_any(r)) {
+                    line("  the " + plural(r) + " met no other people");
+                }
+            }
+        }
+        std::string unmet;
+        for (const PairLine& p : pairs) {
+            if ((p.last == nullptr || p.met == nullptr) && met_any(p.a) && met_any(p.b)) {
+                unmet += (unmet.empty() ? "" : ", ") + plural(p.a) + " and " + plural(p.b);
+            }
+        }
+        if (!unmet.empty()) {
+            line("  never met: " + unmet);
         }
         std::int64_t arrivals = 0, sheltered = 0, expulsions = 0, expelled = 0;
         for (const HistoryView::Event& e : v_.events()) {
@@ -1063,8 +1154,8 @@ private:
         }
         const std::vector<history::MixedSettlement> mixed = history::mixed_at_end(t_);
         line("mixed: " + pl(static_cast<std::int64_t>(mixed.size()), "settlement") + " at E; refugees: " +
-             num(arrivals) + " arrivals, " + num(sheltered) + " people; expelled: " + num(expulsions) + " times, " +
-             num(expelled) + " people");
+             pl(arrivals, "arrival") + ", " + num(sheltered) + " people; expelled: " + pl(expulsions, "time") + ", " +
+             num(expelled) + " people");  // P5-03a 9.4: plurals
         if (!full) {
             return;
         }
@@ -1072,12 +1163,23 @@ private:
             const db::SettlementRow& s = t_.settlements[static_cast<std::size_t>(m.settlement - 1)];
             std::string l = "  s" + num(s.id) + " " + escape_history_text(s.name) + " (" +
                             (s.owner_civ != 0 ? civ(s.owner_civ) : std::string("no owner")) + "): ";
-            for (std::size_t i = 0; i < m.shares.size(); ++i) {
+            // P5-03a 9.4: the ruling race first, then share descending, then
+            // race id.
+            auto shares = m.shares;
+            std::stable_sort(shares.begin(), shares.end(), [](const auto& x, const auto& y) {
+                const bool rx = x.standing == 3;
+                const bool ry = y.standing == 3;
+                if (rx != ry) {
+                    return rx;
+                }
+                return x.share != y.share ? x.share > y.share : x.race < y.race;
+            });
+            for (std::size_t i = 0; i < shares.size(); ++i) {
                 if (i > 0) {
                     l += "; ";
                 }
-                l += plural(m.shares[i].race) + " " + num(m.shares[i].share) + " " +
-                     std::string(word(STANDING, m.shares[i].standing, 0));
+                l += plural(shares[i].race) + " " + num(shares[i].share) + " " +
+                     std::string(word(STANDING, shares[i].standing, 0));
             }
             line(std::move(l));
         }

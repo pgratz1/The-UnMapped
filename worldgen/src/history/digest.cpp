@@ -1131,6 +1131,10 @@ private:
             k == kinds_.plague_spread || k == kinds_.quiet_stretch) {
             return false;
         }
+        if (k == kinds_.settlement_mixed &&
+            !std::binary_search(mixed_told_.begin(), mixed_told_.end(), e.row.id)) {
+            return false;  // P5-03a 9.5
+        }
         return !(k == kinds_.war_declared && excluded_declaration(e.row.id));
     }
 
@@ -1160,8 +1164,35 @@ private:
 
     [[nodiscard]] std::int64_t salience(Id e) const { return events_[static_cast<std::size_t>(e - 1)].row.salience; }
 
+    // P5-03a 9.5: the first settlement_mixed of each unordered pair {race,
+    // ruling}, the first SUMMARY_MIXED_MAX of them by id.
+    void mixed_candidates() {
+        mixed_told_.clear();
+        std::vector<std::pair<Id, Id>> pairs;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind != kinds_.settlement_mixed || mixed_told_.size() >= SUMMARY_MIXED_MAX) {
+                continue;
+            }
+            Id race = 0;
+            Id ruling = 0;
+            const KindDef* k = view_.catalogue().find_id(e.row.kind);
+            for (const db::EventParticipantRow& p : e.participants) {
+                const std::string& role = k->roles[static_cast<std::size_t>(p.role - 1)].role;  // checked by load
+                race = role == "race" ? p.entity_id : race;
+                ruling = role == "ruling" ? p.entity_id : ruling;
+            }
+            const std::pair<Id, Id> key{std::min(race, ruling), std::max(race, ruling)};
+            if (std::find(pairs.begin(), pairs.end(), key) != pairs.end()) {
+                continue;
+            }
+            pairs.push_back(key);
+            mixed_told_.push_back(e.row.id);
+        }
+    }
+
     void summary() {
         const std::size_t n = events_.size();
+        mixed_candidates();
         std::vector<Id> ranked;
         for (const HistoryView::Event& e : events_) {
             if (candidate(e)) {
@@ -1516,6 +1547,40 @@ private:
         put("abandonment_lost", lost);
         put("monster_stories", d_.monster_stories);
         put("ruins_oldest_year", oldest ? *oldest : STAT_NONE);
+        // P5-03a 9.6: meetings by word; turns into a higher band than the
+        // pair's previous band (the last turn's, else the meeting's).
+        std::int64_t by_word = 0, warmed = 0;
+        std::vector<std::tuple<Id, Id, std::int64_t>> bands;  // (race_a, race_b, band), small
+        const auto pair_band = [&bands](Id a, Id b) -> std::int64_t* {
+            for (auto& [x, y, band] : bands) {
+                if (x == a && y == b) {
+                    return &band;
+                }
+            }
+            return nullptr;
+        };
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            if ((k != kinds_.peoples_met && k != kinds_.disposition_turned) || e.participants.size() < 2U) {
+                continue;
+            }
+            const Id a = std::min(e.participants[0].entity_id, e.participants[1].entity_id);
+            const Id b = std::max(e.participants[0].entity_id, e.participants[1].entity_id);
+            const std::int64_t band = value_of(e, "band");
+            std::int64_t* known = pair_band(a, b);
+            if (k == kinds_.peoples_met) {
+                by_word += value_of(e, "sealed") == 1 ? 1 : 0;
+            } else if (known != nullptr && band > *known) {
+                ++warmed;
+            }
+            if (known != nullptr) {
+                *known = band;
+            } else {
+                bands.emplace_back(a, b, band);
+            }
+        }
+        put("peoples_met_by_word", by_word);
+        put("dispositions_warmed", warmed);
     }
 
     // r21 26.5 item 2 (P5-12): region_names, regions_renamed, refuges,
@@ -1934,6 +1999,7 @@ private:
     Kinds kinds_;
     HistoryDigest d_;
     std::vector<Id> stories_;  // P5-03 10.1: the told monsters' story events
+    std::vector<Id> mixed_told_;  // P5-03a 9.5: the settlement_mixed candidates, ascending
     std::vector<std::vector<Id>> effects_;           // index event id: the events it caused, ascending
     std::vector<std::vector<Id>> civ_events_;        // index civ - 1: its events, ascending
     std::vector<std::size_t> war_row_;               // index event id: its war relation row, or NONE

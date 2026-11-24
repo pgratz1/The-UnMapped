@@ -236,13 +236,14 @@ EventCatalogue build_compiled() {
                               {"reason"}, 0, {}});
     // P5-03 11.3 (generator 0.24.0): kind 56, a small place left for fear of
     // a monster; 8.1: kinds 57 to 62, race relations, mixed settlements and
-    // migrations.
+    // migrations. P5-03a 10.4 (generator 0.25.0): the values sealed (57),
+    // standing and majority (60), standing and years (62) appended.
     c.kinds.push_back(KindDef{56, "settlement_fled", true, 1, 1,
                               {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
     const auto two_races = [] {
         return std::vector<RoleDef>{role(1, "race_a", EntityType::race, 1, 1), role(2, "race_b", EntityType::race, 1, 1)};
     };
-    c.kinds.push_back(KindDef{57, "peoples_met", true, 1, 0, two_races(), {"disposition", "band"}, 0, {}});
+    c.kinds.push_back(KindDef{57, "peoples_met", true, 1, 0, two_races(), {"disposition", "band", "sealed"}, 0, {}});
     c.kinds.push_back(KindDef{58, "disposition_turned", true, 0, 0, two_races(), {"disposition", "band"}, 0, {}});
     c.kinds.push_back(KindDef{59, "refugees_arrived", true, 1, 1,
                               {role(1, "settlement", EntityType::settlement, 1, 1),
@@ -253,7 +254,7 @@ EventCatalogue build_compiled() {
                               {role(1, "settlement", EntityType::settlement, 1, 1),
                                role(2, "civilization", EntityType::civilization, 1, 1),
                                role(3, "race", EntityType::race, 1, 1), role(4, "ruling", EntityType::race, 1, 1)},
-                              {"share"}, 0, {}});
+                              {"share", "standing", "majority"}, 0, {}});
     c.kinds.push_back(KindDef{61, "standing_changed", true, 1, 1,
                               {role(1, "settlement", EntityType::settlement, 1, 1),
                                role(2, "civilization", EntityType::civilization, 1, 1),
@@ -263,7 +264,7 @@ EventCatalogue build_compiled() {
                               {role(1, "settlement", EntityType::settlement, 1, 1),
                                role(2, "civilization", EntityType::civilization, 1, 1),
                                role(3, "race", EntityType::race, 1, 1)},
-                              {"people"}, 0, {}});
+                              {"people", "standing", "years"}, 0, {}});
     return c;
 }
 
@@ -324,7 +325,8 @@ enum class TokenType : std::uint8_t {
     beast_bold,     // P5-03 13: {@beast:bold}
 };
 
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid };  // kind: P5-02 10.3; raid: P5-03 9.5
+// kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -522,6 +524,12 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::kind;
         } else if (*form == "raid") {  // P5-03 9.5
             out.form = Form::raid;
+        } else if (*form == "its") {  // P5-03a 7.1
+            out.form = Form::its;
+        } else if (*form == "aside") {
+            out.form = Form::aside;
+        } else if (*form == "where") {
+            out.form = Form::where;
         } else {
             return unknown;
         }
@@ -534,6 +542,10 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     }
     if (out.form == Form::raid && r->type != EntityType::monster) {
         return "form 'raid' needs a monster role" + where;
+    }
+    if ((out.form == Form::its || out.form == Form::aside || out.form == Form::where) &&
+        r->type != EntityType::monster) {
+        return "form '" + std::string(*form) + "' needs a monster role" + where;
     }
     if (r->min_count == 0 && out.form != Form::all) {
         return "role '" + r->role + "' may have no participant" + where;
@@ -1200,6 +1212,16 @@ const std::string* HistoryView::monster_noun(std::int64_t monster) const noexcep
     return find_by_id(monster_kind_nouns_, m->kind);
 }
 
+const db::MonsterKindRow* HistoryView::monster_kind_row(std::int64_t monster) const noexcept {
+    const MonsterNames* m = find_by_id(monsters_, monster);
+    if (m == nullptr) {
+        return nullptr;
+    }
+    const auto it = std::lower_bound(monster_kind_rows_.begin(), monster_kind_rows_.end(), m->kind,
+                                     [](const db::MonsterKindRow& r, std::int64_t id) { return r.id < id; });
+    return it != monster_kind_rows_.end() && it->id == m->kind ? &*it : nullptr;
+}
+
 const std::string* HistoryView::beast_plural(std::int64_t beast) const noexcept {
     return find_by_id(beast_plurals_, beast);
 }
@@ -1614,6 +1636,42 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
             return "corrupt table 'event': row " + int_text(event) + ": peoples_met without its rows";
         }
     }
+    // P5-03a 10.4: the ranges of the new values, in event order.
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const std::string_view k = kind_key(v.event);
+        const KindDef* kind = t.catalogue->find(k);
+        if (kind == nullptr) {
+            continue;
+        }
+        std::string_view key;
+        std::int64_t lo = 0;
+        std::int64_t hi = 0;
+        if (k == "peoples_met" && v.seq == kind->value_seq("sealed")) {
+            key = "sealed";
+            hi = 1;
+        } else if (k == "settlement_mixed" && v.seq == kind->value_seq("standing")) {
+            key = "standing";
+            hi = 2;
+        } else if (k == "settlement_mixed" && v.seq == kind->value_seq("majority")) {
+            key = "majority";
+            hi = 1;
+        } else if (k == "people_expelled" && v.seq == kind->value_seq("standing")) {
+            key = "standing";
+            hi = 1;
+        } else if (k == "people_expelled" && v.seq == kind->value_seq("years")) {
+            key = "years";
+            hi = t.end_year - 1;  // reading: years >= 0, and no more than the history
+        } else {
+            continue;
+        }
+        if (v.value < lo || v.value > hi) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value " + std::string(key) + " " +
+                   int_text(v.value) + " outside " + int_text(lo) + " to " + int_text(hi);
+        }
+    }
     // The race participants (16.4's last event check) are checked first,
     // in monster_tables_problem: see race_participant_problem.
     (void)n_events;
@@ -1995,6 +2053,49 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
         }
         link_from(start, type, id);
     };
+    // P5-03a 7.1: {m:its}, {m:aside} and {m:where} of monster `m`.
+    const auto monster_form = [&](std::int64_t m, Form form) {
+        const db::MonsterKindRow* k = view.monster_kind_row(m);
+        const std::string* name = view.name(EntityType::monster, m);
+        if (k == nullptr || name == nullptr) {
+            fail(at + "no name for monster " + int_text(m));
+        }
+        if (form == Form::its) {
+            out += k->grouped == 1 ? "their" : "its";
+            return;
+        }
+        if (form == Form::aside) {
+            if (k->wake != 2) {
+                out += ", ";
+                out += k->noun;
+                out += ",";
+            }
+            return;
+        }
+        const std::string* region = view.region_name_at_event(e->row.region, event_id);
+        if (region == nullptr) {
+            fail(at + "no region " + int_text(e->row.region));
+        }
+        if (k->wake == 2) {
+            // Empty when the host is named for this place: its name ends with
+            // " of " and the region's name at the event's year ("The " as
+            // "the ").
+            const std::string* at_year = view.region_name_at_year(e->row.region, e->row.year);
+            std::string r = " of ";
+            if (at_year != nullptr && at_year->compare(0, 4, "The ") == 0) {
+                r += "the ";
+                r.append(*at_year, 4, std::string::npos);
+            } else if (at_year != nullptr) {
+                r += *at_year;
+            }
+            if (at_year != nullptr && name->size() >= r.size() &&
+                name->compare(name->size() - r.size(), r.size(), r) == 0) {
+                return;
+            }
+        }
+        out += " in ";
+        append_name(*region, EntityType::region, e->row.region);
+    };
     // r19 22.1: the clause of each token (a placeholder belongs to the
     // clause in which it starts), and per clause whether every number of it
     // (each {value} and each '#' of a chosen three-word form) is 1 to 9.
@@ -2051,7 +2152,9 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         fail(at + "no participant with role '" + t.text + "'");
                     }
                     const db::EventParticipantRow& p = *ps.front();
-                    if (t.form == Form::name) {
+                    if (t.form == Form::its || t.form == Form::aside || t.form == Form::where) {
+                        monster_form(p.entity_id, t.form);  // P5-03a 7.1
+                    } else if (t.form == Form::name) {
                         append_name(name_of(p, t.form), static_cast<EntityType>(p.entity_type), p.entity_id);
                     } else if (t.form == Form::raid) {
                         out += name_of(p, t.form);  // P5-03 9.5: a phrase, no link

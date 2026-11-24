@@ -217,7 +217,7 @@ constexpr std::string_view REPORT_USAGE =
     "usage: worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
-    "  --history           print the history report (format '# worldgen history v5') instead of the world report\n"
+    "  --history           print the history report (format '# worldgen history v6') instead of the world report\n"
     "  --level LEVEL       with --history: summary (default) or full\n"
     "  --out PATH          write the report to this file instead of stdout\n"
     "  --force             replace an existing output file\n"

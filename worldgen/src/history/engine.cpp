@@ -408,6 +408,8 @@ public:
         return config_.catalogue->find_id(stored(event).row.kind)->key;
     }
     [[nodiscard]] std::int64_t event_year(std::int64_t event) const { return stored(event).row.year; }
+    // P5-03a 7.3.
+    [[nodiscard]] std::vector<std::int64_t> event_causes(std::int64_t event) const { return stored(event).causes; }
     // P3-04 r21 23.3.
     [[nodiscard]] std::int64_t event_region(std::int64_t event) const { return stored(event).row.region; }
     [[nodiscard]] std::int64_t event_settlement(std::int64_t event) const { return stored(event).row.settlement; }
@@ -1307,6 +1309,10 @@ std::int64_t StepContext::event_participant(std::int64_t event, std::string_view
 
 std::vector<std::int64_t> StepContext::event_participants(std::int64_t event, std::string_view role) const {
     return engine_.event_participants(event, role);
+}
+
+std::vector<std::int64_t> StepContext::event_causes(std::int64_t event) const {
+    return engine_.event_causes(event);
 }
 
 std::int64_t StepContext::last_event_id() const {

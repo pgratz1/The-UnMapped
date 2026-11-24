@@ -255,6 +255,7 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.fear_years = r.get_int("fear_years");
     t.fear_permille = r.get_int("fear_permille");
     t.overrun_people_ref = r.get_int("overrun_people_ref");
+    t.undead_dead_permille = r.get_int("undead_dead_permille");
     return t;
 }
 
@@ -793,6 +794,17 @@ void MonstersSubsystem::read_log(const StepContext& ctx) {
 }
 
 bool MonstersSubsystem::rise(StepContext& ctx) {
+    // P5-03a 6: T = max(undead_min_dead, P_W x undead_dead_permille div
+    // 1000), P_W the people of the standing settlements as the test is made.
+    std::int64_t world_people = 0;
+    for (const Settlement& s : ctx.state().settlements()) {
+        if (standing(s)) {
+            world_people = checked_add(world_people, s.population);
+        }
+    }
+    const std::int64_t threshold = std::max(
+        tuning_.undead_min_dead, floor_div(checked_mul(world_people, tuning_.undead_dead_permille), 1000));
+    const std::int64_t need = floor_div(checked_mul(threshold, 1000), std::max<std::int64_t>(1, pressure_));
     for (std::int64_t r = 1; r <= region_count_; ++r) {
         const std::vector<WindowEntry>& w = windows_[static_cast<std::size_t>(r - 1)];
         std::int64_t sum = 0;
@@ -800,7 +812,7 @@ bool MonstersSubsystem::rise(StepContext& ctx) {
             sum = checked_add(sum, x.dead);
         }
         // P5-03 14.2: the threshold falls with the pressure.
-        if (sum < floor_div(checked_mul(tuning_.undead_min_dead, 1000), std::max<std::int64_t>(1, pressure_))) {
+        if (sum < need) {
             continue;
         }
         for (std::size_t k = 0; k < kinds_.size(); ++k) {

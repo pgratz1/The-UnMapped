@@ -118,6 +118,10 @@ struct MonstersTuning {
     std::int64_t hunt_raid_permille = 60, hunt_max_permille = 400;
     std::int64_t fear_raids = 3, fear_years = 50, fear_permille = 300;
     std::int64_t overrun_people_ref = 800;
+    // P5-03a 6 (generator 0.25.0): the threshold's share of the world's
+    // people. 0 in a hand-made tuning, where undead_min_dead is then the
+    // whole threshold (the rule before 0.25.0); shipped 25.
+    std::int64_t undead_dead_permille = 0;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };

@@ -141,8 +141,9 @@ inline constexpr std::string_view hist_beasts_bold_kind = "hist.beasts.bold_kind
 inline constexpr std::string_view hist_monsters_fear = "hist.monsters.fear";
 inline constexpr std::string_view hist_peoples_abandon_loss = "hist.peoples.abandon_loss";
 inline constexpr std::string_view hist_relations_expel = "hist.relations.expel";
+inline constexpr std::string_view hist_relations_settlers = "hist.relations.settlers";  // P5-03a 5.1
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 76> all_stream_names = {
+inline constexpr std::array<std::string_view, 77> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -219,6 +220,7 @@ inline constexpr std::array<std::string_view, 76> all_stream_names = {
     hist_monsters_fear,
     hist_peoples_abandon_loss,
     hist_relations_expel,
+    hist_relations_settlers,
 };
 
 }  // namespace worldgen::streams

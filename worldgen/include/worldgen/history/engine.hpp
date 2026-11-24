@@ -263,6 +263,8 @@ public:
     [[nodiscard]] std::vector<std::int64_t> event_participants(std::int64_t event, std::string_view role) const;
     // The `year` of event `event` (P3-05 r12 22.2: the cause memory).
     [[nodiscard]] std::int64_t event_year(std::int64_t event) const;
+    // P5-03a 7.3: the causes of event `event`, ascending.
+    [[nodiscard]] std::vector<std::int64_t> event_causes(std::int64_t event) const;
     // P3-04 r21 23.3 (P5-12): pure reads of the events appended so far. The
     // id of the last event (0 when none); an event's region, settlement (0
     // none) and salience; the value of key `key` (FatalError "history: state:

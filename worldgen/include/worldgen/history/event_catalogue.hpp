@@ -198,6 +198,8 @@ public:
     // order).
     [[nodiscard]] const std::string* monster_noun(std::int64_t monster) const noexcept;
     [[nodiscard]] const std::string* beast_plural(std::int64_t beast) const noexcept;
+    // P5-03a 7.1: the monster_kind row of the monster's kind, or nullptr.
+    [[nodiscard]] const db::MonsterKindRow* monster_kind_row(std::int64_t monster) const noexcept;
     // P5-03 9.5, 13: the raid phrase of a monster's kind and the bold phrase
     // of a beast for event `event` (phrase number (event - 1) mod n of the
     // stored list); nullptr when the row does not exist.

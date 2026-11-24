@@ -415,8 +415,10 @@ Schema report_event_schema() {
         Field::required("kind", Type::string(32, id_grammar())),
         Field::required("salience", Type::integer(0, 100)),
         // P3-10: 512 bytes (P3-04 4.2 says 256; the cause lists of P3-05 r12
-        // 22.3 make the templates of kinds 16 and 31 longer).
-        Field::required("template", Type::string(512)),
+        // 22.3 make the templates of kinds 16 and 31 longer). P5-03a (a
+        // reading): 1024, since the cause lists of 3.5 and 7.3 make the
+        // templates of kinds 58 and 59 longer than 512.
+        Field::required("template", Type::string(1024)),
     });
 }
 
@@ -1343,6 +1345,7 @@ Schema history_monsters_schema() {
         i("fear_years", 1, 100000),
         i("fear_permille", 0, 1000),
         i("overrun_people_ref", 1, 1000000),
+        i("undead_dead_permille", 0, 1000),  // P5-03a 10.2
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
@@ -1394,6 +1397,18 @@ Schema history_relations_schema() {
         i("mixed_min_permille", 1, 1001),
         i("expel_permille", 0, 1000),
         i("expel_share_max", 0, 1000),
+        // P5-03a 10.1 (generator 0.25.0), appended in this order.
+        i("peace_years", 0, 100000),
+        i("peace_memory_per_century", 0, 10000),
+        i("peace_memory_max", 0, 2000),
+        i("contact_hops", 0, 8),
+        i("foe_years", 1, 100000),
+        i("foe_war_memory", 0, 1000),
+        i("foe_monster_memory", 0, 1000),
+        i("meet_sealed_hops", -1, 8),
+        i("meet_sealed_years", 0, 100000),
+        i("conquest_settlers_span_permille", 0, 1000),
+        i("expel_gap_years", 0, 100000),
     };
     std::vector<Check> checks{
         Check{"relations_bands",
@@ -1413,6 +1428,25 @@ Schema history_relations_schema() {
                       return std::nullopt;
                   }
                   return std::string("memory_min must not be above 0 nor memory_max below 0");
+              }},
+        // P5-03a 10.1.
+        Check{"relations_peace_cap",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::int64_t a = r.get_int("peace_memory_max");
+                  const std::int64_t b = r.get_int("memory_max");
+                  if (a <= b) {
+                      return std::nullopt;
+                  }
+                  return "peace_memory_max " + int_text(a) + " is above memory_max " + int_text(b);
+              }},
+        Check{"relations_settlers",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::int64_t a = r.get_int("conquest_settlers_permille");
+                  const std::int64_t b = r.get_int("conquest_settlers_span_permille");
+                  if (a + b <= 1000) {
+                      return std::nullopt;
+                  }
+                  return "conquest settlers " + int_text(a) + " + " + int_text(b) + " exceed 1000";
               }},
     };
     return Schema(std::move(fields), std::move(checks));

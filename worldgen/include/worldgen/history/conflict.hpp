@@ -259,6 +259,20 @@ public:
     [[nodiscard]] virtual std::int64_t disposition(std::int64_t race_a, std::int64_t race_b) const = 0;
     // The pair's last disposition_turned into band 0 (hatred), 0 when none.
     [[nodiscard]] virtual std::int64_t hatred_event(std::int64_t race_a, std::int64_t race_b) const = 0;
+    // P5-03a 13 (b), for P5-04 (conflict does not read them): the pair's band
+    // code (0 hatred, 1 wariness, 2 friendship; the plain band of B before a
+    // meeting) and whether it has met. The defaults serve a view that keeps
+    // no bands.
+    [[nodiscard]] virtual std::int64_t band(std::int64_t race_a, std::int64_t race_b) const {
+        (void)race_a;
+        (void)race_b;
+        return 1;
+    }
+    [[nodiscard]] virtual bool met(std::int64_t race_a, std::int64_t race_b) const {
+        (void)race_a;
+        (void)race_b;
+        return false;
+    }
 };
 
 // --- The subsystem (13) ----------------------------------------------------------------------

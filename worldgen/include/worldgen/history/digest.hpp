@@ -55,6 +55,9 @@ inline constexpr std::size_t SUMMARY_MONSTER_STORIES = 3;
 inline constexpr std::int64_t SUMMARY_MONSTER_HARM_MIN = 200;
 inline constexpr std::int64_t SUMMARY_MONSTER_TAKEN_HARM = 500;
 inline constexpr std::size_t SUMMARY_MONSTER_ENDED_LINES = 2;
+// P5-03a 9.5 (format v6): the settlement_mixed events that may enter the
+// summary set: the first of each pair of races, at most this many.
+inline constexpr std::size_t SUMMARY_MIXED_MAX = 3;
 // P5-03 17.2 (a reading): a settlement is mixed at E when a race other than
 // the ruling one has at least this share (the shipped mixed_min_permille;
 // the report reads the world only).

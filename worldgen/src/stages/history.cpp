@@ -75,7 +75,8 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     monsters.set_region_names(&renaming);  // P5-03 12.2
     // P5-03 6.1, 6.6 item 3: the relations run after the monsters; they are
     // peoples' ledger and conflict's disposition view.
-    history::RelationsSubsystem relations(peoples, conflict, content);
+    // P5-03a 8 (A2): the dispositions are valid from construction.
+    history::RelationsSubsystem relations(peoples, conflict, content, inputs);
     peoples.set_ledger(&relations);
     conflict.set_dispositions(&relations);
     history::EmptyInterventionSource none;

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -120,6 +121,17 @@ RelationsTuning relations_tuning_from(const data::ContentSet& content) {
     t.mixed_min_permille = r.get_int("mixed_min_permille");
     t.expel_permille = r.get_int("expel_permille");
     t.expel_share_max = r.get_int("expel_share_max");
+    t.peace_years = r.get_int("peace_years");  // P5-03a 10.1
+    t.peace_memory_per_century = r.get_int("peace_memory_per_century");
+    t.peace_memory_max = r.get_int("peace_memory_max");
+    t.contact_hops = r.get_int("contact_hops");
+    t.foe_years = r.get_int("foe_years");
+    t.foe_war_memory = r.get_int("foe_war_memory");
+    t.foe_monster_memory = r.get_int("foe_monster_memory");
+    t.meet_sealed_hops = r.get_int("meet_sealed_hops");
+    t.meet_sealed_years = r.get_int("meet_sealed_years");
+    t.conquest_settlers_span_permille = r.get_int("conquest_settlers_span_permille");
+    t.expel_gap_years = r.get_int("expel_gap_years");
     return t;
 }
 
@@ -173,16 +185,28 @@ RelationsSubsystem::RelationsSubsystem(PeoplesSubsystem& peoples, const Conflict
                                        RelationsTuning tuning)
     : peoples_(peoples), conflict_(conflict), tuning_(tuning) {}
 
+RelationsSubsystem::RelationsSubsystem(PeoplesSubsystem& peoples, const ConflictSubsystem& conflict,
+                                       const data::ContentSet& content, const HistoryInputs& inputs)
+    : RelationsSubsystem(peoples, conflict, relations_tuning_from(content)) {
+    prepare_from(inputs, content);  // P5-03a 8 (A2)
+}
+
 std::span<const Step> RelationsSubsystem::steps() const {
     return STEPS;
 }
 
 void RelationsSubsystem::prepare(const StepContext& ctx) {
+    if (!prepared_) {
+        prepare_from(ctx.inputs(), ctx.content());
+    }
+}
+
+void RelationsSubsystem::prepare_from(const HistoryInputs& in, const data::ContentSet& content) {
     if (prepared_) {
         return;
     }
-    const HistoryInputs& in = ctx.inputs();
     expel_key_ = stream_key(in.seed, streams::hist_relations_expel);
+    settlers_key_ = stream_key(in.seed, streams::hist_relations_settlers);
     const ConflictCamp& camp = conflict_.camp_table();
     for (const db::RaceRow& r : in.races) {  // id order
         race_ids_.push_back(r.id);
@@ -190,10 +214,13 @@ void RelationsSubsystem::prepare(const StepContext& ctx) {
         race_awake_.push_back(r.awakening_year ? *r.awakening_year : -1);
     }
     const std::size_t n = race_ids_.size();
+    if (n > 64U) {
+        fail("history: bound: races exceeds 64");  // P5-03a 3.2's bit sets
+    }
     // 6.2.1: B(a, b) = camp + floor_div(stance(a->b) + stance(b->a), 2).
     std::vector<std::vector<RaceStance>> stances;
     for (const db::RaceRow& r : in.races) {
-        stances.push_back(race_stances_from(ctx.content(), r.key));
+        stances.push_back(race_stances_from(content, r.key));
     }
     const auto stance = [&](std::size_t i, std::size_t j) {
         for (const RaceStance& s : stances[i]) {
@@ -227,6 +254,7 @@ void RelationsSubsystem::prepare(const StepContext& ctx) {
         }
     }
     pair_rows_.assign(pairs_.size(), {});
+    at_war_pairs_.assign(pairs_.size(), 0);
     prepared_ = true;
 }
 
@@ -255,7 +283,9 @@ void RelationsSubsystem::run(StepContext& ctx) {
             expulsions(ctx);
         }
         pending_displacements(ctx);
+        war_foes(ctx);  // P5-03a 3.6
         decay(ctx.years());
+        peace(ctx);
         turns(ctx);
         meetings(ctx);
     }
@@ -343,7 +373,11 @@ bool RelationsSubsystem::met(std::int64_t a, std::int64_t b) const {
     return p != nullptr && p->met;
 }
 
-Band RelationsSubsystem::band(std::int64_t a, std::int64_t b) const {
+std::int64_t RelationsSubsystem::band(std::int64_t a, std::int64_t b) const {
+    return static_cast<std::int64_t>(band_of(a, b));
+}
+
+Band RelationsSubsystem::band_of(std::int64_t a, std::int64_t b) const {
     const Pair* p = a != b ? pair_of(a, b) : nullptr;
     if (p != nullptr && p->met) {
         return p->band;
@@ -381,7 +415,7 @@ Standing RelationsSubsystem::target(const StepContext& ctx, std::int64_t ruling,
     if (e.conquered && ctx.year() - e.since_year < tuning_.subject_years) {
         return Standing::subject;
     }
-    switch (band(ruling, e.race)) {
+    switch (band_of(ruling, e.race)) {
         case Band::hatred: return Standing::subject;
         case Band::wariness: return Standing::tolerated;
         case Band::friendship: return Standing::accepted;
@@ -450,7 +484,22 @@ void RelationsSubsystem::mix(const StepContext& ctx, std::int64_t settlement, st
     for (const std::int64_t r : races) {
         c.push_back(checked_add(checked_mul(share_in(p.entries, r), before), checked_mul(share_in(group, r), people)));
     }
-    const std::vector<std::int64_t> shares = largest_remainder(c, 1000);
+    std::vector<std::int64_t> shares = largest_remainder(c, 1000);
+    // P5-03a 8 (A1): the ruling race, when it was in S, keeps at least 1;
+    // the 1 comes from the largest share (then the smaller race id).
+    const bool ruling_in_s =
+        std::any_of(p.entries.begin(), p.entries.end(), [&p](const Entry& e) { return e.race == p.ruling; });
+    if (ruling_in_s) {
+        const auto qi = static_cast<std::size_t>(std::lower_bound(races.begin(), races.end(), p.ruling) - races.begin());
+        if (shares[qi] == 0) {
+            std::size_t big = 0;
+            for (std::size_t i = 1; i < shares.size(); ++i) {
+                big = shares[i] > shares[big] ? i : big;  // races ascend: ties keep the smaller id
+            }
+            --shares[big];
+            ++shares[qi];
+        }
+    }
     std::vector<Entry> next;
     for (std::size_t i = 0; i < races.size(); ++i) {
         if (shares[i] <= 0) {
@@ -518,8 +567,13 @@ void RelationsSubsystem::owner_changes(const StepContext& ctx) {
         for (const Entry& e : p.entries) {
             x = e.race == q ? e.share : x;
         }
-        const std::int64_t share_q =
-            checked_add(x, floor_div(checked_mul(1000 - x, tuning_.conquest_settlers_permille), 1000));
+        // P5-03a 5.1: the settlers' share sigma is drawn in
+        // [conquest_settlers_permille, + conquest_settlers_span_permille].
+        const std::uint64_t u = ctx.draw(settlers_key_, word(id), word(s.owner_civ), 0);
+        const std::int64_t sigma = checked_add(
+            tuning_.conquest_settlers_permille,
+            static_cast<std::int64_t>(pick(u, word(checked_add(tuning_.conquest_settlers_span_permille, 1)))));
+        const std::int64_t share_q = checked_add(x, floor_div(checked_mul(1000 - x, sigma), 1000));
         if (std::none_of(p.entries.begin(), p.entries.end(), [q](const Entry& e) { return e.race == q; })) {
             Entry e;
             e.race = q;
@@ -654,7 +708,13 @@ void RelationsSubsystem::mixed(StepContext& ctx) {
                                Participant{"civilization", EntityType::civilization, p.owner},
                                Participant{"race", EntityType::race, e.race},
                                Participant{"ruling", EntityType::race, p.ruling}};
-            ev.values = {e.share};
+            // P5-03a 5.2: the entry's standing, and whether it outnumbers the
+            // ruling race.
+            std::int64_t ruling_share = 0;
+            for (const Entry& q : p.entries) {
+                ruling_share = q.race == p.ruling ? q.share : ruling_share;
+            }
+            ev.values = {e.share, static_cast<std::int64_t>(e.standing), e.share > ruling_share ? 1 : 0};
             ev.causes = causes_of({e.since_event});
             (void)ctx.append(ev);
             place(id).entries[i].mixed_told = true;
@@ -787,7 +847,16 @@ void RelationsSubsystem::pending_displacements(StepContext& ctx) {
                                Participant{"origin", EntityType::settlement, r.from},
                                Participant{"race", EntityType::race, g}};
             ev.values = {taken, static_cast<std::int64_t>(st)};
-            ev.causes = causes_of({r.cause});
+            // P5-03a 7.3: an abandonment's own causes come with it.
+            std::vector<std::int64_t> causes{r.cause};
+            if (r.cause >= 1 && r.cause <= ctx.last_event_id()) {
+                const std::string_view ck = ctx.event_kind(r.cause);
+                if (ck == "settlement_abandoned" || ck == "settlement_abandoned_to") {
+                    const std::vector<std::int64_t> more = ctx.event_causes(r.cause);
+                    causes.insert(causes.end(), more.begin(), more.end());
+                }
+            }
+            ev.causes = causes_of(std::move(causes));
             const std::int64_t at = ctx.append(ev);
             ctx.state().set_population(best, checked_add(p_u, taken));
             Entry arrived;
@@ -816,6 +885,11 @@ void RelationsSubsystem::expulsions(StepContext& ctx) {
         if (o < 1 || state.civ(o).ended_year || !ctx.visible(state.civ(o)) || peoples_.lying_low(state, o, ctx.year())) {
             continue;
         }
+        // P5-03a 5.3: the gap, tested before any draw.
+        if (const auto last = last_expulsion_.find(o);
+            last != last_expulsion_.end() && ctx.year() - last->second < tuning_.expel_gap_years) {
+            continue;
+        }
         const std::int64_t pop = s.population;
         const std::int64_t region = s.region;
         const std::size_t count = place(id).entries.size();
@@ -823,7 +897,7 @@ void RelationsSubsystem::expulsions(StepContext& ctx) {
             const Place& p = place(id);
             const Entry& e = p.entries[i];
             if (e.race == p.ruling || static_cast<std::int64_t>(e.standing) > 1 ||
-                band(p.ruling, e.race) != Band::hatred || e.share > tuning_.expel_share_max) {
+                band_of(p.ruling, e.race) != Band::hatred || e.share > tuning_.expel_share_max) {
                 continue;
             }
             const std::int64_t people = floor_div(checked_mul(pop, e.share), 1000);
@@ -838,9 +912,10 @@ void RelationsSubsystem::expulsions(StepContext& ctx) {
             ev.participants = {Participant{"settlement", EntityType::settlement, id},
                                Participant{"civilization", EntityType::civilization, o},
                                Participant{"race", EntityType::race, g}};
-            ev.values = {people};
+            ev.values = {people, static_cast<std::int64_t>(e.standing), ctx.year() - e.since_year};  // P5-03a 5.3
             ev.causes = causes_of({e.since_event, turn > e.since_event ? turn : 0});
             const std::int64_t at = ctx.append(ev);
+            last_expulsion_[o] = ctx.year();
             ctx.state().set_population(id, pop - people);
             peoples_.note_reduction(id, at);
             Place& w = place(id);
@@ -894,6 +969,9 @@ void RelationsSubsystem::read_log(const StepContext& ctx) {
             ry = ctx.event_participant(e, "race");
             delta = tuning_.shelter_memory;
         } else {
+            if (kind == "monster_raid" || kind == "settlement_overrun") {
+                monster_foe(ctx, e);  // P5-03a 3.3
+            }
             continue;
         }
         const std::int64_t rx = race_of_civ(state, x);
@@ -903,18 +981,244 @@ void RelationsSubsystem::read_log(const StepContext& ctx) {
         if (rx == 0 || ry == 0 || rx == ry) {
             continue;
         }
-        Pair* p = pair_of(rx, ry);
-        if (p == nullptr || !p->met) {
-            continue;
-        }
-        p->memory = std::clamp(checked_add(p->memory, checked_mul(delta, 1000)), checked_mul(tuning_.memory_min, 1000),
-                               checked_mul(tuning_.memory_max, 1000));
-        p->contributions.push_back(e);
-        if (p->contributions.size() > MAX_CONTRIBUTIONS) {
-            p->contributions.erase(p->contributions.begin());
-        }
+        credit(rx, ry, delta, e);  // P5-03a 3.5
     }
     cursor_ = last + 1;
+}
+
+void RelationsSubsystem::credit(std::int64_t a, std::int64_t b, std::int64_t units, std::int64_t event) {
+    Pair* p = a != b ? pair_of(a, b) : nullptr;
+    if (p == nullptr || !p->met) {
+        return;
+    }
+    p->memory = std::clamp(checked_add(p->memory, checked_mul(units, 1000)), checked_mul(tuning_.memory_min, 1000),
+                           checked_mul(tuning_.memory_max, 1000));
+    if (units == 0) {
+        return;  // reading: a contribution of no sign is kept by neither list
+    }
+    std::vector<std::int64_t>& list = units > 0 ? p->warmer : p->colder;
+    list.push_back(event);
+    if (list.size() > MAX_CONTRIBUTIONS) {
+        list.erase(list.begin());
+    }
+}
+
+// P5-03a 3.3, a monster: raid or overrun e of monster m on a realm of race r.
+void RelationsSubsystem::monster_foe(const StepContext& ctx, std::int64_t e) {
+    const std::int64_t m = ctx.event_participant(e, "monster");
+    const std::int64_t r = race_of_civ(ctx.state(), ctx.event_participant(e, "civilization"));
+    if (m == 0 || r == 0) {
+        return;
+    }
+    const std::int64_t y = ctx.year();
+    for (const std::int64_t r2 : race_ids_) {  // ascending
+        if (r2 == r) {
+            continue;
+        }
+        const auto seen = monster_foes_.find({m, r2});
+        if (seen == monster_foes_.end() || y - seen->second.year >= tuning_.foe_years || !met(r, r2)) {
+            continue;
+        }
+        const auto key = std::make_tuple(std::min(r, r2), std::max(r, r2), m);
+        if (monster_credited_.count(key) != 0) {
+            continue;
+        }
+        credit(r, r2, tuning_.foe_monster_memory, e);
+        monster_credited_.insert(key);
+    }
+    monster_foes_[{m, r}] = Seen{ctx.event_year(e), e};
+}
+
+// P5-03a 3.3, in war; and the strife of 3.2: which pairs an open war joins.
+void RelationsSubsystem::war_foes(const StepContext& ctx) {
+    const State& state = ctx.state();
+    const std::int64_t y = ctx.year();
+    std::fill(at_war_pairs_.begin(), at_war_pairs_.end(), std::uint8_t{0});
+    for (const auto& [key, rel] : state.relations()) {  // ascending key
+        if (key.kind != "war" || key.a_type != CIV_TYPE || key.b_type != CIV_TYPE) {
+            continue;
+        }
+        const std::int64_t ra = race_of_civ(state, key.a_id);
+        const std::int64_t rb = race_of_civ(state, key.b_id);
+        if (ra == 0 || rb == 0 || ra == rb) {
+            continue;
+        }
+        civ_foes_[{key.a_id, rb}] = Seen{y, rel.event};
+        civ_foes_[{key.b_id, ra}] = Seen{y, rel.event};
+        if (Pair* p = pair_of(ra, rb)) {
+            at_war_pairs_[static_cast<std::size_t>(p - pairs_.data())] = 1;
+        }
+    }
+    // For each z ascending, its entries (ascending race).
+    auto it = civ_foes_.begin();
+    while (it != civ_foes_.end()) {
+        const std::int64_t z = it->first.first;
+        auto end = it;
+        while (end != civ_foes_.end() && end->first.first == z) {
+            ++end;
+        }
+        for (auto i = it; i != end; ++i) {
+            for (auto j = std::next(i); j != end; ++j) {
+                const std::int64_t r1 = i->first.second;
+                const std::int64_t r2 = j->first.second;
+                const Seen& s1 = i->second;
+                const Seen& s2 = j->second;
+                if (y - s1.year >= tuning_.foe_years || y - s2.year >= tuning_.foe_years ||
+                    (s1.year != y && s2.year != y) || !met(r1, r2)) {
+                    continue;
+                }
+                const auto credited = std::make_tuple(r1, r2, z);
+                if (civ_credited_.count(credited) != 0) {
+                    continue;
+                }
+                credit(r1, r2, tuning_.foe_war_memory, std::max(s1.event, s2.event));
+                civ_credited_.insert(credited);
+            }
+        }
+        it = end;
+    }
+}
+
+// P5-03a 4.1: breadth-first on every border, neighbours ascending.
+const std::vector<std::int64_t>& RelationsSubsystem::border_hops(const GeoView& geo, std::int64_t region) {
+    const std::size_t n = geo.regions().size();
+    if (border_hops_.size() != n) {
+        border_hops_.assign(n, {});
+    }
+    std::vector<std::int64_t>& out = border_hops_[static_cast<std::size_t>(region - 1)];
+    if (!out.empty()) {
+        return out;
+    }
+    out.assign(n, -1);
+    std::vector<std::int64_t> queue{region};
+    out[static_cast<std::size_t>(region - 1)] = 0;
+    for (std::size_t head = 0; head < queue.size(); ++head) {
+        const std::int64_t r = queue[head];
+        const std::int64_t h = out[static_cast<std::size_t>(r - 1)];
+        for (const GeoView::Neighbour& nb : geo.region(r).neighbours) {
+            std::int64_t& d = out[static_cast<std::size_t>(nb.region - 1)];
+            if (d < 0) {
+                d = h + 1;
+                queue.push_back(nb.region);
+            }
+        }
+    }
+    return out;
+}
+
+// The regions within contact_hops of `region` on the border graph (itself
+// included), ascending; cached per region.
+const std::vector<std::int64_t>& RelationsSubsystem::within_contact(const GeoView& geo, std::int64_t region) {
+    const std::size_t n = geo.regions().size();
+    if (within_.size() != n) {
+        within_.assign(n, {});
+    }
+    std::vector<std::int64_t>& out = within_[static_cast<std::size_t>(region - 1)];
+    if (!out.empty()) {
+        return out;
+    }
+    std::vector<std::pair<std::int64_t, std::int64_t>> queue{{region, 0}};  // (region, hops)
+    std::vector<std::int64_t> seen{region};
+    for (std::size_t head = 0; head < queue.size(); ++head) {
+        const auto [r, h] = queue[head];
+        if (h >= tuning_.contact_hops) {
+            continue;
+        }
+        for (const GeoView::Neighbour& nb : geo.region(r).neighbours) {
+            if (std::find(seen.begin(), seen.end(), nb.region) == seen.end()) {
+                seen.push_back(nb.region);
+                queue.emplace_back(nb.region, h + 1);
+            }
+        }
+    }
+    std::stable_sort(seen.begin(), seen.end());
+    out = std::move(seen);
+    return out;
+}
+
+std::size_t RelationsSubsystem::race_index(std::int64_t race) const {
+    return static_cast<std::size_t>(std::lower_bound(race_ids_.begin(), race_ids_.end(), race) - race_ids_.begin());
+}
+
+// P5-03a 3.2: per region the races present (P3-06 5.1's presence of every
+// alive visible civilization).
+std::vector<std::uint64_t> RelationsSubsystem::race_presence(const StepContext& ctx) const {
+    const State& state = ctx.state();
+    std::vector<std::uint64_t> bits(ctx.geo().regions().size(), 0);
+    const auto present = [&](std::int64_t civ) {
+        if (civ < 1 || civ > civ_count(state)) {
+            return false;
+        }
+        const Civilization& c = state.civ(civ);
+        return !c.ended_year && ctx.visible(c);
+    };
+    const auto mark = [&](std::int64_t region, std::int64_t civ) {
+        if (region >= 1 && static_cast<std::size_t>(region) <= bits.size() && present(civ)) {
+            bits[static_cast<std::size_t>(region - 1)] |= std::uint64_t{1} << race_index(state.civ(civ).race);
+        }
+    };
+    const auto nr = static_cast<std::int64_t>(bits.size());
+    for (std::int64_t r = 1; r <= nr; ++r) {
+        mark(r, state.region(r).owner);
+    }
+    const std::int64_t ns = settlement_count(state);
+    for (std::int64_t id = 1; id <= ns; ++id) {
+        const Settlement& s = state.settlement(id);
+        if (standing_settlement(s) && ctx.visible(s)) {
+            mark(s.region, s.owner_civ);
+        }
+    }
+    return bits;
+}
+
+// P5-03a 3.2: long peace between neighbours.
+void RelationsSubsystem::peace(const StepContext& ctx) {
+    if (tuning_.peace_memory_per_century == 0 || tuning_.peace_memory_max == 0) {
+        // No gain is possible; the strife years are still kept.
+        for (std::size_t i = 0; i < pairs_.size(); ++i) {
+            if (pairs_[i].met && at_war_pairs_[i] != 0) {
+                pairs_[i].strife_year = ctx.year();
+            }
+        }
+        return;
+    }
+    const std::int64_t y = ctx.year();
+    const std::vector<std::uint64_t> bits = race_presence(ctx);
+    // near[k]: the races present within contact_hops of a region of race k.
+    std::vector<std::uint64_t> near(race_ids_.size(), 0);
+    const auto nr = static_cast<std::int64_t>(bits.size());
+    for (std::int64_t r = 1; r <= nr; ++r) {
+        const std::uint64_t here = bits[static_cast<std::size_t>(r - 1)];
+        if (here == 0) {
+            continue;
+        }
+        std::uint64_t around = 0;
+        for (const std::int64_t t : within_contact(ctx.geo(), r)) {
+            around |= bits[static_cast<std::size_t>(t - 1)];
+        }
+        for (std::size_t k = 0; k < near.size(); ++k) {
+            if ((here >> k) & 1U) {
+                near[k] |= around;
+            }
+        }
+    }
+    const std::int64_t g = floor_div(checked_mul(checked_mul(ctx.years(), tuning_.peace_memory_per_century), 1000), 100);
+    const std::int64_t cap = checked_mul(tuning_.peace_memory_max, 1000);
+    for (std::size_t i = 0; i < pairs_.size(); ++i) {
+        Pair& p = pairs_[i];
+        if (!p.met) {
+            continue;
+        }
+        if (at_war_pairs_[i] != 0) {
+            p.strife_year = y;
+            continue;
+        }
+        const bool contact = ((near[race_index(p.a)] >> race_index(p.b)) & 1U) != 0;
+        if (!contact || y - p.strife_year < tuning_.peace_years || p.memory >= cap) {
+            continue;
+        }
+        p.memory = std::min(cap, checked_add(p.memory, g));
+    }
 }
 
 void RelationsSubsystem::decay(std::int64_t years) {
@@ -954,9 +1258,13 @@ void RelationsSubsystem::turns(StepContext& ctx) {
         if (ctx.step() == Step::q4 && ctx.quiet_events_left(0) <= 0) {
             continue;  // it waits
         }
-        std::vector<std::int64_t> causes = p.contributions;
+        // P5-03a 3.5: a warmer turn cites the warmer contributions (else the
+        // meeting), a colder one the colder (else the last turn, else the
+        // meeting).
+        const bool warmer = static_cast<std::int64_t>(next) > static_cast<std::int64_t>(p.band);
+        std::vector<std::int64_t> causes = warmer ? p.warmer : p.colder;
         if (causes.empty()) {
-            causes = {p.turn_event != 0 ? p.turn_event : p.met_event};
+            causes = {warmer ? p.met_event : (p.turn_event != 0 ? p.turn_event : p.met_event)};
         }
         EventSpec ev = point_event(ctx, "disposition_turned", 0, 0);
         ev.participants = {Participant{"race_a", EntityType::race, p.a}, Participant{"race_b", EntityType::race, p.b}};
@@ -970,7 +1278,8 @@ void RelationsSubsystem::turns(StepContext& ctx) {
         if (next == Band::hatred) {
             w.hatred_event = at;
         }
-        w.contributions.clear();
+        w.warmer.clear();
+        w.colder.clear();
         write_pair_row(w, ctx.year());
     }
 }
@@ -999,55 +1308,96 @@ std::vector<std::int64_t> RelationsSubsystem::presence(const StepContext& ctx, s
 }
 
 void RelationsSubsystem::meetings(StepContext& ctx) {
-    if (tuning_.meet_hops < 0) {
+    if (tuning_.meet_hops < 0 && tuning_.meet_sealed_hops < 0) {
         return;
     }
     const State& state = ctx.state();
     const std::int64_t nc = civ_count(state);
+    using Key = std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t, std::int64_t>;  // (h, Rx, Ry, x, y)
+    // The presence of each alive visible civilization, once per step (6.2.4).
+    std::vector<std::vector<std::int64_t>> presences(static_cast<std::size_t>(nc) + 1);
+    bool presences_known = false;
     for (std::size_t i = 0; i < pairs_.size(); ++i) {
         if (pairs_[i].met) {
             continue;
         }
+        if (!presences_known) {
+            for (std::int64_t c = 1; c <= nc; ++c) {
+                const Civilization& civ = state.civ(c);
+                if (!civ.ended_year && ctx.visible(civ)) {
+                    presences[static_cast<std::size_t>(c)] = presence(ctx, c);
+                }
+            }
+            presences_known = true;
+        }
         const std::int64_t a = pairs_[i].a;
         const std::int64_t b = pairs_[i].b;
-        std::vector<std::pair<std::int64_t, std::vector<std::int64_t>>> xs, ys;  // (civ, presence)
+        std::vector<std::int64_t> xs, ys;  // civilizations of race a and b
         for (std::int64_t c = 1; c <= nc; ++c) {
             const Civilization& civ = state.civ(c);
             if (civ.ended_year || !ctx.visible(civ) || (civ.race != a && civ.race != b)) {
                 continue;
             }
-            (civ.race == a ? xs : ys).emplace_back(c, presence(ctx, c));
+            (civ.race == a ? xs : ys).push_back(c);
         }
         if (xs.empty() || ys.empty()) {
             continue;
         }
-        bool found = false;
-        std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t, std::int64_t> best{};
-        for (const auto& [x, px] : xs) {
-            for (const std::int64_t rx : px) {
-                const std::vector<std::int64_t>& hops = peoples_.view().hops(rx);
-                for (const auto& [y, py] : ys) {
-                    for (const std::int64_t ry : py) {
-                        const std::int64_t h = hops[static_cast<std::size_t>(ry - 1)];
-                        if (h < 0) {
-                            continue;
-                        }
-                        const auto key = std::make_tuple(h, rx, ry, x, y);
-                        if (!found || key < best) {
-                            best = key;
-                            found = true;
+        // The smallest key on a graph given by its hops lists.
+        const auto smallest = [&](const auto& hops_of) -> std::optional<Key> {
+            std::optional<Key> best;
+            for (const std::int64_t x : xs) {
+                for (const std::int64_t rx : presences[static_cast<std::size_t>(x)]) {
+                    const std::vector<std::int64_t>& hops = hops_of(rx);
+                    for (const std::int64_t y : ys) {
+                        for (const std::int64_t ry : presences[static_cast<std::size_t>(y)]) {
+                            const std::int64_t h = hops[static_cast<std::size_t>(ry - 1)];
+                            if (h < 0) {
+                                continue;
+                            }
+                            const Key key{h, rx, ry, x, y};
+                            if (!best || key < *best) {
+                                best = key;
+                            }
                         }
                     }
                 }
             }
+            return best;
+        };
+        std::optional<Key> found;
+        bool sealed = false;
+        if (tuning_.meet_hops >= 0) {
+            const std::optional<Key> open =
+                smallest([this](std::int64_t r) -> const std::vector<std::int64_t>& { return peoples_.view().hops(r); });
+            if (open && std::get<0>(*open) <= tuning_.meet_hops) {
+                found = open;
+            }
         }
-        if (!found || std::get<0>(best) > tuning_.meet_hops) {
-            continue;
+        if (!found) {
+            // P5-03a 4.2: meeting by word across closed borders.
+            std::optional<Key> word_key;
+            if (tuning_.meet_sealed_hops >= 0) {
+                word_key = smallest(
+                    [this, &ctx](std::int64_t r) -> const std::vector<std::int64_t>& { return border_hops(ctx.geo(), r); });
+            }
+            if (!word_key || std::get<0>(*word_key) > tuning_.meet_sealed_hops) {
+                pairs_[i].word_since = 0;
+                continue;
+            }
+            if (pairs_[i].word_since == 0) {
+                pairs_[i].word_since = ctx.year();
+            }
+            if (ctx.year() - pairs_[i].word_since < tuning_.meet_sealed_years) {
+                continue;
+            }
+            found = word_key;
+            sealed = true;
         }
         if (ctx.step() == Step::q4 && ctx.quiet_events_left(0) <= 0) {
             continue;  // it waits
         }
-        const auto [h, rx, ry, x, y] = best;
+        const auto [h, rx, ry, x, y] = *found;
         (void)h;
         const Civilization& cx = state.civ(x);
         const Civilization& cy = state.civ(y);
@@ -1057,7 +1407,7 @@ void RelationsSubsystem::meetings(StepContext& ctx) {
         const Band b0 = plain_band(pairs_[i].base);
         EventSpec ev = point_event(ctx, "peoples_met", region, 0);
         ev.participants = {Participant{"race_a", EntityType::race, a}, Participant{"race_b", EntityType::race, b}};
-        ev.values = {pairs_[i].base, static_cast<std::int64_t>(b0)};
+        ev.values = {pairs_[i].base, static_cast<std::int64_t>(b0), sealed ? 1 : 0};
         ev.causes = causes_of({cause});
         const std::int64_t at = ctx.append(ev);
         Pair& w = pairs_[i];
@@ -1066,6 +1416,9 @@ void RelationsSubsystem::meetings(StepContext& ctx) {
         w.met_event = at;
         w.memory = 0;
         w.band = b0;
+        w.strife_year = ctx.year();  // P5-03a 3.2
+        w.warmer.clear();
+        w.colder.clear();
         write_pair_row(w, ctx.year());
     }
 }

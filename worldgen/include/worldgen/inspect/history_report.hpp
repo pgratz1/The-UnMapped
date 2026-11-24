@@ -32,8 +32,11 @@ inline constexpr std::string_view HISTORY_REPORT_HEADER_V3 = "# worldgen history
 // First line of format v4 (P5-02 12.1); no longer written from generator
 // 0.24.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V4 = "# worldgen history v4";
-// First line of format v5 (P5-03 17.1), the one written.
+// First line of format v5 (P5-03 17.1); no longer written from generator
+// 0.25.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V5 = "# worldgen history v5";
+// First line of format v6 (P5-03a 9.1), the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V6 = "# worldgen history v6";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 
