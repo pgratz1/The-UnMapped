@@ -239,7 +239,7 @@ void ViewerScreen::update_browser_controls() {
         if (!event_list_->is_selected(static_cast<int32_t>(row))) {
             event_list_->select(static_cast<int32_t>(row));
         }
-        event_list_->ensure_current_is_visible();
+        event_list_->call_deferred("ensure_current_is_visible");
     } else {
         event_list_->deselect_all();
     }
@@ -262,7 +262,8 @@ void ViewerScreen::on_event_list_changed() {
         event_list_->set_item_tooltip(item, rows[i]);
     }
     update_browser_controls();
-    scroll_event_list();
+    // After layout: a list rebuilt just now has no item positions yet.
+    callable_mp(this, &ViewerScreen::scroll_event_list).call_deferred();
     last_list_rebuild_nsec_ = now_nsec() - start;
     year_steps_.list = last_list_rebuild_nsec_;
 }
@@ -325,7 +326,7 @@ void ViewerScreen::add_link(const godot::String& target, const godot::String& te
     // Only the targets the model follows are links (5.2); the others (ra, g,
     // m, si, f, fa) are plain text.
     if (model_->can_follow_link(target)) {
-        browser_detail_->push_meta(target, godot::RichTextLabel::META_UNDERLINE_ON_HOVER, target);
+        browser_detail_->push_meta(target, godot::RichTextLabel::META_UNDERLINE_ALWAYS, target);
         browser_detail_->add_text(text);
         browser_detail_->pop();
     } else {

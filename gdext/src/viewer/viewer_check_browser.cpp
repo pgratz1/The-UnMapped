@@ -934,6 +934,23 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
                           list_text(settlements);
             }
         }
+        {
+            // The mask: dimmed exactly where the region layer is not a held region.
+            const std::vector<uint8_t>& mask = model->highlight_mask();
+            const godot::PackedInt64Array held = model->get_highlight()["regions"];
+            int64_t wrong = 0;
+            int64_t dimmed = 0;
+            for (std::size_t i = 0; i < mask.size(); ++i) {
+                const int64_t x = static_cast<int64_t>(i % model->highlight_mask_width());
+                const int64_t y = static_cast<int64_t>(i / model->highlight_mask_width());
+                const bool keep = held.has(model->get_region_at(x, y));
+                dimmed += mask[i] != 0 ? 1 : 0;
+                wrong += (mask[i] != 0) == keep ? 1 : 0;
+            }
+            expect(!mask.empty() && wrong == 0 && dimmed > 0 && screen.map_view()->has_mask(),
+                   "B9 the dimming mask covers the " + num(dimmed) + " cells outside the held regions (" + num(wrong) +
+                       " wrong), and the map view has it");
+        }
         expect(problem.empty(), "B9 c" + num(followed_civ) + " at the marker years: the regions it holds and its "
                                 "standing settlements, framed on the map" +
                                     (problem.empty() ? godot::String() : ": " + to_godot(problem)));
