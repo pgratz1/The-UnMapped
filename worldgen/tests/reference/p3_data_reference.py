@@ -2527,6 +2527,8 @@ FILTER_WORDS_024 = ("bird",)
 P5_03_BASE_COMMIT = "87fbda9"
 # The commit whose game/data holds the 0.24.0 files (origin/p5/03a-spec, main at 0.24.0 plus the spec).
 P5_03A_BASE_COMMIT = "fdf54cf"
+# The commit whose game/data and goldens hold the 0.25.0 files (p5/04-tests base: P5-03a integrated plus the spec).
+P5_04_BASE_COMMIT = "1eda9b8"
 
 
 def phrase_ok(s):
@@ -2923,11 +2925,301 @@ def check_spec_025(c):
          dict(tomllib.loads(HISTORY_FILES_024["conflict.toml"])["history"]["conflict"], **CONFLICT_CHANGED_025))
 
 
+# ---------------------------------------------------------------------------
+# The 0.26.0 listings (P5-04, docs/specs/p5-04-alliances-trade.md r2: 4.1, 4.2, 4.3, 8.3, 11.1), derived from the
+# 0.25.0 ones by the edits the spec states, at the spec's starting values (calibration, 15.2, may move them: then
+# ALLIANCES_RANGES_026, RACE_FIELDS_026, CONFLICT_NEW_RANGES_026 and REPORT_ENTRIES_026 are the one place to edit,
+# then `golden`).
+# ---------------------------------------------------------------------------
+# 4.1: three race fields appended after stances, all required.
+RACE_026 = RACE_024 + (("origin_allies", ARR(STR)), ("ally_join_permille", INT), ("mining_permille", INT))
+assert RACE_024[-1][0] == "stances"
+# race -> (origin_allies, ally_join_permille, mining_permille)
+RACE_FIELDS_026 = {"elf": (["faerie"], 700, 0), "faerie": (["elf"], 150, 0), "dwarf": ([], 800, 1000),
+                   "goblin": ([], 400, 0), "human": ([], 600, 0), "orc": ([], 600, 0)}
+
+
+def _race_026(n, text):
+    lines = text.rstrip("\n").split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("stances = ")]
+    assert len(i) == 1
+    o, j, m = RACE_FIELDS_026[n[:-5]]
+    lines[i[0] + 1:i[0] + 1] = ["origin_allies = %s" % _toml_value(o), "ally_join_permille = %d" % j,
+                                "mining_permille = %d" % m]
+    return "\n".join(lines) + "\n"
+
+
+RACE_FILES_026 = {n: _race_026(n, t) for n, t in RACE_FILES_024.items()}
+# 4.2: history.alliances, every field required, in this order (name, lo, hi, start value); mine_forms apart.
+ALLIANCES_RANGES_026 = (
+    ("ally_hops", -1, 8, 3), ("ally_min_disposition", -2000, 2000, -300), ("ally_full_disposition", -2000, 2000, 300),
+    ("ally_friend_disposition", -2000, 2000, 150), ("ally_break_disposition", -2000, 2000, -350),
+    ("allies_max", 0, 16, 3), ("ally_after_war_years", 0, 100000, 100), ("foe_years", 1, 100000, 100),
+    ("fear_share", 0, 1000, 300), ("form_foe_permille", 0, 1000, 40), ("form_fear_permille", 0, 1000, 30),
+    ("form_trade_permille", 0, 1000, 20), ("form_friend_permille", 0, 1000, 10), ("form_max_permille", 0, 1000, 60),
+    ("bloc_share_max", 0, 1000, 500), ("bloc_lapse_share", 0, 1001, 700), ("term_years", 1, 100000, 150),
+    ("refusals_to_break", 1, 100, 2), ("defend_permille", 0, 1000, 700), ("attack_permille", 0, 1000, 200),
+    ("hostility_full", 1, 2000, 500), ("ally_wars_max", 1, 16, 2), ("ally_memory", 0, 1000, 30),
+    ("renew_memory", 0, 1000, 15), ("join_memory", 0, 1000, 30), ("refuse_memory", 0, 1000, 40),
+    ("betray_memory", 0, 1000, 150), ("ally_war_memory", 0, 1000, 75), ("trade_hops", -1, 8, 3),
+    ("trade_min_disposition", -2000, 2000, -250), ("trade_break_margin", 0, 2000, 100),
+    ("trade_after_war_years", 0, 100000, 50), ("trade_permille", 0, 1000, 15), ("trade_max", 0, 16, 4),
+    ("trade_credit_years", 1, 100000, 50), ("trade_memory", 0, 1000, 20), ("trade_ally_years", 0, 100000, 100),
+    ("spoils_plunder_permille", 0, 1000, 250), ("spoils_floor_permille", 0, 1000, 100),
+    ("spoils_cap_permille", 0, 1000, 400), ("spoils_grant_permille", 0, 1000, 450),
+    ("spoils_warmth_permille", 0, 1000, 300), ("spoils_part_permille", 0, 1000, 500),
+    ("spoils_need_permille", 0, 1000, 400), ("spoils_grant_min", 0, 1000, 100), ("spoils_grant_max", 0, 1000, 950),
+    ("share_memory", 0, 1000, 25), ("withheld_memory", 0, 1000, 50), ("withheld_grudge", 0, 2000, 120),
+    ("withheld_to_break", 1, 100, 2), ("mine_permille", 0, 1000, 20), ("mine_ore_min", 1, 100000, 1),
+    ("mine_settlement_min", 0, 1000000, 200), ("arms_trade_permille", 0, 4000, 2000))
+MINE_FORMS_026 = ["The Mines of {settlement}", "The Delvings of {settlement}"]
+ALLIANCES_026 = tuple((n, INT) for n, _, _, _ in ALLIANCES_RANGES_026) + (("mine_forms", ARR(STR)),)
+ALLIANCES_TUNING_026 = dict({n: v for n, _, _, v in ALLIANCES_RANGES_026}, mine_forms=list(MINE_FORMS_026))
+assert len(ALLIANCES_026) == 55
+# 4.2: the zero fixture tuning of I0 (7.14): no reach, no trade reach, no mine; every race's origin_allies empty.
+ALLIANCES_ZERO_026 = dict(ALLIANCES_TUNING_026, ally_hops=-1, trade_hops=-1, mine_permille=0)
+# 4.3: history.conflict, seven fields appended after capital_captured_salience.
+CONFLICT_NEW_RANGES_026 = (
+    ("allied_strain_permille", 0, 1000, 250), ("ally_deterrence_permille", 0, 1000, 300),
+    ("ally_effort_permille", 0, 1000, 1000), ("trade_strength_permille", 0, 1000, 50),
+    ("trade_strength_max", 0, 16, 3), ("forge_strength_permille", 0, 1000, 50),
+    ("arms_strength_permille", 0, 1000, 100))
+# 18.3: the alliances-small fixture (the conflict stress data with these alliance edits; "dwarves present" is the
+# fixture's race list).
+ALLIANCES_SMALL_026 = dict(form_foe_permille=1000, form_fear_permille=1000, form_trade_permille=1000,
+                           form_friend_permille=1000, form_max_permille=1000, defend_permille=1000,
+                           refusals_to_break=1, term_years=10, trade_permille=1000, spoils_grant_permille=500,
+                           spoils_grant_min=300, spoils_grant_max=700, withheld_to_break=1, mine_permille=1000,
+                           mine_settlement_min=0)
+CONFLICT_SMALL_026 = dict(allied_strain_permille=1000)
+# 8.3: the report entries of kinds 63 to 78 after people_expelled, in kind order (key, salience, template).
+REPORT_ENTRIES_026 = (
+    ("alliance_formed", 50,
+     "{@causes:trade_opened=long years of trade,war_declared=the outbreak of war,disposition_turned=the friendship of "
+     "their peoples,civ_conquered=the fall of a realm,settlement_captured=the fall of a neighbour,sacked=the sack of a "
+     "neighbour,region_ceded=the loss of a neighbour's land,settlements_ceded=the loss of a neighbour's land|After |, }"
+     "{ally_a} and {ally_b} {basis?swore the alliance their peoples had kept since the gods made them|swore to stand "
+     "together|made common cause|swore friendship and alliance}{foe:against}."),
+    ("alliance_renewed", 10, "{ally_a} and {ally_b} renewed their alliance{foe:against}."),
+    ("alliance_lapsed", 25, "The alliance of {ally_a} and {ally_b} lapsed{reason?, for together they had grown too "
+                            "great|, its cause long past}."),
+    ("alliance_broken", 40, "{@causes:ally_refused=a call to arms refused|After |, }the alliance of {ally_a} and "
+                            "{ally_b} was broken{reason?, their friendship having cooled|}."),
+    ("alliance_betrayed", 65, "{betrayer} broke faith and made war on {betrayed}, an ally."),
+    ("ally_joined_war", 40, "{ally} {side?joined the war of|came to the defence of} {partner} against {enemy}."),
+    ("ally_refused", 30, "{ally} would not take up arms for {partner} against {enemy}."),
+    ("ally_withdrew", 25, "Bled white, {ally} left the war of {partner} against {enemy}."),
+    ("allied_battle", 35, "{winner}{winner_ally:with} defeated {loser}{loser_ally:with} {pass?in|at the pass into|at the "
+                          "pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of "
+                          "the victors| and one of the victors fell| and # of the victors fell}."),
+    ("trade_opened", 20, "{@causes:peace=the peace,war_won=the war,truce=the truce,peoples_met=the first meeting of "
+                         "their peoples|After |, }{partner_a} and {partner_b} opened trade."),
+    ("trade_broken", 15, "{@causes:war_declared=war came,alliance_betrayed=war came|When |, }the trade between "
+                         "{partner_a} and {partner_b} {reason?ended|dwindled as their friendship cooled|was lost with "
+                         "the roads between them}."),
+    ("spoils_shared", 20, "{principal} gave {ally} its share of the spoils of {@region}."),
+    ("spoils_withheld", 35, "{principal} kept the spoils of {@region} from {ally}, its ally."),
+    ("alliance_spurned", 50, "After the spoils of {@region} were kept from it, {ally} broke its alliance with "
+                             "{principal}."),
+    ("mine_opened", 20, "{civilization} opened {site} in {@region}."),
+    ("arms_sold", 30, "{seller} sold arms forged in {site} to {buyer}."),
+)
+assert len(REPORT_ENTRIES_026) == 16
+# 11.1: the cause words of kinds 13, 16, 31, 43 and 45 gain allied_battle= with battle='s word (reading D1: placed
+# right after the battle_at_pass= entry).
+CAUSE_KINDS_026 = ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to", "region_renamed",
+                   "undead_rose")
+
+
+def _cause_026(template):
+    import re
+    m = re.search(r"battle=([^,|]*),battle_at_pass=([^,|]*)([,|])", template)
+    assert m and m.group(1) == m.group(2), template
+    return template[:m.end(2)] + ",allied_battle=" + m.group(1) + template[m.end(2):]
+
+
+def _report_026(text):
+    import re
+    for k in CAUSE_KINDS_026:
+        m = re.search(r'\{ kind = "%s", salience = \d+, template = "([^"]*)" \}' % k, text)
+        assert m, k
+        text = text[:m.start(1)] + _cause_026(m.group(1)) + text[m.end(1):]
+    assert text.endswith("]\n")
+    return text[:-2] + "".join('  { kind = "%s", salience = %d, template = "%s" },\n' % e
+                               for e in REPORT_ENTRIES_026) + "]\n"
+
+
+def _renaming_026(text):
+    return _edit(text, 'kinds = ["battle", "battle_at_pass"]\n', 'kinds = ["battle", "battle_at_pass", "allied_battle"]\n')
+
+
+def _conflict_026(text):
+    return _edit(text, "\ncapital_captured_salience = 80\n",
+                 "\ncapital_captured_salience = 80\n" + "".join("%s = %d\n" % (n, v)
+                                                                 for n, _, _, v in CONFLICT_NEW_RANGES_026))
+
+
+def alliances_file_026(t=None):
+    t = ALLIANCES_TUNING_026 if t is None else t
+    return ("# Alliances, trade, the dwarves' mines and arms (spec P5-04 4.2). Generator 0.26.0.\n"
+            "[history.alliances]\n" + "".join("%s = %s\n" % (n, _toml_value(t[n])) for n, _ in ALLIANCES_026))
+
+
+HISTORY_FILES_026 = dict(HISTORY_FILES_025, **{
+    "report.toml": _report_026(HISTORY_FILES_025["report.toml"]),
+    "renaming.toml": _renaming_026(HISTORY_FILES_025["renaming.toml"]),
+    "conflict.toml": _conflict_026(HISTORY_FILES_025["conflict.toml"]),
+    "alliances.toml": alliances_file_026()})
+SPEC_FILES_026 = dict(SPEC_FILES_025, race=RACE_FILES_026, history=HISTORY_FILES_026)
+KINDS_026 = dict(KINDS_025)
+KINDS_026["race"] = ("races", RACE_026)
+CONFLICT_026 = KINDS_025["history"][1]["conflict"] + tuple((n, INT) for n, _, _, _ in CONFLICT_NEW_RANGES_026)
+KINDS_026["history"] = ("history", dict(KINDS_025["history"][1], conflict=CONFLICT_026, alliances=ALLIANCES_026))
+
+
+def race_origin_messages(rid, r, races):
+    """race_origin_allies (4.1): the first failing entry (the loader's error path), then, with every race loaded
+    (`races`: key -> record), the relation listed by both races (reading D2: both placeholders of the last message
+    are the listed race)."""
+    seen = []
+    for i, o in enumerate(r["origin_allies"]):
+        if o not in races:
+            return ["origin_allies[%d] '%s' is not a race" % (i, o)]
+        if o == rid:
+            return ["origin_allies[%d] '%s' is the race itself" % (i, o)]
+        if o in seen:
+            return ["origin_allies[%d] '%s' is listed twice" % (i, o)]
+        seen.append(o)
+    for o in r["origin_allies"]:
+        if rid not in races[o]["origin_allies"]:
+            return ["origin_allies '%s' is not returned by race '%s'" % (o, o)]
+    return []
+
+
+def race_origin_error(rid, r, races):
+    m = race_origin_messages(rid, r, races)
+    return "check 'race_origin_allies' failed for 'race.%s': %s" % (rid, m[0]) if m else None
+
+
+def alliances_check_messages(t):
+    """The named checks of 4.2 and 6.8 in the order the spec lists them: [(check, message)]; within a check the
+    first failing condition only."""
+    out = []
+    if t["spoils_floor_permille"] > t["spoils_cap_permille"]:
+        out.append(("alliances_spoils", "spoils_floor_permille %d is above spoils_cap_permille %d"
+                    % (t["spoils_floor_permille"], t["spoils_cap_permille"])))
+    elif t["spoils_grant_min"] > t["spoils_grant_max"]:
+        out.append(("alliances_spoils", "spoils_grant_min %d is above spoils_grant_max %d"
+                    % (t["spoils_grant_min"], t["spoils_grant_max"])))
+    for i, f in enumerate(t["mine_forms"]):
+        import re
+        if f.count("{settlement}") != 1 or re.sub(r"\{settlement\}", "", f).find("{") >= 0:
+            out.append(("alliances_mine_forms", "mine_forms[%d] '%s' must contain {settlement} once" % (i, f)))
+            break
+    if not t["ally_min_disposition"] < t["ally_full_disposition"]:
+        out.append(("alliances_dispositions", "ally_min_disposition %d is not below ally_full_disposition %d"
+                    % (t["ally_min_disposition"], t["ally_full_disposition"])))
+    elif not t["ally_break_disposition"] < t["ally_min_disposition"]:
+        out.append(("alliances_dispositions", "ally_break_disposition %d is not below ally_min_disposition %d"
+                    % (t["ally_break_disposition"], t["ally_min_disposition"])))
+    if not t["bloc_share_max"] < t["bloc_lapse_share"]:
+        out.append(("alliances_blocs", "bloc_share_max %d is not below bloc_lapse_share %d"
+                    % (t["bloc_share_max"], t["bloc_lapse_share"])))
+    if not t["trade_min_disposition"] < t["ally_full_disposition"]:
+        out.append(("alliances_trade", "trade_min_disposition %d is not below ally_full_disposition %d"
+                    % (t["trade_min_disposition"], t["ally_full_disposition"])))
+    return out
+
+
+def check_spec_026(c):
+    """The 0.26.0 listings say what P5-04 4.1 to 4.3, 8.3 and 11.1 state."""
+    h = parsed_spec("history")
+    al = h["alliances"]
+    check_record(ALLIANCES_026, al, "history.alliances")
+    c.eq("history.alliances fields in order (4.2)", list(al), [n for n, _ in ALLIANCES_026])
+    c.eq("history.alliances start values (4.2)", al, ALLIANCES_TUNING_026)
+    for n, lo, hi, _ in ALLIANCES_RANGES_026:
+        c.ok("history.alliances.%s inside int(%d, %d)" % (n, lo, hi), lo <= al[n] <= hi)
+    c.eq("the shipped alliances pass their checks", alliances_check_messages(al), [])
+    c.eq("the zero tuning passes", alliances_check_messages(ALLIANCES_ZERO_026), [])
+    c.eq("the alliances-small tuning passes", alliances_check_messages(dict(al, **ALLIANCES_SMALL_026)), [])
+    for edit, want in (
+            (dict(spoils_floor_permille=401), [("alliances_spoils", "spoils_floor_permille 401 is above "
+                                                                    "spoils_cap_permille 400")]),
+            (dict(spoils_floor_permille=400), []),
+            (dict(spoils_grant_min=951), [("alliances_spoils", "spoils_grant_min 951 is above spoils_grant_max 950")]),
+            (dict(spoils_grant_min=950), []),
+            (dict(mine_forms=["The Mines"]), [("alliances_mine_forms",
+                                               "mine_forms[0] 'The Mines' must contain {settlement} once")]),
+            (dict(mine_forms=["A", "{settlement} {settlement}"]),
+             [("alliances_mine_forms", "mine_forms[0] 'A' must contain {settlement} once")]),
+            (dict(mine_forms=["{settlement} of {name}"]),
+             [("alliances_mine_forms", "mine_forms[0] '{settlement} of {name}' must contain {settlement} once")]),
+            (dict(ally_min_disposition=300), [("alliances_dispositions", "ally_min_disposition 300 is not below "
+                                                                         "ally_full_disposition 300")]),
+            (dict(ally_break_disposition=-300), [("alliances_dispositions", "ally_break_disposition -300 is not below "
+                                                                            "ally_min_disposition -300")]),
+            (dict(bloc_share_max=700), [("alliances_blocs", "bloc_share_max 700 is not below bloc_lapse_share 700")]),
+            (dict(trade_min_disposition=300), [("alliances_trade", "trade_min_disposition 300 is not below "
+                                                                   "ally_full_disposition 300")])):
+        c.eq("alliances checks on %r" % edit, alliances_check_messages(dict(al, **edit)), want)
+    races = parsed_spec("race")
+    for k, (o, j, m) in RACE_FIELDS_026.items():
+        c.eq("race %s fields (4.1)" % k, (races[k]["origin_allies"], races[k]["ally_join_permille"],
+                                          races[k]["mining_permille"]), (o, j, m))
+        c.eq("race %s: the three fields after stances" % k, list(races[k])[-4:],
+             ["stances", "origin_allies", "ally_join_permille", "mining_permille"])
+        c.eq("race_origin_allies passes on %s" % k, race_origin_messages(k, races[k], races), [])
+    el = races["elf"]
+    for edit, want in ((["dragon"], "origin_allies[0] 'dragon' is not a race"),
+                       (["elf"], "origin_allies[0] 'elf' is the race itself"),
+                       (["faerie", "faerie"], "origin_allies[1] 'faerie' is listed twice"),
+                       (["faerie", "dwarf"], "origin_allies 'dwarf' is not returned by race 'dwarf'")):
+        c.eq("race_origin_allies on %r" % edit, race_origin_error("elf", dict(el, origin_allies=edit), races),
+             "check 'race_origin_allies' failed for 'race.elf': " + want)
+    co = h["conflict"]
+    old = tomllib.loads(HISTORY_FILES_025["conflict.toml"])["history"]["conflict"]
+    c.eq("history.conflict: 0.25.0's fields then seven (4.3)", list(co),
+         list(old) + [n for n, _, _, _ in CONFLICT_NEW_RANGES_026])
+    c.eq("history.conflict values", co, dict(old, **{n: v for n, _, _, v in CONFLICT_NEW_RANGES_026}))
+    evl = h["report"]["events"]
+    c.eq("report lists 78 kinds (0.26.0)", len(evl), 78)
+    c.eq("entries 63 to 78 (8.3)", [(e["kind"], e["salience"], e["template"]) for e in evl[62:]],
+         [tuple(e) for e in REPORT_ENTRIES_026])
+    old = tomllib.loads(HISTORY_FILES_025["report.toml"])["history"]["report"]["events"]
+    for a, b in zip(evl[:62], old):
+        want = dict(b, template=_cause_026(b["template"])) if b["kind"] in CAUSE_KINDS_026 else b
+        c.eq("report entry %s (11.1)" % b["kind"], a, want)
+    for k in CAUSE_KINDS_026:
+        t = [e for e in evl if e["kind"] == k][0]["template"]
+        c.ok("%s names allied_battle (11.1)" % k, "allied_battle=" in t)
+    rn = h["renaming"]
+    sl = [r for r in rn["rules"] if r["key"] == "slaughter"][0]
+    c.eq("renaming slaughter kinds (11.1)", sl["kinds"], ["battle", "battle_at_pass", "allied_battle"])
+    for k in ("peoples", "chronology", "engine", "monsters", "relations"):
+        c.eq("history.%s as at 0.25.0" % k, h[k], tomllib.loads(HISTORY_FILES_025[k + ".toml"])["history"][k])
+    c.eq("history ids (0.26.0)", sorted(h), ["alliances", "chronology", "conflict", "engine", "monsters", "peoples",
+                                             "relations", "renaming", "report"])
+
+
+def pre_026(path, kind):
+    """A race or history directory older than 0.26.0 (P5-04): no origin_allies in a race file; no alliances.toml."""
+    if kind == "history":
+        return not os.path.exists(os.path.join(path, "alliances.toml"))
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                if "origin_allies" not in f.read():
+                    return True
+    return False
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
+            "0.26.0")
 
 
 def at_least(v):
@@ -2937,8 +3229,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0") else ("culture", "history", "race")
-    if v == "0.25.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0") else ("culture", "history", "race")
+    if v == "0.26.0":
+        KINDS, SPEC_FILES = KINDS_026, SPEC_FILES_026
+    elif v == "0.25.0":
         KINDS, SPEC_FILES = KINDS_025, SPEC_FILES_025
     elif v == "0.24.0":
         KINDS, SPEC_FILES = KINDS_024, SPEC_FILES_024
@@ -2963,7 +3257,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.25.0")
+use_version("0.26.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -3050,6 +3344,8 @@ def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
     if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2); phrases at 0.24.0 (P5-03 9.5, 13)
         return "0.23.0" if pre_024(path, kind) else "0.24.0"
+    if kind in ("race", "history") and not pre_024(path, kind) and not pre_026(path, kind):
+        return "0.26.0"
     if kind == "history" and not pre_024(path, kind) and not pre_025(path):
         return "0.25.0"
     if kind in ("race", "history") and not pre_024(path, kind):
@@ -3083,6 +3379,8 @@ def same_version(kind, a, b):
         a, b = ("0.20.0" if x in ("0.21.0", "0.22.0", "0.23.0") else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.24.0
         a, b = ("0.23.0" if x == "0.24.0" else x for x in (a, b))
+    if kind in ("culture", "beast", "monster"):   # P5-04 changes the race and history files only
+        a, b = ("0.25.0" if x == "0.26.0" else x for x in (a, b))
     if kind in ("race", "culture", "beast", "monster"):   # P5-03a changes the history files only
         a, b = (("0.23.0" if kind == "culture" else "0.24.0") if x == "0.25.0" else x for x in (a, b))
     return a == b
@@ -3360,6 +3658,14 @@ def fx_raw(v):
 
 def check_spec_invariants(c):
     """At 0.24.0: every check of the 0.23.0 listings on them, then check_spec_024 on the 0.24.0 listings."""
+    if at_least("0.26.0"):
+        use_version("0.25.0")
+        try:
+            check_spec_invariants(c)
+        finally:
+            use_version("0.26.0")
+        check_spec_026(c)
+        return None
     if at_least("0.25.0"):
         use_version("0.24.0")
         try:
@@ -4009,9 +4315,9 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.25.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.26.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P5_03A_BASE_COMMIT if DATA_VERSION == "0.24.0" else P5_03_BASE_COMMIT if DATA_VERSION == "0.23.0" else P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+        base = P5_04_BASE_COMMIT if DATA_VERSION == "0.25.0" else P5_03A_BASE_COMMIT if DATA_VERSION == "0.24.0" else P5_03_BASE_COMMIT if DATA_VERSION == "0.23.0" else P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
             P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout

@@ -360,6 +360,29 @@ COMPILED_024 = COMPILED_023 + KINDS_024
 VALUES_025 = {57: ("sealed",), 60: ("standing", "majority"), 62: ("standing", "years")}
 KINDS_025 = tuple(dict(k, values=list(k["values"]) + list(VALUES_025.get(k["id"], ()))) for k in KINDS_024)
 COMPILED_025 = COMPILED_023 + KINDS_025
+# P5-04 8.1 (generator 0.26.0): kinds 63 to 78 appended, every kind caused (civ = 3, site = 9; unlisted counts 1-1).
+_C2 = lambda *names: tuple((n, CIV, 1, 1) for n in names)
+KINDS_026 = (
+    kind_def(63, "alliance_formed", 1, 0, 0, _C2("ally_a", "ally_b") + (("foe", CIV, 0, 1),), ("basis",)),
+    kind_def(64, "alliance_renewed", 1, 0, 0, _C2("ally_a", "ally_b") + (("foe", CIV, 0, 1),), ("basis",)),
+    kind_def(65, "alliance_lapsed", 1, 0, 0, _C2("ally_a", "ally_b"), ("reason",)),
+    kind_def(66, "alliance_broken", 1, 0, 0, _C2("ally_a", "ally_b"), ("reason",)),
+    kind_def(67, "alliance_betrayed", 1, 0, 0, _C2("betrayer", "betrayed"), ()),
+    kind_def(68, "ally_joined_war", 1, 0, 0, _C2("ally", "partner", "enemy"), ("side",)),
+    kind_def(69, "ally_refused", 1, 0, 0, _C2("ally", "partner", "enemy"), ()),
+    kind_def(70, "ally_withdrew", 1, 0, 0, _C2("ally", "partner", "enemy"), ()),
+    kind_def(71, "allied_battle", 1, 1, 0, _C2("winner", "loser") + (("winner_ally", CIV, 0, 16),
+                                                                    ("loser_ally", CIV, 0, 16)),
+             ("winner_dead", "loser_dead", "pass")),
+    kind_def(72, "trade_opened", 1, 0, 0, _C2("partner_a", "partner_b"), ()),
+    kind_def(73, "trade_broken", 1, 0, 0, _C2("partner_a", "partner_b"), ("reason",)),
+    kind_def(74, "spoils_shared", 1, 1, 0, _C2("principal", "ally", "enemy"), ("share",)),
+    kind_def(75, "spoils_withheld", 1, 1, 0, _C2("principal", "ally", "enemy"), ("share",)),
+    kind_def(76, "alliance_spurned", 1, 1, 0, _C2("ally", "principal"), ("reason",)),
+    kind_def(77, "mine_opened", 1, 1, 1, (("civilization", CIV, 1, 1), ("site", SITE, 1, 1)), ()),
+    kind_def(78, "arms_sold", 1, 0, 0, _C2("seller", "buyer") + (("site", SITE, 1, 1),), ()),
+)
+COMPILED_026 = COMPILED_025 + KINDS_026
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -410,11 +433,16 @@ RENDER_R24 = True
 # P5-03a (generator 0.25.0):
 #   RENDER_R25      7.1 the forms `its`, `aside` and `where` of a monster role; 10.4 the five value rows.
 RENDER_R25 = True
+# P5-04 (generator 0.26.0):
+#   RENDER_R26      8.2 the forms `with` (", with " + all + ",") and `against` (" against " + all) of any role, empty
+#                   when the role has no participant; schema 11 (9.2: site kind 3).
+RENDER_R26 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
+            "0.26.0")
 
 
 def at_least(v):
@@ -430,12 +458,13 @@ def use_version(v):
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
+    global RENDER_R26
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
-                "0.24.0": COMPILED_024, "0.25.0": COMPILED_025}[v]
+                "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -445,12 +474,13 @@ def use_version(v):
     RENDER_R23 = i >= VERSIONS.index("0.23.0")
     RENDER_R24 = i >= VERSIONS.index("0.24.0")
     RENDER_R25 = i >= VERSIONS.index("0.25.0")
+    RENDER_R26 = i >= VERSIONS.index("0.26.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
     COLUMNS = (COLUMNS_024 if RENDER_R24 else COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21
                else COLUMNS_021)
-    SCHEMA_VERSION = 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
+    SCHEMA_VERSION = 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
@@ -495,7 +525,7 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
+FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where", "with", "against")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
 
 
 def _is_word(w):
@@ -649,7 +679,8 @@ def placeholder_problem(kind, body, at):
     if ":" in body:
         role, form = body.split(":", 1)
         if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23) or (
-                form == "raid" and not RENDER_R24) or (form in MONSTER_FORMS_025 and not RENDER_R25):
+                form == "raid" and not RENDER_R24) or (form in MONSTER_FORMS_025 and not RENDER_R25) or (
+                form in ("with", "against") and not RENDER_R26):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
@@ -660,7 +691,7 @@ def placeholder_problem(kind, body, at):
             return "form 'raid' needs a monster role at byte %d" % at
         if form in MONSTER_FORMS_025 and r["type"] != MONSTER:   # P5-03a 7.1
             return "form '%s' needs a monster role at byte %d" % (form, at)
-        if form != "all" and r["min"] == 0:
+        if form not in ("all", "with", "against") and r["min"] == 0:   # P5-04 8.2: with, against as all
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
     if body in roles:
@@ -867,7 +898,16 @@ def render(view, eid, links=None):
                     out.append(fmt_value(ev["values"][val_seq[body]], dg))
                     continue
             ps = of_role(role)
-            if form == "all":
+            if form in ("with", "against"):   # P5-04 8.2: nothing when the role has no participant
+                if ps:
+                    out.append(", with " if form == "with" else " against ")
+                    for k, (t, x) in enumerate(ps):
+                        if k > 0:
+                            out.append(" and " if k == len(ps) - 1 else ", ")
+                        put_name(region_name(x, eid) if t == REGION else view["name"](t, x, "name"), t, x)
+                    if form == "with":
+                        out.append(",")
+            elif form == "all":
                 # each name judged at the offset where it is appended (8.5 r10)
                 for k, (t, x) in enumerate(ps):
                     if k > 0:
@@ -2318,6 +2358,11 @@ def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_026 = """\
+# P3-04 engine golden vectors for generator 0.26.0 (schema 11; P5-04): the stub engine (run_engine
+# with the stub configuration, which installs neither renaming, monsters, relations nor alliances) on
+# the 0.26.0 catalogue of 78 kinds (P5-04 8.1: kinds 63 to 78 appended; the forms with and against,
+# 8.2), the templates of P5-04 8.3 and 11.1, and otherwise as at 0.25.0. Spec"""
 HEADER_025 = """\
 # P3-04 engine golden vectors for generator 0.25.0 (schema 10; P5-03a): the stub engine (run_engine
 # with the stub configuration, which installs neither renaming, monsters nor relations) on the 0.25.0
@@ -2459,7 +2504,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.25.0":
+    if ENGINE_VERSION == "0.26.0":
+        head = HEADER_026 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.25.0":
         head = HEADER_025 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.24.0":
         head = HEADER_024 + "\n" + "\n".join(head.splitlines()[2:])
@@ -3112,6 +3159,143 @@ def check_render_r24(c):
     for k in ("settlement_fled", "peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed",
               "standing_changed", "people_expelled", "monster_raid", "beasts_bold"):
         c.eq("P5-03 template of %s passes template_problem" % k, template_problem(shipped[k], shipped[k]["templ"]), None)
+
+
+def check_render_r26(c):
+    """P5-04 18.1 item 14 in the reference: the forms with and against (none, one, three participants) and their
+    template_problem, every template of 8.3 on a hand-made event (the samples of 8.3 and the plan), the cause words
+    of 11.1."""
+    c = CapChecker(c)
+    shipped = {k["key"]: k for k in event_catalogue(spec_report())}
+    names = {(CIV, 1): "The Hold of Durn", (CIV, 2): "The Kingdom of Cear", (CIV, 3): "The Gub Horde",
+             (CIV, 4): "The Urarz Horde", (CIV, 5): "The Skreegg Horde", (CIV, 6): "The House of Aelin",
+             (CIV, 7): "The Court of Onsae", (CIV, 8): "Brel", (REGION, 7): "The Grey Fells",
+             (REGION, 8): "The Iron Fells", (SITE, 3): "The Mines of Kazad Rune", (SETTLEMENT, 4): "Kazad Rune"}
+
+    def name(t, x, form):
+        return names[(t, x)]
+
+    def view(eid, key, region, settlement, parts, values, causes=(), extra=None):
+        evs = {eid: dict(year=900, end_year=900, kind=shipped[key]["id"], region=region, settlement=settlement,
+                         participants=list(parts), values=dict(enumerate(values, 1)), causes=list(causes))}
+        for cid, ckey in (extra or {}).items():
+            evs[cid] = dict(year=800, end_year=800, kind=shipped[ckey]["id"], region=0, settlement=0, participants=[],
+                            values={}, causes=[])
+        return dict(catalogue={k["id"]: k for k in shipped.values()}, events=evs, name=name,
+                    region_at_year=lambda r, y: names[(REGION, r)])
+
+    def civs(role_seq, ids, first=1):
+        return tuple((first + i, role_seq, CIV, x) for i, x in enumerate(ids))
+
+    for k, *_ in pdr.REPORT_ENTRIES_026:
+        c.eq("P5-04 template of %s passes template_problem" % k, template_problem(shipped[k], shipped[k]["templ"]),
+             None)
+    for k in pdr.CAUSE_KINDS_026:
+        c.eq("P5-04 11.1 template of %s passes template_problem" % k,
+             template_problem(shipped[k], shipped[k]["templ"]), None)
+    # 8.2: the forms on allied_battle (winner_ally, loser_ally 0-16)
+    ab = shipped["allied_battle"]
+    for t, want in (("{winner_ally:with}", None), ("{loser_ally:against}", None), ("{winner:with}", None),
+                    ("{winner_ally}", "role 'winner_ally' may have no participant at byte 0"),
+                    ("x{nobody:with}", "unknown placeholder '{nobody:with}' at byte 1"),
+                    ("{nobody:against}", "unknown placeholder '{nobody:against}' at byte 0"),
+                    ("{winner_ally:all}", None)):
+        c.eq("8.2 template_problem %r" % t, template_problem(ab, t), want)
+    for allies, want in (((), "The Hold of Durn defeated the Gub Horde in the Grey Fells; 812 of the defeated and 140 "
+                              "of the victors fell."),
+                         ((2,), "The Hold of Durn, with the Kingdom of Cear, defeated the Gub Horde in the Grey Fells; "
+                                "812 of the defeated and 140 of the victors fell."),
+                         ((2, 4, 5), "The Hold of Durn, with the Kingdom of Cear, the Urarz Horde and the Skreegg Horde, "
+                                     "defeated the Gub Horde in the Grey Fells; 812 of the defeated and 140 of the "
+                                     "victors fell.")):
+        v = view(30, "allied_battle", 7, 0, civs(1, (1,)) + civs(2, (3,), 2) + civs(3, allies, 3), (140, 812, 0))
+        c.eq("8.2 with, %d allies" % len(allies), render(v, 30), want)
+    v = view(31, "allied_battle", 7, 0, civs(1, (1,)) + civs(2, (3,), 2) + civs(4, (5, 8), 3), (1, 0, 4))
+    c.eq("8.2 loser allies; pass; one and none", render(v, 31),
+         "The Hold of Durn defeated the Gub Horde, with the Skreegg Horde and Brel, at the pass into the Grey Fells; "
+         "none of the defeated and one of the victors fell.")
+    v = view(32, "allied_battle", 7, 0, civs(1, (1,)) + civs(2, (3,), 2) + civs(3, (2,), 3), (0, 5, 0))
+    c.eq("8.2 none of the victors", render(v, 32),
+         "The Hold of Durn, with the Kingdom of Cear, defeated the Gub Horde in the Grey Fells; five of the defeated "
+         "fell, and none of the victors.")
+    # against, on alliance_formed's foe (0-1)
+    for basis, foe, causes, extra, want in (
+            (0, (), (11,), {11: "civ_founded"}, "The House of Aelin and the Court of Onsae swore the alliance their "
+                                                "peoples had kept since the gods made them."),
+            (1, (3,), (11,), {11: "war_declared"}, "After the outbreak of war, the Hold of Durn and the Kingdom of Cear "
+                                                   "swore to stand together against the Gub Horde."),
+            (2, (3,), (11,), {11: "region_ceded"}, "After the loss of a neighbour's land, the Hold of Durn and the "
+                                                   "Kingdom of Cear made common cause against the Gub Horde."),
+            (3, (), (11,), {11: "disposition_turned"}, "After the friendship of their peoples, the Hold of Durn and the "
+                                                       "Kingdom of Cear swore friendship and alliance."),
+            (4, (), (11,), {11: "trade_opened"}, "After long years of trade, the Hold of Durn and the Kingdom of Cear "
+                                                 "swore friendship and alliance."),
+            (1, (3,), (11, 12), {11: "trade_opened", 12: "war_declared"},
+             "After long years of trade and the outbreak of war, the Hold of Durn and the Kingdom of Cear swore to "
+             "stand together against the Gub Horde.")):
+        a, b = (6, 7) if basis == 0 else (1, 2)
+        v = view(33, "alliance_formed", 0, 0, civs(1, (a,)) + civs(2, (b,), 2) + civs(3, foe, 3), (basis,),
+                 causes=causes, extra=extra)
+        c.eq("8.3 alliance_formed basis %d causes %r" % (basis, causes), render(v, 33), want)
+    for foe, want in (((), "The Hold of Durn and the Kingdom of Cear renewed their alliance."),
+                      ((3,), "The Hold of Durn and the Kingdom of Cear renewed their alliance against the Gub Horde.")):
+        v = view(34, "alliance_renewed", 0, 0, civs(1, (1,)) + civs(2, (2,), 2) + civs(3, foe, 3), (1 if foe else 3,))
+        c.eq("8.3 alliance_renewed %r" % (foe,), render(v, 34), want)
+    pair = civs(1, (1,)) + civs(2, (2,), 2)
+    for r, want in ((0, "The alliance of the Hold of Durn and the Kingdom of Cear lapsed, its cause long past."),
+                    (1, "The alliance of the Hold of Durn and the Kingdom of Cear lapsed, for together they had grown too "
+                        "great.")):
+        c.eq("8.3 alliance_lapsed %d" % r, render(view(35, "alliance_lapsed", 0, 0, pair, (r,)), 35), want)
+    v = view(36, "alliance_broken", 0, 0, civs(1, (3,)) + civs(2, (5,), 2), (0,), causes=(11,), extra={11: "ally_refused"})
+    c.eq("8.3 alliance_broken by desertion", render(v, 36),
+         "After a call to arms refused, the alliance of the Gub Horde and the Skreegg Horde was broken.")
+    v = view(37, "alliance_broken", 0, 0, pair, (1,), causes=(11,), extra={11: "alliance_formed"})
+    c.eq("8.3 alliance_broken by cooling (a cause with no word: the lower-case start capitalised)", render(v, 37),
+         "The alliance of the Hold of Durn and the Kingdom of Cear was broken, their friendship having cooled.")
+    v = view(38, "alliance_betrayed", 0, 0, civs(1, (4,)) + civs(2, (5,), 2), ())
+    c.eq("8.3 alliance_betrayed", render(v, 38), "The Urarz Horde broke faith and made war on the Skreegg Horde, an ally.")
+    tri = civs(1, (2,)) + civs(2, (1,), 2) + civs(3, (3,), 3)
+    for side, want in ((0, "The Kingdom of Cear came to the defence of the Hold of Durn against the Gub Horde."),
+                       (1, "The Kingdom of Cear joined the war of the Hold of Durn against the Gub Horde.")):
+        c.eq("8.3 ally_joined_war side %d" % side, render(view(39, "ally_joined_war", 0, 0, tri, (side,)), 39), want)
+    c.eq("8.3 ally_refused", render(view(40, "ally_refused", 0, 0, tri, ()), 40),
+         "The Kingdom of Cear would not take up arms for the Hold of Durn against the Gub Horde.")
+    c.eq("8.3 ally_withdrew", render(view(41, "ally_withdrew", 0, 0, tri, ()), 41),
+         "Bled white, the Kingdom of Cear left the war of the Hold of Durn against the Gub Horde.")
+    for ck, want in (("peace", "After the peace, the Hold of Durn and the Kingdom of Cear opened trade."),
+                     ("peoples_met", "After the first meeting of their peoples, the Hold of Durn and the Kingdom of Cear "
+                                     "opened trade."),
+                     ("civ_founded", "The Hold of Durn and the Kingdom of Cear opened trade.")):
+        v = view(42, "trade_opened", 0, 0, pair, (), causes=(11,), extra={11: ck})
+        c.eq("8.3 trade_opened after %s" % ck, render(v, 42), want)
+    for r, ck, want in ((0, "war_declared", "When war came, the trade between the Hold of Durn and the Kingdom of Cear "
+                                            "ended."),
+                        (1, "trade_opened", "The trade between the Hold of Durn and the Kingdom of Cear dwindled as "
+                                            "their friendship cooled."),
+                        (2, "trade_opened", "The trade between the Hold of Durn and the Kingdom of Cear was lost with "
+                                            "the roads between them.")):
+        v = view(43, "trade_broken", 0, 0, pair, (r,), causes=(11,), extra={11: ck})
+        c.eq("8.3 trade_broken reason %d" % r, render(v, 43), want)
+    spo = civs(1, (1,)) + civs(2, (2,), 2) + civs(3, (3,), 3)
+    c.eq("8.3 spoils_shared", render(view(44, "spoils_shared", 7, 0, spo, (240,)), 44),
+         "The Hold of Durn gave the Kingdom of Cear its share of the spoils of the Grey Fells.")
+    c.eq("8.3 spoils_withheld", render(view(45, "spoils_withheld", 7, 0, spo, (240,)), 45),
+         "The Hold of Durn kept the spoils of the Grey Fells from the Kingdom of Cear, its ally.")
+    v = view(46, "alliance_spurned", 7, 0, civs(1, (2,)) + civs(2, (1,), 2), (1,))
+    c.eq("8.3 alliance_spurned", render(v, 46),
+         "After the spoils of the Grey Fells were kept from it, the Kingdom of Cear broke its alliance with the Hold of "
+         "Durn.")
+    v = view(47, "mine_opened", 8, 4, ((1, 1, CIV, 1), (2, 2, SITE, 3)), ())
+    c.eq("8.3 mine_opened", render(v, 47), "The Hold of Durn opened the Mines of Kazad Rune in the Iron Fells.")
+    v = view(48, "arms_sold", 0, 0, ((1, 1, CIV, 1), (2, 2, CIV, 2), (3, 3, SITE, 3)), ())
+    c.eq("8.3 arms_sold", render(v, 48), "The Hold of Durn sold arms forged in the Mines of Kazad Rune to the Kingdom of "
+                                         "Cear.")
+    # 11.1: allied_battle has battle's cause word in kinds 13, 16, 31, 43 and 45
+    for k in pdr.CAUSE_KINDS_026:
+        t = shipped[k]["templ"]
+        i = t.index("battle=")
+        w = t[i + 7:].split(",")[0].split("|")[0]
+        c.true("11.1 %s: allied_battle=%s" % (k, w), ("allied_battle=" + w) in t)
 
 
 def check_render_r21(c):
@@ -3880,6 +4064,8 @@ def cmd_check(argv):
                     check_render_r21(c)
                 if RENDER_R24:
                     check_render_r24(c)
+                if RENDER_R26:
+                    check_render_r26(c)
             else:
                 check_render_r17(c)
         check_quiet_r12(c, inputs)
@@ -4052,7 +4238,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.25.0")   # P5-03a (generator 0.25.0); --version 0.24.0 serves the P5-03 file
+use_version("0.26.0")   # P5-04 (generator 0.26.0); --version 0.25.0 serves the P5-03a file
 
 
 def main(argv):
