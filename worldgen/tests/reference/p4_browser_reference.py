@@ -98,9 +98,9 @@ B7  10.1 `search`: "a query matching nothing" is `qqqzzzxxq` (checked to match n
     queries of each civilization's first three bytes follow the civilizations in ascending id, repeated queries
     kept.
 B8  10.1 `groups`: the keys of the compiled catalogue (P5-02's 55 kinds) in id order, then `unknown_key`. P5-02's
-    kinds 44 to 55 have no row in 4.4's table and fall to `other` (4.4 "P5 kinds fall here until a row is
-    added"; section 9 defers the `monsters` group). 10.2 item 2's "none falls to other" is read for the 43 kinds
-    the table was written for.
+    kinds 44 to 55 are in the group `monsters`, appended as code 5 with ALL_GROUPS 0x3F as section 9 foresees
+    (lead's ruling at the integration), so that 10.2 item 2's "none falls to other" holds for all 55 kinds. The
+    `filters` dump's "each group" lines cover the six groups.
 B9  10.1 cases: P4-04 10.3's (the world cases of world-hashes.sh with history, sample-42-1024, the P3-07
     fixtures, T1 and T2) plus T3; the 1024 world cases are the slow ones.
 B10 4.5 search, the name of a region: its name at E (the last region_name row with from_year <= E, else
@@ -115,7 +115,7 @@ B11 4.6 event_place: an event with settlement s != 0 is placed at s's (x, y); el
 RACE, GOD, CIV, SETTLEMENT, REGION, FIGURE, FACTION, MONSTER, SITE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 
 # 4.4
-GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other")
+GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters")
 GROUP_KEYS = {
     0: ("awakening", "civ_founded", "civ_seceded", "civ_ended", "civ_conquered", "capital_moved", "succession_crisis",
         "quiet_era", "quiet_stretch", "region_renamed"),
@@ -125,10 +125,12 @@ GROUP_KEYS = {
         "sacked", "settlement_captured", "peace", "truce", "war_won", "region_ceded", "settlements_ceded", "tribute",
         "search_abandoned", "refuge_held"),
     3: ("famine", "plague", "plague_spread", "plague_outbreak"),
+    5: ("monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid", "settlement_overrun",
+        "monster_slain", "monster_driven_off", "monster_died", "beasts_bold", "outpost_built", "outpost_abandoned"),
 }
 GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
-ALL_GROUPS = 0x1F
-assert sum(len(v) for v in GROUP_KEYS.values()) == 43 and len(GROUP_OF) == 43
+ALL_GROUPS = 0x3F
+assert sum(len(v) for v in GROUP_KEYS.values()) == 55 and len(GROUP_OF) == 55
 
 
 def event_group(key):
@@ -1009,8 +1011,9 @@ def cmd_check(argv):
             c.eq("4.4 %s" % k, event_group(k), g)
     shipped = [k["key"] for k in pe.COMPILED_022]
     c.eq("4.4 the 43 kinds of 0.22.0 each have a row", [k for k in shipped if event_group(k) == 4], [])
-    c.eq("4.4 P5-02 kinds fall to other (reading B8)", [k["key"] for k in pe.COMPILED[43:] if event_group(k["key"]) != 4],
+    c.eq("4.4 P5-02 kinds are monsters (reading B8)", [k["key"] for k in pe.COMPILED[43:] if event_group(k["key"]) != 5],
          [])
+    c.eq("4.4 no compiled kind falls to other", [k["key"] for k in pe.COMPILED if event_group(k["key"]) == 4], [])
     c.eq("4.4 near misses", [event_group(k) for k in ("", "warx", "Battle", "battle ", "unknown_key")], [4] * 5)
     check_t3(c)
     for name in fixture_names():

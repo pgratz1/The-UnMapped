@@ -151,11 +151,9 @@ TEST_CASE("P4-05 engineer: block lines print the report's [civilizations]") {
 TEST_CASE("P4-05 engineer: kind groups") {
     for (const wh::KindDef& k : wh::compiled_event_catalogue().kinds) {
         const hb::EventGroup g = hb::event_group(k.key);
-        if (k.id <= 43) {
-            CHECK_MESSAGE(g != hb::EventGroup::other, k.key);
-        } else {
-            CHECK_MESSAGE(g == hb::EventGroup::other, k.key);  // P5-02 kinds: not in 4.4's table
-        }
+        CHECK_MESSAGE(g != hb::EventGroup::other, k.key);
+        // P5-02 kinds: the monsters group of section 9 (lead's ruling at the P4-05 integration)
+        CHECK_MESSAGE((g == hb::EventGroup::monsters) == (k.id >= 44), k.key);
     }
     CHECK(hb::event_group("") == hb::EventGroup::other);
     CHECK(hb::event_group("warx") == hb::EventGroup::other);

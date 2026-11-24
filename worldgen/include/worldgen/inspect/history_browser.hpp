@@ -26,13 +26,13 @@ namespace worldgen::inspect {
 // --- Kind groups (4.4) ------------------------------------------------------
 
 // Codes are never reused; a later group is appended (section 9).
-enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4 };
-inline constexpr std::uint32_t ALL_GROUPS = 0x1F;
+enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5 };
+inline constexpr std::uint32_t ALL_GROUPS = 0x3F;
 
 // The group of a kind key, compared as bytes; other for a key 4.4 does not
-// name (the kinds of P5-02, 44 to 55, among them until they get a row).
+// name. P5-02's kinds 44 to 55 are in monsters (section 9).
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;
-// "realms", "settlements", "war", "calamity", "other".
+// "realms", "settlements", "war", "calamity", "other", "monsters".
 [[nodiscard]] std::string_view event_group_word(EventGroup group) noexcept;
 
 // --- The browser index (4.5) ------------------------------------------------

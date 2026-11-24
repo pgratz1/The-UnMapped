@@ -38,8 +38,8 @@ struct GroupRow {
     EventGroup group;
 };
 
-// 4.4, by key.
-constexpr std::array<GroupRow, 43> GROUPS = {{
+// 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
+constexpr std::array<GroupRow, 55> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -83,6 +83,18 @@ constexpr std::array<GroupRow, 43> GROUPS = {{
     {"plague", EventGroup::calamity},
     {"plague_spread", EventGroup::calamity},
     {"plague_outbreak", EventGroup::calamity},
+    {"monster_appeared", EventGroup::monsters},
+    {"undead_rose", EventGroup::monsters},
+    {"monster_woke", EventGroup::monsters},
+    {"monster_slept", EventGroup::monsters},
+    {"monster_raid", EventGroup::monsters},
+    {"settlement_overrun", EventGroup::monsters},
+    {"monster_slain", EventGroup::monsters},
+    {"monster_driven_off", EventGroup::monsters},
+    {"monster_died", EventGroup::monsters},
+    {"beasts_bold", EventGroup::monsters},
+    {"outpost_built", EventGroup::monsters},
+    {"outpost_abandoned", EventGroup::monsters},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -135,6 +147,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::war: return "war";
         case EventGroup::calamity: return "calamity";
         case EventGroup::other: return "other";
+        case EventGroup::monsters: return "monsters";
     }
     return "other";
 }

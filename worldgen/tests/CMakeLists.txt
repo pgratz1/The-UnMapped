@@ -512,24 +512,16 @@ target_compile_definitions(worldgen-tests PRIVATE
 # of 10.2 on T3 (browser_unit_test.cpp) and items 1, 3 and 6 with invariants 1
 # to 3 of section 11 on every case (browser_report_test.cpp). The library is
 # reached through browser_api.hpp. The 1024 cases are in the skipped suite
-# "browser-slow". Until the library has the header of 4.5 (the test writer's
-# branch is written before the engineer's), the files are left out; the
-# integration drops the condition.
-set(UNMAPPED_P4_05_SHARD)
-set(UNMAPPED_P4_05_SLOW)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../include/worldgen/inspect/history_browser.hpp")
-    target_sources(worldgen-tests PRIVATE
-        browser_golden_test.cpp
-        browser_unit_test.cpp
-        browser_report_test.cpp
-    )
-    target_compile_definitions(worldgen-tests PRIVATE
-        UNMAPPED_P4_05_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/browser"
-        UNMAPPED_P4_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-05-browser.txt"
-    )
-    set(UNMAPPED_P4_05_SHARD SHARD browser 30 "*browser_*")
-    set(UNMAPPED_P4_05_SLOW SLOW slow-browser 300 "*-slow" "*browser_*")
-endif()
+# "browser-slow".
+target_sources(worldgen-tests PRIVATE
+    browser_golden_test.cpp
+    browser_unit_test.cpp
+    browser_report_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P4_05_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/browser"
+    UNMAPPED_P4_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p4-05-browser.txt"
+)
 # The generator engineer's checks of spec P4-03 (the 8.2 example, the colour
 # table of 7.2, phase_kind_word); the stage's tests are the timeline files.
 target_sources(worldgen-tests PRIVATE
@@ -578,7 +570,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD renaming 30 "*history_renaming_*"
     SHARD monsters 30 "*history_monsters_*"
     SHARD markers 30 "*markers_*"
-    ${UNMAPPED_P4_05_SHARD}
+    SHARD browser 30 "*browser_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -597,6 +589,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-renaming 600 "*-slow" "*history_renaming_*"
     SLOW slow-monsters 600 "*-slow" "*history_monsters_*"
     SLOW slow-markers 1250 "*-slow" "*markers_*"
-    ${UNMAPPED_P4_05_SLOW}
+    SLOW slow-browser 300 "*-slow" "*browser_*"
     SLOW_REST slow-other 10 "*-slow"
 )

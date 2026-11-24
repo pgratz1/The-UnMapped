@@ -162,6 +162,12 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
           "siege", "sacked", "settlement_captured", "peace", "truce", "war_won", "region_ceded", "settlements_ceded",
           "tribute", "search_abandoned", "refuge_held"}},
         {EventGroup::calamity, {"famine", "plague", "plague_spread", "plague_outbreak"}},
+        // P5-02's kinds 44 to 55: the monsters group of section 9, appended as code 5 (lead's ruling at the
+        // P4-05 integration)
+        {EventGroup::monsters,
+         {"monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid", "settlement_overrun",
+          "monster_slain", "monster_driven_off", "monster_died", "beasts_bold", "outpost_built",
+          "outpost_abandoned"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {
@@ -171,18 +177,14 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 43U);
-    // the 43 kinds of P3 and P5-12 (ids 1 to 43) each have a row; P5-02's kinds 44 to 55 fall to other until a
-    // row is added (4.4; reading B8 of the reference: section 9 defers a monsters group)
+    CHECK(n == 55U);
+    // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() >= 43U);
+    REQUIRE(kinds.size() == 55U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
-        if (k.id <= 43) {
-            CHECK(brapi::event_group(k.key) != EventGroup::other);
-        } else {
-            CHECK(brapi::event_group(k.key) == EventGroup::other);
-        }
+        CHECK(brapi::event_group(k.key) != EventGroup::other);
+        CHECK((brapi::event_group(k.key) == EventGroup::monsters) == (k.id >= 44));
     }
     for (const std::string_view k : {std::string_view(""), std::string_view("warx"), std::string_view("Battle"),
                                      std::string_view("battle "), std::string_view("unknown_key"),
@@ -194,12 +196,14 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(static_cast<int>(EventGroup::war) == 2);
     CHECK(static_cast<int>(EventGroup::calamity) == 3);
     CHECK(static_cast<int>(EventGroup::other) == 4);
-    CHECK(brapi::ALL_GROUPS == 0x1FU);
+    CHECK(static_cast<int>(EventGroup::monsters) == 5);
+    CHECK(brapi::ALL_GROUPS == 0x3FU);
     CHECK(brapi::event_group_word(EventGroup::realms) == "realms");
     CHECK(brapi::event_group_word(EventGroup::settlements) == "settlements");
     CHECK(brapi::event_group_word(EventGroup::war) == "war");
     CHECK(brapi::event_group_word(EventGroup::calamity) == "calamity");
     CHECK(brapi::event_group_word(EventGroup::other) == "other");
+    CHECK(brapi::event_group_word(EventGroup::monsters) == "monsters");
 }
 
 TEST_CASE("P4-05 10.2 item 7: BrowserIndex::build on T3 and on fixtures that load") {

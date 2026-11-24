@@ -282,7 +282,7 @@ inline std::vector<std::pair<std::string, brapi::EventFilter>> filter_list(const
         f.region = r;
         out.emplace_back("region " + num(r) + " full", f);
     }
-    for (std::uint8_t g = 0; g <= 4; ++g) {
+    for (std::uint8_t g = 0; g <= 5; ++g) {  // the six groups, monsters (code 5) last
         brapi::EventFilter f = full_filter();
         f.groups = 1U << g;
         out.emplace_back("group " + std::string(brapi::event_group_word(static_cast<brapi::EventGroup>(g))) + " full",
