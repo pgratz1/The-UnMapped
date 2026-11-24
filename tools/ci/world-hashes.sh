@@ -71,7 +71,7 @@ set -u
 # are given in run_generate below.
 P0_CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 empty-seed-max pattern-seed-0 pattern-seed-42'
 GEO_CASES='geo-phrase-512 geo-seed-0-512 geo-seed-1-1024 geo-seed-42-512'
-HIST_CASES='hist-dense-1024 hist-races-elf-orc-1024 hist-span-2000-512'
+HIST_CASES='hist-dense-1024 hist-races-elf-orc-1024 hist-span-2000-512 p5-monsters-high-1024'
 CASES="$P0_CASES $GEO_CASES $HIST_CASES"
 
 # The cases whose world has a history (P3-07 18.6: every case except empty-*
@@ -119,6 +119,8 @@ run_generate() {
         hist-races-elf-orc-1024) "$cli" generate --out "$2" --data "$data_dir" --seed 3 --races elf,orc ;;
         # P3-04 15: the detail level changes history bytes.
         hist-dense-1024)         "$cli" generate --out "$2" --data "$data_dir" --seed 11 --history-detail dense ;;
+        # P5-02 18 (P5-00 5): the monster pressure changes monster bytes.
+        p5-monsters-high-1024)   "$cli" generate --out "$2" --data "$data_dir" --seed 7 --map-size 1024 --monster-pressure high ;;
         *) echo "world-hashes: internal error: unknown case $1" >&2; return 1 ;;
     esac
 }
