@@ -183,7 +183,8 @@ TEST_CASE("P3-07 r17 24.11 item 2: no orphans with four civilizations per race; 
 
 TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milestone lists") {
     const auto r = hrtest::open_world(world(CASES_1024[4]));
-    const std::string s = hrtest::report_of(r, hrtest::HistoryLevel::summary);
+    // P5-03a 9.2 (v6): the lists are at full (the summary prints their count)
+    const std::string s = hrtest::report_of(r, hrtest::HistoryLevel::full);
     auto milestones = [&](std::int64_t c) {
         std::vector<std::string> out;
         bool in = false;

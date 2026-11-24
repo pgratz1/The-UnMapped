@@ -355,6 +355,11 @@ KINDS_024 = (
                                               ("race", RACE, 1, 1)), ("people",)),
 )
 COMPILED_024 = COMPILED_023 + KINDS_024
+# P5-03a 10.4 (generator 0.25.0): values appended to kinds 57 (sealed), 60 (standing, majority), 62 (standing, years);
+# no kind added, no role changed.
+VALUES_025 = {57: ("sealed",), 60: ("standing", "majority"), 62: ("standing", "years")}
+KINDS_025 = tuple(dict(k, values=list(k["values"]) + list(VALUES_025.get(k["id"], ()))) for k in KINDS_024)
+COMPILED_025 = COMPILED_023 + KINDS_025
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -402,11 +407,14 @@ RENDER_R23 = True
 #                   the placeholder {@beast:bold} (of the beast's bold_phrases), 8.2 the four-word choice {v?w0|w1|w2|w3};
 #                   schema 10 (16.1).
 RENDER_R24 = True
+# P5-03a (generator 0.25.0):
+#   RENDER_R25      7.1 the forms `its`, `aside` and `where` of a monster role; 10.4 the five value rows.
+RENDER_R25 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
 
 
 def at_least(v):
@@ -421,13 +429,13 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
-    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, SCHEMA_VERSION
+    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
-                "0.24.0": COMPILED_024}[v]
+                "0.24.0": COMPILED_024, "0.25.0": COMPILED_025}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -436,6 +444,7 @@ def use_version(v):
     RENDER_R21 = i >= VERSIONS.index("0.22.0")
     RENDER_R23 = i >= VERSIONS.index("0.23.0")
     RENDER_R24 = i >= VERSIONS.index("0.24.0")
+    RENDER_R25 = i >= VERSIONS.index("0.25.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
@@ -486,7 +495,7 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all", "kind", "raid")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
+FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
 
 
 def _is_word(w):
@@ -601,6 +610,9 @@ def clause_digits(kind, templ, ev):
     return {k: any(not (1 <= x <= 9) for x in xs) for k, xs in nums.items()}
 
 
+MONSTER_FORMS_025 = ("its", "aside", "where")   # P5-03a 7.1
+
+
 def placeholder_problem(kind, body, at):
     """The problem of one placeholder body, or None (8.4)."""
     roles = {r["role"]: r for r in kind["roles"]}
@@ -637,7 +649,7 @@ def placeholder_problem(kind, body, at):
     if ":" in body:
         role, form = body.split(":", 1)
         if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23) or (
-                form == "raid" and not RENDER_R24):
+                form == "raid" and not RENDER_R24) or (form in MONSTER_FORMS_025 and not RENDER_R25):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
@@ -646,6 +658,8 @@ def placeholder_problem(kind, body, at):
             return "form 'kind' needs a monster role at byte %d" % at
         if form == "raid" and r["type"] != MONSTER:   # P5-03 9.5
             return "form 'raid' needs a monster role at byte %d" % at
+        if form in MONSTER_FORMS_025 and r["type"] != MONSTER:   # P5-03a 7.1
+            return "form '%s' needs a monster role at byte %d" % (form, at)
         if form != "all" and r["min"] == 0:
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
@@ -866,6 +880,24 @@ def render(view, eid, links=None):
                 t, x = ps[0]
                 ph = view["raid_phrases"](x)
                 out.append(ph[(eid - 1) % len(ph)])
+            elif form == "its":   # P5-03a 7.1: its (grouped 0) or their (grouped 1); no link
+                t, x = ps[0]
+                out.append("their" if view["monster_kind"](x)["grouped"] else "its")
+            elif form == "aside":   # P5-03a 7.1: ", <noun>," for a wild kind; empty for a dead one; no link
+                t, x = ps[0]
+                mk = view["monster_kind"](x)
+                if mk["wake"] != "dead":
+                    out.append(", " + mk["noun"] + ",")
+            elif form == "where":
+                # P5-03a 7.1: " in " + the event region as {@region}; empty for a dead kind whose stored name ends
+                # with " of " + R (R the region's name in force at the event's year, a leading "The " as "the ")
+                t, x = ps[0]
+                mk = view["monster_kind"](x)
+                rname = view["region_at_year"](ev["region"], ev["year"])
+                rr = "the " + rname[4:] if rname.startswith("The ") else rname
+                if not (mk["wake"] == "dead" and view["name"](t, x, "name").endswith(" of " + rr)):
+                    out.append(" in ")
+                    put_name(region_name(ev["region"], eid), REGION, ev["region"])
             else:   # plural, adjective (a race, type 1), kind (P5-02: the monster, type 8)
                 t, x = ps[0]
                 nm = view["name"](t, x, form)
@@ -1900,8 +1932,14 @@ def view_from_rows(res, regions, races, gods):
         raid = {k[0]: k[7].split("|") for k in res.get("monster_kind", [])}
         view["beast_bold"] = lambda b: bold[b]
         view["raid_phrases"] = lambda m: raid[mkind[m]]
+    if RENDER_R23:   # P5-03a 7.1: the kind of a monster (grouped, wake, noun) for the forms its, aside and where
+        kinds = {k[0]: dict(grouped=k[4], wake="wild" if k[5] == 1 else "dead", noun=k[3])
+                 for k in res.get("monster_kind", [])}
+        view["monster_kind"] = lambda m: kinds[mkind[m]]
     if RENDER_R21:
         view["region_at"] = region_at_event_fn(names[REGION], res.get("region_name", []))
+        rn_rows = res.get("region_name", [])
+        view["region_at_year"] = lambda rid, y: region_at_year(names[REGION], rn_rows, rid, y)
     return view
 
 
@@ -2280,6 +2318,12 @@ def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_025 = """\
+# P3-04 engine golden vectors for generator 0.25.0 (schema 10; P5-03a): the stub engine (run_engine
+# with the stub configuration, which installs neither renaming, monsters nor relations) on the 0.25.0
+# catalogue of 62 kinds (P5-03a 10.4: the values sealed of kind 57, standing and majority of kind 60,
+# standing and years of kind 62 appended; the forms its, aside and where of a monster role, 7.1), the
+# rewritten templates of P5-03a 10.3, and otherwise as at 0.24.0. Spec"""
 HEADER_024 = """\
 # P3-04 engine golden vectors for generator 0.24.0 (schema 10; P5-03): the stub engine (run_engine
 # with the stub configuration, which installs neither renaming, monsters nor relations) on the 0.24.0
@@ -2415,7 +2459,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.24.0":
+    if ENGINE_VERSION == "0.25.0":
+        head = HEADER_025 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.24.0":
         head = HEADER_024 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.23.0":
         head = HEADER_023 + "\n" + "\n".join(head.splitlines()[2:])

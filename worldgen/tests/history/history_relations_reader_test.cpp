@@ -38,6 +38,7 @@ struct Base {
     std::int64_t E = 0;
     std::vector<std::vector<std::int64_t>> rr, sr;   // the rows, key order
     std::int64_t met_event = 0, met_a = 0, met_b = 0;
+    std::int64_t mixed_event = 0;   // the first settlement_mixed
     std::map<std::int64_t, std::int64_t> founded;
 };
 
@@ -52,12 +53,14 @@ const Base& base() {
         for (const auto& x : chrono_test::rows_of(r, "settlement_race")) {
             out.sr.push_back({x[0].integer, x[1].integer, x[2].integer, x[3].integer, x[4].integer});
         }
-        std::int64_t k57 = 0;
+        std::int64_t k57 = 0, k60 = 0;
         for (const auto& k : chrono_test::rows_of(r, "event_kind")) {
             if (k[1].bytes == "peoples_met") k57 = k[0].integer;
+            if (k[1].bytes == "settlement_mixed") k60 = k[0].integer;
         }
         for (const auto& e : chrono_test::rows_of(r, "event")) {
             if (e[3].integer == k57 && out.met_event == 0) out.met_event = e[0].integer;
+            if (e[3].integer == k60 && out.mixed_event == 0) out.mixed_event = e[0].integer;
         }
         for (const auto& p : chrono_test::rows_of(r, "event_participant")) {
             if (p[0].integer != out.met_event) continue;
@@ -212,13 +215,15 @@ TEST_CASE("P5-03 16.4: phrase lists, the events' checks and settlement.ending 6"
     // every peoples_met names a pair with rows
     refused("met-no-rows", "DELETE FROM race_relation WHERE race_a = " + n(b.met_a) + " AND race_b = " + n(b.met_b) + ";",
             "corrupt table 'event': row " + n(b.met_event) + ": peoples_met without its rows");
-    // a race participant naming no race row (16.4 gives no text: the table and row only, reading R-R1)
+    // a race participant naming no race row: P5-03a 12 item 2, event_catalogue.cpp's race_participant_problem in
+    // P5-02 11.4's order, the first such row in key order (the settlement_mixed's role race, seq 3, before ruling)
     // (On a settlement_mixed event: a peoples_met participant changed would first break its pair's race_relation
     // rows, "first row is not at its meeting", which the history reader checks before the events.)
+    REQUIRE(b.mixed_event != 0);
     refused("race-participant",
             "UPDATE event_participant SET entity_id = 999 WHERE entity_type = 1 AND event = (SELECT min(id) FROM event "
             "WHERE kind = (SELECT id FROM event_kind WHERE key = 'settlement_mixed'));",
-            "corrupt table '", true);
+            "corrupt table 'event_participant': row (" + n(b.mixed_event) + ", 3): race 999 does not exist");
 }
 
 TEST_CASE("P5-03 16.4: two peoples_met of one pair are refused") {

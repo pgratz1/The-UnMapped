@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.24.0"
+GENERATOR_VERSION = "0.25.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -150,6 +150,9 @@ FLAGS = dict(
     # P5-03 (generator 0.24.0)
     relations=True,     # P5-03 5 to 7: the relations subsystem after the monsters (p5_03_relations_reference.py), the
                         # ledger set on peoples, the dispositions read by conflict (4.1, 4.3), owner_event, schema 10
+    # P5-03a (generator 0.25.0)
+    p503a=True,         # P5-03a 3 to 8: long peace, common enemies, credit and contributions by sign, meetings by
+                        # word, graded settlers, the expulsion gap, A1; the undead threshold by world population (6)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -160,7 +163,8 @@ FLAGS_021 = ("fresh", "strength", "dropped", "hidden42", "toll")
 FLAGS_022 = ("rename",)
 FLAGS_023 = ("monsters", "flare_claim")
 FLAGS_024 = ("relations",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
+FLAGS_025 = ("p503a",)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
 
 
 
@@ -173,6 +177,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_025:
+        return i >= 9
     if k in FLAGS_024:
         return i >= 8
     if k in FLAGS_023:
@@ -196,7 +202,7 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0") or k not in pp.FLAGS_018)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0") or k not in pp.FLAGS_018)
             for k in pp.FLAGS}
 
 
@@ -215,7 +221,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.24.0")
+    use_version("0.16.0" if on else "0.25.0")
 
 
 class rules:

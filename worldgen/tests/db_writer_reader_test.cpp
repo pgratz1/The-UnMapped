@@ -216,7 +216,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     // the thirteen history tables, the key index of event_kind and two
     // sqlite_schema leaf pages, so 34 (P3-04 9.6); schema version 8 adds the
     // root page of table region_name, so 35 (P5-12 12).
-    CHECK(dbtest::read_file(path).size() == 184320);   // P5-02 11.1 (r1): 43 pages (39 roots, sqlite_schema 1 interior + 3 leaves)
+    CHECK(dbtest::read_file(path).size() == 184320);   // 45 pages at schema 10 (P5-03 16.1; P5-03a 12 item 5): 184,320 bytes
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());

@@ -89,6 +89,26 @@ R16 (17.2, 17.4) "mixed at E" and settlements_mixed use the fixed constant MIXED
    integration; phase 1 read the data's mixed_min_permille, spec defect D3).
 R15 (12.1) the epithets excluded are those of every earlier monster of the world (any kind), read from each
    name's matched form; a host of a dead kind has no epithet.
+P5-03a (generator 0.25.0, docs/specs/p5-03a-relations-followups.md r1):
+A1r (3.5) credit with units 0 changes nothing and is kept in neither list of contributions (the sign of 0).
+A2r (3.3) when realm z has several open wars against realms of one race r, the entry (z, r) is written per relation
+   in ascending key: the last relation's opening event stands.
+A3r (3.2) the strife clock is updated in the peace step itself, before the gain test, for met pairs (a meeting sets
+   it to the met year).
+A4r (4.2) "6.2.4's open meeting does not happen this step" includes an open key within meet_hops whose meeting waits
+   for the Q4 budget; word_since 0 is "unset" (a pair in reach at year 0 is set to 0 again the next step).
+A5r (5.3) the gap is per realm over all its settlements: a realm's second expulsion in the same T6 is refused when
+   expel_gap_years > 0.
+A6r (6) P_W is the population of every standing settlement of State (thriving or declining; hidden ones included).
+A7r (7.1) {m:where} compares the stored name with the region's name in force at the event's year (by year), and
+   writes the region as {@region} does (its name at the event).
+A8r (7.3) an arrival's record cause is the displacing event; when it is kind 16 or 31 the abandonment's own causes
+   (event_cause rows) are added.
+X4 (10.1) relations-small at 0.25.0: meet_sealed_hops 3, meet_sealed_years 0, foe_war_memory and
+   foe_monster_memory 300 (the spec's "large as its others"), expel_gap_years 0, conquest_settlers_span_permille
+   400 (600 + 400 passes relations_settlers).
+C1 (12 item 1) the colony's first rows under new rulers: the settlers' share in [least, least + span]; exactly the
+   draw when the seed is known (check-world reads meta's seed).
 """
 
 
@@ -241,6 +261,48 @@ def undead_threshold(min_dead, M):
     return min_dead * 1000 // max(1, M)
 
 
+def peace_gain(M, years, per_century, cap_units):
+    """P5-03a 3.2: g = years x per_century x 1000 div 100; cap = cap_units x 1000; M < cap: M = min(cap, M + g)."""
+    g = years * per_century * 1000 // 100
+    cap = cap_units * 1000
+    return min(cap, M + g) if M < cap else M
+
+
+def settlers_permille(least, span, u):
+    """P5-03a 5.1: sigma = conquest_settlers_permille + pick(u, conquest_settlers_span_permille + 1)."""
+    return least + pnr.pick(u, span + 1)
+
+
+def keep_ruling(shares, q):
+    """P5-03a 8 A1: after mix's split, a ruling race q that was in S and got share 0 takes 1 from the largest share
+    (then the smaller race id)."""
+    out = dict(shares)
+    if out.get(q, 0) > 0:
+        return out
+    g = min(out, key=lambda r: (-out[r], r))
+    out[g] -= 1
+    out[q] = 1
+    return {r: v for r, v in out.items() if v > 0}
+
+
+def undead_threshold_025(min_dead, permille, P_W, M):
+    """P5-03a 6: T = max(undead_min_dead, P_W x undead_dead_permille div 1000); S(r) >= T x 1000 div max(1, M)."""
+    T = max(min_dead, P_W * permille // 1000)
+    return T * 1000 // max(1, M)
+
+
+def summary_ruins(ruins):
+    """P5-03a 9.3: ruins [(id, ruined_year, largest population)]; more than 15: the union of the 5 oldest, the 5
+    largest and the 5 most recent, ascending id, and the number left out; else all, 0."""
+    if len(ruins) <= 15:
+        return sorted(r[0] for r in ruins), 0
+    old = sorted(ruins, key=lambda r: (r[1], r[0]))[:5]
+    big = sorted(ruins, key=lambda r: (-r[2], r[0]))[:5]
+    new = sorted(ruins, key=lambda r: (-r[1], -r[0]))[:5]
+    ids = sorted({r[0] for r in old + big + new})
+    return ids, len(ruins) - len(ids)
+
+
 def road_loss(P, u, lo, hi):
     """11.1: road = P x (lo + pick(u, hi - lo + 1)) div 1000, at most P - 1 when P >= 1."""
     road = P * (lo + pnr.pick(u, hi - lo + 1)) // 1000
@@ -283,6 +345,23 @@ class Relations:
         self.awakened = set()
         self.aw_cursor = 1
         self.log = []              # (year, what, ...) for checks and statistics, not state
+        # P5-03a (generator 0.25.0)
+        import p3_conflict_reference as pcr
+        self.r25 = pcr.FLAGS.get("p503a", False)
+        if self.r25:
+            w.keys["hist.relations.settlers"] = cr.stream_key(w.inp.seed, "hist.relations.settlers")
+            for p in self.pairs.values():
+                p.update(strife_year=0, word_since=0, pos=[], neg=[], sealed=0)
+        self.foe_civ = {}          # 3.3: (z, r) -> (year, opening event)
+        self.foe_mon = {}          # 3.3: (m, r) -> (year, event)
+        self.credited_civ = set()  # (r1, r2, z)
+        self.credited_mon = set()  # (r1, r2, m)
+        self.last_expel = {}       # 5.3: realm -> year of its last expulsion
+        self.bnb = {}              # 4.1: the border graph, every region_border row
+        for b in getattr(w.inp, "borders", ()):
+            self.bnb.setdefault(b["a"], set()).add(b["b"])
+            self.bnb.setdefault(b["b"], set()).add(b["a"])
+        self._bhops = {}
 
     # --- dispositions (6.2.1; the DispositionView of 7.1)
     def pair(self, a, b):
@@ -306,6 +385,123 @@ class Relations:
             return plain_band(self.disposition(a, a), self.t)
         p = self.pair(a, b)
         return p["band"] if p["met"] else plain_band(p["B"], self.t)
+
+    # --- P5-03a 4.1: hops on the border graph (neighbours ascending, cached per source region)
+    def bhops(self, r0):
+        if r0 not in self._bhops:
+            d = {r0: 0}
+            fifo = [r0]
+            i = 0
+            while i < len(fifo):
+                x = fifo[i]
+                i += 1
+                for y in sorted(self.bnb.get(x, ())):
+                    if y not in d:
+                        d[y] = d[x] + 1
+                        fifo.append(y)
+            self._bhops[r0] = d
+        return self._bhops[r0]
+
+    # --- P5-03a 3.5: credit, the one path of a memory change with a cause
+    def credit(self, race_a, race_b, units, event):
+        p = self.pair(race_a, race_b)
+        if not p["met"]:
+            return
+        p["M"] = clamp_memory(p["M"] + units * 1000, self.t)
+        # reading D2: a contribution of units 0 is kept in neither list
+        if units > 0:
+            p["pos"] = (p["pos"] + [event])[-8:]
+        elif units < 0:
+            p["neg"] = (p["neg"] + [event])[-8:]
+
+    def presences(self):
+        """P5-03 6.2.4 / P5-03a 3.2: presence(c) of the alive visible civilizations, by civilization."""
+        w = self.w
+        civs = [c for c in w.civs if c["ended_year"] is None and w.visible(c)]
+        return civs, {c["id"]: sorted(set(w.held(c["id"])) | {x["region"] for x in w.svis(c["id"])}) for c in civs}
+
+    def open_wars(self):
+        """The open war relations of State, ascending key: [(key, c1, c2, opening event)]."""
+        rel = self.w.relations
+        import p3_conflict_reference as pcr
+        return [(k, k[1], k[3], rel[k]) for k in sorted(rel, key=pcr.key_order) if k[4] == "war" and k[0] == CIV
+                and k[2] == CIV]
+
+    # --- P5-03a 3.3: common enemies in war
+    def war_foes(self):
+        w, t = self.w, self.t
+        Y = w.year
+        for _k, c1, c2, e in self.open_wars():
+            r1, r2 = self.race_of_civ(c1), self.race_of_civ(c2)
+            if r1 == r2:
+                continue
+            self.foe_civ[(c1, r2)] = (Y, e)
+            self.foe_civ[(c2, r1)] = (Y, e)
+        by_z = {}
+        for (z, r), v in sorted(self.foe_civ.items()):
+            by_z.setdefault(z, []).append((r, v))
+        for z in sorted(by_z):
+            ents = by_z[z]
+            for i, (r1, (y1, e1)) in enumerate(ents):
+                for r2, (y2, e2) in ents[i + 1:]:
+                    if not (Y - y1 < t["foe_years"] and Y - y2 < t["foe_years"] and Y in (y1, y2)):
+                        continue
+                    if not self.pair(r1, r2)["met"] or (r1, r2, z) in self.credited_civ:
+                        continue
+                    self.credit(r1, r2, t["foe_war_memory"], max(e1, e2))
+                    self.credited_civ.add((r1, r2, z))
+                    self.log.append((Y, "foe-war", r1, r2, z, max(e1, e2)))
+
+    def monster_foe(self, e, ev):
+        """P5-03a 3.3: a monster_raid or settlement_overrun e read in the log."""
+        w, t = self.w, self.t
+        k = w.cat_by_key[ev["key"]]
+        seq = {r["role"]: r["seq"] for r in k["roles"]}
+        parts = sorted(ev["participants"])
+        m = [x for (_s, rs, _t, x) in parts if rs == seq["monster"]][0]
+        c = [x for (_s, rs, _t, x) in parts if rs == seq["civilization"]][0]
+        r = self.race_of_civ(c)
+        for r2 in self.race_ids:
+            if r2 == r or (m, r2) not in self.foe_mon:
+                continue
+            y2, _e2 = self.foe_mon[(m, r2)]
+            key = (min(r, r2), max(r, r2), m)
+            if w.year - y2 < t["foe_years"] and self.pair(r, r2)["met"] and key not in self.credited_mon:
+                self.credit(r, r2, t["foe_monster_memory"], e)
+                self.credited_mon.add(key)
+                self.log.append((w.year, "foe-monster", key[0], key[1], m, e))
+        self.foe_mon[(m, r)] = (ev["year"], e)
+
+    # --- P5-03a 3.2: long peace between neighbours
+    def peace(self, quiet):
+        w, t = self.w, self.t
+        Y = w.year
+        years = w.years if quiet else 1
+        wars = self.open_wars()
+        civs, pres = self.presences()
+        P = {}
+        for c in civs:
+            P.setdefault(c["race"], set()).update(pres[c["id"]])
+        for (a, b) in sorted(self.pairs):
+            p = self.pairs[(a, b)]
+            if not p["met"]:
+                continue
+            at_war = any({self.race_of_civ(c1), self.race_of_civ(c2)} == {a, b} for _k, c1, c2, _e in wars)
+            if at_war:
+                p["strife_year"] = Y
+                continue
+            contact = False
+            for Ra in sorted(P.get(a, ())):
+                h = self.bhops(Ra)
+                if any(Rb in h and h[Rb] <= t["contact_hops"] for Rb in P.get(b, ())):
+                    contact = True
+                    break
+            if not contact or Y - p["strife_year"] < t["peace_years"]:
+                continue
+            M0 = p["M"]
+            p["M"] = peace_gain(p["M"], years, t["peace_memory_per_century"], t["peace_memory_max"])
+            if p["M"] != M0:
+                self.log.append((Y, "peace", a, b, M0, p["M"]))
 
     # --- shares (6.3)
     def race_of_civ(self, c):
@@ -364,7 +560,11 @@ class Relations:
 
     def mix(self, s, G, n, Pb, event):
         S = {g: e["share"] for g, e in self.sh[s]["e"].items()}
-        self.set_shares(s, mix_shares(S, G, n, Pb), event)
+        new = mix_shares(S, G, n, Pb)
+        q = self.sh[s]["q"]
+        if self.r25 and q in S and new.get(q, 0) == 0:   # P5-03a 8 A1
+            new = keep_ruling(new, q)
+        self.set_shares(s, new, event)
 
     # --- the ledger (6.4.1)
     def moved(self, frm, to, people):
@@ -441,10 +641,15 @@ class Relations:
                     continue
                 taken = min(ng, room)
                 st = self.target_new(u["id"], g) if u["id"] in self.sh else RULING
+                causes = (r["cause"],)
+                if self.r25 and r["cause"] and w.events[r["cause"] - 1]["key"] in ("settlement_abandoned",
+                                                                                   "settlement_abandoned_to"):
+                    # P5-03a 7.3: an abandonment's own causes too, ascending, no repeats
+                    causes = tuple(sorted({r["cause"]} | set(w.events[r["cause"] - 1]["causes"])))
                 e = w.append("refugees_arrived", region=u["region"], settlement=u["id"],
                              participants=(("settlement", SETTLEMENT, u["id"]), ("civilization", CIV, cu),
                                            ("origin", SETTLEMENT, r["frm"]), ("race", RACE, g)),
-                             values=(taken, st), causes=(r["cause"],))
+                             values=(taken, st), causes=causes)
                 Pu = u["population"]
                 u["population"] = Pu + taken
                 self.mix(u["id"], {g: 1000}, taken, Pu, e)
@@ -464,6 +669,9 @@ class Relations:
         for e in range(self.cursor, last + 1):
             ev = w.events[e - 1]
             key = ev["key"]
+            if self.r25 and key in ("monster_raid", "settlement_overrun"):
+                self.monster_foe(e, ev)
+                continue
             if key not in delta:
                 continue
             rx, ry, d = delta[key]
@@ -482,6 +690,9 @@ class Relations:
                 continue
             p = self.pair(ra, rb)
             if not p["met"]:
+                continue
+            if self.r25:   # P5-03a 3.5: every change of 6.2.2's table through credit (war events -delta)
+                self.credit(ra, rb, -d, e)
                 continue
             p["M"] = clamp_memory(p["M"] - d * 1000, t)
             p["contrib"] = (p["contrib"] + [e])[-8:]
@@ -511,9 +722,17 @@ class Relations:
                 continue
             if quiet and w.quiet_events_left(0) <= 0:
                 continue
-            causes = sorted(set(p["contrib"])) if p["contrib"] else [p["turn_event"] or p["met_event"]]
+            if self.r25:   # P5-03a 3.5: the causes by the turn's direction
+                if nb > p["band"]:
+                    causes = sorted(set(p["pos"])) if p["pos"] else [p["met_event"]]
+                else:
+                    causes = sorted(set(p["neg"])) if p["neg"] else [p["turn_event"] or p["met_event"]]
+                p["pos"], p["neg"] = [], []
+            else:
+                causes = sorted(set(p["contrib"])) if p["contrib"] else [p["turn_event"] or p["met_event"]]
             e = w.append("disposition_turned", participants=(("race_a", RACE, a), ("race_b", RACE, b)),
                          values=(D, nb), causes=tuple(causes))
+            self.log.append((w.year, "turn-from", a, b, p["band"], nb, tuple(causes)))
             p["band"], p["turn_year"], p["turn_event"], p["contrib"] = nb, w.year, e, []
             if nb == HATRED:
                 p["hatred_event"] = e
@@ -533,6 +752,8 @@ class Relations:
     def meetings(self, quiet):
         w, t = self.w, self.t
         self.note_awakenings()
+        if self.r25:
+            return self.meetings_025(quiet)
         if t["meet_hops"] < 0:
             return
         civs = [c for c in w.civs if c["ended_year"] is None and w.visible(c)]
@@ -574,6 +795,61 @@ class Relations:
             self.rr_row(a, b, w.year)
             self.log.append((w.year, "met", a, b, h, region))
 
+    def meetings_025(self, quiet):
+        """P5-03 6.2.4 with P5-03a 4.2: the open meeting, else the meeting by word on the border graph."""
+        w, t = self.w, self.t
+        civs, pres = self.presences()
+        for (a, b) in sorted(self.pairs):
+            p = self.pairs[(a, b)]
+            if p["met"] or a not in self.awakened or b not in self.awakened:
+                continue
+            xs = [c for c in civs if c["race"] == a]
+            ys = [c for c in civs if c["race"] == b]
+
+            def best_key(hops_of):
+                best = None
+                for x in xs:
+                    for Rx in pres[x["id"]]:
+                        hops = hops_of(Rx)
+                        for y in ys:
+                            for Ry in pres[y["id"]]:
+                                h = hops.get(Ry)
+                                if h is None:
+                                    continue
+                                key = (h, Rx, Ry, x["id"], y["id"])
+                                if best is None or key < best:
+                                    best = key
+                return best
+            sealed = 0
+            best = best_key(w.geo.hops) if t["meet_hops"] >= 0 else None
+            if best is not None and best[0] <= t["meet_hops"] and not (quiet and w.quiet_events_left(0) <= 0):
+                pass   # the open meeting happens
+            else:
+                bk = best_key(self.bhops)
+                if bk is None or bk[0] > t["meet_sealed_hops"]:   # meet_sealed_hops -1: never
+                    p["word_since"] = 0
+                    continue
+                if p["word_since"] == 0:
+                    p["word_since"] = w.year
+                if w.year - p["word_since"] < t["meet_sealed_years"]:
+                    continue
+                if quiet and w.quiet_events_left(0) <= 0:
+                    continue
+                best, sealed = bk, 1
+            h, Rx, Ry, xi, yi = best
+            cx, cy = w.civ(xi), w.civ(yi)
+            young = cx if (cx["founded_year"], cx["id"]) > (cy["founded_year"], cy["id"]) else cy
+            region = Rx if young is cx else Ry
+            band = plain_band(p["B"], t)
+            e = w.append("peoples_met", region=region, participants=(("race_a", RACE, a), ("race_b", RACE, b)),
+                         values=(p["B"], band, sealed), causes=(young["founding_event"],))
+            p.update(met=True, met_year=w.year, met_event=e, M=0, band=band, contrib=[], pos=[], neg=[],
+                     strife_year=w.year, word_since=0, sealed=sealed)
+            if band == HATRED:
+                p["hatred_event"] = 0
+            self.rr_row(a, b, w.year)
+            self.log.append((w.year, "met", a, b, h, region, sealed, Rx, Ry))
+
     # --- owner changes, drift, standings, mixed (6.3.3 to 6.3.6)
     def owner_changes(self):
         w = self.w
@@ -594,7 +870,11 @@ class Relations:
             ev = x.get("owner_event", 0)
             old = st["q"]
             S = {g: e["share"] for g, e in st["e"].items()}
-            new = conquest_shares(S, q, self.t["conquest_settlers_permille"])
+            sigma = self.t["conquest_settlers_permille"]
+            if self.r25:   # P5-03a 5.1: drawn only on a change of people (q != q_s, here)
+                sigma = settlers_permille(sigma, self.t["conquest_settlers_span_permille"],
+                                          w.draw("hist.relations.settlers", s, c, 0))
+            new = conquest_shares(S, q, sigma)
             ents = {}
             for g in sorted(new):
                 e = dict(st["e"][g]) if g in st["e"] else dict(standing=0, since_year=w.year, since_event=ev,
@@ -670,10 +950,13 @@ class Relations:
                     continue
                 if quiet and w.quiet_events_left(st["o"]) <= 0:
                     continue
+                vals = (e["share"],)
+                if self.r25:   # P5-03a 5.2: standing, majority (1 when above the ruling race's share)
+                    vals = (e["share"], e["standing"], 1 if e["share"] > st["e"][st["q"]]["share"] else 0)
                 w.append("settlement_mixed", region=x["region"], settlement=s,
                          participants=(("settlement", SETTLEMENT, s), ("civilization", CIV, st["o"]),
                                        ("race", RACE, g), ("ruling", RACE, st["q"])),
-                         values=(e["share"],), causes=(e["since_event"],))
+                         values=vals, causes=(e["since_event"],))
                 e["mixed_told"] = True
                 self.log.append((w.year, "mixed", s, g))
 
@@ -701,14 +984,18 @@ class Relations:
                 n = P * e["share"] // 1000
                 if n < t["migrate_min"]:
                     continue
+                if self.r25 and o in self.last_expel and w.year - self.last_expel[o] < t["expel_gap_years"]:
+                    continue   # P5-03a 5.3: the gap, tested before the draw
                 if not pp.chance_pm(w.draw("hist.relations.expel", s, g, 0), t["expel_permille"]):
                     continue
                 p = self.pair(st["q"], g)
                 causes = sorted({e["since_event"]} | ({p["turn_event"]} if p["turn_event"] > e["since_event"]
                                                       else set()))
+                vals = (n, e["standing"], w.year - e["since_year"]) if self.r25 else (n,)
                 ev = w.append("people_expelled", region=x["region"], settlement=s,
                               participants=(("settlement", SETTLEMENT, s), ("civilization", CIV, o), ("race", RACE, g)),
-                              values=(n,), causes=tuple(c for c in causes if c))
+                              values=vals, causes=tuple(c for c in causes if c))
+                self.last_expel[o] = w.year
                 x["population"] = P - n
                 w.last_red[s] = ev   # note_reduction
                 rest = {h: v["share"] for h, v in st["e"].items() if h != g}
@@ -787,7 +1074,11 @@ class Relations:
         self.owner_changes()
         self.expulsions()
         self.pending_displacements(False)
+        if self.r25:
+            self.war_foes()
         self.decay(1)
+        if self.r25:
+            self.peace(False)
         self.turns(False)
         self.meetings(False)
         self.mixed(False)
@@ -799,7 +1090,11 @@ class Relations:
         self.read_log()
         self.owner_changes()
         self.pending_displacements(True)
+        if self.r25:
+            self.war_foes()
         self.decay(self.w.years)
+        if self.r25:
+            self.peace(True)
         self.turns(True)
         self.meetings(True)
         self.mixed(True)
@@ -846,6 +1141,11 @@ RELATIONS_SMALL = dict(war_memory=400, conquest_memory=600, sack_memory=300, cap
                        # reading X2: beyond 24.3's list, so that standings change and expulsions pass the majority
                        # guard on small maps: more settlers, a short subjection, a fast drift
                        conquest_settlers_permille=600, subject_years=0)
+# P5-03a 10.1: relations-small at 0.25.0: meetings by word after 0 years within 3 borders, the new *_memory fields
+# large as its others, no expulsion gap; the settlers' span 400 - 600 would exceed 1000 with the least 600
+# (relations_settlers), so the span is 400 and the least share 600 stays (reading X4)
+RELATIONS_SMALL_025 = dict(RELATIONS_SMALL, meet_sealed_hops=3, meet_sealed_years=0, foe_war_memory=300,
+                           foe_monster_memory=300, expel_gap_years=0, conquest_settlers_span_permille=400)
 MONSTERS_SMALL_FEAR = dict(fear_raids=2, fear_permille=1000)
 
 
@@ -856,8 +1156,17 @@ def relations_small_data(dat=None):
     import p3_conflict_reference as pcr
     d = pcr.stress_data(dat)
     d = pcr.edited(d, peoples=dict(abandon_reach_hops=0))
-    d.relations = dict(d.relations, **RELATIONS_SMALL)
+    d.relations = dict(d.relations, **(RELATIONS_SMALL_025 if r25() else RELATIONS_SMALL))
     return d
+
+
+def r25():
+    import p3_conflict_reference as pcr
+    return pcr.FLAGS.get("p503a", False)
+
+
+def tuning_of_version():
+    return pdr.RELATIONS_TUNING_025 if r25() else pdr.RELATIONS_TUNING_024
 
 
 def monsters_small_fear_data(dat=None):
@@ -874,7 +1183,7 @@ def zero_data(dat=None):
     import copy
     import p3_conflict_reference as pcr
     d = pcr.edited(dat or pcr.data())
-    d.relations = dict(pdr.RELATIONS_ZERO_024)
+    d.relations = dict(pdr.RELATIONS_ZERO_025 if r25() else pdr.RELATIONS_ZERO_024)
     d.race = copy.deepcopy(d.race)
     for r in d.race:
         d.race[r]["stances"] = []
@@ -1018,7 +1327,7 @@ def in_force(per_race, y):
 
 
 def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=None, ghost_fade_years=0,
-                         log=None):
+                         log=None, seed=None, all_borders=None):
     """19's invariants 1 to 6, 8 to 10 on rows. base_of(a, b): B from the data; race_key: {race id: key};
     monster_kinds: [(key, def)] (8); log: the subsystem's run log (Relations.log), for what rows do not keep."""
     x = Rows(res, borders)
@@ -1081,7 +1390,20 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
         fe = x.stl[s][7]
         fk = x.kind_of(fe) if fe in x.ev else ""
         if fk in ("colony_founded", "settlement_founded") and y0 not in arrivals_into.get(s, []):
-            want = {civ_race[x.stl[s][5]]: (1000, RULING)}
+            fr = civ_race[x.stl[s][5]]
+            want = {fr: (1000, RULING)}
+            q = civ_race.get(x.owner_at(s, y0))
+            if first != want and q is not None and q != fr and x.stl[s][5] != x.owner_at(s, y0):
+                # P5-03a 12 item 1 (validation finding 1): a colony founded in the year its region changes hands has
+                # first rows already under the new rulers: 6.3.3 (with 5.1's settlers) applied to {founder: 1000}
+                least = t["conquest_settlers_permille"]
+                span = t.get("conquest_settlers_span_permille", 0)
+                sq = first.get(q, (0, 0))[0]
+                if (set(first) == {fr, q} and first[q][1] == RULING and first[fr] == (1000 - sq, SUBJECT)
+                        and least <= sq <= least + span and (seed is None or sq == settlers_permille(
+                            least, span, pnr.draw(cr.stream_key(seed, "hist.relations.settlers"), y0, s,
+                                                  x.owner_at(s, y0), 0)) or span == 0)):
+                    want = first
             if first != want:
                 out.append("4: colony %d's first rows %r are not its founder's race" % (s, first))
         if fk == "refugees_settled":
@@ -1182,14 +1504,72 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
         for st in res.get("site", []):
             if st[6] == s and st[10] <= fy and (st[11] is None or st[11] > fy):
                 out.append("10: settlement %d faded at %d while site %d was open" % (s, fy, st[0]))
+    if "meet_sealed_hops" in t:
+        out += violations_025(res, x, t, met, rows_of)
     if log is not None:
-        out += log_violations(res, t, log)
+        out += log_violations(res, t, log, borders, all_borders)
     return out
 
 
-def log_violations(res, t, log):
-    """5 and 6 on the run's log: the room, the population changes."""
+POSITIVE_KINDS_025 = ("refugees_arrived", "war_declared", "monster_raid", "settlement_overrun")
+NEGATIVE_KINDS_025 = ("war_won", "peace", "truce", "civ_conquered", "sacked", "settlement_captured",
+                      "people_expelled")
+
+
+def violations_025(res, x, t, met, rows_of):
+    """P5-03a 14 item 12 (a), (b) and the values of 10.4 on rows; (c) is on the run's log (log_violations)."""
     out = []
+    band = {k: x.value(e[0], "band") for k, e in met.items()}
+    for e in x.events_of("disposition_turned"):
+        k = (x.role(e[0], "race_a")[0], x.role(e[0], "race_b")[0])
+        if k not in met:
+            continue
+        nb = x.value(e[0], "band")
+        cs = x.causes.get(e[0], [])
+        if nb > band[k]:   # (a) a warmer turn: positive contributions or the pair's meeting
+            if not cs or any(c != met[k][0] and x.kind_of(c) not in POSITIVE_KINDS_025 for c in cs) or (
+                    met[k][0] in cs and len(cs) != 1):
+                out.append("12a: warmer turn e%d of %d-%d cites %r" % (e[0], k[0], k[1], [x.kind_of(c) for c in cs]))
+        else:   # 3.5: a colder turn: negative contributions, else its last turn, else its meeting
+            if not cs or any(x.kind_of(c) not in NEGATIVE_KINDS_025 + ("disposition_turned", "peoples_met")
+                             for c in cs):
+                out.append("3.5: colder turn e%d of %d-%d cites %r" % (e[0], k[0], k[1],
+                                                                      [x.kind_of(c) for c in cs]))
+        band[k] = nb
+    last = {}
+    for e in sorted(x.events_of("people_expelled")):   # (b)
+        c = x.role(e[0], "civilization")[0]
+        if c in last and e[1] - last[c] < t["expel_gap_years"]:
+            out.append("12b: realm %d expels at %d and %d, closer than %d" % (c, last[c], e[1], t["expel_gap_years"]))
+        last[c] = e[1]
+        st, yrs = x.value(e[0], "standing"), x.value(e[0], "years")
+        if st not in (0, 1) or yrs is None or yrs < 0:
+            out.append("10.4: people_expelled e%d standing %r years %r" % (e[0], st, yrs))
+    for e in x.events_of("peoples_met"):
+        if x.value(e[0], "sealed") not in (0, 1):
+            out.append("10.4: peoples_met e%d sealed %r" % (e[0], x.value(e[0], "sealed")))
+    for e in x.events_of("settlement_mixed"):
+        st, mj = x.value(e[0], "standing"), x.value(e[0], "majority")
+        if st not in (0, 1, 2) or mj not in (0, 1):
+            out.append("10.4: settlement_mixed e%d standing %r majority %r" % (e[0], st, mj))
+    return out
+
+
+def log_violations(res, t, log, borders=None, all_borders=None):
+    """5 and 6 on the run's log: the room, the population changes; P5-03a 14 item 12 (c) on the meetings."""
+    out = []
+    if all_borders is not None:
+        ob, ab = Rows(res, borders), Rows(res, all_borders)
+        for item in log:
+            if item[1] != "met" or len(item) < 9:
+                continue
+            _y, _w, a, b, h, _region, sealed, Rx, Ry = item
+            ho, hb = ob.hops(Rx).get(Ry), ab.hops(Rx).get(Ry)
+            if sealed and not ((ho is None or ho > t["meet_hops"]) and hb is not None and hb <= t["meet_sealed_hops"]
+                               and hb == h):
+                out.append("12c: sealed meeting of %d-%d: open hops %s, border hops %s" % (a, b, ho, hb))
+            if not sealed and (ho is None or ho > t["meet_hops"] or ho != h):
+                out.append("12c: open meeting of %d-%d at open hops %s" % (a, b, ho))
     for item in log:
         if item[1] == "arrival":
             _y, _w, frm, u, g, taken, ng = item
@@ -1314,7 +1694,9 @@ def reader_problems(res, E):
     if races is not None:
         for p in sorted(res["event_participant"]):
             if p[3] == RACE and p[4] not in races:
-                out.append("corrupt table 'event': row %d: race %d has no row" % (p[0], p[4]))
+                # P5-03a 12 item 2: event_catalogue.cpp's race_participant_problem (P5-02 11.4's order)
+                out.append("corrupt table 'event_participant': row (%d, %d): race %d does not exist" % (p[0], p[1],
+                                                                                                         p[4]))
                 break
     return out
 
@@ -1372,7 +1754,36 @@ def stats_of(res, E, mixed_min=100):
         ("abandonment_lost", sum(val(e, "lost") for e in ev_of.get("settlement_abandoned_to", []))),
         ("monster_stories", told_monsters(res, ev_of, val)),
         ("ruins_oldest_year", min((s[12] for s in ruins), default="-")),
-    ]
+    ] + (stats_025(res, ev_of, val) if r25() else [])
+
+
+def stats_025(res, ev_of, val):
+    vkeys = {}
+    for k, seq, key in res["event_kind_value"]:
+        vkeys.setdefault(k, {})[key] = seq
+    vals = {}
+    for e, seq, v in res["event_value"]:
+        vals.setdefault(e, {})[seq] = v
+    """P5-03a 9.6: peoples_met_by_word, dispositions_warmed (into a higher band than the pair's previous band)."""
+    parts = {}
+    for p in res["event_participant"]:
+        parts.setdefault(p[0], []).append(p)
+
+    def pair(e):
+        ps = sorted(parts.get(e[0], []))
+        return (ps[0][4], ps[1][4])
+    band = {pair(e): val(e, "band") for e in ev_of.get("peoples_met", [])}
+    warmed = 0
+    for e in sorted(ev_of.get("disposition_turned", [])):
+        k = pair(e)
+        nb = val(e, "band")
+        if k in band and nb > band[k]:
+            warmed += 1
+        band[k] = nb
+    def sealed(e):
+        return vals.get(e[0], {}).get(vkeys[e[3]].get("sealed"), 0) if "sealed" in vkeys.get(e[3], {}) else 0
+    return [("peoples_met_by_word", sum(1 for e in ev_of.get("peoples_met", []) if sealed(e) == 1)),
+            ("dispositions_warmed", warmed)]
 
 
 def told_monsters(res, ev_of, val):
@@ -1390,8 +1801,8 @@ def told_monsters(res, ev_of, val):
 
 
 HEADER = """\
-# P5-03 golden values (docs/specs/p5-03-race-relations.md r1 sections 6, 7, 9 to 14, 16, 21, 23), generator 0.24.0
-# (schema 10), written by worldgen/tests/reference/p5_03_relations_reference.py golden, an independent reference
+# P5-03 golden values (docs/specs/p5-03-race-relations.md r1 sections 6, 7, 9 to 14, 16, 21, 23; P5-03a r1 3 to 8,
+# 9.6, 12), generator %s (schema 10), written by worldgen/tests/reference/p5_03_relations_reference.py golden, an independent reference
 # written from the spec (the relations subsystem runs inside p3_conflict_reference.py's replay, the part-B rules in
 # p5_02_monsters_reference.py and p3_peoples_reference.py). Do not edit by hand; never regenerate to make a C++
 # test pass.
@@ -1428,7 +1839,7 @@ def fixture_sets():
 
 def golden_text(inputs, fixtures_only=False):
     import p3_conflict_reference as pcr
-    o = [HEADER.rstrip("\n")]
+    o = [(HEADER % pcr.GENERATOR_VERSION).rstrip("\n")]
     for dname, dat in fixture_sets():
         for seed in FIXTURE_SEEDS:
             span, races, civs, intensity = pcr.STRESS_CASES.get(seed, pcr.synthetic_case(seed))
@@ -1442,6 +1853,13 @@ def golden_text(inputs, fixtures_only=False):
             res = pcr.world_case(name, seed, size, span, races, detail, inputs, pcr.data(), civs, intensity)
             o.append("case %s %d %d %d %s --history-detail %s --civs-per-race %s --event-intensity %s" % (
                 name, seed, size, span, races, detail, civs, intensity))
+            o += case_lines(name, res, span, MIXED_SHARE_MIN)
+        if r25():   # P5-03a 12 item 6: the world-hashes.sh case p5-monsters-high-1024 (slow suite)
+            import p5_02_monsters_reference as p502
+            name, seed, size, span, races, detail, civs, intensity = p502.WORLD_CASE_HIGH
+            res = p502.world_case_high(inputs, pcr.data())
+            o.append("case %s %d %d %d %s --history-detail %s --civs-per-race %s --event-intensity %s "
+                     "--monster-pressure high" % (name, seed, size, span, races, detail, civs, intensity))
             o += case_lines(name, res, span, MIXED_SHARE_MIN)
     return "\n".join(o) + "\n"
 
@@ -1489,8 +1907,10 @@ def check_units(c):
     c.eq("6.2.2 decay stops at 0 (negative)", decay_step(-300, 1, 40), 0)
     c.eq("6.2.2 25 ticks equal one quiet step of 25", [decay_step(x, 1, 40) for x in [12345]] and
          __import__("functools").reduce(lambda m, _: decay_step(m, 1, 40), range(25), 12345), decay_step(12345, 25, 40))
-    c.eq("6.2.2 clamp to memory_max x 1000", clamp_memory(300000, t), 250000)
-    c.eq("6.2.2 clamp to memory_min x 1000", clamp_memory(-300000, t), -250000)
+    # (the calibrated bounds of the data, -500 and 500 at 0.24.0)
+    c.eq("6.2.2 clamp to memory_max x 1000", clamp_memory(t["memory_max"] * 1000 + 1, t), t["memory_max"] * 1000)
+    c.eq("6.2.2 clamp to memory_min x 1000", clamp_memory(t["memory_min"] * 1000 - 1, t), t["memory_min"] * 1000)
+    c.eq("6.2.2 inside the bounds unchanged", clamp_memory(t["memory_max"] * 1000 - 1, t), t["memory_max"] * 1000 - 1)
     # bands at a meeting and the hysteresis boundaries (h -500, f 150, m 50)
     for D, want in ((-500, 0), (-499, 1), (149, 1), (150, 2)):
         c.eq("6.2.3 plain band at %d" % D, plain_band(D, t), want)
@@ -1531,9 +1951,10 @@ def check_units(c):
     c.eq("9.2 above kill_max a quarter of the rest: 3000 x 0.12 = 360 -> 200 + 40", toll_dead(3000, 120, 200, 250), 240)
     c.eq("9.2 at most P - 1", toll_dead(1, 1000, 200, 250), 0)
     mt = dict(pdr.MONSTERS_TUNING_024)
-    c.eq("9.3 struck once: 20", hunt_permille(1, mt), 20)
-    c.eq("9.3 struck four times: 20 + 3 x 60 = 200", hunt_permille(4, mt), 200)
-    c.eq("9.3 the cap 400", hunt_permille(20, mt), 400)
+    hp, hr, hm = mt["hunt_permille"], mt["hunt_raid_permille"], mt["hunt_max_permille"]   # calibrated 20, 5, 200
+    c.eq("9.3 struck once: hunt_permille", hunt_permille(1, mt), hp)
+    c.eq("9.3 struck four times: hunt_permille + 3 x hunt_raid_permille", hunt_permille(4, mt), min(hm, hp + 3 * hr))
+    c.eq("9.3 the cap hunt_max_permille", hunt_permille(1 + (hm - hp) // max(1, hr) + 5, mt), hm)
     for P, want in ((800, 900), (400, 900), (1200, 900 * 666 // 1000), (3000, 900 * 266 // 1000)):
         c.eq("14.1 giant at normal, P %d" % P, overrun_chance(900, 1000, P, 800), want)
     c.eq("14.2 giant 900 at high is 1000", overrun_chance(900, 1600, 100, 800), 1000)
@@ -1547,13 +1968,13 @@ def check_units(c):
     c.eq("11.1 road at most P - 1", road_loss(10, 0, 1000, 1000), 9)
 
 
-def stub(races=("elf", "goblin"), regions=3, relations=None):
+def stub(races=("elf", "goblin"), regions=3, relations=None, borders=None):
     """A hand-made conflict World (p3_conflict_reference.unit_world) with the relations subsystem of the data's
-    tuning (edits in `relations`)."""
+    tuning (edits in `relations`); borders: region_border rows (default: a walkable chain)."""
     import p3_conflict_reference as pcr
-    w = pcr.unit_world(regions=regions, races=races)
+    w = pcr.unit_world(regions=regions, races=races, borders=borders)
     d = w.dat if hasattr(w, "dat") else pcr.data()
-    t = dict(pdr.RELATIONS_TUNING_024, **(relations or {}))
+    t = dict(tuning_of_version(), **(relations or {}))
     camp = {(ka, kb): pcr.data().conflict["camp"][f] for (ka, kb), f in pcr.CAMP_FIELD.items()}
     rel = Relations(w, t, camp, {})
     return w, rel
@@ -1598,7 +2019,7 @@ def check_stub_units(c):
     rel.expulsions()
     ev = w.events[n0:]
     c.eq("6.5 one people_expelled of 300 (P x share div 1000)", [(e["key"], e["values"]) for e in ev],
-         [("people_expelled", {1: 300})])
+         [("people_expelled", {1: 300, 2: TOLERATED, 3: 0} if r25() else {1: 300})])
     c.eq("6.5 the population falls by 300 and the entry goes", (w.stl(s1)["population"], sorted(rel.sh[s1]["e"])),
          (700, [elf]))
     c.eq("6.5 a displaced record of the race", [(r["kind"], r["race"], r["people"]) for r in rel.pending],
@@ -1611,8 +2032,8 @@ def check_stub_units(c):
     n0 = len(w.events)
     rel.expulsions()
     c.eq("6.5 the majority guard: a share above expel_share_max stays", [e["key"] for e in w.events[n0:]], [])
-    # 6.3.3: an owner change to another race; to the same race
-    w2, rel2 = stub()
+    # 6.3.3: an owner change to another race; to the same race (P5-03a 5.1: the span 0, settlers 100 exactly)
+    w2, rel2 = stub(relations=dict(conquest_settlers_permille=100, conquest_settlers_span_permille=0))
     a1 = pcr.add_civ(w2, elf, 1)
     a2 = pcr.add_civ(w2, gob, 2)
     a3 = pcr.add_civ(w2, elf, 3)
@@ -1653,10 +2074,354 @@ def check_stub_units(c):
     ev = w3.events[-1]
     c.eq("6.2.4 the meeting: region of the younger, B, the plain band, the younger's founding",
          (ev["region"], ev["values"], ev["causes"]),
-         (4, {1: rel3.pair(elf, gob)["B"], 2: plain_band(rel3.pair(elf, gob)["B"], rel3.t)},
-          [w3.civ(b2)["founding_event"]]))
+         (4, {**{1: rel3.pair(elf, gob)["B"], 2: plain_band(rel3.pair(elf, gob)["B"], rel3.t)},
+              **({3: 0} if r25() else {})}, [w3.civ(b2)["founding_event"]]))
     rel3b = stub(regions=4, relations=dict(meet_hops=-1))[1]
     c.eq("6.2.4 meet_hops -1: never", rel3b.t["meet_hops"], -1)
+
+
+# ---------------------------------------------------------------------------
+# P5-03a units (14 items 2 to 9) on hand-checked values and stub worlds
+# ---------------------------------------------------------------------------
+
+def check_units_025(c):
+    t = dict(pdr.RELATIONS_TUNING_025)
+    # 3.2 the gain: g = years x 60 x 1000 div 100 = 600 a year; cap 300 x 1000
+    c.eq("3.2 a tick year at 60/century gains 600", peace_gain(0, 1, 60, 300), 600)
+    c.eq("3.2 a quiet step of 25 years gains 15000", peace_gain(-20000, 25, 60, 300), -5000)
+    c.eq("3.2 the cap: below it, up to it", peace_gain(299700, 1, 60, 300), 300000)
+    c.eq("3.2 the cap: at it, no gain", peace_gain(300000, 1, 60, 300), 300000)
+    c.eq("3.2 the cap: above it (by other sources), unchanged", peace_gain(310000, 1, 60, 300), 310000)
+    c.eq("3.2 per_century 0: no gain", peace_gain(-7000, 100, 0, 300), -7000)
+    # 3.2's prose: a good-neutral pair (B -150) at peace reaches D = 150 after 100 + 750 years (gain 600 - decay 200)
+    M, y = 0, 0
+    while disposition(-150, M) < t["friend_min"]:
+        M = peace_gain(decay_step(M, 1, t["memory_decay_per_century"]), 1, 60, 300)
+        y += 1
+    c.eq("3.2 good-neutral: friendship after 750 years of counted peace (decay 20)", y, 750)
+    M, y = 0, 0
+    for _ in range(5000):
+        M = peace_gain(decay_step(M, 1, t["memory_decay_per_century"]), 1, 60, 300)
+    c.eq("3.2 a neutral-evil pair (B -250) stays wary: D tops at +50", disposition(-250, M), 50)
+    # 5.1 settlers: sigma = 50 + pick(u, 401), 50 to 450
+    c.eq("5.1 the least settlers at u = 0", settlers_permille(50, 400, 0), 50)
+    c.eq("5.1 the most settlers at the largest u", settlers_permille(50, 400, (1 << 64) - 1), 450)
+    c.eq("5.1 span 0 is the least share", settlers_permille(100, 0, (1 << 64) - 1), 100)
+    c.eq("5.1 a one-race town taken at sigma 450", conquest_shares({1: 1000}, 2, 450), {1: 550, 2: 450})
+    # 8 A1: the ruling race of a host of 1 with 2000 newcomers: largest remainder gives it 0; it takes 1
+    S, G = {1: 1000}, {2: 1000}
+    raw = mix_shares(S, G, 2000, 1)
+    c.eq("8 A1 the plain split drops the ruling race", raw, {2: 1000})
+    c.eq("8 A1 the ruling race keeps 1 from the largest share", keep_ruling(raw, 1), {1: 1, 2: 999})
+    c.eq("8 A1 ties of the largest share go to the smaller race id",
+         keep_ruling({2: 500, 3: 500}, 1), {1: 1, 2: 499, 3: 500})
+    c.eq("8 A1 a ruling share above 0 is kept", keep_ruling({1: 3, 2: 997}, 1), {1: 3, 2: 997})
+    # 6 the undead threshold: T = max(1000, P_W x 25 div 1000); x 1000 div max(1, M)
+    for P_W, M, want in ((0, 1000, 1000), (39999, 1000, 1000), (40000, 1000, 1000), (40040, 1000, 1001),
+                         (160000, 1000, 4000), (160000, 1600, 2500), (40000, 500, 2000), (160000, 0, 4000000)):
+        c.eq("6 undead threshold at P_W %d, M %d" % (P_W, M), undead_threshold_025(1000, 25, P_W, M), want)
+    # 9.3 the summary's ruins
+    ruins = [(i, 1000 + 10 * i, 100 + (37 * i) % 17 * 10) for i in range(1, 18)]   # 17 ruins, years ascending
+    ids, more = summary_ruins(ruins)
+    old = [1, 2, 3, 4, 5]
+    new = [13, 14, 15, 16, 17]
+    big = sorted(ruins, key=lambda r: (-r[2], r[0]))[:5]
+    c.eq("9.3 17 ruins: the 5 oldest, 5 largest and 5 most recent", ids, sorted(set(old + new + [r[0] for r in big])))
+    c.eq("9.3 and x more", more, 17 - len(ids))
+    c.eq("9.3 15 ruins: all listed", summary_ruins(ruins[:15]), (list(range(1, 16)), 0))
+    c.eq("9.3 ties of age by id, of size by id",
+         summary_ruins([(i, 500, 10) for i in range(1, 18)]), ([1, 2, 3, 4, 5, 13, 14, 15, 16, 17], 7))
+
+
+def closed(a, b):
+    return dict(a=a, b=b, walk_pairs=0, length_m=1000)
+
+
+def opened(a, b):
+    return dict(a=a, b=b, walk_pairs=5, length_m=1000)
+
+
+def check_stub_units_025(c):
+    import p3_conflict_reference as pcr
+    # --- 3.5 credit: no change before the meeting; +-units x 1000, clamped; eight contributions of each sign
+    w, rel = stub()
+    ids = {r[1]: r[0] for r in w.inp.races}
+    elf, gob = ids["elf"], ids["goblin"]
+    p = rel.pair(elf, gob)
+    rel.credit(elf, gob, 50, 7)
+    c.eq("3.5 credit on an unmet pair: nothing", (p["M"], p["pos"], p["neg"]), (0, [], []))
+    p.update(met=True, met_year=900, met_event=3, strife_year=900)
+    rel.credit(gob, elf, 50, 7)
+    rel.credit(elf, gob, -20, 8)
+    rel.credit(elf, gob, 0, 9)
+    c.eq("3.5 credit: +50 then -20 (either race order); units 0 in no list", (p["M"], p["pos"], p["neg"]),
+         (30000, [7], [8]))
+    rel.credit(elf, gob, 100000, 10)
+    c.eq("3.5 credit clamps to memory_max x 1000", p["M"], rel.t["memory_max"] * 1000)
+    for e in range(20, 32):
+        rel.credit(elf, gob, 1, e)
+        rel.credit(elf, gob, -1, e + 100)
+    c.eq("3.5 the last 8 of each sign", (p["pos"], p["neg"]), (list(range(24, 32)), list(range(124, 132))))
+    # --- 3.5 a turn's causes by its direction
+    w, rel = stub()
+    for _ in range(12):   # events 1 to 12 to cite
+        pcr.add_civ(w, elf, 1)
+    p = rel.pair(elf, gob)
+    w.serial = 99
+    t = rel.t
+    p.update(met=True, met_year=900, met_event=3, band=WARINESS, M=0, strife_year=900)
+    B = p["B"]
+    p["M"] = (t["friend_min"] - B) * 1000
+    p["pos"], p["neg"] = [6, 4], [5]
+    n0 = len(w.events)
+    rel.turns(False)
+    ev = w.events[n0:]
+    c.eq("3.5 a warmer turn cites the positive contributions ascending",
+         [(e["key"], e["values"][2], e["causes"]) for e in ev], [("disposition_turned", FRIENDSHIP, [4, 6])])
+    c.eq("3.5 both lists cleared at a turn", (p["pos"], p["neg"]), ([], []))
+    turn1 = ev[0]["id"]
+    p["M"] = (t["friend_min"] - t["band_margin"] - 1 - B) * 1000
+    n0 = len(w.events)
+    rel.turns(False)
+    c.eq("3.5 a colder turn without negative contributions cites the last turn",
+         [(e["values"][2], e["causes"]) for e in w.events[n0:]], [(WARINESS, [turn1])])
+    p.update(band=WARINESS, turn_event=0, M=(t["hatred_max"] - B) * 1000, pos=[11], neg=[])
+    n0 = len(w.events)
+    rel.turns(False)
+    c.eq("3.5 a colder turn with no turn yet cites the meeting (positive contributions not cited)",
+         [(e["values"][2], e["causes"]) for e in w.events[n0:]], [(HATRED, [3])])
+    p.update(M=(t["hatred_max"] + t["band_margin"] + 1 - B) * 1000, pos=[], neg=[12])
+    n0 = len(w.events)
+    rel.turns(False)
+    c.eq("3.5 a warmer turn without positive contributions cites the meeting (peace did it)",
+         [(e["values"][2], e["causes"]) for e in w.events[n0:]], [(WARINESS, [3])])
+    # --- 3.2 peace: contact over a closed border at contact_hops and + 1; the clock; the war reset
+    w, rel = stub(regions=4, borders=[opened(1, 2), closed(2, 3), opened(3, 4)])
+    c1 = pcr.add_civ(w, elf, 1)
+    c2 = pcr.add_civ(w, gob, 2)
+    s1 = pcr.add_stl(w, c1, 1, 3, 500)
+    s2 = pcr.add_stl(w, c2, 3, 3, 500)
+    w.civ(c1)["capital"], w.civ(c2)["capital"] = s1, s2
+    p = rel.pair(elf, gob)
+    p.update(met=True, met_year=500, met_event=1, band=WARINESS, M=0, strife_year=w.year - t["peace_years"])
+    rel.t = dict(t, contact_hops=1)
+    rel.peace(False)
+    c.eq("3.2 regions 1 and 3 are 2 borders apart (one closed): no contact at contact_hops 1", p["M"], 0)
+    rel.t = dict(t, contact_hops=2)
+    rel.peace(False)
+    c.eq("3.2 contact at contact_hops 2 over the closed border; peace_years reached: +600", p["M"], 600)
+    p.update(strife_year=w.year - t["peace_years"] + 1, M=0)
+    rel.peace(False)
+    c.eq("3.2 peace_years - 1: no gain", p["M"], 0)
+    w.years = 25
+    p.update(strife_year=w.year - t["peace_years"])
+    rel.peace(True)
+    c.eq("3.2 a quiet step of 25 years: 25 x 600", p["M"], 15000)
+    e_war = len(w.events)
+    w.relations[(CIV, c2, CIV, c1, "war")] = e_war
+    p["M"] = 0
+    rel.peace(False)
+    c.eq("3.2 an open war between the two peoples resets strife_year, no gain", (p["strife_year"], p["M"]),
+         (w.year, 0))
+    del w.relations[(CIV, c2, CIV, c1, "war")]
+    w.year += t["peace_years"] - 1
+    rel.peace(False)
+    c.eq("3.2 peace_years - 1 after the war: no gain", p["M"], 0)
+    w.year += 1
+    p["M"] = -10000
+    rel.decay(1)
+    rel.peace(False)
+    c.eq("3.2 with decay (T6 order: decay, then peace): -10000 + 200 + 600", p["M"], -9200)
+    # --- 3.3 a common enemy in war: elf and goblin both at war with a human realm z
+    w, rel = stub(races=("elf", "goblin", "human"), regions=3)
+    ids = {r[1]: r[0] for r in w.inp.races}
+    elf, gob, hum = ids["elf"], ids["goblin"], ids["human"]
+    ce, cg, z, z2, ce2 = (pcr.add_civ(w, elf, 1), pcr.add_civ(w, gob, 2), pcr.add_civ(w, hum, 3),
+                          pcr.add_civ(w, hum, 3), pcr.add_civ(w, elf, 1))
+    p = rel.pair(elf, gob)
+    p.update(met=True, met_year=500, met_event=1)
+    fy, fm = rel.t["foe_years"], rel.t["foe_war_memory"]
+    w.relations[(CIV, z, CIV, ce, "war")] = 21
+    w.relations[(CIV, cg, CIV, z, "war")] = 22
+    rel.war_foes()
+    c.eq("3.3 two open wars of one realm: one credit of foe_war_memory, the larger opening event",
+         (p["M"], p["pos"]), (fm * 1000, [22]))
+    rel.war_foes()
+    c.eq("3.3 once per pair and enemy realm", p["M"], fm * 1000)
+    w.relations = {}
+    w.relations[(CIV, z2, CIV, ce, "war")] = 23
+    rel.war_foes()
+    c.eq("3.3 one war of a second realm z2: no pair yet", p["M"], fm * 1000)
+    w.relations = {}
+    w.year += fy - 1
+    w.relations[(CIV, cg, CIV, z2, "war")] = 24
+    rel.war_foes()
+    c.eq("3.3 the second war within foe_years of the first: a credit for z2", (p["M"], p["pos"]),
+         (2 * fm * 1000, [22, 24]))
+    w2, rel2 = stub(races=("elf", "goblin", "human"), regions=3)
+    ce, cg, z = pcr.add_civ(w2, elf, 1), pcr.add_civ(w2, gob, 2), pcr.add_civ(w2, hum, 3)
+    p2 = rel2.pair(elf, gob)
+    p2.update(met=True, met_year=500, met_event=1)
+    w2.relations = {(CIV, z, CIV, ce, "war"): 21}
+    rel2.war_foes()
+    w2.relations = {}
+    w2.year += fy
+    w2.relations = {(CIV, cg, CIV, z, "war"): 22}
+    rel2.war_foes()
+    c.eq("3.3 the second war at foe_years after the first: no credit", p2["M"], 0)
+    w3, rel3 = stub(races=("elf", "goblin", "human"), regions=3)
+    ce, cg, ce2 = pcr.add_civ(w3, elf, 1), pcr.add_civ(w3, gob, 2), pcr.add_civ(w3, elf, 3)
+    p3 = rel3.pair(elf, gob)
+    p3.update(met=True, met_year=500, met_event=1)
+    w3.relations = {(CIV, ce, CIV, cg, "war"): 21, (CIV, ce, CIV, ce2, "war"): 22}
+    rel3.war_foes()
+    c.eq("3.3 the enemy's own race excluded (an elf realm at war with goblins and elves)", (p3["M"], p3["pos"]),
+         (0, []))
+    w4, rel4 = stub(races=("elf", "goblin", "human"), regions=3)
+    ce, cg, z = pcr.add_civ(w4, elf, 1), pcr.add_civ(w4, gob, 2), pcr.add_civ(w4, hum, 3)
+    p4 = rel4.pair(elf, gob)
+    w4.relations = {(CIV, z, CIV, ce, "war"): 21, (CIV, z, CIV, cg, "war"): 22}
+    rel4.war_foes()
+    c.eq("3.3 an unmet pair: no credit, not marked", (p4["M"], rel4.credited_civ), (0, set()))
+    p4.update(met=True, met_year=w4.year, met_event=30)
+    rel4.war_foes()
+    c.eq("3.3 after the meeting the same realm credits", p4["M"], rel4.t["foe_war_memory"] * 1000)
+    # --- 3.3 a monster raiding two peoples within foe_years, once per (pair, m)
+    w5, rel5 = stub(races=("elf", "goblin", "human"), regions=3)
+    ce, cg, ch = pcr.add_civ(w5, elf, 1), pcr.add_civ(w5, gob, 2), pcr.add_civ(w5, hum, 3)
+    k = w5.cat_by_key["monster_raid"]
+    seq = {r["role"]: r["seq"] for r in k["roles"]}
+
+    def raid(m, civ, year, e):
+        return dict(key="monster_raid", year=year, participants=[(1, seq["monster"], MONSTER, m),
+                                                                  (2, seq["civilization"], CIV, civ)])
+    p5 = rel5.pair(elf, gob)
+    p5.update(met=True, met_year=500, met_event=1)
+    rel5.monster_foe(31, raid(1, ce, w5.year, 31))
+    rel5.monster_foe(32, raid(1, cg, w5.year, 32))
+    c.eq("3.3 a monster raiding elves then goblins: a credit citing the second raid",
+         (p5["M"], p5["pos"]), (rel5.t["foe_monster_memory"] * 1000, [32]))
+    rel5.monster_foe(33, raid(1, ce, w5.year, 33))
+    c.eq("3.3 once per pair and monster", p5["M"], rel5.t["foe_monster_memory"] * 1000)
+    rel5.monster_foe(34, raid(2, ce, w5.year - fy, 34))
+    w5.year += 0
+    rel5.monster_foe(35, raid(2, cg, w5.year, 35))
+    c.eq("3.3 a second monster's raids foe_years apart: no credit", p5["M"], rel5.t["foe_monster_memory"] * 1000)
+    rel5.monster_foe(36, raid(3, ch, w5.year, 36))
+    rel5.monster_foe(37, raid(3, ce, w5.year, 37))
+    c.eq("3.3 an unmet pair (elf-human): no credit", rel5.pair(elf, hum)["M"], 0)
+    # --- 4.2 meeting by word: regions 1 and 3 behind two closed borders
+    def sealed_world(hops, years, borders=None):
+        w, rel = stub(regions=3, borders=borders or [closed(1, 2), closed(2, 3)],
+                      relations=dict(meet_sealed_hops=hops, meet_sealed_years=years))
+        b1 = pcr.add_civ(w, elf, 1, founded=0)
+        b2 = pcr.add_civ(w, gob, 3, founded=10)
+        pcr.add_stl(w, b1, 1, 3, 500)
+        pcr.add_stl(w, b2, 3, 3, 500)
+        rel.awakened = {elf, gob}
+        rel.aw_cursor = len(w.events) + 1
+        w.serial = 99
+        return w, rel, b2
+
+    def meet_step(w, rel):
+        n0 = len(w.events)
+        rel.meetings(False)
+        return [e for e in w.events[n0:] if e["key"] == "peoples_met"]
+    w, rel, b2 = sealed_world(2, 300)
+    p = rel.pair(elf, gob)
+    c.eq("4.2 h 2 at meet_sealed_hops 2: no meeting yet, word_since set", (meet_step(w, rel), p["word_since"]),
+         ([], 1000))
+    w.year = 1299
+    c.eq("4.2 meet_sealed_years - 1: no meeting, word_since kept", (meet_step(w, rel), p["word_since"]), ([], 1000))
+    w.year = 1300
+    ev = meet_step(w, rel)
+    c.eq("4.2 at meet_sealed_years: met by word (sealed 1), the younger's region and founding",
+         [(e["region"], e["values"][3], e["causes"]) for e in ev], [(3, 1, [w.civ(b2)["founding_event"]])])
+    w, rel, b2 = sealed_world(1, 300)
+    p = rel.pair(elf, gob)
+    p["word_since"] = 900
+    c.eq("4.2 h 2 above meet_sealed_hops 1: word_since reset to 0", (meet_step(w, rel), p["word_since"]), ([], 0))
+    w, rel, b2 = sealed_world(-1, 0)
+    c.eq("4.2 meet_sealed_hops -1: never", meet_step(w, rel), [])
+    w, rel, b2 = sealed_world(2, 0, borders=[opened(1, 2), opened(2, 3)])
+    ev = meet_step(w, rel)
+    c.eq("4.2 an open meeting first: sealed 0", [e["values"][3] for e in ev], [0])
+    w, rel, b2 = sealed_world(2, 0)
+    rel.t["meet_hops"] = -1
+    ev = meet_step(w, rel)
+    c.eq("4.2 meet_hops -1 keeps the meeting by word", [e["values"][3] for e in ev], [1])
+    # --- 5.1 settlers: drawn only on a change of people
+    w, rel = stub()
+    draws = []
+    real = w.draw
+
+    def counting(stream, a, b, k):
+        draws.append((stream, a, b, k))
+        return real(stream, a, b, k)
+    w.draw = counting
+    a1, a2, a3 = pcr.add_civ(w, elf, 1), pcr.add_civ(w, gob, 2), pcr.add_civ(w, elf, 3)
+    t1 = pcr.add_stl(w, a1, 1, 3, 1000)
+    rel.new_settlements()
+    w.stl(t1)["owner_civ"], w.stl(t1)["owner_event"] = a3, 2
+    rel.owner_changes()
+    c.eq("5.1 the same people taking a town: no draw", [d for d in draws if d[0] == "hist.relations.settlers"], [])
+    w.stl(t1)["owner_civ"], w.stl(t1)["owner_event"] = a2, 3
+    rel.owner_changes()
+    c.eq("5.1 another people: one draw keyed (settlement, new owner, 0)",
+         [d for d in draws if d[0] == "hist.relations.settlers"], [("hist.relations.settlers", t1, a2, 0)])
+    sg = rel.sh[t1]["e"][gob]["share"]
+    c.ok("5.1 the conquerors' share in [50, 450]: %d" % sg, 50 <= sg <= 450)
+    c.eq("5.1 the share is the draw's", sg, settlers_permille(50, 400, real("hist.relations.settlers", t1, a2, 0)))
+    # --- 5.3 the expulsion gap and the values
+    for gap_ago, want in ((t["expel_gap_years"] - 1, []), (t["expel_gap_years"], ["people_expelled"])):
+        w, rel = stub(relations=dict(expel_permille=1000))
+        c1, c2 = pcr.add_civ(w, elf, 1), pcr.add_civ(w, gob, 2)
+        s1 = pcr.add_stl(w, c1, 1, 3, 1000)
+        w.civ(c1)["capital"] = s1
+        rel.new_settlements()
+        rel.pair(elf, gob).update(met=True, met_event=1, band=HATRED)
+        rel.mix(s1, {gob: 1000}, 300, 700, 2)
+        rel.sh[s1]["e"][gob].update(standing=SUBJECT, since_year=w.year - 77)
+        rel.last_expel[c1] = w.year - gap_ago
+        w.serial = 99
+        draws = []
+        real = w.draw
+        w.draw = counting
+        n0 = len(w.events)
+        rel.expulsions()
+        ev = w.events[n0:]
+        c.eq("5.3 last expulsion %d years ago (gap %d)" % (gap_ago, t["expel_gap_years"]), [e["key"] for e in ev],
+             want)
+        c.eq("5.3 no draw in the gap" if not want else "5.3 a draw past the gap",
+             len([d for d in draws if d[0] == "hist.relations.expel"]), 0 if not want else 1)
+        if want:
+            c.eq("5.3 standing 0 and years 77", (ev[0]["values"][2], ev[0]["values"][3]), (SUBJECT, 77))
+    # --- 5.2 the mixed values
+    w, rel = stub()
+    c1 = pcr.add_civ(w, elf, 1)
+    s1 = pcr.add_stl(w, c1, 1, 3, 1000)
+    rel.new_settlements()
+    rel.pair(elf, gob).update(met=True, met_event=1, band=FRIENDSHIP)
+    rel.mix(s1, {gob: 1000}, 600, 400, 2)
+    w.serial = 99
+    n0 = len(w.events)
+    rel.mixed(False)
+    ev = w.events[n0:]
+    c.eq("5.2 settlement_mixed: share 600, standing 2 (friendship), majority 1",
+         [e["values"] for e in ev], [{1: 600, 2: ACCEPTED, 3: 1}])
+    # --- 8 A1 in the subsystem's mix
+    w, rel = stub()
+    c1 = pcr.add_civ(w, elf, 1)
+    s1 = pcr.add_stl(w, c1, 1, 3, 1)
+    rel.new_settlements()
+    rel.mix(s1, {gob: 1000}, 2000, 1, 2)
+    c.eq("8 A1 a host of 1 taking 2000 keeps its ruling race at share 1",
+         {g: (e["share"], e["standing"]) for g, e in rel.sh[s1]["e"].items()},
+         {elf: (1, RULING), gob: (999, rel.target_new(s1, gob))})
+    # --- 8 A2 dispositions valid before the first step
+    w, rel = stub()
+    c.eq("8 A2 disposition before the first step equals B, no hatred event",
+         (rel.disposition(elf, gob), rel.hatred_event(elf, gob)), (rel.pair(elf, gob)["B"], 0))
 
 
 # ---------------------------------------------------------------------------
@@ -1722,8 +2487,9 @@ def check_reader(c):
          ["corrupt table 'event': row 3: 1-2 met twice"])
     r = mini_rows()
     r["event_participant"] = r["event_participant"][:3] + [(2, 2, 2, RACE, 8)]
-    c.eq("16.4 an unknown race participant", [m for m in reader_problems(r, E) if "'event'" in m],
-         ["corrupt table 'event': row 2: race 8 has no row"])
+    c.eq("16.4 an unknown race participant (P5-03a 12 item 2)",
+         [m for m in reader_problems(r, E) if "'event_participant'" in m],
+         ["corrupt table 'event_participant': row (2, 2): race 8 does not exist"])
 
 
 # ---------------------------------------------------------------------------
@@ -1746,7 +2512,8 @@ def res_violations(res, dat):
     base = (lambda a, b: rel.disposition(a, b) if a == b else rel.pair(a, b)["B"]) if rel else (lambda a, b: 0)
     return invariant_violations(res, dat.relations, inp.params["span"], borders, base,
                                 {r[0]: r[1] for r in inp.races}, list(dat.base.monsters),
-                                dat.peoples.get("ghost_fade_years", 0), rel.log if rel else None)
+                                dat.peoples.get("ghost_fade_years", 0), rel.log if rel else None, seed=inp.seed,
+                                all_borders=[(b["a"], b["b"]) for b in inp.borders])
 
 
 def check_fixtures(c, seeds=FIXTURE_SEEDS, verbose=False):
@@ -1808,7 +2575,8 @@ def cmd_check_world(paths, data_root="game/data"):
                 res[t] = []
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
         conn.row_factory = sqlite3.Row
-        borders = open_borders([dict(r) for r in conn.execute("SELECT * FROM region_border")])
+        all_rb = [dict(r) for r in conn.execute("SELECT * FROM region_border")]
+        borders = open_borders(all_rb)
         races = {r[0]: r for r in conn.execute("SELECT * FROM race").fetchall()}
         conn.close()
         c = Checker()
@@ -1822,8 +2590,9 @@ def cmd_check_world(paths, data_root="game/data"):
             ra, rb = races[a][1], races[b][1]
             return base_disposition(camp, ka, kb, st[key_id[ra]].get(key_id[rb], 0), st[key_id[rb]].get(key_id[ra], 0))
         res["race"] = [(r, races[r][1]) for r in races]
+        seed = int(meta["seed"]) if "seed" in meta else None
         for v in invariant_violations(res, dat.relations, E, borders, base, {r: races[r][1] for r in races},
-                                      list(dat.base.monsters), dat.peoples.get("ghost_fade_years", 0)):
+                                      list(dat.base.monsters), dat.peoples.get("ghost_fade_years", 0), seed=seed):
             c.ok("%s invariant %s" % (path, v), False)
         for m in reader_problems(res, E):
             c.ok("%s reader %s" % (path, m), False)
@@ -1839,6 +2608,9 @@ def cmd_check(argv):
     c = Checker()
     check_units(c)
     check_stub_units(c)
+    if r25():
+        check_units_025(c)
+        check_stub_units_025(c)
     check_reader(c)
     quick = "--quick" in argv
     check_fixtures(c, FIXTURE_SEEDS[:4] if quick else FIXTURE_SEEDS, verbose="-v" in argv)
@@ -1864,7 +2636,12 @@ def main(argv):
         print(__doc__)
         return 2
     import p3_conflict_reference as pcr
-    pcr.use_version("0.24.0")
+    version = "0.25.0"   # P5-03a; --version 0.24.0 serves P5-03's rules and file
+    if "--version" in argv:
+        i = argv.index("--version")
+        version = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    pcr.use_version(version)
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else DEFAULT_INPUTS
     if argv[0] == "check":
         return cmd_check(argv[1:])
@@ -1872,6 +2649,9 @@ def main(argv):
         c = Checker()
         check_units(c)
         check_stub_units(c)
+        if r25():
+            check_units_025(c)
+            check_stub_units_025(c)
         check_reader(c)
         print("%d checks, %d failures" % (c.count, c.failures))
         return 1 if c.failures else 0

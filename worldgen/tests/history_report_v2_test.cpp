@@ -78,15 +78,15 @@ std::string event_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history-report") {
 
-TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v4` (P5-02 12.1) at both levels") {
+TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v6` (P5-03a 9.1) at both levels") {
     // the spec names no library constant for the header: the text is checked
     for (const std::string& t : {summary(), full()}) {
         const std::vector<std::string> lines = hrtest::lines_of(t);
         REQUIRE(!lines.empty());
-        CHECK(lines[0] == "# worldgen history v5");
+        CHECK(lines[0] == "# worldgen history v6");   // P5-03a 9.1
     }
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v5");
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v5");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v6");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v6");
 }
 
 TEST_CASE("P3-07 r19 25.13 item 2: at most two calamity candidates per phase (25.2)") {
@@ -136,12 +136,11 @@ TEST_CASE("P3-07 r19 25.13 item 4: adversary lines for a war only, one count lin
     // Arn: Bel and Cor at war; Dun and Fen in enmity, Esk none (its enmity closed at its end)
     CHECK(sub_lines(civ_block(summary(), 1), "  adversaries: 5") ==
           std::vector<std::string>{"    Bel (c2): 1 war, won 1, lost 0, drawn 0, open 0, 1650-1656; now at peace",
-                                   "    Cor (c3): 1 war, won 0, lost 0, drawn 0, open 1, 1660-2999; now at war",
-                                   "    without war: 3 (enmity 2, none 1)"});
-    // Dun: only a no-war adversary: the count line and the without-war line
+                                   "    Cor (c3): 1 war, won 0, lost 0, drawn 0, open 1, 1660-2999; now at war"});
+    // P5-03a 9.2 (v6): no `without war:` line. Dun: only a no-war adversary: the count line alone
     const std::vector<std::string> c4 = civ_block(summary(), 4);
     CHECK(contains_line(c4, "  adversaries: 1"));
-    CHECK(sub_lines(c4, "  adversaries: 1") == std::vector<std::string>{"    without war: 1 (enmity 1, none 0)"});
+    CHECK(sub_lines(c4, "  adversaries: 1").empty());
     // Grok: none
     CHECK(contains_line(civ_block(summary(), 7), "  adversaries: none"));
     // full keeps its relation rows
@@ -154,13 +153,11 @@ TEST_CASE("P3-07 r19 25.13 item 5: an ended realm in short at summary, unchanged
               "c5 Esk", "  race: Human (ra1)", "  founded: 0 in The Age of Humans (a1), e10",
               "  last capital: Eskmere (s11)", "  settlements: 2 founded, 0 held at the end, 1 ruined, 1 faded",
               "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: 1",
-              "    without war: 1 (enmity 0, none 1)", "  fate: ended in 1200, e30: Esk came to an end.", "  milestones:",
-              // four: the founding, the ending, the longest quiet stretch, then the fill (its own founding of Eskby)
-              "    0 e10 civ_founded: The Humans founded Esk in Esk Heath.",
-              "    0 e11 settlement_founded: Esk founded Eskby in Esk Heath.",
+              "  fate: ended in 1200, e30: Esk came to an end.",
+              // P5-03a 9.2 (v6): the count of the full list (its six events) and the quiet stretch only
+              "  milestones: 6",
               "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
-              "kept the peace. (Esk: 54 new generations of rulers.)",
-              "    1200 e30 civ_ended: Esk came to an end."});
+              "kept the peace. (Esk: 54 new generations of rulers.)"});
     const std::vector<std::string> f5 = civ_block(full(), 5);
     CHECK(contains_line(f5, "  home: Esk Heath (rg7), grassland"));
     CHECK(contains_line(f5, "  peak regions: 1, 0-1199"));
@@ -187,7 +184,13 @@ TEST_CASE("P3-07 r19 25.13 item 7: one end year per war; colonies and kind chang
     CHECK(contains_line(civ_block(full(), 1), "    war: Arn (c1), Bel (c2), 1650-1655, e40 to e41"));
     // Dun, no war: the fill key (own, cal, salience, id) takes its colonies, then its claim, sack and abandonment
     // (own 0, cal 0) before the plague e26 and the outbreak e27 of 45 and the crisis e25 of 40 (cal 1)
+    // (P5-03a 9.2: the list at full; at summary its count and the quiet stretch)
+    CHECK(contains_line(civ_block(summary(), 4), "  milestones: 8"));
     CHECK(sub_lines(civ_block(summary(), 4), "  milestones:") ==
+          std::vector<std::string>{
+              "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
+              "kept the peace. (Dun: 54 new generations of rulers.)"});
+    CHECK(sub_lines(civ_block(full(), 4), "  milestones:") ==
           std::vector<std::string>{
               "    0 e8 civ_founded: The Humans founded Dun in the Holt of Yews.",
               "    0 e9 settlement_founded: Dun founded Dunholm in the Holt of Yews.",

@@ -123,11 +123,15 @@ const Scene& scene() {
             add("59-" + n(k), "refugees_arrived", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 4, 2}, {4, 1, 1}}, {240, k},
                 {s.ev["sack"]});
         }
-        add("60", "settlement_mixed", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}, {4, 1, 2}}, {300}, {s.ev["capture"]});
+        // P5-03a 10.4: kind 60's standing and majority, kind 62's standing and years
+        add("60", "settlement_mixed", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}, {4, 1, 2}}, {300, 0, 0},
+            {s.ev["capture"]});
+        add("60b", "settlement_mixed", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}, {4, 1, 2}}, {700, 2, 1}, {});
         for (std::int64_t k = 0; k <= 2; ++k) {
             add("61-" + n(k), "standing_changed", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}}, {k, 300}, {s.ev["capture"]});
         }
-        add("62", "people_expelled", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}}, {310}, {s.ev["capture"]});
+        add("62", "people_expelled", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}}, {310, 1, 77}, {s.ev["capture"]});
+        add("62b", "people_expelled", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 1, 1}}, {45, 0, 1}, {s.ev["capture"]});
         const std::string M1 = n(s.m1), S1 = n(s0 + 1);
         sql += "INSERT INTO monster VALUES (" + M1 + ", 'Old Grakh', 4, " + S1 + ", " + Y + ", " + n(s.ev["44"]) +
                ", NULL, 0, 0, 1, 0);";
@@ -157,16 +161,18 @@ TEST_CASE("P5-03 8.1, 11.3: kinds 56 to 62 appended after 55, their uses, roles 
         const char* values;
     };
     for (const K& k : {K{56, "settlement_fled", true, 1, 1, "1:monster:8:1-1;2:civilization:3:1-1;", ""},
-                       K{57, "peoples_met", true, 1, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band"},
+                       // P5-03a 10.4 (0.25.0): sealed after band
+                       K{57, "peoples_met", true, 1, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band,sealed"},
                        K{58, "disposition_turned", true, 0, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band"},
                        K{59, "refugees_arrived", true, 1, 1,
                          "1:settlement:4:1-1;2:civilization:3:1-1;3:origin:4:1-1;4:race:1:1-1;", "people,standing"},
                        K{60, "settlement_mixed", true, 1, 1,
-                         "1:settlement:4:1-1;2:civilization:3:1-1;3:race:1:1-1;4:ruling:1:1-1;", "share"},
+                         "1:settlement:4:1-1;2:civilization:3:1-1;3:race:1:1-1;4:ruling:1:1-1;",
+                         "share,standing,majority"},   // P5-03a 10.4
                        K{61, "standing_changed", true, 1, 1, "1:settlement:4:1-1;2:civilization:3:1-1;3:race:1:1-1;",
                          "standing,share"},
                        K{62, "people_expelled", true, 1, 1, "1:settlement:4:1-1;2:civilization:3:1-1;3:race:1:1-1;",
-                         "people"}}) {
+                         "people,standing,years"}}) {   // P5-03a 10.4
         CAPTURE(k.key);
         const eng::KindDef& d = c.kinds[static_cast<std::size_t>(k.id - 1)];
         CHECK(d.id == k.id);
@@ -243,7 +249,8 @@ TEST_CASE("P5-03 8.2, 9.5, 11.3, 13: the sentence of every new kind and of kinds
     CHECK(at("56") == "For fear of Old Grakh, the people of Drutnot Hole left their homes.");
     CHECK(at("58a") == "After the sacks, the " + A + " and the " + B + " came to hate one another.");
     CHECK(at("58b") == "The " + A + " and the " + B + " became friends.");
-    CHECK(at("58c") == "The " + A + " and the " + B + " grew wary of one another.");   // a turn cause: no clause
+    // P5-03a 3.5: a turn citing the last turn reads "long years apart"
+    CHECK(at("58c") == "After long years apart, the " + A + " and the " + B + " grew wary of one another.");
     CHECK(at("59-0") == "After the sack, 240 " + A + " from Nutskrank found shelter in Drutnot Hole, held as subjects "
                         "by the Snat Horde.");
     CHECK(at("59-1") == "After the sack, 240 " + A + " from Nutskrank found shelter in Drutnot Hole, tolerated by the "
@@ -252,16 +259,22 @@ TEST_CASE("P5-03 8.2, 9.5, 11.3, 13: the sentence of every new kind and of kinds
                         "Snat Horde.");
     CHECK(at("59-3") == "After the sack, 240 " + A + " from Nutskrank found shelter in Drutnot Hole, among their own "
                         "kin of the Snat Horde.");
-    CHECK(at("60") == "After the conquest, the " + A + " and the " + B + " lived side by side in Drutnot Hole.");
+    // P5-03a 5.2
+    CHECK(at("60") == "After the conquest, in Drutnot Hole the " + B + " ruled over the " + A + ".");
+    CHECK(at("60b") == "In Drutnot Hole the " + B + " lived as equals with the " + A + ", who outnumbered them.");
     CHECK(at("61-0") == "In Drutnot Hole, the Snat Horde held the " + A + " as subjects.");
     CHECK(at("61-1") == "In Drutnot Hole, the Snat Horde tolerated the " + A + ".");
     CHECK(at("61-2") == "In Drutnot Hole, the Snat Horde accepted the " + A + " as equals.");
-    CHECK(at("62") == "The Snat Horde drove the " + A + " out of Drutnot Hole; 310 left.");
+    // P5-03a 5.3
+    CHECK(at("62") == "Hating the " + A + ", the Snat Horde drove them out of Drutnot Hole, where it had tolerated them "
+                      "for 77 years; 310 left.");
+    CHECK(at("62b") == "Hating the " + A + ", the Snat Horde drove them out of Drutnot Hole, where it had held them as "
+                       "subjects for one year; 45 left.");   // P3-11's number words in the clause of {years}
     // a meeting of the world itself (57): its band's alternative
     REQUIRE(s.met != 0);
     const std::string met = eng::render(r, s.met);
     CHECK(met.rfind("The ", 0) == 0U);
-    CHECK(met.find(" first met the ") != std::string::npos);
+    CHECK((met.find(" first met the ") != std::string::npos || met.find(" first had word of the ") != std::string::npos));
     CHECK((met.find(", and hated them from the first.") != std::string::npos ||
            met.find(", and were wary of them.") != std::string::npos ||
            met.find(", and were glad of them.") != std::string::npos));

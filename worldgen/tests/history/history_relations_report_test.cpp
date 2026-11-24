@@ -23,6 +23,7 @@
 #include "../history_report_checks.hpp"
 #include "../history_report_fixture.hpp"
 #include "p5_03_relations_api.hpp"
+#include "p5_03a_relations_api.hpp"
 #include "worldgen/inspect/history_report.hpp"
 
 namespace {
@@ -34,8 +35,11 @@ namespace fs = std::filesystem;
 using hrtest::HistoryLevel;
 
 const char* const H14 = "h14-v5";
+const char* const H15 = "h15-v6";   // P5-03a 14 item 11
 
-bool fixture_present() { return fs::exists(fs::path(UNMAPPED_P3_07_FIXTURE_DIR) / (std::string(H14) + ".toml")); }
+bool fixture_present(const char* name = H14) {
+    return fs::exists(fs::path(UNMAPPED_P3_07_FIXTURE_DIR) / (std::string(name) + ".toml"));
+}
 
 struct H14Fixture {
     hrtest::Fixture fx;
@@ -49,10 +53,10 @@ const H14Fixture*& current() {
 }
 
 // The P3-07 loader for the tables it knows, then the schema 10 columns and tables (GUESS row members, adapter).
-H14Fixture load_h14() {
+H14Fixture load_rel_fixture(const char* name) {
     H14Fixture out;
-    out.fx = hrtest::load_fixture(H14);
-    const fs::path path = fs::path(UNMAPPED_P3_07_FIXTURE_DIR) / (std::string(H14) + ".toml");
+    out.fx = hrtest::load_fixture(name);
+    const fs::path path = fs::path(UNMAPPED_P3_07_FIXTURE_DIR) / (std::string(name) + ".toml");
     const toml::table doc = toml::parse(hrtest::detail::text_of_file(path), path.string());
     using hrtest::detail::i64;
     using hrtest::detail::str;
@@ -102,6 +106,8 @@ H14Fixture load_h14() {
     return out;
 }
 
+H14Fixture load_h14() { return load_rel_fixture(H14); }
+
 void stage_biomes(worldgen::stages::StageContext& ctx) {
     for (const auto& r : current()->fx.biomes) ctx.write_biome(r);
 }
@@ -140,11 +146,14 @@ void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : current()->sr) ctx.write_settlement_race(r);      // GUESS (16.2)
 }
 
-const std::string& h14_world() {
-    static const std::string path = [] {
-        static const H14Fixture f = load_h14();
+std::string rel_world(const char* name) {
+    static std::map<std::string, std::string> worlds;
+    if (const auto it = worlds.find(name); it != worlds.end()) return it->second;
+    static std::map<std::string, H14Fixture> fixtures;
+    const std::string path = [&] {
+        const H14Fixture& f = fixtures[name] = load_rel_fixture(name);
         static dbtest::TempDir dir("relations-h14");
-        const std::string p = dir.file("h14-v5.db");
+        const std::string p = dir.file(std::string(name) + ".db");
         static const worldgen::data::ContentSet empty;
         worldgen::WorldParams wp;
         wp.seed = f.fx.seed;
@@ -161,17 +170,18 @@ const std::string& h14_world() {
         const db::Status s =
             worldgen::stages::testing::generate_world_with_stages(wp, empty, stages, p, db::Overwrite::replace);
         current() = nullptr;
-        REQUIRE_MESSAGE(s.ok(), "fixture h14-v5: " << (s.ok() ? "" : s.error().message));
+        REQUIRE_MESSAGE(s.ok(), "fixture " << name << ": " << (s.ok() ? "" : s.error().message));
         return p;
     }();
-    return path;
+    return worlds[name] = path;
 }
 
-std::string text(HistoryLevel level) {
-    static std::map<int, std::string> cache;
-    const auto it = cache.find(static_cast<int>(level));
+std::string text(HistoryLevel level, const char* name = H14) {
+    static std::map<std::pair<std::string, int>, std::string> cache;
+    const std::pair<std::string, int> k{name, static_cast<int>(level)};
+    const auto it = cache.find(k);
     if (it != cache.end()) return it->second;
-    return cache[static_cast<int>(level)] = hrtest::report_of(h14_world(), level);
+    return cache[k] = hrtest::report_of(rel_world(name), level);
 }
 
 std::vector<std::string> headings(const std::string& t) {
@@ -236,11 +246,11 @@ Counts counts() {
         for (const auto& [g, v] : es) mixed = mixed || (v.first >= 100 && v.second != 3);
         c.nmixed += mixed ? 1 : 0;
     }
-    // lead ruling 3 (integration): "1 settlement" singular
+    // lead ruling 3 (integration): "1 settlement" singular; P5-03a 9.4: "1 arrival", "1 time"
     c.mixed = "mixed: " + std::to_string(c.nmixed) + (c.nmixed == 1 ? " settlement" : " settlements") +
-              " at E; refugees: " + std::to_string(arrivals) +
-              " arrivals, " + std::to_string(arrived) + " people; expelled: " + std::to_string(expelled) + " times, " +
-              std::to_string(gone) + " people";
+              " at E; refugees: " + std::to_string(arrivals) + (arrivals == 1 ? " arrival, " : " arrivals, ") +
+              std::to_string(arrived) + " people; expelled: " + std::to_string(expelled) +
+              (expelled == 1 ? " time, " : " times, ") + std::to_string(gone) + " people";
     return c;
 }
 
@@ -248,14 +258,14 @@ Counts counts() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-03 17.1: the header is `# worldgen history v5` at both levels; the text equals the reference's") {
+TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v6` at both levels; H14 equals the reference's") {
     if (!fixture_present()) {
         MESSAGE("h14-v5.toml absent: skipped (written with the reference)");
         return;
     }
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v5");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v6");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         const auto& g = hrtest::golden();
         const auto it = g.find(H14);
@@ -291,7 +301,18 @@ TEST_CASE("P5-03 17.2: [peoples] after [sites]; count lines, pair lines and sett
         }
         REQUIRE(mixed_at >= 1U);
         CHECK(b[mixed_at] == c.mixed);
-        const std::size_t pair_lines = mixed_at - 1U, stl_lines = b.size() - mixed_at - 1U;
+        // P5-03a 9.4: after the pair lines, at both levels, the unmet lines (`  the <plural> met no other people`,
+        // `  never met: ...`); H14: elves and humans never met, both met the goblins: one `never met:` line
+        std::size_t unmet_lines = 0;
+        for (std::size_t i = 1; i < mixed_at; ++i) {
+            if (b[i].rfind("  never met: ", 0) == 0 || (b[i].rfind("  the ", 0) == 0 &&
+                                                        b[i].find(" met no other people") != std::string::npos)) {
+                ++unmet_lines;
+            }
+        }
+        CHECK(unmet_lines == 1U);
+        CHECK(b[mixed_at - 1U] == "  never met: Elves and Humans");
+        const std::size_t pair_lines = mixed_at - 1U - unmet_lines, stl_lines = b.size() - mixed_at - 1U;
         if (full) {
             CHECK(static_cast<std::int64_t>(pair_lines) == c.npairs);
             CHECK(static_cast<std::int64_t>(stl_lines) == c.nmixed);
@@ -299,7 +320,7 @@ TEST_CASE("P5-03 17.2: [peoples] after [sites]; count lines, pair lines and sett
             CHECK(pair_lines == c.turned.size());
             CHECK(stl_lines == 0U);
         }
-        for (std::size_t i = 1; i < mixed_at; ++i) {
+        for (std::size_t i = 1; i < mixed_at - unmet_lines; ++i) {
             const std::string& l = b[i];
             CAPTURE(l);
             CHECK(l.rfind("  ", 0) == 0U);
@@ -321,7 +342,8 @@ TEST_CASE("P5-03 17.4: the [stats] keys appended at the end of the full list, in
         "race_relations", "settlement_races", "race_pairs", "race_pairs_met", "dispositions_turned", "pairs_hatred",
         "pairs_friendship", "refugees_arrived", "refugees_people", "people_expelled", "expelled_people",
         "settlements_mixed", "settlements_mixed_ever", "settlements_fled", "abandoned_without_destination",
-        "abandonment_lost", "monster_stories", "ruins_oldest_year"};
+        "abandonment_lost", "monster_stories", "ruins_oldest_year",
+        "peoples_met_by_word", "dispositions_warmed"};   // P5-03a 9.6: appended
     std::vector<std::string> keys;
     for (const std::string& l : hrtest::block(text(HistoryLevel::full), "[stats]")) {
         keys.push_back(l.substr(0, l.find(" = ")));
@@ -366,6 +388,171 @@ TEST_CASE("P5-03 10.2: [monsters] at summary: living, then at most two ended not
     const std::int64_t x = static_cast<std::int64_t>(f.fx.monsters.size()) - listed;
     CHECK(more == (x > 0));
     if (x > 0) CHECK(s.back() == "  and " + std::to_string(x) + " more");
+}
+
+
+// --- P5-03a 14 item 11: format v6 on fixture H15 (h15-v6.toml, written by reference/p5_03a_h15_fixture.py from the
+// 0.25.0 listings). The expected lines are hand-checked against the fixture's rows (its header comment says what
+// each event is) and equal the reference's check_fixture_facts_v6 (p3_report_reference.py).
+
+std::vector<std::string> between(const std::vector<std::string>& ls, const std::string& head, const std::string& next) {
+    std::vector<std::string> out;
+    bool in = false;
+    for (const std::string& l : ls) {
+        if (l == head) in = true;
+        else if (in && l.rfind(next, 0) == 0) break;
+        if (in) out.push_back(l);
+    }
+    return out;
+}
+
+TEST_CASE("P5-03a 9.1, 9.4: H15 header and [peoples] at both levels (by word, from, unmet lines, plurals, order)") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary, H15));
+    const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full, H15));
+    REQUIRE_FALSE(s.empty());
+    REQUIRE_FALSE(f.empty());
+    CHECK(s.front() == "# worldgen history v6");
+    CHECK(f.front() == "# worldgen history v6");
+    CHECK(between(s, "[peoples]", "[stats]") ==
+          std::vector<std::string>{
+              "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
+              "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+              "  the Humans met no other people", "  never met: Elves and Dwarves",
+              "mixed: 3 settlements at E; refugees: 1 arrival, 30 people; expelled: 1 time, 340 people"});
+    CHECK(between(f, "[peoples]", "[stats]") ==
+          std::vector<std::string>{
+              "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0", "  Elves and Dwarves: never met",
+              "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+              "  Elves and Humans: never met", "  Dwarves and Goblins: hatred -640, met 600 e41 by word",
+              "  Dwarves and Humans: never met", "  Goblins and Humans: never met",
+              "  the Humans met no other people", "  never met: Elves and Dwarves",
+              "mixed: 3 settlements at E; refugees: 1 arrival, 30 people; expelled: 1 time, 340 people",
+              // the ruling race first, then share descending, then race id
+              "  s3 Gorzhak (The Krurz Horde (c3)): Goblins 900 ruling; Dwarves 100 subject",
+              "  s6 Thiefann (The Krurz Horde (c3)): Goblins 300 ruling; Elves 700 subject",
+              "  s7 Duldar (The Krurz Horde (c3)): Goblins 100 ruling; Dwarves 900 subject"});
+}
+
+TEST_CASE("P5-03a 9.2: H15 milestones as a count with the quiet stretch at summary; no without-war line") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    const std::string s = text(HistoryLevel::summary, H15), f = text(HistoryLevel::full, H15);
+    const std::vector<std::string> c3 = hrtest::civ_block(s, 3);
+    const auto m = std::find(c3.begin(), c3.end(), "  milestones: 8");
+    REQUIRE(m != c3.end());
+    // the two quiet stretches e46 (120 years) and e47 (300): the longer is the realm's one milestone of its kind
+    CHECK(std::vector<std::string>(m, c3.end()) ==
+          std::vector<std::string>{"  milestones: 8",
+                                   "    1000-1299 e47 quiet_stretch: For 300 years, from 1000 to 1299, the land was "
+                                   "quiet; one realm held it. (The Krurz Horde: 15 new generations of rulers.)"});
+    std::int64_t full_heads = 0, summary_heads = 0;
+    for (const std::string& l : hrtest::lines_of(f)) full_heads += l == "  milestones:" ? 1 : 0;
+    for (const std::string& l : hrtest::lines_of(s)) summary_heads += l.rfind("  milestones: ", 0) == 0 ? 1 : 0;
+    CHECK(full_heads == 4);
+    CHECK(summary_heads == 4);
+    // the elves: a war with the goblins and an enmity without war with the dwarves: the count and the war line only
+    const std::vector<std::string> c1 = hrtest::civ_block(s, 1);
+    const auto a = std::find(c1.begin(), c1.end(), "  adversaries: 2");
+    REQUIRE(a != c1.end());
+    REQUIRE(a + 2 < c1.end());
+    CHECK(*(a + 1) == "    The Krurz Horde (c3): 1 war, won 0, lost 1, drawn 0, open 0, 395-410; now none");
+    CHECK((a + 2)->rfind("    ", 0) != 0U);
+    for (const std::string& l : hrtest::lines_of(s)) CHECK(l.find("without war") == std::string::npos);
+}
+
+TEST_CASE("P5-03a 9.3: H15's seventeen ruins: 5 oldest, 5 largest, 5 latest at summary, then and 5 more") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    auto ruins = [](const std::string& t) {
+        std::vector<std::string> out;
+        for (const std::string& l : hrtest::block(t, "[present]")) {
+            if ((l.rfind("  s", 0) == 0 && l.find(": ruined ") != std::string::npos && l.find(", at ") == std::string::npos) ||
+                l.rfind("  and ", 0) == 0) {
+                out.push_back(l.rfind("  and ", 0) == 0 ? l : l.substr(2, l.find(' ', 2) - 2));
+            }
+        }
+        return out;
+    };
+    // oldest s8 (651), s9 to s12 (1410 to 1503); latest s20 to s24 (1751 to 1875); largest by census population
+    // 100 + 37 ((5 i + 3) mod 16) for s(9 + i): s21 (655), s24 (618), s11 (581), s14 (544), s17 (507)
+    CHECK(ruins(text(HistoryLevel::summary, H15)) ==
+          std::vector<std::string>{"s8", "s9", "s10", "s11", "s12", "s14", "s17", "s20", "s21", "s22", "s23", "s24",
+                                   "  and 5 more"});
+    CHECK(ruins(text(HistoryLevel::full, H15)).size() == 17U);
+    CHECK(hrtest::contains_line(hrtest::block(text(HistoryLevel::summary, H15), "[present]"), "ruins: 17"));
+}
+
+TEST_CASE("P5-03a 9.5, 9.6: H15's mixed events in the summary (first of each race pair); the two [stats] keys") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    const std::string s = text(HistoryLevel::summary, H15), f = text(HistoryLevel::full, H15);
+    const std::set<std::int64_t> shown = hrtest::shown_ids(s);
+    CHECK(hrtest::stats_of(s).at("summary_threshold") == 20);   // every candidate shown: only rule 9.5 hides e39, e52
+    CHECK(shown.count(36) == 1U);   // elf-goblin, the first
+    CHECK(shown.count(39) == 0U);   // elf-goblin, the second
+    CHECK(shown.count(45) == 1U);   // dwarf-goblin, the first
+    CHECK(shown.count(52) == 0U);   // dwarf-goblin, the second
+    CHECK(p503a_api::SUMMARY_MIXED_MAX_SPEC == 3);
+    const std::vector<std::string> st = hrtest::block(f, "[stats]");
+    REQUIRE(st.size() >= 2U);
+    CHECK(st[st.size() - 2U] == "peoples_met_by_word = 1");
+    CHECK(st[st.size() - 1U] == "dispositions_warmed = 1");
+    for (const std::string& l : hrtest::block(s, "[stats]")) CHECK(l.rfind("peoples_met_by_word", 0) != 0U);
+}
+
+TEST_CASE("P5-03a 10.3: H15's sentences of the rewritten templates (3.5, 4.2, 5.2, 5.3, 7.3)") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    const std::string f = text(HistoryLevel::full, H15);
+    auto sentence = [&](std::int64_t e) {
+        const std::string head = " e" + std::to_string(e) + " ";
+        for (const std::string& l : hrtest::lines_of(f)) {
+            if (!l.empty() && l[0] >= '0' && l[0] <= '9' && l.find(head) != std::string::npos) {
+                const std::size_t a = l.find(": ") + 2;
+                return l.substr(a, l.find(" {") - a);
+            }
+        }
+        return std::string();
+    };
+    CHECK(sentence(36) == "After the conquest, in Fievos the Goblins ruled over the Elves, who outnumbered them.");
+    CHECK(sentence(37) == "After the conquests, the Elves and the Goblins came to hate one another.");
+    CHECK(sentence(41) == "The Dwarves first had word of the Goblins in Gor Heath, and hated them from the first.");
+    CHECK(sentence(33) == "The Elves first met the Goblins in Gor Heath, and were wary of them.");
+    CHECK(sentence(44) == "After the plague and the abandonment of their home, 30 Dwarves from Duldum found shelter in "
+                          "Gorzhak, held as subjects by the Krurz Horde.");
+    CHECK(sentence(45) == "After the coming of refugees, in Gorzhak the Goblins ruled over the Dwarves.");
+    CHECK(sentence(48) == "Hating the Elves, the Krurz Horde drove them out of Fievos, where it had held them as subjects "
+                          "for 500 years; 340 left.");
+    CHECK(sentence(49) == "After long years of peace, the Elves and the Goblins grew wary of one another.");
+}
+
+TEST_CASE("P5-03a 14 item 11: H15's text at both levels equals the reference's (p3-07-report.txt)") {
+    if (!fixture_present(H15)) {
+        MESSAGE("h15-v6.toml absent: skipped");
+        return;
+    }
+    for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
+        const std::string name = level == HistoryLevel::full ? "full" : "summary";
+        const auto& g = hrtest::golden();
+        const auto it = g.find(H15);
+        if (it == g.end() || it->second.report.count(name) == 0U) {
+            MESSAGE("p3-07-report.txt has no h15-v6 " << name << " line yet (recorded from the reference, phase 2)");
+            continue;
+        }
+        CHECK(worldgen::to_hex(worldgen::sha256(text(level, H15))) == it->second.report.at(name));
+    }
 }
 
 }  // TEST_SUITE
