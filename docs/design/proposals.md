@@ -1336,3 +1336,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: (1) the P5-02 spec r1 said a monster may overrun a settlement only if its lair is not a settlement; the code applied that only to a lair won by an overrun, so an undead host that rises in a ruined settlement may still overrun one living settlement, and the accepted sweep figures were measured so. (2) The summary history report of worlds with four civilizations per race has a median of 1,101 lines on the spec's 20 worlds against T18's bound of 1,100 (1,089 on 30 worlds).
 - Decision (Paul, 2026-11-23): (1) "Keep that, makes them more scary." Spec r2 section 5 says so: `holds_settlement` is set only by an overrun. (2) "Fine": the one-line miss is accepted; T18's bound for that set is read as about 1,100.
 - Status: decided
+
+### Viewer v1, P4-06: how the history movie keeps time
+
+- Date: 2026-11-23
+- Raised by: spec writer (P4-06, `docs/specs/p4-06-history-movie.md`)
+- Design doc section: 10 ("Viewer v1 decisions": "History movie"), 13 (P4 row and exit check)
+- Problem: the design asks for play, pause, speed and skipping quiet years, with the year's sentences beside the map, recorded with Godot's Movie Maker. It does not say what "quiet" is, what a movie of one civilization plays, what happens when the speed asks for more years than frames, or how a recording stays the same from run to run.
+- Proposal: playback walks the browser's current event list (a selected civilization's story by default span, first to last event). Each year has a dwell of 1/speed seconds; with "skip quiet years" on, a year with nothing listed takes a tenth of that. A frame makes at most one year change and never passes a year with a listed event, so every such year is shown with its sentences and flashing places, and busy stretches run slower than the speed. Time comes only from the frame step, so Movie Maker's fixed frame rate gives the same years in the same frames on every run. The sentences appear in a ticker over the map's lower edge; the year slider moves to a row of its own with the play controls. No library change.
+- Interim choice: as proposed (P4-06 open questions 1 to 7).
+- Status: open.
