@@ -87,7 +87,7 @@ TEST_CASE("P3-07 r21 26.1 to 26.5: report --history v3 on geo-seed-42-512") {
         const std::string text = hrtest::report_of(r, level);
         const std::vector<std::string> lines = hrtest::lines_of(text);
         REQUIRE_FALSE(lines.empty());
-        CHECK(lines[0] == "# worldgen history v5");   // P5-02 12.1
+        CHECK(lines[0] == "# worldgen history v6");   // P5-02 12.1; P5-03a 9.1
         // 26.2: renamed regions after standing claims
         std::size_t at_line = lines.size();
         for (std::size_t i = 0; i < lines.size(); ++i) {

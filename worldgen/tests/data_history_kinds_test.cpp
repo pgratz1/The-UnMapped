@@ -998,26 +998,36 @@ TEST_CASE("P3-01 3: every race field is required and no other key is accepted") 
     }
 }
 
-TEST_CASE("P3-04 r13 4.2: report_event.template is string(512) from 0.19.0: 512 bytes load, 513 are refused") {
+TEST_CASE("P3-04 r13 4.2, P5-03a: report_event.template is string(1024) from 0.25.0: 1024 bytes load, 1025 are refused") {
+    // string(512) from 0.19.0; string(1024) from 0.25.0 (lead's ruling at P5-03a: the cause-list templates of
+    // kinds 58 and 59 with the words of P5-03a 3.5 and 7.3 are longer than 512 bytes).
     const std::string old = "{creator} awakened the {race:plural} in {@region}.";
     REQUIRE(contains(history_data::REPORT_TOML, old));
     // plain text after the placeholders keeps the template valid (8.4); only the length changes
-    const std::string at512 = old + std::string(512 - old.size(), 'x');
-    REQUIRE(at512.size() == 512U);
-    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at512)).ok(), "512 bytes");
-    const Load l = load(shipped_edited("history/report.toml", old, at512 + "x"));
+    const std::string at1024 = old + std::string(1024 - old.size(), 'x');
+    REQUIRE(at1024.size() == 1024U);
+    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at1024)).ok(), "1024 bytes");
+    const Load l = load(shipped_edited("history/report.toml", old, at1024 + "x"));
     const wd::LoadError e = only_error(l);
     CHECK(e.path == "history/report.toml");
     CHECK(contains(e.message, "template"));
-    // the shipped cause-list templates of kinds 16 and 31 exceed the old bound of 256 (P3-05 r12 22.3)
-    for (const char* k : {"settlement_abandoned\"", "settlement_abandoned_to\""}) {
-        const std::string t(history_data::REPORT_TOML);
-        const std::size_t at = t.find(std::string("kind = \"") + k);
+    // the shipped cause-list templates of kinds 16 and 31 exceed the bound of 256 before 0.19.0 (P3-05 r12 22.3);
+    // those of kinds 58 and 59 the bound of 512 before 0.25.0
+    const std::string t(history_data::REPORT_TOML);
+    const auto length_of = [&](const std::string& k) {
+        const std::size_t at = t.find("kind = \"" + k + "\"");
         REQUIRE(at != std::string::npos);
         const std::size_t from = t.find("template = \"", at) + 12;
         const std::size_t to = t.find("\" }", from);
-        CHECK(to - from > 256U);
-        CHECK(to - from <= 512U);
+        return to - from;
+    };
+    for (const char* k : {"settlement_abandoned", "settlement_abandoned_to"}) {
+        CHECK(length_of(k) > 256U);
+        CHECK(length_of(k) <= 1024U);
+    }
+    for (const char* k : {"disposition_turned", "refugees_arrived"}) {
+        CHECK(length_of(k) > 512U);
+        CHECK(length_of(k) <= 1024U);
     }
 }
 

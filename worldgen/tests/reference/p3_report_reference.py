@@ -91,6 +91,8 @@ DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # r1 histories (6.4.1), rebuilt by build-inputs
 DEFAULT_INPUTS_024 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03-int",
                                   "report-inputs")   # 0.24.0 histories (phase 2: build-inputs)
+DEFAULT_INPUTS_025 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03a-int",
+                                  "report-inputs")   # 0.25.0 histories (P5-03a phase 2: build-inputs)
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
 GENERATOR_VERSION = "0.25.0"
@@ -237,7 +239,7 @@ def use_version(v):
     V4 = v in ("0.23.0", "0.24.0", "0.25.0")
     V5 = v in ("0.24.0", "0.25.0")
     V6 = v == "0.25.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    DEFAULT_INPUTS = DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]

@@ -30,8 +30,8 @@ inline const std::vector<RelField>& new_relations_fields() {
         {"peace_years", 0, 100000, 100},          {"peace_memory_per_century", 0, 10000, 60},
         {"peace_memory_max", 0, 2000, 300},       {"contact_hops", 0, 8, 1},
         {"foe_years", 1, 100000, 100},            {"foe_war_memory", 0, 1000, 60},
-        {"foe_monster_memory", 0, 1000, 60},      {"meet_sealed_hops", -1, 8, 3},
-        {"meet_sealed_years", 0, 100000, 300},    {"conquest_settlers_span_permille", 0, 1000, 400},
+        {"foe_monster_memory", 0, 1000, 60},      {"meet_sealed_hops", -1, 8, 5},
+        {"meet_sealed_years", 0, 100000, 150},    {"conquest_settlers_span_permille", 0, 1000, 400},
         {"expel_gap_years", 0, 100000, 60}};
     return v;
 }

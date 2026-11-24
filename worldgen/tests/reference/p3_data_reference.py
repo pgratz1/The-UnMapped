@@ -2769,7 +2769,7 @@ RELATIONS_CHANGED_025 = {"shelter_memory": 90, "conquest_settlers_permille": 50}
 RELATIONS_NEW_RANGES_025 = (
     ("peace_years", 0, 100000, 100), ("peace_memory_per_century", 0, 10000, 60), ("peace_memory_max", 0, 2000, 300),
     ("contact_hops", 0, 8, 1), ("foe_years", 1, 100000, 100), ("foe_war_memory", 0, 1000, 60),
-    ("foe_monster_memory", 0, 1000, 60), ("meet_sealed_hops", -1, 8, 3), ("meet_sealed_years", 0, 100000, 300),
+    ("foe_monster_memory", 0, 1000, 60), ("meet_sealed_hops", -1, 8, 5), ("meet_sealed_years", 0, 100000, 150),
     ("conquest_settlers_span_permille", 0, 1000, 400), ("expel_gap_years", 0, 100000, 60))
 assert RELATIONS_RANGES_024[-1][0] == "expel_share_max"
 RELATIONS_RANGES_025 = tuple((n, lo, hi, RELATIONS_CHANGED_025.get(n, v)) for n, lo, hi, v in RELATIONS_RANGES_024) \
@@ -2846,9 +2846,21 @@ def monsters_file_025():
             "".join("%s = %s\n" % (k, _toml_value(v)) for k, v in MONSTERS_TUNING_025.items()))
 
 
+# The engineer's calibration (P5-03a 11, phase 2): history.conflict.border_friction 200 -> 300 (restoring the wars
+# that peace between neighbours removed; C1); meet_sealed_hops 5 and meet_sealed_years 150 above (RR1, RR3).
+CONFLICT_CHANGED_025 = {"border_friction": 300}
+
+
+def _conflict_025(text):
+    for k, v in sorted(CONFLICT_CHANGED_025.items()):
+        old = tomllib.loads(text)["history"]["conflict"][k]
+        text = _edit(text, "\n%s = %d\n" % (k, old), "\n%s = %d\n" % (k, v))
+    return text
+
+
 HISTORY_FILES_025 = dict(HISTORY_FILES_024, **{
     "report.toml": _report_025(HISTORY_FILES_024["report.toml"]), "monsters.toml": monsters_file_025(),
-    "relations.toml": relations_file_025()})
+    "relations.toml": relations_file_025(), "conflict.toml": _conflict_025(HISTORY_FILES_024["conflict.toml"])})
 SPEC_FILES_025 = dict(SPEC_FILES_024, history=HISTORY_FILES_025)
 KINDS_025 = dict(KINDS_024)
 KINDS_025["history"] = ("history", dict(KINDS_024["history"][1], monsters=MONSTERS_025, relations=RELATIONS_025))
@@ -2905,8 +2917,10 @@ def check_spec_025(c):
              "events"]])
     c.eq("other templates as at 0.24.0", {k: e["template"] for k, e in byk.items() if k not in REPORT_TEMPLATES_025},
          {k: e["template"] for k, e in old.items() if k not in REPORT_TEMPLATES_025})
-    for k in ("renaming", "peoples", "chronology", "conflict", "engine"):
+    for k in ("renaming", "peoples", "chronology", "engine"):
         c.eq("history.%s as at 0.24.0" % k, h[k], tomllib.loads(HISTORY_FILES_024[k + ".toml"])["history"][k])
+    c.eq("history.conflict as at 0.24.0 but border_friction 300 (calibration)", h["conflict"],
+         dict(tomllib.loads(HISTORY_FILES_024["conflict.toml"])["history"]["conflict"], **CONFLICT_CHANGED_025))
 
 
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"

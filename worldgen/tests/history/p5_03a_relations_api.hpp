@@ -19,6 +19,11 @@
 #include <cstdint>
 #include <memory>
 
+// Integrated with the implementation (p5/03a-int): every guessed name above exists as written
+// (RelationsSubsystem's four-argument constructor takes `const ConflictSubsystem&`; DispositionView::band returns
+// the band code as std::int64_t; SUMMARY_MIXED_MAX is std::size_t in digest.hpp).
+#define UNMAPPED_P503A_API 1
+
 #include "p5_03_relations_api.hpp"
 #include "worldgen/history/digest.hpp"
 

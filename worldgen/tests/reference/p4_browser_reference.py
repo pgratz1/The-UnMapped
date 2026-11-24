@@ -64,9 +64,10 @@ GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p4-05-browser.txt")
 T3_DIR = os.path.join(REPO, "worldgen", "tests", "data", "browser")
 T3_NAME = "t3-browser"
 INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
-INPUTS = tl.INPUTS_P5_03   # 0.24.0 (phase 2); --version 0.23.0 serves the committed file
+INPUTS_024 = tl.INPUTS_P5_03
+INPUTS = tl.INPUTS_P5_03A   # 0.25.0 (phase 2); --version 0.24.0 or 0.23.0 serves the committed file of that version
 SCRATCH = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-05-a-tests", "fixtures-ref")
-GENERATOR_VERSION = "0.24.0"
+GENERATOR_VERSION = "0.25.0"   # P5-03a: no kind is added, the groups are those of 0.24.0 (reading B13)
 WORLD_CASES = tl.WORLD_CASES
 SLOW_CASES = tuple(n for n in WORLD_CASES if n.endswith("-1024"))
 
@@ -1076,8 +1077,12 @@ def main(argv):
             tl.RULES = "p5-02"
             use_groups("0.23.0")
             INPUTS, GENERATOR_VERSION = INPUTS_023, "0.23.0"
-        elif v != "0.24.0":
-            raise SystemExit("--version: 0.23.0 or 0.24.0")
+        elif v == "0.24.0":
+            prr.use_version("0.24.0")
+            tl.RULES = "p5-03"
+            INPUTS, GENERATOR_VERSION = INPUTS_024, "0.24.0"
+        elif v != "0.25.0":
+            raise SystemExit("--version: 0.23.0, 0.24.0 or 0.25.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":

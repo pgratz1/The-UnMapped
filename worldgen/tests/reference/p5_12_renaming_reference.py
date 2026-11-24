@@ -215,6 +215,8 @@ def build_name(forms, start, name_value, noun_value, registry, common=None, filt
     for j in range(n):
         fi = (start + j) % n
         f = forms[fi]
+        if name_value is None and ("{name}" in f or "{stem}" in f):
+            continue   # no {name} for this event: the form cannot be filled (P5-03a; never so before 0.25.0)
         nm = fill(f, name_value, noun_value, stem_value)
         parts = form_parts(f, name_value or "", noun_value, stem_value)
         prob = name_problem(nm, parts, common, filt)
@@ -369,7 +371,13 @@ class Renaming:
         if t == SETTLEMENT:
             return w.stl(x)["name"]
         if t == pe.MONSTER:   # P5-02 9.3: {name} is the monster's root, read through the monsters subsystem
-            return w.monsters.monster_root_of(x)
+            root = w.monsters.monster_root_of(x)
+            # 0.25.0 (P5-03a proposals entry, the engineer's fix as ruled by the lead): a host named for its place
+            # (P5-03 12.2) has no root, so the event gives no {name}: only the forms without {name} or {stem} can be
+            # chosen, and when none fits the rule does not rename (0.24.0 filled {name} with "").
+            if root == "" and pcr.FLAGS.get("p503a", False):
+                return None
+            return root
         c = w.civ(x)
         forms = w.dat.naming[self.culture_key[c["culture"]]]["civilization_forms"]
         return realm_root(c["name"], forms)

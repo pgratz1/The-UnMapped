@@ -61,6 +61,8 @@
 // after settlements_ceded. Mirrors SPEC_FILES_021. P5-02 (generator 0.23.0) and P5-03 (generator 0.24.0;
 // race stances, history.relations, the new history.monsters and history.peoples fields, the phrases,
 // forms and report entries): the texts are those of SPEC_FILES_024 at the calibrated values.
+// P5-03a (generator 0.25.0; 10.1 to 10.3 and the calibration): history.relations, history.monsters, the
+// report templates and history.conflict.border_friction 300; the texts are those of SPEC_FILES_025.
 
 #include <cstdint>
 #include <map>
@@ -471,25 +473,25 @@ events = [
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
   { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}." },
-  { kind = "monster_appeared", salience = 45, template = "{monster}, {monster:kind}, made its lair in {@region}." },
-  { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead of {@region} rose as {monster}." },
+  { kind = "monster_appeared", salience = 45, template = "{monster}, {monster:kind}, made {monster:its} lair in {@region}." },
+  { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }{monster} rose from {monster:its} graves{monster:where}." },
   { kind = "monster_woke", salience = 25, template = "{monster} woke again in {@region}." },
   { kind = "monster_slept", salience = 10, template = "{monster} sank into sleep in {lair}." },
   { kind = "monster_raid", salience = 15, template = "{monster} {monster:raid} {@settlement}; {dead?no one died|one died|# died}." },
-  { kind = "settlement_overrun", salience = 50, template = "{monster} drove the people from {@settlement} and made it its lair; {survivors?no one escaped|one escaped|# escaped}." },
-  { kind = "monster_slain", salience = 55, template = "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}." },
-  { kind = "monster_driven_off", salience = 30, template = "{civilization} drove {monster} back to its lair in {@region}." },
-  { kind = "monster_died", salience = 30, template = "{monster}, {monster:kind}, died of great age in {@region}." },
+  { kind = "settlement_overrun", salience = 50, template = "{monster} drove the people from {@settlement} and made it {monster:its} lair; {survivors?no one escaped|one escaped|# escaped}." },
+  { kind = "monster_slain", salience = 55, template = "{slayer} hunted down and slew {monster}{monster:aside}{monster:where}." },
+  { kind = "monster_driven_off", salience = 30, template = "{civilization} drove {monster} back to {monster:its} lair{monster:where}." },
+  { kind = "monster_died", salience = 30, template = "{monster}{monster:aside} died of great age{monster:where}." },
   { kind = "beasts_bold", salience = 15, template = "In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died." },
   { kind = "outpost_built", salience = 12, template = "{civilization} raised {site} in {@region} against {enemy}." },
   { kind = "outpost_abandoned", salience = 10, template = "{civilization} abandoned {site}{reason?, the frontier having fallen quiet|, the land being lost|, its realm having fallen}." },
   { kind = "settlement_fled", salience = 45, template = "For fear of {monster}, the people of {@settlement} left their homes." },
-  { kind = "peoples_met", salience = 25, template = "The {race_a:plural} first met the {race_b:plural} in {@region}{band?, and hated them from the first|, and were wary of them|, and were glad of them}." },
-  { kind = "disposition_turned", salience = 55, template = "{@causes:war_won=the wars,peace=the wars,truce=the wars,civ_conquered=the conquests,sacked=the sacks,settlement_captured=the conquests,people_expelled=the expulsions,refugees_arrived=years of shelter given|After |, }the {race_a:plural} and the {race_b:plural} {band?came to hate one another|grew wary of one another|became friends}." },
-  { kind = "refugees_arrived", salience = 25, template = "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the expulsion|After |, }{people} {race:plural} from {origin} found shelter in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their own kin of} {civilization}." },
-  { kind = "settlement_mixed", salience = 25, template = "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the cession|After |, }the {race:plural} and the {ruling:plural} lived side by side in {settlement}." },
+  { kind = "peoples_met", salience = 25, template = "The {race_a:plural} {sealed?first had word of|first met} the {race_b:plural} in {@region}{band?, and hated them from the first|, and were wary of them|, and were glad of them}." },
+  { kind = "disposition_turned", salience = 55, template = "{@causes:war_won=the wars,peace=the wars,truce=the wars,civ_conquered=the conquests,sacked=the sacks,settlement_captured=the conquests,people_expelled=the expulsions,refugees_arrived=years of shelter given,war_declared=wars against a common enemy,monster_raid=the raids of a common foe,settlement_overrun=the raids of a common foe,peoples_met=long years of peace,disposition_turned=long years apart|After |, }the {race_a:plural} and the {race_b:plural} {band?came to hate one another|grew wary of one another|became friends}." },
+  { kind = "refugees_arrived", salience = 25, template = "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the expulsion,settlement_abandoned=the abandonment of their home,settlement_abandoned_to=the abandonment of their home,plague=the plague,plague_outbreak=the plague,plague_spread=the plague,famine=the famine,settlement_fled=their flight,region_ceded=the cession,settlements_ceded=the cession|After |, }{people} {race:plural} from {origin} found shelter in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their own kin of} {civilization}." },
+  { kind = "settlement_mixed", salience = 25, template = "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the cession,sacked=the sack,settlement_overrun=the ravage,refugees_arrived=the coming of refugees,refugees_settled=the flight,settlement_abandoned_to=the abandonment of a neighbour|After |, }in {settlement} the {ruling:plural} {standing?ruled over|tolerated|lived as equals with} the {race:plural}{majority?, who outnumbered them|}." },
   { kind = "standing_changed", salience = 15, template = "In {settlement}, {civilization} {standing?held the|tolerated the|accepted the} {race:plural}{standing? as subjects|| as equals}." },
-  { kind = "people_expelled", salience = 40, template = "{civilization} drove the {race:plural} out of {settlement}; {people} left." },
+  { kind = "people_expelled", salience = 40, template = "Hating the {race:plural}, {civilization} drove them out of {settlement}, where it had {standing?held them as subjects|tolerated them|tolerated them} for {years} {years?year|years}; {people} left." },
 ]
 )";
 
@@ -608,12 +610,11 @@ forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name
 // (both fixture roots hold identical copies). The rates are interim (P5-02 17 step 9): after the engineer's
 // calibration these listings follow the data files.
 
-inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P5-03 9.4). Generator 0.24.0; rates of the calibration sweep
-# (P5-03 22 step 10).
+inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P5-03 9.4; P5-03a 10.2). Generator 0.25.0.
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
 living_permille = 100
-undead_min_dead = 4000
+undead_min_dead = 1000
 undead_window_years = 100
 hunt_hops = 2
 hunt_levy_permille = 50
@@ -650,6 +651,7 @@ fear_raids = 2
 fear_years = 50
 fear_permille = 400
 overrun_people_ref = 800
+undead_dead_permille = 25
 )";
 
 inline constexpr std::string_view BEAST_BEAR_TOML = R"([beast.bear]
@@ -938,10 +940,9 @@ inline const std::vector<std::pair<std::string, std::string_view>>& monster_file
     return v;
 }
 
-// --- history.relations (P5-03 4.2; generator 0.24.0, the calibrated values) ---
+// --- history.relations (P5-03 4.2, P5-03a 10.1; generator 0.25.0, the calibrated values) ---
 
-inline constexpr std::string_view RELATIONS_TOML = R"(# Race relations, mixed settlements and migrations (spec P5-03 4.2). Generator 0.24.0; values of the
-# calibration sweep (P5-03 22 step 10).
+inline constexpr std::string_view RELATIONS_TOML = R"(# Race relations, mixed settlements and migrations (spec P5-03 4.2; P5-03a 10.1). Generator 0.25.0.
 [history.relations]
 hatred_max = -500
 friend_min = 150
@@ -954,18 +955,29 @@ conquest_memory = 150
 sack_memory = 30
 capture_memory = 15
 expel_memory = 90
-shelter_memory = 45
+shelter_memory = 90
 meet_hops = 8
 migrate_hops = 2
 migrate_min = 40
 welcome_min = -200
 subject_years = 200
-conquest_settlers_permille = 100
+conquest_settlers_permille = 50
 drift_permille_per_century = 100
 fade_permille = 20
 mixed_min_permille = 100
 expel_permille = 3
 expel_share_max = 500
+peace_years = 100
+peace_memory_per_century = 60
+peace_memory_max = 300
+contact_hops = 1
+foe_years = 100
+foe_war_memory = 60
+foe_monster_memory = 60
+meet_sealed_hops = 5
+meet_sealed_years = 150
+conquest_settlers_span_permille = 400
+expel_gap_years = 60
 )";
 
 // --- history.conflict (P3-06 12.1, the listing; generator 0.16.0; r9 20.9 from 0.18.0) ---
@@ -973,7 +985,7 @@ expel_share_max = 500
 inline constexpr std::string_view CONFLICT_TOML = R"([history.conflict]
 camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
 enmity_max = -500
-border_friction = 200
+border_friction = 300
 want_weight = 500
 hunger_full = 300
 fear_share = 400

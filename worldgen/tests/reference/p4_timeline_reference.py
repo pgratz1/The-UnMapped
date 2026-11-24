@@ -97,42 +97,45 @@ SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
 # 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
 # (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p5-03"
-RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03")
+RULES = "p5-03a"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
 # P5-03 (0.24.0): the 0.24.0 report inputs (p3_report_reference.py build-inputs at 0.24.0; phase 2)
 INPUTS_P5_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03-int", "report-inputs")
+# P5-03a (0.25.0, the default rule set "p5-03a"): no timeline rule changes (no table or column is added); the 0.25.0
+# report inputs (p3_report_reference.py build-inputs at 0.25.0; phase 2). `--rules p5-03` keeps the 0.24.0 file.
+INPUTS_P5_03A = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03a-int", "report-inputs")
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03")
+    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
 
 
 def p403a():
     """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
-    return RULES in ("p4-03a", "p5-02", "p5-03")
+    return RULES in ("p4-03a", "p5-02", "p5-03", "p5-03a")
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03")
+    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
 
 
 def r4():
     """P4-01 r4 (P5-02 13): sites, monsters, beasts and settlement endings in the dumps (READINGS P5)."""
-    return RULES in ("p5-02", "p5-03")
+    return RULES in ("p5-02", "p5-03", "p5-03a")
 
 
 def r5():
     """P4-01 r5 (P5-03 18): race relations and settlement shares by year, and their dump lines."""
-    return RULES == "p5-03"
+    return RULES in ("p5-03", "p5-03a")
 
 
 def default_inputs():
-    return INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_03A if RULES == "p5-03a" else INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -1780,6 +1783,8 @@ def main(argv):
             prr.use_version("0.22.0")
         elif RULES == "p5-02":
             prr.use_version("0.23.0")
+        elif RULES == "p5-03":
+            prr.use_version("0.24.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "distances":
         return cmd_distances(rest)

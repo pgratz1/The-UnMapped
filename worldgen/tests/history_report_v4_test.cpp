@@ -52,10 +52,10 @@ std::string chronicle_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-02 12.1, P5-03 17.1: the header is `# worldgen history v5` at both levels; the text equals the reference's") {
+TEST_CASE("P5-02 12.1, P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v6` at both levels; the text equals the reference's") {
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v5");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v6");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         CHECK(worldgen::to_hex(worldgen::sha256(t)) == hrtest::golden_case("h13-v4").report.at(name));
     }

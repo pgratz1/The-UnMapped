@@ -72,8 +72,11 @@ INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "ou
 INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
 # P5-03 (0.24.0, the default): no marker rule changes (11.2 keeps more ruins standing, which the rows carry); the
 # world cases are the 0.24.0 report inputs (phase 2); `--version 0.23.0` serves the committed P5-02 file.
-INPUTS = tl.INPUTS_P5_03
-GENERATOR_VERSION = "0.24.0"
+INPUTS_024 = tl.INPUTS_P5_03
+# P5-03a (0.25.0, the default): no marker rule changes; the world cases are the 0.25.0 report inputs (phase 2);
+# `--version 0.24.0` serves the committed P5-03 file.
+INPUTS = tl.INPUTS_P5_03A
+GENERATOR_VERSION = "0.25.0"
 # Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
 # halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
 # (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
@@ -100,8 +103,12 @@ def use_version(v):
         GENERATOR_VERSION, INPUTS = "0.23.0", INPUTS_023
         tl.RULES = "p5-02"
         prr.use_version("0.23.0")
-    elif v != "0.24.0":
-        raise SystemExit("--version: 0.22.0, 0.23.0 or 0.24.0")
+    elif v == "0.24.0":
+        GENERATOR_VERSION, INPUTS = "0.24.0", INPUTS_024
+        tl.RULES = "p5-03"
+        prr.use_version("0.24.0")
+    elif v != "0.25.0":
+        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0 or 0.25.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """

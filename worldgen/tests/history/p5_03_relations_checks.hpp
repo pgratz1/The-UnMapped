@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <set>
@@ -488,6 +489,12 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
 
     // 6: expulsions
     const std::int64_t share_max = rel("expel_share_max");
+    // 6.3.4: drift runs at a phase start in T1, before T6's expulsions of the same year, so the share an expulsion
+    // tests is the last row's share less that drift (a drift never writes an event; found at integration of P5-03a
+    // on relations-small seed 7, where the share drifted below the limit in the expulsion's year).
+    const std::int64_t drift_rate = rel("drift_permille_per_century");
+    std::set<std::int64_t> drift_years;
+    for (const Row& p : t.phase) drift_years.insert(at(p, 3));
     std::set<Pair> expelled_years;
     for (const std::int64_t e : x.events_of("people_expelled")) {
         const Row& E = *x.ev.at(e);
@@ -518,6 +525,15 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         const std::int64_t region_s = x.stl.count(s) != 0U ? at(*x.stl.at(s), 4) : -1;
         for (const auto& [id, row] : x.ev) {
             if (id < e && at(*row, 1) == y && (at(*row, 6) == s || at(*row, 5) == region_s)) changed_before = true;
+        }
+        if (before && drift_years.count(y) != 0U) {
+            const auto prev = drift_years.find(y);
+            if (prev == drift_years.begin()) {
+                before.reset();   // the first phase: the last drift year is the history's first year
+            } else {
+                const std::int64_t d = y - *std::prev(prev);
+                *before -= std::min(*before, *before * drift_rate * d / 100000);
+            }
         }
         if (before && *before > share_max && !changed_before) {
             out.push_back("6: e" + n(e) + " takes a share above expel_share_max");
