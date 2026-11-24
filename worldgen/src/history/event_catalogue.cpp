@@ -1614,18 +1614,33 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
             return "corrupt table 'event': row " + int_text(event) + ": peoples_met without its rows";
         }
     }
+    // The race participants (16.4's last event check) are checked first,
+    // in monster_tables_problem: see race_participant_problem.
+    (void)n_events;
+    return std::nullopt;
+}
+
+// P5-03 16.4: every participant of entity type 1 names a race row. 16.4
+// gives no text; the message and the place in the order are those of
+// HistoryView::load, which checks every participant's entity as it reads
+// table event_participant, before any table of schema 9 or 10 (spec P5-02
+// 11.4: the two reads give the same first error).
+std::optional<std::string> race_participant_problem(const MonsterTables& t) {
     for (const db::EventParticipantRow& p : t.participants) {
         if (p.entity_type == static_cast<std::int64_t>(EntityType::race) && !sorted_has(t.race_ids, p.entity_id)) {
-            return "corrupt table 'event': row " + int_text(p.event) + ": race " + int_text(p.entity_id) + " has no row";
+            return "corrupt table 'event_participant': row (" + int_text(p.event) + ", " + int_text(p.seq) +
+                   "): race " + int_text(p.entity_id) + " does not exist";
         }
     }
-    (void)n_events;
     return std::nullopt;
 }
 
 }  // namespace
 
 std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
+    if (std::optional<std::string> why = race_participant_problem(t)) {
+        return why;
+    }
     const EventCatalogue& cat = *t.catalogue;
     const std::int64_t n_events = static_cast<std::int64_t>(t.events.size());
     const auto kind_key = [&](std::int64_t event) -> std::string_view {
