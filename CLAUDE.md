@@ -79,6 +79,8 @@ A stage moves through the roles in this order:
 
 One stage per branch, merged when green. Each phase ends with a review by Paul before the next phase starts.
 
+`docs/questions-for-paul.md` is the one tally of every question put to Paul (open, decided, settled by phase approval), wherever it was first asked. The lead adds a stage's new questions and moves answered rows to its decided section at each merge, and records each decision in `proposals.md`; a spec or review that puts a question to Paul must also get a row there.
+
 `README.md` carries the public status and the phase timeline. The lead updates its Status and Timeline sections whenever a stage merges to `main`, a phase starts or ends, or work in flight changes, in the same push.
 
 ## Build and test
