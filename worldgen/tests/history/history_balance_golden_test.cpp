@@ -110,7 +110,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 19, a colony founded in the step of a cession passes to the winner") {
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 5, a colony founded in the step of a cession passes to the winner") {
     // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration; the first
     // round's 1024 seed 36 case, e310, no longer occurs with the second round's rules, and no 1024 default world
     // of seeds 0 to 160 has one): the reference (p3_conflict_reference.py check-world, table for table on this
@@ -123,11 +123,14 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 19, a colony founded 
     // P5-01 (generator 0.21.0): seed 5 has none any more; of the 1024 turbulent seeds 0 to 39, seeds 19, 20, 22, 30
     // and 35 have one each (P5-01 integration, C++ worlds); seed 19's is region_ceded e751 of region 10 in 4331
     // (colony e749, s122).
-    static dbtest::TempDir dir("balance-golden-1024-turbulent-19");
+    // P5-02 (generator 0.23.0, test writer): seed 19 has none any more; of the 1024 turbulent seeds 0 to 39, seeds
+    // 5 and 12 have one each; seed 5's is region_ceded e1048 of region 34 in 4410 (colony e1046, s112), and the
+    // conflict reference's check-world reproduces that world's history tables.
+    static dbtest::TempDir dir("balance-golden-1024-turbulent-5");
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const std::string path = dir.file("turbulent-19-1024.db");
-    REQUIRE(worldgen::generate_world(chrono_test::world_params(19, 1024, hp, shipped()), shipped(), path,
+    const std::string path = dir.file("turbulent-5-1024.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(5, 1024, hp, shipped()), shipped(), path,
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     const db::WorldReader r = open_world(path);
@@ -163,7 +166,7 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 19, a colony founded 
             CHECK(row);
         }
     }
-    CHECK(found >= 1);  // 0.21.0: e751 (s122, region 10, 4331)
+    CHECK(found >= 1);  // 0.21.0: e751 (s122, region 10, 4331); 0.23.0 seed 5: e1048 (s112, region 34, 4410)
     MESSAGE("same-step colony cessions found: " << found);
     // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
     CHECK(cession_violations(t) == std::vector<std::string>{});
