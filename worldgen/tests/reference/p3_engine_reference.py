@@ -700,10 +700,15 @@ def join_all(names):
     return ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def render(view, eid):
+def render(view, eid, links=None):
     """render_event(view, id). view: dict with catalogue (by id), events (by
     id: year, end_year, kind, region, settlement, participants [(seq, role
-    seq, type, id)], values {seq: v}) and names: name(type, id, form)."""
+    seq, type, id)], values {seq: v}) and names: name(type, id, form).
+
+    links: when a list, P4-05 4.1's links of render_event_linked are appended
+    to it as (start, length, type, id), start and length in characters of the
+    returned text (bytes when the view's strings are Latin-1 decoded, as
+    p3_report_reference reads them). The text is the same either way."""
     if eid not in view["events"]:
         fatal("render_event: event %d: no such event" % eid)
     ev = view["events"][eid]
@@ -732,12 +737,18 @@ def render(view, eid):
             return view["region_at"](rid, at_event)
         return view["name"](REGION, rid, "name")
 
-    def put_name(nm):
+    def link(nm, typ, ident):
+        if links is not None:
+            links.append((sum(len(x) for x in out), len(nm), typ, ident))
+
+    def put_name(nm, typ=None, ident=None):
         # 8.5 r10: a leading "The " of a name appended mid-sentence becomes "the ".
         if RENDER_R10 and nm.startswith("The "):
             so_far = "".join(out)
             if not (so_far == "" or so_far.endswith(". ")):
                 nm = "the " + nm[4:]
+        if typ is not None:
+            link(nm, typ, ident)
         out.append(nm)
 
     b = templ
@@ -766,11 +777,11 @@ def render(view, eid):
         elif body == "@end_year":
             out.append(str(ev["end_year"]))
         elif body == "@region":
-            put_name(region_name(ev["region"], eid))
+            put_name(region_name(ev["region"], eid), REGION, ev["region"])
         elif RENDER_R21 and body == "@region_former":
-            put_name(region_name(ev["region"], eid - 1))
+            put_name(region_name(ev["region"], eid - 1), REGION, ev["region"])
         elif body == "@settlement":
-            put_name(view["name"](SETTLEMENT, ev["settlement"], "name"))
+            put_name(view["name"](SETTLEMENT, ev["settlement"], "name"), SETTLEMENT, ev["settlement"])
         elif RENDER_R23 and body == "@beast":   # P5-02 10.3: beast.plural, as stored (no name rule)
             out.append(view["beast_plural"](ev["values"][val_seq["beast"]]))
         elif RENDER_R12 and body.startswith("@causes:"):
@@ -810,13 +821,15 @@ def render(view, eid):
                 for k, (t, x) in enumerate(ps):
                     if k > 0:
                         out.append(" and " if k == len(ps) - 1 else ", ")
-                    put_name(region_name(x, eid) if t == REGION else view["name"](t, x, "name"))
+                    put_name(region_name(x, eid) if t == REGION else view["name"](t, x, "name"), t, x)
             elif form == "name":
                 t, x = ps[0]
-                put_name(region_name(x, eid) if t == REGION else view["name"](t, x, form))
-            else:
+                put_name(region_name(x, eid) if t == REGION else view["name"](t, x, form), t, x)
+            else:   # plural, adjective (a race, type 1), kind (P5-02: the monster, type 8)
                 t, x = ps[0]
-                out.append(view["name"](t, x, form))
+                nm = view["name"](t, x, form)
+                link(nm, t, x)
+                out.append(nm)
     return "".join(out)
 
 

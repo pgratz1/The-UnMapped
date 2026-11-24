@@ -42,6 +42,9 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         <case>.history.full.txt (report --history --level full, written beside each input world), and the
         committed golden file against a fresh computation. Exit 1 on any disagreement.
 
+    --rules p4-04 (before any command) keeps P4-04's ruin and faded glyphs and plague colour (P4-05 12.1 F3, F5
+    are the default); --version 0.22.0 implies it.
+
 Readings chosen where the spec is open are listed in READINGS below and in the test writer's report.
 Never regenerate the golden file to make a C++ test pass.
 """
@@ -66,8 +69,21 @@ T2_NAME = "t2-markers"
 # Generator 0.23.0 (P5-02, schema 9) by default: the world cases are the report inputs of the P5-02 integration
 # (r1 histories); `--version 0.22.0` serves the committed 0.22.0 file (inputs of P4-04, timeline rules p4-03a).
 INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-04-tests", "inputs")
-INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-int", "report-inputs")
+INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
 GENERATOR_VERSION = "0.23.0"
+# Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
+# halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
+# (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
+RULES = "p4-05"
+
+
+def use_rules(r):
+    global RULES
+    if r not in ("p4-04", "p4-05"):
+        raise SystemExit("--rules: p4-04 or p4-05")
+    RULES = r
+    SYMBOL_COLOUR[PLAGUE] = (0, 190, 120) if r == "p4-05" else (150, 210, 0)
+    _GLYPHS.clear()
 
 
 def use_version(v):
@@ -127,7 +143,7 @@ STATUS_WORD = {1: "thriving", 2: "declining", 3: "ruined", 4: "faded"}
 # 3.4: symbol, keys, colour; the value is the priority (sack > siege > battle > plague > plain)
 PLAIN, PLAGUE, BATTLE, SIEGE, SACK = 0, 1, 2, 3, 4
 SYMBOL_WORD = {PLAIN: "plain", PLAGUE: "plague", BATTLE: "battle", SIEGE: "siege", SACK: "sack"}
-SYMBOL_COLOUR = {SACK: (200, 0, 200), SIEGE: (255, 150, 0), BATTLE: (230, 30, 30), PLAGUE: (150, 210, 0),
+SYMBOL_COLOUR = {SACK: (200, 0, 200), SIEGE: (255, 150, 0), BATTLE: (230, 30, 30), PLAGUE: (0, 190, 120),
                  PLAIN: (255, 255, 255)}
 SYMBOL_KEYS = {b"sacked": SACK, b"settlement_captured": SACK, b"siege": SIEGE, b"refuge_held": SIEGE,
                b"battle": BATTLE, b"battle_at_pass": BATTLE, b"plague": PLAGUE, b"plague_outbreak": PLAGUE,
@@ -328,7 +344,9 @@ def diamond(r, dx, dy):
 SHAPE = {1: (disc, 1), 2: (disc, 2), 3: (square, 2), 4: (square, 3), 5: (diamond, 3)}
 
 
-def halo(radius, cells):
+def halo(radius, cells, of=3):
+    """5.2: every class-0 cell with an 8-neighbour of class `of` (3 ink; 2 fill for P4-05's faded ruin) becomes
+    halo."""
     n = 2 * radius + 1
     out = list(cells)
     for j in range(n):
@@ -337,7 +355,7 @@ def halo(radius, cells):
                 continue
             for b in (-1, 0, 1):
                 for a in (-1, 0, 1):
-                    if (a or b) and 0 <= i + a < n and 0 <= j + b < n and cells[(j + b) * n + i + a] == 3:
+                    if (a or b) and 0 <= i + a < n and 0 <= j + b < n and cells[(j + b) * n + i + a] == of:
                         out[j * n + i] = 1
     return out
 
@@ -362,6 +380,20 @@ def glyph(base, declining=False, capital=False):
         return radius, halo(radius, cells)
     if declining or capital:
         raise ValueError("glyph: base %d with declining or capital" % base)
+    if base in (8, 9) and RULES == "p4-05":
+        # P4-05 12.1 F3: ruin r 4, ink where max(|dx|, |dy|) <= 3 and ||dx| - |dy|| <= 1, then the halo rule;
+        # faded r 3, fill where |dx| = |dy| <= 2, then a halo on every 0 cell with an 8-neighbour of class 2
+        radius = 4 if base == 8 else 3
+        n = 2 * radius + 1
+        cells = [0] * (n * n)
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                i = (dy + radius) * n + dx + radius
+                if base == 8 and max(abs(dx), abs(dy)) <= 3 and abs(abs(dx) - abs(dy)) <= 1:
+                    cells[i] = 3
+                if base == 9 and abs(dx) == abs(dy) <= 2:
+                    cells[i] = 2
+        return radius, halo(radius, cells, 3 if base == 8 else 2)
     if base in (8, 9, 10):
         radius = 2 if base == 9 else 3
         n = 2 * radius + 1
@@ -607,7 +639,8 @@ def golden_text(inputs):
             raise SystemExit("missing input world %s" % path)
         lines += case_lines(name, path, is_world)
     head = [
-        "# P4-04 marker golden values (docs/specs/p4-04-markers.md 10.3), generator %s." % GENERATOR_VERSION,
+        "# P4-04 marker golden values (docs/specs/p4-04-markers.md 10.3), generator %s%s." % (
+            GENERATOR_VERSION, "" if RULES == "p4-04" else ", glyphs and colours of P4-05 12.1 F3 and F5"),
         "# Written by worldgen/tests/reference/p4_markers_reference.py golden; never edited by hand.",
         "# Cases ascending: the world cases of tools/ci/world-hashes.sh with history, sample-42-1024 (generate",
         "# --seed 42 --map-size 1024), the P3-07 fixtures, T1 (t1-edges) and T2 (t2-markers).",
@@ -645,6 +678,13 @@ DRAWINGS = {
     (9, False, False): ["F---F", "-F-F-", "--F--", "-F-F-", "F---F"],
     (10, False, False): ["-------", "--hhh--", "-hhKhh-", "hhKhKhh", "hKhhhKh", "hhh-hhh", "-------"],
 }
+# P4-05 12.1 F3: the two drawings that replace P4-04 5.3's ruin and faded ruin
+DRAWINGS_P405 = {
+    (8, False, False): ["hhhh-hhhh", "hKKhhhKKh", "hKKKhKKKh", "hhKKKKKhh", "-hhKKKhh-", "hhKKKKKhh", "hKKKhKKKh",
+                        "hKKhhhKKh", "hhhh-hhhh"],
+    (9, False, False): ["hhh-hhh", "hFhhhFh", "hhFhFhh", "-hhFhh-", "hhFhFhh", "hFhhhFh", "hhh-hhh"],
+}
+COUNTS_P405 = {(8, False, False): (44, 0, 33, 0), (9, False, False): (36, 9, 0, 0)}
 CODE = {"h": 1, "F": 2, "K": 3, ".": 4, "-": 0}
 # (halo, fill, ink, interior)
 COUNTS = {(1, False, False): (24, 9, 12, 0), (2, False, False): (32, 21, 16, 0), (3, False, False): (32, 25, 24, 0),
@@ -658,12 +698,16 @@ def counts(cells):
 
 
 def check_glyphs(c):
-    for key, rows in DRAWINGS.items():
+    drawings, cnts = dict(DRAWINGS), dict(COUNTS)
+    if RULES == "p4-05":
+        drawings.update(DRAWINGS_P405)
+        cnts.update(COUNTS_P405)
+    for key, rows in drawings.items():
         radius, cells = glyph(*key)
         want = [CODE[ch] for row in rows for ch in row]
         c.eq("5 drawing %s radius" % glyph_name(*key), 2 * radius + 1, len(rows))
         c.eq("5 drawing %s" % glyph_name(*key), cells, want)
-    for key, cnt in COUNTS.items():
+    for key, cnt in cnts.items():
         c.eq("5 counts %s" % glyph_name(*key), counts(glyph(*key)[1]), cnt)
     for bad in ((0, False, False), (6, False, False), (7, False, False), (12, False, False), (8, True, False),
                 (16, False, False)):
@@ -766,7 +810,8 @@ def check_draw_order(c):
             (20, 10): INK, (21, 10): HALO,
             (10, 1): (200, 0, 200),  # ring band (dy = -9), not covered
             (3, 16): INK,           # ruin over the ring's band
-            (4, 16): HALO,          # ruin halo over the ring's ink
+            (4, 16): HALO if RULES == "p4-04" else INK,   # ruin halo (p4-04) / the thick X's bar (p4-05)
+            (5, 16): HALO,          # ruin halo over the ring's ink
             (0, 23): NO_OWNER,      # hamlet without owner, clipped at two edges
             (30, 0): INK, (31, 1): INK, (31, 0): HALO,   # pass clipped at the top and right edges
             (0, 0): bg}
@@ -930,6 +975,12 @@ def main(argv):
         i = argv.index("--version")
         use_version(argv[i + 1])
         argv = argv[:i] + argv[i + 2:]
+    if "--rules" in argv:
+        i = argv.index("--rules")
+        use_rules(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
+    elif GENERATOR_VERSION == "0.22.0":
+        use_rules("p4-04")   # the 0.22.0 file predates P4-05
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if "--glyphs" in rest:

@@ -1,3 +1,4 @@
+// P4-05 12.1 F3 and F5 replace the ruin and faded ruin glyphs and the plague colour.
 // Spec P4-04 10.2 items 1, 2 and 6: every glyph of section 5 against the drawings of 5.2 and 5.3 and the
 // class counts of 5.2 to 5.4, the variants not drawn there from the rule (written here as predicates),
 // marker_glyph's FatalErrors; event_symbol for every key of 3.4, near misses and the empty key, the symbol
@@ -142,12 +143,14 @@ TEST_CASE("P4-04 10.2 item 1: the drawings of 5.2 and 5.3") {
     check_drawing({3, false, true}, {"hhhhhhhhhhh", "hKKKKKKKKKh", "hKKKKKKKKKh", "hKKFFFFFKKh", "hKKFFFFFKKh",
                                      "hKKFFFFFKKh", "hKKFFFFFKKh", "hKKFFFFFKKh", "hKKKKKKKKKh", "hKKKKKKKKKh",
                                      "hhhhhhhhhhh"});
-    check_drawing({8, false, false}, {"hhh-hhh", "hKhhhKh", "hhKhKhh", "-hhKhh-", "hhKhKhh", "hKhhhKh", "hhh-hhh"});
-    check_drawing({9, false, false}, {"F---F", "-F-F-", "--F--", "-F-F-", "F---F"});
+    // P4-05 12.1 F3 replaces 5.3: the ruin is a thick X of radius 4, the faded ruin a haloed thin X of radius 3
+    check_drawing({8, false, false}, {"hhhh-hhhh", "hKKhhhKKh", "hKKKhKKKh", "hhKKKKKhh", "-hhKKKhh-", "hhKKKKKhh",
+                                      "hKKKhKKKh", "hKKhhhKKh", "hhhh-hhhh"});
+    check_drawing({9, false, false}, {"hhh-hhh", "hFhhhFh", "hhFhFhh", "-hhFhh-", "hhFhFhh", "hFhhhFh", "hhh-hhh"});
     check_drawing({10, false, false}, {"-------", "--hhh--", "-hhKhh-", "hhKhKhh", "hKhhhKh", "hhh-hhh", "-------"});
 }
 
-TEST_CASE("P4-04 10.2 item 1: class counts of 5.2 to 5.4") {
+TEST_CASE("P4-04 10.2 item 1: class counts of 5.2 to 5.4 (ruin and faded: P4-05 12.1 F3)") {
     struct C {
         GlyphKey k;
         std::array<int, 4> want;  // halo, fill, ink, interior
@@ -155,8 +158,8 @@ TEST_CASE("P4-04 10.2 item 1: class counts of 5.2 to 5.4") {
     const C cases[] = {{{1, false, false}, {24, 9, 12, 0}},   {{2, false, false}, {32, 21, 16, 0}},
                        {{3, false, false}, {32, 25, 24, 0}},  {{4, false, false}, {40, 40, 41, 0}},
                        {{5, false, false}, {40, 25, 16, 0}},  {{2, true, false}, {32, 12, 16, 9}},
-                       {{3, false, true}, {40, 25, 56, 0}},   {{8, false, false}, {36, 0, 9, 0}},
-                       {{9, false, false}, {0, 9, 0, 0}},     {{10, false, false}, {23, 0, 5, 0}},
+                       {{3, false, true}, {40, 25, 56, 0}},   {{8, false, false}, {44, 0, 33, 0}},
+                       {{9, false, false}, {36, 9, 0, 0}},    {{10, false, false}, {23, 0, 5, 0}},
                        {{11, false, false}, {144, 68, 104, 0}}};
     for (const C& c : cases) {
         CAPTURE(glyph_name(c.k));
@@ -177,8 +180,8 @@ TEST_CASE("P4-04 10.2 item 1: every settlement variant from the rule of 5.2; rad
             }
         }
     }
-    CHECK(wi::marker_glyph({8, false, false}).radius == 3);
-    CHECK(wi::marker_glyph({9, false, false}).radius == 2);
+    CHECK(wi::marker_glyph({8, false, false}).radius == 4);  // P4-05 12.1 F3
+    CHECK(wi::marker_glyph({9, false, false}).radius == 3);
     CHECK(wi::marker_glyph({10, false, false}).radius == 3);
     CHECK(wi::marker_glyph({11, false, false}).radius == 11);
     // the largest glyph is the ring: 23 x 23 cells (4 cost note)
@@ -262,7 +265,7 @@ TEST_CASE("P4-04 10.2 item 2: event_symbol, its words and colours") {
     CHECK(wi::event_symbol_colour(EventSymbol::sack) == Rgb{200, 0, 200});
     CHECK(wi::event_symbol_colour(EventSymbol::siege) == Rgb{255, 150, 0});
     CHECK(wi::event_symbol_colour(EventSymbol::battle) == Rgb{230, 30, 30});
-    CHECK(wi::event_symbol_colour(EventSymbol::plague) == Rgb{150, 210, 0});
+    CHECK(wi::event_symbol_colour(EventSymbol::plague) == Rgb{0, 190, 120});  // P4-05 12.1 F5
     CHECK(wi::event_symbol_colour(EventSymbol::plain) == Rgb{255, 255, 255});
 }
 
