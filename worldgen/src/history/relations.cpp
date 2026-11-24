@@ -1341,6 +1341,7 @@ void RelationsSubsystem::meetings(StepContext& ctx) {
             (civ.race == a ? xs : ys).push_back(c);
         }
         if (xs.empty() || ys.empty()) {
+            pairs_[i].word_since = 0;  // P5-03a 4.2: no key
             continue;
         }
         // The smallest key on a graph given by its hops lists.
