@@ -1618,6 +1618,10 @@ std::size_t clause_cuts(std::string_view literal) noexcept {
 }  // namespace
 
 std::string render_event(const HistoryView& view, std::int64_t event_id) {
+    return render_event_linked(view, event_id).text;
+}
+
+LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
     const std::string at = "render_event: event " + int_text(event_id) + ": ";
     const HistoryView::Event* e = view.event(event_id);
     if (e == nullptr) {
@@ -1653,11 +1657,21 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         const std::int64_t seq = kind->value_seq(key);
         return e->values[static_cast<std::size_t>(seq - 1)];  // every value present (HistoryView::load)
     };
-    std::string out;
+    LinkedText linked;
+    std::string& out = linked.text;
+    // P4-05 4.1: a link over the bytes appended since `start`.
+    const auto link_from = [&linked](std::size_t start, EntityType type, std::int64_t id) {
+        const std::size_t end = linked.text.size();
+        if (end > start) {
+            linked.links.push_back(TextLink{static_cast<std::uint32_t>(start), static_cast<std::uint32_t>(end - start),
+                                            static_cast<std::int64_t>(type), id, false});
+        }
+    };
     // r10 (P1-06 r3 14.7): a name's leading "The " is written "the " unless
     // the name is appended at a sentence start (offset 0 or after ". ").
-    const auto append_name = [&out](const std::string& name) {
+    const auto append_name = [&out, &link_from](const std::string& name, EntityType type, std::int64_t id) {
         constexpr std::string_view THE = "The ";
+        const std::size_t start = out.size();
         const bool sentence_start = out.empty() || (out.size() >= 2U && out.compare(out.size() - 2U, 2U, ". ") == 0);
         if (!sentence_start && name.size() >= THE.size() && name.compare(0, THE.size(), THE) == 0) {
             out += "the ";
@@ -1665,6 +1679,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         } else {
             out += name;
         }
+        link_from(start, type, id);
     };
     // r19 22.1: the clause of each token (a placeholder belongs to the
     // clause in which it starts), and per clause whether every number of it
@@ -1711,16 +1726,22 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                         if (i > 0) {
                             out += i + 1 == ps.size() ? " and " : ", ";
                         }
-                        append_name(name_of(*ps[i], Form::name));
+                        append_name(name_of(*ps[i], Form::name), static_cast<EntityType>(ps[i]->entity_type),
+                                    ps[i]->entity_id);
                     }
                 } else {
                     if (ps.empty()) {
                         fail(at + "no participant with role '" + t.text + "'");
                     }
+                    const db::EventParticipantRow& p = *ps.front();
                     if (t.form == Form::name) {
-                        append_name(name_of(*ps.front(), t.form));
+                        append_name(name_of(p, t.form), static_cast<EntityType>(p.entity_type), p.entity_id);
                     } else {
-                        out += name_of(*ps.front(), t.form);  // race words are copied as they are
+                        // Race words and monster nouns are copied as they are;
+                        // the link names the race (type 1) or the monster (8).
+                        const std::size_t start = out.size();
+                        out += name_of(p, t.form);
+                        link_from(start, static_cast<EntityType>(p.entity_type), p.entity_id);
                     }
                 }
                 break;
@@ -1753,7 +1774,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 if (s == nullptr) {
                     fail(at + "no region " + int_text(e->row.region));
                 }
-                append_name(*s);
+                append_name(*s, EntityType::region, e->row.region);
                 break;
             }
             case TokenType::settlement: {
@@ -1761,7 +1782,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 if (s == nullptr) {
                     fail(at + "no settlement " + int_text(e->row.settlement));
                 }
-                append_name(*s);
+                append_name(*s, EntityType::settlement, e->row.settlement);
                 break;
             }
             case TokenType::beast: {  // P5-02 10.3: copied as stored
@@ -1811,7 +1832,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
             }
         }
     }
-    return out;
+    return linked;
 }
 
 }  // namespace worldgen::history

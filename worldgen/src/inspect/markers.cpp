@@ -150,7 +150,7 @@ Rgb event_symbol_colour(EventSymbol symbol) noexcept {
         case EventSymbol::sack: return Rgb{200, 0, 200};
         case EventSymbol::siege: return Rgb{255, 150, 0};
         case EventSymbol::battle: return Rgb{230, 30, 30};
-        case EventSymbol::plague: return Rgb{150, 210, 0};
+        case EventSymbol::plague: return Rgb{0, 190, 120};  // P4-05 12.1 F5
         case EventSymbol::plain: break;
     }
     return Rgb{255, 255, 255};
@@ -441,11 +441,7 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
     out.places.clear();
     if (options.events) {
         for (const std::int64_t id : state.events) {
-            const std::optional<std::size_t> e = index_of(id, event_places_.size());
-            if (!e) {
-                markers_fatal("no event " + num(id));
-            }
-            const EventPlace& ep = event_places_[*e];
+            const EventPlace& ep = place_of(id);  // P4-05 4.6: the one place rule
             if (!ep.placed) {
                 continue;
             }
@@ -509,6 +505,24 @@ std::int64_t MarkerIndex::capital(const history::LoadedHistory& history, std::in
     return s;
 }
 
+const MarkerIndex::EventPlace& MarkerIndex::place_of(std::int64_t event) const {
+    const std::optional<std::size_t> e = index_of(event, event_places_.size());
+    if (!e) {
+        markers_fatal("no event " + num(event));
+    }
+    return event_places_[*e];
+}
+
+std::optional<std::array<std::int64_t, 2>> MarkerIndex::event_place(const history::LoadedHistory& history,
+                                                                    std::int64_t event) const {
+    check_history(history);
+    const EventPlace& ep = place_of(event);
+    if (!ep.placed) {
+        return std::nullopt;
+    }
+    return std::array<std::int64_t, 2>{ep.x, ep.y};
+}
+
 std::int64_t MarkerIndex::ruined_year(std::int64_t settlement) const {
     return ruined_year_[settlement_index(settlement)];
 }
@@ -554,8 +568,9 @@ public:
     [[nodiscard]] std::uint8_t at(std::int32_t dx, std::int32_t dy) const noexcept { return cells_[pos(dx, dy)]; }
     void set(std::int32_t dx, std::int32_t dy, std::uint8_t c) noexcept { cells_[pos(dx, dy)] = c; }
 
-    // The halo rule of 5.1.
-    void halo() {
+    // The halo rule of 5.1: a 0 cell with an 8-neighbour of class `of`
+    // (ink; P4-05 F3: fill for the faded cross).
+    void halo(std::uint8_t of = GLYPH_INK) {
         std::vector<std::uint8_t> next = cells_;
         for (std::int32_t dy = -radius_; dy <= radius_; ++dy) {
             for (std::int32_t dx = -radius_; dx <= radius_; ++dx) {
@@ -566,7 +581,7 @@ public:
                 for (std::int32_t ny = dy - 1; ny <= dy + 1 && !near_ink; ++ny) {
                     for (std::int32_t nx = dx - 1; nx <= dx + 1 && !near_ink; ++nx) {
                         if ((nx != dx || ny != dy) && iabs(nx) <= radius_ && iabs(ny) <= radius_ &&
-                            at(nx, ny) == GLYPH_INK) {
+                            at(nx, ny) == of) {
                             near_ink = true;
                         }
                     }
@@ -625,16 +640,31 @@ Glyph settlement_glyph(std::uint8_t kind, bool declining, bool capital) {
     return std::move(g).take();
 }
 
-// 5.3: the ruin and faded crosses.
-Glyph cross_glyph(std::int32_t radius, std::uint8_t cls, bool halo) {
-    GlyphGrid g(radius);
+// P4-05 12.1 F3 (replaces P4-04 5.3): the ruin, a thick X of radius 4,
+// ink where max(|dx|, |dy|) <= 3 and ||dx| - |dy|| <= 1, then the halo
+// rule (33 ink, 44 halo).
+Glyph ruin_glyph() {
+    GlyphGrid g(4);
+    for (std::int32_t dy = -3; dy <= 3; ++dy) {
+        for (std::int32_t dx = -3; dx <= 3; ++dx) {
+            if (iabs(iabs(dx) - iabs(dy)) <= 1) {
+                g.set(dx, dy, GLYPH_INK);
+            }
+        }
+    }
+    g.halo();
+    return std::move(g).take();
+}
+
+// F3: the faded ruin, radius 3, fill where |dx| = |dy| <= 2, then a halo on
+// every 0 cell with an 8-neighbour of class fill (9 fill, 36 halo).
+Glyph faded_glyph() {
+    GlyphGrid g(3);
     for (std::int32_t d = -2; d <= 2; ++d) {
-        g.set(d, d, cls);
-        g.set(d, -d, cls);
+        g.set(d, d, GLYPH_FILL);
+        g.set(d, -d, GLYPH_FILL);
     }
-    if (halo) {
-        g.halo();
-    }
+    g.halo(GLYPH_FILL);
     return std::move(g).take();
 }
 
@@ -678,8 +708,8 @@ Glyph marker_glyph(GlyphKey key) {
         throw FatalError("marker_glyph: no glyph for " + key_text(key));
     }
     switch (key.base) {
-        case 8: return cross_glyph(3, GLYPH_INK, true);
-        case 9: return cross_glyph(2, GLYPH_FILL, false);
+        case 8: return ruin_glyph();
+        case 9: return faded_glyph();
         case 10: return pass_glyph();
         default: return ring_glyph();  // 11
     }

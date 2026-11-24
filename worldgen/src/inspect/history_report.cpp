@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "worldgen/core/error.hpp"
 #include "worldgen/db/schema.hpp"
 #include "worldgen/history/digest.hpp"
 #include "worldgen/history/event_catalogue.hpp"
@@ -88,11 +89,229 @@ bool upland(const history::RegionInfo& r) noexcept {
     return r.walk_cells < r.cells / 4 + (r.cells % 4 != 0 ? 1 : 0);
 }
 
+// --- Block lines (P4-05 4.2) ----------------------------------------------
+
+Segment lit(std::string text) {
+    return Segment{SegmentKind::literal, std::move(text), 0, 0};
+}
+Segment txt(std::string text) {
+    return Segment{SegmentKind::text, std::move(text), 0, 0};
+}
+Segment event_ref(Id event) {
+    return Segment{SegmentKind::event, std::string(), 0, event};
+}
+Segment sentence_of(Id event) {
+    return Segment{SegmentKind::sentence, std::string(), 0, event};
+}
+
+const db::RaceRow* find_race(const history::HistoryTables& t, Id id) {
+    for (const db::RaceRow& r : t.races) {
+        if (r.id == id) {
+            return &r;
+        }
+    }
+    return nullptr;
+}
+const db::AgeRow* find_age(const history::HistoryTables& t, std::int64_t year) {
+    for (const db::AgeRow& a : t.ages) {
+        if (a.start_year <= year && year <= a.end_year) {
+            return &a;
+        }
+    }
+    return nullptr;
+}
+const history::RegionInfo* find_region(const history::HistoryTables& t, Id id) {
+    const auto it = std::lower_bound(t.regions.begin(), t.regions.end(), id,
+                                     [](const history::RegionInfo& r, Id x) { return r.id < x; });
+    return it != t.regions.end() && it->id == id ? &*it : nullptr;
+}
+const std::string* find_biome_key(const history::HistoryTables& t, Id id) {
+    for (const auto& [b, key] : t.biome_keys) {
+        if (b == id) {
+            return &key;
+        }
+    }
+    return nullptr;
+}
+
+// The lines of one civilization's block (6.6 with 24.5, 25.3 to 25.5), the
+// report's former Report::civilization written as segments.
+class BlockBuilder {
+public:
+    BlockBuilder(const HistoryView& view, const history::HistoryTables& t, HistoryLevel level)
+        : v_(view), t_(t), level_(level) {}
+
+    std::vector<BlockLine> build(const db::CivilizationRow& c, const history::CivilizationDigest& d) {
+        // r19 25.5: an ended realm's block at summary leaves out home, the
+        // peak lines and events, with at most MILESTONES_ENDED milestones.
+        const bool short_block = level_ == HistoryLevel::summary && c.ended_year.has_value();
+        add({lit("c" + num(c.id) + " "), txt(c.name)});
+        const db::RaceRow* r = find_race(t_, c.race);
+        add({lit("  race: "), entity_named(1, r->id, r->name)});
+        const history::RegionInfo* home = find_region(t_, c.home_region);
+        if (!short_block) {
+            const std::string* biome = find_biome_key(t_, home->biome);
+            BlockLine l{lit("  home: "), entity(5, c.home_region), lit(", ")};
+            l.push_back(biome != nullptr ? txt(*biome) : lit("?"));
+            if (upland(*home)) {
+                l.push_back(lit(", upland"));
+            }
+            add(std::move(l));
+        }
+        const db::AgeRow* age = find_age(t_, c.founded_year);
+        add({lit("  founded: " + num(c.founded_year) + " in "), txt(age->name), lit(" (a" + num(age->id) + "), "),
+             event_ref(c.founding_event)});
+        if (d.seceded_from != 0) {
+            add({lit("  seceded from: "), entity(3, d.seceded_from), lit(", "), event_ref(c.founding_event)});
+        }
+        const std::string capital = c.ended_year ? "  last capital: " : "  capital: ";
+        add({lit(capital), c.capital != 0 ? entity(4, c.capital) : lit("none")});
+        if (!short_block) {
+            add({lit(d.peak_regions.count > 0 ? "  peak regions: " + num(d.peak_regions.count) + ", " +
+                                                    span_of(d.peak_regions.from_year, d.peak_regions.to_year)
+                                              : std::string("  peak regions: 0"))});
+            add({lit(d.peak_population.population > 0 ? "  peak population: " + num(d.peak_population.population) +
+                                                            " in " + num(d.peak_population.year)
+                                                      : std::string("  peak population: 0"))});
+        }
+        add({lit("  settlements: " + num(d.settlements_founded) + " founded, " + num(d.settlements_held) +
+                 " held at the end, " + num(d.settlements_ruined) + " ruined, " + num(d.settlements_faded) +
+                 " faded")});  // r19 25.3 item 3
+        add({lit("  wars: " + num(d.wars_declared) + " declared, " + num(d.wars_defended) + " defended; won " +
+                 num(d.wars_won) + ", lost " + num(d.wars_lost) + ", drawn " + num(d.wars_drawn) + ", open " +
+                 num(d.wars_open))});
+        if (level_ == HistoryLevel::full) {
+            relations(d);
+        } else {
+            adversaries(d);
+        }
+        if (!short_block) {
+            add({lit("  events: " + num(d.events))});
+        }
+        if (!c.ended_year) {
+            add({lit("  fate: alive in " + num(t_.end_year) + ": " + pl(d.regions_held, "region") + ", " +
+                     pl(d.settlements_held, "settlement") + ", population " + num(d.population))});
+        } else {
+            add({lit("  fate: ended in " + num(*c.ended_year) + ", "), event_ref(c.ending_event), lit(": "),
+                 sentence_of(c.ending_event)});
+        }
+        add({lit("  milestones:")});
+        for (const Id m : short_block ? d.milestones_ended : d.milestones) {
+            const HistoryView::Event& e = v_.events()[static_cast<std::size_t>(m - 1)];
+            const history::KindDef& k = *v_.catalogue().find_id(e.row.kind);  // checked by HistoryView::load
+            BlockLine l{lit("    " + event_span(e.row) + " "), event_ref(m), lit(" "), txt(k.key), lit(": "),
+                        sentence_of(m)};
+            const std::string n = history::history_note(v_, m, c.id);
+            if (!n.empty()) {
+                l.push_back(lit(" ("));
+                l.push_back(txt(n));
+                l.push_back(lit(")"));
+            }
+            add(std::move(l));
+        }
+        return std::move(lines_);
+    }
+
+    // As the report's ref(): a region by its name at E; no name: the tag alone.
+    [[nodiscard]] Segment entity(Id type, Id id) const {
+        const std::optional<EntityType> t = history::entity_type_from_code(type);
+        const std::string* name = !t ? nullptr
+                                  : *t == EntityType::region ? v_.region_name_at_year(id, t_.end_year)
+                                                             : v_.name(*t, id);
+        return Segment{SegmentKind::entity, name != nullptr ? *name : std::string(), type, id};
+    }
+
+private:
+    static Segment entity_named(Id type, Id id, const std::string& name) {
+        return Segment{SegmentKind::entity, name, type, id};
+    }
+
+    void add(BlockLine line) { lines_.push_back(std::move(line)); }
+
+    // r17 24.5: one line per adversary, summary only; r19 25.4: a line for
+    // each adversary with a war row, then one count line for the others.
+    void adversaries(const history::CivilizationDigest& d) {
+        if (d.adversaries.empty()) {
+            add({lit("  adversaries: none")});
+            return;
+        }
+        add({lit("  adversaries: " + num(static_cast<std::int64_t>(d.adversaries.size())))});
+        std::int64_t without = 0;
+        std::int64_t enmity = 0;
+        for (const history::CivilizationDigest::Adversary& a : d.adversaries) {
+            if (a.wars == 0) {
+                ++without;
+                enmity += a.state == "enmity" ? 1 : 0;
+                continue;
+            }
+            add({lit("    "), entity(a.type, a.id),
+                 lit(": " + pl(a.wars, "war") + ", won " + num(a.won) + ", lost " + num(a.lost) + ", drawn " +
+                     num(a.drawn) + ", open " + num(a.open) + ", " + span_of(a.first, a.last) + "; now " + a.state)});
+        }
+        if (without > 0) {
+            add({lit("    without war: " + num(without) + " (enmity " + num(enmity) + ", none " + num(without - enmity) +
+                     ")")});
+        }
+    }
+
+    void relations(const history::CivilizationDigest& d) {
+        if (d.relations.empty()) {
+            add({lit("  relations: none")});
+            return;
+        }
+        std::vector<std::pair<std::string, std::int64_t>> kinds;  // ascending bytes
+        for (const std::size_t i : d.relations) {
+            const std::string& k = t_.relations[i].kind;
+            const auto it = std::lower_bound(kinds.begin(), kinds.end(), k,
+                                             [](const std::pair<std::string, std::int64_t>& a, const std::string& b) {
+                                                 return a.first < b;
+                                             });
+            if (it != kinds.end() && it->first == k) {
+                ++it->second;
+            } else {
+                kinds.insert(it, {k, 1});
+            }
+        }
+        BlockLine head{lit("  relations: " + num(static_cast<std::int64_t>(d.relations.size())) + " (")};
+        for (std::size_t k = 0; k < kinds.size(); ++k) {
+            if (k > 0) {
+                head.push_back(lit(", "));
+            }
+            head.push_back(txt(kinds[k].first));
+            head.push_back(lit(" " + num(kinds[k].second)));
+        }
+        head.push_back(lit(")"));
+        add(std::move(head));
+        for (const std::size_t i : d.relations) {
+            const db::RelationRow& r = t_.relations[i];
+            BlockLine l{lit("    "), txt(r.kind), lit(": "), entity(r.a_type, r.a_id), lit(", "),
+                        entity(r.b_type, r.b_id)};
+            if (r.until) {
+                // r6: a relation that began and ended within one year.
+                const std::int64_t last = *r.until == r.since ? r.since : *r.until - 1;
+                l.push_back(lit(", " + span_of(r.since, last) + ", "));
+                l.push_back(event_ref(r.since_event));
+                l.push_back(lit(" to "));
+                l.push_back(event_ref(r.until_event));
+            } else {
+                l.push_back(lit(", since " + num(r.since) + ", "));
+                l.push_back(event_ref(r.since_event));
+            }
+            add(std::move(l));
+        }
+    }
+
+    const HistoryView& v_;
+    const history::HistoryTables& t_;
+    HistoryLevel level_;
+    std::vector<BlockLine> lines_;
+};
+
 class Report {
 public:
     Report(const HistoryView& view, const history::HistoryTables& t, const history::HistoryDigest& d,
-           HistoryLevel level)
-        : v_(view), t_(t), d_(d), level_(level) {}
+           HistoryLevel level, bool with_chronicle = true)
+        : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
         line(std::string(HISTORY_REPORT_HEADER_V4));  // P5-02 12.1
@@ -106,7 +325,9 @@ public:
             phases();
         }
         const std::int64_t before = lines_;
-        chronicle();
+        if (with_chronicle_) {
+            chronicle();
+        }
         chronicle_lines_ = lines_ - before;
         civilizations();
         present();
@@ -165,22 +386,7 @@ private:
         return *v_.catalogue().find_id(e.row.kind);  // checked by HistoryView::load
     }
 
-    [[nodiscard]] const db::AgeRow* age_of(std::int64_t year) const {
-        for (const db::AgeRow& a : t_.ages) {
-            if (a.start_year <= year && year <= a.end_year) {
-                return &a;
-            }
-        }
-        return nullptr;
-    }
-    [[nodiscard]] const db::RaceRow* race(Id id) const {
-        for (const db::RaceRow& r : t_.races) {
-            if (r.id == id) {
-                return &r;
-            }
-        }
-        return nullptr;
-    }
+    [[nodiscard]] const db::RaceRow* race(Id id) const { return find_race(t_, id); }
     [[nodiscard]] const db::GodRow* god(Id id) const {
         for (const db::GodRow& g : t_.gods) {
             if (g.id == id) {
@@ -188,19 +394,6 @@ private:
             }
         }
         return nullptr;
-    }
-    [[nodiscard]] const history::RegionInfo* region_row(Id id) const {
-        const auto it = std::lower_bound(t_.regions.begin(), t_.regions.end(), id,
-                                         [](const history::RegionInfo& r, Id x) { return r.id < x; });
-        return it != t_.regions.end() && it->id == id ? &*it : nullptr;
-    }
-    [[nodiscard]] std::string biome_key(Id id) const {
-        for (const auto& [b, key] : t_.biome_keys) {
-            if (b == id) {
-                return escape_history_text(key);
-            }
-        }
-        return "?";
     }
 
     // --- [settings] (6.3) ---------------------------------------------------
@@ -283,123 +476,10 @@ private:
         }
     }
 
+    // P4-05 4.2: printed from the block lines the browser shows.
     void civilization(const db::CivilizationRow& c, const history::CivilizationDigest& d) {
-        // r19 25.5: an ended realm's block at summary leaves out home, the
-        // peak lines and events, with at most MILESTONES_ENDED milestones.
-        const bool short_block = level_ == HistoryLevel::summary && c.ended_year.has_value();
-        line("c" + num(c.id) + " " + escape_history_text(c.name));
-        const db::RaceRow* r = race(c.race);
-        line("  race: " + escape_history_text(r->name) + " (ra" + num(r->id) + ")");
-        const history::RegionInfo* home = region_row(c.home_region);
-        if (!short_block) {
-            line("  home: " + region(c.home_region) + ", " + biome_key(home->biome) +
-                 (upland(*home) ? ", upland" : ""));
-        }
-        const db::AgeRow* age = age_of(c.founded_year);
-        line("  founded: " + num(c.founded_year) + " in " + escape_history_text(age->name) + " (a" + num(age->id) +
-             "), e" + num(c.founding_event));
-        if (d.seceded_from != 0) {
-            line("  seceded from: " + civ(d.seceded_from) + ", e" + num(c.founding_event));
-        }
-        const std::string capital = c.ended_year ? "  last capital: " : "  capital: ";
-        line(capital + (c.capital != 0 ? settlement(c.capital) : std::string("none")));
-        if (!short_block) {
-            line(d.peak_regions.count > 0 ? "  peak regions: " + num(d.peak_regions.count) + ", " +
-                                                span_of(d.peak_regions.from_year, d.peak_regions.to_year)
-                                          : std::string("  peak regions: 0"));
-            line(d.peak_population.population > 0 ? "  peak population: " + num(d.peak_population.population) +
-                                                        " in " + num(d.peak_population.year)
-                                                  : std::string("  peak population: 0"));
-        }
-        line("  settlements: " + num(d.settlements_founded) + " founded, " + num(d.settlements_held) +
-             " held at the end, " + num(d.settlements_ruined) + " ruined, " + num(d.settlements_faded) +
-             " faded");  // r19 25.3 item 3
-        line("  wars: " + num(d.wars_declared) + " declared, " + num(d.wars_defended) + " defended; won " +
-             num(d.wars_won) + ", lost " + num(d.wars_lost) + ", drawn " + num(d.wars_drawn) + ", open " +
-             num(d.wars_open));
-        if (level_ == HistoryLevel::full) {
-            relations(d);
-        } else {
-            adversaries(d);
-        }
-        if (!short_block) {
-            line("  events: " + num(d.events));
-        }
-        if (!c.ended_year) {
-            line("  fate: alive in " + num(t_.end_year) + ": " + pl(d.regions_held, "region") + ", " +
-                 pl(d.settlements_held, "settlement") + ", population " + num(d.population));
-        } else {
-            line("  fate: ended in " + num(*c.ended_year) + ", e" + num(c.ending_event) + ": " +
-                 sentence(c.ending_event));
-        }
-        line("  milestones:");
-        for (const Id m : short_block ? d.milestones_ended : d.milestones) {
-            const HistoryView::Event& e = event(m);
-            line("    " + event_span(e.row) + " e" + num(m) + " " + escape_history_text(kind_of(e).key) + ": " +
-                 sentence(m) + note(m, c.id));
-        }
-    }
-
-    // r17 24.5: one line per adversary, summary only; r19 25.4: a line for
-    // each adversary with a war row, then one count line for the others.
-    void adversaries(const history::CivilizationDigest& d) {
-        if (d.adversaries.empty()) {
-            line("  adversaries: none");
-            return;
-        }
-        line("  adversaries: " + num(static_cast<std::int64_t>(d.adversaries.size())));
-        std::int64_t without = 0;
-        std::int64_t enmity = 0;
-        for (const history::CivilizationDigest::Adversary& a : d.adversaries) {
-            if (a.wars == 0) {
-                ++without;
-                enmity += a.state == "enmity" ? 1 : 0;
-                continue;
-            }
-            line("    " + ref(a.type, a.id) + ": " + pl(a.wars, "war") + ", won " + num(a.won) + ", lost " +
-                 num(a.lost) + ", drawn " + num(a.drawn) + ", open " + num(a.open) + ", " + span_of(a.first, a.last) +
-                 "; now " + a.state);
-        }
-        if (without > 0) {
-            line("    without war: " + num(without) + " (enmity " + num(enmity) + ", none " + num(without - enmity) + ")");
-        }
-    }
-
-    void relations(const history::CivilizationDigest& d) {
-        if (d.relations.empty()) {
-            line("  relations: none");
-            return;
-        }
-        std::vector<std::pair<std::string, std::int64_t>> kinds;  // ascending bytes
-        for (const std::size_t i : d.relations) {
-            const std::string& k = t_.relations[i].kind;
-            const auto it = std::lower_bound(kinds.begin(), kinds.end(), k,
-                                             [](const std::pair<std::string, std::int64_t>& a, const std::string& b) {
-                                                 return a.first < b;
-                                             });
-            if (it != kinds.end() && it->first == k) {
-                ++it->second;
-            } else {
-                kinds.insert(it, {k, 1});
-            }
-        }
-        std::string s = "  relations: " + num(static_cast<std::int64_t>(d.relations.size())) + " (";
-        for (std::size_t k = 0; k < kinds.size(); ++k) {
-            s += (k > 0 ? ", " : "") + escape_history_text(kinds[k].first) + " " + num(kinds[k].second);
-        }
-        line(s + ")");
-        for (const std::size_t i : d.relations) {
-            const db::RelationRow& r = t_.relations[i];
-            std::string l = "    " + escape_history_text(r.kind) + ": " + ref(r.a_type, r.a_id) + ", " +
-                            ref(r.b_type, r.b_id) + ", ";
-            if (r.until) {
-                // r6: a relation that began and ended within one year.
-                const std::int64_t last = *r.until == r.since ? r.since : *r.until - 1;
-                l += span_of(r.since, last) + ", e" + num(r.since_event) + " to e" + num(r.until_event);
-            } else {
-                l += "since " + num(r.since) + ", e" + num(r.since_event);
-            }
-            line(std::move(l));
+        for (const BlockLine& l : BlockBuilder(v_, t_, level_).build(c, d)) {
+            line(block_line_report_text(v_, l));
         }
     }
 
@@ -871,6 +951,7 @@ private:
     const history::HistoryTables& t_;
     const history::HistoryDigest& d_;
     HistoryLevel level_;
+    bool with_chronicle_ = true;  // false: only counting the lines outside it (history_report_digest)
     std::string out_;
     std::int64_t lines_ = 0;
     std::int64_t chronicle_lines_ = 0;
@@ -909,6 +990,97 @@ std::string escape_history_text(std::string_view text) {
     return out;
 }
 
+std::string history_entity_tag(std::int64_t type, std::int64_t id) {
+    return std::string(word(PREFIX, type, 1)) + num(id);
+}
+
+std::vector<BlockLine> civilization_block(const HistoryView& view, const history::HistoryTables& tables,
+                                          const history::HistoryDigest& digest, std::int64_t civ,
+                                          HistoryLevel level) {
+    if (level != HistoryLevel::summary && level != HistoryLevel::full) {
+        throw FatalError("civilization_block: bad level");
+    }
+    const auto it = std::lower_bound(tables.civilizations.begin(), tables.civilizations.end(), civ,
+                                     [](const db::CivilizationRow& c, std::int64_t x) { return c.id < x; });
+    if (it == tables.civilizations.end() || it->id != civ ||
+        digest.civilizations.size() != tables.civilizations.size()) {
+        throw FatalError("civilization_block: no civilization " + num(civ));
+    }
+    const auto k = static_cast<std::size_t>(it - tables.civilizations.begin());
+    return BlockBuilder(view, tables, level).build(*it, digest.civilizations[k]);
+}
+
+std::string block_line_report_text(const HistoryView& view, const BlockLine& line) {
+    std::string out;
+    for (const Segment& g : line) {
+        switch (g.kind) {
+            case SegmentKind::literal: out += g.text; break;
+            case SegmentKind::text: out += escape_history_text(g.text); break;
+            case SegmentKind::entity:
+                if (g.text.empty()) {
+                    out += history_entity_tag(g.type, g.id);
+                } else {
+                    out += escape_history_text(g.text) + " (" + history_entity_tag(g.type, g.id) + ")";
+                }
+                break;
+            case SegmentKind::event: out += "e" + num(g.id); break;
+            case SegmentKind::sentence: out += escape_history_text(history::render_event(view, g.id)); break;
+        }
+    }
+    return out;
+}
+
+history::LinkedText block_line_display(const HistoryView& view, const BlockLine& line) {
+    history::LinkedText out;
+    const auto link = [&out](std::size_t start, std::int64_t type, std::int64_t id, bool tagged) {
+        out.links.push_back(history::TextLink{static_cast<std::uint32_t>(start),
+                                              static_cast<std::uint32_t>(out.text.size() - start), type, id, tagged});
+    };
+    for (const Segment& g : line) {
+        const std::size_t start = out.text.size();
+        switch (g.kind) {
+            case SegmentKind::literal:
+            case SegmentKind::text: out.text += g.text; break;
+            case SegmentKind::entity:
+                // No name: the tag, untagged, as the report prints it alone.
+                out.text += g.text.empty() ? history_entity_tag(g.type, g.id) : g.text;
+                link(start, g.type, g.id, !g.text.empty());
+                break;
+            case SegmentKind::event:
+                out.text += "e" + num(g.id);
+                link(start, 0, g.id, false);
+                break;
+            case SegmentKind::sentence: {
+                history::LinkedText s = history::render_event_linked(view, g.id);
+                out.text += s.text;
+                for (history::TextLink l : s.links) {
+                    l.start += static_cast<std::uint32_t>(start);
+                    out.links.push_back(l);
+                }
+                break;
+            }
+        }
+    }
+    return out;
+}
+
+history::HistoryDigest history_report_digest(const HistoryView& view, const history::HistoryTables& tables) {
+    history::HistoryDigest digest = history::digest_history(view, tables);
+    // P5-02 12.9: O is counted on the summary rendered with the set of
+    // SUMMARY_BUDGET (no line outside [chronicle] depends on the set, so the
+    // chronicle itself is not rendered); the set is chosen again with B when
+    // B differs.
+    Report summary(view, tables, digest, HistoryLevel::summary, false);
+    static_cast<void>(summary.build());
+    const std::int64_t budget = history::summary_budget(
+        static_cast<std::int64_t>(tables.civilizations.size()), summary.outside_lines(),
+        static_cast<std::int64_t>(tables.ages.size()), static_cast<std::int64_t>(tables.phases.size()));
+    if (budget != digest.summary_budget) {
+        history::choose_summary_set(digest, budget);
+    }
+    return digest;
+}
+
 db::Result<std::string> build_history_report(const db::WorldReader& world, HistoryLevel level) {
     try {
         db::Result<history::HistoryTables> tables = history::read_history_tables(world);
@@ -922,27 +1094,8 @@ db::Result<std::string> build_history_report(const db::WorldReader& world, Histo
         if (const std::optional<std::string> why = history::history_reads_disagree(view.value(), tables.value())) {
             return db::Error{db::ErrorCode::corrupt_layer, *why};
         }
-        history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
-        // P5-02 12.9: O is counted on the summary rendered with the set of
-        // SUMMARY_BUDGET (no line outside [chronicle] depends on the set);
-        // the set is chosen again with B when B is smaller, for both levels.
-        Report summary(view.value(), tables.value(), digest, HistoryLevel::summary);
-        std::string text = summary.build();
-        const history::HistoryTables& t = tables.value();
-        const std::int64_t budget = history::summary_budget(
-            static_cast<std::int64_t>(t.civilizations.size()), summary.outside_lines(),
-            static_cast<std::int64_t>(t.ages.size()), static_cast<std::int64_t>(t.phases.size()));
-        const bool again = budget != digest.summary_budget;
-        if (again) {
-            history::choose_summary_set(digest, budget);
-        }
-        if (level == HistoryLevel::full) {
-            return Report(view.value(), tables.value(), digest, level).build();
-        }
-        if (again) {
-            text = Report(view.value(), tables.value(), digest, level).build();
-        }
-        return text;
+        const history::HistoryDigest digest = history_report_digest(view.value(), tables.value());
+        return Report(view.value(), tables.value(), digest, level).build();
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the history report"};
     }

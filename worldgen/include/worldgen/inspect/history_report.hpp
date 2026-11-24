@@ -11,9 +11,12 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "worldgen/db/reader.hpp"
 #include "worldgen/db/result.hpp"
+#include "worldgen/history/digest.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 
 namespace worldgen::inspect {
 
@@ -49,6 +52,59 @@ template <class T>
 // backslash becomes "\\", every byte below 0x20, 0x7F and every byte from
 // 0x80 becomes "\xHH" with upper-case hex, every other byte is copied.
 [[nodiscard]] std::string escape_history_text(std::string_view text);
+
+// --- Block lines (P4-05 4.2) ------------------------------------------------
+
+// One piece of a block line: literal bytes as printed; text from the world
+// (escaped in the report); a reference to an entity (type code, id, its name
+// or empty when it has none); an event reference "e<id>"; the sentence of an
+// event (id).
+enum class SegmentKind : std::uint8_t { literal = 1, text = 2, entity = 3, event = 4, sentence = 5 };
+struct Segment {
+    SegmentKind kind = SegmentKind::literal;
+    std::string text;
+    std::int64_t type = 0;
+    std::int64_t id = 0;
+    friend bool operator==(const Segment&, const Segment&) = default;
+};
+using BlockLine = std::vector<Segment>;
+
+// The lines of civilization `civ`'s block in [civilizations] at `level`, in
+// print order, the first being "c<id> <name>". `digest` is the report's
+// (history_report_digest). FatalError "civilization_block: no civilization
+// <c>" for an unknown civ, "civilization_block: bad level" for a level that
+// is neither summary nor full.
+[[nodiscard]] std::vector<BlockLine> civilization_block(const history::HistoryView& view,
+                                                        const history::HistoryTables& tables,
+                                                        const history::HistoryDigest& digest, std::int64_t civ,
+                                                        HistoryLevel level);
+
+// The report form of a line (before the report's trailing-space rule):
+// literal as is; text escape_history_text(text); entity
+// escape_history_text(name) + " (" + tag + ")", or the tag alone when the
+// name is empty; event "e<id>"; sentence escape_history_text(render_event).
+// The tag is the report's prefix of the type ("ra", "g", "c", "s", "rg",
+// "f", "fa", "m", "si"; "?" otherwise) and the id.
+[[nodiscard]] std::string block_line_report_text(const history::HistoryView& view, const BlockLine& line);
+
+// The display form: the same without escapes and without " (<tag>)". An
+// entity with a name is a tagged link over the name; one without a name
+// shows its tag, untagged (so that B4's transform gives the report form); an
+// event is a link (type 0) over "e<id>"; a sentence carries its own links
+// (render_event_linked) shifted.
+[[nodiscard]] history::LinkedText block_line_display(const history::HistoryView& view, const BlockLine& line);
+
+// The report's tag of an entity: prefix and id ("c3", "rg4"; "?<id>" for a
+// type code outside 1 to 9).
+[[nodiscard]] std::string history_entity_tag(std::int64_t type, std::int64_t id);
+
+// --- The digest the report prints with (P4-05 4.3) ---------------------------
+
+// digest_history, then, as P5-02 12.9, the summary set chosen again with
+// the budget of the summary's line count outside [chronicle]. The report
+// and the browser both use this digest. Pure on a checked history.
+[[nodiscard]] history::HistoryDigest history_report_digest(const history::HistoryView& view,
+                                                           const history::HistoryTables& tables);
 
 // The whole history report of an open world (P3-07 section 6), or the first
 // error of P3-07 5.2: history_missing for a world without history,

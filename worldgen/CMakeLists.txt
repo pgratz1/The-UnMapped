@@ -96,6 +96,7 @@ add_library(worldgen STATIC
     src/history/stubs.cpp
     src/stages/history.cpp
     src/inspect/history.cpp
+    src/inspect/history_browser.cpp
     src/inspect/history_report.cpp
     # P4-01: the timeline, the civilization colours and the territory image.
     src/history/timeline.cpp

@@ -515,6 +515,7 @@ target_sources(worldgen-tests PRIVATE
 # the test writer's markers_* files.
 target_sources(worldgen-tests PRIVATE
     p4_04_engineer_test.cpp
+    p4_05_engineer_test.cpp
 )
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every

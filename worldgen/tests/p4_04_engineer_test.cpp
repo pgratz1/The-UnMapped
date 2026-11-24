@@ -77,9 +77,12 @@ TEST_CASE("P4-04 engineer: the reference drawings of 5.2 and 5.3") {
           std::vector<std::string>{"hhhhhhhhhhh", "hKKKKKKKKKh", "hKKKKKKKKKh", "hKKFFFFFKKh", "hKKFFFFFKKh",
                                    "hKKFFFFFKKh", "hKKFFFFFKKh", "hKKFFFFFKKh", "hKKKKKKKKKh", "hKKKKKKKKKh",
                                    "hhhhhhhhhhh"});
+    // P4-05 12.1 F3 replaces the ruin and faded drawings of 5.3.
     CHECK(drawing(GlyphKey{8, false, false}) ==
-          std::vector<std::string>{"hhh_hhh", "hKhhhKh", "hhKhKhh", "_hhKhh_", "hhKhKhh", "hKhhhKh", "hhh_hhh"});
-    CHECK(drawing(GlyphKey{9, false, false}) == std::vector<std::string>{"F___F", "_F_F_", "__F__", "_F_F_", "F___F"});
+          std::vector<std::string>{"hhhh_hhhh", "hKKhhhKKh", "hKKKhKKKh", "hhKKKKKhh", "_hhKKKhh_", "hhKKKKKhh",
+                                   "hKKKhKKKh", "hKKhhhKKh", "hhhh_hhhh"});
+    CHECK(drawing(GlyphKey{9, false, false}) ==
+          std::vector<std::string>{"hhh_hhh", "hFhhhFh", "hhFhFhh", "_hhFhh_", "hhFhFhh", "hFhhhFh", "hhh_hhh"});
     CHECK(drawing(GlyphKey{10, false, false}) ==
           std::vector<std::string>{"_______", "__hhh__", "_hhKhh_", "hhKhKhh", "hKhhhKh", "hhh_hhh", "_______"});
 }
@@ -92,8 +95,8 @@ TEST_CASE("P4-04 engineer: the class counts of 5.2 to 5.4") {
     check_counts(GlyphKey{5, false, false}, 40, 25, 16, 0);
     check_counts(GlyphKey{2, true, false}, 32, 12, 16, 9);
     check_counts(GlyphKey{3, false, true}, 40, 25, 56, 0);
-    check_counts(GlyphKey{8, false, false}, 36, 0, 9, 0);
-    check_counts(GlyphKey{9, false, false}, 0, 9, 0, 0);
+    check_counts(GlyphKey{8, false, false}, 44, 0, 33, 0);  // P4-05 F3
+    check_counts(GlyphKey{9, false, false}, 36, 9, 0, 0);
     check_counts(GlyphKey{10, false, false}, 23, 0, 5, 0);
     check_counts(GlyphKey{11, false, false}, 144, 68, 104, 0);
     CHECK(worldgen::inspect::marker_glyph(GlyphKey{11, false, false}).radius == 11);
@@ -114,7 +117,7 @@ TEST_CASE("P4-04 engineer: symbols and words") {
     CHECK(event_symbol("sackedx") == EventSymbol::plain);
     CHECK(event_symbol("") == EventSymbol::plain);
     CHECK(worldgen::inspect::event_symbol_word(EventSymbol::siege) == "siege");
-    CHECK(worldgen::inspect::event_symbol_colour(EventSymbol::plague) == worldgen::inspect::Rgb{150, 210, 0});
+    CHECK(worldgen::inspect::event_symbol_colour(EventSymbol::plague) == worldgen::inspect::Rgb{0, 190, 120});  // P4-05 F5
     CHECK(worldgen::history::settlement_kind_word(0).empty());
     CHECK(worldgen::history::settlement_kind_word(5) == "fortress");
     CHECK(worldgen::history::settlement_kind_word(6).empty());
@@ -151,8 +154,9 @@ TEST_CASE("P4-04 engineer: draw_markers order, clipping and scale") {
     };
     CHECK(px(one, 32, 20, 15) == Rgb{10, 20, 30});  // the capital's fill
     CHECK(px(one, 32, 4, 4) == MARKER_INK);         // the ruin inside the ring
-    CHECK(px(one, 32, 7, 7) == MARKER_HALO);        // the ruin's halo over the ring's ink (98)
-    CHECK(px(one, 32, 0, 2) == Rgb{7, 7, 7});       // inside the ring: untouched
+    // P4-05 F3: the ruin of radius 4 covers 0..8 but its '_' cells.
+    CHECK(px(one, 32, 8, 1) == MARKER_HALO);        // the ruin's halo over the ring's ink (65)
+    CHECK(px(one, 32, 0, 4) == Rgb{7, 7, 7});       // inside the ring, a ruin '_' cell: untouched
     CHECK(px(one, 32, 0, 7) == MARKER_HALO);        // the ring's inner halo
     CHECK(px(one, 32, 9, 0) == Rgb{230, 30, 30});  // the battle band, dx 9: 81 in 73..90
     std::vector<std::uint8_t> three(3U * 96U * 72U, 7);

@@ -284,7 +284,33 @@ struct MonsterTables {
 
 // The sentence of event `event_id` (P3-04 8.5) from its kind's stored
 // template. FatalError "render_event: event <id>: <reason>" when the id is
-// not in the log or the stored template has a problem.
+// not in the log or the stored template has a problem. render_event_linked's
+// text: one code path.
 [[nodiscard]] std::string render_event(const HistoryView& view, std::int64_t event_id);
+
+// A link over part of a text (P4-05 4.1): byte offsets into the UTF-8 text,
+// type 0 for an event or an EntityType code, the id; tagged only for the
+// references of a block line (4.2), always false in a sentence.
+struct TextLink {
+    std::uint32_t start = 0, length = 0;
+    std::int64_t type = 0;
+    std::int64_t id = 0;
+    bool tagged = false;
+    friend bool operator==(const TextLink&, const TextLink&) = default;
+};
+struct LinkedText {
+    std::string text;
+    std::vector<TextLink> links;  // ascending start, never overlapping
+    friend bool operator==(const LinkedText&, const LinkedText&) = default;
+};
+
+// P4-05 4.1: the sentence of render_event with a link over every name the
+// renderer appends: a role in form name or all, each participant's name as
+// written (a lower-cased "the " included) with its type and id; forms plural
+// and adjective, the race word (type 1); form kind, the monster noun (type
+// 8); {@region} and {@region_former}, the region name (type 5);
+// {@settlement} (type 4). Values, years, choices, beasts and cause words have
+// none. FatalErrors those of render_event.
+[[nodiscard]] LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id);
 
 }  // namespace worldgen::history

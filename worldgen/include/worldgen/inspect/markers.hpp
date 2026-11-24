@@ -7,8 +7,10 @@
 // the order section 4 states. The marker set and the overlay pixels are part
 // of the cross-platform contract (section 13).
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -104,6 +106,13 @@ public:
     [[nodiscard]] std::int64_t ruin_event(std::int64_t settlement) const;   // 0: none
     [[nodiscard]] std::span<const db::PassRow> passes() const noexcept { return passes_; }  // ascending id
 
+    // P4-05 4.6, the place of 3.4: the event's settlement cell, else its
+    // region's seed cell, else none. markers_at uses it for its places.
+    // `history` the one load was given; FatalError "markers: no event <e>"
+    // for an id not in the log.
+    [[nodiscard]] std::optional<std::array<std::int64_t, 2>> event_place(const history::LoadedHistory& history,
+                                                                         std::int64_t event) const;
+
 private:
     struct CapitalEntry {
         std::int64_t year = 0, event = 0, settlement = 0;
@@ -116,6 +125,8 @@ private:
 
     void check_history(const history::LoadedHistory& history) const;
     [[nodiscard]] std::size_t settlement_index(std::int64_t settlement) const;
+    // The place entry of event `event` (3.4); FatalError for an id not in the log.
+    [[nodiscard]] const EventPlace& place_of(std::int64_t event) const;
     // The settlement of the last run entry of civ index c with year <= Y, 0 when none.
     [[nodiscard]] std::int64_t run_settlement(std::size_t c, std::int64_t year) const;
     // capital(c, Y) of 3.2 given the settlement states at Y and whether c is alive.
@@ -159,7 +170,8 @@ inline constexpr Rgb MARKER_HALO{240, 240, 240};
 inline constexpr Rgb MARKER_FADED{150, 150, 150};
 inline constexpr Rgb MARKER_NO_OWNER{128, 128, 128};
 
-// FatalError "marker_glyph: ..." for a key section 5 does not define.
+// FatalError "marker_glyph: ..." for a key section 5 does not define. Ruin
+// (8) and faded (9) as P4-05 12.1 F3.
 [[nodiscard]] Glyph marker_glyph(GlyphKey key);
 // The key of a settlement entry: status 1 or 2 base = kind (0 for a kind
 // outside 1..5), declining = status 2, capital; status 3 base 8; status 4

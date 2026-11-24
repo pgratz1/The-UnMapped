@@ -593,7 +593,8 @@ private:
         EventCatalogue cat;
         for (const Row& k : h_.rows[0]) {
             if (k[0].integer != static_cast<std::int64_t>(cat.kinds.size()) + 1) {
-                return;  // checked by HistoryView::load ("id not consecutive")
+                // P5-02 audit A2: the message of HistoryView::load's check.
+                corrupt(db::EVENT_KIND_TABLE, "row " + num(k[0].integer) + ": id not consecutive");
             }
             KindDef d;
             d.id = k[0].integer;
