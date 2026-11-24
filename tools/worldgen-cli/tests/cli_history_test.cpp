@@ -4,7 +4,7 @@
 // [history] section and hash --detail's thirteen table lines of golden
 // worlds against worldgen/tests/golden/p3-04-engine.txt (11.1, 11.2,
 // 16.4), the corrupt cases of 11.1 as exit 3 with nothing on stdout, an
-// unknown stage still exits 2, and world-hashes.sh with its fifteen cases
+// unknown stage still exits 2, and world-hashes.sh with its sixteen cases
 // including hist-dense-1024 (15).
 //
 // Written from the spec only. Slow checks (the 1024 worlds) are in the
@@ -132,7 +132,7 @@ TEST_CASE("cli P3-04 9.5: an unknown stage still exits 2") {
     CHECK(r.out.empty());
 }
 
-TEST_CASE("cli P3-04 15: world-hashes.sh lists fifteen cases, hist-dense-1024 with --seed 11 --history-detail dense") {
+TEST_CASE("cli P3-04 15: world-hashes.sh lists sixteen cases, hist-dense-1024 with --seed 11 --history-detail dense") {
     const std::string script = read_text(source_root() / "tools" / "ci" / "world-hashes.sh");
     CHECK(contains(script, "hist-dense-1024"));
     CHECK(contains(script, "--seed 11 --history-detail dense"));
@@ -157,7 +157,7 @@ TEST_CASE("cli P3-04 15: world-hashes.sh lists fifteen cases, hist-dense-1024 wi
             i = sp + 1;
         }
     }
-    CHECK(cases.size() == 15U);
+    CHECK(cases.size() == 16U);
     CHECK(std::find(cases.begin(), cases.end(), "hist-dense-1024") != cases.end());
 }
 
