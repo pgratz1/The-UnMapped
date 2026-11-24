@@ -1695,7 +1695,8 @@ The lead's rulings, built by the engineer, now in the references:
 
 - `p3_engine_reference.py` `render`: a rendered sentence whose first byte is a to z is capitalised (ruling 1; R14).
 - `p3_report_reference.py`: `[peoples]` "mixed at E" with the constant `MIXED_SHARE_MIN` = 100 and "1 settlement"
-  singular (ruling 3; R16); `build_input` takes C++ sources of this generator version as they are (their region
+  singular (ruling 3; R16); its pairs, and `[stats]` `race_pairs` in `p5_03_relations_reference.py`, are of the races
+  with `race.present` = 1 (as built; fixture H1 holds a race row that is not present); `build_input` takes C++ sources of this generator version as they are (their region
   names are current) and upgrades a schema 9 source to schema 10.
 - `p5_03_relations_reference.py`: settlement_race rows of a quiet step at its start Y (ruling 6; R3); the meeting's
   presence is P3-06 5.1's simple definition (ruling 6; R6); a pending move into a settlement no longer standing is

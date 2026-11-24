@@ -406,6 +406,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("phase"), text("phase"), text(p004::DDL_PHASE)},
         {text("table"), text("race"), text("race"), text(p004::DDL_RACE)},
         {text("table"), text("race_biome"), text("race_biome"), text(p004::DDL_RACE_BIOME)},
+        {text("table"), text("race_relation"), text("race_relation"), text(p004::DDL_RACE_RELATION)},   // P5-03 16.1
         {text("table"), text("region"), text("region"), text(p004::DDL_REGION)},
         {text("table"), text("region_biome"), text("region_biome"), text(p004::DDL_REGION_BIOME)},
         {text("table"), text("region_border"), text("region_border"), text(p004::DDL_REGION_BORDER)},
@@ -414,6 +415,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("relation"), text("relation"), text(p004::DDL_RELATION)},
         {text("table"), text("settlement"), text("settlement"), text(p004::DDL_SETTLEMENT)},
         {text("table"), text("settlement_census"), text("settlement_census"), text(p004::DDL_SETTLEMENT_CENSUS)},
+        {text("table"), text("settlement_race"), text("settlement_race"), text(p004::DDL_SETTLEMENT_RACE)},
         {text("table"), text("site"), text("site"), text(p004::DDL_SITE)},
     };
     CHECK(schema.value() == expected_schema);
@@ -425,7 +427,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
                  ++visited;
              })
                 .ok());
-    CHECK(visited == 39);  // 32 tables and 7 automatic indexes (schema 9)
+    CHECK(visited == 41);  // 34 tables and 7 automatic indexes (schema 10)
     CHECK(std::string(worldgen::db::sqlite_library_version()) == sqlite3_libversion());
 }
 

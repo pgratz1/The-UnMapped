@@ -171,14 +171,14 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const char* const names[] = {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
                                  "event_kind", "event_kind_role", "event_kind_value", "event_participant",
                                  "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome",
-                                 "region", "region_biome", "region_border", "region_control", "region_name", "relation",
-                                 "settlement", "settlement_census", "site"};
-    for (std::size_t k = 0; k < 32; ++k) {
+                                 "race_relation", "region", "region_biome", "region_border", "region_control", "region_name",
+                                 "relation", "settlement", "settlement_census", "settlement_race", "site"};   // schema 10
+    for (std::size_t k = 0; k < 34; ++k) {
         CHECK(starts_with(hl[2 + k], std::string("table ") + names[k] + " "));
     }
     CHECK(hl[21] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));   // schema 9: four tables before
-    CHECK(hl[34] == "layer elevation " + gold.at("layer"));
-    CHECK(hl[34] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
+    CHECK(hl[36] == "layer elevation " + gold.at("layer"));   // schema 10: 34 tables
+    CHECK(hl[36] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
 
     // report: schema 2, the table, and the five pass keys right after
     // edge_parallel_run_m, equal to the test's own measure.

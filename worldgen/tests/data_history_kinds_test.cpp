@@ -388,7 +388,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 7U);  // conflict.toml from 0.16.0 (P3-06 12.1),
+    CHECK(directory_from_disk(data, "history").entries.size() == 8U);  // relations.toml from 0.24.0 (P5-03 4.2),
+                                                                         // conflict.toml from 0.16.0 (P3-06 12.1),
                                                                          // renaming.toml from 0.22.0 (P5-12 4),
                                                                          // monsters.toml from 0.23.0 (P5-02 4.3)
 }

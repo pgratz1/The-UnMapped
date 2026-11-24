@@ -1339,7 +1339,7 @@ def stats_of(res, E, mixed_min=100):
     def val(e, key):
         return vals.get(e[0], {}).get(vkeys[e[3]][key], 0)
     rr = sorted(res.get("race_relation", []))
-    races = sorted({r[0] for r in res.get("race", [])}) if res.get("race") else sorted(
+    races = sorted({r[0] for r in res.get("race", []) if r[9] == 1}) if res.get("race") else sorted(
         {c[2] for c in res["civilization"]})
     n_pairs = len(races) * (len(races) - 1) // 2
     last = {}

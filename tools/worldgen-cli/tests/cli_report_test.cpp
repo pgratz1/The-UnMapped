@@ -111,13 +111,13 @@ TEST_CASE("cli 12.4: test-pattern world") {
     for (std::size_t k = 0; k < tables.size(); ++k) {
         CHECK(lines[20 + k] == tables[k]);
     }
-    CHECK(lines[52] == "[layers]");
-    CHECK(starts_with(lines[53], "test.ramp u8 256x256 codec=1 bytes="));
-    CHECK(lines[53].substr(lines[53].size() - 14) == " min=0 max=255");
-    CHECK(lines[53] == layer_line("test.ramp", "u8", p004::ramp_cells()));
-    CHECK(lines[54] == layer_line("test.hash", "u8", p004::hash_cells(0)));
-    CHECK(lines[55] == layer_line("test.noise", "i16", p004::noise_cells(0)));
-    MESSAGE("seed-0 pattern report layer lines:\n", lines[53], "\n", lines[54], "\n", lines[55]);
+    CHECK(lines[54] == "[layers]");   // schema 10: 34 tables
+    CHECK(starts_with(lines[55], "test.ramp u8 256x256 codec=1 bytes="));
+    CHECK(lines[55].substr(lines[55].size() - 14) == " min=0 max=255");
+    CHECK(lines[55] == layer_line("test.ramp", "u8", p004::ramp_cells()));
+    CHECK(lines[56] == layer_line("test.hash", "u8", p004::hash_cells(0)));
+    CHECK(lines[57] == layer_line("test.noise", "i16", p004::noise_cells(0)));
+    MESSAGE("seed-0 pattern report layer lines:\n", lines[55], "\n", lines[56], "\n", lines[57]);
 }
 
 TEST_CASE("cli 12.4: --out writes the same bytes as stdout") {

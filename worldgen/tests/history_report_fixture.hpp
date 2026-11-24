@@ -100,6 +100,9 @@ struct Fixture {
     std::vector<db::BeastPopulationRow> beast_populations;
     std::vector<db::MonsterRow> monsters;
     std::vector<db::SiteRow> sites;
+    // schema 10 (P5-03 16.1; H14): the rows as given, in key order
+    std::vector<db::RaceRelationRow> race_relations;
+    std::vector<db::SettlementRaceRow> settlement_races;
 };
 
 namespace detail {
@@ -266,6 +269,15 @@ inline Fixture load_fixture(const std::string& name) {
         fx.sites.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
                             i64(*r->get(5)), i64(*r->get(6)), i64(*r->get(7)), i64(*r->get(8)), i64(*r->get(9)),
                             i64(*r->get(10)), nullable(*r->get(11)), i64(*r->get(12)), i64(*r->get(13))});
+    }
+    // Schema 10 (P5-03 16.1): race_relation [race_a, race_b, year, disposition, band], settlement_race [settlement,
+    // race, year, share, standing], as the reference's expand_fixture takes them (key order).
+    for (const toml::array* r : detail::rows(doc, "race_relation")) {
+        fx.race_relations.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4))});
+    }
+    for (const toml::array* r : detail::rows(doc, "settlement_race")) {
+        fx.settlement_races.push_back(
+            {i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4))});
     }
     // The catalogue: id = position; roles and values seq = position.
     struct KindInfo {
@@ -486,6 +498,8 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.beast_populations) ctx.write_beast_population(r);
     for (const auto& r : f.monsters) ctx.write_monster(r);
     for (const auto& r : f.sites) ctx.write_site(r);
+    for (const auto& r : f.race_relations) ctx.write_race_relation(r);   // P5-03 16.1
+    for (const auto& r : f.settlement_races) ctx.write_settlement_race(r);
 }
 
 inline const dbtest::TempDir& fixture_dir() {

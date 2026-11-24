@@ -98,7 +98,8 @@ TEST_CASE("P5-02 12.4: [monsters] after [present]: every monster at full; the li
     CHECK(summary == std::vector<std::string>{
                          "monsters: 2; awake 0, asleep 1, slain 1, died 0",
                          "  m2 Saelith the Black: Dragon, asleep, lair Saelith's Deep (si3) in Arn Vale (rg1), since "
-                         "975 e20, raids 1, killed 100, hoard 32"});   // one alive: no `and <x> more` line
+                         "975 e20, raids 1, killed 100, hoard 32",
+                         "  and 1 more"});   // P5-03 10.2 (v5): Old Grakh ended and is not notable (killed 30)
     // the block order: [present], [monsters], [sites], [stats]
     const std::vector<std::string> lines = hrtest::lines_of(text(HistoryLevel::full));
     std::vector<std::string> heads;

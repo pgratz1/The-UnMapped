@@ -848,8 +848,8 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         CHECK(r.error().message == "world schema version 4, this build reads 10");
     }
-    SUBCASE("meta.schema_version 10, 7 and 4") {
-        CHECK(open_code(variant("msv10.db", "UPDATE meta SET value = '10' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 11, 7 and 4") {   // 11: above this build's 10 (P5-03 16.1)
+        CHECK(open_code(variant("msv11.db", "UPDATE meta SET value = '11' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("msv7.db", "UPDATE meta SET value = '7' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
@@ -946,7 +946,7 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
     SUBCASE("validation order: the earlier check wins") {
         CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 10")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 10; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 11; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

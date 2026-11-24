@@ -1668,8 +1668,8 @@ geo-seed-42-512 stats abandoned_without_destination 1
 geo-seed-42-512 stats abandonment_lost 268
 geo-seed-42-512 stats monster_stories 1
 geo-seed-42-512 stats ruins_oldest_year 3294
-h1-war-and-ruin full 38683f79d8a94033eb315d5f61b2cc6d774a575254671dac4df03b3c68f69d04
-h1-war-and-ruin summary 1ef4d3371a61f7dce0b3c482de56aebd9a5d7fbc9b2a24f68b1337c3387fc7ca
+h1-war-and-ruin full 0f87f17cd23b8ca230f6ad4d4b3d4a6e0fe62397e53a368657a425ba517f6042
+h1-war-and-ruin summary 6b0dc9edfe6eefde482e4b849c6d6bbd4a1fb25920066ad206cc630b5345723b
 h1-war-and-ruin table age 9116eb4919a98390f67a008d1f8ab54982a9f1eee385ac647f62554001223567
 h1-war-and-ruin table beast aae89fc0f03e2959ae4d701a80cc3915918c950b159f6abb6c92c1433b1a8534
 h1-war-and-ruin table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b9ca9b05c34181ac0a65ac5d
@@ -2452,8 +2452,8 @@ hist-dense-1024 stats abandoned_without_destination 0
 hist-dense-1024 stats abandonment_lost 446
 hist-dense-1024 stats monster_stories 3
 hist-dense-1024 stats ruins_oldest_year 2098
-hist-races-elf-orc-1024 full d177005964e785dfbbda0be54bdf533924915190f7bc817441e71c79557ec3c2
-hist-races-elf-orc-1024 summary 7796a98f43d802671b7d603e8d753002b0fa1bd7c847a11beb3b6f48beff9922
+hist-races-elf-orc-1024 full 208ecb97c5f4df4585d22331fd70206fc48aca40c1d071a5af0c5fe65d49cc84
+hist-races-elf-orc-1024 summary 6016fe212754715bc9594795703ad05ed60ed44f9aa5dc3699d3a089df1c179c
 hist-races-elf-orc-1024 stats end_year 6000
 hist-races-elf-orc-1024 stats ages 2
 hist-races-elf-orc-1024 stats phases 4
@@ -2644,7 +2644,7 @@ hist-races-elf-orc-1024 stats settlements_left 1
 hist-races-elf-orc-1024 stats regions_shunned 1
 hist-races-elf-orc-1024 stats race_relations 2
 hist-races-elf-orc-1024 stats settlement_races 59
-hist-races-elf-orc-1024 stats race_pairs 15
+hist-races-elf-orc-1024 stats race_pairs 1
 hist-races-elf-orc-1024 stats race_pairs_met 1
 hist-races-elf-orc-1024 stats dispositions_turned 0
 hist-races-elf-orc-1024 stats pairs_hatred 1

@@ -1346,7 +1346,8 @@ def monster_stories(w):
 def peoples_lines(w, level):
     """P5-03 17.2: [peoples]."""
     t = w.t
-    races = [r[0] for r in t["race"]]
+    # the races present (race.present = 1; integration: a fixture may hold a race row that is not present)
+    races = [r[0] for r in t["race"] if r[9] == 1]
     plural = {r[0]: r[3] for r in t["race"]}
     pairs = [(a, b) for i, a in enumerate(races) for b in races[i + 1:]]
     met, turned = {}, {}

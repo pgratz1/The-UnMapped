@@ -125,9 +125,9 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     for (std::size_t k = 0; k < want.size(); ++k) {
         CHECK(lines[2 + k] == "table " + want[k].first + " " + to_hex(want[k].second));
     }
-    CHECK(lines[34] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
-    CHECK(lines[35] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
-    CHECK(lines[36] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
+    CHECK(lines[36] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));   // schema 10: 34 tables
+    CHECK(lines[37] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
+    CHECK(lines[38] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
 }
 
 TEST_CASE("cli 12.5: layer hash is codec-independent") {
@@ -148,8 +148,8 @@ TEST_CASE("cli 12.5: layer hash is codec-independent") {
     REQUIRE(lines.size() == 38);  // thirty-four tables since schema 10 (P5-03 16.1)
     const std::string expected = to_hex(p004::layer_hash_i16(7, 5, cells));
     CHECK(lines[21] == "table pass " + to_hex(p004::empty_pass_table_hash()));
-    CHECK(lines[34] == "layer test.raw " + expected);
-    CHECK(lines[35] == "layer test.varint " + expected);
+    CHECK(lines[36] == "layer test.raw " + expected);   // schema 10: 34 tables
+    CHECK(lines[37] == "layer test.varint " + expected);
     CHECK(lines[18] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(9, "", "test_fixture"))));
 }
 
