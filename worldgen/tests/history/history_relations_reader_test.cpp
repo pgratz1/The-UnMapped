@@ -101,6 +101,26 @@ void refused(const std::string& name, const std::string& sql, const std::string&
     CHECK(t.error().message == e->message);
 }
 
+// P5-03a 10.4: the value checks "in the existing form" `value <k> <v> outside <a> to <b>` (reading D18: the table
+// and row prefix and the upper bound of `years` are not given, so the message is matched as a part).
+void refused_with(const std::string& name, const std::string& sql, const std::string& part) {
+    CAPTURE(name);
+    const db::WorldReader r = chrono_test::open_world(corrupt(name, sql));
+    const auto e = eng::view_error(r);
+    REQUIRE_MESSAGE(e.has_value(), "HistoryView::load accepted " << name);
+    CHECK(e->code == db::ErrorCode::corrupt_layer);
+    CHECK_MESSAGE(e->message.find(part) != std::string::npos, e->message);
+    const auto t = h::read_history_tables(r);
+    REQUIRE_FALSE(t.ok());
+    CHECK(t.error().message == e->message);
+}
+
+// The event_value row of value `key` of the first event of kind `kind`, as SQL selecting it.
+std::string value_of(const std::string& kind, int seq) {
+    return "event_value WHERE event = (SELECT min(id) FROM event WHERE kind = (SELECT id FROM event_kind WHERE key = '" +
+           kind + "')) AND seq = " + std::to_string(seq);
+}
+
 std::string where_rr(const std::vector<std::int64_t>& x) {
     return " WHERE race_a = " + n(x[0]) + " AND race_b = " + n(x[1]) + " AND year = " + n(x[2]);
 }
@@ -224,6 +244,35 @@ TEST_CASE("P5-03 16.4: phrase lists, the events' checks and settlement.ending 6"
             "UPDATE event_participant SET entity_id = 999 WHERE entity_type = 1 AND event = (SELECT min(id) FROM event "
             "WHERE kind = (SELECT id FROM event_kind WHERE key = 'settlement_mixed'));",
             "corrupt table 'event_participant': row (" + n(b.mixed_event) + ", 3): race 999 does not exist");
+}
+
+TEST_CASE("P5-03a 10.4: the new values' ranges: sealed, standing and majority of kind 60, standing and years of 62") {
+    refused_with("sealed", "UPDATE " + value_of("peoples_met", 3).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+                 "value sealed 2 outside 0 to 1");
+    refused_with("mixed-standing",
+                 "UPDATE " + value_of("settlement_mixed", 2).replace("event_value WHERE", "event_value SET value = 3 WHERE") + ";",
+                 "value standing 3 outside 0 to 2");
+    refused_with("mixed-majority",
+                 "UPDATE " + value_of("settlement_mixed", 3).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+                 "value majority 2 outside 0 to 1");
+    // kind 62 is rare: checked when the world holds a people_expelled
+    const db::WorldReader r = chrono_test::open_world(base_path());
+    bool expelled = false;
+    std::int64_t k62 = 0;
+    for (const auto& k : chrono_test::rows_of(r, "event_kind")) {
+        if (k[1].bytes == "people_expelled") k62 = k[0].integer;
+    }
+    for (const auto& e : chrono_test::rows_of(r, "event")) expelled = expelled || e[3].integer == k62;
+    if (!expelled) {
+        MESSAGE("seed 42 at 512 has no people_expelled: kind 62's value checks are left to the slow worlds");
+        return;
+    }
+    refused_with("expel-standing",
+                 "UPDATE " + value_of("people_expelled", 2).replace("event_value WHERE", "event_value SET value = 2 WHERE") + ";",
+                 "value standing 2 outside 0 to 1");
+    refused_with("expel-years",
+                 "UPDATE " + value_of("people_expelled", 3).replace("event_value WHERE", "event_value SET value = -1 WHERE") + ";",
+                 "value years -1 outside 0 to");
 }
 
 TEST_CASE("P5-03 16.4: two peoples_met of one pair are refused") {

@@ -15,7 +15,9 @@
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <map>
 #include <set>
 #include <string>
@@ -162,7 +164,7 @@ TEST_CASE("P5-03a 10.1, 10.2: the shipped game/data and both fixture roots hold 
         CHECK(h::check_history_data(*l.content).empty());
         const wd::Record& r = record_of(*l.content, "relations");
         CHECK(r.size() == p503a::relations_fields().size());
-        for (const p503data::RelField& f : p503a::new_relations_fields()) CHECK(r.find(f.name) != nullptr);
+        for (const p503data::RelField& f : p503a::new_relations_fields()) CHECK(r.find(std::string(f.name)) != nullptr);
         CHECK(record_of(*l.content, "monsters").find("undead_dead_permille") != nullptr);
     }
 }
@@ -333,8 +335,8 @@ TEST_CASE("P5-03a 10.1 (13): I0 with the 0.25.0 zero tuning: no event of kinds 5
 TEST_CASE("P5-03a 8 A2: dispositions valid from construction: D = B, no hatred event, before the first step") {
     const wd::ContentSet& c = conflict_test::shipped();
     const eng::HistoryInputs in = p503run::stress_inputs(1, c);
-    cfl::Conflict pair(c);
-    const auto rel = p503a_api::constructed(*pair.peoples.sub, *pair.sub, c, in);
+    cfl::Conflict cp(c);
+    const auto rel = p503a_api::constructed(*cp.peoples.sub, *cp.sub, c, in);
     REQUIRE(rel != nullptr);
     const p503check::World w = p503check::world_of_run(p503api::RTables{}, in, c);
     const p503check::Index x(w);

@@ -22,6 +22,7 @@
 
 #include "../history_report_checks.hpp"
 #include "p5_03_relations_runs.hpp"
+#include "p5_03a_checks.hpp"
 #include "worldgen/inspect/history_report.hpp"
 
 namespace {
@@ -110,6 +111,7 @@ void check_case(const RCase& g) {
         }
     }
     CHECK(p503check::violations(*w) == std::vector<std::string>{});
+    CHECK(p503a_check::violations(*w) == std::vector<std::string>{});   // P5-03a 14 item 12
 }
 
 // --- I0 (7.4) --------------------------------------------------------------------------------------------
