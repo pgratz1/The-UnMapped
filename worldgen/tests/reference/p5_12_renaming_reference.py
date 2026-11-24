@@ -1238,7 +1238,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.23.0"   # P5-02: rule 7 ravage, {stem}, the possessive rule; --version 0.22.0 keeps P5-12's file
+    version = "0.24.0"   # P5-03: rule 7's {name}'s Waste and the histories of 0.24.0; --version 0.23.0 keeps P5-02's file
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

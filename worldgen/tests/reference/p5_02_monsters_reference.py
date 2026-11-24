@@ -49,6 +49,13 @@ STREAMS = ("hist.beasts.bold", "hist.monsters.wake", "hist.monsters.rise", "hist
            "hist.peoples.ghost", "hist.names.monster", "hist.names.site", "hist.monsters.raid_target")
 # r1 (6.4.1): hist.monsters.raid_target is appended after hist.names.site.
 SIM_STREAMS = STREAMS[:12] + ("hist.monsters.raid_target",)
+# P5-03 3: appended after hist.monsters.raid_target (the part-B streams of this module)
+P503_STREAMS = ("hist.beasts.bold_kind", "hist.monsters.fear")
+
+
+def p503():
+    """P5-03 part B (9, 12, 13, 14) is on with the peoples flag of 0.24.0."""
+    return pp.FLAGS.get("p503", False)
 CIV, SETTLEMENT, REGION, MONSTER, SITE = pe.CIV, pe.SETTLEMENT, pe.REGION, pe.MONSTER, pe.SITE
 AWAKE, ASLEEP, SLAIN, DIED = 1, 2, 3, 4
 LAIR, OUTPOST = 1, 2
@@ -181,8 +188,9 @@ class Monsters:
         self.naming = base.naming
         self.threshold = base.engine[inp.params["detail"]]["flare_threshold"]
         self.M = self.t["pressure"][inp.params.get("pressure", "normal")]
-        for s in SIM_STREAMS:
+        for s in SIM_STREAMS + P503_STREAMS:
             w.keys[s] = cr.stream_key(inp.seed, s)
+        self.epithets = set()   # P5-03 12.1: the epithets of the world's monster names so far
         self.geo = GeoNb(inp)
         self.regions = list(self.geo.ids)
         self.R = len(self.regions)
@@ -296,13 +304,61 @@ class Monsters:
         return best[1] if best is not None else None
 
     # ---------------------------------------------------------------- names (9)
-    def monster_name(self, k, m):
+    def monster_name(self, k, m, place=None):
         key, kd = self.kinds[k - 1]
         cul = kd["naming_culture"]
-        d = pnr.with_forms(self.naming[cul], "monster", kd["name_forms"])
+        if p503() and kd["wake"] == "dead":   # P5-03 12.2: a host named for its place
+            return self.place_name(kd, m, place), place
+        forms = kd["name_forms"]
+        if p503():   # 12.1: F' without the forms whose epithet an earlier monster has
+            fs = [f for f in forms if not (epithet(f) and epithet(f) in self.epithets)]
+            if not fs:
+                fs = ["{root}"] if "{root}" in forms else list(forms)
+            forms = fs
+        d = pnr.with_forms(self.naming[cul], "monster", forms)
         name, _t = pnr.make_name(d, cul, "monster", self.inp.seed, self.culture_num[cul], m, self.w.registry)
         root = realm_root(name, kd["name_forms"])
+        if p503():
+            f = matched_form(name, kd["name_forms"])
+            if f is not None and epithet(f):
+                self.epithets.add(epithet(f))
         return name, root
+
+    def place_name(self, kd, m, place):
+        """12.2: start = pick(D(hist.names.monster; m, 0, 0), |F|); the first form from start, cyclic, whose name is
+        at most 48 bytes and not in the registry; none: the start form's name and the smallest free numeral."""
+        forms = kd["name_forms"]
+        n = len(forms)
+        start = pnr.pick(pnr.draw(cr.stream_key(self.inp.seed, "hist.names.monster"), self.w.year, m, 0, 0), n)
+        first = None
+        for j in range(n):
+            nm = forms[(start + j) % n].replace("{place}", place)
+            if first is None:
+                first = nm
+            if len(nm.encode()) <= 48 and nm not in self.w.registry:
+                self.w.registry.add(nm)
+                return nm
+        kk = 2
+        while first + " " + roman(kk) in self.w.registry:
+            kk += 1
+        nm = first + " " + roman(kk)
+        if len(nm.encode()) > 64:
+            pe.fatal("names: a name longer than 64 bytes")
+        self.w.registry.add(nm)
+        return nm
+
+    def place_of(self, rid, at_settlement):
+        """12.2: the settlement's name at a ruin, else the region's name in force at Y; a leading The is the."""
+        if at_settlement:
+            nm = self.w.stl(at_settlement)["name"]
+        else:
+            nm = self.reg[rid]["name"]
+            rn = getattr(self.w, "renaming", None)
+            if rn is not None:
+                for r in sorted(rn.rows):
+                    if r[0] == rid and r[1] <= self.w.year:
+                        nm = r[2]
+        return "the " + nm[4:] if nm.startswith("The ") else nm
 
     def lair_name(self, k, s, root, trace=None):
         """9.2: cycle the kind's lair_forms from start = pick(D(lair_name; s, 0, 0), n)."""
@@ -421,8 +477,12 @@ class Monsters:
                 tt = min(sts, key=lambda s: (-s["population"], s["id"]))
                 P = tt["population"]
                 dead = min(P - 1, max(1, P * t["bold_toll_permille"] // 1000))
-                b = min(range(1, len(self.beasts) + 1),
-                        key=lambda s: (-self.B[(r, s)] * self.beasts[s - 1][1]["menace"], s))
+                if p503():   # P5-03 13: a weighted draw over B x menace
+                    ws = [self.B[(r, s)] * self.beasts[s - 1][1]["menace"] for s in range(1, len(self.beasts) + 1)]
+                    b = 1 + pnr.weighted(w.draw("hist.beasts.bold_kind", r, 0, 0), ws)
+                else:
+                    b = min(range(1, len(self.beasts) + 1),
+                            key=lambda s: (-self.B[(r, s)] * self.beasts[s - 1][1]["menace"], s))
                 e = w.append("beasts_bold", region=r, settlement=tt["id"],
                              participants=(("settlement", SETTLEMENT, tt["id"]), ("civilization", CIV, tt["owner_civ"])),
                              values=(b, dead))
@@ -441,7 +501,8 @@ class Monsters:
             pe.fatal("history: bound: monsters exceed 100000")
         if s > SITES_MAX:
             pe.fatal("history: bound: sites exceed 1000000")
-        name, root = self.monster_name(k, m)
+        name, root = self.monster_name(k, m, self.place_of(rid, at_settlement)
+                                       if p503() and self.kind(k)["wake"] == "dead" else None)
         if at_settlement:
             x0 = w.stl(at_settlement)
             cell = (x0["x"], x0["y"])
@@ -458,7 +519,8 @@ class Monsters:
                                   # holds: set only by an overrun (6.4.3; the lead's ruling on integration D1):
                                   # a host risen at a ruin (6.3.2) may still overrun once
                                   holds=False, raids={}, died=None, death_event=0, slayer=0,
-                                  overrun=0))
+                                  overrun=0, raid_years={}, place_raids={},
+                                  dead_kind=self.kind(k)["wake"] == "dead"))
         self.created_this_step = True
         if quiet and self.kind(k)["flare"]:
             self.pending_flare = e
@@ -516,7 +578,8 @@ class Monsters:
         w, t = self.w, self.t
         for r in self.regions:
             ent = self.W.get(r, [])
-            if sum(x[1] for x in ent) < t["undead_min_dead"]:
+            need = t["undead_min_dead"] * 1000 // max(1, self.M) if p503() else t["undead_min_dead"]   # P5-03 14.2
+            if sum(x[1] for x in ent) < need:
                 continue
             for k in range(1, len(self.kinds) + 1):
                 if self.created_this_step:
@@ -626,11 +689,26 @@ class Monsters:
         c = tt["owner_civ"]
         tau = kd["toll_min_permille"] + pnr.pick(w.draw("hist.monsters.raid_toll", m["id"], 0, 0),
                                                  kd["toll_max_permille"] - kd["toll_min_permille"] + 1)
-        dead = max(0, min(kd["kill_max"], P * tau // 1000, P - 1))
+        causes = (m["waking"],)
+        if p503():   # 9.2 the toll above kill_max; 9.1 the last raid on the same place within raid_chain_years
+            t = self.t
+            raw = P * tau // 1000
+            dead = raw if raw <= kd["kill_max"] else kd["kill_max"] + (raw - kd["kill_max"]) * t["toll_over_permille"] // 1000
+            dead = max(0, min(dead, P - 1))
+            keep = max(t["raid_chain_years"], t["fear_years"])
+            lst = [x for x in m["place_raids"].get(tt["id"], []) if w.year - x[0] < keep]
+            prev = [x for x in lst if w.year - x[0] < t["raid_chain_years"]]
+            if prev:
+                causes = tuple(sorted({m["waking"], prev[-1][1]}))
+        else:
+            dead = max(0, min(kd["kill_max"], P * tau // 1000, P - 1))
         plunder = P * kd["hoard_permille"] // 1000
         e = w.append("monster_raid", region=tt["region"], settlement=tt["id"],
                      participants=(("monster", MONSTER, m["id"]), ("civilization", CIV, c)), values=(dead, plunder),
-                     causes=(m["waking"],))
+                     causes=causes)
+        if p503():
+            m["place_raids"][tt["id"]] = lst + [(w.year, e)]
+            m["raid_years"].setdefault(c, []).append(w.year)
         if dead > 0:
             tt["population"] = P - dead
         w.last_red[tt["id"]] = e    # note_reduction (M2)
@@ -638,6 +716,24 @@ class Monsters:
         m["raids"][c] = (w.year, e)
         self.log.append((w.year, "raid", m["id"], tt["id"], dead, hops[tt["region"]]))
         self.overrun(m, kd, tt, c, e)
+        if p503() and tt["status"] in (1, 2):
+            self.fear(m, tt, c)
+
+    def fear(self, m, tt, c):
+        """P5-03 9.4: the flight for fear after a raid and its overrun test."""
+        w, t = self.w, self.t
+        recent = [x for x in m["place_raids"].get(tt["id"], []) if x[0] > w.year - t["fear_years"]]
+        if len(recent) < t["fear_raids"] or pp.KIND_KEY[tt["kind"]] not in ("hamlet", "village"):
+            return
+        if w.civ(c)["capital"] == tt["id"] or not any(x["id"] != tt["id"] for x in w.standing_of(c)):
+            return
+        if not chance_pm(w.draw("hist.monsters.fear", m["id"], tt["id"], 0), t["fear_permille"]):
+            return
+        e = w.append("settlement_fled", region=tt["region"], settlement=tt["id"],
+                     participants=(("monster", MONSTER, m["id"]), ("civilization", CIV, c)),
+                     causes=tuple(sorted(x[1] for x in recent[-4:])))
+        w.abandon(tt["id"], e, causes_given=(e,))
+        self.log.append((w.year, "fled", m["id"], tt["id"], c, e))
 
     def overrun(self, m, kd, tt, c, raid_e):
         w = self.w
@@ -649,7 +745,11 @@ class Monsters:
             return
         if self.open_lair_in(tt["region"], but=m["id"]):
             return
-        if not chance_pm(w.draw("hist.monsters.overrun", m["id"], tt["id"], 0), kd["overrun_permille"]):
+        p_ov = kd["overrun_permille"]
+        if p503():   # P5-03 14.1, 14.2: scaled by M and by the target's population after the raid
+            fP = min(1000, self.t["overrun_people_ref"] * 1000 // max(1, tt["population"]))
+            p_ov = min(1000, p_ov * self.M // 1000) * fP // 1000
+        if not chance_pm(w.draw("hist.monsters.overrun", m["id"], tt["id"], 0), p_ov):
             return
         s2 = len(self.sites) + 1
         lname = self.lair_name(m["kind"], s2, m["root"])
@@ -682,7 +782,11 @@ class Monsters:
             S = H * self.prowess(civ["race"]) // 1000
             if S == 0:
                 continue
-            if not chance_pm(w.draw("hist.monsters.hunt", m["id"], c, 0), t["hunt_permille"]):
+            p_h = t["hunt_permille"]
+            if p503():   # P5-03 9.3 (reading H1: R_c counts the raids with Y - year <= hunt_memory_years)
+                R = sum(1 for yr in m["raid_years"].get(c, []) if Y - yr <= t["hunt_memory_years"])
+                p_h = min(t["hunt_max_permille"], t["hunt_permille"] + (max(1, R) - 1) * t["hunt_raid_permille"])
+            if not chance_pm(w.draw("hist.monsters.hunt", m["id"], c, 0), p_h):
                 continue
             odds = min(t["slay_max_permille"], S * 1000 // (S + kd["might"]))
             u = pnr.pick(w.draw("hist.monsters.hunt_outcome", m["id"], c, 0), 1000)
@@ -843,12 +947,31 @@ class Monsters:
         return self.monsters[mid - 1]["name"]
 
     def monster_root_of(self, mid):
-        return self.monsters[mid - 1]["root"]
+        m = self.monsters[mid - 1]
+        if p503() and m.get("dead_kind"):   # P5-03 12.2: a host's root is its place; monster_root is empty
+            return ""
+        return m["root"]
 
 
 def pe_biome_keys():
     import p3_conflict_reference as pcr
     return dict(pcr.BIOME_KEYS)
+
+
+def epithet(form):
+    """P5-03 12.1."""
+    return form.replace("{root}", "").strip(" ")
+
+
+def matched_form(name, forms):
+    """The form A{root}B a name's root is matched by (P5-02 9.2, list order), else None."""
+    for f in forms:
+        if "{root}" not in f:
+            continue
+        a, b = f.split("{root}", 1)
+        if name.startswith(a) and name.endswith(b) and len(name) > len(a) + len(b):
+            return f
+    return None
 
 
 def realm_root(name, forms):
@@ -1746,7 +1869,7 @@ def cmd_check_world(paths, data_root="game/data"):
         rows = rows_from_db(path)
         meta = rows["meta"]
         c = Checker()
-        c.eq("%s schema_version" % path, meta.get("schema_version"), "9")
+        c.eq("%s schema_version" % path, meta.get("schema_version"), str(pe.SCHEMA_VERSION))   # 10 at 0.24.0
         E = int(meta.get("history_end_year", meta.get("param.history_span", "6000")))
         borders = [(r[0], r[1]) for r in rows["region_border"]]
         for v in invariant_violations(rows, list(dat.base.monsters), dat.base.monsters_tuning, E, borders,
@@ -1785,7 +1908,12 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    pcr.use_version("0.23.0")
+    version = "0.24.0"   # P5-03 part B; --version 0.23.0 serves the committed P5-02 file
+    if "--version" in argv:
+        i = argv.index("--version")
+        version = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    pcr.use_version(version)
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else DEFAULT_INPUTS
     if argv[0] == "check":
         return cmd_check(argv[1:])

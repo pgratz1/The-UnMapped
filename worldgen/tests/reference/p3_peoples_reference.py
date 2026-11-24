@@ -86,7 +86,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.23.0"  # P5-02: the ghost rule (8.2), the WildView seam (7.1, 7.2), settlement.ending (P5-12: P3-02 r19 names, kind 43 in the catalogue; no peoples rule (P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
+GENERATOR_VERSION = "0.24.0"  # P5-03: reach, road losses, unfaded ruins, the ledger (P5-02: the ghost rule (8.2), the WildView seam (7.1, 7.2), settlement.ending (P5-12: P3-02 r19 names, kind 43 in the catalogue; no peoples rule (P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
 ONE = 1 << 32
 
 # ---------------------------------------------------------------------------
@@ -120,12 +120,24 @@ FLAGS = dict(
     awaken_pop=True,    # 23.2: the awakening settlement starts at max(founding, min(awakening_population, C(H, r)))
     # P5-02 (generator 0.23.0)
     ghost=True,         # P5-02 8.2: a small place struck by famine or plague may be left standing (hist.peoples.ghost)
+    # P5-03 (generator 0.24.0)
+    p503=True,          # P5-03 11.1: a destination within abandon_reach_hops, the losses on the road; 11.2: ruins left
+                        # standing do not fade; 7.2: the ledger calls of the ruin procedure; 7.3 owner_event; 9.4
+                        # abandon public (with causes)
 )
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
 FLAGS_023 = ("ghost",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")   # 0.21.0, 0.22.0: no peoples rule
+FLAGS_024 = ("p503",)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")   # 0.21.0, 0.22.0: no peoples rule
+
+
+def road_loss_of(P, u, t):
+    """P5-03 11.1: road = P x (min + pick(u, max - min + 1)) div 1000, at most P - 1 when P >= 1."""
+    lo, hi = t["abandon_loss_min_permille"], t["abandon_loss_max_permille"]
+    road = P * (lo + pnr.pick(u, hi - lo + 1)) // 1000
+    return min(road, P - 1) if P >= 1 else road
 
 
 def flags_for(v):
@@ -133,7 +145,7 @@ def flags_for(v):
     if v not in VERSIONS:
         raise ValueError(v)
     i = VERSIONS.index(v)
-    return {k: (i >= 7 if k in FLAGS_023 else i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
+    return {k: (i >= 8 if k in FLAGS_024 else i >= 7 if k in FLAGS_023 else i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
             for k in FLAGS}
 
 
@@ -156,7 +168,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.23.0")
+    use_version("0.16.0" if on else "0.24.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -302,7 +314,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
@@ -324,13 +336,15 @@ COMPILED_021 = COMPILED_020 + (pe.KIND_41, pe.KIND_42)
 COMPILED_022 = COMPILED_021 + (pe.KIND_43,)
 # P5-02 10.1 (generator 0.23.0): kinds 44 to 55.
 COMPILED_023 = COMPILED_022 + pe.KINDS_023
-COMPILED = COMPILED_023
+# P5-03 11.3, 8.1 (generator 0.24.0): kinds 56 to 62.
+COMPILED_024 = COMPILED_023 + pe.KINDS_024
+COMPILED = COMPILED_024
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
-            42: COMPILED_021, 43: COMPILED_022, 55: COMPILED_023}[len(pe.COMPILED)]
+            42: COMPILED_021, 43: COMPILED_022, 55: COMPILED_023, 62: COMPILED_024}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31, 38}   # 31: r6, an abandonment of 9.2 in Q1
 
@@ -391,7 +405,8 @@ def report_events_messages(report):
 
 STREAMS = ("hist.peoples.ghost", "hist.peoples.home", "hist.peoples.civs", "hist.peoples.found", "hist.peoples.outward",
            "hist.peoples.famine", "hist.peoples.famine_toll", "hist.peoples.plague", "hist.peoples.plague_toll",
-           "hist.peoples.plague_spread", "hist.peoples.abandon", "hist.peoples.crisis", "hist.peoples.split")
+           "hist.peoples.plague_spread", "hist.peoples.abandon", "hist.peoples.crisis", "hist.peoples.split",
+           "hist.peoples.abandon_loss")   # P5-03 3 (0.24.0; keyed, so the older draws are unchanged)
 
 
 def civs_param(text):
@@ -839,6 +854,31 @@ class World(pe.World):
         self.wild = None
         self.ghost_log = []        # (year, settlement, strike event, abandonment event)
         self.shun_log = []         # (year, civ, region) of every candidate left out because it is shunned
+        # P5-03 7.2: the people ledger (set_ledger; None: no call); 6.4's records of the ruin procedure
+        self.ledger = None
+        self.road_log = []         # (year, settlement, P, road, settled, kind) of every abandonment (11.1)
+
+    # --- P5-03 7.2, 11.1, 11.2
+    def set_ledger(self, ledger):
+        self.ledger = ledger
+
+    def in_reach(self, s, t):
+        """11.1: hops(region(s))[region(t)] <= abandon_reach_hops (always, before 0.24.0)."""
+        if not FLAGS["p503"]:
+            return True
+        h = self.geo.hops(s["region"]).get(t["region"])
+        return h is not None and h <= self.t["abandon_reach_hops"]
+
+    def open_site_at(self, sid):
+        """11.2 (b): an open site (any kind) has the settlement sid (through the monsters, when installed)."""
+        m = getattr(self, "monsters", None)
+        return m is not None and any(x["settlement"] == sid and x["ending"] == 0 for x in m.sites)
+
+    def ending_now(self, s):
+        """P5-02 8.3 (with 11.3's code 6) of a ruined settlement, from its ruin event."""
+        e = s["ruin_event"]
+        return pe.settlement_ending(s["status"], e, lambda x: self.events[x - 1]["key"],
+                                    lambda x: self.events[x - 1]["causes"])
 
     # --- names (P3-02 4.3; r10 12.2 from 0.19.0: K, the cores of the history stage's names)
     def hist_name(self, naming, culture_id, kind, cnum, entity):
@@ -946,7 +986,7 @@ class World(pe.World):
         self.settlements.append(dict(id=s, name=name, x=x, y=y, region=region, founder_civ=civ,
                                      founded_year=self.year, founding_event=event, owner_civ=civ, kind=kind,
                                      status=THRIVING, population=pop, ruined_year=None, ruin_event=0,
-                                     created=self.serial))
+                                     created=self.serial, owner_event=event))
         return s
 
     def set_owner(self, rid, civ, event):
@@ -1301,10 +1341,17 @@ class World(pe.World):
         race = self.civ(c)["race"]
         p = s["population"]
         others = [t for t in self.standing_of(c) if t["id"] != sid]
-        if others:
-            t = min(others, key=lambda t: ((t["x"] - s["x"]) ** 2 + (t["y"] - s["y"]) ** 2, t["id"]))
+        reach = [t for t in others if self.in_reach(s, t)]   # P5-03 11.1
+        settled = 0
+        if reach:
+            t = min(reach, key=lambda t: ((t["x"] - s["x"]) ** 2 + (t["y"] - s["y"]) ** 2, t["id"]))
             room = max(0, 2 * self.geo.capacity(t["region"], race) - t["population"])
-            t["population"] += min(p, room)
+            settled = min(p, room)
+            t["population"] += settled
+            if self.ledger is not None and settled >= 1:   # P5-03 7.2
+                self.ledger.moved(sid, t["id"], settled)
+        if self.ledger is not None and p - settled >= 1:
+            self.ledger.displaced(sid, 0, p - settled, e)
         s["population"] = 0
         s["status"] = RUINED
         s["ruined_year"] = self.year
@@ -1325,7 +1372,7 @@ class World(pe.World):
         (squared cell distance, then id) or None, settled = min(P, max(0, 2 C(R_t, r) - P_t))."""
         c = s["owner_civ"]
         race = self.civ(c)["race"]
-        others = [t for t in self.standing_of(c) if t["id"] != s["id"]]
+        others = [t for t in self.standing_of(c) if t["id"] != s["id"] and self.in_reach(s, t)]   # P5-03 11.1
         if not others:
             return None, 0
         t = min(others, key=lambda t: ((t["x"] - s["x"]) ** 2 + (t["y"] - s["y"]) ** 2, t["id"]))
@@ -1339,6 +1386,8 @@ class World(pe.World):
         for u in self.settlements:
             if u["id"] == s["id"] or u["owner_civ"] != c or u["status"] not in (THRIVING, DECLINING):
                 continue
+            if not self.in_reach(s, u):   # P5-03 11.1
+                continue
             k = ((u["x"] - s["x"]) ** 2 + (u["y"] - s["y"]) ** 2, u["id"])
             if best is None or k < best[0]:
                 best = (k, u)
@@ -1351,17 +1400,22 @@ class World(pe.World):
         if not ok:
             self.checks.append("14 item 12 (r6): destination of settlement %d in %d" % (s["id"], self.year))
 
-    def abandon(self, sid, cause):
+    def abandon(self, sid, cause, causes_given=None):
+        """8.5 (P5-03 9.4: public; causes_given in place of the blow's)."""
         s = self.stl(sid)
         c = s["owner_civ"]
-        causes = (cause,)
+        causes = (cause,) if causes_given is None else tuple(causes_given)
         cite_d = FLAGS["causes"] and s["status"] == DECLINING and sid in self.decline_start and \
             (not FLAGS["memory"] or self.recent(self.decline_start[sid]))   # r12 22.2 item 2
         if cite_d:
             # r6 8.5 causes: the blow (or last reduction / founding) and the decline start, ascending, no repeats
-            causes = tuple(sorted({cause, self.decline_start[sid]}))
-        t, settled = self.destination(s) if FLAGS["dest"] else (None, 0)
+            causes = tuple(sorted(set(causes) | {self.decline_start[sid]}))
         p = s["population"]
+        road = 0
+        if FLAGS["p503"]:   # 11.1: the losses on the road, taken off before the ruin
+            road = road_loss_of(p, self.draw("hist.peoples.abandon_loss", sid, 0, 0), self.t)
+            s["population"] = p - road
+        t, settled = self.destination(s) if FLAGS["dest"] else (None, 0)
         if FLAGS["dest"]:
             self.check_destination(s, t, settled)
         if cite_d and self.decline_start[sid] not in causes:
@@ -1374,7 +1428,9 @@ class World(pe.World):
         else:
             e = self.append("settlement_abandoned", region=s["region"], settlement=sid,
                             participants=(("settlement", SETTLEMENT, sid), ("civilization", CIV, c)),
-                            values=(p,), causes=causes)
+                            values=(p - road,), causes=causes)
+        if FLAGS["p503"]:
+            self.road_log.append((self.year, sid, p, road, settled, "31" if settled >= 1 else "16"))
         self.ruin(sid, e)
         if not self.standing_of(c):
             e2 = self.append("civ_ended", region=s["region"], settlement=sid,
@@ -1783,6 +1839,7 @@ class World(pe.World):
         self.civ(c2)["capital"] = newcap["id"]
         for s in leaving:
             s["owner_civ"] = c2
+            s["owner_event"] = e2   # P5-03 7.3
         for r in part:
             self.set_owner(r, c2, e2)
         return True
@@ -1793,6 +1850,12 @@ class World(pe.World):
         for s in self.settlements:
             if s["status"] != RUINED or self.year - s["ruined_year"] < self.t["ruin_fade_years"]:
                 continue
+            if FLAGS["p503"]:   # 11.2 (a) and (b)
+                gf = self.t["ghost_fade_years"]
+                if not (self.ending_now(s) == 1 or (gf > 0 and self.year - s["ruined_year"] >= gf)):
+                    continue
+                if self.open_site_at(s["id"]):
+                    continue
             if self.quiet_events_left(0) <= 0:
                 break
             self.append("ruin_faded", region=s["region"], settlement=s["id"],

@@ -91,13 +91,20 @@ DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # r1 histories (6.4.1), rebuilt by build-inputs
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
-GENERATOR_VERSION = "0.23.0"
+GENERATOR_VERSION = "0.24.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
 V3 = True   # P3-07 r21 26 (format v3, generator 0.22.0); V3 implies V2's rules
 V4 = True   # P5-02 12 (format v4, generator 0.23.0, schema 9); V4 implies V3's rules
+V5 = True   # P5-03 17 (format v5, generator 0.24.0, schema 10); V5 implies V4's rules
 SUMMARY_MONSTER_LINES = 2   # P5-02 12.4: a constant of P3-07 section 8
+# P5-03 10.1, 10.2: constants of P3-07 section 8
+SUMMARY_MONSTER_STORIES, SUMMARY_MONSTER_HARM_MIN, SUMMARY_MONSTER_TAKEN_HARM = 3, 200, 500
+SUMMARY_MONSTER_ENDED_LINES = 2
+# P5-03 17.2 "mixed at E" (6.3.6's mixed_min_permille, not stored in a world: reading R16 of
+# p5_03_relations_reference, the shipped value)
+MIXED_MIN_PERMILLE = 100
 # P5-02 r1 12.9: the summary line limit (constants of P3-07 section 8). SUMMARY_LINES_CAP is the lead's ruling of
 # 2026-11-23 (L = min(1390, ...)), as is the rule that at level summary with C > SUMMARY_LINES_CIVS the [monsters]
 # block prints its count line only (O is counted after that rule).
@@ -213,21 +220,22 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, V4, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0"):
+    global GENERATOR_VERSION, V2, V3, V4, V5, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0", "0.23.0")
-    V3 = v in ("0.22.0", "0.23.0")
-    V4 = v == "0.23.0"
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0")
+    V3 = v in ("0.22.0", "0.23.0", "0.24.0")
+    V4 = v in ("0.23.0", "0.24.0")
+    V5 = v == "0.24.0"
     DEFAULT_INPUTS = DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.23.0")
+use_version("0.24.0")
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -276,7 +284,7 @@ def load_world(path):
     try:
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
         t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ()) +
-             (pe.NEW_TABLES_023 if V4 else ())}
+             (pe.NEW_TABLES_023 if V4 else ()) + (pe.NEW_TABLES_024 if V5 else ())}
     finally:
         conn.close()
     return World(meta, t)
@@ -770,6 +778,9 @@ def summary24(w, fr, candidates_only=False, budget=None):
         return 0
 
     floor = set(F)
+    if V5:   # P5-03 10.1: the stories of the told monsters, in the set always, with their units as 24.2 defines
+        for x in monster_stories(w)[1]:
+            floor |= {x} | fr.unit(x)
     for a in w.t["age"]:
         y0, y1 = a[2], a[3]
         in_age = sorted((e for e in cands if y0 <= e[1] <= y1), key=lambda e: (-involves(a, e[0]), -e[7], e[0]))
@@ -908,8 +919,8 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v4" if V4 else "# worldgen history v3" if V3 else "# worldgen history v2" if V2 else
-         "# worldgen history v1", "level = %s" % level]
+    o = ["# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+         "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
     for key, mk in (("seed", "seed"), ("seed_phrase", "seed_phrase"), ("map_size", "param.map_size"),
@@ -951,8 +962,10 @@ def outside_lines(w, d, level):
     if V4:   # P5-02 12.4, 12.5
         post += monster_lines(w, level)
         post += site_lines(w, level)
+    if V5:   # P5-03 17.2: after [sites]
+        post += peoples_lines(w, level)
     post.append("[stats]")
-    post += ["%s = %d" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
+    post += ["%s = %s" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
     return o, post
 
 
@@ -1268,8 +1281,8 @@ MONSTER_STATUS = {1: "awake", 2: "asleep", 3: "slain", 4: "died"}
 SITE_ENDING_WORD = {1: "slain", 2: "died", 3: "moved", 4: "lost", 5: "fell", 6: "quiet"}
 
 
-def monster_raids(w):
-    """{monster id: (raids, killed)} over the monster_raid events."""
+def monster_raids(w, floor0=False):
+    """{monster id: (raids, killed)} over the monster_raid events (floor0: negative dead as 0, P5-03 10.1)."""
     out = {}
     rk = w.K["monster_raid"]
     for e in w.t["event"]:
@@ -1278,7 +1291,113 @@ def monster_raids(w):
         m = role_ids(w, e[0], "monster")[0]
         dead = [v[2] for v in w.vals.get(e[0], []) if v[1] == 1]
         r, k = out.get(m, (0, 0))
-        out[m] = (r + 1, k + (dead[0] if dead else 0))
+        dv = dead[0] if dead else 0
+        out[m] = (r + 1, k + (max(0, dv) if floor0 else dv))
+    return out
+
+
+def monster_harm(w):
+    """P5-03 10.1: harm(m) = the dead of m's raids (negative as 0) + TAKEN_HARM x (its overruns + the flights
+    naming it)."""
+    out = {}
+    for m, (_r, k) in monster_raids(w, floor0=True).items():
+        out[m] = k
+    for key in ("settlement_overrun", "settlement_fled"):
+        kk = w.K.get(key)
+        for e in w.t["event"]:
+            if e[3] == kk:
+                for m in role_ids(w, e[0], "monster"):
+                    out[m] = out.get(m, 0) + SUMMARY_MONSTER_TAKEN_HARM
+    return out
+
+
+def monster_stories(w):
+    """P5-03 10.1: (told monsters, the story events): the first SUMMARY_MONSTER_STORIES notable monsters by (harm
+    descending, id); each story its born_event, its raid of the largest dead (then smaller id), its overrun, its
+    death_event."""
+    harm = monster_harm(w)
+    ms = {m[0]: m for m in w.t["monster"]}
+    told = sorted((m for m in ms if harm.get(m, 0) >= SUMMARY_MONSTER_HARM_MIN), key=lambda m: (-harm[m], m))
+    told = told[:SUMMARY_MONSTER_STORIES]
+    events = set()
+    rk, ok = w.K["monster_raid"], w.K["settlement_overrun"]
+    for mid in told:
+        m = ms[mid]
+        events.add(m[5])
+        raids = [e for e in w.t["event"] if e[3] == rk and role_ids(w, e[0], "monster")[0] == mid]
+        if raids:
+            def dead(e):
+                v = [x[2] for x in w.vals.get(e[0], []) if x[1] == 1]
+                return v[0] if v else 0
+            events.add(min(raids, key=lambda e: (-dead(e), e[0]))[0])
+        ov = [e[0] for e in w.t["event"] if e[3] == ok and role_ids(w, e[0], "monster")[0] == mid]
+        if ov:
+            events.add(ov[0])
+        if m[7]:
+            events.add(m[7])
+    return told, events
+
+
+def peoples_lines(w, level):
+    """P5-03 17.2: [peoples]."""
+    t = w.t
+    races = [r[0] for r in t["race"]]
+    plural = {r[0]: r[3] for r in t["race"]}
+    pairs = [(a, b) for i, a in enumerate(races) for b in races[i + 1:]]
+    met, turned = {}, {}
+    for e in t["event"]:
+        k = w.kind_key[e[3]]
+        if k in ("peoples_met", "disposition_turned"):
+            key = (role_ids(w, e[0], "race_a")[0], role_ids(w, e[0], "race_b")[0])
+            (met if k == "peoples_met" else turned)[key] = e
+    last = {}
+    for r in t["race_relation"]:
+        last[(r[0], r[1])] = r
+    bands = [last[p][4] for p in pairs if p in met and p in last]
+    o = ["[peoples]", "pairs: %d; met %d; hatred %d, wariness %d, friendship %d" % (
+        len(pairs), sum(1 for p in pairs if p in met), bands.count(0), bands.count(1), bands.count(2))]
+    few = len(t["civilization"]) > SUMMARY_LINES_CIVS
+    for p in pairs:
+        if level == "summary" and (few or p not in turned):
+            continue
+        if p in met and p in last:
+            line = "  %s and %s: %s %d, met %d e%d" % (plural[p[0]], plural[p[1]], ("hatred", "wariness", "friendship")
+                                                      [last[p][4]], last[p][3], met[p][1], met[p][0])
+            if p in turned:
+                line += ", turned %d e%d" % (turned[p][1], turned[p][0])
+        else:
+            line = "  %s and %s: never met" % (plural[p[0]], plural[p[1]])
+        o.append(line)
+    mixed = mixed_at_end(w)
+    arr = [e for e in t["event"] if w.kind_key[e[3]] == "refugees_arrived"]
+    exp = [e for e in t["event"] if w.kind_key[e[3]] == "people_expelled"]
+
+    def v1(e):
+        v = [x[2] for x in w.vals.get(e[0], []) if x[1] == 1]
+        return v[0] if v else 0
+    o.append("mixed: %d settlements at E; refugees: %d arrivals, %d people; expelled: %d times, %d people" % (
+        len(mixed), len(arr), sum(v1(e) for e in arr), len(exp), sum(v1(e) for e in exp)))
+    if level == "full":
+        words = ("subject", "tolerated", "accepted", "ruling")
+        for sid, f in mixed:
+            s = w.stl[sid]
+            ents = sorted(f.items(), key=lambda kv: (-kv[1][0], kv[0]))
+            o.append("  s%d %s (%s): %s" % (sid, s[1], w.ref(CIV, s[8]) if s[8] else "no owner", "; ".join(
+                "%s %d %s" % (plural[g], sh, words[st]) for g, (sh, st) in ents)))
+    return o
+
+
+def mixed_at_end(w):
+    """[(settlement, {race: (share, standing)})] of the standing settlements at E that are mixed (6.3.6), ascending."""
+    import p5_03_relations_reference as p503
+    per = p503.shares_in_force(w.t["settlement_race"])
+    out = []
+    for s in w.t["settlement"]:
+        if not standing(s[10]) or s[0] not in per:
+            continue
+        f = p503.in_force(per[s[0]], w.E - 1)
+        if any(st != 3 and sh >= MIXED_MIN_PERMILLE for sh, st in f.values()):
+            out.append((s[0], f))
     return out
 
 
@@ -1296,6 +1415,12 @@ def monster_lines(w, level):
     else:
         alive = sorted((m for m in ms if m[9] in (1, 2)), key=lambda m: (-m[10], m[0]))
         shown, more = alive[:SUMMARY_MONSTER_LINES], max(0, len(alive) - SUMMARY_MONSTER_LINES)
+        if V5:   # P5-03 10.2: then the ended notable monsters; x counts every monster not listed
+            harm = monster_harm(w)
+            ended = sorted((m for m in ms if m[9] in (3, 4) and harm.get(m[0], 0) >= SUMMARY_MONSTER_HARM_MIN),
+                           key=lambda m: (-harm.get(m[0], 0), m[0]))
+            shown = shown + ended[:SUMMARY_MONSTER_ENDED_LINES]
+            more = len(ms) - len(shown)
     for m in shown:
         st = "slain by %s" % w.ref(CIV, m[8]) if m[9] == 3 else MONSTER_STATUS[m[9]]
         lair = w.site[m[3]]
@@ -1378,6 +1503,11 @@ def ruin_how(w, eid, s=None):
     after = ""
     if V4 and s is not None and len(s) > 14:
         after = {3: " after plague", 4: " after famine"}.get(s[14], "")
+    if V5 and s is not None and len(s) > 14 and s[14] == 6:   # P5-03 11.3: the monster of the cause
+        fk = w.K["settlement_fled"]
+        fl = [c for c in w.causes.get(eid, []) if w.ev[c][3] == fk]
+        m = role_ids(w, fl[0], "monster") if fl else []
+        after = " for fear of %s" % w.ref(MONSTER, m[0]) if m else ""
     if k == "settlement_abandoned":
         return "abandoned" + after
     if k == "settlement_abandoned_to":
@@ -1540,8 +1670,18 @@ def stats(w, d):
               ("undead_risen", by_kind.get(K["undead_rose"], 0)), ("outposts", sum(1 for x in ss if x[2] == 2)),
               ("outposts_open", sum(1 for x in ss if x[2] == 2 and x[13] == 0)),
               ("beasts_bold", by_kind.get(K["beasts_bold"], 0)),
-              ("settlements_left", sum(1 for x in st if len(x) > 14 and x[14] in (3, 4, 5))),
+              ("settlements_left", sum(1 for x in st if len(x) > 14 and x[14] in ((3, 4, 5, 6) if V5 else (3, 4, 5)))),
               ("regions_shunned", len({x[3] for x in ss if x[2] == 1 and x[13] == 0 and x[6] != 0}))]
+    if V5:   # P5-03 17.4, at the end of the list (full only)
+        import p5_03_relations_reference as p503
+        rows = dict(w.res if hasattr(w, "res") else {}, **{k: t[k] for k in t})
+        st5 = dict(p503.stats_of(rows, E, MIXED_MIN_PERMILLE))
+        st5["monster_stories"] = len(monster_stories(w)[0])
+        for k in ("race_relations", "settlement_races", "race_pairs", "race_pairs_met", "dispositions_turned",
+                  "pairs_hatred", "pairs_friendship", "refugees_arrived", "refugees_people", "people_expelled",
+                  "expelled_people", "settlements_mixed", "settlements_mixed_ever", "settlements_fled",
+                  "abandoned_without_destination", "abandonment_lost", "monster_stories", "ruins_oldest_year"):
+            o.append((k, st5[k]))
     return o
 
 
@@ -1562,10 +1702,11 @@ FIXTURE_NAMES = ("h1-war-and-ruin", "h2-minimal", "h3-runaway", "h3b-runaway-100
 FIXTURE_NAMES_V2 = FIXTURE_NAMES + ("h11-v2",)   # r19 25.13 item 11: H11 holds the v2 cases
 FIXTURE_NAMES_V3 = FIXTURE_NAMES_V2 + ("h12-v3",)   # r21 26.8 item 9: H12 holds the v3 cases 2 to 5
 FIXTURE_NAMES_V4 = FIXTURE_NAMES_V3 + ("h13-v4",)   # P5-02 19.1 item 15: H13 holds the v4 cases
+FIXTURE_NAMES_V5 = FIXTURE_NAMES_V4 + ("h14-v5",)   # P5-03 24.1 item 11: H14 holds the v5 cases
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -1617,7 +1758,15 @@ def expand_fixture(fx):
                 if tn in null and r[null[tn]] == -1:
                     r[null[tn]] = None
                 rs.append(tuple(r))
+            if V5 and tn in ("beast", "monster_kind"):   # P5-03 16.1: the phrase column (reading F1: a fixture
+                # row without it gets one phrase, so that 16.4's phrase-list check passes)
+                n = 6 if tn == "beast" else 7
+                rs = [r if len(r) > n else tuple(r) + (("grew bold near" if tn == "beast" else "fell upon"),)
+                      for r in rs]
             rows[tn] = sorted(rs, key=lambda r: tuple(r[:3]) if tn == "beast_population" else (r[0],))
+        if V5:   # schema 10: race_relation and settlement_race as given (key order)
+            for tn in pe.NEW_TABLES_024:
+                rows[tn] = sorted(tuple(r) for r in tb.get(tn, []))
     kinds, kroles, kvalues = [], [], []
     by_key = {}
     for i, k in enumerate(fx.get("kind", [])):
@@ -1669,7 +1818,8 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "9" if V4 else "8" if V3 else "7", "seed": str(m["seed"]),
+            "param.races": m["races"], "schema_version": "10" if V5 else "9" if V4 else "8" if V3 else "7",
+            "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows
 
@@ -1686,6 +1836,15 @@ def ddl_statements():
         out = [pe.SETTLEMENT_DDL_023 if s.startswith("CREATE TABLE settlement (") else s for s in out]
         have = {s.split(" ")[2] for s in out}
         out += [s for s in pe.DDL_023_NEW if s.split(" ")[2] not in have]
+        # schema 10 (P5-03 16.1) from the spec's text whether schema.md holds 9 or 10; schema 9 without them
+        new24 = {s.split(" ")[2] for s in pe.DDL_024_NEW}
+        old23 = {s.split(" ")[2]: s for s in pe.DDL_023_NEW}
+        if V5:
+            rep24 = {d.split(" ")[2]: d for d in pe.DDL_024_REPLACED.values()}
+            out = [rep24.get(s.split(" ")[2], s) for s in out]
+            out += [s for s in pe.DDL_024_NEW if s.split(" ")[2] not in {x.split(" ")[2] for x in out}]
+        else:
+            out = [old23.get(s.split(" ")[2], s) for s in out if s.split(" ")[2] not in new24]
     else:    # schema 8 or older once schema.md holds 9 (P5-02): no ending, none of the five tables
         new = {s.split(" ")[2] for s in pe.DDL_023_NEW}
         out = [s.replace(", ending INTEGER NOT NULL) STRICT", ") STRICT") if s.startswith("CREATE TABLE settlement (")
