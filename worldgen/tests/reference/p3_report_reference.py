@@ -2352,7 +2352,12 @@ def build_input(src, dst):
     import p1_regions_reference as p1r
     tmp = dst + ".tmp"
     shutil.copyfile(src, tmp)
-    p1r.rename_db(src, tmp)
+    sc = sqlite3.connect("file:%s?mode=ro" % src, uri=True)
+    src_version = dict(sc.execute("SELECT key, value FROM meta").fetchall()).get("generator_version")
+    sc.close()
+    if src_version != GENERATOR_VERSION:
+        # P5-03 integration: a source written by the C++ of this version already stores the current region names
+        p1r.rename_db(src, tmp)
     use_version(GENERATOR_VERSION)   # rename_db serves p1_regions_reference's version of the data (0.22.0)
     conn = pchr.open_world(tmp)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
