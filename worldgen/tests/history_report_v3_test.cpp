@@ -195,8 +195,8 @@ TEST_CASE("P3-07 r21 26.5 item 2: the four [stats] keys at full, 17 summary keys
     const auto full = hrtest::stats_list(text(HistoryLevel::full));
     std::vector<std::string> tail;
     // P5-02 12.6 (v4): the seventeen keys of 12.6 follow; the four of r21 26.5 come right before them; P5-03 17.4
-    // (v5): eighteen more after those
-    for (std::size_t i = full.size() - 4 - 17 - 18; i < full.size() - 17 - 18; ++i) tail.push_back(full[i].first);
+    // (v5): eighteen more after those; P5-03a 9.6 (v6): two more
+    for (std::size_t i = full.size() - 4 - 17 - 18 - 2; i < full.size() - 17 - 18 - 2; ++i) tail.push_back(full[i].first);
     CHECK(tail == std::vector<std::string>{"region_names", "regions_renamed", "refuges", "refuges_hidden"});
     const auto st = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(st.at("region_names") == 3);
@@ -306,9 +306,10 @@ TEST_CASE("P3-07 r22 26.4, 26.2: a claim note names a region renamed after the d
         CHECK(contains_line(present, "  rg3: The Grey Downs since 1800, e1022; formerly Bel Downs"));
     }
     CHECK(contains_line(block(full, "[present]"), "  rg3 The Grey Downs: The Kingdom of Bel (c2) since 801"));
-    // P5-03 17 (format v5, generator 0.24.0): the reference's text of the same world at v5
-    CHECK(hrtest::sha_hex(summary) == "4908c76ceccfad6980ea108f36cf7c29e949f38c4d11413d0202706c5553fc08");
-    CHECK(hrtest::sha_hex(full) == "b41c57515922f80e0e7a6321c22865a3807ab982bbd1bbdfc24e569a658cea82");
+    // P5-03a 9 (format v6, generator 0.25.0): the reference's text of the same world at v6 (p3_report_reference.py
+    // fixture h12-v3, these statements, report; at --version 0.24.0 it gives v5's 4908c76c... and b41c5751...)
+    CHECK(hrtest::sha_hex(summary) == "ad99363d32bcdcc1009311a5f810dbb7b20220a2a6ec0037702e4ab50ad29792");
+    CHECK(hrtest::sha_hex(full) == "6f8412766c9a93c22bf3f717d6d13e316e7889aaedc6ffc7adfe99348519b5e2");
 }
 
 }  // TEST_SUITE

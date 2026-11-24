@@ -427,8 +427,14 @@ class Browser:
                 d.population[cid]))])
         else:
             o.append([lit("  fate: ended in %d, " % c[8]), evs(c[9]), lit(": "), sen(c[9])])
-        o.append([lit("  milestones:")])
-        for x in prr.milestones(w, cid, prr.MILESTONES_ENDED if short else prr.MILESTONES):
+        ms = prr.milestones(w, cid, prr.MILESTONES_ENDED if short else prr.MILESTONES)
+        if prr.V6 and level == "summary":   # P5-03a 9.2 (report v6): the full list's count, then its quiet stretches
+            full_ms = prr.milestones(w, cid, prr.MILESTONES)
+            o.append([lit("  milestones: %d" % len(full_ms))])
+            ms = [x for x in full_ms if w.ev[x][3] == w.K["quiet_stretch"]]
+        else:
+            o.append([lit("  milestones:")])
+        for x in ms:
             e = w.ev[x]
             line = [lit("    %s " % prr.span(e)), evs(x), lit(" "), txt(w.kind_key[e[3]]), lit(": "), sen(x)]
             nt = prr.note(w, x, cid)
@@ -466,7 +472,7 @@ class Browser:
             last = max((w.E - 1) if x[6] is None else x[6] for x in wars)
             out.append([lit("    "), ent(o_[0], o_[1]), lit(": %s, won %d, lost %d, drawn %d, open %d, %d-%d; now %s" % (
                 prr.pl(len(wars), "war"), cnt["won"], cnt["lost"], cnt["drawn"], cnt["open"], first, last, state))])
-        if no_war[0]:
+        if no_war[0] and not prr.V6:   # P5-03a 9.2: no "without war" line at v6
             out.append([lit("    without war: %d (enmity %d, none %d)" % (no_war[0], no_war[1],
                                                                           no_war[0] - no_war[1]))])
         return out

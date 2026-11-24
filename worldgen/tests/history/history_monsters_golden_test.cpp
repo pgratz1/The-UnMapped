@@ -447,8 +447,10 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
     // every kind appears and every event kind but beasts_bold is written over the monsters-small fixtures; at
     // 0.24.0 (P5-03 14.2: the slaughter that raises the dead scales with the pressure) no host rises on them, so
     // the undead and undead_rose are witnessed by the world cases instead (geo-seed-1-1024's m5, hist-conflict-73-
-    // 1024's m6 and three more)
-    CHECK(monsters_golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "wyvern"});
+    // 1024's m6 and three more); at 0.25.0 (P5-03a 6: the threshold follows the world's population) a host rises
+    // on the monsters-small fixtures too
+    CHECK(monsters_golden().kinds_seen ==
+          std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
     CHECK(monsters_golden().events_seen.size() >= 10U);
     std::size_t undead = 0;
     for (const MCase& c : monsters_golden().cases) {

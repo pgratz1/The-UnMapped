@@ -53,7 +53,7 @@ TEST_CASE("P3-01 8.3 test 9: the spec listings with the shipped geography data h
 }
 
 TEST_CASE("P3-01 2, 6.3, 7: generator version and schema version (0.23.0 since P5-02; schema 9 since P5-02)") {
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.24.0");  // P5-03
-    CHECK(std::string(worldgen::generator_version()) == "0.24.0");  // P5-03
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.25.0");  // P5-03; P5-03a
+    CHECK(std::string(worldgen::generator_version()) == "0.25.0");  // P5-03; P5-03a
     CHECK(worldgen::db::SCHEMA_VERSION == 10);  // P5-02 11.1 (8 at P5-12: table region_name)
 }

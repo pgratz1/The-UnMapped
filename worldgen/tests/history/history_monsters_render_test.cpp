@@ -288,16 +288,23 @@ TEST_CASE("P5-02 10.2, 10.3: the sentence of every new kind (names of types 8 an
     CHECK(at("47b") == "Saelith the Black sank into sleep in the Lair of Saelith.");
     // P5-03 9.5 (0.24.0): the raid phrase ((event id - 1) mod 3) of the troll's raid_phrases; 48a, b, c are three
     // consecutive events
-    CHECK(at("48a") == "Old Grakh fell upon Drutnot Hole; no one died.");
-    CHECK(at("48b") == "Old Grakh prowled the edges of Drutnot Hole; one died.");
-    CHECK(at("48c") == "Old Grakh came down by night on Drutnot Hole; 41 died.");
+    // consecutive events (their ids follow the base world's events, so the phrase is chosen by id here)
+    // (the troll's raid_phrases in game/data/monsters/troll.toml order)
+    const std::vector<std::string> raid = {"came down by night on", "fell upon", "prowled the edges of"};
+    const auto phrase = [&](const char* label) {
+        return raid[static_cast<std::size_t>((s.ev.at(label) - 1) % 3)];
+    };
+    CHECK(at("48a") == "Old Grakh " + phrase("48a") + " Drutnot Hole; no one died.");
+    CHECK(at("48b") == "Old Grakh " + phrase("48b") + " Drutnot Hole; one died.");
+    CHECK(at("48c") == "Old Grakh " + phrase("48c") + " Drutnot Hole; 41 died.");
     CHECK(at("49") == "The Host of Edric drove the people from Nutskrank and made it " + its.at(5) + " lair; 41 escaped.");
     CHECK(at("50") == "The Stinrild League hunted down and slew Saelith the Black, a dragon of the old world, in King's "
                       "Fold.");
     CHECK(at("51") == "The Snat Horde drove Old Grakh back to its lair in King's Fold.");
     CHECK(at("52") == "Uguurz the Glutton, an ogre, died of great age in King's Fold.");
     // P5-03 13 (0.24.0): kind 53's template with the wolves' bold phrase ((event id - 1) mod 2)
-    CHECK(at("53") == "In King's Fold the wolves hunted the roads from Drutnot Hole; three died.");
+    const std::string bold = (s.ev.at("53") - 1) % 2 == 0 ? "hunted the roads from" : "grew bold and stalked the herds of";
+    CHECK(at("53") == "In King's Fold the wolves " + bold + " Drutnot Hole; three died.");
     CHECK(at("54") == "The Snat Horde raised Snat Watch in King's Fold against the Stinrild League.");
     CHECK(at("55a") == "The Snat Horde abandoned Snat Watch, the frontier having fallen quiet.");
     CHECK(at("55b") == "The Snat Horde abandoned Snat Watch, the land being lost.");

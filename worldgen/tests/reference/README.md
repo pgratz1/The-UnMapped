@@ -1764,9 +1764,53 @@ report behind `V6`. Phase 1 records no golden.
   line, the summary's ruins (9.3), `[peoples]` (9.4), the mixed candidates (9.5, `SUMMARY_MIXED_MAX` 3), the two
   stats (9.6), fixture H15 (`h15-v6`, written by `p5_03a_h15_fixture.py`) with `check_fixture_facts_v6`.
 
-Phase 2 (integration) still has to: regenerate the inputs at 0.25.0 and record every golden of 14 from these
-references; bring `p4_timeline_reference.py`, `p4_markers_reference.py` and `p4_browser_reference.py` to 0.25.0
-(they still name 0.24.0).
+### 0.25.0, phase 2 (integration with the engineer's branch)
+
+Merged with `origin/p5/03a-impl` (81f15d6, then c5b68ff: the audit's A1, `word_since` reset for a pair with a race
+without an alive realm, which moves none of the cases below) and `origin/main`. The calibrated values are in the
+one place of each listing: `meet_sealed_hops` 5 and `meet_sealed_years` 150 in `RELATIONS_NEW_RANGES_025`,
+`history.conflict.border_friction` 300 in `CONFLICT_CHANGED_025` (`p3_data_reference.py`); the C++ listing
+`p3_01_history_data.hpp` is regenerated from `SPEC_FILES_025` (each raw string that equalled its 0.24.0 file
+replaced by the 0.25.0 one: report, monsters, relations, conflict) and `history/p5_03a_relations_data.hpp` holds the
+same values. `p3_engine_reference.py` now serves 0.25.0 by default (it still served 0.24.0 standalone, so the engine
+and peoples goldens of phase 1's command list would not have moved); `--version 0.24.0` reproduces the committed
+0.24.0 `p3-04-engine.txt` and `p3-05-peoples.txt` byte for byte.
+
+- `p5_12_renaming_reference.py`: the engineer's fix as ruled by the lead: a host named for its place has no root,
+  so the event gives no `{name}`; the forms with `{name}` or `{stem}` cannot be chosen and, when none fits, the rule
+  does not rename (behind the conflict flag `p503a`).
+- `p3_report_reference.py`: `DEFAULT_INPUTS_025` (`~/.cache/the-unmapped/out/p5-03a-int/report-inputs`).
+- `p4_timeline_reference.py`: rule set `p5-03a` (default; no timeline rule changes, the 0.25.0 inputs);
+  `--rules p5-03` keeps the 0.24.0 file. `p4_markers_reference.py` and `p4_browser_reference.py`: 0.25.0 by default
+  (no rule or group change; the browser's groups are those of reading B13), `--version 0.24.0` keeps P5-03's file.
+
+C++ worlds of 0.25.0 equal the references table for table (`p3_conflict_reference.py check-world`, every history
+table) on geo-seed-0-512, geo-seed-42-512, geo-phrase-512, hist-span-2000-512, geo-seed-1-1024, hist-dense-1024,
+hist-races-elf-orc-1024, p5-monsters-high-1024, civs4-seed-0-1024, seed-0-1024 and seed 5 at 1024
+`--monster-pressure high`; `p5_03_relations_reference.py`, `p5_12_renaming_reference.py` and
+`p5_02_monsters_reference.py check-world` find no problem on them; `build-inputs` gives the C++ tables of all
+thirteen report cases, and `p3_report_reference.py compare` finds the C++ reports equal at both levels on all of them.
+
+Report inputs: generated with the C++ of this branch (the thirteen `WORLD_CASES`) into
+`~/.cache/the-unmapped/out/p5-03a-int/report-src`, then `build-inputs report-src report-inputs`, with the C++ history
+reports (`<case>.history.summary.txt`, `.full.txt`) written beside them for the markers check. Goldens recorded with
+P5-03's phase 2 command list (`I=~/.cache/the-unmapped/out/p5-02-tests/inputs`, report inputs as above):
+`p3-01-data.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt` (it hashes the catalogue rows), `p3-06-conflict.txt`,
+`p5-12-renaming.txt`, `p5-02-monsters.txt`, `p5-03-relations.txt`, `p3-07-report.txt`, `p4-01-timeline.txt`,
+`p4-04-markers.txt`, `p4-05-browser.txt`. Not moved: `p3-02-names.txt`, `core_vectors.txt`, `p1-*`,
+`p3-03-chronology.txt`.
+
+Test-side fixes at integration: the expulsion check of `p5_03_relations_checks.hpp` takes 6.3.4's drift at a phase
+start of the expulsion's year off the last row's share (relations-small seed 7: the share was above
+`expel_share_max` at the last row and drifted below it in T1 of the year, which the engineer read rightly); the
+monster-forms scene of `history_monsters_p503a_test.cpp` takes a second region the world never renamed; the raid
+and bold phrases of the P5-02 render scene are chosen by event id (the scene's ids follow the base world's events);
+summary milestones read at full where a test named them (v6 9.2); `report_event.template` is `string(1024)` (lead's
+ruling). Fixture H15 (`p5_03a_h15_fixture.py`) was refused by the C++ reader, which phase 1 could not run: its event
+ids now ascend with the year (renumbered by year and order of writing: the elf-goblin meeting is e25, the expulsion
+e47, the longer quiet stretch e48; `check_fixture_facts_v6` and the C++ tests follow), and a settlement that never
+changed hands has its end population in its one census row. `p4_browser_reference.py`'s summary block follows
+v6 9.2 (the milestone count, no `without war` line), which phase 1 had left at v5.
 
 ## P3-07 history report
 

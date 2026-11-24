@@ -132,6 +132,32 @@ for i in range(16):
                         parts=[("settlement", sid), ("civilization", 3)], values=[0], causes=[founds[sid]]))
 assert len(RUIN) == 17
 
+# Event ids ascend with the year (the report's reader refuses an event whose year is below the previous one's,
+# P3-07 14.2): renumber by (year, order of writing), which keeps every cause before its event. (Integration of
+# P5-03a: phase 1 wrote the ids in the order above, so the C++ reader refused the fixture.)
+_order = sorted(ev, key=lambda e: (e["year"], e["id"]))
+_NEW = {e["id"]: i for i, e in enumerate(_order, 1)}
+for e in _order:
+    e["id"] = _NEW[e["id"]]
+    e["causes"] = sorted(_NEW[c] for c in e["causes"])
+    assert all(c < e["id"] for c in e["causes"])
+ev[:] = _order
+
+
+def N(x):
+    return _NEW[x]
+
+
+aw = {k: N(v) for k, v in aw.items()}
+civf = {k: N(v) for k, v in civf.items()}
+cap = {k: N(v) for k, v in cap.items()}
+founds = {k: N(v) for k, v in founds.items()}
+STL = {k: (a, b, c, d, N(f)) for k, (a, b, c, d, f) in STL.items()}
+RUIN = {k: (y, N(x)) for k, (y, x) in RUIN.items()}
+(met_eg, war, cap5, mix5, turn1, cap6, mix6, peace, met_dg, plg, ab8, arr, mix3, q1, q2, exp5, turn2, war2, cap7,
+ mix7) = (N(x) for x in (met_eg, war, cap5, mix5, turn1, cap6, mix6, peace, met_dg, plg, ab8, arr, mix3, q1, q2, exp5,
+                         turn2, war2, cap7, mix7))
+
 # sizes of the goblin hamlets: distinct, not in founding order
 SIZE = {9 + i: 100 + 37 * ((5 * i + 3) % 16) for i in range(16)}
 SIZE[8] = 330
@@ -157,7 +183,9 @@ for sid in sorted(STL):
         kind = 3 if sid <= 4 else 2
         pop = {1: 2000, 2: 1500, 3: 1800, 4: 1600, 5: 400, 6: 500, 7: 600}[sid]
         stl_rows.append([sid, nm, 10 * sid, 10 * sid, reg, civ, y, fe, o, kind, 1, pop, -1, 0])
-        census.append([sid, y, civ, kind, 1, 300 if sid > 4 else 500])
+        # the last census row is the settlement's end state (the reader's rule, P3-07 14.2): a place that never
+        # changed hands is counted at its end population from its founding (integration: phase 1 wrote 500)
+        census.append([sid, y, civ, kind, 1, (300 if sid > 4 else 500) if o != civ else pop])
         if o != civ:
             cy = {5: 400, 6: 405, 7: 1300}[sid]
             census.append([sid, cy, o, kind, 1, pop])

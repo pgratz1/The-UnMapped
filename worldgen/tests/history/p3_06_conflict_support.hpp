@@ -599,7 +599,10 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK(at(r, 7) >= at(*x.cv.at(b), 7));
             CHECK(at(r, 5) >= x.year(at(r, 7)));
             if (sk != 58) {
-                CHECK(at(r, 5) == at(*x.cv.at(b), 6));
+                // the founding is the larger event; the row opens in the first step D <= enmity_max, which is the
+                // founding year unless D crossed enmity_max later within the band (band_margin; P5-03a's peace and
+                // credits move D without a turn: stress-14 at 0.25.0 opens rows 5 and 15 years after the founding)
+                CHECK(at(r, 5) >= at(*x.cv.at(b), 6));
                 CHECK(at(r, 7) == at(*x.cv.at(b), 7));
             }
             if (uk != 0) CHECK((uk == 18 || uk == k_civ_conquered));

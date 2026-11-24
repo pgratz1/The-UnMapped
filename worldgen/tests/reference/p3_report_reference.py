@@ -2425,7 +2425,8 @@ def check_budget_r1(c):
 
 
 def check_fixture_facts_v6(c):
-    """H15 (P5-03a 14 item 11), hand-checked; the C++ tests spell out the same lines."""
+    """H15 (P5-03a 14 item 11), hand-checked; the C++ tests spell out the same lines. Event ids as renumbered by
+    year at integration (the meeting e25, the expulsion e47, the longer quiet stretch e48)."""
     w = load_world(fixture_db("h15-v6"))
     s = report(w, "summary").decode("ascii").split("\n")
     f = report(w, "full").decode("ascii").split("\n")
@@ -2439,13 +2440,13 @@ def check_fixture_facts_v6(c):
     pf = block(f, "[peoples]", "[stats]")
     c.eq("H15 9.4 [peoples] at summary", ps, [
         "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
-        "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+        "  Elves and Goblins: wariness -430, met 310 e25, turned 1200 e49 from hatred",
         "  the Humans met no other people", "  never met: Elves and Dwarves",
         "mixed: 3 settlements at E; refugees: 1 arrival, 30 people; expelled: 1 time, 340 people"])
     c.eq("H15 9.4 [peoples] at full", pf, [
         "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
         "  Elves and Dwarves: never met",
-        "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+        "  Elves and Goblins: wariness -430, met 310 e25, turned 1200 e49 from hatred",
         "  Elves and Humans: never met", "  Dwarves and Goblins: hatred -640, met 600 e41 by word",
         "  Dwarves and Humans: never met", "  Goblins and Humans: never met",
         "  the Humans met no other people", "  never met: Elves and Dwarves",
@@ -2455,7 +2456,7 @@ def check_fixture_facts_v6(c):
         "  s7 Duldar (The Krurz Horde (c3)): Goblins 100 ruling; Dwarves 900 subject"])
     c3 = block(s, "c3 The Krurz Horde", "c4 ")
     c.eq("H15 9.2 the milestones count and the one quiet stretch at summary", c3[c3.index("  milestones: 8"):], [
-        "  milestones: 8", "    1000-1299 e47 quiet_stretch: For 300 years, from 1000 to 1299, the land was quiet; "
+        "  milestones: 8", "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was quiet; "
                            "one realm held it. (The Krurz Horde: 15 new generations of rulers.)"])
     c.eq("H15 9.2 full keeps the list", [x for x in f if x.startswith("  milestones")],
          ["  milestones:"] * 4)
@@ -2476,7 +2477,7 @@ def check_fixture_facts_v6(c):
     c.eq("H15 9.6 [stats] appended", (st, f[-3:-1]), (["peoples_met_by_word = 1", "dispositions_warmed = 1"],
                                                        ["peoples_met_by_word = 1", "dispositions_warmed = 1"]))
     c.eq("H15 9.6 no new key at summary", [x for x in s if x.startswith("peoples_met_by_word")], [])
-    sents = {e: w.sentence(e) for e in (36, 41, 44, 45, 48, 49, 37)}
+    sents = {e: w.sentence(e) for e in (36, 41, 44, 45, 47, 49, 37)}
     c.eq("H15 10.3 sentences", sents, {
         36: "After the conquest, in Fievos the Goblins ruled over the Elves, who outnumbered them.",
         37: "After the conquests, the Elves and the Goblins came to hate one another.",
@@ -2484,7 +2485,7 @@ def check_fixture_facts_v6(c):
         44: "After the plague and the abandonment of their home, 30 Dwarves from Duldum found shelter in Gorzhak, "
             "held as subjects by the Krurz Horde.",
         45: "After the coming of refugees, in Gorzhak the Goblins ruled over the Dwarves.",
-        48: "Hating the Elves, the Krurz Horde drove them out of Fievos, where it had held them as subjects for 500 "
+        47: "Hating the Elves, the Krurz Horde drove them out of Fievos, where it had held them as subjects for 500 "
             "years; 340 left.",
         49: "After long years of peace, the Elves and the Goblins grew wary of one another."})
 

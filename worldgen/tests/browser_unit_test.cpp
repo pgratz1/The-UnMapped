@@ -463,7 +463,9 @@ TEST_CASE("P4-05 10.2 item 3: T3's block lines (no capital, ended, seceded, an a
     CHECK_MESSAGE(*fate == linked("  fate: ended in 1800, e22: Stonehelm fell to the Kingdom of Arn.",
                                   {lk(23, 3, 0, 22), lk(28, 9, CIV, 3), lk(46, 18, CIV, 1)}),
                   link_list(*fate));
-    const LinkedText* m13 = line_starting(c3, "    1250 e13 ");
+    // P5-03a 9.2 (v6): the summary's milestones are a count, so the milestone is read in the full block
+    const std::vector<LinkedText> c3m = block(3, HistoryLevel::full);
+    const LinkedText* m13 = line_starting(c3m, "    1250 e13 ");
     REQUIRE(m13 != nullptr);
     CHECK_MESSAGE(*m13 == linked("    1250 e13 war_declared: Stonehelm declared war on the Kingdom of Arn over the "
                                  "Holt of Yews. (Claimed since 1200.)",
@@ -487,7 +489,8 @@ TEST_CASE("P4-05 10.2 item 3: T3's block lines (no capital, ended, seceded, an a
     }
 
     // segments (4.2): a note is " (" literal, text, ")" literal; the fate line has an event and a sentence segment
-    const auto seg3 = brapi::civilization_block(t3().h, t3().index.digest(), 3, HistoryLevel::summary);
+    // (the full block: at v6 the summary's milestones are a count, P5-03a 9.2)
+    const auto seg3 = brapi::civilization_block(t3().h, t3().index.digest(), 3, HistoryLevel::full);
     bool saw_note = false, saw_fate = false;
     for (const brapi::BlockLine& l : seg3) {
         const std::string text = brapi::block_line_report_text(t3().h, l);

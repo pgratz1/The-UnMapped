@@ -62,7 +62,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h11-v2",    // r19 25.13 item 11 (the spec's "H9 v2")
                                                "h12-v3",    // r21 26.8 item 9 (P5-12)
                                                "h13-v4",    // P5-02 19.1 item 15 (format v4, schema 9)
-                                               "h14-v5"};   // P5-03 24.1 item 11 (format v5, schema 10)
+                                               "h14-v5",    // P5-03 24.1 item 11 (format v5, schema 10)
+                                               "h15-v6"};   // P5-03a 14 item 11 (format v6, schema 10)
     return v;
 }
 

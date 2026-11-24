@@ -91,7 +91,8 @@ TEST_CASE("P3-07 4, 5.1: parse_history_level") {
 }
 
 TEST_CASE("P3-07 14.1 item 1: the trailing-space rule on a template ending in a space and on an empty sentence") {
-    const std::vector<std::string> c3 = civ_block(summary("h1-war-and-ruin"), 3);
+    // P5-03a 9.2 (v6): the summary's milestones are a count, so the milestone lines are read at full
+    const std::vector<std::string> c3 = civ_block(full("h1-war-and-ruin"), 3);
     CHECK(contains_line(c3, "    1900 e18 oath: Gutrot Clans swore an oath\\x20"));
     CHECK(contains_line(c3, "    1950 e19 silence:\\x20"));
     // in the chronicle the refs follow, so nothing is rewritten
@@ -170,19 +171,11 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  adversaries: 3",
               "    Gutrot Clans (c3): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2030; now at peace",
               "    The Skib Horde (c2): 1 war, won 1, lost 0, drawn 0, open 0, 2001-2010; now none",
-              "    without war: 1 (enmity 0, none 1)",
+              // P5-03a 9.2 (v6): no without-war line; the milestones as a count (the full block's eight) followed by
+              // the quiet stretches only
               "  events: 19",
               "  fate: alive in 3000: 3 regions, 3 settlements, population 1920",
-              "  milestones:",
-              "    0 e2 civ_founded: The Elves founded Finen in Elder Vale.",
-              "    0 e3 settlement_founded: Finen founded Voeledell in Elder Vale.",
-              "    2001 e22 war_declared: Finen declared war on the Skib Horde over Gr\\xC3\\xA9y \\\\ Moor. (Claimed "
-              "since 1999.)",
-              "    2003 e24 war_declared: Finen declared war on Gutrot Clans over the Ashen Fields. (Claimed since "
-              "2002.)",
-              "    2005 e27 settlement_captured: Finen took Redwall from the Skib Horde; three died.",
-              "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 fled.",
-              "    2010 e30 civ_conquered: The Skib Horde fell to Finen.",
+              "  milestones: 8",
               "    2050-2499 e33 quiet_stretch: For 450 years, from 2050 to 2499, the land was quiet, and two realms "
               "kept the peace. (Finen: one new generation of rulers.)"});
     // the relation rows stay at full in place of the adversary lines
@@ -209,11 +202,8 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  adversaries: 1",
               "    Finen (c1): 1 war, won 0, lost 1, drawn 0, open 0, 2001-2010; now none",
               "  fate: ended in 2010, e30: The Skib Horde fell to Finen.",
-              "  milestones:",
-              "    1500 e8 civ_founded: The Goblins founded the Skib Horde in Gr\\xC3\\xA9y \\\\ Moor.",
-              "    1500 e9 settlement_founded: The Skib Horde founded Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor.",
-              "    1510 e12 settlement_founded: The Skib Horde founded Redwall in Gr\\xC3\\xA9y \\\\ Moor.",
-              "    2010 e30 civ_conquered: The Skib Horde fell to Finen."});
+              // P5-03a 9.2 (v6): an ended realm's count is that of its full list (eight), no quiet stretch
+              "  milestones: 8"});
     // the same realm at full keeps 24.5's block (eight milestones)
     const std::vector<std::string> c2_full = civ_block(full("h1-war-and-ruin"), 2);
     CHECK(contains_line(c2_full, "  home: Gr\\xC3\\xA9y \\\\ Moor (rg3), grassland"));
@@ -239,15 +229,7 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "    Finen (c1): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2030; now at peace",
               "  events: 13",
               "  fate: alive in 3000: 1 region, 1 settlement, population 1000",
-              "  milestones:",
-              "    1500 e10 civ_founded: The Goblins founded Gutrot Clans in the Ashen Fields.",
-              "    1500 e11 settlement_founded: Gutrot Clans founded Ghashpit in the Ashen Fields.",
-              "    1600 e13 settlement_founded: Gutrot Clans founded Mossgate in Low Marsh.",
-              "    1600 e14 claim: Gutrot Clans laid claim to Low Marsh, held by Finen.",
-              "    1900 e18 oath: Gutrot Clans swore an oath\\x20",
-              "    1950 e19 silence:\\x20",
-              "    2003 e24 war_declared: Finen declared war on Gutrot Clans over the Ashen Fields. (Claimed since "
-              "2002.)",
+              "  milestones: 8",   // P5-03a 9.2 (v6)
               "    2050-2499 e33 quiet_stretch: For 450 years, from 2050 to 2499, the land was quiet, and two realms "
               "kept the peace. (Gutrot Clans: 18 new generations of rulers.)"});
     // the upland rule of 6.6 (4 x walk_cells < cells): Stone Teeth, 300 of 2000
@@ -413,8 +395,9 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                  "  settlements: 0 founded, 0 held at the end, 0 ruined, 0 faded",
                                  "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: none",
                                  "  events: 1", "  fate: alive in 2000: 0 regions, 0 settlements, population 0",
-                                 "  milestones:",
-                                 "    0 e2 civ_founded: The Humans founded the Kingdom of Alird in Northeast Downs."});
+                                 "  milestones: 1"});   // P5-03a 9.2 (v6): a count at summary
+    CHECK(contains_line(civ_block(full("h2-minimal"), 1),
+                        "    0 e2 civ_founded: The Humans founded the Kingdom of Alird in Northeast Downs."));
     CHECK(block(s, "[phases]").empty());
     CHECK(contains_line(civ_block(full("h2-minimal"), 1), "  relations: none"));
     CHECK(block(full("h2-minimal"), "[phases]") == std::vector<std::string>{"p1 a1 opening 0-149, 150 years; trigger e1; 2 events",

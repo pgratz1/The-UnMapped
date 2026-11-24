@@ -420,13 +420,13 @@ TEST_CASE("P5-03a 9.1, 9.4: H15 header and [peoples] at both levels (by word, fr
     CHECK(between(s, "[peoples]", "[stats]") ==
           std::vector<std::string>{
               "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
-              "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+              "  Elves and Goblins: wariness -430, met 310 e25, turned 1200 e49 from hatred",
               "  the Humans met no other people", "  never met: Elves and Dwarves",
               "mixed: 3 settlements at E; refugees: 1 arrival, 30 people; expelled: 1 time, 340 people"});
     CHECK(between(f, "[peoples]", "[stats]") ==
           std::vector<std::string>{
               "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0", "  Elves and Dwarves: never met",
-              "  Elves and Goblins: wariness -430, met 310 e33, turned 1200 e49 from hatred",
+              "  Elves and Goblins: wariness -430, met 310 e25, turned 1200 e49 from hatred",
               "  Elves and Humans: never met", "  Dwarves and Goblins: hatred -640, met 600 e41 by word",
               "  Dwarves and Humans: never met", "  Goblins and Humans: never met",
               "  the Humans met no other people", "  never met: Elves and Dwarves",
@@ -446,10 +446,10 @@ TEST_CASE("P5-03a 9.2: H15 milestones as a count with the quiet stretch at summa
     const std::vector<std::string> c3 = hrtest::civ_block(s, 3);
     const auto m = std::find(c3.begin(), c3.end(), "  milestones: 8");
     REQUIRE(m != c3.end());
-    // the two quiet stretches e46 (120 years) and e47 (300): the longer is the realm's one milestone of its kind
+    // the two quiet stretches e46 (120 years) and e48 (300; ids renumbered by year at integration): the longer is the realm's one milestone of its kind
     CHECK(std::vector<std::string>(m, c3.end()) ==
           std::vector<std::string>{"  milestones: 8",
-                                   "    1000-1299 e47 quiet_stretch: For 300 years, from 1000 to 1299, the land was "
+                                   "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was "
                                    "quiet; one realm held it. (The Krurz Horde: 15 new generations of rulers.)"});
     std::int64_t full_heads = 0, summary_heads = 0;
     for (const std::string& l : hrtest::lines_of(f)) full_heads += l == "  milestones:" ? 1 : 0;
@@ -529,11 +529,11 @@ TEST_CASE("P5-03a 10.3: H15's sentences of the rewritten templates (3.5, 4.2, 5.
     CHECK(sentence(36) == "After the conquest, in Fievos the Goblins ruled over the Elves, who outnumbered them.");
     CHECK(sentence(37) == "After the conquests, the Elves and the Goblins came to hate one another.");
     CHECK(sentence(41) == "The Dwarves first had word of the Goblins in Gor Heath, and hated them from the first.");
-    CHECK(sentence(33) == "The Elves first met the Goblins in Gor Heath, and were wary of them.");
+    CHECK(sentence(25) == "The Elves first met the Goblins in Gor Heath, and were wary of them.");
     CHECK(sentence(44) == "After the plague and the abandonment of their home, 30 Dwarves from Duldum found shelter in "
                           "Gorzhak, held as subjects by the Krurz Horde.");
     CHECK(sentence(45) == "After the coming of refugees, in Gorzhak the Goblins ruled over the Dwarves.");
-    CHECK(sentence(48) == "Hating the Elves, the Krurz Horde drove them out of Fievos, where it had held them as subjects "
+    CHECK(sentence(47) == "Hating the Elves, the Krurz Horde drove them out of Fievos, where it had held them as subjects "
                           "for 500 years; 340 left.");
     CHECK(sentence(49) == "After long years of peace, the Elves and the Goblins grew wary of one another.");
 }

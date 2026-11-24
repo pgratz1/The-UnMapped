@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -64,8 +65,12 @@ const Scene& scene() {
         const auto st = chrono_test::rows_of(base, "settlement");
         const std::int64_t R = st.at(0).at(4).integer;
         std::int64_t R2 = 0, x2 = 0, y2 = 0;
+        // R2 is a region the world never renamed (the scene's own renaming is then its only region_name row; at
+        // 0.25.0 the first other region of seed 42 has a renaming whose event would lose its row)
+        std::set<std::int64_t> renamed;
+        for (const auto& row : chrono_test::rows_of(base, "region_name")) renamed.insert(row.at(0).integer);
         for (const auto& row : st) {
-            if (row.at(4).integer != R && R2 == 0) {
+            if (row.at(4).integer != R && R2 == 0 && renamed.count(row.at(4).integer) == 0U) {
                 R2 = row.at(4).integer;
                 x2 = row.at(2).integer;
                 y2 = row.at(3).integer;
@@ -146,7 +151,10 @@ const Scene& scene() {
         add("driven-old", "monster_driven_off", R2, 0, {{1, 8, m3}, {2, 3, 1}}, {}, {s.ev["raid"]});
         add("died-new", "monster_died", R2, 0, {{1, 8, m4}}, {}, {s.ev["born-dead-new-name"]});
         add("slain-wyvern", "monster_slain", R, 0, {{1, 8, m5}, {2, 3, 2}}, {12}, {s.ev["raid"]});
-        add("overrun", "settlement_overrun", R, 1, {{1, 8, m6}, {2, 3, 1}, {3, 9, s0 + 6}}, {41}, {s.ev["raid"]});
+        // the overrun's lair is a site of its own, opened by the overrun (the reader's origin rule; P5-02 8.3)
+        add("overrun", "settlement_overrun", R, 1, {{1, 8, m6}, {2, 3, 1}, {3, 9, s0 + 7}}, {41}, {s.ev["raid"]});
+        sql += "INSERT INTO site VALUES (" + n(s0 + 7) + ", 'Grakh''s Hold', 1, " + n(R) + ", " + n(x1) + ", " +
+               n(y1) + ", 1, 0, " + n(m6) + ", " + n(Y) + ", " + n(s.ev["overrun"]) + ", NULL, 0, 0);";
         // monster rows: id, name, kind, lair_site, born, born_event, died, death_event, slain_by, status, hoard
         auto mrow = [&](std::int64_t mid, const M& m, const std::string& death, std::int64_t slayer, std::int64_t status) {
             const std::int64_t sid = s0 + (mid - m0);

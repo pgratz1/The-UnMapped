@@ -133,13 +133,15 @@ TEST_CASE("P5-02 12.6: the [stats] keys appended at the end, full only; the summ
         {"monster_raids", 2},   {"monster_killed", 130},     {"settlements_overrun", 1}, {"undead_risen", 0},
         {"outposts", 2},        {"outposts_open", 1},        {"beasts_bold", 1},       {"settlements_left", 3},
         {"regions_shunned", 1}};
-    // P5-03 17.4 (v5): eighteen keys appended after these
-    const std::ptrdiff_t p503 = 18;
-    REQUIRE(st.size() >= want.size() + 18U);
+    // P5-03 17.4 (v5): eighteen keys appended after these; P5-03a 9.6 (v6): two more after those
+    const std::ptrdiff_t p503 = 18 + 2;
+    REQUIRE(st.size() >= want.size() + 20U);
     CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - p503 - static_cast<std::ptrdiff_t>(want.size()),
                                                             st.end() - p503) == want);
-    CHECK(st[st.size() - 18U].first == "race_relations");
-    CHECK(st.back().first == "ruins_oldest_year");
+    CHECK(st[st.size() - 20U].first == "race_relations");
+    CHECK(st[st.size() - 3U].first == "ruins_oldest_year");
+    CHECK(st[st.size() - 2U].first == "peoples_met_by_word");
+    CHECK(st.back().first == "dispositions_warmed");
     const auto m = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(m.at("events_monster_appeared") == 2);
     CHECK(m.at("events_outpost_abandoned") == 1);

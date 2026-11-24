@@ -216,7 +216,7 @@ TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awa
     // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
     // geo.regions.name after geo.regions.cost; P3-06 r10 20.17 (0.18.0) hist.conflict.search; r22 24.5 (0.21.0)
     // hist.conflict.toll
-    REQUIRE(names.size() == 76U);   // P5-12 3 (0.22.0): the two hist.renaming streams; P5-02 3 sixteen (0.23.0)
+    REQUIRE(names.size() == 77U);   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-12 3 (0.22.0): the two hist.renaming streams; P5-02 3 sixteen (0.23.0)
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;

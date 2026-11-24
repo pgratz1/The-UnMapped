@@ -4052,7 +4052,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.24.0")
+use_version("0.25.0")   # P5-03a (generator 0.25.0); --version 0.24.0 serves the P5-03 file
 
 
 def main(argv):
