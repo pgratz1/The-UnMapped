@@ -358,7 +358,7 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     // P3-02 r15 14.3 (P3-11, generator 0.20.0): slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
     // P3-02 r17 15.1 (P5-01, generator 0.21.0): slurs 33 / 17 / 5, crude 71 / 12 / 15, famous 0 / 0 / 103 (15.1
     // writes 105; 101 + shiva + hindi is 103)
-    const std::vector<std::array<std::size_t, 3>> sizes = {{71, 12, 15}, {0, 0, 103}, {33, 17, 5}, {5, 1, 391}};
+    const std::vector<std::array<std::size_t, 3>> sizes = {{71, 12, 15}, {0, 0, 103}, {33, 17, 5}, {5, 1, 392}};   // P5-03 12.3: bird
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;

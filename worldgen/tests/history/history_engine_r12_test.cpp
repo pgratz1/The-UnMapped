@@ -302,9 +302,10 @@ TEST_CASE("P3-04 r12 20.3, 20.6 item 3: thousands separators in {value} and #; n
     cases.push_back({"{@year}", {}, 0});
     cases.push_back({"{n?one|many}", {}, 1000});
     const std::vector<std::string> got = render_c("separators.db", cases);
+    // P5-03 lead ruling 1 (0.24.0): a first byte a to z is capitalised
     const std::vector<std::string> want = {"0", "999", "1,000", "1,155", "25,000", "1,000,000", "-1,000", "-999",
-                                           "52,691", "zero", "999 x", "1,000 x", "1,155 x", "25,000 x",
-                                           "1,000,000 x", "-1,000 x", "-999 x", "52,691 x", "5999", "many"};
+                                           "52,691", "Zero", "999 x", "1,000 x", "1,155 x", "25,000 x",
+                                           "1,000,000 x", "-1,000 x", "-999 x", "52,691 x", "5999", "Many"};
     CHECK(got == want);
 }
 

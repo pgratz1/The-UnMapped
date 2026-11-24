@@ -88,12 +88,15 @@ TEST_CASE("P3-05 8.5, 8.6, 10.3, 14: the stress cases equal the reference and re
         }
     }
     CHECK(n == 10U);
+    // P5-03 11.2 (0.24.0): a ruin left standing (no sack in the peoples-only configuration) never fades with the
+    // shipped ghost_fade_years 0, so ruin_faded is no longer among the kinds every stress set writes
     for (const std::int64_t k : {std::int64_t{k_settlement_abandoned}, std::int64_t{k_capital_moved},
-                                 std::int64_t{k_civ_ended}, std::int64_t{k_ruin_faded}, std::int64_t{k_civ_seceded},
+                                 std::int64_t{k_civ_ended}, std::int64_t{k_civ_seceded},
                                  std::int64_t{k_settlement_dwindled}, std::int64_t{k_plague_spread}}) {
         CAPTURE(k);
         CHECK(kinds[k] > 0);
     }
+    CHECK(kinds[k_ruin_faded] == 0);
 }
 
 TEST_CASE("P3-05 14 item 9, 9.2: a quiet step of 25 years equals 25 tick years without pressures") {

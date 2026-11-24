@@ -255,9 +255,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 55U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 62U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 55U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 62U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -316,8 +316,12 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
         "hist.monsters.raid", "hist.monsters.raid_toll", "hist.monsters.overrun", "hist.monsters.hunt",
         "hist.monsters.hunt_outcome", "hist.monsters.lair_name", "hist.sites.outpost", "hist.peoples.ghost",
         "hist.names.monster", "hist.names.site", "hist.monsters.raid_target"};
-    REQUIRE(at + 9 + p502.size() == names.size() - 1);
+    // P5-03 3 (generator 0.24.0): four more after hist.monsters.raid_target, in this order
+    const std::vector<std::string_view> p503 = {"hist.beasts.bold_kind", "hist.monsters.fear",
+                                                "hist.peoples.abandon_loss", "hist.relations.expel"};
+    REQUIRE(at + 9 + p502.size() + p503.size() == names.size() - 1);
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
+    for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
 }
 
 }  // TEST_SUITE

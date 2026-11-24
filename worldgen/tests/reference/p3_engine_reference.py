@@ -621,8 +621,8 @@ def placeholder_problem(kind, body, at):
                     else "{@settlement} needs a kind with a settlement at byte %d" % at)
         if RENDER_R23 and body == "@beast":   # P5-02 10.3
             return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
-        if RENDER_R24 and body == "@beast:bold":   # P5-03 13: template_problem as {@beast}'s
-            return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
+        if RENDER_R24 and body == "@beast:bold":   # P5-03 13: template_problem as {@beast}'s, naming itself (built)
+            return None if "beast" in values else "{@beast:bold} needs a kind with a value 'beast' at byte %d" % at
         return unknown
     if "?" in body:
         v, rest = body.split("?", 1)
@@ -2492,6 +2492,31 @@ REPORT_CHECK_CASE = (
 # ---------------------------------------------------------------------------
 
 Checker = pchr.Checker
+
+
+def _cap(x):
+    if isinstance(x, str) and x and "a" <= x[0] <= "z":
+        return x[0].upper() + x[1:]
+    if isinstance(x, list):
+        return [_cap(y) for y in x]
+    return x
+
+
+class CapChecker:
+    """P5-03 lead ruling 1 (0.24.0): the render checks of earlier revisions, written before a rendered sentence
+    starting with a to z was capitalised, compare against their want with its first byte capitalised when that is
+    exactly the difference (the rule itself is checked in check_render_r24)."""
+
+    def __init__(self, c):
+        self._c = c
+
+    def eq(self, label, got, want):
+        if RENDER_R24 and got != want and got == _cap(want):
+            want = _cap(want)
+        return self._c.eq(label, got, want)
+
+    def __getattr__(self, name):
+        return getattr(self._c, name)
 expect_fatal = pchr.expect_fatal
 
 
@@ -2813,6 +2838,7 @@ def check_render_r10(c):
     """P3-04 16.1 item 10 (r10) in the reference: the three-word form and
     names inside a sentence, on hand-made views (the examples of 8.5 and of
     P1-06 r3 14.7)."""
+    c = CapChecker(c)
     names = {}
 
     def view_of(kind_key, templ, parts, values=None, region=0, settlement=0, kind=None):
@@ -2957,6 +2983,7 @@ def r21_view(rows, events, geo=None):
 def check_render_r24(c):
     """P5-03 24.1 item 9 in the reference: the form raid, {@beast:bold}, the four-word choice on the shipped
     templates of kinds 48, 53, 56 to 62, with hand-made views (phrase number (id - 1) mod n)."""
+    c = CapChecker(c)
     shipped = {k["key"]: k for k in event_catalogue(spec_report())}
     names = {(MONSTER, 3): "The Brood of Skarr", (SETTLEMENT, 4): "Nub Pit", (SETTLEMENT, 5): "Ashford",
              (SETTLEMENT, 6): "Kazad Rune", (CIV, 1): "The Hold of Durn", (CIV, 2): "The House of Aelin",
@@ -2996,9 +3023,13 @@ def check_render_r24(c):
     v = view(9, "beasts_bold", 7, 4, ((1, 1, SETTLEMENT, 4), (2, 2, CIV, 1)), (3, 0))
     c.eq("13 one phrase, no one died", render(v, 9), "In the Grey Fells the wolves strayed into the fields of Nub Pit; "
                                                     "no one died.")
+    # lead ruling 1 (integration): a rendered sentence whose first byte is a to z is capitalised; one starting
+    # otherwise is unchanged
+    c._c.eq("ruling 1: a leading a to z capitalised", render(view(9, "beasts_bold", 7, 4, ((1, 1, SETTLEMENT, 4),
+                                                                                         (2, 2, CIV, 1)), (3, 0)), 9)[0], "I")
     c.eq("13 template_problem of {@beast:bold} without a beast value",
          template_problem(shipped["monster_raid"], "The {@beast:bold} came."),
-         "{@beast} needs a kind with a value 'beast' at byte 4")
+         "{@beast:bold} needs a kind with a value 'beast' at byte 4")
     # 8.2: refugees_arrived's four-word standing, the samples of 8.2
     for st, word in ((0, "held as subjects by"), (1, "tolerated by"), (2, "welcomed by"), (3, "among their own kin of"),
                      (7, "among their own kin of")):
@@ -3087,6 +3118,7 @@ def check_render_r21(c):
 
 def check_render_r19(c):
     """P3-04 r19 22.4 items 1 and 2 in the reference, on hand-made views and the shipped report data."""
+    c = CapChecker(c)
     view, shipped = r19_view_maker()
     for key, vals, want in R19_TABLE:
         got = render(view(key, None, R19_PARTS[key], vals, end_year=687), 100)
@@ -3245,6 +3277,7 @@ def _engine_tuning_problem(eng):
 
 def check_render_r17(c):
     """P3-04 r17 21.3 items 1 to 3 in the reference, on hand-made views and the shipped report data."""
+    c = CapChecker(c)
     names = {(SETTLEMENT, 1): "Drutnot Hole", (SETTLEMENT, 2): "Nutskrank", (SETTLEMENT, 3): "The Grey Fort",
              (CIV, 1): "The Snat Horde", (CIV, 2): "The Stinrild League", (REGION, 7): "King's Fold",
              (CIV, 3): "Clan Durgarin"}
@@ -3338,6 +3371,7 @@ def check_render_r17(c):
 
 def check_render_r12(c):
     """P3-04 r12 20.6 items 2 and 3 in the reference, on hand-made views: {@causes:...} and separators."""
+    c = CapChecker(c)
     names = {(SETTLEMENT, 1): "Glathenddell", (CIV, 1): "The Warrens of Zeez", (CIV, 2): "Clan Durgarin"}
 
     def nm(t, x, form):

@@ -187,9 +187,9 @@ void check_golden_world(const Sandbox& sb, const std::string& name, const std::v
     CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
                                              "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
-                                             "race_biome", "region", "region_biome", "region_border",
+                                             "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
-                                             "settlement_census", "site"});
+                                             "settlement_census", "settlement_race", "site"});
     for (const std::string& want : golden_table_lines(name)) {
         CAPTURE(want);
         CHECK(contains(detail, "\n" + want + "\n"));

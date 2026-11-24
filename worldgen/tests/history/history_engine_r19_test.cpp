@@ -222,11 +222,12 @@ TEST_CASE("P3-04 r19 22.1, 22.4 item 1: one number per clause as 21.1; the claus
         {"In {@year} {a} fell", {3, 0}},                // a year is no number
     };
     for (const auto& [t, v] : cases) evs.push_back(two(t, v.first, v.second));
+    // P5-03 lead ruling 1 (0.24.0): a first byte a to z is capitalised
     const std::vector<std::string> want = {
-        "0 souls", "one souls", "nine souls", "10 souls", "1,000 souls", "-3 souls",
-        "2 and 10", "2 and 0", "two and three", "two, 10", "two; 10", "2,10", "2;10", "two and three;", "2; 10",
-        "2, 10", "2 and 10", "four and four; 10", "12 fell and 3", "single and 10", "none and three",
-        "many and three", "In 5999 three fell"};
+        "0 souls", "One souls", "Nine souls", "10 souls", "1,000 souls", "-3 souls",
+        "2 and 10", "2 and 0", "Two and three", "Two, 10", "Two; 10", "2,10", "2;10", "Two and three;", "2; 10",
+        "2, 10", "2 and 10", "Four and four; 10", "12 fell and 3", "Single and 10", "None and three",
+        "Many and three", "In 5999 three fell"};
     const std::vector<std::string> got = render_all("clauses.db", evs);
     REQUIRE(got.size() == want.size());
     for (std::size_t i = 0; i < want.size(); ++i) {
@@ -237,7 +238,7 @@ TEST_CASE("P3-04 r19 22.1, 22.4 item 1: one number per clause as 21.1; the claus
 
 TEST_CASE("P3-04 r19 22.2: kinds 41 claim_dropped and 42 refuge_hidden in the compiled catalogue") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 55U);  // P3-04 r21 23.2 (0.22.0): kind 43 appended; P5-02 10.1: 44 to 55
+    REQUIRE(c.kinds.size() == 62U);  // P3-04 r21 23.2 (0.22.0): kind 43 appended; P5-02 10.1: 44 to 55
     const auto& k41 = c.kinds[40];
     CHECK(k41.id == 41);
     CHECK(k41.key == "claim_dropped");

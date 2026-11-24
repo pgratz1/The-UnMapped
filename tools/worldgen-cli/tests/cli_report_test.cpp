@@ -94,7 +94,7 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 56);  // 17 meta rows and 32 tables since schema 9 (P5-02 11.1)
+    REQUIRE(lines.size() == 58);  // 17 meta rows and 34 tables since schema 10 (P5-03 16.1)
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
@@ -103,8 +103,8 @@ TEST_CASE("cli 12.4: test-pattern world") {
     std::vector<std::string> tables;
     for (const char* t : {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
                           "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer",
-                          "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border",
-                          "region_control", "region_name", "relation", "settlement", "settlement_census", "site"}) {
+                          "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "race_relation", "region", "region_biome", "region_border",
+                          "region_control", "region_name", "relation", "settlement", "settlement_census", "settlement_race", "site"}) {
         const std::string n(t);
         tables.push_back(n + " = " + (n == "layer" ? "3" : n == "meta" ? "17" : "0"));
     }

@@ -236,7 +236,9 @@ Counts counts() {
         for (const auto& [g, v] : es) mixed = mixed || (v.first >= 100 && v.second != 3);
         c.nmixed += mixed ? 1 : 0;
     }
-    c.mixed = "mixed: " + std::to_string(c.nmixed) + " settlements at E; refugees: " + std::to_string(arrivals) +
+    // lead ruling 3 (integration): "1 settlement" singular
+    c.mixed = "mixed: " + std::to_string(c.nmixed) + (c.nmixed == 1 ? " settlement" : " settlements") +
+              " at E; refugees: " + std::to_string(arrivals) +
               " arrivals, " + std::to_string(arrived) + " people; expelled: " + std::to_string(expelled) + " times, " +
               std::to_string(gone) + " people";
     return c;

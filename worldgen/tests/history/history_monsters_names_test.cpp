@@ -101,8 +101,17 @@ TEST_CASE("P5-02 9.1: monster and outpost names in one registry equal the refere
         if (g.what == "mname") {
             const wd::Record& m = def(c, "monster", g.key).record;
             const std::string culture = m.get_string("naming_culture");
-            std::vector<std::string> forms;
-            for (const wd::Value& v : m.get("name_forms").as_array()) forms.push_back(v.as_string());
+            // The golden pins P3-02 4.3's attempt with the 0.23.0 forms of each kind (p3_names_reference.py's
+            // MONSTERS_KINDS_023); P5-03 12.1 and 12.2 moved the shipped forms and the epithet rule, which the P5-03
+            // tests cover. So the forms are the 0.23.0 ones, transcribed.
+            const std::map<std::string, std::vector<std::string>> forms_023 = {
+                {"dragon", {"{root} the Black", "{root} the Pale", "{root}"}},
+                {"giant", {"{root} Stonehand", "{root}"}},
+                {"ogre", {"{root} the Glutton", "{root}"}},
+                {"troll", {"Old {root}", "{root}"}},
+                {"undead", {"The Host of {root}", "The Restless of {root}"}},
+                {"wyvern", {"The {root} Brood", "The Brood of {root}"}}};
+            const std::vector<std::string> forms = forms_023.at(g.key);
             const wh::CultureNaming naming = p502api::monster_naming(
                 wh::culture_naming_from(def(c, "culture", culture).record.get_record("naming")), forms);
             CHECK(wh::name_forms(naming, wh::NameKind::monster) == forms);

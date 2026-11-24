@@ -442,7 +442,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_relations_partb_test.cpp
     history/history_relations_reader_test.cpp
     history/history_relations_report_test.cpp
-    history/history_relations_timeline_test.cpp
+    history/history_relations_reads_test.cpp   # P5-03 18 (not *timeline_*: one shard per file)
     history/history_relations_golden_test.cpp
     history/history_monsters_p503_test.cpp
     history/history_peoples_p503_test.cpp

@@ -1314,7 +1314,7 @@ inline const std::vector<std::string_view>& race_fields() {
         "odds_min_permille", "awakening_quarrel",  // P3-01 r11 3.5 (generator 0.19.0)
         "hidden_years",                            // P3-01 r13 3.6 (P3-10 second round)
         "awakening_population",                    // P3-01 r14 3.7 (P3-11, generator 0.20.0)
-        "settlement_kinds", "culture"};
+        "settlement_kinds", "culture", "stances"};   // stances: P5-03 4.1 (generator 0.24.0)
     return v;
 }
 // P3-01 r8 (1): record race_cell_weights.

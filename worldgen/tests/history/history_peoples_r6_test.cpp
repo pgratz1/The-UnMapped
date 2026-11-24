@@ -77,7 +77,12 @@ const wd::ContentSet& quiet_content() {
     static const wd::ContentSet c = with_peoples({{"found_rate_permille", I64(0)},
                                                   {"famine_ppm", I64(0)},
                                                   {"plague_ppm", by_kind(0, 0, 0, 0, 0)},
-                                                  {"crisis_per_generation_permille", I64(0)}});
+                                                  {"crisis_per_generation_permille", I64(0)},
+                                                  // P5-03 11.1 (0.24.0): P3-05 r6's reach and no road loss, so
+                                                  // that the next region's settlement is a destination as before
+                                                  {"abandon_reach_hops", I64(2)},
+                                                  {"abandon_loss_min_permille", I64(0)},
+                                                  {"abandon_loss_max_permille", I64(0)}});
     return c;
 }
 
@@ -90,7 +95,10 @@ const wd::ContentSet& plague_content() {
                                                   {"plague_toll_max", I64(300)},
                                                   {"plague_spread_permille", I64(0)},
                                                   {"abandon_permille", by_kind(1000, 1000, 1000, 1000, 1000)},
-                                                  {"crisis_per_generation_permille", I64(0)}});
+                                                  {"crisis_per_generation_permille", I64(0)},
+                                                  {"abandon_reach_hops", I64(2)},   // P5-03 11.1, as above
+                                                  {"abandon_loss_min_permille", I64(0)},
+                                                  {"abandon_loss_max_permille", I64(0)}});
     return c;
 }
 

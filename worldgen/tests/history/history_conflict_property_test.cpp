@@ -43,7 +43,7 @@ void check_case(const CCase& g, std::map<std::int64_t, std::int64_t>* kinds = nu
     const eng::HistoryInputs in = synthetic_inputs(g);
     const Tables t = eng::history_stage(c, in);
     const std::map<std::string, std::string> h = table_hashes(t);
-    CHECK(g.tables.size() == 19U);   // P5-02 11.1 (schema 9): five more; the history tables with region_name (schema 8, P3-04 r21 23.4)
+    CHECK(g.tables.size() == 21U);   // P5-03 16.1 (schema 10): two more;   // P5-02 11.1 (schema 9): five more; the history tables with region_name (schema 8, P3-04 r21 23.4)
     for (const auto& [name, hex] : g.tables) {
         CAPTURE(name);
         CHECK(h.at(name) == hex);

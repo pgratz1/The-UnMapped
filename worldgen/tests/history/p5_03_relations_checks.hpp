@@ -485,9 +485,11 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         }
         // The share at the expulsion is that of the last row before y unless s changed earlier in the same year
         // (an owner change or arrival before the expulsion in T6 rescales the shares; same-year rows replace).
+        // (a cession is an event of the region with settlement 0)
         bool changed_before = false;
+        const std::int64_t region_s = x.stl.count(s) != 0U ? at(*x.stl.at(s), 4) : -1;
         for (const auto& [id, row] : x.ev) {
-            if (id < e && at(*row, 1) == y && at(*row, 6) == s) changed_before = true;
+            if (id < e && at(*row, 1) == y && (at(*row, 6) == s || at(*row, 5) == region_s)) changed_before = true;
         }
         if (before && *before > share_max && !changed_before) {
             out.push_back("6: e" + n(e) + " takes a share above expel_share_max");

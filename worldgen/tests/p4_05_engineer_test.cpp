@@ -152,8 +152,10 @@ TEST_CASE("P4-05 engineer: kind groups") {
     for (const wh::KindDef& k : wh::compiled_event_catalogue().kinds) {
         const hb::EventGroup g = hb::event_group(k.key);
         CHECK_MESSAGE(g != hb::EventGroup::other, k.key);
-        // P5-02 kinds: the monsters group of section 9 (lead's ruling at the P4-05 integration)
-        CHECK_MESSAGE((g == hb::EventGroup::monsters) == (k.id >= 44), k.key);
+        // P5-02 kinds: the monsters group of section 9 (lead's ruling at the P4-05 integration); P5-03 (lead ruling
+        // 4): kind 56 in monsters, kinds 57 to 62 in the group peoples
+        CHECK_MESSAGE((g == hb::EventGroup::monsters) == (k.id >= 44 && k.id <= 56), k.key);
+        CHECK_MESSAGE((g == hb::EventGroup::peoples) == (k.id >= 57), k.key);
     }
     CHECK(hb::event_group("") == hb::EventGroup::other);
     CHECK(hb::event_group("warx") == hb::EventGroup::other);

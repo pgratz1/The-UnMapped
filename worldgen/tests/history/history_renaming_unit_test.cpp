@@ -40,7 +40,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 r21 23.2: kind 43 region_renamed in the compiled and the shipped catalogue") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 55U);   // P5-02 10.1
+    REQUIRE(c.kinds.size() == 62U);   // P5-02 10.1
     const auto& k = c.kinds[42];
     CHECK(k.id == 43);
     CHECK(k.key == "region_renamed");

@@ -168,8 +168,9 @@ TEST_CASE("P3-04 r10 8.4, 8.5, 16.1 item 10: the three-word value form with 0, 1
     }
     const std::vector<std::string> got = render_cases("three-word.db", cases);
     // P3-04 r17 21.1 (0.20.0): a value from one to nine in # renders as a word
-    CHECK(got == std::vector<std::string>{"x.", "x and one fled.", "x and two fled.", "x and -1 fled.", "x and 12 fled.",
-                                          "0a", "oneb", "fivec", "#", "##"});
+    // P5-03 lead ruling 1 (0.24.0): a rendered sentence whose first byte is a to z is capitalised
+    CHECK(got == std::vector<std::string>{"X.", "X and one fled.", "X and two fled.", "X and -1 fled.", "X and 12 fled.",
+                                          "0a", "Oneb", "Fivec", "#", "##"});
 }
 
 TEST_CASE("P3-04 r10 8.4: a body with four words is an unknown placeholder; the three-word form is valid") {
@@ -183,7 +184,10 @@ TEST_CASE("P3-04 r10 8.4: a body with four words is an unknown placeholder; the 
     k.values = {"n"};
     CHECK_FALSE(eng::template_problem(k, "{n?a|b|c}").has_value());
     CHECK_FALSE(eng::template_problem(k, "{n?|one|#}").has_value());
-    CHECK(eng::template_problem(k, "{n?a|b|c|d}") == std::optional<std::string>("unknown placeholder '{n?a|b|c|d}' at byte 0"));
+    // P5-03 9.5 (0.24.0): the four-word choice is valid; five words are an unknown placeholder
+    CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d}").has_value());
+    CHECK(eng::template_problem(k, "{n?a|b|c|d|e}") ==
+          std::optional<std::string>("unknown placeholder '{n?a|b|c|d|e}' at byte 0"));
     CHECK(eng::template_problem(k, "x {m?a|b|c}") == std::optional<std::string>("unknown placeholder '{m?a|b|c}' at byte 2"));
     // The shipped templates of 0.17.0 that use the form parse (P3-04 r10 4.2, P3-05 r6 11, P3-06 r7 11).
     for (const ReportEntry& e : shipped_report()) {
@@ -249,11 +253,12 @@ TEST_CASE("P3-04 r10 8.5: only a leading 'The ' exactly; '. ' starts a sentence;
     cases.push_back(TCase{"x {r:plural} {r:adjective} {n?The one|The many} The", {{"r", RACE, 1, 1}}, {"n"},
                           {{1, RACE, 1}}, {2}});
     const std::vector<std::string> got = render_cases("rules.db", cases);
-    CHECK(got == std::vector<std::string>{"x Thebes", "x There Hollow", "x The", "x THE Mob",
-                                          "It ended. The Skib Horde was no more.", "a: the Skib Horde",
-                                          "a; the Skib Horde", "a(the Skib Horde", "a, the Skib Horde",
-                                          "ax and the Skib Horde", "The A, the B and the C met.",
-                                          "Met: the A, the B and the C.", "x Elves Elven The many The"});
+    // P5-03 lead ruling 1 (0.24.0): a first byte a to z is capitalised (the mid-sentence "the" is unchanged)
+    CHECK(got == std::vector<std::string>{"X Thebes", "X There Hollow", "X The", "X THE Mob",
+                                          "It ended. The Skib Horde was no more.", "A: the Skib Horde",
+                                          "A; the Skib Horde", "A(the Skib Horde", "A, the Skib Horde",
+                                          "Ax and the Skib Horde", "The A, the B and the C met.",
+                                          "Met: the A, the B and the C.", "X Elves Elven The many The"});
 }
 
 TEST_CASE("P3-04 r10 8.5: rendering changes no stored name") {
@@ -261,7 +266,7 @@ TEST_CASE("P3-04 r10 8.5: rendering changes no stored name") {
         {"x {civilization} {@region}", {{"civilization", CIV, 1, 1}}, {}, {{1, CIV, 1}}, {}, 4}};
     const Built b = build("stored.db", cases);
     const db::WorldReader r = open_world(b.path);
-    CHECK(eng::render(r, b.first_event) == "x the Skib Horde the Scarred Downs");
+    CHECK(eng::render(r, b.first_event) == "X the Skib Horde the Scarred Downs");   // P5-03 lead ruling 1
     // The tables keep the capital (P3-04 r10 8.5: stored names and display names never change).
     CHECK(rows_of(r, "civilization").at(0).at(1).bytes == "The Skib Horde");
     CHECK(rows_of(r, "region").at(3).at(1).bytes == "The Scarred Downs");

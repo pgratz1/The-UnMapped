@@ -345,11 +345,11 @@ inline const std::set<std::string>& summary_stat_keys() {
 // The invariants of r17 24.10 (items 1 to 7 as far as they are checks on the text; item 7's standing claims
 // are spelled out per fixture by the tests) on the summary and full texts of one world.
 inline void check_invariants(const db::WorldReader& r, const std::string& summary, const std::string& full) {
-    // P5-02 12.4, 12.5 (v4): [monsters] and [sites] after [present]
+    // P5-02 12.4, 12.5 (v4): [monsters] and [sites] after [present]; P5-03 17.2 (v5): [peoples] after [sites]
     const std::vector<std::string> heads_s = {"[settings]", "[ages]",     "[chronicle]", "[civilizations]",
-                                              "[present]",  "[monsters]", "[sites]",     "[stats]"};
+                                              "[present]",  "[monsters]", "[sites]",     "[peoples]", "[stats]"};
     const std::vector<std::string> heads_f = {"[settings]", "[ages]",    "[phases]", "[chronicle]", "[civilizations]",
-                                              "[present]",  "[monsters]", "[sites]",  "[stats]"};
+                                              "[present]",  "[monsters]", "[sites]",  "[peoples]", "[stats]"};
     for (const std::string* text : {&summary, &full}) {
         const bool is_full = text == &full;
         CAPTURE(is_full);

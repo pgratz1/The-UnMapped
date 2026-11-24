@@ -130,7 +130,7 @@ const std::vector<Beast>& beasts() {
 
 const std::vector<std::string_view>& beast_fields() {
     static const std::vector<std::string_view> v = {"name", "plural", "habitat", "density", "growth_permille",
-                                                    "menace", "food"};
+                                                    "menace", "food", "bold_phrases"};   // P5-03 13
     return v;
 }
 
@@ -155,25 +155,28 @@ const std::vector<Monster>& monsters() {
     static const std::vector<Monster> v = {
         {"dragon", "Dragon", "a dragon of the old world", false, "wild",
          {{"alpine", 800}, {"highland_moor", 400}, {"blighted_waste", 600}}, 60, "elven",
-         {"{root} the Black", "{root} the Pale", "{root}"}, {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 60, 50,
+         {"{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing", "{root} the Gold-Eyed",
+          "{root}"},
+         {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 60, 50,
          200, 600, {"hamlet", "village", "town"}, 600, 40, 2000, 0, 1, true, 40},
         {"giant", "Giant", "a giant of the mountains", false, "wild", {{"alpine", 900}, {"highland_moor", 500}}, 25,
-         "dwarven", {"{root} Stonehand", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 100, 30, 100,
+         "dwarven", {"{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 100, 30, 100,
          150, {"hamlet", "village"}, 900, 150, 3000, 2500, 2, true, 8},
         {"ogre", "Ogre", "an ogre", false, "wild",
          {{"grassland", 400}, {"heath", 600}, {"steppe", 700}, {"highland_moor", 300}}, 40, "orcish",
-         {"{root} the Glutton", "{root}"}, {"{root}'s Larder", "The Pit of {root}"}, 200, 1, 150, 20, 60, 40,
+         {"{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat", "{root}"}, {"{root}'s Larder", "The Pit of {root}"}, 200, 1, 150, 20, 60, 40,
          {"hamlet"}, 900, 80, 8000, 1000, 3, false, 3},
         {"troll", "Troll", "a troll of the hills", false, "wild",
          {{"highland_moor", 800}, {"alpine", 600}, {"temperate_forest", 400}, {"heath", 300}}, 50, "goblin",
-         {"Old {root}", "{root}"}, {"{root}'s Hollow", "The Den of {root}"}, 300, 1, 150, 20, 80, 60,
+         {"Old {root}", "{root} the Grey", "{root} Stonehide", "{root} of the Fells", "Mossback {root}", "{root}"}, {"{root}'s Hollow", "The Den of {root}"}, 300, 1, 150, 20, 80, 60,
          {"hamlet", "village"}, 900, 120, 5000, 2000, 3, false, 5},
         {"undead", "Undead", "a host of the restless dead", true, "dead", {}, 15000, "human",
-         {"The Host of {root}", "The Restless of {root}"}, {"The Barrows of {root}", "{root}'s Howe"}, 1500, 1, 80, 30,
-         120, 200, {"hamlet", "village"}, 900, 200, 3000, 1000, 2, false, 5},
+         {"The Host of {place}", "The Restless of {place}", "The Dead of {place}"},
+         {"The Barrows of {root}", "The Howes of {root}"}, 1500, 1, 80, 30,
+         120, 200, {"hamlet", "village"}, 900, 200, 3000, 1000, 2, false, 0},
         {"wyvern", "Wyvern", "a brood of wyverns", true, "wild", {{"alpine", 700}, {"heath", 500}, {"highland_moor", 600}},
-         50, "goblin", {"The {root} Brood", "The Brood of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
-         120, 20, 80, 50, {"hamlet"}, 900, 60, 10000, 1000, 2, false, 2},
+         50, "goblin", {"The {root} Brood", "The Brood of {root}", "The Screamers of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
+         120, 20, 80, 50, {"hamlet"}, 900, 60, 10000, 1000, 2, false, 0},
     };
     return v;
 }
@@ -182,7 +185,8 @@ const std::vector<std::string_view>& monster_fields() {
     static const std::vector<std::string_view> v = {
         "name", "noun", "grouped", "wake", "biomes", "wake_rate", "naming_culture", "name_forms", "lair_forms",
         "might", "range_hops", "raid_permille", "toll_min_permille", "toll_max_permille", "kill_max", "overruns",
-        "overrun_permille", "active_years", "rewake_ppm", "lifespan_years", "max_alive", "flare", "hoard_permille"};
+        "overrun_permille", "active_years", "rewake_ppm", "lifespan_years", "max_alive", "flare", "hoard_permille",
+        "raid_phrases"};   // P5-03 9.5
     return v;
 }
 
@@ -312,7 +316,7 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     const Load l = load(history_data::shipped_files());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
-    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U);   // pressure first; r1 4.3: prey_* last
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U);   // pressure first; r1 4.3: prey_*; P5-03 9.4: 8 last
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();
     REQUIRE(p.size() == 3U);
@@ -358,10 +362,12 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     }
     // 4.5: ghost_permille 200, ghost_max_population 600 (r1) appended after crisis_small_salience
     const wd::Record& pe = definition(*l.content, "history", "peoples").record;
-    REQUIRE(pe.size() >= 3U);
-    CHECK(pe.name_at(pe.size() - 3) == "crisis_small_salience");
-    CHECK(pe.name_at(pe.size() - 2) == "ghost_permille");
-    CHECK(pe.name_at(pe.size() - 1) == "ghost_max_population");
+    // P5-03 11.1, 11.2 (0.24.0): four fields follow
+    REQUIRE(pe.size() >= 7U);
+    CHECK(pe.name_at(pe.size() - 7) == "crisis_small_salience");
+    CHECK(pe.name_at(pe.size() - 6) == "ghost_permille");
+    CHECK(pe.name_at(pe.size() - 5) == "ghost_max_population");
+    CHECK(pe.name_at(pe.size() - 4) == "abandon_reach_hops");
     CHECK(pe.get_int("ghost_permille") == 200);
     CHECK(pe.get_int("ghost_max_population") == 600);
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
@@ -504,9 +510,9 @@ TEST_CASE("P5-02 4.2: every monster field required; ranges one step outside; enu
                                "overruns = [\"hamlet\", \"village\", \"town\", \"hamlet\"]")).ok());
     CHECK(load(with_edit(path, "overruns = [\"hamlet\", \"village\"]", "overruns = []")).ok());
     // name_forms and lair_forms: array(string(48, name_form), 1, 8)
-    CHECK_FALSE(load(with_edit(path, "name_forms = [\"Old {root}\", \"{root}\"]", "name_forms = []")).ok());
+    CHECK_FALSE(load(with_edit(path, "name_forms = [\"Old {root}\", \"{root} the Grey\", \"{root} Stonehide\", \"{root} of the Fells\", \"Mossback {root}\", \"{root}\"]", "name_forms = []")).ok());
     CHECK_FALSE(load(with_edit(path, "lair_forms = [\"{root}'s Hollow\", \"The Den of {root}\"]", "lair_forms = []")).ok());
-    CHECK_FALSE(load(with_edit(path, "name_forms = [\"Old {root}\", \"{root}\"]",
+    CHECK_FALSE(load(with_edit(path, "name_forms = [\"Old {root}\", \"{root} the Grey\", \"{root} Stonehide\", \"{root} of the Fells\", \"Mossback {root}\", \"{root}\"]",
                                "name_forms = [\"a {root}\", \"b {root}\", \"c {root}\", \"d {root}\", \"e {root}\", "
                                "\"f {root}\", \"g {root}\", \"h {root}\", \"{root}\"]")).ok());
     CHECK_FALSE(load(with_edit(path, "\"The Den of {root}\"", "\"The Den of the troll\"")).ok());   // no {root}
@@ -558,10 +564,10 @@ TEST_CASE("P5-02 4.2: the named checks of kind monster in order, with the messag
                                            "overruns = [\"hamlet\", \"hamlet\"]"))),
                   troll, "monster_overruns_unique", "monster.troll", "overruns[1] 'hamlet' repeats overruns[0]");
     // monster_bare_form_last
-    check_failure(one_error(load(with_edit(troll, "name_forms = [\"Old {root}\", \"{root}\"]",
+    check_failure(one_error(load(with_edit(troll, "name_forms = [\"Old {root}\", \"{root} the Grey\", \"{root} Stonehide\", \"{root} of the Fells\", \"Mossback {root}\", \"{root}\"]",
                                            "name_forms = [\"{root}\", \"Old {root}\"]"))),
                   troll, "monster_bare_form_last", "monster.troll", "name_forms[0] '{root}' must be the last form");
-    CHECK(load(with_edit(troll, "name_forms = [\"Old {root}\", \"{root}\"]", "name_forms = [\"Old {root}\"]")).ok());
+    CHECK(load(with_edit(troll, "name_forms = [\"Old {root}\", \"{root} the Grey\", \"{root} Stonehide\", \"{root} of the Fells\", \"Mossback {root}\", \"{root}\"]", "name_forms = [\"Old {root}\"]")).ok());
 }
 
 TEST_CASE("P5-02 4.3: history.monsters every field one step outside its range, required; monsters_bold_ordered") {
@@ -658,7 +664,7 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     CHECK(seven.get_string("name_role") == "monster");
     CHECK(seven.get_string("namer_role") == "civilization");
     CHECK(strings(seven.value_at(11)) == std::vector<std::string>{"The Haunt of {name}", "{name}'s Shadow",
-                                                                   "The Forsaken {noun}", "The Hollow of {name}"});
+                                                                   "The Forsaken {noun}", "{name}'s Waste"});   // P5-03 12.3
     const std::vector<std::vector<std::string>> forms = {
         {"{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"},
         {"{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"},
@@ -678,7 +684,7 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     // the report entries: kind 43's cause words (21.2) and the twelve entries of 10.2
     const wd::Record& rep = definition(*l.content, "history", "report").record;
     const std::vector<wd::Value>& ev = rep.value_at(0).as_array();
-    REQUIRE(ev.size() == 55U);
+    REQUIRE(ev.size() == 62U);
     CHECK(has(ev[42].as_record().get_string("template"),
               "became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }"));
     const std::vector<std::pair<std::string_view, std::int64_t>> want = {
@@ -691,11 +697,11 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
         CHECK(e.get_int("salience") == want[i].second);
     }
     // D2 (the test writer's reading): kinds 48 and 49 read {@settlement}; neither kind has a role `settlement`
+    // P5-03 9.5 and 13 (0.24.0): kinds 48 and 53 reworded
     CHECK(ev[47].as_record().get_string("template") ==
-          "{monster} fell upon {@settlement}; {dead?no one died|one died|# died}.");
+          "{monster} {monster:raid} {@settlement}; {dead?no one died|one died|# died}.");
     CHECK(ev[52].as_record().get_string("template") ==
-          "In {@region} the {@beast} grew bold, and travellers from {settlement} went in fear; {dead?none|one|#} died "
-          "on the roads.");
+          "In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died.");
 }
 
 }  // TEST_SUITE

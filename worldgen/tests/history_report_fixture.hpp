@@ -61,7 +61,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h8-frames",       "h9-realms",      "h10-floor",
                                                "h11-v2",    // r19 25.13 item 11 (the spec's "H9 v2")
                                                "h12-v3",    // r21 26.8 item 9 (P5-12)
-                                               "h13-v4"};   // P5-02 19.1 item 15 (format v4, schema 9)
+                                               "h13-v4",    // P5-02 19.1 item 15 (format v4, schema 9)
+                                               "h14-v5"};   // P5-03 24.1 item 11 (format v5, schema 10)
     return v;
 }
 
@@ -652,7 +653,9 @@ inline std::map<std::string, std::int64_t> stats_of(std::string_view text) {
     for (const std::string& l : block(text, "[stats]")) {
         const std::size_t eq = l.find(" = ");
         REQUIRE_MESSAGE(eq != std::string::npos, "not a stats line: " << l);
-        out[l.substr(0, eq)] = std::stoll(l.substr(eq + 3));
+        // P5-03 17.4: ruins_oldest_year is `-` when no ruin stands at E; read as -1 (no year is negative)
+        const std::string v = l.substr(eq + 3);
+        out[l.substr(0, eq)] = v == "-" ? std::int64_t{-1} : std::stoll(v);
     }
     return out;
 }
@@ -662,7 +665,8 @@ inline std::vector<std::pair<std::string, std::int64_t>> stats_list(std::string_
     for (const std::string& l : block(text, "[stats]")) {
         const std::size_t eq = l.find(" = ");
         REQUIRE_MESSAGE(eq != std::string::npos, "not a stats line: " << l);
-        out.emplace_back(l.substr(0, eq), std::stoll(l.substr(eq + 3)));
+        const std::string v = l.substr(eq + 3);   // `-`: -1, as stats_of
+        out.emplace_back(l.substr(0, eq), v == "-" ? std::int64_t{-1} : std::stoll(v));
     }
     return out;
 }

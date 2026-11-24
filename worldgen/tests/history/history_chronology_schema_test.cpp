@@ -91,7 +91,7 @@ TEST_SUITE("chronology") {
 TEST_CASE("P3-03 5.1, 14.1 item 7: SCHEMA_VERSION 6 and the five statements after region_biome's, byte for byte") {
     CHECK(chrono_api::schema_version() == 10);   // P5-02 11.1
     const std::vector<std::string> ddl = chrono_api::ddl_statements();
-    REQUIRE(ddl.size() == 32U);  // P3-04 9.1: thirteen more after age's; region_name (schema 8, P3-04 r21 23.4); five of P5-02 11.1 (schema 9)
+    REQUIRE(ddl.size() == 34U);   // P5-03 16.1: two more;  // P3-04 9.1: thirteen more after age's; region_name (schema 8, P3-04 r21 23.4); five of P5-02 11.1 (schema 9)
     CHECK(ddl[7].rfind("CREATE TABLE region_biome ", 0) == 0U);
     CHECK(ddl[8] == DDL_RACE);
     CHECK(ddl[9] == DDL_RACE_BIOME);
@@ -122,7 +122,7 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     CHECK(keys == required_keys());
     // The statements are stored in execution order, ninth to thirteenth.
     const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' ORDER BY rowid");
-    REQUIRE(sql.size() == 32U);   // P5-02 11.1: schema 9
+    REQUIRE(sql.size() == 34U);   // P5-03 16.1: schema 10
     CHECK(sql[8] == std::vector<std::string>{"race", DDL_RACE});
     CHECK(sql[9] == std::vector<std::string>{"race_biome", DDL_RACE_BIOME});
     CHECK(sql[10] == std::vector<std::string>{"culture", DDL_CULTURE});
@@ -526,6 +526,7 @@ TEST_CASE("P3-03 9.2, 14.1 item 11: the five table lines of hash --detail; NULL 
                                             "phase",
                                             "race",
                                             "race_biome",
+                                            "race_relation",   // P5-03 16.1
                                             "region",
                                             "region_biome",
                                             "region_border",
@@ -534,7 +535,8 @@ TEST_CASE("P3-03 9.2, 14.1 item 11: the five table lines of hash --detail; NULL 
                                             "relation",
                                             "settlement",
                                             "settlement_census",
-                                            "site"});  // schema 9 (P3-04 9.1, r21 23.4, P5-02 11.1)
+                                            "settlement_race",
+                                            "site"});  // schema 10 (P3-04 9.1, r21 23.4, P5-02 11.1, P5-03 16.1)
     const Rows rows = chrono_api::stage(shipped(), h, 3, {"North Downs", "East Wood"});
     const std::map<std::string, std::string> want = table_hashes(rows);
     const std::map<std::string, std::string> got = detail_tables(r);

@@ -150,11 +150,13 @@ TEST_CASE("P3-04 r17 21.1, 21.3 item 1: one to nine as words in {value} and #; d
     evs.push_back(val("{n?one|#}", 4));   // the two-word form's # is an ordinary byte (8.4)
     evs.push_back(val("{n?|one|#}", 4));
     evs.push_back(val("{n?|one|#}", 1));  // the template's own word
-    evs.push_back(val("{n} died.", 7));   // never capitalized
+    evs.push_back(val("{n} died.", 7));   // capitalised since P5-03 (lead ruling 1)
+    // P5-03 lead ruling 1 (0.24.0): a first byte a to z is capitalised (r17 21.1 said a number word is never
+    // capitalised; the ruling makes it the general rule)
     const std::vector<std::string> want = {
-        "0", "one", "two", "nine", "10", "11", "999", "1,000", "-3",
-        "zero", "single", "two x", "nine x", "10 x", "11 x", "999 x", "1,000 x", "-3 x",
-        "5999", "one", "#", "four", "one", "seven died."};
+        "0", "One", "Two", "Nine", "10", "11", "999", "1,000", "-3",
+        "Zero", "Single", "Two x", "Nine x", "10 x", "11 x", "999 x", "1,000 x", "-3 x",
+        "5999", "One", "#", "Four", "One", "Seven died."};
     CHECK(render_all("numbers.db", evs) == want);
 }
 

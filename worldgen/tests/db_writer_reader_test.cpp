@@ -93,7 +93,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.23.0"},
+        {"generator_version", "0.24.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -104,7 +104,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
         {"param.map_size", "1024"},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "9"},
+        {"schema_version", "10"},   // P5-03 16.1
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -232,8 +232,8 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
                         {"index", "sqlite_autoindex_race_1", "race"}};
     for (const char* t : {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
                           "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer",
-                          "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border",
-                          "region_control", "region_name", "relation", "settlement", "settlement_census", "site"}) {
+                          "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "race_relation", "region", "region_biome", "region_border",
+                          "region_control", "region_name", "relation", "settlement", "settlement_census", "settlement_race", "site"}) {
         want_schema.push_back({"table", t, t});
     }
     CHECK(schema == want_schema);
@@ -272,7 +272,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM layer") == Rows{{"0"}});
     // Pragmas agree with the header.
     CHECK(db.rows("PRAGMA application_id") == Rows{{"1431194960"}});
-    CHECK(db.rows("PRAGMA user_version") == Rows{{"9"}});
+    CHECK(db.rows("PRAGMA user_version") == Rows{{"10"}});
     CHECK(db.rows("PRAGMA page_size") == Rows{{"4096"}});
     CHECK(db.rows("PRAGMA encoding") == Rows{{"UTF-8"}});
     CHECK(db.rows("PRAGMA auto_vacuum") == Rows{{"0"}});
@@ -291,7 +291,7 @@ TEST_CASE("empty world through the reader (9)") {
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
     CHECK(reader.schema_version() == 10);
-    CHECK(reader.generator_version() == "0.23.0");
+    CHECK(reader.generator_version() == "0.24.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());
@@ -811,12 +811,12 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(open_code(path) == name(ErrorCode::not_world));
         CHECK(dbtest::dir_entries(dir.path()) == before);
     }
-    SUBCASE("user_version 10") {
-        const auto r = WorldReader::open(variant("uv10.db", "PRAGMA user_version = 10"));
+    SUBCASE("user_version 11") {   // a version above this build's (10, P5-03 16.1)
+        const auto r = WorldReader::open(variant("uv11.db", "PRAGMA user_version = 11"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         // "world schema version X, this build reads Y"
-        CHECK(r.error().message == "world schema version 10, this build reads 10");
+        CHECK(r.error().message == "world schema version 11, this build reads 10");
     }
     SUBCASE("user_version 8: a schema-8 (0.22.0) world is refused (P5-02 11.1)") {
         const auto r = WorldReader::open(variant("uv8.db", "PRAGMA user_version = 8"));

@@ -926,10 +926,12 @@ TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after ge
     CHECK(names.size() == 76U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
     // P5-12 3 (0.22.0): hist.renaming.chance and hist.renaming.name appended after hist.conflict.toll, in that order;
     // P5-02 3 (0.23.0) fifteen more after them, then (r1) hist.monsters.raid_target.
-    CHECK(names[names.size() - 19] == "hist.conflict.toll");
-    CHECK(names[names.size() - 18] == "hist.renaming.chance");
-    CHECK(names[names.size() - 17] == "hist.renaming.name");
-    CHECK(names[names.size() - 1] == "hist.monsters.raid_target");
+    // P5-03 3 (0.24.0): hist.beasts.bold_kind, hist.monsters.fear, hist.peoples.abandon_loss, hist.relations.expel.
+    CHECK(names[names.size() - 23] == "hist.conflict.toll");
+    CHECK(names[names.size() - 22] == "hist.renaming.chance");
+    CHECK(names[names.size() - 21] == "hist.renaming.name");
+    CHECK(names[names.size() - 5] == "hist.monsters.raid_target");
+    CHECK(names[names.size() - 1] == "hist.relations.expel");
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "geo.regions.cost") {

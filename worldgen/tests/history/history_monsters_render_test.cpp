@@ -196,7 +196,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-02 10.1: kinds 44 to 55 appended in the table's order, their uses, roles and values") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 55U);
+    REQUIRE(c.kinds.size() == 62U);
     struct K {
         std::int64_t id;
         const char* key;
@@ -282,16 +282,18 @@ TEST_CASE("P5-02 10.2, 10.3: the sentence of every new kind (names of types 8 an
     CHECK(at("46") == "The Host of Edric woke again in King's Fold.");
     CHECK(at("47") == "Old Grakh sank into sleep in Grakh's Hollow.");
     CHECK(at("47b") == "Saelith the Black sank into sleep in the Lair of Saelith.");
+    // P5-03 9.5 (0.24.0): the raid phrase ((event id - 1) mod 3) of the troll's raid_phrases; 48a, b, c are three
+    // consecutive events
     CHECK(at("48a") == "Old Grakh fell upon Drutnot Hole; no one died.");
-    CHECK(at("48b") == "Old Grakh fell upon Drutnot Hole; one died.");
-    CHECK(at("48c") == "Old Grakh fell upon Drutnot Hole; 41 died.");
+    CHECK(at("48b") == "Old Grakh prowled the edges of Drutnot Hole; one died.");
+    CHECK(at("48c") == "Old Grakh came down by night on Drutnot Hole; 41 died.");
     CHECK(at("49") == "The Host of Edric drove the people from Nutskrank and made it its lair; 41 escaped.");
     CHECK(at("50") == "The Stinrild League hunted down and slew Saelith the Black, a dragon of the old world, in King's "
                       "Fold.");
     CHECK(at("51") == "The Snat Horde drove Old Grakh back to its lair in King's Fold.");
     CHECK(at("52") == "Uguurz the Glutton, an ogre, died of great age in King's Fold.");
-    CHECK(at("53") == "In King's Fold the wolves grew bold, and travellers from Drutnot Hole went in fear; three died "
-                      "on the roads.");
+    // P5-03 13 (0.24.0): kind 53's template with the wolves' bold phrase ((event id - 1) mod 2)
+    CHECK(at("53") == "In King's Fold the wolves hunted the roads from Drutnot Hole; three died.");
     CHECK(at("54") == "The Snat Horde raised Snat Watch in King's Fold against the Stinrild League.");
     CHECK(at("55a") == "The Snat Horde abandoned Snat Watch, the frontier having fallen quiet.");
     CHECK(at("55b") == "The Snat Horde abandoned Snat Watch, the land being lost.");
@@ -411,10 +413,10 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
     refused("bp-repeat", "INSERT INTO beast_population VALUES (" + R + ", 1, 3, 777777);"
                          "INSERT INTO beast_population VALUES (" + R + ", 1, 4, 777777);",
             bp + R + ", 1, 4): count equals the previous row of this region and beast");
-    // settlement 1 of geo-seed-42-512 is faded after its sacking (ending 1, derived through its ruin_faded's cause,
-    // r1 25 item 3)
-    refused("ending", "UPDATE settlement SET ending = 4 WHERE id = 1;",
-            "corrupt table 'settlement': row 1: ending 4 is not its ruin's ending 1");
+    // settlement 4 of geo-seed-42-512 is faded after its sacking (ending 1, derived through its ruin_faded's cause,
+    // r1 25 item 3); at 0.24.0 settlement 1 (the witness at 0.23.0) stands to the end
+    refused("ending", "UPDATE settlement SET ending = 4 WHERE id = 4;",
+            "corrupt table 'settlement': row 4: ending 4 is not its ruin's ending 1");
     // events: a participant of type 8 with no row; a kind 44 without its site; a value beast with no row (R4)
     {
         const auto e = eng::view_error(open_world(corrupt(

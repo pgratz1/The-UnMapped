@@ -102,7 +102,8 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
         "events_settlement_founded = 0\nevents_quiet_era = 0\nevents_flare_up = 1\ncivilizations = 2\n"
         "civilizations_alive = 1\nsettlements = 2\nsettlements_standing = 1\nregions_held = 1\ncensus_rows = 3\n"
         "relations = 1\nregion_names = 0\n"   // P3-04 r21 23.4: region_names after relations
-        "beasts = 0\nmonster_kinds = 0\nbeast_populations = 0\nmonsters = 0\nsites = 0\n";   // P5-02 11.3
+        "beasts = 0\nmonster_kinds = 0\nbeast_populations = 0\nmonsters = 0\nsites = 0\n"   // P5-02 11.3
+        "race_relations = 0\nsettlement_races = 0\n";   // P5-03 16.3
     // P3-05 15.4 appends the population keys after relations.
     const std::string p305 = "population = 200\n""population_elf = 200\n""population_goblin = 0\n""population_dwarf = 0\n""population_faerie = 0\n""population_human = 0\n""population_orc = 0\n""settlements_standing_elf = 1\n""settlements_standing_goblin = 0\n""settlements_standing_dwarf = 0\n""settlements_standing_faerie = 0\n""settlements_standing_human = 0\n""settlements_standing_orc = 0\n""regions_held_elf = 0\n""regions_held_goblin = 0\n""regions_held_dwarf = 1\n""regions_held_faerie = 0\n""regions_held_human = 0\n""regions_held_orc = 0\n";
     CHECK(section(text, "[history]") == want + p305);
@@ -124,7 +125,7 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
     for (const char ch : tables) {
         n += ch == '\n' ? 1 : 0;
     }
-    CHECK(n == 33U);  // header + 32
+    CHECK(n == 35U);  // header + 34 (P5-03 16.3: race_relations, settlement_races)
     for (const std::string& t : hash_tables()) {
         CHECK_MESSAGE(tables.find("\n" + t + " = ") != std::string::npos, t);
     }

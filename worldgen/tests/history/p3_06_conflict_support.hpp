@@ -11,6 +11,7 @@
 
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/renaming.hpp"
+#include "worldgen/history/relations.hpp"
 #include "p3_05_peoples_support.hpp"
 #include "p3_06_conflict_api.hpp"
 
@@ -591,9 +592,16 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         if (k == "enmity") {
             CHECK(a < b);
             CHECK(enmity.insert({a, b}).second);
-            CHECK((sk == 2 || sk == 15));  // civ_founded, civ_seceded
-            CHECK(at(r, 5) == at(*x.cv.at(b), 6));
-            CHECK(at(r, 7) == at(*x.cv.at(b), 7));
+            // P5-03 7.1 (4.3): since_event is the larger of the younger realm's founding event and the hatred
+            // turn of the two peoples (disposition_turned, kind 58); the row opens in the step the pair first
+            // qualifies, so since is at or after since_event's year
+            CHECK((sk == 2 || sk == 15 || sk == 58));  // civ_founded, civ_seceded, disposition_turned
+            CHECK(at(r, 7) >= at(*x.cv.at(b), 7));
+            CHECK(at(r, 5) >= x.year(at(r, 7)));
+            if (sk != 58) {
+                CHECK(at(r, 5) == at(*x.cv.at(b), 6));
+                CHECK(at(r, 7) == at(*x.cv.at(b), 7));
+            }
             if (uk != 0) CHECK((uk == 18 || uk == k_civ_conquered));
         } else if (k == "war") {
             CHECK(sk == k_war_declared);
@@ -1782,8 +1790,12 @@ struct ConflictConfig {
     // HistoryResult::region_names only through run() below; run_engine leaves them empty, P3-04 r21 23.4).
     std::unique_ptr<worldgen::history::RenamingSubsystem> renaming;
     std::unique_ptr<worldgen::history::MonstersSubsystem> monsters;
+    // P5-03 6.6 item 3: the relations subsystem after monsters, the people ledger and the disposition view
+    std::unique_ptr<worldgen::history::RelationsSubsystem> relations;
 
-    explicit ConflictConfig(const wd::ContentSet& c, bool with_monsters = true)
+    // with_relations defaults to with_monsters: the full configuration of the history stage (0.24.0), or P5-02's
+    // configuration without monsters, which has no relations either.
+    explicit ConflictConfig(const wd::ContentSet& c, bool with_monsters = true, int with_relations = -1)
         : pair(std::make_unique<cfl::Conflict>(c)), catalogue(eng::catalogue_of(c)),
           renaming(std::make_unique<worldgen::history::RenamingSubsystem>(
               *pair->peoples.sub, worldgen::history::renaming_tuning_from(c), catalogue)) {
@@ -1791,6 +1803,12 @@ struct ConflictConfig {
             monsters = std::make_unique<worldgen::history::MonstersSubsystem>(*pair->peoples.sub, c);
             pair->peoples.sub->set_wild(monsters.get());
             renaming->set_monsters(monsters.get());
+            monsters->set_region_names(renaming.get());   // P5-03 12.2
+        }
+        if (with_relations < 0 ? with_monsters : with_relations != 0) {
+            relations = std::make_unique<worldgen::history::RelationsSubsystem>(*pair->peoples.sub, *pair->sub, c);
+            pair->peoples.sub->set_ledger(relations.get());
+            pair->sub->set_dispositions(relations.get());
         }
     }
     void add_before(std::vector<eng::Step> steps, FnSubsystem::Fn fn) {
@@ -1811,6 +1829,7 @@ struct ConflictConfig {
         c.subsystems.push_back(pair->subsystem());
         c.subsystems.push_back(renaming.get());
         if (monsters) c.subsystems.push_back(monsters.get());
+        if (relations) c.subsystems.push_back(relations.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
         if (monsters) c.tension.push_back(monsters.get());
@@ -1829,6 +1848,11 @@ struct ConflictConfig {
             r.beast_populations = monsters->beast_population_rows();
             r.monsters = monsters->monster_rows();
             r.sites = monsters->site_rows();
+        }
+        if (relations) {
+            relations->finish(in.params.span);
+            r.race_relations = relations->race_relation_rows();
+            r.settlement_races = relations->settlement_race_rows();
         }
         return eng::tables_of(r);
     }

@@ -66,10 +66,12 @@ const std::vector<std::string>& new_ddl() {
         "CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture "
         "INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID",
         // P5-02 11.1 (schema 9): five statements after region_name's, in this order, byte for byte
+        // P5-03 16.1 (schema 10): beast gains bold_phrases and monster_kind raid_phrases, last
         "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT "
-        "NULL, menace INTEGER NOT NULL, food INTEGER NOT NULL) STRICT",
+        "NULL, menace INTEGER NOT NULL, food INTEGER NOT NULL, bold_phrases TEXT NOT NULL) STRICT",
         "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT "
-        "NOT NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL) STRICT",
+        "NOT NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL, raid_phrases TEXT NOT "
+        "NULL) STRICT",
         "CREATE TABLE beast_population (region INTEGER NOT NULL, beast INTEGER NOT NULL, year INTEGER NOT NULL, count "
         "INTEGER NOT NULL, PRIMARY KEY (region, beast, year)) STRICT, WITHOUT ROWID",
         "CREATE TABLE monster (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, lair_site INTEGER "
@@ -79,6 +81,11 @@ const std::vector<std::string>& new_ddl() {
         "NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, settlement INTEGER NOT NULL, founder_civ INTEGER NOT NULL, "
         "monster INTEGER NOT NULL, origin_year INTEGER NOT NULL, origin_event INTEGER NOT NULL, ended_year INTEGER, "
         "ending_event INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT",
+        // P5-03 16.1 (schema 10): two statements after site's, in this order
+        "CREATE TABLE race_relation (race_a INTEGER NOT NULL, race_b INTEGER NOT NULL, year INTEGER NOT NULL, "
+        "disposition INTEGER NOT NULL, band INTEGER NOT NULL, PRIMARY KEY (race_a, race_b, year)) STRICT, WITHOUT ROWID",
+        "CREATE TABLE settlement_race (settlement INTEGER NOT NULL, race INTEGER NOT NULL, year INTEGER NOT NULL, share "
+        "INTEGER NOT NULL, standing INTEGER NOT NULL, PRIMARY KEY (settlement, race, year)) STRICT, WITHOUT ROWID",
     };
     return v;
 }
@@ -126,14 +133,21 @@ std::map<std::string, std::vector<Row>> sample_rows() {
         {"region_name", {{I(10), I(5), T("The Ashes of Ruin"), I(1), I(3)}, {I(10), I(9), T("Ruin's Grave"), I(0), I(4)},
                          {I(12), I(0), T("The Heart of Voeledell"), I(2), I(1)}}},
         // schema 9 (P5-02 11.1): NULL in monster.died and site.ended_year
-        {"beast", {{I(1), T("bear"), T("Bear"), T("bears"), I(30), I(30)}, {I(2), T("wolf"), T("Wolf"), T("wolves"), I(10), I(0)}}},
-        {"monster_kind", {{I(1), T("dragon"), T("Dragon"), T("a dragon of the old world"), I(0), I(1), I(6000)},
-                          {I(2), T("undead"), T("Undead"), T("a host of the restless dead"), I(1), I(2), I(1500)}}},
+        {"beast", {{I(1), T("bear"), T("Bear"), T("bears"), I(30), I(30), T("broke into the stores of")},
+                   {I(2), T("wolf"), T("Wolf"), T("wolves"), I(10), I(0), T("hunted the roads from|grew bold")}}},
+        {"monster_kind", {{I(1), T("dragon"), T("Dragon"), T("a dragon of the old world"), I(0), I(1), I(6000),
+                           T("fell in fire upon")},
+                          {I(2), T("undead"), T("Undead"), T("a host of the restless dead"), I(1), I(2), I(1500),
+                           T("crept into|walked by night in")}}},
         {"beast_population", {{I(10), I(1), I(0), I(7)}, {I(10), I(1), I(149), I(6)}, {I(12), I(2), I(0), I(40)}}},
         {"monster", {{I(1), T("Old Grakh"), I(1), I(1), I(5), I(2), N(), I(0), I(0), I(1), I(9)},
                      {I(2), T("The Host of Edric"), I(2), I(2), I(5), I(2), I(9), I(2), I(1), I(3), I(0)}}},
         {"site", {{I(1), T("Grakh's Hollow"), I(1), I(10), I(4), I(5), I(0), I(0), I(1), I(5), I(2), N(), I(0), I(0)},
                   {I(2), T("Snat Watch"), I(2), I(12), I(6), I(7), I(0), I(1), I(0), I(5), I(2), I(9), I(2), I(6)}}},
+        // schema 10 (P5-03 16.2): keys ascending, a negative disposition, a share 0 with standing 0
+        {"race_relation", {{I(1), I(2), I(5), I(-250), I(1)}, {I(1), I(2), I(9), I(-600), I(0)}}},
+        {"settlement_race", {{I(1), I(1), I(0), I(1000), I(3)}, {I(1), I(1), I(5), I(700), I(3)},
+                             {I(1), I(2), I(5), I(300), I(0)}, {I(1), I(2), I(9), I(0), I(0)}}},
     };
 }
 
@@ -145,9 +159,9 @@ TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen hi
           "thirty-second (settlement with ending; region_name; beast, monster_kind, beast_population, monster, site)") {
     CHECK(eng::schema_version() == 10);
     const std::vector<std::string> ddl = eng::ddl_statements();
-    REQUIRE(ddl.size() == 32U);
-    REQUIRE(new_ddl().size() == 19U);
-    for (std::size_t i = 0; i < 19; ++i) {
+    REQUIRE(ddl.size() == 34U);   // P5-03 16.1
+    REQUIRE(new_ddl().size() == 21U);   // P5-03 16.1
+    for (std::size_t i = 0; i < 21; ++i) {
         CAPTURE(i);
         CHECK(ddl[13 + i] == new_ddl()[i]);
     }
@@ -156,8 +170,8 @@ TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen hi
     const std::string path = generated(dir, "none.db", "none");
     const dbtest::SqliteFile db(path);
     const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' ORDER BY rowid");
-    REQUIRE(sql.size() == 32U);
-    for (std::size_t i = 0; i < 19; ++i) {
+    REQUIRE(sql.size() == 34U);   // P5-03 16.1
+    for (std::size_t i = 0; i < 21; ++i) {
         CHECK(sql[13 + i] == std::vector<std::string>{ddl_tables()[i], new_ddl()[i]});
     }
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' AND tbl_name = 'event_kind'") ==
@@ -169,7 +183,7 @@ TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen hi
     CHECK(db.rows("SELECT count(*) FROM sqlite_schema WHERE type = 'index' AND tbl_name IN ('phase', 'event', "
                   "'event_participant', 'event_cause', 'event_value', 'civilization', 'settlement', "
                   "'settlement_census', 'region_control', 'relation', 'event_kind_role', 'event_kind_value', "
-                  "'region_name', 'beast_population', 'monster', 'site')") ==
+                  "'region_name', 'beast_population', 'monster', 'site', 'race_relation', 'settlement_race')") ==
           std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
 }
@@ -220,7 +234,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
         const std::string path = generated(dir, "none-" + std::to_string(span) + ".db", "none", span);
         const db::WorldReader r = open_world(path);
         CHECK(r.meta("history_end_year").value_or("<absent>") == std::to_string(span));
-        CHECK(r.meta("schema_version").value_or("") == "9");   // P5-02 11.1 (8 at P5-12)
+        CHECK(r.meta("schema_version").value_or("") == "10");   // P5-03 16.1 (9 at P5-02, 8 at P5-12)
         for (const std::string& t : ddl_tables()) {
             CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }

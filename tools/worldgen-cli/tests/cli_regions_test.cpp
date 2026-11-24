@@ -223,9 +223,9 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
     CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
                                              "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
-                                             "race_biome", "region", "region_biome", "region_border",
+                                             "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
-                                             "settlement_census", "site"});
+                                             "settlement_census", "settlement_race", "site"});
     REQUIRE_FALSE(layers.empty());
     CHECK(layers.back() == "region");
     CHECK(hex["layer region"] == gold.at("region"));
@@ -256,7 +256,8 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
             "table event_value",  "table phase",             "table region_control", "table relation",
             "table settlement",   "table settlement_census", "table region_name",
             "table beast",        "table monster_kind",      "table beast_population", "table monster",
-            "table site"};  // chronology (P3-03) and history (P3-04, P5-12, P5-02)
+            "table site",         "table race_relation",     "table settlement_race"};   // chronology (P3-03) and
+                                                                                   // history (P3-04, P5-12, P5-02, P5-03)
         if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
         }
@@ -291,7 +292,8 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(r.out.find("\nwalk_share = ") < r.out.find("\nregions = "));
     // [tables] (P0-04 amendment 18 (a)).
     CHECK(contains(r.out, "\npass = 0\nphase = "));
-    CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nregion = 14\nregion_biome = "));
+    CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nrace_relation = "));   // P5-03 16.1
+    CHECK(contains(r.out, "\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
     CHECK(contains(r.out, "\nschema_version = 10\n"));
 }

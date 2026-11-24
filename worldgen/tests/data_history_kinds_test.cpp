@@ -209,7 +209,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 7U);  // chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 8U);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -265,14 +265,15 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
     REQUIRE(history.id_schemas.size() == 8U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
-                                               // renaming P5-12 (r16 5.4); monsters P5-02 4.3
+                                               // renaming P5-12 (r16 5.4); monsters P5-02 4.3; relations P5-03 4.2
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "conflict");
     CHECK(history.id_schemas[2].id == "engine");
     CHECK(history.id_schemas[3].id == "monsters");
     CHECK(history.id_schemas[4].id == "peoples");
-    CHECK(history.id_schemas[5].id == "renaming");
-    CHECK(history.id_schemas[6].id == "report");
+    CHECK(history.id_schemas[5].id == "relations");   // P5-03 4.2
+    CHECK(history.id_schemas[6].id == "renaming");
+    CHECK(history.id_schemas[7].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -579,6 +580,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
+        f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
@@ -604,6 +606,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
+        f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         const Load l = load(f);
         INFO(dump(l));
@@ -705,7 +708,7 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
           "unknown id 'deities' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'monsters', "
-          "'peoples', 'renaming', 'report'");
+          "'peoples', 'relations', 'renaming', 'report'");   // relations: P5-03 4.2
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {

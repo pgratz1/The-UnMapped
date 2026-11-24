@@ -1680,6 +1680,50 @@ python3 -B worldgen/tests/reference/p4_markers_reference.py golden
 python3 -B worldgen/tests/reference/p4_browser_reference.py golden
 ```
 
+### 0.24.0, phase 2 (integration with the engineer's branch)
+
+Merged with `origin/p5/03-impl` (02d008d) and `origin/main` (75f6bfa): every data root holds the engineer's calibrated
+values (relations `war_memory` 75, `conquest_memory` 150, `sack_memory` 30, `capture_memory` 15, `expel_memory` 90,
+`shelter_memory` 45, `memory_min`/`memory_max` -500/500, `memory_decay_per_century` 20, `meet_hops` 8,
+`expel_permille` 3; monsters `raid_chain_years` 300, `hunt_raid_permille` 5, `hunt_max_permille` 200, `fear_raids` 2,
+`fear_permille` 400; peoples `abandon_reach_hops` 0), set in `RELATIONS_RANGES_024`, `MONSTERS_NEW_RANGES_024` and
+`PEOPLES_NEW_RANGES_024` of `p3_data_reference.py`; the C++ listing `p3_01_history_data.hpp` is regenerated from
+`SPEC_FILES_024` (each raw string that equalled its 0.23.0 file replaced by the 0.24.0 one, `RELATIONS_TOML` added
+to `shipped_files`) and `history/p5_03_relations_data.hpp` holds the same values.
+
+The lead's rulings, built by the engineer, now in the references:
+
+- `p3_engine_reference.py` `render`: a rendered sentence whose first byte is a to z is capitalised (ruling 1; R14).
+- `p3_report_reference.py`: `[peoples]` "mixed at E" with the constant `MIXED_SHARE_MIN` = 100 and "1 settlement"
+  singular (ruling 3; R16); `build_input` takes C++ sources of this generator version as they are (their region
+  names are current) and upgrades a schema 9 source to schema 10.
+- `p5_03_relations_reference.py`: settlement_race rows of a quiet step at its start Y (ruling 6; R3); the meeting's
+  presence is P3-06 5.1's simple definition (ruling 6; R6); a pending move into a settlement no longer standing is
+  skipped (ruling 6; R12); `MIXED_SHARE_MIN` in the golden's `[stats]` lines.
+- `p3_engine_reference.py`: `{@beast:bold}`'s `template_problem` names itself (`{@beast:bold} needs a kind with a
+  value 'beast' at byte <n>`, the built message; 13 says "as `{@beast}`'s"); the render checks of earlier revisions
+  go through `CapChecker` (ruling 1 changes their first letters only).
+- `p3_peoples_reference.py` `plague_plan`: a planned spread that empties its target sends the survivors to a
+  destination within `abandon_reach_hops`, less the losses on the road (11.1 in P3-05 10.2's replay, so that the
+  planned total equals the real toll; found on stress-13, kind 37's `total`).
+- `p3_conflict_reference.py` `check-world`'s invariants at 0.24.0: an abandonment may cite `settlement_fled` and a
+  reduction `people_expelled`; kinds 57 to 61 may fall in quiet steps; an `enmity` row's `since_event` is the later
+  of the younger realm's founding and the hatred turn, `since` at or after its year.
+
+C++ worlds of 0.24.0 equal the references table for table (`p3_conflict_reference.py check-world`, every history
+table) on geo-seed-0-512, geo-seed-42-512, geo-phrase-512, hist-span-2000-512, geo-seed-1-1024, hist-dense-1024,
+hist-races-elf-orc-1024, p5-monsters-high-1024, civs4-seed-0-1024 and seed 5 at 1024 `--monster-pressure high`;
+`p5_03_relations_reference.py check-world` and `p5_12_renaming_reference.py check-world` find no problem on them, and
+`p3_report_reference.py compare` finds the C++ reports equal at both levels.
+
+Report inputs: generated with the C++ of this branch (`worldgen-cli generate`, the thirteen `WORLD_CASES` with
+their arguments) into `~/.cache/the-unmapped/out/p5-03-int/report-src`, then `build-inputs report-src
+report-inputs` (history tables recomputed by the references). Goldens recorded with the phase 2 command list
+above (report, timeline, markers and browser on those inputs): `p3-01-data.txt`, `p3-04-engine.txt`,
+`p3-05-peoples.txt`, `p3-06-conflict.txt`, `p5-12-renaming.txt`, `p5-02-monsters.txt`, `p5-03-relations.txt` (new),
+`p3-07-report.txt`, `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt`. Not moved: `p3-02-names.txt`,
+`core_vectors.txt`, `p1-*`, `p3-03-chronology.txt`.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

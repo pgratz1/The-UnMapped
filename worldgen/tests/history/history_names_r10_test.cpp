@@ -163,7 +163,7 @@ TEST_CASE("P3-02 r10 12.1, 12.3: the eight filter entries reject the names of 12
         if (d.id == "words") {
             CHECK(d.record.get_array("anywhere").size() == 5U);
             CHECK(d.record.get_array("at_start").size() == 1U);
-            CHECK(d.record.get_array("whole").size() == 391U);
+            CHECK(d.record.get_array("whole").size() == 392U);   // P5-03 12.3: bird
         }
     }
 }

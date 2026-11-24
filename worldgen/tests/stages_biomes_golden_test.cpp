@@ -702,7 +702,8 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                                              "event_participant", "event_cause", "event_value", "civilization",
                                              "settlement", "settlement_census", "region_control",
                                              "relation", "region_name", "beast", "monster_kind", "beast_population",
-                                             "monster", "site"});  // schema 9 (P3-04 9.1, P5-12 7.2, P5-02 11.1)
+                                             "monster", "site", "race_relation", "settlement_race"});   // schema 10
+                                             // (P3-04 9.1, P5-12 7.2, P5-02 11.1, P5-03 16.1)
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' ORDER BY name") ==
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_beast_1"},
                                                 {"sqlite_autoindex_biome_1"},

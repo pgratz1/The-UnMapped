@@ -95,7 +95,7 @@ const std::vector<Rule>& shipped_rules() {
          {"{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"}},
         // P5-02 9.3: rule 7
         {"ravage", {"settlement_overrun"}, {}, 1, 1, 0, false, 600, 75, "monster", "civilization",
-         {"The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"}},
+         {"The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"}},   // P5-03 12.3
     };
     return v;
 }
@@ -337,7 +337,7 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
     for (const wd::Definition& d : h->definitions) {
         if (d.id != "report") continue;
         const std::vector<wd::Value>& ev = d.record.get("events").as_array();
-        REQUIRE(ev.size() == 55U);   // P5-02 10.2
+        REQUIRE(ev.size() == 62U);   // P5-02 10.2
         const wd::Record& last = ev[42].as_record();   // kind 43; kinds 44 to 55 follow (P5-02 10.2)
         CHECK(last.get_string("kind") == "region_renamed");
         CHECK(last.get_int("salience") == 60);

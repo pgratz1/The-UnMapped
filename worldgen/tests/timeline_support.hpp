@@ -344,7 +344,11 @@ inline std::string list_text(std::span<const std::int64_t> ids) {
 // D(Y) of a YearState. P5-02 13 (P4-01 r4; the test writer's line formats, reading P5 of the reference: 13 gives
 // none): the settlement lines gain the ending at Y (GUESS SettlementState::ending), and with the timeline D(Y)
 // ends with `site <id>` per site open at Y and `monster <id> <awake> <lair> <region>` per monster alive at Y.
-inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nullptr) {
+// P5-03 18 (rule set p5-03): with the timeline and the world's race ids (ascending), D(Y) ends with `races <a> <b>
+// <met> <disposition> <band>` per pair a < b, then `mix <s> <race> <share> <standing>` per settlement standing at Y
+// with more than one race, ascending.
+inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nullptr,
+                             const std::vector<std::int64_t>* races = nullptr) {
     std::string out = "year " + num(st.year) + " phase " + num(st.phase) + " age " + num(st.age) + "\n";
     for (const wh::RegionHolding& r : st.regions) {
         out += "hold " + num(r.region) + " " + num(r.civ) + " " + num(r.since) + " " + num(r.event) + "\n";
@@ -369,8 +373,33 @@ inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nu
                        num(ms.region) + "\n";
             }
         }
+        if (races != nullptr) {
+            for (std::size_t i = 0; i < races->size(); ++i) {
+                for (std::size_t j = i + 1; j < races->size(); ++j) {
+                    const wh::RaceRelationState r = t->race_relation_at((*races)[i], (*races)[j], st.year);
+                    out += "races " + num(r.race_a) + " " + num(r.race_b) + " " + (r.met ? "1" : "0") + " " +
+                           num(r.disposition) + " " + num(r.band) + "\n";
+                }
+            }
+            for (const wh::SettlementState& s : st.settlements) {
+                const std::vector<wh::RaceShare> mx = t->settlement_races(s.settlement, st.year);
+                if (mx.size() > 1U) {
+                    for (const wh::RaceShare& x : mx) {
+                        out += "mix " + num(s.settlement) + " " + num(x.race) + " " + num(x.share) + " " +
+                               num(x.standing) + "\n";
+                    }
+                }
+            }
+        }
     }
     return out;
+}
+
+inline std::vector<std::int64_t> race_ids(const wh::LoadedHistory& h) {
+    std::vector<std::int64_t> v;
+    for (const db::RaceRow& r : h.tables.races) v.push_back(r.id);
+    std::sort(v.begin(), v.end());
+    return v;
 }
 
 // S of a loaded history.
@@ -414,6 +443,15 @@ inline std::string static_dump(const wh::LoadedHistory& h) {
     for (const db::BeastPopulationRow& b : h.tables.beast_populations) {
         out += "beast " + num(b.region) + " " + num(b.beast) + " " + num(b.year) + " " + num(b.count) + "\n";
     }
+    // P5-03 18: after the beast lines, every race_relation and settlement_race row in key order
+    for (const db::RaceRelationRow& r : h.tables.race_relations) {
+        out += "relation " + num(r.race_a) + " " + num(r.race_b) + " " + num(r.year) + " " + num(r.disposition) + " " +
+               num(r.band) + "\n";
+    }
+    for (const db::SettlementRaceRow& r : h.tables.settlement_races) {
+        out += "share " + num(r.settlement) + " " + num(r.race) + " " + num(r.year) + " " + num(r.share) + " " +
+               num(r.standing) + "\n";
+    }
     for (const wh::HistoryView::Event& e : h.view.events()) {
         out += "effects " + num(e.row.id) + " " + list_text(t.effects(e.row.id)) + "\n";
     }
@@ -434,12 +472,12 @@ inline std::vector<std::int64_t> golden_years(const wh::LoadedHistory& h) {
 }
 
 // SHA-256 of D(0) ... D(E), through the reusing overload of year_state.
-inline std::string years_hash(const wh::Timeline& t) {
+inline std::string years_hash(const wh::Timeline& t, const std::vector<std::int64_t>& races) {
     worldgen::Sha256 m;
     wh::YearState st;
     for (std::int64_t y = 0; y <= t.end_year(); ++y) {
         t.year_state(y, st);
-        m.update(std::string_view(year_dump(st, &t)));
+        m.update(std::string_view(year_dump(st, &t, &races)));
     }
     return worldgen::to_hex(m.final());
 }
@@ -559,10 +597,11 @@ inline void check_dumps(const std::string& name, const wh::LoadedHistory& h) {
     CAPTURE(name);
     const GoldenCase& g = golden_case(name);
     const std::string s = static_dump(h);
+    const std::vector<std::int64_t> races = race_ids(h);
     CHECK_MESSAGE(sha(s) == g.static_hash, "S of " << name << ":\n" << s.substr(0, 4000));
     std::vector<std::pair<std::int64_t, std::string>> got;
     for (const std::int64_t y : golden_years(h)) {
-        const std::string d = year_dump(h.timeline.year_state(y), &h.timeline);
+        const std::string d = year_dump(h.timeline.year_state(y), &h.timeline, &races);
         got.emplace_back(y, sha(d));
         const auto it = std::find_if(g.years.begin(), g.years.end(), [&](const auto& p) { return p.first == y; });
         if (it != g.years.end() && it->second != got.back().second) {
@@ -570,7 +609,7 @@ inline void check_dumps(const std::string& name, const wh::LoadedHistory& h) {
         }
     }
     CHECK(got == g.years);
-    CHECK(years_hash(h.timeline) == g.years_hash);
+    CHECK(years_hash(h.timeline, races) == g.years_hash);
 }
 
 }  // namespace tltest

@@ -3549,7 +3549,7 @@ template beasts_bold 496e207b40726567696f6e7d20746865207b4062656173747d207b40626
 template monster_raid 7b636976696c697a6174696f6e3a726169647d207b40736574746c656d656e747d2e form 'raid' needs a monster role at byte 0
 template battle 7b77696e6e65723a726169647d2e form 'raid' needs a monster role at byte 0
 template monster_raid 7b6d6f6e737465723a726169647d ok
-template monster_raid 546865207b4062656173743a626f6c647d2063616d652e {@beast} needs a kind with a value 'beast' at byte 4
+template monster_raid 546865207b4062656173743a626f6c647d2063616d652e {@beast:bold} needs a kind with a value 'beast' at byte 4
 template beasts_bold 7b4062656173743a6669657263657d207b736574746c656d656e747d2e unknown placeholder '{@beast:fierce}' at byte 0
 template refugees_arrived 7b7374616e64696e673f617c627c637c647d ok
 template refugees_arrived 7b7374616e64696e673f617c627c637c647c657d unknown placeholder '{standing?a|b|c|d|e}' at byte 0

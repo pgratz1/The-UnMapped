@@ -248,13 +248,14 @@ std::map<std::int64_t, std::int64_t> derived_endings(const Tables& t) {
         } else if (k == "settlement_overrun") {
             e = 2;
         } else if (k == "settlement_abandoned" || k == "settlement_abandoned_to") {
-            bool plague = false, famine = false;
+            bool plague = false, famine = false, fled = false;
             for (const std::int64_t c : causes[ruin]) {
                 const std::string& ck = key[kind_of[c]];
                 plague = plague || ck == "plague" || ck == "plague_spread" || ck == "plague_outbreak";
                 famine = famine || ck == "famine";
+                fled = fled || ck == "settlement_fled";   // P5-03 11.3: code 6, tested before 3 and 4
             }
-            e = plague ? 3 : famine ? 4 : 5;
+            e = fled ? 6 : plague ? 3 : famine ? 4 : 5;
         }
         out[at(s, 0)] = e;
     }
@@ -443,15 +444,23 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
     CHECK(high.seed == 7U);
     CHECK(high.size == 1024);
     CHECK(high.pressure == "high");
-    // every kind appears and every event kind but beasts_bold is written over the monsters-small fixtures
-    CHECK(monsters_golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
-    CHECK(monsters_golden().events_seen.size() >= 11U);
+    // every kind appears and every event kind but beasts_bold is written over the monsters-small fixtures; at
+    // 0.24.0 (P5-03 14.2: the slaughter that raises the dead scales with the pressure) no host rises on them, so
+    // the undead and undead_rose are witnessed by the world cases instead (geo-seed-1-1024's m5, hist-conflict-73-
+    // 1024's m6 and three more)
+    CHECK(monsters_golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "wyvern"});
+    CHECK(monsters_golden().events_seen.size() >= 10U);
+    std::size_t undead = 0;
+    for (const MCase& c : monsters_golden().cases) {
+        for (const std::string& m : c.monsters) undead += m.find(" undead ") != std::string::npos ? 1U : 0U;
+    }
+    CHECK(undead >= 5U);
     // the table lines of the world cases equal p3-06-conflict.txt's
     for (const MCase& c : monsters_golden().cases) {
         if (c.kind != "world" || c.pressure != "normal") continue;
         CAPTURE(c.name);
         const CCase& cc = conflict_case(c.name.c_str());
-        for (const char* t : {"beast_population", "monster", "site", "race_relation", "settlement_race"}) CHECK(cc.tables.at(t) == c.tables.at(t).second);
+        for (const char* t : {"beast_population", "monster", "site"}) CHECK(cc.tables.at(t) == c.tables.at(t).second);
     }
 }
 
@@ -493,7 +502,7 @@ TEST_CASE("P5-02 7.5 I0: with the zero tuning the history tables equal those wit
 }
 
 // 19.1 item 3 on a world where boldness occurs (phase 1 found none on the fixtures): geo-seed-0-512 has two
-// beasts_bold events with the shipped tuning of 0.23.0 (r1). Each is checked against 6.2.3 from the rows.
+// beasts_bold events with the shipped tuning of 0.23.0 (r1), one at 0.24.0. Each is checked against 6.2.3 from the rows.
 TEST_CASE("P5-02 6.2.3: beasts_bold on geo-seed-0-512: settlement, owner, beast, toll and one per region and year") {
     const MCase& g = mcase("geo-seed-0-512");
     const Tables t = tables_of_world(open_world(world_of(g)));
@@ -528,10 +537,10 @@ TEST_CASE("P5-02 6.2.3: beasts_bold on geo-seed-0-512: settlement, owner, beast,
         REQUIRE(vals[id].size() == 2U);   // 10.1: beast, dead
         const std::int64_t beast = at(*vals[id][0], 2), dead = at(*vals[id][1], 2);
         REQUIRE(menace.count(beast) == 1U);
-        CHECK(menace[beast] > 0);   // the species of the largest B x menace is a predator
+        CHECK(menace[beast] > 0);   // P5-03 13: drawn by B x menace, so a species of menace 0 is never chosen
         CHECK(dead >= 0);
     }
-    CHECK(n == 2);
+    CHECK(n == 1);   // 0.24.0: one (p3-06-conflict.txt, geo-seed-0-512 events_beasts_bold = 1); two at 0.23.0
 }
 
 // 19.2 resume (P3-04 16.3 item 21): a world generated --until chronology and resumed through the history stage

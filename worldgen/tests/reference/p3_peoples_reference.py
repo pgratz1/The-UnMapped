@@ -1775,11 +1775,16 @@ class World(pe.World):
             if not left and FLAGS["ghost"] and self.ghost_eligible(u, pop[uid], gone):
                 left = self.ghost_draw(u)   # P5-02 8.2 in the plan
             if left:
-                others = [x for x in self.standing_of(owner) if x["id"] != uid and x["id"] not in gone]
+                # P5-03 11.1 in the plan as in the abandonment (integration: the plan equals the real toll): the
+                # destination within abandon_reach_hops and the survivors less the losses on the road
+                others = [x for x in self.standing_of(owner) if x["id"] != uid and x["id"] not in gone
+                          and self.in_reach(u, x)]
                 if others:
                     d = min(others, key=lambda x: ((x["x"] - u["x"]) ** 2 + (x["y"] - u["y"]) ** 2, x["id"]))
                     room = max(0, 2 * self.geo.capacity(d["region"], race) - pop[d["id"]])
-                    pop[d["id"]] += min(pop[uid], room)
+                    road = road_loss_of(pop[uid], self.draw("hist.peoples.abandon_loss", uid, 0, 0), t) \
+                        if FLAGS["p503"] else 0
+                    pop[d["id"]] += min(pop[uid] - road, room)
                 pop[uid] = 0
                 gone.add(uid)
         return total

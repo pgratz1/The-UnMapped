@@ -63,7 +63,9 @@ TEST_CASE("P5-03 11.1: abandon_reach_hops 0 and the stress data: destinations in
     const wd::ContentSet c =
         p503api::with_history(conflict_test::stress_content(), "peoples", {{"abandon_reach_hops", p503api::V(0)}});
     std::int64_t without = 0;
-    for (const std::uint64_t seed : {0U, 1U, 2U, 3U}) {
+    // stress 13 added at integration: with the calibrated data it is the stress map with an abandonment of kind 16
+    // (p3-06-conflict.txt, stress-13 events_settlement_abandoned = 1)
+    for (const std::uint64_t seed : {0U, 1U, 2U, 3U, 13U}) {
         CAPTURE(seed);
         const p503check::World w = p503run::stage_fixture(seed, c);
         check_abandonments(w);

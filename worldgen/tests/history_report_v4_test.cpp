@@ -105,9 +105,9 @@ TEST_CASE("P5-02 12.4: [monsters] after [present]: every monster at full; the li
     for (const std::string& l : lines) {
         if (!l.empty() && l[0] == '[') heads.push_back(l);
     }
-    REQUIRE(heads.size() >= 4U);
-    CHECK(std::vector<std::string>(heads.end() - 4, heads.end()) ==
-          std::vector<std::string>{"[present]", "[monsters]", "[sites]", "[stats]"});
+    REQUIRE(heads.size() >= 5U);   // P5-03 17.2 (v5): [peoples] after [sites]
+    CHECK(std::vector<std::string>(heads.end() - 5, heads.end()) ==
+          std::vector<std::string>{"[present]", "[monsters]", "[sites]", "[peoples]", "[stats]"});
 }
 
 TEST_CASE("P5-02 12.5: [sites] after [monsters]: every site at full, the count line only at summary") {
@@ -132,9 +132,13 @@ TEST_CASE("P5-02 12.6: the [stats] keys appended at the end, full only; the summ
         {"monster_raids", 2},   {"monster_killed", 130},     {"settlements_overrun", 1}, {"undead_risen", 0},
         {"outposts", 2},        {"outposts_open", 1},        {"beasts_bold", 1},       {"settlements_left", 3},
         {"regions_shunned", 1}};
-    REQUIRE(st.size() >= want.size());
-    CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - static_cast<std::ptrdiff_t>(want.size()),
-                                                            st.end()) == want);
+    // P5-03 17.4 (v5): eighteen keys appended after these
+    const std::ptrdiff_t p503 = 18;
+    REQUIRE(st.size() >= want.size() + 18U);
+    CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - p503 - static_cast<std::ptrdiff_t>(want.size()),
+                                                            st.end() - p503) == want);
+    CHECK(st[st.size() - 18U].first == "race_relations");
+    CHECK(st.back().first == "ruins_oldest_year");
     const auto m = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(m.at("events_monster_appeared") == 2);
     CHECK(m.at("events_outpost_abandoned") == 1);

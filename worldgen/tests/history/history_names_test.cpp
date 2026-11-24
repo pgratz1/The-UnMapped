@@ -921,7 +921,7 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     // at 0.18.0; 768 whole at 0.17.0)
     CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 109);
     CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 30);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 514);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 515);   // P5-03 12.3: bird
 }
 
 }  // TEST_SUITE
