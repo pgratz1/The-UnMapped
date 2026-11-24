@@ -1,6 +1,6 @@
 # P4-06 History movie
 
-Status: **r1 draft, 2026-11-23**, for approval by Paul or the lead. Phase P4 Viewer v1, stage 6 (the last) of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-06", 5 rules V1 to V10, 6.2, 7 row P4-06, 8, 10 step 6, 11 question 2). Builds on P4-03 r4 (year bar, `HistoryState`, `YearMarks`, the focus rule of 4.3), P4-04 r2 (event places and rings, `event_symbol`, `event_symbol_colour`), P4-05 r2 (browser, `BrowserState`, follow, the event list, B0 to B12) and the viewer as built on `origin/main` at 568df26 (generator 0.23.0, schema 9; `gdext/README.md`). Design doc 10 ("Viewer v1 decisions": "History movie"). Proposals read: "Viewer: a history movie on the 2D map" (Paul's request) and "Viewer v1: the history movie is playback, recorded with Godot's Movie Maker" (accepted 2026-11-22).
+Status: **r2, 2026-11-24**: correction round, text only, brought in line with what was built (`gdext/src/viewer/playback_state.cpp`, `viewer_model_playback.cpp`, `viewer_screen_playback.cpp`, `gdext/README.md`); no change to code or output (revision notes at the end). r1 (draft, 2026-11-23) was approved by the lead and merged. Phase P4 Viewer v1, stage 6 (the last) of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-06", 5 rules V1 to V10, 6.2, 7 row P4-06, 8, 10 step 6, 11 question 2). Builds on P4-03 r4 (year bar, `HistoryState`, `YearMarks`, the focus rule of 4.3), P4-04 r2 (event places and rings, `event_symbol`, `event_symbol_colour`), P4-05 r2 (browser, `BrowserState`, follow, the event list, B0 to B12) and the viewer as built on `origin/main` at 568df26 (generator 0.23.0, schema 9; `gdext/README.md`). Design doc 10 ("Viewer v1 decisions": "History movie"). Proposals read: "Viewer: a history movie on the 2D map" (Paul's request) and "Viewer v1: the history movie is playback, recorded with Godot's Movie Maker" (accepted 2026-11-22).
 
 **No world byte changes, no library part.** Generator stays 0.23.0, schema 9; `report`, `hash`, every golden file and `world-hashes.sh` are unchanged. Everything the movie needs already exists in `worldgen` (section 2). Owner: viewer engineer; the world critic reviews a recording.
 
@@ -91,10 +91,10 @@ The year change dominates a frame. P4-05 measured, on `linux-gcc-release`, seed 
 | --- | --- | --- |
 | `stopped` | `toggle_playback` / `play(from, to)` | `playing`; start year Y when P0 ≤ Y < P1, else P0 |
 | `playing` | `toggle_playback` | `paused` |
-| `paused` | `toggle_playback` | `playing`, from Y when P0 ≤ Y < P1, else from P0 (r = 0) |
+| `paused` | `toggle_playback` | `playing`, from Y when P0 ≤ Y < P1 (r = 0; clock, ticker and flashes kept); else a **new session** over the same span from P0, as `play` (clock 0, ticker and flashes cleared, S_stop recomputed) |
 | `playing`, `paused`, `ended` | a year change not made by playback (5.3) | `paused` at the new Y, r = 0 |
 | `playing` | advance reaches the end of P1 | `ended`, `playback_finished` once |
-| `ended` | `toggle_playback` | `playing` from P0 |
+| `ended` | `toggle_playback` | a **new session** over the same span from P0, as `play` |
 | any | `stop_playback`, world closed or opened | `stopped`, ticker and flashes cleared |
 
 `play(from, to)` from any state starts a new session over that span.
@@ -160,11 +160,11 @@ The ticker holds at most **6** entries; older entries are dropped from the front
 
 ### 6.2 Screen
 
-`%Ticker`, a `PanelContainer` over the bottom of `%MapView` (its child, anchored to the bottom edge with 8 px margins, `mouse_filter` ignore on it and its children, so hover, click and drag reach the map). Background black at alpha 0.6; inside, a `VBoxContainer` `%TickerLines` with one `Label` per entry, newest at the bottom, autowrap on word boundaries. Entries of the year shown in white, older ones in (170, 170, 170). Its height is at most 40 % of the map view; when the wrapped entries do not fit, the oldest are hidden. It is visible when the ticker toggle is on (default on, key **T**), the state is not `stopped`, and it has entries. It is rebuilt only on `ticker_changed`.
+`%Ticker`, a `PanelContainer` over the bottom of `%MapView` (its child, anchored to the bottom edge with 8 px margins, `mouse_filter` ignore on it and its children, so hover, click and drag reach the map). Background black at alpha 0.6; inside, a `VBoxContainer` `%TickerLines` with one `Label` per entry, newest at the bottom, autowrap on word boundaries. Entries of the year shown in white, older ones in (170, 170, 170). Its height is at most 40 % of the map view; when the wrapped entries do not fit, the oldest are hidden. As built, six entries cover about the map's lower third at both window sizes of 8.3 (question 4). It is visible when the ticker toggle is on (default on, key **T**), the state is not `stopped`, and it has entries. It is rebuilt only on `ticker_changed`.
 
 ## 7. Flashes
 
-On `arrive(y)`, each event of L with `year` = y and a place (`event_place` ≠ none) adds a flash `{event, x, y, colour, age 0, life 1,200,000}`; colour = `event_symbol_colour(event_symbol(kind_key))` (white for plain). At most 32 flashes; the oldest is dropped. A flash's age grows with `clock` (while `playing`, and while `ended` so that the last ones fade out, 4.2) and it is removed when age ≥ life. Flashes are cleared on `play`, `stop_playback` and a year change from outside, and frozen while `paused`.
+On `arrive(y)`, each event of L with `year` = y and a place (`event_place` ≠ none) adds a flash, **also the events that the ticker's cut of 6.1 (its first 5 and `... and <n> more`) leaves out of the ticker**, `{event, x, y, colour, age 0, life 1,200,000}`; colour = `event_symbol_colour(event_symbol(kind_key))` (white for plain). At most 32 flashes; the oldest is dropped. A flash's age grows with `clock` (while `playing`, and while `ended` so that the last ones fade out, 4.2) and it is removed when age ≥ life. Flashes are cleared on `play`, `stop_playback` and a year change from outside, and frozen while `paused`.
 
 `LayerMapView` draws them last, above the markers and the P4-05 highlights: a ring (`draw_arc`, full circle) centred on the cell's screen centre, radius 6g + 14g × age / life screen pixels and width 2g, with g the glyph cell size of P4-05 12.1 F1, in the flash colour with alpha 1 − age / life. The screen hands `get_flashes()` to the map view and calls `queue_redraw` on every frame while one is alive. The P4-04 rings of the year's events are drawn as before.
 
@@ -203,11 +203,11 @@ YearBar (VBoxContainer)
 | Q | skip quiet years on / off |
 | T | ticker shown / hidden |
 
-The keys of P4-03 and P4-05 keep their meaning; those that change the year pause playback (5.3). Without history the five keys do nothing. While a list, the search field or a spin box has focus it keeps Space (a focused `ItemList` or `LineEdit` takes it); Escape releases the focus first (P4-05 6.5).
+The keys of P4-03 and P4-05 keep their meaning; those that change the year pause playback (5.3). Without history the five keys do nothing. While a list, the search field or a spin box has focus it keeps Space (a focused `ItemList` or `LineEdit` takes it); Escape releases the focus of **any** control that has it (not only a browser control, P4-05 6.5), and with no focus it clears the selection as before.
 
 ### 8.3 Window sizes
 
-At 1600 × 1000 the map keeps about 800 × 830 px (31 px less than P4-05's 860), and the ticker covers at most its lower 40 %. At 1280 × 800 it is about 540 × 630. Key **B** (P4-05) or `--no-pane` gives the map the right pane's width, which is the recommended form for a recording (9.3).
+Measured as built, with the right pane shown: the map is **802 × 822** px at 1600 × 1000 and **544 × 622** at 1280 × 800 (r1 estimated about 800 × 830 and 540 × 630). The ticker covers at most its lower 40 %, with six entries about its lower third. Key **B** (P4-05) or `--no-pane` gives the map the right pane's width, which is the recommended form for a recording (9.3).
 
 ## 9. Command line and recording
 
@@ -224,16 +224,18 @@ At 1600 × 1000 the map keeps about 800 × 830 px (31 px less than P4-05's 860),
 
 With `--play`, `--year` is ignored (the span's start wins) and the status line shows `--year ignored: --play sets the start year`.
 
+Readings as built: `--speed` and `--skip-quiet` are accepted (and checked, 9.2) without `--play`; they then set the starting speed and skip of the controls. An argument that starts with `--` and is longer than two bytes is never taken as a `--play` value, so `--play --speed 5` is `--play needs two values: …`, not a year error.
+
 ### 9.2 Refusals (exact texts; checked by P9)
 
-The first that applies is shown in the status line as an error and printed with `printerr`; with `--quit-at-end` the viewer then quits with exit status 1, otherwise it stays open without playing.
+The first that applies, in the order of the table (r2: "no history" is tested before the span, since without history no span is one of the world's), is shown in the status line as an error and printed with `printerr`; with `--quit-at-end` the viewer then quits with exit status 1, otherwise it stays open without playing.
 
 | Case | Text |
 | --- | --- |
 | `--play` without two values | `--play needs two values: a year or - for each end` |
 | a value neither a decimal integer nor `-` | `--play <from> <to>: not a year: <value>` |
-| a span outside [0, E] or from > to (after defaults) | `--play <from> <to>: not a span of this world (0 to <E>)` |
 | world without history | `--play: this world has no history` |
+| a span outside [0, E] or from > to (after defaults) | `--play <from> <to>: not a span of this world (0 to <E>)` |
 | speed not in `SPEEDS` | `--speed <s>: not one of 1, 2, 5, 10, 20, 50, 100, 200, 500` |
 | bad skip value | `--skip-quiet <w>: on or off` |
 | `--quit-at-end` or `--play-log` without `--play` | `--quit-at-end needs --play` / `--play-log needs --play` |
@@ -247,21 +249,21 @@ The first that applies is shown in the status line as an error and printed with 
 B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-release
 GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64
 OUT=~/.cache/the-unmapped/out/movies; mkdir -p "$OUT"
-xvfb-run -a -s "-screen 0 1600x1000x24" "$GODOT" --path "$B/game" --resolution 1600x1000 \
-    --write-movie "$OUT/seed42-c3.avi" --fixed-fps 30 -- ~/.cache/the-unmapped/out/seed42-1024.db \
-    --select c3 --play - - --speed 5 --quit-at-end --no-pane
+xvfb-run -a -s "-screen 0 1600x1000x24" "$GODOT" --path "$B/game" --resolution 1600x900 \
+    --write-movie "$OUT/seed42-c4.avi" --fixed-fps 30 -- ~/.cache/the-unmapped/out/seed42-1024.db \
+    --select c4 --play - - --speed 20 --quit-at-end --no-pane
 ```
 
-Godot's own options (before `--`) choose the file (`.avi`: MJPEG with audio; `.png`: a numbered PNG sequence) and the frame rate; the viewer's options (after `--`) choose what plays. The movie file must be under the build root (V8); the viewer cannot see Godot's path, so this is a rule of the documented command, not a check. Recording needs a renderer (a desktop, or `xvfb-run` as above); no CI job records a movie (P4-00 6.2).
+**Frame size** (r2, found by the confirmation task): Godot 4.7.2's Movie Maker writes every frame at the project's viewport size, **1600 × 900** (`game/project.godot`), whatever `--resolution` says; a window of another size is scaled to it, and one of another aspect ratio is distorted (r1's `--resolution 1600x1000`). The documented command therefore uses `--resolution 1600x900`; a smaller file needs a downscale afterwards (for example `ffmpeg -vf scale=1280:720`, `gdext/README.md`). Godot's own options (before `--`) choose the file (`.avi`: MJPEG with audio; `.png`: a numbered PNG sequence) and the frame rate; the viewer's options (after `--`) choose what plays. The movie file must be under the build root (V8); the viewer cannot see Godot's path, so this is a rule of the documented command, not a check. Recording needs a renderer (a desktop, or `xvfb-run` as above); no CI job records a movie (P4-00 6.2).
 
-**Confirmation task** (viewer engineer, validation note): with the pinned 4.7.2 on Linux, record the command above to AVI and to PNG, check that the AVI plays in a common player and that its frame count is the `--play-log` frame count plus the 1 s lead-in and the 2 s end hold (90 frames at 30 fps) and the few frames before the world opens, and run it twice to show that the two `--play-log` outputs are identical. Windows: the same command in Git Bash without `xvfb-run`, by Paul or a later CI-free run (question 7). If Movie Maker proves unusable, the fallback of P4-00 6.2 applies (a PNG frame dump of the viewport by the viewer), with a spec amendment first.
+**Confirmation task** (viewer engineer, validation note): with the pinned 4.7.2 on Linux, record the command above to AVI and to PNG, check that the AVI plays in a common player and that its frame count is the `--play-log` frame count plus the 1 s lead-in and the 2 s end hold (90 frames at 30 fps) and the few frames before the world opens, and run it twice to show that the two `--play-log` outputs are identical. Windows: the same command in Git Bash without `xvfb-run`, by Paul or a later CI-free run (question 7). Done on Linux 2026-11-23 (`gdext/README.md`: 184 frames for `--select c4`, the `--play-log` lines of the AVI run and two PNG runs identical, the two PNG sequences identical frame for frame); Windows remains for Paul. If Movie Maker proves unusable, the fallback of P4-00 6.2 applies (a PNG frame dump of the viewport by the viewer), with a spec amendment first.
 
 ## 10. Performance (P4-00 8; release, seed 42 at 1024; 2048 four times)
 
 | Operation | Budget |
 | --- | --- |
 | `playback_advance` without its `set_year` (loop, ticker entries, flashes) | 1 ms |
-| S_stop recomputation (play, filter change) | 2 ms at 3,000 events |
+| S_stop recomputation (play, filter change; with the playback list) | 2 ms at 3,000 events; measured at most 0.03 ms (seed 42 at 1024 and the 2,646-event world) |
 | a frame with a year change, `set_year` to the next drawn frame | 50 ms (P4-05 12.3), unchanged |
 | playing on screen at 30 fps, any speed | under `xvfb-run`: no frame over 50 ms; on a desktop display: mean frame under 33 ms |
 
@@ -271,13 +273,19 @@ Godot's own options (before `--`) choose the file (`.avi`: MJPEG with audio; `.p
 UNMAPPED-BENCH: playback <i|ii|iii>: <frames> frames, <changes> year changes, <stops> stops, movie <seconds> s at 30 fps, advance max <ms> ms (year <y>) mean <ms> ms, ticker max <ms> ms
 ```
 
+then the slowest recomputation of the playback list and S_stop (at `play` and the filter changes; budget 2 ms, measured 0.03 ms):
+
+```
+UNMAPPED-BENCH: playback list and stop years recomputed (play, filter changes): slowest <ms> (<n> events)
+```
+
 and, windowed only, run (i) once more on real frames (vsync off, dt fixed at 33,333 regardless of delta) timing each frame from one `frame_post_draw` to the next:
 
 ```
 UNMAPPED-BENCH: playback frames: mean <ms> ms, max <ms> ms, <n> over 33 ms, <k> over 50 ms
 ```
 
-The validation note records the figures and the three movie lengths. A budget missed by more than a factor of two is a defect.
+The validation note records the figures and the three movie lengths. A budget missed by more than a factor of two is a defect. `--bench` with `--play` is refused (9.2). Measured as built (`gdext/README.md`, 2026-11-23, `linux-gcc-release`, seed 42 at 1024 / the 2,646-event world): movies (i) 32.4 / 33.2 s, (ii) 74.9 / 79.5 s, (iii) 127.4 / 113.3 s; `playback_advance` without its `set_year` at most 0.032 / 0.007 ms; on real frames under `xvfb-run` mean 27.8 ms, max 45.3 ms, none over 50 ms.
 
 ## 11. Headless check (P4-00 7 row P4-06, as amended in 13)
 
@@ -303,7 +311,7 @@ The check's **reference** is its own implementation of 4.2 over its own stop set
 | P3 | timing against the reference, scope all, level summary, for C1 (speed 10, skip off, [0, 300], dt 33,333), C2 (speed 50, skip on, [0, E], 33,333), C3 (speed 500, skip on, [0, E], 16,667), C4 (speed 500, skip off, [0, E], 33,333): `get_playback_stop_years()` equals the reference's set; the sequence of (call, Y) of every year change equals the reference's; never more than one year change per call; every stop year appears; the call that ends playback is the reference's |
 | P4 | story: the civilization of B5, level full, `select_civilization`, `play(-1, -1)`: span = [first, last year] of B3's list for it; with C2's speed, skip and dt, the stop years equal that list's distinct years plus P0 and P1; the ticker's event entries over the whole run are that list's events, in order, each once, and no other event. Again with group `war` set before `play`: the war events only |
 | P5 | ticker, scope all, C2: at each arrival the new entries are, in order, the phase line (when a phase starts) and the rows of the summary chronicle's events of that year, text equal to `get_event_rows` of those ids; the same at level full against `history.txt`; at most 6 entries at any time; `current` true exactly for entries of Y; at the first year of the full chronicle with more than 6 events (if the world has one) the 5 + `... and <n> more` form, else the same rule checked on a ticker fed directly through `PlaybackState` |
-| P6 | flashes, C2: the flashes added at each arrival are the ticker's events with a place, at B7's cell, colour `event_symbol_colour` of the kind; each is gone once its age reaches 1,200,000; never more than 32; none added for an event without a place |
+| P6 | flashes, C2: the flashes added at each arrival are the events of L of that year with a place (the ticker's events with a place, and those its cut hides), at B7's cell, colour `event_symbol_colour` of the kind; each is gone once its age reaches 1,200,000; never more than 32; none added for an event without a place |
 | P7 | interaction: during C2, at the third stop year, `set_year(Y + 7)` from outside: state `paused`, Y = Y + 7, ticker = the entries of Y + 7 only, no flashes; `playback_advance` changes nothing while paused; `toggle_playback` resumes and the next year changes equal the reference restarted at Y + 7 with r = 0; `set_playback_speed(100)` while playing changes no year in that call and the dwell after it is 10,000; `select_event` of an event pauses at its year; `stop_playback` clears ticker and flashes; closing and reopening the world gives `stopped` |
 | P8 | keys, with focus released: Space toggles `playing` / `paused`; Shift+Space stops; `-` and `=` step through `SPEEDS` and stop at both ends; Q toggles skip; T toggles the ticker's visibility; each change shows in `%PlayButton`, `%PlaySpeed`, `%PlaySkipQuiet` |
 | P9 | options: `parse_play_options` over a table of argument lists gives the options or the exact texts of 9.2: valid spans, `-` at either end, from > to, to > E, a non-integer, one value only, every speed of `SPEEDS` and 0, 3 and 1000, `--skip-quiet maybe`, `--quit-at-end` and `--play-log` alone, with `--screenshot`, with `--bench`, and without history |
@@ -337,7 +345,7 @@ Each has a recommendation, which the implementation follows until he decides.
 1. **Skip quiet years: faster or jumped.** Recommendation: quiet years at ten times the speed (Q = 10), so the slider visibly runs through a long peace and the settlement markers still grow. Alternative: jump straight from stop to stop (Q infinite), which gives the shortest movie.
 2. **The movie plays the browser's list.** Recommendation: playback walks the list the browser shows (3, 5.4), so a civilization's story is "select, Play", and a group filter plays only its wars. Alternative: playback always plays the whole history, and the selection only colours the ticker.
 3. **Scrubbing during play pauses.** Recommendation: any year change not made by playback pauses at the new year, and Play resumes from there (4.4). Alternatives: scrubbing stops playback, or playback continues from the new year.
-4. **The ticker over the map.** Recommendation: a translucent panel over the map's lower edge (6.2), so a recording with the right pane hidden shows map and sentences together. Alternatives: a strip under the map (the map loses about 130 px of height at 1600 × 1000), or the ticker in the right pane.
+4. **The ticker over the map.** Recommendation: a translucent panel over the map's lower edge (6.2), so a recording with the right pane hidden shows map and sentences together. Alternatives: a strip under the map (the map loses about 130 px of height at 1600 × 1000), or the ticker in the right pane. (r2) As built, six entries cover about the lower third of the map at both window sizes (8.3); **the lead leans towards a strip below the map**, for Paul to decide after the world critic's review of a recording.
 5. **Defaults.** Recommendation: speed 10 years a second, skip on, ticker on; speeds 1 to 500 in nine steps. A whole history then plays in a minute or two (the bench records the real length); a story reads well at 2 to 5.
 6. **The year bar's two rows.** Recommendation: the slider on a row of its own with Play, speed and skip (8.1), which fixes the 10 px slider at 1280 × 800 for one row of map height. Alternative: shorter button labels on one row, which leaves the slider narrow at 1280.
 7. **Recording format and Windows.** Recommendation: AVI (MJPEG) at 30 fps for review movies, PNG sequence when an editor will cut them; the engineer confirms Linux, and Paul confirms the documented command on Windows once, since no CI job records. Alternative: a CI job that records a short PNG sequence on both systems (minutes of runner time per push).
@@ -352,4 +360,5 @@ Each has a recommendation, which the implementation follows until he decides.
 
 ## Revision notes
 
+- **r2** (2026-11-24), text only, from what was built; no change to code or output. 4.4: resuming outside the span or from `ended` starts a new session. 6.2, 8.3: measured map sizes (544 × 622 at 1280 × 800, 802 × 822 at 1600 × 1000); six ticker entries cover the map's lower third. 7, P6: a flash for every placed event of the year, also those the ticker's cut hides. 8.2: Escape releases the focus of any control. 9.1: `--speed` and `--skip-quiet` accepted without `--play`; an argument starting with `--` is never a `--play` value. 9.2: "no history" before "not a span of this world". 9.3: Movie Maker writes at the project's viewport size, 1600 × 900, so the command uses `--resolution 1600x900` (and `--select c4 --speed 20`, as documented); a smaller file needs a downscale; the confirmation task done on Linux. 10: the bench line for the playback list and stop recomputation (budget 2 ms, measured 0.03 ms), `--bench` with `--play` refused, the measured figures. 14 question 4: the lead's lean towards a strip below the map.
 - **r1** (2026-11-23): first draft.

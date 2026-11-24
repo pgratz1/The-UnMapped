@@ -1372,3 +1372,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: playback walks the browser's current event list (a selected civilization's story by default span, first to last event). Each year has a dwell of 1/speed seconds; with "skip quiet years" on, a year with nothing listed takes a tenth of that. A frame makes at most one year change and never passes a year with a listed event, so every such year is shown with its sentences and flashing places, and busy stretches run slower than the speed. Time comes only from the frame step, so Movie Maker's fixed frame rate gives the same years in the same frames on every run. The sentences appear in a ticker over the map's lower edge; the year slider moves to a row of its own with the play controls. No library change.
 - Interim choice: as proposed (P4-06 open questions 1 to 7).
 - Status: open.
+
+### History: P5-03 r2, readings as built and calibrated
+
+- Date: 2026-11-24
+- Raised by: spec writer (`docs/specs/p5-03-race-relations.md` r2), from the build, the calibration and the lead's rulings on `p5/03-int` (generator 0.24.0)
+- Design doc section: 5 ("Race relations", "Mixed settlements", "Waiting for phase P5"; "Monsters as actors"), 9 ("Disposition")
+- Problem: the readings of the two P5-03 entries above were taken with r1's estimated values; calibration moved several, which changes how the readings play out.
+- Readings now in force: a pair's memory is bounded at ±500 and returns toward 0 at 20 a century, and each war, conquest, sack, capture, expulsion and shelter moves it three times r1's amount; peoples meet when their realms lie within eight borders (in practice every pair that can reach the other); an abandonment's survivors go only to a settlement of their realm in the same region, else they are displaced and may find shelter with another people; a small place flees a monster after two raids in fifty years; hunts grow more likely by a small step per remembered raid. The report counts a settlement as mixed at the end by a fixed share of 100 per mille, independent of the tuning. A rendered event sentence always starts with a capital letter. With these values a default world has a median of one change of band between peoples: most pairs keep the feeling their camps give them.
+- Interim choice: as built. Open for Paul in the spec (28): whether relations should move more (question 7, after the world critic's review) and the bound for lairs on former settlements (question 8).
+- Status: open.

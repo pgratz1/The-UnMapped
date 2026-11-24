@@ -1,6 +1,6 @@
 # P5-03 Race relations, mixed settlements and refugee migrations; P5-02 follow-ups
 
-Status: **draft r1, 2026-11-23, for the lead's and Paul's approval.** Written by the spec writer on `p5/03-spec`, cut from `origin/main` at 568df26 (generator 0.23.0, schema 9, report format v4; P5-01, P5-12, P5-02 and P4-05 merged). Phase P5 History depth, stage 03 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-03", 3.2, 4, 6.1, 7, 8), with the follow-ups of P5-02 bundled in (part B). Generator **0.24.0**; **schema 10**; history report format **v5** (each the next free one at merge, P5-00 4.3).
+Status: **r2, 2026-11-24**: correction round, text only, brought in line with what was built, calibrated and ruled on `p5/03-int` (generator 0.24.0); no change to code or output (revision notes at the end). r1 (draft, 2026-11-23) was written by the spec writer on `p5/03-spec`, cut from `origin/main` at 568df26 (generator 0.23.0, schema 9, report format v4; P5-01, P5-12, P5-02 and P4-05 merged). Phase P5 History depth, stage 03 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-03", 3.2, 4, 6.1, 7, 8), with the follow-ups of P5-02 bundled in (part B). Generator **0.24.0**; **schema 10**; history report format **v5** (each the next free one at merge, P5-00 4.3).
 
 Sources: design doc 5 ("Gods and the order of the races": alignment sets starting relations; the race table; "Peoples, beasts and monsters": stances, "Race relations", "Mixed settlements"; "Waiting for phase P5": migrations of whole peoples as refugees; "The plan for phase P5": mixed peoples, state by year), 6 (`race_relation`, `settlement_race`), 9 ("Disposition": an NPC's disposition starts from the relation between their race and the player's and is adjusted by the settlement's mix), 13, 14; P5-00 (3.1 P5-03, 4, 6.1, 7, 8.3); P3-04 r22 (6.9), P3-05 (8.5, 8.6, 9.3, 13, 21), P3-06 (4, 5, 7.5, 20.1), P3-07 r22, P4-01 r4, P5-12 r2, P5-02 r2; `docs/reviews/p5-02-beasts-monsters-world-critic.md` (F1 to F8); Paul's standing decisions in `docs/design/proposals.md` (monsters prefer smaller settlements; an undead host risen in a ruin may still overrun once; the share of capital-sack renamings stays; T16 at most 2 repeated battles per thousand; standing settlements not below P5-02's floor, a median of at least 81 of the default sweep, 83 measured; the `civs4` summary median read as about 1,100) and his wish of 2026-11-23 for abandoned places to explore.
 
@@ -93,14 +93,14 @@ All fields required, in this order:
 | `hatred_max` | int(−2000, 0) | −500 | a disposition at or below this is hatred (equal to `history.conflict.enmity_max`, 7.1) |
 | `friend_min` | int(0, 2000) | 150 | at or above this is friendship |
 | `band_margin` | int(0, 500) | 50 | hysteresis of a band change (6.2.3) |
-| `memory_min`, `memory_max` | int(−2000, 0), int(0, 2000) | −250, 250 | bounds of a pair's memory, in disposition units |
-| `memory_decay_per_century` | int(0, 10000) | 40 | memory's return toward 0 |
-| `war_memory` | int(0, 1000) | 25 | lost per war between them that ends by peace, truce or victory |
-| `conquest_memory` | int(0, 1000) | 50 | lost per realm conquered |
-| `sack_memory`, `capture_memory` | int(0, 1000) | 10, 5 | lost per settlement sacked, captured |
-| `expel_memory` | int(0, 1000) | 30 | lost per expulsion |
-| `shelter_memory` | int(0, 1000) | 15 | gained per arrival of refugees of one race in the other's settlement |
-| `meet_hops` | int(−1, 8) | 3 | two races meet when realms of both lie within this many borders (6.2.4); −1: never (a test seam) |
+| `memory_min`, `memory_max` | int(−2000, 0), int(0, 2000) | −500, 500 (r1: −250, 250) | bounds of a pair's memory, in disposition units |
+| `memory_decay_per_century` | int(0, 10000) | 20 (r1: 40) | memory's return toward 0 |
+| `war_memory` | int(0, 1000) | 75 (r1: 25) | lost per war between them that ends by peace, truce or victory |
+| `conquest_memory` | int(0, 1000) | 150 (r1: 50) | lost per realm conquered |
+| `sack_memory`, `capture_memory` | int(0, 1000) | 30, 15 (r1: 10, 5) | lost per settlement sacked, captured |
+| `expel_memory` | int(0, 1000) | 90 (r1: 30) | lost per expulsion |
+| `shelter_memory` | int(0, 1000) | 45 (r1: 15) | gained per arrival of refugees of one race in the other's settlement |
+| `meet_hops` | int(−1, 8) | 8 (r1: 3) | two races meet when realms of both lie within this many borders (6.2.4); −1: never (a test seam) |
 | `migrate_hops` | int(0, 8) | 2 | refugees seek a host within this many borders of their old home |
 | `migrate_min` | int(1, 100000) | 40 | the smallest group that migrates (equal to `abandon_min`) |
 | `welcome_min` | int(−2000, 2001) | −200 | a host's people takes in a race whose disposition toward it is at least this; 2001: never |
@@ -108,9 +108,11 @@ All fields required, in this order:
 | `conquest_settlers_permille` | int(0, 1000) | 100 | the conquerors' own people settling in a taken town (6.3.3) |
 | `drift_permille_per_century` | int(0, 1000) | 100 | the share of each minority that passes to the ruling people per century |
 | `fade_permille` | int(0, 1000) | 20 | a minority below this share is absorbed |
-| `mixed_min_permille` | int(1, 1001) | 100 | a minority at or above this makes the settlement mixed; 1001: never |
-| `expel_permille` | int(0, 1000) | 30 | chance per tick year of an expulsion that may happen |
+| `mixed_min_permille` | int(1, 1001) | 100 | a minority at or above this makes the settlement mixed (6.3.6's event); 1001: never. The report's "mixed at E" uses its own constant, 17.2 |
+| `expel_permille` | int(0, 1000) | 3 (r1: 30) | chance per tick year of an expulsion that may happen |
 | `expel_share_max` | int(0, 1000) | 500 | a minority above this share is too many to drive out |
+
+Every value is the shipped (calibrated, 22 step 10) value at 0.24.0; r1's value is in brackets where calibration moved it.
 
 Checks: `relations_bands`: `hatred_max` + `band_margin` < `friend_min` − `band_margin` (`bands overlap: hatred_max <a> and friend_min <b> with band_margin <m>`); `relations_memory`: `memory_min` ≤ 0 ≤ `memory_max` (by the types).
 
@@ -139,7 +141,7 @@ Bounds: settlements and races are those of `State`; at most 6 × 5 / 2 = 15 pair
 | T4 | shares of new settlements; pending moves; pending displacements; mixed |
 | T6, Q4 | shares of new settlements; pending moves; the log (6.2.2); owner changes (6.3.3); expulsions (6.5, T6 only); pending displacements; decay (6.2.2); turns (6.2.3); meetings (6.2.4); mixed |
 
-Y is the step's year (a quiet step's start), L its length. Nothing acts in T2, T3 or Q3.
+Y is the step's year (a quiet step's start), L its length. Nothing acts in T2, T3 or Q3. Every step ends by writing the `settlement_race` rows of the step (6.7).
 
 ### 6.2 Dispositions
 
@@ -156,7 +158,7 @@ D is symmetric. For a = b, D(a, a) = camp_table[k_a][k_a] (the same race; no mem
 
 #### 6.2.2 What moves the memory (T6, Q4)
 
-**The log.** Read every event e from the cursor to `last_event_id()` in ascending id, then advance the cursor. For e of a kind below, take its two civilizations x, y (by the roles listed; for `truce` the two `parties` in participant order) with races r_x, r_y; if r_x ≠ r_y and the pair has met: M(r_x, r_y) −= Δ × 1000 (or += for shelter), clamped to its bounds; append e to the pair's contributions (keeping the last 8).
+**The log.** Read every event e from the cursor to `last_event_id()` in ascending id, then advance the cursor. For e of a kind below, take its two civilizations x, y (by the roles listed, through `StepContext::event_participant`; for `truce` the two `parties` in participant order, through `StepContext::event_participants(event, role)`, which returns every participant id of the role in participant order) with races r_x, r_y; if r_x ≠ r_y and the pair has met: M(r_x, r_y) −= Δ × 1000 (or += for shelter), clamped to its bounds; append e to the pair's contributions (keeping the last 8).
 
 | Kind | x, y | Δ |
 | --- | --- | --- |
@@ -170,7 +172,7 @@ D is symmetric. For a = b, D(a, a) = camp_table[k_a][k_a] (the same race; no mem
 
 Events of this subsystem written in this step are read at the next T6 or Q4.
 
-**Decay** (T6: years 1; Q4: years L): for every pair, d = years × `memory_decay_per_century` × 1000 div 100; M > 0: M = max(0, M − d); M < 0: M = min(0, M + d). In milli-units a tick year decays 400 at the shipped rate, so ticks and quiet steps decay alike.
+**Decay** (T6: years 1; Q4: years L): for every pair, d = years × `memory_decay_per_century` × 1000 div 100; M > 0: M = max(0, M − d); M < 0: M = min(0, M + d). In milli-units a tick year decays 200 at the shipped rate (20 a century), so ticks and quiet steps decay alike.
 
 #### 6.2.3 Bands and turns (T6, Q4)
 
@@ -185,7 +187,7 @@ band 1 → 2  if D ≥ f          band 2 → 1  if D < f − m
 
 #### 6.2.4 Meetings (T6, Q4)
 
-For each pair (a, b) ascending that has not met, with both races awakened: the **presence** of a civilization is P3-06 5.1's (`presence(c)`: the regions c holds and the regions of its standing visible settlements). Over the pairs of alive, visible civilizations x of race a and y of race b, and regions R_x ∈ presence(x), R_y ∈ presence(y), find the smallest key (h, R_x, R_y, x, y) with h = `PeoplesView::hops(R_x)[R_y]` (unreachable: none). If such a key exists with h ≤ `meet_hops`: append **`peoples_met`** (region = the region of the younger of x and y (larger `founded_year`, then larger id) in the key, settlement 0; participants a `race_a`, b `race_b`; values `disposition` = B(a, b), `band` = the plain band; cause the younger's `founding_event`); the pair is met (year Y, the event), M = 0, its band set; a row is written (6.7). In Q4 it needs `quiet_events_left(0)` > 0, else it waits. `meet_hops` = −1: no pair ever meets.
+For each pair (a, b) ascending that has not met, with both races awakened: the **presence** of a civilization is P3-06 5.1's simple definition (`presence(c)`: the regions c holds and the regions of its standing visible settlements, ascending), not P3-06 20.1's, which leaves out hidden refuges: a hidden refuge's region counts for a meeting. Over the pairs of alive, visible civilizations x of race a and y of race b, and regions R_x ∈ presence(x), R_y ∈ presence(y), find the smallest key (h, R_x, R_y, x, y) with h = `PeoplesView::hops(R_x)[R_y]` (unreachable: none). If such a key exists with h ≤ `meet_hops`: append **`peoples_met`** (region = the region of the younger of x and y (larger `founded_year`, then larger id) in the key, settlement 0; participants a `race_a`, b `race_b`; values `disposition` = B(a, b), `band` = the plain band; cause the younger's `founding_event`); the pair is met (year Y, the event), M = 0, its band set; a row is written (6.7). In Q4 it needs `quiet_events_left(0)` > 0, else it waits. `meet_hops` = −1: no pair ever meets.
 
 ### 6.3 Shares and standing
 
@@ -219,7 +221,7 @@ The **target** standing of an entry g ≠ q_s: 0 if `conquered` and Y − `since
 
 #### 6.3.6 Mixed (every step, last)
 
-For each standing visible settlement s ascending, each entry g ≠ q_s ascending with share_g ≥ `mixed_min_permille` and `mixed_told` false: append **`settlement_mixed`** (region and settlement s; participants s `settlement`, o_s `civilization`, g `race`, q_s `ruling`; value `share`; cause the entry's `since_event`); `mixed_told` = true. In Q1 and Q4 it needs `quiet_events_left(o_s)` > 0, else it waits. A settlement is **mixed** at Y when some entry g ≠ q_s has share ≥ `mixed_min_permille`.
+For each standing visible settlement s ascending, each entry g ≠ q_s ascending with share_g ≥ `mixed_min_permille` and `mixed_told` false: append **`settlement_mixed`** (region and settlement s; participants s `settlement`, o_s `civilization`, g `race`, q_s `ruling`; value `share`; cause the entry's `since_event`); `mixed_told` = true. In Q1 and Q4 it needs `quiet_events_left(o_s)` > 0, else it waits. `mixed_told` belongs to the entry, not to the pair (settlement, race): an entry removed (expulsion, fade) takes its flag with it, and a race that comes back gets a new entry with `mixed_told` false, so its return is told again. A settlement is **mixed** at Y when some entry g ≠ q_s has share ≥ `mixed_min_permille`.
 
 ### 6.4 Migrations: the people ledger
 
@@ -227,14 +229,16 @@ For each standing visible settlement s ascending, each entry g ≠ q_s ascending
 
 `PeoplesSubsystem` gains `void set_ledger(PeopleLedger*)` and `PeopleLedger* ledger() const`; `PeopleLedger` (declared in `peoples.hpp`) has two calls, each of which only records (no `State` change, no append, no draw):
 
-- `moved(from, to, people)`: called right after `people` of settlement `from` were added to settlement `to` by the caller (so `to`'s population before is its population now minus `people`);
-- `displaced(from, race, people, cause)`: `people` of settlement `from` have nowhere to go (race 0: of every race of `from`, by its shares; else of that race only); `cause` is the event that displaced them.
+- `moved(state, from, to, people, cause)`: called right after `people` of settlement `from` were added to settlement `to` by the caller (so `to`'s population before is its population now minus `people`); `cause` is the event the move came with (the ruin, the capture or cession, the refuge's founding), and the races new to `to` date from it (6.4.2);
+- `displaced(state, from, race, people, cause)`: `people` of settlement `from` have nowhere to go (race 0: of every race of `from`, by its shares; else of that race only); `cause` is the event that displaced them.
 
-At each call the subsystem copies `from`'s entries and o_from (as they are at the call) into the record. The callers (7.2): P3-05's ruin procedure item 2 (`moved` for the survivors that reach t, `displaced` for the rest, cause the ruin's event e), which serves abandonment, sack and overrun; P3-06's `refugees` after a capture (`moved` for those placed, `displaced` for the rest, cause the capture); P3-06's flight (`moved` into the refuge, after `found_settlement`); this subsystem's expulsion (6.5, `displaced` with the race). With no ledger set, no call is made.
+Both take the live `State` (const) as their first argument; both declared pure virtual in `PeopleLedger`.
+
+At each call the subsystem first runs 6.3.1's bookkeeping (so a settlement founded earlier in the step is known), then copies `from`'s entries and o_from (as they are at the call) into the record. The callers (7.2): P3-05's ruin procedure item 2 (`moved` for the survivors that reach t, `displaced` for the rest, cause the ruin's event e), which serves abandonment, sack and overrun; P3-06's `refugees` after a capture or a cession (`moved` for those placed, `displaced` for the rest, cause the capture, or the `settlements_ceded` or `region_ceded` event); P3-06's flight (`moved` into the refuge, after `found_settlement`, cause the `refugees_settled` event); this subsystem's expulsion (6.5, `displaced` with the race). With no ledger set, no call is made.
 
 #### 6.4.2 Pending moves
 
-In record order: `mix(to, from's copied entries, people, P_to − people)` with P_to read at the call (stored in the record). A row is written for `to` (6.7).
+In record order: when `to` is not standing when the record is resolved (it fell after the call), the record is skipped: its people went with it. Else `mix(to, from's copied entries, people, P_to − people)` with P_to read at the call (stored in the record); a race new to `to` gets `since_year` Y (the resolving step's year) and `since_event` the record's cause. A row is written for `to` (6.7).
 
 #### 6.4.3 Pending displacements
 
@@ -271,7 +275,7 @@ The majority guard (`expel_share_max`) keeps a conquered majority in place until
 
 **`race_relation`** (16.2): a row (a, b, year, disposition, band) is written at a pair's meeting (the meeting's year), at each turn (the turn's year), at the start of each T1 or Q1 whose phase differs from the last (year = the previous phase's last year), and when the stage ends the run (`finish`, year E − 1), each only when (disposition, band) differs from the pair's last row; when two rows of one pair fall in the same year, the later replaces the earlier. A pair that never met has no row.
 
-**`settlement_race`** (16.2): a row (s, g, year, share, standing) for each entry whose (share, standing) differs from the last row of (s, g), written at the end of every step in which s's entries changed (the step's year; a quiet step's Y + L − 1 for drift, which is applied at a phase start), and at `finish` for standing settlements; an entry removed writes a row with share 0 and standing 0 (the race left). No row is written for a settlement after it is ruined. Same-year rows of one (s, g): the later replaces the earlier. So the shares of a standing settlement at the end of year Y are, per race, the last row with year ≤ Y and share > 0.
+**`settlement_race`** (16.2): a row (s, g, year, share, standing) for each entry whose (share, standing) differs from the last row of (s, g), written at the end of every step of this subsystem for every standing settlement (unchanged entries write nothing), at the step's year Y; a quiet step's rows are dated at its start Y, like the census (P3-04 6.7), drift and standings included (r1 said Y + L − 1 for drift). `finish` writes no `settlement_race` row (the last step's rows are the end state). An entry removed writes a row with share 0 and standing 0 (the race left); a first row of share 0 is never written. No row is written for a settlement after it is ruined. Same-year rows of one (s, g): the later replaces the earlier. So the shares of a standing settlement at the end of year Y are, per race, the last row with year ≤ Y and share > 0.
 
 ## 7. Seams
 
@@ -280,13 +284,13 @@ The majority guard (`expel_share_max`) keeps a conquered majority in place until
 `ConflictSubsystem` gains `void set_dispositions(const DispositionView*)` and `const ConflictCamp& camp_table() const`; `DispositionView` (declared in `conflict.hpp`) has `std::int64_t disposition(std::int64_t race_a, std::int64_t race_b) const` (6.2.1's D, symmetric, D(a, a) the camp value) and `std::int64_t hatred_event(std::int64_t race_a, std::int64_t race_b) const` (the pair's last `disposition_turned` into band 0, 0 when none). With no view set, conflict is as at 0.23.0.
 
 - **4.1**: d(a, b) = D(r_a, r_b) − grudge{a, b}, read from the view (as it holds when conflict runs: the end of relations' last T6 or Q4). For r_a = r_b this is camp(a, b) − grudge, unchanged.
-- **4.3 `enmity`**: a pair of civilizations qualifies when D(r_a, r_b) ≤ `enmity_max` (in place of camp(a, b) ≤ `enmity_max`); the row is opened with `since_event` = the larger id of the younger civilization's `founding_event` and `hatred_event(r_a, r_b)`. So a pair that qualifies at first sight opens as before, and a pair whose peoples came to hate each other later opens with the turn that brought it. The rest of 4.3 is unchanged (at most one row per pair, ever; closed by the end of a side). With the shipped values `hatred_max` = `enmity_max` = −500, an enmity row exists between realms exactly when their peoples are in hatred (or were, since the row stays).
+- **4.3 `enmity`**: a pair of civilizations qualifies when D(r_a, r_b) ≤ `enmity_max` (in place of camp(a, b) ≤ `enmity_max`); the row is opened with `since_event` = the larger id of the younger civilization's `founding_event` and `hatred_event(r_a, r_b)`; its `since` is the year it opens (the bookkeeping year, as every `relation` row's, P3-04 6.7), so a row opened by a later turn into hatred has `since` = that later year while its `since_event` may be older. So a pair that qualifies at first sight opens as before, and a pair whose peoples came to hate each other later opens with the turn that brought it. The rest of 4.3 is unchanged (at most one row per pair, ever; closed by the end of a side). With the shipped values `hatred_max` = `enmity_max` = −500, an enmity row exists between realms exactly when their peoples are in hatred (or were, since the row stays).
 
 ### 7.2 The people ledger in peoples and conflict (amends P3-05 8.5, P3-06 7.5, 20.1)
 
-- P3-05 8.5 item 2 (the ruin procedure, so also abandonment, sack and overrun): after t gains `settled`, `ledger()->moved(s, t, settled)` when settled ≥ 1; then, when P − settled ≥ 1 (the people with no room or no destination), `ledger()->displaced(s, 0, P − settled, e)` with e the ruin's event. Abandonment's road losses (11.1) are dead, not displaced: they are taken off before the ruin.
-- P3-06 7.5's `refugees` after a capture: `moved(from, nearest, placed)` when placed ≥ 1, then `displaced(from, 0, people − placed, the capture)` when that is ≥ 1 (and `displaced(from, 0, people, the capture)` when there is no own settlement).
-- P3-06 20.1's flight: `moved(t, h, n)` right after the refuge h is founded with n people.
+- P3-05 8.5 item 2 (the ruin procedure, so also abandonment, sack and overrun): after t gains `settled`, `ledger()->moved(state, s, t, settled, e)` when settled ≥ 1; then, when P − settled ≥ 1 (the people with no room or no destination), `ledger()->displaced(state, s, 0, P − settled, e)` with e the ruin's event. Abandonment's road losses (11.1) are dead, not displaced: they are taken off before the ruin.
+- P3-06 7.5's `refugees` after a capture, and after a cession (P3-06 22.5's excess over the winner's room, kind 29 or 40): `moved(from, nearest, placed, cause)` when placed ≥ 1, then `displaced(from, 0, people − placed, cause)` when that is ≥ 1 (and `displaced(from, 0, people, cause)` when there is no own settlement), with cause the capture or the cession event.
+- P3-06 20.1's flight: `moved(t, h, n, the refugees_settled event)` right after the refuge h is founded with n people.
 - Nothing else in P3 moves people between settlements (colonists found new settlements of the founder's people, 6.3.1; a tribute is casualties, P3-06 20.3).
 
 ### 7.3 `Settlement::owner_event` (amends P3-04 6.1)
@@ -327,11 +331,13 @@ The charged civilization of a quiet-step event (W9) is its first civilization pa
 | `standing_changed` | 15 | `In {settlement}, {civilization} {standing?held the|tolerated the|accepted the} {race:plural}{standing? as subjects|| as equals}.` | no |
 | `people_expelled` | 40 | `{civilization} drove the {race:plural} out of {settlement}; {people} left.` | yes |
 
-`refugees_arrived`'s `{standing?…}` has four alternatives for 0, 1, 2 and 3: **the choice placeholder gains a four-word form** (amends P3-04 8.4, r10's three-word form): `{v?w0|w1|w2|w3}` renders w0 for 0, w1 for 1, w2 for 2 and w3 for every other value (`#` is the value, as in the three-word form); `template_problem` unchanged otherwise. `people` ≥ `migrate_min` (40), so the number is never a word. Samples (illustrative): `The Dwarves first met the Goblins in the Grey Fells, and were wary of them.` · `After the wars and the sacks, the Dwarves and the Goblins came to hate one another.` · `After the sack, 240 Humans from Ashford found shelter in Kazad Rune, tolerated by the Hold of Durn.` · `After the conquest, the Goblins and the Elves lived side by side in Fievos.` · `The House of Aelin drove the Goblins out of Fievos; 310 left.`
+`refugees_arrived`'s `{standing?…}` has four alternatives for 0, 1, 2 and 3: **the choice placeholder gains a four-word form** (amends P3-04 8.4, r10's three-word form): `{v?w0|w1|w2|w3}` renders w0 for 0, w1 for 1, w2 for 2 and w3 for every other value (`#` is the value, as in the three-word form); `template_problem` unchanged otherwise. `people` ≥ `migrate_min` (40), so the number is never a word.
+
+**A sentence starts with a capital** (amends P3-04 8.5 and 21; r23): after every substitution, when the first byte of the rendered sentence is a lower-case ASCII letter (`a` to `z`), `render_event` makes it the upper-case letter; nothing else changes. It is a general rule of the renderer, not of these templates: it is needed by templates that open with a `{@causes:…|After |, }` clause followed by a literal `the ` when no cause has a word (`disposition_turned`, `settlement_mixed`), and it applies to any template whose first substitution renders lower-case, a number word included. It supersedes P3-04 r17's "the word is never capitalized" for a word at byte 0 (no shipped template puts a value there). No world byte changes (sentences are not stored). Samples (illustrative): `The Dwarves first met the Goblins in the Grey Fells, and were wary of them.` · `After the wars and the sacks, the Dwarves and the Goblins came to hate one another.` · `After the sack, 240 Humans from Ashford found shelter in Kazad Rune, tolerated by the Hold of Durn.` · `After the conquest, the Goblins and the Elves lived side by side in Fievos.` · `The House of Aelin drove the Goblins out of Fievos; 310 left.`
 
 Causes (W6): a meeting, the younger realm's founding; a turn, the events that moved the memory since the last turn (or the last turn, or the meeting); an arrival, the event that displaced the group (an abandonment, a sack, an overrun, a capture, an expulsion); a mixed settlement, the event that brought the minority or put it under new rulers; a standing change, the turn that changed the band, else the event the standing dates from; an expulsion, the event that made the people subjects and, when later, the turn into hatred.
 
-**Summary candidates**: about 13 meetings, 1 to 3 turns, 3 to 10 arrivals, 3 to 10 mixed settlements and 0 to 2 expulsions a default world at salience ≥ 20, against the 12.9 budget (P5-02); no companion is added. Measured by the engineer (21, T18).
+**Summary candidates**: about 15 meetings (every pair, RR1), a median of 1 turn (RR2), 5 arrivals (MX2), 3 expulsions (MX3) and about 8 mixed settlements (MX1) a default world, against the 12.9 budget (P5-02); no companion is added. T18 (21) holds: default median 620 lines.
 
 # Part B. P5-02 follow-ups
 
@@ -343,7 +349,7 @@ Source: `docs/reviews/p5-02-beasts-monsters-world-critic.md`. Each finding with 
 
 ### 9.1 A raid cites the last raid on the same place (amends P5-02 6.4.1)
 
-The monster keeps, per settlement, the years and ids of its raids on it within the last max(`raid_chain_years`, `fear_years`) years. A raid's causes are, ascending without repeats: the monster's current waking event and, when m raided t within the last `raid_chain_years` (new field of `history.monsters`, shipped **100**), its last such raid. So a run of raids reads as a chain, and a reader of the log can follow a place's suffering back to the monster's waking.
+The monster keeps, per settlement, the years and ids of its raids on it within the last max(`raid_chain_years`, `fear_years`) years. A raid's causes are, ascending without repeats: the monster's current waking event and, when m raided t within the last `raid_chain_years` (new field of `history.monsters`, shipped **300**, r1 100; "within": Y − year < `raid_chain_years`), its last such raid. So a run of raids reads as a chain, and a reader of the log can follow a place's suffering back to the monster's waking.
 
 ### 9.2 Tolls scale with the place (amends P5-02 6.4.1)
 
@@ -358,24 +364,24 @@ dead = max(0, min(dead, P − 1))
 
 ### 9.3 Hunts called sooner (amends P5-02 6.4.2)
 
-R_c = the number of m's raids on civilization c with year > Y − `hunt_memory_years` (≥ 1 for every c in the hunt loop). The chance of a hunt becomes
+R_c = the number of m's raids on civilization c with Y − year ≤ `hunt_memory_years` (P5-02's 30; ≥ 1 for every c in the hunt loop). Note the two windows differ at their edge, as built: the hunt memory includes a raid exactly `hunt_memory_years` old, the raid chain (9.1) and the fear count (9.4) exclude one exactly `raid_chain_years` or `fear_years` old. The chance of a hunt becomes
 
 ```
 p_hunt = min(hunt_max_permille, hunt_permille + (R_c − 1) × hunt_raid_permille)
 ```
 
-with `hunt_raid_permille` (new, shipped **60**) and `hunt_max_permille` (new, shipped **400**): a realm struck once hunts at 20‰ a year, struck four times in thirty years at 200‰. Odds, outcomes and causes as P5-02. Expected (the critic's s17): a giant raiding one fortress every ten years is hunted within a few decades, not after 1,870 years. The monster keeps per civilization the years of its raids within `hunt_memory_years` (P5-02 25 item 11's one entry per civilization gains this list; entries older than the memory are dropped when the list is read).
+with `hunt_raid_permille` (new, shipped **5**, r1 60) and `hunt_max_permille` (new, shipped **200**, r1 400): a realm struck once hunts at 20‰ a year, struck four times in thirty years at 35‰; the cap is reached at 37 remembered raids. Odds, outcomes and causes as P5-02. Measured (21 F1b): the median from a monster's first raid on a realm to its slaying or driving off by that realm is 27 years. The monster keeps per civilization the years of its raids within `hunt_memory_years` (P5-02 25 item 11's one entry per civilization gains this list; entries older than the memory are dropped when the list is read).
 
 ### 9.4 Flight for fear (new; amends P5-02 6.4.3)
 
-After a raid on t and its overrun test (P5-02 6.4.3), if t is still standing: F_t = the number of m's raids on t with year > Y − `fear_years`, this raid included. If F_t ≥ `fear_raids`, kind(t) is hamlet or village, t is not its owner's capital, its owner c has another standing settlement (those created earlier in the step count), and `chance_pm(D(hist.monsters.fear; m, t, 0), fear_permille)`:
+After a raid on t and its overrun test (P5-02 6.4.3), if t is still standing: F_t = the number of m's raids on t with year > Y − `fear_years`, this raid included. If F_t ≥ `fear_raids` (shipped 2), kind(t) is hamlet or village, t is not its owner's capital, its owner c has another standing settlement (those created earlier in the step count), and `chance_pm(D(hist.monsters.fear; m, t, 0), fear_permille)`:
 
 1. append **`settlement_fled`** (region and settlement t; participants m `monster`, c `civilization`; causes: m's raids on t within `fear_years`, at most the last 4, ascending);
 2. `PeoplesSubsystem::abandon(ctx, t, {that event})`: P3-05 8.5's abandonment, made public (items 1 to 6 with the given causes in place of the blow's, plus t's decline start when it is declining, as 8.5 says; item 6 cannot apply). Its event (kind 31 or 16, with 11.1's rules) follows the flight, and its ending is 6 `fled` (11.3).
 
-New fields of `history.monsters`, appended after `prey_might_max_permille` in this order: `raid_chain_years` int(1, 100000) 100; `toll_over_permille` int(0, 1000) 250; `hunt_raid_permille` int(0, 1000) 60; `hunt_max_permille` int(0, 1000) 400; `fear_raids` int(1, 100) 3; `fear_years` int(1, 100000) 50; `fear_permille` int(0, 1000) 300; `overrun_people_ref` int(1, 1000000) 800 (14.1). Check `monsters_hunt_ordered`: `hunt_permille` ≤ `hunt_max_permille` (`hunt_permille <a> is above hunt_max_permille <b>`). The `zero` fixture tuning of P5-02 7.5 keeps them as shipped (nothing raids at pressure 0).
+New fields of `history.monsters`, appended after `prey_might_max_permille` in this order: `raid_chain_years` int(1, 100000) **300** (r1: 100); `toll_over_permille` int(0, 1000) 250; `hunt_raid_permille` int(0, 1000) **5** (r1: 60); `hunt_max_permille` int(0, 1000) **200** (r1: 400); `fear_raids` int(1, 100) **2** (r1: 3); `fear_years` int(1, 100000) 50; `fear_permille` int(0, 1000) **400** (r1: 300); `overrun_people_ref` int(1, 1000000) 800 (14.1). Shipped (calibrated) values at 0.24.0; r1's in brackets where they moved. Check `monsters_hunt_ordered`: `hunt_permille` ≤ `hunt_max_permille` (`hunt_permille <a> is above hunt_max_permille <b>`). The `zero` fixture tuning of P5-02 7.5 keeps them as shipped (nothing raids at pressure 0).
 
-**Cost against G2** (standing settlements at E, median ≥ 81; 83 at 0.23.0). A flight needs three raids on one small place within fifty years; the critic's sweep has runs of 29 to 50 raids on one place, but most targets see one or two. Estimate (the critic's figures, no prototype run for this draft): 1 to 3 flights a default world, most of them in earlier ages, where the land refills (P3-05 9.3's foundings take the free slot and region); at E perhaps −0.5 to −1 standing settlement. The sooner hunts end runs of raids, and the overrun rule of 14.1 spares larger places, which offsets a little. The engineer's calibration (22 step 10) holds G2 by `fear_permille` first, then `fear_raids`; if G2 cannot be held at `fear_permille` ≥ 100, the engineer reports to the lead (question 4).
+**Cost against G2** (standing settlements at E, median ≥ 81). A flight needs two raids on one small place within fifty years. Measured at 0.24.0 by the engineer (21): flights median 1 a default world (max 9), standing settlements at E median 83, so G2 holds at `fear_permille` 400 (question 4 is answered).
 
 ### 9.5 Raid sentences by kind (amends P5-02 4.2, 10.2, 10.3)
 
@@ -413,9 +419,11 @@ At summary, after the living monsters (at most `SUMMARY_MONSTER_LINES`, 2, by ho
 - **Destination within reach.** In item 1, t = the nearest of c's other standing settlements **with `hops(region(s))[region(t)]` ≤ `abandon_reach_hops`** (squared cell distance, then id); none: settled = 0 and kind 16 (`settlement_abandoned`) is written, its survivors scattered. The ruin procedure (sack, overrun) uses the same t, so a sacked town's survivors with no settlement of their realm within reach are displaced (7.2) as well.
 - **Losses on the road** (abandonment only, not a sack or an overrun, whose tolls are their own): with P the population at the abandonment, road = P × (`abandon_loss_min_permille` + pick(D(hist.peoples.abandon_loss; s, 0, 0), `abandon_loss_max_permille` − `abandon_loss_min_permille` + 1)) div 1000, and road = min(road, P − 1) when P ≥ 1. The survivors are P − road; `set_population(s, P − road)` before the ruin. Kind 31: settled = min(P − road, room), lost = P − settled (the dead of the road and those with no room). Kind 16: `survivors` = P − road. The people with no room are displaced (7.2); the dead of the road are not.
 
-New `history.peoples` fields, appended after `ghost_max_population` in this order: `abandon_reach_hops` int(0, 16) **2**; `abandon_loss_min_permille` int(0, 1000) **50**; `abandon_loss_max_permille` int(0, 1000) **200**; `ghost_fade_years` int(0, 100000) **0** (11.2). Check `peoples_abandon_loss_ordered`: min ≤ max (`abandon_loss_min_permille <a> is above abandon_loss_max_permille <b>`). The I0 fixture of P5-02 7.5 and this spec's 7.4 keep them as shipped (they change worlds on both sides of the identity alike).
+- **The plague plan** (P3-05 10.2, amended): the replayed plan of an outbreak's spreads applies the same reach and the same road losses to a spread that abandons its target (its survivors less `road` go to the nearest standing settlement of the owner within `abandon_reach_hops`, up to its room), so the planned total equals the real toll of the strikes (P3-05 invariant 13).
 
-Expected: every abandonment of 50 people or more loses some on the road (the critic's 308 of 309 with `lost` = 0 becomes none), and abandonments without a destination become about one in ten (the realms whose nearest other settlement lies three or more borders away: secession remnants, refuges, far colonies). Standing settlements: no change (no settlement is lost that was not lost before). World population at E: below 0.1% (a few hundred a world).
+New `history.peoples` fields, appended after `ghost_max_population` in this order: `abandon_reach_hops` int(0, 16) **0** (r1: 2; calibrated: the destination must lie in the settlement's own region); `abandon_loss_min_permille` int(0, 1000) **50**; `abandon_loss_max_permille` int(0, 1000) **200**; `ghost_fade_years` int(0, 100000) **0** (11.2). Check `peoples_abandon_loss_ordered`: min ≤ max (`abandon_loss_min_permille <a> is above abandon_loss_max_permille <b>`). The I0 fixture of P5-02 7.5 and this spec's 7.4 keep them as shipped (they change worlds on both sides of the identity alike).
+
+Expected: every abandonment of 50 people or more loses some on the road (the critic's 308 of 309 with `lost` = 0 becomes none). With `abandon_reach_hops` 0 an abandonment has a destination only when its realm has another standing settlement in the same region; the people of the others are displaced (7.2) and may find shelter abroad (6.4.3). The share of kind 16 is F3a's (21), measured by validation. Standing settlements and world population at E: G2 (21).
 
 ### 11.2 Ruins that do not fade (amends P3-05 8.6)
 
@@ -441,7 +449,7 @@ Template and salience (`history.report`): `settlement_fled`, **45**, `For fear o
 
 ### 12.1 Epithets (amends P3-02 4.2 for kind `monster`, P5-02 4.2)
 
-The **epithet** of a name form is the form with `{root}` removed and outer spaces trimmed (`{root} the Glutton` → `the Glutton`; `Old {root}` → `Old`; `{root}` → empty). For a name attempt of kind `monster` (P5-02 9.1), F' = the kind's `name_forms` without every form whose epithet is non-empty and is the epithet of an earlier monster's name in the world (the form its root was matched by, P5-02 9.2), in list order; F' empty: F' = the bare form if the kind has one, else F. The attempt draws its form from F' in place of F. So no epithet repeats in a world while the kind has an unused one.
+The **epithet** of a name form is the form with `{root}` removed and outer spaces trimmed (`{root} the Glutton` → `the Glutton`; `Old {root}` → `Old`; `{root}` → empty). For a name attempt of kind `monster` (P5-02 9.1), F' = the kind's `name_forms` without every form whose epithet is non-empty and is the epithet of an earlier monster's name in the world (the form its root was matched by, P5-02 9.2), in list order; F' empty: F' = the bare form if the kind has one, else F. The attempt draws its form from F' in place of F. So no epithet repeats in a world while the kind has an unused one. The epithets used are compared across **every wild monster of the world**, whatever its kind (one list for the world, as built): `{root} the Grey` used by a giant excludes `{root} the Grey` for a troll. Hosts of the dead (12.2) have no epithet and take no part.
 
 Shipped `name_forms` (taste; `monster_bare_form_last` holds):
 
@@ -458,7 +466,7 @@ The engineer checks every new form word against the placename `forbidden` and `e
 
 ### 12.2 Hosts named for where they rose (amends P5-02 4.2, 6.3.2, 9.1, 9.2)
 
-A kind with `wake` = `dead` has name forms with the slot **`{place}`** (exactly once, no `{root}`); `{place}` is the name of the settlement at whose ruin the host rises (P5-02 6.3.2's lair at a ruin), else the region's name in force at Y (`RenamingSubsystem::name_now(region)`: its last `region_name` row, else `region.name`; a const read, set on the monsters subsystem by the stage), with a leading `The ` written `the `. The name: F = the kind's forms, start = pick(D(hist.names.monster; m, 0, 0), |F|); the first form in cyclic order from start whose name is valid (P3-02 4.4's length) and not in the registry; none: the start form's name followed by ` ` and roman(k), the smallest k ≥ 2 that is free (fatal above 64 bytes). No syllable is drawn and the name filter is not applied (the parts are names that passed it). The host's **root** (P5-02 9.2) is the `{place}` value, which its lair names use. `monster_root` (P5-12's seam) returns the empty string for such a host, so renaming's forms with `{name}` or `{stem}` are skipped for it (P5-02 25 item 8) and an overrun by a host renames only by `The Forsaken {noun}`.
+A kind with `wake` = `dead` has name forms with the slot **`{place}`** (exactly once, no `{root}`); `{place}` is the name of the settlement at whose ruin the host rises (P5-02 6.3.2's lair at a ruin), else the region's name in force at Y (`RenamingSubsystem::name_now(region)`: its last `region_name` row, else `region.name`; a const read, set on the monsters subsystem by the stage), with a leading `The ` written `the `. The name: F = the kind's forms, start = pick(D(hist.names.monster; m, 0, 0), |F|); the first form in cyclic order from start whose name is valid (P3-02 4.4's attempt length, at most 48 bytes, `NAME_ATTEMPT_MAX_BYTES`) and not in the registry; none: the start form's name followed by ` ` and roman(k), the smallest k ≥ 2 that is free, which may be up to 64 bytes (`NAME_MAX_BYTES`; `names: a name longer than 64 bytes`, fatal, above). No syllable is drawn and the name filter is not applied (the parts are names that passed it). The host's **root** (P5-02 9.2) is the `{place}` value, which its lair names use. `monster_root` (P5-12's seam) returns the empty string for such a host, so renaming's forms with `{name}` or `{stem}` are skipped for it (P5-02 25 item 8) and an overrun by a host renames only by `The Forsaken {noun}`.
 
 Shipped undead: `name_forms` = `The Host of {place}`, `The Restless of {place}`, `The Dead of {place}`; `lair_forms` = `The Barrows of {root}`, `The Howes of {root}`. Check `monster_place_forms` (with the kind's loader): a `dead` kind's form without `{place}` or with `{root}`: `name_forms[<i>] '<f>' of a dead kind needs {place} and no {root}`; a `wild` kind's form with `{place}`: `name_forms[<i>] '<f>' holds {place}, which only a dead kind may`. The `name_form` string type accepts `{place}` (P3-02 4's grammar, for monster forms only). Samples: `the dead of Wolf's Brows rose as the Restless of Wolf's Brows`; at a ruin: `the Host of Geackham`.
 
@@ -470,13 +478,13 @@ Shipped undead: `name_forms` = `The Host of {place}`, `The Restless of {place}`,
 ## 13. F5 Beasts that grow bold (amends P5-02 4.1, 6.2.3, 10.2)
 
 - **Which beast.** b = `weighted(D(hist.beasts.bold_kind; r, 0, 0), [B(r, s) × menace_s for s ascending])` in place of the largest; a species of weight 0 (deer, menace 0) is never chosen. With the shipped data a forest region's bold beasts are wolves about four times in ten, bears and boar the rest; a marsh's spiders often.
-- **Phrases.** Beast data gains `bold_phrases`, array(string(48, `phrase`), 1, 4), required, after `food`; stored in `beast.bold_phrases` joined with `|` (16.1). Placeholder **`{@beast:bold}`** (8.4's body gains it): phrase number ((event id − 1) mod n) of the `beast` row named by the event's value `beast`; `template_problem` as `{@beast}`'s. Kind 53's template becomes `In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died.` Shipped: bear `broke into the stores of`, `came down on the herds of`; boar `trampled the fields of`, `tore up the gardens of`; deer `strayed into the fields of`; giant spider `spun their webs across the paths of`, `lay in wait on the roads from`; wolf `hunted the roads from`, `grew bold and stalked the herds of`.
+- **Phrases.** Beast data gains `bold_phrases`, array(string(48, `phrase`), 1, 4), required, after `food`; stored in `beast.bold_phrases` joined with `|` (16.1). Placeholder **`{@beast:bold}`** (8.4's body gains it): phrase number ((event id − 1) mod n) of the `beast` row named by the event's value `beast`; `template_problem` as `{@beast}`'s, naming the placeholder used: `{@beast:bold} needs a kind with a value 'beast'` (and `{@beast} …` for the plain one). Kind 53's template becomes `In {@region} the {@beast} {@beast:bold} {settlement}; {dead?no one|one|#} died.` Shipped: bear `broke into the stores of`, `came down on the herds of`; boar `trampled the fields of`, `tore up the gardens of`; deer `strayed into the fields of`; giant spider `spun their webs across the paths of`, `lay in wait on the roads from`; wolf `hunted the roads from`, `grew bold and stalked the herds of`.
 
 ## 14. F8, F7 and F6
 
 ### 14.1 F8 Overruns take small places (amends P5-02 6.4.3)
 
-The overrun's chance becomes `min(1000, overrun_permille × M div 1000) × f_P div 1000`, with M the pressure factor (14.2) and f_P = min(1000, `overrun_people_ref` × 1000 div max(1, P_t)), P_t the target's population after the raid. Shipped `overrun_people_ref` 800: a hamlet or a village of up to 800 has the kind's full chance, a village of 1,200 two thirds, a town of 3,000 a quarter. The kinds a monster may overrun (`overruns`) are unchanged, so a dragon may still take a town, rarely. Expected: towns fall from about a sixth of overruns to below a tenth; overruns per world fall a little (M4's median 2 to 4, 3 at 0.23.0; calibrated by `overrun_people_ref`).
+The overrun's chance becomes `min(1000, overrun_permille × M div 1000) × f_P div 1000`, with M the pressure factor (14.2) and f_P = min(1000, `overrun_people_ref` × 1000 div max(1, P_t)), P_t the target's population after the raid. Shipped `overrun_people_ref` 800: a hamlet or a village of up to 800 has the kind's full chance, a village of 1,200 two thirds, a town of 3,000 a quarter. The kinds a monster may overrun (`overruns`) are unchanged, so a dragon may still take a town, rarely. Measured at 0.24.0 by the engineer (21 F8): towns are 5.3% of overruns (about a sixth at 0.23.0), overruns per world median 2.5 (3 at 0.23.0).
 
 ### 14.2 F7 What is cheap now: pressure shapes overruns and risings (amends P5-02 6.3.2, 6.4.3)
 
@@ -491,7 +499,7 @@ Not changed, with reasons: undead late in history (they need slaughter, which th
 
 ## 15. The test-side item (for the test writer)
 
-`worldgen/tests/reference/p5_12_renaming_reference.py check-world` reports a false renaming defect on seed 5 at 1024 with `--monster-pressure high`: its `max_weight` takes the largest weight over every rule naming the event's kind, so when two rules share a cause kind (`great_sack` and `capital_sack` both name `sacked`) an event that only the lighter rule's conditions accept is checked against the heavier weight. The check must take the weight of the rules whose conditions (values, `min_magnitude`, `min_salience`, `capital`) the event meets. A test fix only; the C++ is right. The test writer confirms the cause on that world before changing the reference.
+`worldgen/tests/reference/p5_12_renaming_reference.py check-world` reports a false renaming defect on seed 5 at 1024 with `--monster-pressure high`: its `max_weight` takes the largest weight over every rule naming the event's kind, so when two rules share a cause kind (`great_sack` and `capital_sack` both name `sacked`) an event that only the lighter rule's conditions accept is checked against the heavier weight. The check must take the weight of the rules whose conditions (values, `min_magnitude`, `min_salience`, `capital`) the event meets. **The rule in force** (as built, P5-12 4): a renaming event can meet the conditions of two rules (`great_sack` and `capital_sack` on one sack of a capital); each rule whose conditions are met makes its own chance draw (`hist.renaming.chance` with k the rule number), and the candidate of the region is the weightiest rule whose conditions are met **and** whose chance draw passed (then the smaller event id). A heavier rule whose draw failed does not block a lighter one whose draw passed. A test fix only; the C++ is right. The test writer confirms the cause on that world before changing the reference.
 
 # Common to both parts
 
@@ -513,7 +521,7 @@ CREATE TABLE race_relation (race_a INTEGER NOT NULL, race_b INTEGER NOT NULL, ye
 CREATE TABLE settlement_race (settlement INTEGER NOT NULL, race INTEGER NOT NULL, year INTEGER NOT NULL, share INTEGER NOT NULL, standing INTEGER NOT NULL, PRIMARY KEY (settlement, race, year)) STRICT, WITHOUT ROWID
 ```
 
-`SCHEMA_VERSION`, `user_version` and `meta.schema_version` become **10**; readers refuse 9 (`world schema version 9, this build reads 10`). The empty world gains two root pages: expected 45 pages (43 + 2), possibly one more if `sqlite_schema` overflows again; the engineer measures and `docs/specs/schema.md` records it. `db::HISTORY_TABLES` stays at 13 entries; the new tables are read by name after `site`.
+`SCHEMA_VERSION`, `user_version` and `meta.schema_version` become **10**; readers refuse 9 (`world schema version 9, this build reads 10`). The empty world gains two root pages: **45 pages, 184,320 bytes** (43 + 2; measured with the vendored SQLite, `sqlite_schema` still fits its pages; recorded in `docs/specs/schema.md`). `db::HISTORY_TABLES` stays at 13 entries; the new tables are read by name after `site`.
 
 ### 16.2 Columns, codes and row order
 
@@ -526,6 +534,8 @@ CREATE TABLE settlement_race (settlement INTEGER NOT NULL, race INTEGER NOT NULL
 ### 16.3 Report, hash and viewer
 
 `report` (P3-04 11.1): `[tables]` gains `race_relation`, `settlement_race` in name order; `[history]` gains, after `sites`: `race_relations`, `settlement_races` (rows). `hash --detail`: one `table <name>` line each. The viewer reads schema 10 through the library; the viewer engineer is told the two tables and section 18's reads; `gdext-headless-check` is unaffected.
+
+**Browser kind groups** (amends P4-05 4.4; lead ruling): kind 56 `settlement_fled` is in group `monsters` (5); kinds 57 to 62 are in the new group **`peoples` = 6**, appended (codes are never reused), and `ALL_GROUPS` becomes **0x7F**. `event_group_word` gives `peoples`; the viewer's group menu lists it last.
 
 ### 16.4 Checks on read (amends P5-02 11.4)
 
@@ -554,7 +564,7 @@ mixed: <x> settlements at E; refugees: <a> arrivals, <p> people; expelled: <e> t
   s<id> <name> (<owner ref>): <race plural> <share> <standing word>; <race plural> <share> <standing word>[; …]
 ```
 
-The counts are of the pairs of races present, their bands at E (met pairs only), the mixed standing settlements at E (6.3.6) and the events of kinds 59 and 62 with their `people`. `turned` names the pair's last `disposition_turned`. Pair lines in ascending (race_a, race_b); settlement lines in ascending id, entries by share descending, then race id. **Full**: every pair line and every mixed settlement line. **Summary**: the two count lines, and the pair lines of the pairs with at least one turn; when the world has more than `SUMMARY_LINES_CIVS` (16) civilizations, the two count lines only.
+The counts are of the pairs of races with `race.present` = 1 (a race that never awakened in the world is in no pair), their bands at E (met pairs only), the mixed standing settlements at E and the events of kinds 59 and 62 with their `people`. **Mixed at E** (lead ruling): a settlement standing at E with an entry in force at E − 1 (its last `settlement_race` row with share > 0) whose standing is not 3 and whose share is at least the report's constant **`MIXED_SHARE_MIN` = 100** (`worldgen/history/digest.hpp`); the data field `mixed_min_permille` governs only the event of 6.3.6, so the report needs no tuning. The count is written `1 settlement` in the singular (`<x> settlements` otherwise). `turned` names the pair's last `disposition_turned`. Pair lines in ascending (race_a, race_b); settlement lines in ascending id, entries by share descending, then race id. **Full**: every pair line and every mixed settlement line. **Summary**: the two count lines, and the pair lines of the pairs with at least one turn; when the world has more than `SUMMARY_LINES_CIVS` (16) civilizations, the two count lines only.
 
 ### 17.3 `[present]`, `[monsters]`, chronicle
 
@@ -562,11 +572,11 @@ The counts are of the pairs of races present, their bands at E (met pairs only),
 
 ### 17.4 `[stats]` (appended at the end of the list, full only; `SUMMARY_STATS` unchanged)
 
-In this order: `race_relations`, `settlement_races` (rows; also `[history]` keys), `race_pairs`, `race_pairs_met`, `dispositions_turned`, `pairs_hatred`, `pairs_friendship`, `refugees_arrived`, `refugees_people`, `people_expelled`, `expelled_people`, `settlements_mixed` (at E), `settlements_mixed_ever` (settlements with a `settlement_mixed` event), `settlements_fled`, `abandoned_without_destination` (kind 16 events), `abandonment_lost` (Σ `lost` of kind 31), `monster_stories` (told monsters, 10.1), `ruins_oldest_year` (the smallest `ruined_year` of a status-3 settlement at E, or `-` when none). `events_<key>` lines of the new kinds appear by themselves.
+In this order: `race_relations`, `settlement_races` (rows; also `[history]` keys), `race_pairs` (pairs of races with `race.present` = 1), `race_pairs_met`, `dispositions_turned`, `pairs_hatred`, `pairs_friendship`, `refugees_arrived`, `refugees_people`, `people_expelled`, `expelled_people`, `settlements_mixed` (at E, by `MIXED_SHARE_MIN`, 17.2), `settlements_mixed_ever` (settlements with a `settlement_mixed` event), `settlements_fled`, `abandoned_without_destination` (kind 16 events), `abandonment_lost` (Σ `lost` of kind 31), `monster_stories` (told monsters, 10.1), `ruins_oldest_year` (the smallest `ruined_year` of a status-3 settlement at E, or `-` when none). `events_<key>` lines of the new kinds appear by themselves.
 
 ### 17.5 Length
 
-At summary: `[peoples]` 2 lines plus 0 to 4 turned pairs in a default world; `[monsters]` up to 2 more lines; the chronicle up to 12 story events and about 25 to 35 new candidates of part A within the budget. Expected default median about 620 (0.23.0: 599.5), max held by 12.9's L (790). `civs4`: `[peoples]` 2 lines, `[monsters]` unchanged (count line), chronicle unchanged in size (the budget binds): median about **1,103** (1,101), which is open for Paul (question 5).
+At summary: `[peoples]` 2 lines plus 0 to 4 turned pairs in a default world; `[monsters]` up to 2 more lines; the chronicle up to 12 story events and about 25 to 35 new candidates of part A within the budget. Measured at 0.24.0 by the engineer (21 T18): default median 620 (0.23.0: 599.5), max 785, held by 12.9's L (790). `civs4`: `[peoples]` 2 lines, `[monsters]` unchanged (count line), chronicle unchanged in size (the budget binds): median **1,112** (0.23.0: 1,101); the lead restates the bound as at most 1,150 (21, question 5).
 
 ## 18. Timeline reads (amends P4-01; r5)
 
@@ -608,34 +618,36 @@ std::vector<RaceShare> settlement_races(std::int64_t settlement, std::int64_t ye
 
 ## 21. Targets (validation)
 
-At 1024 defaults, 100 worlds (seeds 0–99), unless stated. Bounds are estimates where no prototype was run; the engineer's calibration (22 step 10) measures every row and reports in a spec revision.
+At 1024 defaults, 100 worlds (seeds 0–99), unless stated. r2 (lead rulings after calibration): the bounds below replace r1's estimates where they were restated; the column **Measured** gives the engineer's final sweep, **measured at 0.24.0 by the engineer; validation's figures supersede**.
 
-| Target | Definition | Bound |
-| --- | --- | --- |
-| **RR1** | pairs met by E | in ≥ 90% of worlds every pair of present races has met; median pairs met ≥ 13 of 15 |
-| **RR2** | `disposition_turned` per world | median 1 to 4, max ≤ 10; at least one in ≥ 50 worlds; every band entered by a turn somewhere in the sweep |
-| **RR3** | participation (P5-00 8.3, hard): every present race is a participant (as a race, or through one of its civilizations) of an event of a P5 subsystem | every world of every sweep with at least two races present; a world where a race never meets another and no P5 event names it is reported to the lead (a race isolated on its own land) |
-| **MX1** | mixed standing settlements at E | median 3 to 12; at least one in ≥ 80 worlds |
-| **MX2** | `refugees_arrived` per world; people sheltered | median 3 to 15; reported |
-| **MX3** | `people_expelled` per world | median ≤ 3, max ≤ 10 |
-| **C1** | conflict regressions (P5-00 8.2 item 3) | wars per world median within ±10% of 0.23.0's (23.5: 21 to 26); T1 to T20 of P5-01 as bounded at 0.23.0; enmity rows per world reported against 0.23.0 |
-| **T16** | repeated battles | at most 2 per thousand (Paul) |
-| **G2** | standing settlements at E; world population at E | medians at least 81 and 214,500 (P5-02 r1, unchanged) |
-| **F1a** | the most raids by one monster on one settlement | median per world ≤ 8, max ≤ 20 (0.23.0: max 50) |
-| **F1b** | years from a monster's first raid on a realm to its slaying or driving off by that realm | median ≤ 150; reported by kind |
-| **F1c** | raid lines | no phrase above 40% of raid lines; the most common (dead, plunder) pair ≤ 1% of raids (0.23.0: 63 of 4,557, 1.4%); ≥ 50% of raids cite an earlier raid |
-| **F1d** | `settlement_fled` per world | median 1 to 3 |
-| **F2** | told monsters | every default world with a notable monster tells at least one in its summary (by construction); T18 holds |
-| **F3a** | abandonments with `lost` > 0 (kind 31) | ≥ 80%; kind 16 among abandonments 5% to 25% |
-| **F3b** | present-day ruins older than 1,500 years at E | at least one in ≥ 50 worlds (0.23.0: none before year 4000) |
-| **F4** | the most used epithet of a kind across the sweep | ≤ 40% of that kind's named monsters (0.23.0: `the Glutton` 68 of 90) |
-| **F5** | `beasts_bold` by species | wolves ≤ 60%; boar ≥ 5%; bears ≥ 5% |
-| **F8** | overruns of towns | ≤ 10% of overruns; M4's overrun median 2 to 4 holds |
-| **M** | P5-02's M1 to M6, G1, G3, S1, B1 | as bounded in P5-02 r1 (M4: a living lair at E in ≥ 85 worlds, a lair on a former settlement in ≥ 65; M5: 20% to 70% slain) |
-| **T18** | summary lines | default median ≤ 700, max ≤ 800; `civs4` median about 1,100 (Paul's reading), max ≤ 1,400 |
-| **timing** | `generate` at 1024, release, seed 0, three runs | at most 5 s more than 0.23.0 (P5-00 8.1); `report --history` under 2 s |
+| Target | Definition | Bound | Measured |
+| --- | --- | --- | --- |
+| **RR1** | pairs met by E | every pair of races that can reach each other over open borders within `meet_hops` meets; all fifteen pairs meet in at least 80 of 100 worlds (r1: 90%, median ≥ 13 of 15) | 84 of 100 |
+| **RR2** | `disposition_turned` per world | median 1 to 4, max ≤ 10; at least one in ≥ 50 worlds; every band entered by a turn somewhere in the sweep (r1, unchanged) | median 1; across the sweep hatred entered 116 times, wariness 30, friendship 3 |
+| **RR3** | participation (P5-00 8.3): every present race is a participant (as a race, or through one of its civilizations) of an event of a P5 subsystem | **reported, not bounded** (r1: hard); a world where a race never meets another and no P5 event names it is a race alone on its own land | 10 worlds have a race alone on its own land |
+| **MX1** | mixed standing settlements at E (17.2) | median 3 to 12; at least one in ≥ 80 worlds | median 8 |
+| **MX2** | `refugees_arrived` per world; people sheltered | median 3 to 15; reported | median 5 |
+| **MX3** | `people_expelled` per world | median ≤ 5, the maximum reported (r1: median ≤ 3, max ≤ 10) | median 3, max 22 |
+| **C1** | conflict regressions (P5-00 8.2 item 3) | wars per world median within ±10% of 0.23.0's (23.5: 21 to 26); T1 to T20 of P5-01 as bounded at 0.23.0; enmity rows per world reported against 0.23.0 | wars median 25.5 (+8.5%) |
+| **T16** | repeated battles | at most 2 per thousand (Paul) | 0.93 per thousand |
+| **G2** | standing settlements at E; world population at E | medians at least 81 and 214,500 (P5-02 r1, unchanged) | 83; 217,827 |
+| **F1a** | the most raids by one monster on one settlement | median per world ≤ 8, max ≤ 40 (r1: max ≤ 20; 0.23.0: max 50) | median 5, max 33 |
+| **F1b** | years from a monster's first raid on a realm to its slaying or driving off by that realm | median ≤ 150; reported by kind | median 27 |
+| **F1c** | raid lines | every raid on a place the same monster raided within `raid_chain_years` cites that raid (by rule, 9.1), and such raids are at least 30% of raids (r1: ≥ 50% cite an earlier raid); no phrase above 40% of raid lines; the most common (dead, plunder) pair ≤ 1% of raids (0.23.0: 1.4%) | 38.7% cite; top phrase 11.8%; top pair 0.61% |
+| **F1d** | `settlement_fled` per world | median 1 to 3 | median 1, max 9 |
+| **F2** | told monsters | every default world with a notable monster tells at least one in its summary (by construction); T18 holds | — |
+| **F3a** | abandonments with `lost` > 0 (kind 31) | ≥ 80%; kind 16 among abandonments 5% to 25% (r1's bound; with `abandon_reach_hops` 0, validation reports the figure) | — |
+| **F3b** | present-day ruins older than 1,500 years at E | at least one in ≥ 50 worlds (0.23.0: none before year 4000) | — |
+| **F4** | the most used epithet of a kind across the sweep | ≤ 40% of that kind's named monsters (0.23.0: `the Glutton` 68 of 90) | 37.7% |
+| **F5** | `beasts_bold` by species | wolves ≤ 60%; boar ≥ 5%; bears ≥ 5% | wolves 33% |
+| **F8** | overruns of towns | ≤ 10% of overruns; M4's overrun median 2 to 4 holds | towns 5.3%; overruns median 2.5 |
+| **M** | P5-02's M1 to M6, G1, G3, S1, B1 | as bounded in P5-02 r1 (M5: 20% to 70% slain). M4: a living lair at E in ≥ 85 worlds; **a lair on a former settlement open at E in ≥ 65 worlds, Paul's bound: OPEN FOR PAUL** pending validation's figure | lair on a former settlement: 62 of 100 |
+| **T18** | summary lines | default median ≤ 700, max ≤ 800; `civs4` median at most 1,150 (r1: "about 1,100", Paul's reading at 0.23.0), max ≤ 1,400 | default median 620, max 785; `civs4` median 1,112 |
+| **timing** | `generate` at 1024, release, seed 0, three runs | at most 5 s more than 0.23.0 (P5-00 8.1); `report --history` under 2 s | validation |
 
-**Costs against G2, item by item** (Paul's rule): flights for fear −0.5 to −1 at E (9.4); expulsions about 0 (the majority guard; a place left below `abandon_min` needs a minority larger than its rulers' remainder, which the guard forbids except in tiny places); abandonments out of reach 0 (11.1: the same settlements end; only where their people go changes); unfaded ruins about 0 (11.2); overruns of small places only +0 to +0.3 (14.1); hunts sooner +0 to +0.5 (fewer raids, fewer small places pushed below `abandon_min`). Net −1 to 0: G2 holds with little room (83 → about 82); the calibration's first lever is `fear_permille`.
+**RR2 and the staticness of relations.** With the shipped camps and stances, four pairs start in hatred (good–evil, −700) and leave it only by 250 units of shelter; of the pairs that start in wariness, dwarf–goblin (−350) is 150 units from hatred, the neutral–evil pairs (−250) 250 and the good–neutral pairs (−150) 350, against memory bounds of ±500 and a decay of 20 a century; friendship needs +300 or more for every pair but elf–faerie (which starts in it). By these bounds every pair that starts in wariness can reach hatred with enough grudge, and dwarf–goblin, the only pair a stance moves toward it, needs the least; the lead's reading of the sweep is that in practice hatred is entered by a turn only by dwarf–goblin. A median of one turn a world means that dispositions mostly stay where the camps put them. **Open question for Paul after the world critic's review** (28 item 7): whether relations should move more.
+
+**Costs against G2** (Paul's rule): measured together (G2 above): standing settlements median 83 at 0.24.0, as at 0.23.0; world population median 217,827.
 
 Sweeps (P5-00 8.2): default 100; 20 `civs4`; `calm`, `turbulent`; 512 seeds 0–19, 2048 seeds 0–4; `--monster-pressure low` and `high` seeds 0–19; `--races` subsets (`elf,orc`, `dwarf,human`, a single race), where RR3 is read.
 
@@ -712,7 +724,7 @@ One branch, one engineer, one test writer working from the specs separately. `GE
 
 ### 24.3 Reference and fixtures
 
-`p5_03_relations_reference.py` on `p5_02_monsters_reference.py` (which gains part B) inside the conflict reference's replay: sections 6 and 7 (the ledger at the callers' points, the disposition in conflict's strain and enmity), with a `check-world` mode for invariants 1 to 10 and 16.4's checks. The schema gate of the references becomes 10. A hand-made root **`relations-small`** (the conflict stress data with large `*_memory` values, `band_margin` 0, `expel_permille` 1000, `welcome_min` −2000 and `abandon_reach_hops` 0) makes every kind of part A happen on small maps; `monsters-small` (P5-02) gains `fear_raids` 2 and `fear_permille` 1000 so that flights happen.
+`p5_03_relations_reference.py` on `p5_02_monsters_reference.py` (which gains part B) inside the conflict reference's replay: sections 6 and 7 (the ledger at the callers' points, the disposition in conflict's strain and enmity), with a `check-world` mode for invariants 1 to 10 and 16.4's checks. The schema gate of the references becomes 10. A hand-made root **`relations-small`** (the conflict stress data with large `*_memory` values, `band_margin` 0, `expel_permille` 1000, `welcome_min` −2000 and `abandon_reach_hops` 0) makes every kind of part A happen on small maps; `monsters-small` (P5-02) gains `fear_raids` 2 and `fear_permille` 1000 so that flights happen. **Fixtures of an earlier schema** (as built): the report fixture loader (`worldgen/tests/history_report_fixture.hpp`) gives a `beast` row without the `bold_phrases` column the phrase `grew bold near` and a `monster_kind` row without `raid_phrases` the phrase `fell upon`, so the v4 fixtures load unchanged.
 
 ## 25. For P6, and for the world critic
 
@@ -726,11 +738,12 @@ One branch, one engineer, one test writer working from the specs separately. `GE
 | --- | --- | --- | --- |
 | P3-01 | race fields; kind `history` ids | `stances`; id `relations` | next revision, pointing here |
 | P3-02 | 4, 4.2, 4.5 | `{place}` in monster forms; epithet exclusion | next revision |
-| P3-04 | 6.1, 6.4, 8.2, 8.4, 9 | `Settlement::owner_event`; the configuration; kinds 56–62; form `raid`, `{@beast:bold}`, the four-word choice; schema 10 | r23 |
-| P3-05 | 8.5, 8.6, 12.1 | reach, road losses, `abandon` public, the ledger calls; fading; fields | r19 |
-| P3-06 | 4.1, 4.3, 7.5, 20.1 | dispositions from the view; enmity; the ledger calls | r23 |
+| P3-04 | 6.1, 6.4, 8.2, 8.4, 8.5, 9, 21 | `Settlement::owner_event`; the configuration; kinds 56–62; form `raid`, `{@beast:bold}`, the four-word choice; a sentence's first lower-case letter capitalised (8.2 here; supersedes 21's "never capitalized" at byte 0); `StepContext::event_participants`; schema 10 | r23 (pointer section added in this round) |
+| P3-05 | 8.5, 8.6, 10.2, 12.1 | reach, road losses, `abandon` public, the ledger calls; the plague plan's reach and road losses; fading; fields | r19 |
+| P3-06 | 4.1, 4.3, 7.5, 20.1, 22.5 | dispositions from the view; enmity; the ledger calls (capture, cession, flight) | r23 |
 | P3-07 | new 28; 24.2, 24.3 | v5, `[peoples]`, the floor, `[monsters]`, the fled companion, `[stats]` | r23 |
 | P4-01 | 5, 13.1 | race relations and shares by year, dumps | r5 |
+| P4-05 | 4.4 | kind 56 in `monsters`; group `peoples` = 6 for kinds 57–62; `ALL_GROUPS` 0x7F (16.3) | r3 (applied in this round) |
 | P5-02 | 4.1, 4.2, 4.3, 6.2.3, 6.3.2, 6.4, 8.3, 9, 10.2, 11, 12.4 | part B | r3 pointer |
 | P5-12 | 4 | rule 7's form; an empty monster root | pointer |
 | `schema.md` | — | schema 10, catalogue rows 56–62 | the engineer |
@@ -748,12 +761,14 @@ Each amended spec gets a revision note pointing to this spec's section; the norm
 
 ## 28. Open questions for Paul
 
-1. **Do realms read their peoples' disposition?** It is what makes "old wars leave grudges that shape later choices" reach new realms, and it moves P3's approved war balance. *Recommendation*: yes, with the small memory values shipped and C1 as the check (wars within ±10%). *Alternative*: dispositions recorded and reported only in this stage, read by conflict from P5-04 with trade.
+1. **Do realms read their peoples' disposition?** It is what makes "old wars leave grudges that shape later choices" reach new realms, and it moves P3's approved war balance. *Recommendation*: yes, with the memory values shipped and C1 as the check (wars within ±10%; r2: the calibrated values of 4.2 give +8.5%). *Alternative*: dispositions recorded and reported only in this stage, read by conflict from P5-04 with trade.
 2. **Expulsions.** A ruling people in hatred with a minority may drive it out (at most half a settlement, by the majority guard). *Recommendation*: keep; it is the darkest outcome of standing and the strongest reason a refugee can give. *Alternative*: standing only, no expulsion.
 3. **Ruins left standing never fade.** *Recommendation*: never (`ghost_fade_years` 0), and a ruin with an open lair never while the lair is open; burned ruins fade as before. *Alternative*: a long fade (4,000 years), so the first age's ghost places still go.
-4. **The answer to repeated raids.** *Recommendation*: hunts called sooner and flight for fear (9); tribute to a monster in P5-04. If G2 (median ≥ 81) cannot be held with flights at `fear_permille` ≥ 100, the choices are fewer flights or a lower floor; the engineer reports which.
-5. **The `civs4` summary length.** About two lines more (`[peoples]`' count lines), a median of about 1,103 against Paul's "about 1,100". *Recommendation*: accept. *Alternative*: no `[peoples]` lines at summary in worlds of more than 16 realms (1,101).
-6. **One stage or two.** *Recommendation*: one stage (0). *Alternative*: P5-02a (part B) first, then P5-03 (part A), as marked in 0.
+4. **The answer to repeated raids.** *Recommendation*: hunts called sooner and flight for fear (9); tribute to a monster in P5-04. (r2: G2 holds at `fear_permille` 400, median 83; no choice is needed.)
+5. **The `civs4` summary length.** Measured median 1,112 against Paul's "about 1,100" (0.23.0: 1,101). *Lead's ruling* (r2): the bound is restated as at most 1,150 (21 T18). *Alternative*: no `[peoples]` lines at summary in worlds of more than 16 realms.
+6. **One stage or two.** *Recommendation*: one stage (0). *Alternative*: P5-02a (part B) first, then P5-03 (part A), as marked in 0. (r2: built as one stage.)
+7. **Relations that barely move** (r2; after the world critic's review). With the calibrated memory a world has a median of one turn; most pairs keep the band their camps give them (21 RR2). *Question*: should dispositions move more (larger memory values or bounds, a smaller `band_margin`, stances closer to the bands), or is a world in which old camps decide most of the peoples' feelings the intended reading of design 5? The interim choice is the shipped values.
+8. **M4, a lair on a former settlement open at E** (r2). Paul's bound is 65 of 100 worlds; the engineer measured 62. *Open for Paul* pending validation's figure: keep the bound (and calibrate further), or lower it.
 
 ## 29. Proposals
 
@@ -762,3 +777,4 @@ Three entries in `docs/design/proposals.md`: "History: race relations, mixed set
 ## Revision notes
 
 - r1 (2026-11-23): first draft, with the P5-02 world critic's findings and Paul's standing decisions worked in.
+- **r2** (2026-11-24), text only, from what was built, calibrated and ruled on `p5/03-int` (generator 0.24.0, schema 10, report v5); no change to code or output. 4.2, 9.1, 9.3, 9.4, 11.1: every tuning value set to the shipped (calibrated) value, r1's in brackets where it moved (relations `memory_*` ±500, decay 20, the five `*_memory` values tripled, `meet_hops` 8, `expel_permille` 3; monsters `raid_chain_years` 300, `hunt_raid_permille` 5, `hunt_max_permille` 200, `fear_raids` 2, `fear_permille` 400; peoples `abandon_reach_hops` 0), and the estimates they made stale removed or replaced by measured figures (9.3, 9.4, 11.1, 14.1, 8.2, 17.5). 6.1, 6.7: `settlement_race` rows at the end of every step, a quiet step's at its start Y, none at `finish`. 6.2.2: decay 200 milli-units a tick year; `StepContext::event_participants`. 6.2.4: P3-06 5.1's simple presence. 6.3.6: `mixed_told` per entry. 6.4.1: the ledger signatures with `state` and `cause`; a move's new entries date from its cause. 6.4.2: a pending move into a settlement no longer standing is skipped. 7.1: an enmity row's `since` is the year it opens. 7.2: cession refugees through the ledger with the cession as cause; the flight's cause. 8.2: a rendered sentence's first lower-case letter is capitalised (amends P3-04 r23). 9.3: the hunt memory counts Y − year ≤ `hunt_memory_years`; the raid chain Y − year < `raid_chain_years`. 11.1: the plague plan applies reach and road losses (P3-05 10.2). 12.1: epithets across every wild monster of the world; 12.2: name lengths 48 and 64. 13: `{@beast:bold}`'s `template_problem` names it. 15: the rule in force. 16.1: the empty world measured, 45 pages, 184,320 bytes. 16.3: browser groups (amends P4-05 4.4). 17.2, 17.4: `MIXED_SHARE_MIN` = 100, `1 settlement`, pairs of present races. 21: targets restated by lead ruling with the engineer's measured figures (RR1, RR3, F1a, F1c, MX3, T18 `civs4`), M4's lair bound open for Paul. 24.3: the fixture loader's default phrases. 26: P3-04, P3-05, P3-06 and P4-05 rows. 28: questions 4 and 5 answered, 7 (static relations) and 8 (M4) added.
