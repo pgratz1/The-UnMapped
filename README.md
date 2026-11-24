@@ -6,6 +6,10 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 **This is an early-stage project.** There is no game yet. What exists today is the foundation of the world generator: a toolkit that writes reproducible world files and proves they are identical on every compiler. See [Status](#status) for exactly where things stand.
 
+![The world viewer playing the history of one human realm of a generated world: territory by year, settlements and ruins, wars and plagues, and the events as sentences](docs/images/viewer-history-movie.gif)
+
+*The world viewer playing a thousand years of one realm's generated history (the Duchy of Brel, seed 42, generator 0.24.0): territory by year, settlements and ruins as markers, and each event as a sentence. Every name, border and war comes from the seed.*
+
 ## Contents
 
 - [The idea](#the-idea)
