@@ -1725,6 +1725,13 @@ above (report, timeline, markers and browser on those inputs): `p3-01-data.txt`,
 `p3-07-report.txt`, `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt`. Not moved: `p3-02-names.txt`,
 `core_vectors.txt`, `p1-*`, `p3-03-chronology.txt`.
 
+Witnesses replaced at 0.24.0 (each confirmed with a reference): the same-step colony cession of 1024 turbulent seed
+34 (region_ceded e148 of region 36 in 2611, colony e145, s36; `check-world` equal), replacing seed 5; seed 0's
+milestones (the House of Nife's sacks e261 and e271, the Baskeeb Mob's war_won e111); one beasts_bold on
+geo-seed-0-512 (two at 0.23.0); geo-seed-42-512's faded settlement 4 for the ending check (1 stands to the end);
+the undead in the world cases (no host rises on monsters-small); standing_changed on relations-small-7; a kind 16
+abandonment on stress-13 with abandon_reach_hops 0.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file
