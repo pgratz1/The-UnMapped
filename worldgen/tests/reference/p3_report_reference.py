@@ -89,6 +89,8 @@ INPUTS_020 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "ou
 DEFAULT_INPUTS_021 = DEFAULT_INPUTS
 DEFAULT_INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-int",
                                   "report-inputs")   # r1 histories (6.4.1), rebuilt by build-inputs
+DEFAULT_INPUTS_024 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03-int",
+                                  "report-inputs")   # 0.24.0 histories (phase 2: build-inputs)
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
 GENERATOR_VERSION = "0.24.0"
@@ -229,7 +231,7 @@ def use_version(v):
     V3 = v in ("0.22.0", "0.23.0", "0.24.0")
     V4 = v in ("0.23.0", "0.24.0")
     V5 = v == "0.24.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    DEFAULT_INPUTS = DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
@@ -284,7 +286,10 @@ def load_world(path):
     try:
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
         t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ()) +
-             (pe.NEW_TABLES_023 if V4 else ()) + (pe.NEW_TABLES_024 if V5 else ())}
+             (pe.NEW_TABLES_023 if V4 else ())}
+        for name in (pe.NEW_TABLES_024 if V5 else ()):   # a world before schema 10 has none (read as empty)
+            have = conn.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (name,)).fetchone()
+            t[name] = pk_rows(conn, name)[1] if have else []
     finally:
         conn.close()
     return World(meta, t)
@@ -1379,8 +1384,9 @@ def peoples_lines(w, level):
         len(mixed), len(arr), sum(v1(e) for e in arr), len(exp), sum(v1(e) for e in exp)))
     if level == "full":
         words = ("subject", "tolerated", "accepted", "ruling")
+        stl = {x[0]: x for x in t["settlement"]}
         for sid, f in mixed:
-            s = w.stl[sid]
+            s = stl[sid]
             ents = sorted(f.items(), key=lambda kv: (-kv[1][0], kv[0]))
             o.append("  s%d %s (%s): %s" % (sid, s[1], w.ref(CIV, s[8]) if s[8] else "no owner", "; ".join(
                 "%s %d %s" % (plural[g], sh, words[st]) for g, (sh, st) in ents)))
@@ -2025,7 +2031,8 @@ def check_invariants(c, name, w):
         ok = ok and all(line != "" and not line.endswith(" ") for line in lines)
         heads = [line for line in lines if line.startswith("[") and line.endswith("]") and " " not in line]
         c.eq("%s %s: bytes and lines" % (name, lv), ok, True)
-        want_heads = heads_want[lv] if not V4 else heads_want[lv][:-1] + ["[monsters]", "[sites]", "[stats]"]
+        want_heads = heads_want[lv] if not V4 else heads_want[lv][:-1] + ["[monsters]", "[sites]"] + (
+            ["[peoples]"] if V5 else []) + ["[stats]"]
         c.eq("%s %s: 24.4 blocks" % (name, lv), heads, want_heads)   # P5-02 12.4, 12.5
     s, f = (texts[lv].decode("ascii") for lv in ("summary", "full"))
     stat = dict(line.split(" = ") for line in block(f, "[stats]"))   # 25.12 item 2: invariant 6 read on full
@@ -2104,7 +2111,8 @@ def check_invariants(c, name, w):
                                 civilization=w.t["civilization"], settlement=w.t["settlement"],
                                 region_control=w.t["region_control"], settlement_census=w.t["settlement_census"],
                                 relation=w.t["relation"], region_name=w.t.get("region_name", []),
-                                **{t: w.t[t] for t in (pe.NEW_TABLES_023 if V4 else ())}), w.E,
+                                **{t: w.t[t] for t in (pe.NEW_TABLES_023 if V4 else ()) + (
+                                    pe.NEW_TABLES_024 if V5 else ())}), w.E,
                          w.t["race"])
     for line in hist[1:]:
         k, v = line.split(" = ")
@@ -2188,7 +2196,8 @@ def check_fixture_facts_v2(c):
     w = load_world(path)
     d = Digest(w)
     s, f = report(w, "summary").decode("ascii"), report(w, "full").decode("ascii")
-    hv = "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else "# worldgen history v2"   # P5-02 12.1
+    hv = ("# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3
+          else "# worldgen history v2")   # P5-02 12.1, P5-03 17.1
     c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), (hv, hv))
     c.eq("H11 T = 100 (300 chants of 100)", d.T, 100)
     cands = set(summary_candidates(w, d.frames))

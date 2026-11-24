@@ -81,6 +81,7 @@ X2 (24.3) relations-small adds conquest_settlers_permille 600 and subject_years 
 X3 (24.3) standing_changed happens on none of the ten relations-small maps (a hated minority is expelled before a
    phase start can change its standing, and conquests are between hated peoples); the stub-world units and H14
    cover it.
+R17 (6.3.3) a standing settlement whose owner becomes 0 (no realm) changes o_s only.
 R16 (17.2, 17.4) "mixed at E" needs mixed_min_permille, which the world does not store (spec defect D3): the
    reference reads it from the data root (the shipped 100 for world cases).
 R15 (12.1) the epithets excluded are those of every earlier monster of the world (any kind), read from each
@@ -578,6 +579,8 @@ class Relations:
             if c == st["o"]:
                 continue
             st["o"] = c
+            if c == 0:   # R17: a standing settlement left without an owner keeps its people and rulers
+                continue
             q = self.race_of_civ(c)
             if q == st["q"]:
                 continue
@@ -1359,8 +1362,23 @@ def stats_of(res, E, mixed_min=100):
         ("settlements_fled", sum(1 for s, k in endings.items() if k == 6)),
         ("abandoned_without_destination", len(ev_of.get("settlement_abandoned", []))),
         ("abandonment_lost", sum(val(e, "lost") for e in ev_of.get("settlement_abandoned_to", []))),
+        ("monster_stories", told_monsters(res, ev_of, val)),
         ("ruins_oldest_year", min((s[12] for s in ruins), default="-")),
     ]
+
+
+def told_monsters(res, ev_of, val):
+    """10.1: the number of told monsters (notable: harm >= 200; at most 3)."""
+    mon = {}
+    parts = {}
+    for p in res["event_participant"]:
+        parts.setdefault(p[0], []).append(p)
+    for key, w in (("monster_raid", None), ("settlement_overrun", 500), ("settlement_fled", 500)):
+        for e in ev_of.get(key, []):
+            for p in parts.get(e[0], []):
+                if p[3] == MONSTER:
+                    mon[p[4]] = mon.get(p[4], 0) + (max(0, val(e, "dead")) if w is None else w)
+    return min(3, sum(1 for h in mon.values() if h >= 200))
 
 
 HEADER = """\
