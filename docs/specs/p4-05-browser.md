@@ -1,6 +1,6 @@
 # P4-05 Browser of civilizations and events
 
-Status: **r2, 2026-11-23**: correction round, the text brought in line with what was built and ruled (revision notes at the end). r1 was approved by the lead and built on `p4/05-*` with P5-02 merged in between, so the stage merged at generator 0.23.0, schema 9. Phase P4 Viewer v1, stage 5 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-05", 3.2, rules V1 to V10, 7 row P4-05, 8, 9, 10). Builds on P4-01 (`Timeline`, `LoadedHistory`), P4-03 r4 (year bar, `HistoryState`, H1 to H9), P4-04 r2 (`MarkerIndex`, markers, hover, M0 to M9) and P3-07 (the digest, `[civilizations]`, the chronicle line), as on `origin/main` at 61d2e23 (generator 0.22.0, schema 8). Design doc 10 ("World viewer": "a browser for civilizations, figures and events with their causes") and 13 (P4 row and exit check). Section 12 carries the world critic's P4-04 findings and the slow year change.
+Status: **r3, 2026-11-24**: the kind group `peoples` of P5-03 (4.4). **r2, 2026-11-23**: correction round, the text brought in line with what was built and ruled (revision notes at the end). r1 was approved by the lead and built on `p4/05-*` with P5-02 merged in between, so the stage merged at generator 0.23.0, schema 9. Phase P4 Viewer v1, stage 5 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-05", 3.2, rules V1 to V10, 7 row P4-05, 8, 9, 10). Builds on P4-01 (`Timeline`, `LoadedHistory`), P4-03 r4 (year bar, `HistoryState`, H1 to H9), P4-04 r2 (`MarkerIndex`, markers, hover, M0 to M9) and P3-07 (the digest, `[civilizations]`, the chronicle line), as on `origin/main` at 61d2e23 (generator 0.22.0, schema 8). Design doc 10 ("World viewer": "a browser for civilizations, figures and events with their causes") and 13 (P4 row and exit check). Section 12 carries the world critic's P4-04 findings and the slow year change.
 
 **No world byte changes.** Generator stays **0.22.0**, schema stays **8**; `report` and `hash` bytes unchanged. New golden file `worldgen/tests/golden/p4-05-browser.txt`. The carried-over glyph and colour changes (12.2) re-record `p4-04-markers.txt` and change the `markers.txt` hashes of `world-hashes.sh`; nothing else moves.
 
@@ -101,10 +101,10 @@ Today `history_report_digest` = `digest_history`. On `origin/p5/02-impl-r1` (gen
 ### 4.4 Kind groups (`history_browser.hpp`)
 
 ```cpp
-enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5 };
-inline constexpr std::uint32_t ALL_GROUPS = 0x3F;
+enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5, peoples = 6 };
+inline constexpr std::uint32_t ALL_GROUPS = 0x7F;
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;      // bytes; default other
-[[nodiscard]] std::string_view event_group_word(EventGroup) noexcept;          // "realms" ... "other", "monsters"
+[[nodiscard]] std::string_view event_group_word(EventGroup) noexcept;          // "realms" ... "other", "monsters", "peoples"
 ```
 
 | Group | Kind keys |
@@ -114,9 +114,10 @@ inline constexpr std::uint32_t ALL_GROUPS = 0x3F;
 | `war` | `flare_up`, `claim`, `claim_settlements`, `claim_dropped`, `war_declared`, `battle`, `battle_at_pass`, `siege`, `sacked`, `settlement_captured`, `peace`, `truce`, `war_won`, `region_ceded`, `settlements_ceded`, `tribute`, `search_abandoned`, `refuge_held` |
 | `calamity` | `famine`, `plague`, `plague_spread`, `plague_outbreak` |
 | `other` | any other key (V7: kinds by key) |
-| `monsters` | `monster_appeared`, `undead_rose`, `monster_woke`, `monster_slept`, `monster_raid`, `settlement_overrun`, `monster_slain`, `monster_driven_off`, `monster_died`, `beasts_bold`, `outpost_built`, `outpost_abandoned` (P5-02's kinds 44 to 55) |
+| `monsters` | `monster_appeared`, `undead_rose`, `monster_woke`, `monster_slept`, `monster_raid`, `settlement_overrun`, `monster_slain`, `monster_driven_off`, `monster_died`, `beasts_bold`, `outpost_built`, `outpost_abandoned` (P5-02's kinds 44 to 55), `settlement_fled` (r3: P5-03's kind 56) |
+| `peoples` | `peoples_met`, `disposition_turned`, `refugees_arrived`, `settlement_mixed`, `standing_changed`, `people_expelled` (r3: P5-03's kinds 57 to 62) |
 
-This covers every one of the 55 shipped kinds (lead ruling at the P4-05 integration with P5-02: group `monsters` appended as code 5, `ALL_GROUPS` = 0x3F; codes are never reused). No shipped kind falls to `other`. A new kind gets its row when it is added. The test in 10.2 item 2 fails if a compiled kind has no row.
+This covers every one of the 55 shipped kinds (lead ruling at the P4-05 integration with P5-02: group `monsters` appended as code 5, `ALL_GROUPS` = 0x3F; codes are never reused). (r3, P5-03 16.3, lead ruling: kind 56 joins `monsters`, group `peoples` is appended as code 6 for kinds 57 to 62, `ALL_GROUPS` = 0x7F; all 62 kinds are covered.) No shipped kind falls to `other`. A new kind gets its row when it is added. The test in 10.2 item 2 fails if a compiled kind has no row.
 
 ### 4.5 The browser index (`worldgen/inspect/history_browser.hpp`)
 
@@ -504,5 +505,6 @@ From the determinism audit of Part A (`docs/reviews/p4-05-browser-library-audit.
 
 ## Revision notes
 
+- **r3** (2026-11-24), text only, pointer to P5-03 r2 16.3: 4.4 gains group `peoples` = 6 (kinds 57 to 62), kind 56 `settlement_fled` in `monsters`, `ALL_GROUPS` = 0x7F.
 - **r2** (2026-11-23), text only, from what was built and ruled; no change to code or output. 4.4: group `monsters` = 5 for kinds 44 to 55, `ALL_GROUPS` = 0x3F, all 55 kinds covered, `other` holds no shipped kind (lead ruling). 4.2: `history_entity_tag`; an entity without a name displays its tag as an untagged link; the FatalErrors of `civilization_block`. 4.5: the error texts as built. 4.6: `markers: no event <e>`. 4.7: budgets for the 3,000-event world only, the bench suite's real name (`browser-bench`) and the measured costs. 5.2: only `c`, `s`, `rg` and `e` are links in the viewer. 6.1: the group menu from `get_event_groups()`, Follow a check box. 4.3: the P5-02 step done. 7: the large world at `--event-intensity turbulent` (2,646 events). 9: the kind-groups bullet done. 10.2 item 2 and 15.3: 55 kinds. 16: the audit's advisories A1 and A2 as open items.
 - **r1** (2026-11-23): first draft.
