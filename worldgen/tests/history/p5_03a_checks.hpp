@@ -193,6 +193,13 @@ inline std::vector<std::string> violations(const World& w) {
                 const std::string k = x.kind_of(id);
                 other = other || (at(*row, 1) == y && at(*row, 6) == s &&
                                   (k == "refugees_arrived" || k == "people_expelled" || k == "colony_founded"));
+                // people who fled a sack, an overrun or an abandonment elsewhere that year may have reached s before
+                // the owner change through the ledger (P5-03 6.4.1) without an event at s: the rows of y - 1 are then
+                // not the shares the settlers' rule was applied to (integration of P5-03a: s116 of seed 42 at 1024
+                // took 2,008 people of Edemford's sack, mostly of the conquerors' race, before the cession of 5821)
+                other = other || (at(*row, 1) == y && (k == "sacked" || k == "settlement_overrun" ||
+                                                       k == "settlement_fled" || k == "settlement_abandoned" ||
+                                                       k == "settlement_abandoned_to"));
             }
             if (other) continue;
             const auto before = p503check::in_force(srows.at(s), y - 1), after = p503check::in_force(srows.at(s), y);

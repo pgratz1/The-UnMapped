@@ -458,6 +458,10 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         std::vector<std::int64_t> rec;
         for (const std::int64_t c0 : cs) {
             if (displacing.count(x.kind_of(c0)) != 0U && at(*x.ev.at(c0), 6) == from) rec.push_back(c0);
+            // P5-03 7.2: cession refugees go through the ledger with the cession as cause, an event of the region
+            // (settlement 0); found at integration of P5-03a on p5-monsters-high-1024 (e275 after region_ceded e273)
+            const std::string kc = x.kind_of(c0);
+            if ((kc == "region_ceded" || kc == "settlements_ceded") && at(*x.ev.at(c0), 5) == rf) rec.push_back(c0);
         }
         if (rec.empty()) {
             out.push_back("6.4.3: e" + n(e) + " cause is not the displacing event at its origin");

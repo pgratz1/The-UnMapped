@@ -1811,6 +1811,11 @@ ids now ascend with the year (renumbered by year and order of writing: the elf-g
 e47, the longer quiet stretch e48; `check_fixture_facts_v6` and the C++ tests follow), and a settlement that never
 changed hands has its end population in its one census row. `p4_browser_reference.py`'s summary block follows
 v6 9.2 (the milestone count, no `without war` line), which phase 1 had left at v5.
+Slow-suite checks made exact at integration: 6.4.3's arrival cause may be a cession of the origin's region (P5-03
+7.2's cession refugees; p5-monsters-high-1024 e275); 5.1's settlers' share is not checked in a year with a sack,
+overrun, flight or abandonment anywhere (movers reach the place through the ledger before the owner change, without
+an event there; seed 42 at 1024, s116 in 5821); P3-06's enmity row opens at or after the younger realm's founding
+year (stress-14: D crossed `enmity_max` within the hatred band 5 and 15 years later); the seed 0 milestone witnesses.
 
 ## P3-07 history report
 
