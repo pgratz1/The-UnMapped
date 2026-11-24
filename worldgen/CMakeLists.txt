@@ -90,6 +90,7 @@ add_library(worldgen STATIC
     src/history/conflict_war.cpp
     src/history/monsters.cpp
     src/history/relations.cpp
+    src/history/alliances.cpp
     src/history/renaming.cpp
     src/history/peoples.cpp
     src/history/peoples_geo.cpp

@@ -986,6 +986,16 @@ void RelationsSubsystem::read_log(const StepContext& ctx) {
     cursor_ = last + 1;
 }
 
+std::int64_t RelationsSubsystem::met_event(std::int64_t a, std::int64_t b) const {
+    const Pair* p = a != b ? pair_of(a, b) : nullptr;
+    return p != nullptr && p->met ? p->met_event : 0;
+}
+
+std::int64_t RelationsSubsystem::turn_event(std::int64_t a, std::int64_t b) const {
+    const Pair* p = a != b ? pair_of(a, b) : nullptr;
+    return p != nullptr ? p->turn_event : 0;
+}
+
 void RelationsSubsystem::credit(std::int64_t a, std::int64_t b, std::int64_t units, std::int64_t event) {
     Pair* p = a != b ? pair_of(a, b) : nullptr;
     if (p == nullptr || !p->met) {

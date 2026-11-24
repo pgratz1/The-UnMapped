@@ -35,3 +35,6 @@ awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
 stances = [{ race = "faerie", value = 200 }]
+origin_allies = ["faerie"]
+ally_join_permille = 700
+mining_permille = 0

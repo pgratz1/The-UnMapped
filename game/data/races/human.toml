@@ -36,3 +36,6 @@ awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
 stances = []
+origin_allies = []
+ally_join_permille = 600
+mining_permille = 0

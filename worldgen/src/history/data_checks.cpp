@@ -167,6 +167,44 @@ void check_race_stances(const data::ContentSet& content, const data::Definition&
     }
 }
 
+// P5-04 4.1: race_origin_allies, the first failing entry of each race; the
+// relation must be listed by both races (checked once every entry is a race).
+void check_race_origin_allies(const data::ContentSet& content, const data::Definition& race,
+                              std::vector<data::LoadError>& out) {
+    const std::vector<data::Value>& list = race.record.get_array("origin_allies");
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        const std::string& r = list[i].as_string();
+        const std::string at = "origin_allies[" + db::format_u64(i) + "] '" + r + "' ";
+        std::string problem;
+        const data::Definition* other = content.find(data::RACE_KIND, r);
+        if (other == nullptr) {
+            problem = at + "is not a race";
+        } else if (r == race.id) {
+            problem = at + "is the race itself";
+        } else {
+            for (std::size_t j = 0; j < i; ++j) {
+                if (list[j].as_string() == r) {
+                    problem = at + "is listed twice";
+                    break;
+                }
+            }
+            if (problem.empty()) {
+                bool back = false;
+                for (const data::Value& v : other->record.get_array("origin_allies")) {
+                    back = back || v.as_string() == race.id;
+                }
+                if (!back) {
+                    problem = "origin_allies '" + r + "' is not returned by race '" + r + "'";
+                }
+            }
+        }
+        if (!problem.empty()) {
+            out.push_back(monster_error(data::RACE_DIRECTORY, "race_origin_allies", data::RACE_KIND, race.id, problem));
+            return;
+        }
+    }
+}
+
 }  // namespace
 
 std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective) {
@@ -200,6 +238,7 @@ std::vector<data::LoadError> check_history_data(const data::ContentSet& content)
         check_race_biomes(content, *race, out);
         check_race_culture(content, *race, out);
         check_race_stances(content, *race, out);  // P5-03 4.1
+        check_race_origin_allies(content, *race, out);  // P5-04 4.1
         if (tuning != nullptr) {
             check_race_age_name(tuning->record.get_string("age_name_form"), *race, out);
         }

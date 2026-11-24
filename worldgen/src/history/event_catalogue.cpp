@@ -265,6 +265,40 @@ EventCatalogue build_compiled() {
                                role(2, "civilization", EntityType::civilization, 1, 1),
                                role(3, "race", EntityType::race, 1, 1)},
                               {"people", "standing", "years"}, 0, {}});
+    // P5-04 8.1 (generator 0.26.0): kinds 63 to 78, alliances, trade, the
+    // spoils of allied wars, mines and arms.
+    const auto civ = [](std::int64_t seq, std::string_view name, std::int64_t lo = 1, std::int64_t hi = 1) {
+        return role(seq, name, EntityType::civilization, lo, hi);
+    };
+    const auto pair_of = [&civ](std::string_view a, std::string_view b) {
+        return std::vector<RoleDef>{civ(1, a), civ(2, b)};
+    };
+    const auto pair_foe = [&civ] {
+        return std::vector<RoleDef>{civ(1, "ally_a"), civ(2, "ally_b"), civ(3, "foe", 0, 1)};
+    };
+    const auto call = [&civ] { return std::vector<RoleDef>{civ(1, "ally"), civ(2, "partner"), civ(3, "enemy")}; };
+    const auto spoils = [&civ] { return std::vector<RoleDef>{civ(1, "principal"), civ(2, "ally"), civ(3, "enemy")}; };
+    c.kinds.push_back(KindDef{63, "alliance_formed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
+    c.kinds.push_back(KindDef{64, "alliance_renewed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
+    c.kinds.push_back(KindDef{65, "alliance_lapsed", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{66, "alliance_broken", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{67, "alliance_betrayed", true, 0, 0, pair_of("betrayer", "betrayed"), {}, 0, {}});
+    c.kinds.push_back(KindDef{68, "ally_joined_war", true, 0, 0, call(), {"side"}, 0, {}});
+    c.kinds.push_back(KindDef{69, "ally_refused", true, 0, 0, call(), {}, 0, {}});
+    c.kinds.push_back(KindDef{70, "ally_withdrew", true, 0, 0, call(), {}, 0, {}});
+    c.kinds.push_back(KindDef{71, "allied_battle", true, 1, 0,
+                              {civ(1, "winner"), civ(2, "loser"), civ(3, "winner_ally", 0, 16),
+                               civ(4, "loser_ally", 0, 16)},
+                              {"winner_dead", "loser_dead", "pass"}, 0, {}});
+    c.kinds.push_back(KindDef{72, "trade_opened", true, 0, 0, pair_of("partner_a", "partner_b"), {}, 0, {}});
+    c.kinds.push_back(KindDef{73, "trade_broken", true, 0, 0, pair_of("partner_a", "partner_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{74, "spoils_shared", true, 1, 0, spoils(), {"share"}, 0, {}});
+    c.kinds.push_back(KindDef{75, "spoils_withheld", true, 1, 0, spoils(), {"share"}, 0, {}});
+    c.kinds.push_back(KindDef{76, "alliance_spurned", true, 1, 0, pair_of("ally", "principal"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{77, "mine_opened", true, 1, 1,
+                              {civ(1, "civilization"), role(2, "site", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{78, "arms_sold", true, 0, 0,
+                              {civ(1, "seller"), civ(2, "buyer"), role(3, "site", EntityType::site, 1, 1)}, {}, 0, {}});
     return c;
 }
 
@@ -326,7 +360,7 @@ enum class TokenType : std::uint8_t {
 };
 
 // kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where };
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -530,6 +564,10 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::aside;
         } else if (*form == "where") {
             out.form = Form::where;
+        } else if (*form == "with") {  // P5-04 8.2
+            out.form = Form::with;
+        } else if (*form == "against") {
+            out.form = Form::against;
         } else {
             return unknown;
         }
@@ -547,7 +585,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
         r->type != EntityType::monster) {
         return "form '" + std::string(*form) + "' needs a monster role" + where;
     }
-    if (r->min_count == 0 && out.form != Form::all) {
+    if (r->min_count == 0 && out.form != Form::all && out.form != Form::with && out.form != Form::against) {
         return "role '" + r->role + "' may have no participant" + where;
     }
     return std::nullopt;
@@ -1832,7 +1870,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.id != static_cast<std::int64_t>(i) + 1) {
             return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
         }
-        if (r.kind != 1 && r.kind != 2) return at + "kind " + int_text(r.kind) + " is not 1 or 2";
+        if (r.kind != 1 && r.kind != 2 && r.kind != 3) return at + "kind " + int_text(r.kind) + " is not 1, 2 or 3";
         if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
         if (r.x < 0 || r.y < 0 || r.x >= t.map_size || r.y >= t.map_size) {
             return at + "cell " + int_text(r.x) + " " + int_text(r.y) + " outside the map";
@@ -1847,14 +1885,18 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.kind == 1) {
             if (r.monster < 1 || r.monster > n_monsters) return at + "monster " + int_text(r.monster) + " is not a monster row";
             if (r.founder_civ != 0) return at + "founder_civ " + int_text(r.founder_civ) + " of a lair";
-        } else {
+        } else if (r.kind == 2) {
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "monster " + int_text(r.monster) + " of an outpost";
+        } else {  // P5-04 9.2: a mine
+            if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
+            if (r.monster != 0) return at + "mine with a monster";
+            if (r.settlement == 0) return at + "mine without a settlement";
         }
         if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
         const std::string_view ok = kind_key(r.origin_event);
         const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
-                                ok == "outpost_built") &&
+                                ok == "outpost_built" || ok == "mine_opened") &&
                                year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
         if (!origin_ok) {
             return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
@@ -1873,6 +1915,9 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             }
         }
         if (r.ending < 0 || r.ending > 6) return at + "ending " + int_text(r.ending) + " outside 0 to 6";
+        if (r.kind == 3 && r.ending != 0 && r.ending != 4 && r.ending != 5) {
+            return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a mine";
+        }
     }
     // monster.
     for (std::size_t i = 0; i < t.monsters.size(); ++i) {
@@ -2139,13 +2184,19 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         ps.push_back(&p);
                     }
                 }
-                if (t.form == Form::all) {
+                if ((t.form == Form::with || t.form == Form::against) && !ps.empty()) {
+                    out += t.form == Form::with ? ", with " : " against ";  // P5-04 8.2
+                }
+                if (t.form == Form::all || t.form == Form::with || t.form == Form::against) {
                     for (std::size_t i = 0; i < ps.size(); ++i) {
                         if (i > 0) {
                             out += i + 1 == ps.size() ? " and " : ", ";
                         }
                         append_name(name_of(*ps[i], Form::name), static_cast<EntityType>(ps[i]->entity_type),
                                     ps[i]->entity_id);
+                    }
+                    if (t.form == Form::with && !ps.empty()) {
+                        out += ",";
                     }
                 } else {
                     if (ps.empty()) {

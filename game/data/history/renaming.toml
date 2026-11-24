@@ -50,7 +50,7 @@ forms = ["{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder
 
 [[history.renaming.rules]]
 key = "slaughter"
-kinds = ["battle", "battle_at_pass"]
+kinds = ["battle", "battle_at_pass", "allied_battle"]
 values = ["winner_dead", "loser_dead"]
 min_magnitude = 5000
 window_years = 100

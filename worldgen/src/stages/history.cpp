@@ -8,6 +8,7 @@
 
 #include "worldgen/core/error.hpp"
 #include "worldgen/db/schema.hpp"
+#include "worldgen/history/alliances.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/monsters.hpp"
@@ -79,10 +80,15 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     history::RelationsSubsystem relations(peoples, conflict, content, inputs);
     peoples.set_ledger(&relations);
     conflict.set_dispositions(&relations);
+    // P5-04 6.1, 6.10 item 3: the alliances run after the relations; they are
+    // conflict's alliance view and open mines through the monsters' sites.
+    history::AlliancesSubsystem alliances(peoples, conflict, relations, content);
+    conflict.set_alliances(&alliances);
+    alliances.set_sites(&monsters);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations};
+    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances};
     config.tension = {&conflict, &monsters};
     config.interventions = &none;
     config.catalogue = &catalogue;

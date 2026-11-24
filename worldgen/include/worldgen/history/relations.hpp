@@ -116,6 +116,10 @@ public:
     // meeting) and whether it has met.
     [[nodiscard]] std::int64_t band(std::int64_t race_a, std::int64_t race_b) const override;
     [[nodiscard]] bool met(std::int64_t race_a, std::int64_t race_b) const override;
+    // P5-04 7.13: the pair's last disposition_turned (0 none).
+    [[nodiscard]] std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const override;
+    // P5-04 6.8: the pair's peoples_met event (0 when unmet or unknown).
+    [[nodiscard]] std::int64_t met_event(std::int64_t race_a, std::int64_t race_b) const;
 
     // P5-03a 3.5: the one path by which an event moves a pair's memory. When
     // the pair has met: M += units x 1000, clamped to its bounds, and the

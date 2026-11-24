@@ -541,7 +541,34 @@ std::int64_t MonstersSubsystem::growth_permille(std::int64_t region) const {
 
 bool MonstersSubsystem::holds_site(std::int64_t settlement) const {
     return std::any_of(sites_.begin(), sites_.end(),
-                       [settlement](const Site& t) { return !t.ended_year && t.settlement == settlement; });
+                       [settlement](const Site& t) { return t.kind != 3 && !t.ended_year && t.settlement == settlement; });
+}
+
+void MonstersSubsystem::open_site(const SiteSpec& spec) {
+    if (spec.id != next_site_id() || spec.kind != 3) {
+        fail("history: monsters: open_site: site " + int_text(spec.id) + " of kind " + int_text(spec.kind) +
+             " is not the next site of kind 3");
+    }
+    Site t;
+    t.id = spec.id;
+    t.kind = spec.kind;
+    t.name = spec.name;
+    t.region = spec.region;
+    t.x = spec.x;
+    t.y = spec.y;
+    t.settlement = spec.settlement;
+    t.founder = spec.founder_civ;
+    t.monster = spec.monster;
+    t.origin_year = spec.origin_year;
+    t.origin_event = spec.origin_event;
+    sites_.push_back(std::move(t));
+}
+
+void MonstersSubsystem::end_site_seam(std::int64_t id, std::int64_t year, std::int64_t event, std::int64_t ending) {
+    if (site(id).kind != 3 || site(id).ended_year) {
+        fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine");
+    }
+    end_site(id, year, event, ending);
 }
 
 bool MonstersSubsystem::shunned(std::int64_t region) const {
@@ -887,7 +914,7 @@ void MonstersSubsystem::create(StepContext& ctx, std::size_t k, std::int64_t reg
             const bool dead_place = x != 0 && (state.settlement(x).status == SettlementStatus::ruined ||
                                                state.settlement(x).status == SettlementStatus::faded);
             const bool occupied = std::any_of(sites_.begin(), sites_.end(), [x](const Site& t) {
-                return !t.ended_year && t.settlement == x;
+                return t.kind != 3 && !t.ended_year && t.settlement == x;
             });
             if (dead_place && !occupied) {
                 lair_settlement = x;
