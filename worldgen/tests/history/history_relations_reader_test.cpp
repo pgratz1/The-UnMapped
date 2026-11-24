@@ -213,8 +213,11 @@ TEST_CASE("P5-03 16.4: phrase lists, the events' checks and settlement.ending 6"
     refused("met-no-rows", "DELETE FROM race_relation WHERE race_a = " + n(b.met_a) + " AND race_b = " + n(b.met_b) + ";",
             "corrupt table 'event': row " + n(b.met_event) + ": peoples_met without its rows");
     // a race participant naming no race row (16.4 gives no text: the table and row only, reading R-R1)
-    refused("race-participant", "UPDATE event_participant SET entity_id = 999 WHERE event = " + n(b.met_event) +
-                                    " AND seq = 2;",
+    // (On a settlement_mixed event: a peoples_met participant changed would first break its pair's race_relation
+    // rows, "first row is not at its meeting", which the history reader checks before the events.)
+    refused("race-participant",
+            "UPDATE event_participant SET entity_id = 999 WHERE entity_type = 1 AND event = (SELECT min(id) FROM event "
+            "WHERE kind = (SELECT id FROM event_kind WHERE key = 'settlement_mixed'));",
             "corrupt table '", true);
 }
 

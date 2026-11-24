@@ -1938,26 +1938,26 @@ geo-seed-42-512 e737 Famine struck Nirnthrurn Deep; 101 died.
 world geo-phrase-512 15629206466951235176 512 6000 all normal auto normal
 geo-phrase-512 input_region e85c837f305c94a12d6e8b1bf17ab12089fedb368ce3ae70bcf608697ef7a938
 geo-phrase-512 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
-geo-phrase-512 table beast_population c92a169468b8cff60e471f67faf0707f6c0a6e93db74e8d3a154aa7802edc839
-geo-phrase-512 table civilization d5852f1dd7229e3efb6858f9e9025790a039d9e93cd9c6050938d54ab728e554
-geo-phrase-512 table event 7c1321b401f6fd3c8e91737a670d0e28fdb778ae5545d45362ddd42d977c2a92
-geo-phrase-512 table event_cause 7aafe3e58921287a1878daa7b1bf208044c54ae3a7beb6490ef4e60072204f7c
+geo-phrase-512 table beast_population 8246efb7bffbc8ca2142d023cf525e3130c75f30e8b0a04c05ecd5141f210632
+geo-phrase-512 table civilization 42ba1f55555076c94a1e7827e27adb2bf4fee12967e871bb3623daf716a78d8b
+geo-phrase-512 table event 50a03eb815c125ccd6b0ca2cc3857fc8806e7f634239ad3706bd68d33bad1be1
+geo-phrase-512 table event_cause 9aa7ad65c836e826c21ab70de1037c7462389d33d239684e4f3afe2915fd53b7
 geo-phrase-512 table event_kind d4f379b3a3812846bdc9412a44f400071c4eebd3ef279c730e53e19b03586607
 geo-phrase-512 table event_kind_role 8745395fe4a1c46c68c624764fe314901aa306bcc1199f9b98238db570a75f9e
 geo-phrase-512 table event_kind_value 48f33d421fc18e95633553176b07aff9089584a06354b4e4b0a24a6b2b34f48b
-geo-phrase-512 table event_participant 84f8d517b55346997b91995916a46e3a849c2851fae9e342fb40a204b14d8f27
-geo-phrase-512 table event_value fb2500a079f93bb7b689021f1b2a7b9c7501681f730b9009738d6b97fd1f5aaf
-geo-phrase-512 table monster 450b6e84077a9e8d3ffb6f36ebe8f134d9106fd5f716ef3fcc4e521ee3f21a10
+geo-phrase-512 table event_participant 35bc6ecf9028e1dd3eea4a27ae89c016067aa278936c5b02a711dc1e1b604225
+geo-phrase-512 table event_value f29bd74642b818f614c8e814e24a9a17fab7ada4431b298133597a097e421adb
+geo-phrase-512 table monster bc7e60a4e12bfd9ae04716355f8b359ca6a1b72a78d6a2376d2a55be07d08f32
 geo-phrase-512 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
-geo-phrase-512 table phase 3efb84bfe1e9294fbf40e98d6dba2f9f9d5160ff681f9e8fff7da6d16bc4644c
-geo-phrase-512 table race_relation 01542fdc954010b22187de48029567e248e794eaa21e06022989da3dc66d9115
-geo-phrase-512 table region_control b0681c41b4b7240634f8f59938cbe4f69d4e561d13c98fa9b9095cf903db90bc
+geo-phrase-512 table phase 3abb33a321d016f8a3bffe34f13190b4aa1149e9c7c18677066cdf0853719172
+geo-phrase-512 table race_relation 2a867ddf833a2dadd205375e420ecf1552e828eae30beb59a18f28e9b7b1c7c1
+geo-phrase-512 table region_control 3bf75bece59b3d4736cafff9a7aaf85799efb0eb66c03093bd85f79764fcb5e2
 geo-phrase-512 table region_name 0e6a1c6b02969d8b906be8e5102fa216e0b8adc0e24736b655ba24480c1ec680
-geo-phrase-512 table relation 2d74566f02b7d72752a1613566303586e7098bd30429c8ab8fa5b42819cb01b6
-geo-phrase-512 table settlement 728cb7520dbac25df11eb82506451c52385647bc3249e5df0dd93f3e03a6e04d
-geo-phrase-512 table settlement_census 8a7653cc052e35041a6b1114d41a975ad772dc2e15885e48f7fcff4eccf15834
-geo-phrase-512 table settlement_race f914793a7eb702f9e3f2d2c0603c5335cd37619b5c5f92285be4e57940a403a0
-geo-phrase-512 table site 708bd6b02686c79703e4e3fc1448abcabe868be92b8a6578b2dd36b7267bb0f1
+geo-phrase-512 table relation 5a242c2bd210216bc6d9136ee65ca827fafe532093d33e5fd9a21a702a6be38c
+geo-phrase-512 table settlement 8fee75d7163193d9ca59041159369035655b47847e367e32463538582ddafb7a
+geo-phrase-512 table settlement_census b51b643f928c68ab5845702a37f8bac36a0ea3054eee287b953d2e8fc81c5f6a
+geo-phrase-512 table settlement_race 94c64cd144e5aa44f932cc5cb1ab003599d0f2a8038d49fd6d779ce50fa990e0
+geo-phrase-512 table site 37abaf6392e78df0f0df58e7f631f2836a3965c5817925ff0e2af108f2efcd9c
 geo-phrase-512 report end_year = 6000
 geo-phrase-512 report phases_opening = 6
 geo-phrase-512 report phases_quiet = 10
@@ -1965,48 +1965,48 @@ geo-phrase-512 report phases_flare = 6
 geo-phrase-512 report phases_final = 1
 geo-phrase-512 report simulated_years = 1389
 geo-phrase-512 report simulated_permille = 231
-geo-phrase-512 report events = 387
+geo-phrase-512 report events = 355
 geo-phrase-512 report events_awakening = 6
 geo-phrase-512 report events_civ_founded = 7
 geo-phrase-512 report events_settlement_founded = 7
 geo-phrase-512 report events_quiet_era = 0
 geo-phrase-512 report events_flare_up = 6
-geo-phrase-512 report events_colony_founded = 34
-geo-phrase-512 report events_became_village = 13
+geo-phrase-512 report events_colony_founded = 36
+geo-phrase-512 report events_became_village = 12
 geo-phrase-512 report events_became_town = 16
 geo-phrase-512 report events_became_city = 1
 geo-phrase-512 report events_settlement_dwindled = 2
-geo-phrase-512 report events_famine = 15
+geo-phrase-512 report events_famine = 14
 geo-phrase-512 report events_plague = 0
-geo-phrase-512 report events_plague_spread = 10
+geo-phrase-512 report events_plague_spread = 16
 geo-phrase-512 report events_succession_crisis = 11
 geo-phrase-512 report events_civ_seceded = 1
 geo-phrase-512 report events_settlement_abandoned = 1
-geo-phrase-512 report events_capital_moved = 5
+geo-phrase-512 report events_capital_moved = 4
 geo-phrase-512 report events_civ_ended = 0
 geo-phrase-512 report events_ruin_faded = 1
-geo-phrase-512 report events_claim = 28
-geo-phrase-512 report events_war_declared = 17
-geo-phrase-512 report events_battle = 54
+geo-phrase-512 report events_claim = 26
+geo-phrase-512 report events_war_declared = 14
+geo-phrase-512 report events_battle = 42
 geo-phrase-512 report events_battle_at_pass = 0
-geo-phrase-512 report events_siege = 31
-geo-phrase-512 report events_sacked = 7
+geo-phrase-512 report events_siege = 23
+geo-phrase-512 report events_sacked = 5
 geo-phrase-512 report events_settlement_captured = 4
 geo-phrase-512 report events_peace = 5
-geo-phrase-512 report events_truce = 5
-geo-phrase-512 report events_region_ceded = 3
+geo-phrase-512 report events_truce = 4
+geo-phrase-512 report events_region_ceded = 1
 geo-phrase-512 report events_civ_conquered = 0
 geo-phrase-512 report events_settlement_abandoned_to = 1
 geo-phrase-512 report events_refugees_settled = 1
 geo-phrase-512 report events_tribute = 5
-geo-phrase-512 report events_war_won = 5
+geo-phrase-512 report events_war_won = 3
 geo-phrase-512 report events_search_abandoned = 2
 geo-phrase-512 report events_refuge_held = 0
-geo-phrase-512 report events_plague_outbreak = 26
+geo-phrase-512 report events_plague_outbreak = 27
 geo-phrase-512 report events_quiet_stretch = 6
-geo-phrase-512 report events_claim_settlements = 2
+geo-phrase-512 report events_claim_settlements = 0
 geo-phrase-512 report events_settlements_ceded = 0
-geo-phrase-512 report events_claim_dropped = 1
+geo-phrase-512 report events_claim_dropped = 3
 geo-phrase-512 report events_refuge_hidden = 1
 geo-phrase-512 report events_region_renamed = 1
 geo-phrase-512 report events_monster_appeared = 1
@@ -2019,73 +2019,73 @@ geo-phrase-512 report events_monster_slain = 0
 geo-phrase-512 report events_monster_driven_off = 1
 geo-phrase-512 report events_monster_died = 0
 geo-phrase-512 report events_beasts_bold = 0
-geo-phrase-512 report events_outpost_built = 6
+geo-phrase-512 report events_outpost_built = 7
 geo-phrase-512 report events_outpost_abandoned = 4
 geo-phrase-512 report events_settlement_fled = 0
 geo-phrase-512 report events_peoples_met = 15
-geo-phrase-512 report events_disposition_turned = 1
-geo-phrase-512 report events_refugees_arrived = 4
-geo-phrase-512 report events_settlement_mixed = 7
+geo-phrase-512 report events_disposition_turned = 0
+geo-phrase-512 report events_refugees_arrived = 0
+geo-phrase-512 report events_settlement_mixed = 5
 geo-phrase-512 report events_standing_changed = 1
 geo-phrase-512 report events_people_expelled = 0
 geo-phrase-512 report civilizations = 8
 geo-phrase-512 report civilizations_alive = 8
-geo-phrase-512 report settlements = 42
-geo-phrase-512 report settlements_standing = 32
-geo-phrase-512 report regions_held = 10
-geo-phrase-512 report census_rows = 452
-geo-phrase-512 report relations = 45
+geo-phrase-512 report settlements = 44
+geo-phrase-512 report settlements_standing = 36
+geo-phrase-512 report regions_held = 11
+geo-phrase-512 report census_rows = 460
+geo-phrase-512 report relations = 36
 geo-phrase-512 report region_names = 1
 geo-phrase-512 report beasts = 5
 geo-phrase-512 report monster_kinds = 6
-geo-phrase-512 report beast_populations = 221
+geo-phrase-512 report beast_populations = 209
 geo-phrase-512 report monsters = 1
-geo-phrase-512 report sites = 8
-geo-phrase-512 report race_relations = 44
-geo-phrase-512 report settlement_races = 83
-geo-phrase-512 report population = 55881
-geo-phrase-512 report population_elf = 2365
-geo-phrase-512 report population_goblin = 15414
-geo-phrase-512 report population_dwarf = 17102
-geo-phrase-512 report population_faerie = 1378
-geo-phrase-512 report population_human = 17438
-geo-phrase-512 report population_orc = 2184
+geo-phrase-512 report sites = 9
+geo-phrase-512 report race_relations = 41
+geo-phrase-512 report settlement_races = 76
+geo-phrase-512 report population = 66951
+geo-phrase-512 report population_elf = 2450
+geo-phrase-512 report population_goblin = 21748
+geo-phrase-512 report population_dwarf = 9977
+geo-phrase-512 report population_faerie = 1122
+geo-phrase-512 report population_human = 14048
+geo-phrase-512 report population_orc = 17606
 geo-phrase-512 report settlements_standing_elf = 4
-geo-phrase-512 report settlements_standing_goblin = 9
-geo-phrase-512 report settlements_standing_dwarf = 7
-geo-phrase-512 report settlements_standing_faerie = 3
-geo-phrase-512 report settlements_standing_human = 5
-geo-phrase-512 report settlements_standing_orc = 4
+geo-phrase-512 report settlements_standing_goblin = 12
+geo-phrase-512 report settlements_standing_dwarf = 4
+geo-phrase-512 report settlements_standing_faerie = 2
+geo-phrase-512 report settlements_standing_human = 4
+geo-phrase-512 report settlements_standing_orc = 10
 geo-phrase-512 report regions_held_elf = 1
 geo-phrase-512 report regions_held_goblin = 3
-geo-phrase-512 report regions_held_dwarf = 2
-geo-phrase-512 report regions_held_faerie = 2
+geo-phrase-512 report regions_held_dwarf = 1
+geo-phrase-512 report regions_held_faerie = 1
 geo-phrase-512 report regions_held_human = 1
-geo-phrase-512 report regions_held_orc = 1
-geo-phrase-512 stats civ_settlements_max = 7
-geo-phrase-512 stats settlements_colonies = 34
+geo-phrase-512 report regions_held_orc = 4
+geo-phrase-512 stats civ_settlements_max = 10
+geo-phrase-512 stats settlements_colonies = 36
 geo-phrase-512 stats civilizations_seceded = 1
-geo-phrase-512 stats relations_enmity = 11
-geo-phrase-512 stats relations_peace = 17
-geo-phrase-512 stats war_years_total = 209
-geo-phrase-512 stats war_years_max = 40
+geo-phrase-512 stats relations_enmity = 8
+geo-phrase-512 stats relations_peace = 14
+geo-phrase-512 stats war_years_total = 162
+geo-phrase-512 stats war_years_max = 21
 geo-phrase-512 stats civilizations_conquered = 0
-geo-phrase-512 stats settlements_sacked = 6
+geo-phrase-512 stats settlements_sacked = 4
 geo-phrase-512 stats settlements_captured = 4
-geo-phrase-512 stats regions_conquered = 4
+geo-phrase-512 stats regions_conquered = 2
 geo-phrase-512 stats races_alive = 6
-geo-phrase-512 stats wars_attacker_elf = 1
-geo-phrase-512 stats wars_attacker_goblin = 10
-geo-phrase-512 stats wars_attacker_dwarf = 4
+geo-phrase-512 stats wars_attacker_elf = 0
+geo-phrase-512 stats wars_attacker_goblin = 9
+geo-phrase-512 stats wars_attacker_dwarf = 3
 geo-phrase-512 stats wars_attacker_faerie = 0
 geo-phrase-512 stats wars_attacker_human = 0
 geo-phrase-512 stats wars_attacker_orc = 2
-geo-phrase-512 stats wars_hollow = 4
-geo-phrase-512 stats wars_hollow_permille = 266
+geo-phrase-512 stats wars_hollow = 2
+geo-phrase-512 stats wars_hollow_permille = 166
 geo-phrase-512 stats wars_same_goal_max = 3
 geo-phrase-512 stats wars_same_goal_unchanged_max = 3
-geo-phrase-512 stats race_population_share_max_permille = 312
-geo-phrase-512 stats race_regions_share_max_permille = 300
+geo-phrase-512 stats race_population_share_max_permille = 324
+geo-phrase-512 stats race_regions_share_max_permille = 363
 geo-phrase-512 stats wars_unfound = 2
 geo-phrase-512 stats refuges_held_no_destination = 0
 geo-phrase-512 war e26 2269-2284 c2 c1 rg9 claim e22 battles 4 sacked 0 taken 0 exhaustion truce
@@ -2095,20 +2095,17 @@ geo-phrase-512 war e111 4356-4365 c4 c2 rg10 claim e104 battles 2 sacked 0 taken
 geo-phrase-512 war e120 4401-4408 c3 c5 rg6 claim e102 battles 0 sacked 0 taken 0 unfound unfound
 geo-phrase-512 war e132 4951-4963 c2 c5 rg6 claim e128 battles 2 sacked 1 taken 0 goal-lost won-c2
 geo-phrase-512 war e133 4956-4962 c3 c5 rg6 claim e129 battles 2 sacked 1 taken 0 goal-lost won-c3
-geo-phrase-512 war e166 5075-5084 c4 c2 rg13 claim e134 battles 2 sacked 0 taken 0 exhaustion truce
-geo-phrase-512 war e198 5611-5638 c2 c6 rg12 claim e174 battles 5 sacked 0 taken 0 exhaustion won-c2-tribute
-geo-phrase-512 war e212 5632-5654 c3 c5 rg11 claim e195 battles 4 sacked 0 taken 0 exhaustion won-c5-tribute
-geo-phrase-512 war e230 5639-5642 c2 c5 rg11 claim e189 battles 0 sacked 0 taken 0 unfound unfound
-geo-phrase-512 war e244 5675-5680 c4 c2 rg13 claim e201 battles 2 sacked 0 taken 1 exhaustion truce
-geo-phrase-512 war e282 5810-5823 c7 c6 rg12 claim e254 battles 4 sacked 0 taken 0 exhaustion truce
-geo-phrase-512 war e309 5926-5933 c7 c2 rg10 claim e302 battles 4 sacked 0 taken 1 exhaustion won-c2-ceded
-geo-phrase-512 war e327 5948-5953 c4 c2 rg10 claim e326 battles 4 sacked 2 taken 1 goal-lost won-c4-ceded
-geo-phrase-512 war e328 5949-5989 c2 c6 rg12 claim e301 battles 10 sacked 2 taken 1 length won-c6-tribute
-geo-phrase-512 war e359 5972-5985 c1 c2 rg5 claim e358 battles 3 sacked 0 taken 0 goal-lost truce
+geo-phrase-512 war e167 5075-5079 c4 c2 rg13 claim e134 battles 1 sacked 0 taken 0 exhaustion won-c2-tribute
+geo-phrase-512 war e196 5611-5631 c2 c6 rg12 claim e174 battles 5 sacked 0 taken 0 exhaustion truce
+geo-phrase-512 war e211 5632-5635 c3 c5 rg11 claim e193 battles 0 sacked 0 taken 0 unfound unfound
+geo-phrase-512 war e233 5675-5696 c4 c2 rg13 claim e197 battles 4 sacked 1 taken 0 exhaustion truce
+geo-phrase-512 war e274 5810-5818 c7 c6 rg12 claim e244 battles 4 sacked 0 taken 0 exhaustion won-c7-tribute
+geo-phrase-512 war e304 5926-5946 c7 c2 rg10 claim e300 battles 5 sacked 0 taken 4 aim won-c7-tribute
+geo-phrase-512 war e308 5934-5955 c2 c6 rg12 claim e298 battles 7 sacked 1 taken 0 exhaustion truce
 geo-phrase-512 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
-geo-phrase-512 r19 t11 17 first_orc_war 172 claims39 1/0/1 cessions40 0 goal_differs 0
-geo-phrase-512 r22 fresh 2/0 dropped 1 refuge_hidden 1 repeated_tolls 0 mixed_tolls 0
-geo-phrase-512 r22 open_claims e303,e306,e307,e352,e378
+geo-phrase-512 r19 t11 17 first_orc_war 172 claims39 0/0/0 cessions40 0 goal_differs 0
+geo-phrase-512 r22 fresh 0/0 dropped 3 refuge_hidden 1 repeated_tolls 0 mixed_tolls 0
+geo-phrase-512 r22 open_claims e90,e265,e316,e352,e355
 geo-phrase-512 r22 hidden_refuges -
 geo-phrase-512 r21 renamings 1 9:3381:capital_sack:e75
 geo-phrase-512 q150 0 e0
@@ -2305,18 +2302,15 @@ geo-phrase-512 note e120 Claimed since 4263.
 geo-phrase-512 note e130 The claim of the Warrens of Skruz-Snugg to East Wood, held by the Liemouvie Ring, came to a head.
 geo-phrase-512 note e132 Claimed since 4926.
 geo-phrase-512 note e133 Claimed since 4926. The second war between them.
-geo-phrase-512 note e166 Claimed since 4957. The second war between them.
-geo-phrase-512 note e197 The claim of the Warrens of Skruz-Snugg to the Wolds of Scythes, held by the Meald League, came to a head.
-geo-phrase-512 note e198 Claimed since 5110.
-geo-phrase-512 note e212 Claimed since 5486. The third war between them.
-geo-phrase-512 note e230 Claimed since 5386. The second war between them.
-geo-phrase-512 note e244 Claimed since 5617. The third war between them.
-geo-phrase-512 note e282 Claimed since 5686.
-geo-phrase-512 note e309 Claimed since 5891.
-geo-phrase-512 note e327 Claimed since 5938. The fourth war between them.
-geo-phrase-512 note e328 Claimed since 5891. The second war between them.
-geo-phrase-512 note e359 Claimed since 3902. The fourth war between them.
-geo-phrase-512 summary threshold 26 shown 193 ages 6,22,20,33,25,87
+geo-phrase-512 note e167 Claimed since 4957. The second war between them.
+geo-phrase-512 note e195 The claim of the Warrens of Skruz-Snugg to the Wolds of Scythes, held by the Meald League, came to a head.
+geo-phrase-512 note e196 Claimed since 5110.
+geo-phrase-512 note e211 Claimed since 5486. The third war between them.
+geo-phrase-512 note e233 Claimed since 5617. The third war between them.
+geo-phrase-512 note e274 Claimed since 5686.
+geo-phrase-512 note e304 Claimed since 5891.
+geo-phrase-512 note e308 Claimed since 5884. The second war between them.
+geo-phrase-512 summary threshold 26 shown 166 ages 6,22,20,33,25,60
 geo-phrase-512 e1 Esis awakened the Elves in Tinderside Thicket.
 geo-phrase-512 e2 The Elves founded the Realm of Lecier in Tinderside Thicket.
 geo-phrase-512 e3 The Realm of Lecier founded Vaenies in Tinderside Thicket.
@@ -2478,232 +2472,200 @@ geo-phrase-512 e158 The Meald League founded Brimham in the Wolds of Scythes.
 geo-phrase-512 e159 The Elves first met the Humans in the Wolds of Scythes, and were wary of them.
 geo-phrase-512 e160 The Goblins first met the Humans in the Wolds of Scythes, and were wary of them.
 geo-phrase-512 e161 The Dwarves first met the Humans in the Wolds of Scythes, and were wary of them.
-geo-phrase-512 e162 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,180 died in all.
-geo-phrase-512 e163 The plague spread to Slug; 266 died.
-geo-phrase-512 e164 A succession crisis at Brimham shook the Meald League.
-geo-phrase-512 e165 Famine struck Burkskrogg Pit; 162 died.
-geo-phrase-512 e166 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over Southeast Fells.
-geo-phrase-512 e167 The Warrens of Skruz-Snugg raised Skinkbit Lookout in South Downs against the Hold of Girinnam.
-geo-phrase-512 e168 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
-geo-phrase-512 e169 The Warrens of Skruz-Snugg defeated the Hold of Girinnam in Southeast Fells; 798 of the defeated and 165 of the victors fell.
-geo-phrase-512 e170 The Warrens of Skruz-Snugg raised Zeekreez Stockade in Southeast Fells against the Hold of Girinnam.
-geo-phrase-512 e171 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in the Harrowed Crags; 568 of the defeated and 194 of the victors fell.
-geo-phrase-512 e172 The Warrens of Skruz-Snugg and the Hold of Girinnam made peace after nine years of war, neither the victor.
+geo-phrase-512 e162 The Faeries first met the Humans in the Wolds of Scythes, and were wary of them.
+geo-phrase-512 e163 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,180 died in all.
+geo-phrase-512 e164 The plague spread to Slug; 266 died.
+geo-phrase-512 e165 A succession crisis at Brimham shook the Meald League.
+geo-phrase-512 e166 Famine struck Burkskrogg Pit; 162 died.
+geo-phrase-512 e167 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over Southeast Fells.
+geo-phrase-512 e168 The Warrens of Skruz-Snugg raised Skinkbit Lookout in South Downs against the Hold of Girinnam.
+geo-phrase-512 e169 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
+geo-phrase-512 e170 The Warrens of Skruz-Snugg defeated the Hold of Girinnam in Southeast Fells; 879 of the defeated and 158 of the victors fell.
+geo-phrase-512 e171 The Hold of Girinnam sued the Warrens of Skruz-Snugg for peace after four years of war.
+geo-phrase-512 e172 The Hold of Girinnam paid tribute to the Warrens of Skruz-Snugg; 925 were carried off.
 geo-phrase-512 e173 The Warrens of Skruz-Snugg sent settlers from Dramnarn to found Geenk Hole in Southeast Fells.
 geo-phrase-512 e174 The Warrens of Skruz-Snugg laid claim to the Wolds of Scythes, held by the Meald League.
 geo-phrase-512 e175 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
 geo-phrase-512 e176 Brimham grew into a town of 1,505.
 geo-phrase-512 e177 Famine struck Aethsor; 24 died.
 geo-phrase-512 e178 Famine struck Dramnarn; 30 died.
-geo-phrase-512 e179 Famine struck Nirdbrorn; 89 died.
-geo-phrase-512 e180 For 425 years, from 5186 to 5610, the land was quiet, and six realms kept the peace.
-geo-phrase-512 e181 The Meald League laid claim to South Downs, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e182 Brimham in the Wolds of Scythes grew into a city.
-geo-phrase-512 e183 The Warrens of Skruz-Snugg abandoned Skinkbit Lookout, the frontier having fallen quiet.
-geo-phrase-512 e184 The Faeries first met the Humans in the Wolds of Scythes, and were wary of them.
-geo-phrase-512 e185 The Liemouvie Ring sent settlers from Fiaflaemi to found Whaey in Lichenknoll Forest.
-geo-phrase-512 e186 The Meald League sent settlers from Brimham to found Mealdtearham in the Wolds of Scythes.
-geo-phrase-512 e187 Mealdtearham grew into a town of 1,841.
-geo-phrase-512 e188 The Meald League sent settlers from Brimham to found Gedbridbury in the Wolds of Scythes.
-geo-phrase-512 e189 The Warrens of Skruz-Snugg laid claim to Lichenknoll Forest, held by the Liemouvie Ring.
-geo-phrase-512 e190 Gedbridbury grew into a town of 1,639.
-geo-phrase-512 e191 The Meald League sent settlers from Brimham to found Damdulbury in the Wolds of Scythes.
-geo-phrase-512 e192 Whaey grew into a village of 271.
-geo-phrase-512 e193 Damdulbury grew into a town of 1,640.
-geo-phrase-512 e194 The Liemouvie Ring sent settlers from Whaey to found Leen in East Wood.
-geo-phrase-512 e195 The Gnokkirk Horde laid claim to Lichenknoll Forest, held by the Liemouvie Ring.
-geo-phrase-512 e196 The Warrens of Skruz-Snugg laid claim to the Harrowed Crags, held by the Hold of Girinnam.
-geo-phrase-512 e197 In 5611 tensions flared into 27 years of upheaval.
-geo-phrase-512 e198 The Warrens of Skruz-Snugg declared war on the Meald League over the Wolds of Scythes.
-geo-phrase-512 e199 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 389 of the defeated and 129 of the victors fell.
-geo-phrase-512 e200 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
-geo-phrase-512 e201 The Hold of Girinnam laid claim to Southeast Fells, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e202 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 290 of the defeated and 104 of the victors fell.
-geo-phrase-512 e203 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
-geo-phrase-512 e204 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 305 of the defeated and 117 of the victors fell.
-geo-phrase-512 e205 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
-geo-phrase-512 e206 Plague broke out in Kunk-Slitch Hole and spread to three other settlements; 591 died in all.
-geo-phrase-512 e207 The plague spread to Zodrib Pit; 122 died.
-geo-phrase-512 e208 The plague spread to Nozz Pit; 61 died.
-geo-phrase-512 e209 The plague spread to Geenk Hole; 54 died.
-geo-phrase-512 e210 The Meald League raised Guck Watch in the Wolds of Scythes against the Warrens of Skruz-Snugg.
-geo-phrase-512 e211 Famine struck Dramnarn; 29 died.
-geo-phrase-512 e212 The Gnokkirk Horde declared war on the Liemouvie Ring over Lichenknoll Forest.
-geo-phrase-512 e213 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 488 of the defeated and 101 of the victors fell.
-geo-phrase-512 e214 Plague broke out in Gedbridbury and spread to one other settlement; 1,395 died in all.
-geo-phrase-512 e215 The plague spread to Brimham; 1,093 died.
-geo-phrase-512 e216 The Gnokkirk Horde defeated the Liemouvie Ring in Lichenknoll Forest; 46 of the defeated and 13 of the victors fell.
-geo-phrase-512 e217 The Gnokkirk Horde besieged Fiaflaemi of the Liemouvie Ring; it held.
-geo-phrase-512 e218 Uul'duk awakened the Orcs in Owlpike Sward.
-geo-phrase-512 e219 The Orcs founded the Urom Horde in Owlpike Sward.
-geo-phrase-512 e220 The Urom Horde founded Aag'grug Camp in Owlpike Sward.
-geo-phrase-512 e221 The Warrens of Skruz-Snugg defeated the Meald League in Sootsike Sward; 288 of the defeated and 108 of the victors fell.
-geo-phrase-512 e222 The Meald League sued the Warrens of Skruz-Snugg for peace after 27 years of war.
-geo-phrase-512 e223 The Meald League paid tribute to the Warrens of Skruz-Snugg; 1,313 were carried off.
-geo-phrase-512 e224 The Elves first met the Orcs in Owlpike Sward, and hated them from the first.
-geo-phrase-512 e225 The Goblins first met the Orcs in Owlpike Sward, and were glad of them.
-geo-phrase-512 e226 The Dwarves first met the Orcs in Owlpike Sward, and were wary of them.
-geo-phrase-512 e227 The Faeries first met the Orcs in Owlpike Sward, and hated them from the first.
-geo-phrase-512 e228 The Humans first met the Orcs in Owlpike Sward, and were wary of them.
-geo-phrase-512 e229 Weakened by tribute, Brimham dwindled to 5,703 souls.
-geo-phrase-512 e230 The Warrens of Skruz-Snugg declared war on the Liemouvie Ring over Lichenknoll Forest.
-geo-phrase-512 e231 The Warrens of Skruz-Snugg searched Lichenknoll Forest for the Liemouvie Ring and found no one; the war ended after three years.
-geo-phrase-512 e232 The Liemouvie Ring defeated the Gnokkirk Horde in Lichenknoll Forest; 91 of the defeated and 11 of the victors fell.
-geo-phrase-512 e233 The Gnokkirk Horde defeated the Liemouvie Ring in Hawkthorn Wolds; 46 of the defeated and 11 of the victors fell.
-geo-phrase-512 e234 Plague broke out in Grorkbug Pit and spread to two other settlements; 1,742 died in all.
-geo-phrase-512 e235 The plague spread to Skrork-Zot Hole; 215 died.
-geo-phrase-512 e236 The plague spread to Gib; 279 died.
-geo-phrase-512 e237 The Liemouvie Ring defeated the Gnokkirk Horde in Lichenknoll Forest; 90 of the defeated and 11 of the victors fell.
-geo-phrase-512 e238 The Liemouvie Ring prevailed over the Gnokkirk Horde after 22 years of war.
-geo-phrase-512 e239 The Gnokkirk Horde paid tribute to the Liemouvie Ring; 791 were carried off.
-geo-phrase-512 e240 The Urom Horde sent settlers from Aag'grug Camp to found Ugaaldurag in Owlpike Sward.
-geo-phrase-512 e241 Plague broke out in Ugaaldurag; 31 died.
-geo-phrase-512 e242 Plague broke out in Fiaflaemi; 117 died.
-geo-phrase-512 e243 Plague broke out in Skozz Hole; 620 died.
-geo-phrase-512 e244 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over Southeast Fells.
-geo-phrase-512 e245 The Urom Horde sent settlers from Aag'grug Camp to found Daamghaarz Camp in Owlpike Sward.
-geo-phrase-512 e246 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in Southeast Fells; 591 of the defeated and 139 of the victors fell.
-geo-phrase-512 e247 The Hold of Girinnam besieged Dramnarn of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e248 The Hold of Girinnam took Dramnarn from the Warrens of Skruz-Snugg; 48 died.
-geo-phrase-512 e249 After the conquest, the Goblins and the Dwarves lived side by side in Dramnarn.
-geo-phrase-512 e250 The Warrens of Skruz-Snugg defeated the Hold of Girinnam in Southeast Fells; 1,050 of the defeated and 168 of the victors fell.
-geo-phrase-512 e251 The Warrens of Skruz-Snugg and the Hold of Girinnam made peace after five years of war, neither the victor.
-geo-phrase-512 e252 The Urom Horde sent settlers from Aag'grug Camp to found Kugh'ugogh Camp in Owlpike Sward.
-geo-phrase-512 e253 The Urom Horde sent settlers from Aag'grug Camp to found Grughza in Spraydown.
-geo-phrase-512 e254 The Urom Horde laid claim to the Wolds of Scythes, held by the Meald League.
-geo-phrase-512 e255 Leen grew into a village of 250.
-geo-phrase-512 e256 Famine struck Sneeg-Bink Pit; 85 died.
-geo-phrase-512 e257 Plague broke out in Aethsor; 117 died.
-geo-phrase-512 e258 The Urom Horde sent settlers from Aag'grug Camp to found Krag'thuugh in the Barrows of Sheaves.
-geo-phrase-512 e259 Plague broke out in Brimham; 769 died.
-geo-phrase-512 e260 Ugaaldurag grew into a village of 250.
-geo-phrase-512 e261 Plague broke out in Gib and spread to one other settlement; 579 died in all.
-geo-phrase-512 e262 The plague spread to Zodrib Pit; 312 died.
-geo-phrase-512 e263 Daamghaarz Camp grew into a village of 250.
-geo-phrase-512 e264 Grughza grew into a village of 251.
-geo-phrase-512 e265 Kugh'ugogh Camp grew into a village of 250.
-geo-phrase-512 e266 Krag'thuugh grew into a village of 250.
-geo-phrase-512 e267 Plague broke out in Leen; 86 died.
-geo-phrase-512 e268 Weakened by plague, Leen was abandoned; its 214 survivors were scattered.
-geo-phrase-512 e269 214 Faeries from Leen found shelter in Dramnarn, tolerated by the Hold of Girinnam.
-geo-phrase-512 e270 The Faeries and the Dwarves lived side by side in Dramnarn.
-geo-phrase-512 e271 Plague broke out in Nozz Pit and spread to one other settlement; 335 died in all.
-geo-phrase-512 e272 The plague spread to Zodrib Pit; 214 died.
-geo-phrase-512 e273 Famine struck Grorkbug Pit; 747 died.
-geo-phrase-512 e274 The Liemouvie Ring sent settlers from Whaey to found Whyvou in East Wood.
-geo-phrase-512 e275 A succession crisis at Skozz Hole shook the Gnokkirk Horde.
-geo-phrase-512 e276 Aerae the Old woke again in the Harrowed Crags.
-geo-phrase-512 e277 Aerae the Old fell in fire upon Whyvou; eight died.
-geo-phrase-512 e278 Plague broke out in Brimham; 904 died.
-geo-phrase-512 e279 Aerae the Old came down in flame on Slug; 301 died.
-geo-phrase-512 e280 Aerae the Old drove the people from Slug and made it its lair; 2,033 escaped.
-geo-phrase-512 e281 Plague broke out in Damdulbury; 646 died.
-geo-phrase-512 e282 The Urom Horde declared war on the Meald League over the Wolds of Scythes.
-geo-phrase-512 e283 Aerae the Old fell in fire upon Skazib; 99 died.
-geo-phrase-512 e284 The Gnokkirk Horde drove Aerae the Old back to its lair in South Downs.
-geo-phrase-512 e285 The Urom Horde defeated the Meald League in the Wolds of Scythes; 288 of the defeated and 120 of the victors fell.
-geo-phrase-512 e286 The Urom Horde besieged Brimham of the Meald League; it held.
-geo-phrase-512 e287 The Urom Horde defeated the Meald League in the Wolds of Scythes; 361 of the defeated and 124 of the victors fell.
-geo-phrase-512 e288 The Urom Horde besieged Brimham of the Meald League; it held.
-geo-phrase-512 e289 The Urom Horde defeated the Meald League in the Wolds of Scythes; 383 of the defeated and 86 of the victors fell.
-geo-phrase-512 e290 The Urom Horde besieged Brimham of the Meald League; it held.
-geo-phrase-512 e291 The Meald League defeated the Urom Horde in the Wolds of Scythes; 569 of the defeated and 91 of the victors fell.
-geo-phrase-512 e292 The Meald League and the Urom Horde made peace after 13 years of war, neither the victor.
-geo-phrase-512 e293 The Meald League abandoned Guck Watch, the frontier having fallen quiet.
-geo-phrase-512 e294 Grughza grew into a town of 1,501.
-geo-phrase-512 e295 Famine struck Nozz Pit; 32 died.
-geo-phrase-512 e296 Plague broke out in Naendnae and spread to one other settlement; 407 died in all.
-geo-phrase-512 e297 The plague spread to Aethsor; 24 died.
-geo-phrase-512 e298 Weakened by plague, Aethsor was abandoned; 363 survivors went to Naendnae, and 73 were lost.
-geo-phrase-512 e299 Plague broke out in Kunk-Slitch Hole; 704 died.
-geo-phrase-512 e300 Krag'thuugh grew into a town of 1,502.
-geo-phrase-512 e301 The Warrens of Skruz-Snugg laid claim to the Wolds of Scythes, held by the Meald League.
-geo-phrase-512 e302 The Urom Horde laid claim to South Downs, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e303 The Liemouvie Ring laid claim to Southeast Fells, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e304 The Realm of Lecier sent settlers from Simi to found Ithilce in Vaenies' Fall.
-geo-phrase-512 e305 Famine struck Graskroz Pit; 26 died.
-geo-phrase-512 e306 The Urom Horde laid claim to the Wolds of Scythes, held by the Meald League.
-geo-phrase-512 e307 The Liemouvie Ring laid claim to Hawkthorn Wolds, held by the Gnokkirk Horde.
-geo-phrase-512 e308 The Warrens of Skruz-Snugg laid claim to Dramnarn of the Hold of Girinnam in Southeast Fells.
-geo-phrase-512 e309 The Urom Horde declared war on the Warrens of Skruz-Snugg over South Downs.
-geo-phrase-512 e310 The Warrens of Skruz-Snugg defeated the Urom Horde in South Downs; 995 of the defeated and 190 of the victors fell.
-geo-phrase-512 e311 Plague broke out in Gib; 375 died.
-geo-phrase-512 e312 The Urom Horde defeated the Warrens of Skruz-Snugg in the Barrows of Sheaves; 463 of the defeated and 174 of the victors fell.
-geo-phrase-512 e313 The Warrens of Skruz-Snugg defeated the Urom Horde in South Downs; 840 of the defeated and 169 of the victors fell.
-geo-phrase-512 e314 The Warrens of Skruz-Snugg defeated the Urom Horde in the Barrows of Sheaves; 870 of the defeated and 152 of the victors fell.
-geo-phrase-512 e315 The Warrens of Skruz-Snugg besieged Krag'thuugh of the Urom Horde; it fell.
-geo-phrase-512 e316 The Warrens of Skruz-Snugg took Krag'thuugh from the Urom Horde; 134 died.
-geo-phrase-512 e317 The Urom Horde sued the Warrens of Skruz-Snugg for peace after seven years of war.
-geo-phrase-512 e318 The Urom Horde ceded Spraydown to the Warrens of Skruz-Snugg.
-geo-phrase-512 e319 After the cession, the Orcs and the Goblins lived side by side in Grughza.
-geo-phrase-512 e320 After the conquest, the Orcs and the Goblins lived side by side in Krag'thuugh.
-geo-phrase-512 e321 Plague broke out in Brimham; 1,324 died.
-geo-phrase-512 e322 The Hold of Girinnam laid claim to Southeast Fells, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e323 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
-geo-phrase-512 e324 The Skrab Mob broke away from the Warrens of Skruz-Snugg with three settlements.
-geo-phrase-512 e325 The Warrens of Skruz-Snugg abandoned Zeekreez Stockade, the land being lost.
-geo-phrase-512 e326 The Hold of Girinnam laid claim to South Downs, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e327 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over South Downs.
-geo-phrase-512 e328 The Warrens of Skruz-Snugg declared war on the Meald League over the Wolds of Scythes.
-geo-phrase-512 e329 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in South Downs; 234 of the defeated and 91 of the victors fell.
-geo-phrase-512 e330 The Hold of Girinnam besieged Slinkbat Hole of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e331 The Hold of Girinnam took Slinkbat Hole from the Warrens of Skruz-Snugg; 300 died.
-geo-phrase-512 e332 After the conquest, the Goblins and the Dwarves lived side by side in Slinkbat Hole.
-geo-phrase-512 e333 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in South Downs; 263 of the defeated and 77 of the victors fell.
-geo-phrase-512 e334 The Hold of Girinnam besieged Zodrib Pit of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e335 The Meald League raised Gunmas Watch in the Wolds of Scythes against the Warrens of Skruz-Snugg.
-geo-phrase-512 e336 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in South Downs; 243 of the defeated and 73 of the victors fell.
-geo-phrase-512 e337 The Hold of Girinnam besieged Zodrib Pit of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e338 The Hold of Girinnam sacked Zodrib Pit of the Warrens of Skruz-Snugg; 861 died and 2,012 fled.
-geo-phrase-512 e339 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 179 of the defeated and 80 of the victors fell.
-geo-phrase-512 e340 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in South Downs; 188 of the defeated and 81 of the victors fell.
-geo-phrase-512 e341 The Hold of Girinnam besieged Kunk-Slitch Hole of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e342 The Hold of Girinnam sacked Kunk-Slitch Hole of the Warrens of Skruz-Snugg; 1,394 died and 3,255 fled.
-geo-phrase-512 e343 The Hold of Girinnam prevailed over the Warrens of Skruz-Snugg after five years of war.
-geo-phrase-512 e344 The Warrens of Skruz-Snugg ceded Spraydown to the Hold of Girinnam.
-geo-phrase-512 e345 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 293 of the defeated and 94 of the victors fell.
-geo-phrase-512 e346 The Meald League besieged Grorkbug Pit of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e347 After the sack, 3,255 Goblins from Kunk-Slitch Hole found shelter in Graskroz Pit, among their own kin of the Skrab Mob.
-geo-phrase-512 e348 After the wars, the conquests and the sacks, the Goblins and the Dwarves came to hate one another.
-geo-phrase-512 e349 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 247 of the defeated and 96 of the victors fell.
-geo-phrase-512 e350 The Meald League besieged Grorkbug Pit of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e351 The Warrens of Skruz-Snugg raised Skrizz Stockade in Sootsike Sward against the Meald League.
-geo-phrase-512 e352 The Urom Horde laid claim to Spraydown, held by the Hold of Girinnam.
-geo-phrase-512 e353 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 333 of the defeated and 102 of the victors fell.
-geo-phrase-512 e354 The Meald League besieged Grorkbug Pit of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e355 The Meald League took Grorkbug Pit from the Warrens of Skruz-Snugg; 657 died.
-geo-phrase-512 e356 The seat of the Warrens of Skruz-Snugg moved to Gnix.
-geo-phrase-512 e357 After the conquest, the Goblins and the Humans lived side by side in Grorkbug Pit.
-geo-phrase-512 e358 The Realm of Lecier laid claim to the Barrows of Sheaves, held by the Warrens of Skruz-Snugg.
-geo-phrase-512 e359 The Realm of Lecier declared war on the Warrens of Skruz-Snugg over the Barrows of Sheaves.
-geo-phrase-512 e360 The Warrens of Skruz-Snugg defeated the Meald League in the Barrows of Sheaves; 166 of the defeated and 29 of the victors fell.
-geo-phrase-512 e361 The Realm of Lecier defeated the Warrens of Skruz-Snugg in the Barrows of Sheaves; 87 of the defeated and 29 of the victors fell.
-geo-phrase-512 e362 The Realm of Lecier besieged Krag'thuugh of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e363 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 174 of the defeated and 29 of the victors fell.
-geo-phrase-512 e364 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
-geo-phrase-512 e365 The Realm of Lecier defeated the Warrens of Skruz-Snugg in the Barrows of Sheaves; 92 of the defeated and 27 of the victors fell.
-geo-phrase-512 e366 The Realm of Lecier besieged Krag'thuugh of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e367 The Warrens of Skruz-Snugg raised Nutch Stockade in the Barrows of Sheaves against the Realm of Lecier.
-geo-phrase-512 e368 The Warrens of Skruz-Snugg defeated the Realm of Lecier in the Barrows of Sheaves; 107 of the defeated and 28 of the victors fell.
-geo-phrase-512 e369 Plague broke out in Krag'thuugh; 294 died.
-geo-phrase-512 e370 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 72 of the defeated and 23 of the victors fell.
-geo-phrase-512 e371 The Meald League defeated the Warrens of Skruz-Snugg in the Barrows of Sheaves; 88 of the defeated and 28 of the victors fell.
-geo-phrase-512 e372 The Meald League besieged Krag'thuugh of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e373 The Meald League sacked Krag'thuugh of the Warrens of Skruz-Snugg; 435 died and 1,018 fled.
-geo-phrase-512 e374 The Realm of Lecier and the Warrens of Skruz-Snugg made peace after 13 years of war, neither the victor.
-geo-phrase-512 e375 The Warrens of Skruz-Snugg abandoned Nutch Stockade, the land being lost.
-geo-phrase-512 e376 After the sack, 102 Goblins from Krag'thuugh found shelter in Ugaaldurag, welcomed by the Urom Horde.
-geo-phrase-512 e377 After the sack, 916 Orcs from Krag'thuugh found shelter in Ugaaldurag, among their own kin of the Urom Horde.
-geo-phrase-512 e378 The Skrab Mob laid claim to Slinkbat Hole of the Hold of Girinnam in South Downs.
-geo-phrase-512 e379 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 152 of the defeated and 50 of the victors fell.
-geo-phrase-512 e380 The Meald League besieged Gnix of the Warrens of Skruz-Snugg; it fell.
-geo-phrase-512 e381 The Meald League sacked Gnix of the Warrens of Skruz-Snugg; 748 died and 1,747 fled.
-geo-phrase-512 e382 The seat of the Warrens of Skruz-Snugg moved to Skrork-Zot Hole.
-geo-phrase-512 e383 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 115 of the defeated and 34 of the victors fell.
-geo-phrase-512 e384 The Meald League besieged Skrork-Zot Hole of the Warrens of Skruz-Snugg; it held.
-geo-phrase-512 e385 The Meald League prevailed over the Warrens of Skruz-Snugg after 40 years of war.
-geo-phrase-512 e386 The Warrens of Skruz-Snugg paid tribute to the Meald League; 591 were carried off.
-geo-phrase-512 e387 Whyvou grew into a village of 250.
+geo-phrase-512 e179 For 425 years, from 5186 to 5610, the land was quiet, and six realms kept the peace.
+geo-phrase-512 e180 The Meald League laid claim to South Downs, held by the Warrens of Skruz-Snugg.
+geo-phrase-512 e181 Brimham in the Wolds of Scythes grew into a city.
+geo-phrase-512 e182 The Warrens of Skruz-Snugg abandoned Skinkbit Lookout, the frontier having fallen quiet.
+geo-phrase-512 e183 The Liemouvie Ring sent settlers from Fiaflaemi to found Whaey in Lichenknoll Forest.
+geo-phrase-512 e184 The Meald League sent settlers from Brimham to found Mealdtearham in the Wolds of Scythes.
+geo-phrase-512 e185 Mealdtearham grew into a town of 1,841.
+geo-phrase-512 e186 The Meald League sent settlers from Brimham to found Gedbridbury in the Wolds of Scythes.
+geo-phrase-512 e187 The Warrens of Skruz-Snugg laid claim to Lichenknoll Forest, held by the Liemouvie Ring.
+geo-phrase-512 e188 Gedbridbury grew into a town of 1,639.
+geo-phrase-512 e189 The Meald League sent settlers from Brimham to found Damdulbury in the Wolds of Scythes.
+geo-phrase-512 e190 Whaey grew into a village of 271.
+geo-phrase-512 e191 Damdulbury grew into a town of 1,640.
+geo-phrase-512 e192 The Liemouvie Ring sent settlers from Whaey to found Leen in East Wood.
+geo-phrase-512 e193 The Gnokkirk Horde laid claim to Lichenknoll Forest, held by the Liemouvie Ring.
+geo-phrase-512 e194 The Warrens of Skruz-Snugg laid claim to the Harrowed Crags, held by the Hold of Girinnam.
+geo-phrase-512 e195 In 5611 tensions flared into 27 years of upheaval.
+geo-phrase-512 e196 The Warrens of Skruz-Snugg declared war on the Meald League over the Wolds of Scythes.
+geo-phrase-512 e197 The Hold of Girinnam laid claim to Southeast Fells, held by the Warrens of Skruz-Snugg.
+geo-phrase-512 e198 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 595 of the defeated and 90 of the victors fell.
+geo-phrase-512 e199 The Warrens of Skruz-Snugg defeated the Meald League in Sootsike Sward; 369 of the defeated and 125 of the victors fell.
+geo-phrase-512 e200 Plague broke out in Kunk-Slitch Hole and spread to three other settlements; 580 died in all.
+geo-phrase-512 e201 The plague spread to Zodrib Pit; 120 died.
+geo-phrase-512 e202 The plague spread to Nozz Pit; 60 died.
+geo-phrase-512 e203 The plague spread to Geenk Hole; 53 died.
+geo-phrase-512 e204 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 549 of the defeated and 94 of the victors fell.
+geo-phrase-512 e205 The Meald League raised Brerd Tower in the Wolds of Scythes against the Warrens of Skruz-Snugg.
+geo-phrase-512 e206 The Warrens of Skruz-Snugg defeated the Meald League in Sootsike Sward; 339 of the defeated and 110 of the victors fell.
+geo-phrase-512 e207 Famine struck Dramnarn; 29 died.
+geo-phrase-512 e208 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 350 of the defeated and 91 of the victors fell.
+geo-phrase-512 e209 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
+geo-phrase-512 e210 The Warrens of Skruz-Snugg and the Meald League made peace after 20 years of war, neither the victor.
+geo-phrase-512 e211 The Gnokkirk Horde declared war on the Liemouvie Ring over Lichenknoll Forest.
+geo-phrase-512 e212 Plague broke out in Gedbridbury and spread to one other settlement; 1,373 died in all.
+geo-phrase-512 e213 The plague spread to Brimham; 1,075 died.
+geo-phrase-512 e214 The Gnokkirk Horde searched Lichenknoll Forest for the Liemouvie Ring and found no one; the war ended after three years.
+geo-phrase-512 e215 Weakened by plague, Brimham dwindled to 6,311 souls.
+geo-phrase-512 e216 Uul'duk awakened the Orcs in Owlpike Sward.
+geo-phrase-512 e217 The Orcs founded the Urom Horde in Owlpike Sward.
+geo-phrase-512 e218 The Urom Horde founded Aag'grug Camp in Owlpike Sward.
+geo-phrase-512 e219 The Elves first met the Orcs in Owlpike Sward, and hated them from the first.
+geo-phrase-512 e220 The Goblins first met the Orcs in Owlpike Sward, and were glad of them.
+geo-phrase-512 e221 The Dwarves first met the Orcs in Owlpike Sward, and were wary of them.
+geo-phrase-512 e222 The Faeries first met the Orcs in Owlpike Sward, and hated them from the first.
+geo-phrase-512 e223 The Humans first met the Orcs in Owlpike Sward, and were wary of them.
+geo-phrase-512 e224 The Warrens of Skruz-Snugg let the claim against the Liemouvie Ring over Lichenknoll Forest lapse.
+geo-phrase-512 e225 Plague broke out in Grorkbug Pit and spread to two other settlements; 1,725 died in all.
+geo-phrase-512 e226 The plague spread to Skrork-Zot Hole; 212 died.
+geo-phrase-512 e227 The plague spread to Gib; 276 died.
+geo-phrase-512 e228 The Urom Horde sent settlers from Aag'grug Camp to found Ugaaldurag in Owlpike Sward.
+geo-phrase-512 e229 Plague broke out in Ugaaldurag; 31 died.
+geo-phrase-512 e230 Plague broke out in Fiaflaemi; 125 died.
+geo-phrase-512 e231 Plague broke out in Skozz Hole; 678 died.
+geo-phrase-512 e232 Leen grew into a village of 250.
+geo-phrase-512 e233 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over Southeast Fells.
+geo-phrase-512 e234 The Urom Horde sent settlers from Aag'grug Camp to found Daamghaarz Camp in Owlpike Sward.
+geo-phrase-512 e235 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in Southeast Fells; 506 of the defeated and 170 of the victors fell.
+geo-phrase-512 e236 The Hold of Girinnam besieged Dramnarn of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e237 The Hold of Girinnam sacked Dramnarn of the Warrens of Skruz-Snugg; 146 died and 342 fled.
+geo-phrase-512 e238 The Warrens of Skruz-Snugg sent settlers from Graskroz Pit to found Krogg Pit in Southeast Fells.
+geo-phrase-512 e239 The Warrens of Skruz-Snugg raised Zeesnix Lookout in Southeast Fells against the Hold of Girinnam.
+geo-phrase-512 e240 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in Southeast Fells; 578 of the defeated and 173 of the victors fell.
+geo-phrase-512 e241 The Hold of Girinnam besieged Graskroz Pit of the Warrens of Skruz-Snugg; it held.
+geo-phrase-512 e242 The Urom Horde sent settlers from Aag'grug Camp to found Grughza in Owlpike Sward.
+geo-phrase-512 e243 The Urom Horde sent settlers from Aag'grug Camp to found Krag'thuugh in Spraydown.
+geo-phrase-512 e244 The Urom Horde laid claim to the Wolds of Scythes, held by the Meald League.
+geo-phrase-512 e245 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in Southeast Fells; 411 of the defeated and 150 of the victors fell.
+geo-phrase-512 e246 The Hold of Girinnam besieged Graskroz Pit of the Warrens of Skruz-Snugg; it held.
+geo-phrase-512 e247 Famine struck Sneeg-Bink Pit; 90 died.
+geo-phrase-512 e248 Plague broke out in Aethsor; 117 died.
+geo-phrase-512 e249 The Urom Horde sent settlers from Aag'grug Camp to found Urugkuld in the Barrows of Sheaves.
+geo-phrase-512 e250 The Warrens of Skruz-Snugg defeated the Hold of Girinnam in Southeast Fells; 955 of the defeated and 161 of the victors fell.
+geo-phrase-512 e251 The Warrens of Skruz-Snugg and the Hold of Girinnam made peace after 21 years of war, neither the victor.
+geo-phrase-512 e252 Plague broke out in Brimham; 807 died.
+geo-phrase-512 e253 Ugaaldurag grew into a village of 250.
+geo-phrase-512 e254 Plague broke out in Gib and spread to one other settlement; 564 died in all.
+geo-phrase-512 e255 The plague spread to Zodrib Pit; 304 died.
+geo-phrase-512 e256 Daamghaarz Camp grew into a village of 250.
+geo-phrase-512 e257 Krag'thuugh grew into a village of 251.
+geo-phrase-512 e258 Grughza grew into a village of 250.
+geo-phrase-512 e259 Urugkuld grew into a village of 250.
+geo-phrase-512 e260 Plague broke out in Leen; 91 died.
+geo-phrase-512 e261 Weakened by plague, Leen was abandoned; its 224 survivors were scattered.
+geo-phrase-512 e262 Plague broke out in Nozz Pit and spread to one other settlement; 332 died in all.
+geo-phrase-512 e263 The plague spread to Zodrib Pit; 211 died.
+geo-phrase-512 e264 Famine struck Grorkbug Pit; 740 died.
+geo-phrase-512 e265 The Liemouvie Ring laid claim to Southeast Fells, held by the Warrens of Skruz-Snugg.
+geo-phrase-512 e266 The Liemouvie Ring sent settlers from Whaey to found Loufi Hollow in East Wood.
+geo-phrase-512 e267 A succession crisis at Skozz Hole shook the Gnokkirk Horde.
+geo-phrase-512 e268 Aerae the Old woke again in the Harrowed Crags.
+geo-phrase-512 e269 Aerae the Old burned the fields of Loufi Hollow; eight died.
+geo-phrase-512 e270 Aerae the Old drove the people from Loufi Hollow and made it its lair; 59 escaped.
+geo-phrase-512 e271 Plague broke out in Brimham; 915 died.
+geo-phrase-512 e272 Aerae the Old burned the fields of Sneeg-Bink Pit; 173 died.
+geo-phrase-512 e273 Plague broke out in Damdulbury; 658 died.
+geo-phrase-512 e274 The Urom Horde declared war on the Meald League over the Wolds of Scythes.
+geo-phrase-512 e275 Aerae the Old burned the fields of Skazib; 99 died.
+geo-phrase-512 e276 The Gnokkirk Horde drove Aerae the Old back to its lair in East Wood.
+geo-phrase-512 e277 The Urom Horde defeated the Meald League in the Wolds of Scythes; 376 of the defeated and 133 of the victors fell.
+geo-phrase-512 e278 The Urom Horde besieged Brimham of the Meald League; it held.
+geo-phrase-512 e279 The Urom Horde defeated the Meald League in the Wolds of Scythes; 346 of the defeated and 103 of the victors fell.
+geo-phrase-512 e280 The Urom Horde besieged Brimham of the Meald League; it held.
+geo-phrase-512 e281 The Meald League defeated the Urom Horde in the Wolds of Scythes; 524 of the defeated and 93 of the victors fell.
+geo-phrase-512 e282 The Urom Horde defeated the Meald League in the Barrows of Sheaves; 323 of the defeated and 94 of the victors fell.
+geo-phrase-512 e283 The Meald League sued the Urom Horde for peace after eight years of war.
+geo-phrase-512 e284 The Meald League paid tribute to the Urom Horde; 1,301 were carried off.
+geo-phrase-512 e285 The Meald League abandoned Brerd Tower, the frontier having fallen quiet.
+geo-phrase-512 e286 Krag'thuugh grew into a town of 1,514.
+geo-phrase-512 e287 Famine struck Nozz Pit; 32 died.
+geo-phrase-512 e288 Plague broke out in Naendnae and spread to one other settlement; 407 died in all.
+geo-phrase-512 e289 The plague spread to Aethsor; 24 died.
+geo-phrase-512 e290 Weakened by plague, Aethsor was abandoned; 363 survivors went to Naendnae, and 73 were lost.
+geo-phrase-512 e291 Plague broke out in Kunk-Slitch Hole; 583 died.
+geo-phrase-512 e292 Plague broke out in Slug and spread to five other settlements; 2,206 died in all.
+geo-phrase-512 e293 The plague spread to Grorkbug Pit; 959 died.
+geo-phrase-512 e294 The plague spread to Gnix; 302 died.
+geo-phrase-512 e295 The plague spread to Slinkbat Hole; 324 died.
+geo-phrase-512 e296 The plague spread to Nozz Pit; 49 died.
+geo-phrase-512 e297 The plague spread to Geenk Hole; 52 died.
+geo-phrase-512 e298 The Warrens of Skruz-Snugg laid claim to the Wolds of Scythes, held by the Meald League.
+geo-phrase-512 e299 Urugkuld grew into a town of 1,512.
+geo-phrase-512 e300 The Urom Horde laid claim to South Downs, held by the Warrens of Skruz-Snugg.
+geo-phrase-512 e301 The Realm of Lecier sent settlers from Simi to found Anfe in Vaenies' Fall.
+geo-phrase-512 e302 Famine struck Graskroz Pit; 26 died.
+geo-phrase-512 e303 The Urom Horde laid claim to the Wolds of Scythes, held by the Meald League.
+geo-phrase-512 e304 The Urom Horde declared war on the Warrens of Skruz-Snugg over South Downs.
+geo-phrase-512 e305 The Urom Horde defeated the Warrens of Skruz-Snugg in South Downs; 573 of the defeated and 142 of the victors fell.
+geo-phrase-512 e306 The Urom Horde besieged Zodrib Pit of the Warrens of Skruz-Snugg; it held.
+geo-phrase-512 e307 Plague broke out in Gib; 369 died.
+geo-phrase-512 e308 The Warrens of Skruz-Snugg declared war on the Meald League over the Wolds of Scythes.
+geo-phrase-512 e309 The Urom Horde defeated the Warrens of Skruz-Snugg in South Downs; 254 of the defeated and 94 of the victors fell.
+geo-phrase-512 e310 The Urom Horde besieged Zodrib Pit of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e311 The Urom Horde took Zodrib Pit from the Warrens of Skruz-Snugg; 225 died.
+geo-phrase-512 e312 After the conquest, the Goblins and the Orcs lived side by side in Zodrib Pit.
+geo-phrase-512 e313 Plague broke out in Brimham; 1,298 died.
+geo-phrase-512 e314 The Warrens of Skruz-Snugg raised Beerk Lookout in South Downs against the Meald League.
+geo-phrase-512 e315 The Urom Horde raised Shol Stockade in Spraydown against the Warrens of Skruz-Snugg.
+geo-phrase-512 e316 The Warrens of Skruz-Snugg laid claim to the Harrowed Crags, held by the Hold of Girinnam.
+geo-phrase-512 e317 The Urom Horde defeated the Warrens of Skruz-Snugg in South Downs; 285 of the defeated and 74 of the victors fell.
+geo-phrase-512 e318 The Urom Horde besieged Slinkbat Hole of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e319 The Urom Horde took Slinkbat Hole from the Warrens of Skruz-Snugg; 214 died.
+geo-phrase-512 e320 After the conquest, the Goblins and the Orcs lived side by side in Slinkbat Hole.
+geo-phrase-512 e321 The Urom Horde raised the Watch of Zolzaash in the Barrows of Sheaves against the Warrens of Skruz-Snugg.
+geo-phrase-512 e322 The Urom Horde defeated the Warrens of Skruz-Snugg in South Downs; 194 of the defeated and 68 of the victors fell.
+geo-phrase-512 e323 The Urom Horde besieged Slug of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e324 The Urom Horde took Slug from the Warrens of Skruz-Snugg; 206 died.
+geo-phrase-512 e325 After the conquest, the Goblins and the Orcs lived side by side in Slug.
+geo-phrase-512 e326 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
+geo-phrase-512 e327 The Skrab Mob broke away from the Warrens of Skruz-Snugg with four settlements.
+geo-phrase-512 e328 The Warrens of Skruz-Snugg abandoned Zeesnix Lookout, the land being lost.
+geo-phrase-512 e329 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 268 of the defeated and 43 of the victors fell.
+geo-phrase-512 e330 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
+geo-phrase-512 e331 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 122 of the defeated and 50 of the victors fell.
+geo-phrase-512 e332 The Urom Horde defeated the Warrens of Skruz-Snugg in South Downs; 182 of the defeated and 39 of the victors fell.
+geo-phrase-512 e333 The Urom Horde besieged Kunk-Slitch Hole of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e334 The Urom Horde took Kunk-Slitch Hole from the Warrens of Skruz-Snugg; 205 died.
+geo-phrase-512 e335 The Urom Horde prevailed over the Warrens of Skruz-Snugg after 20 years of war.
+geo-phrase-512 e336 The Warrens of Skruz-Snugg paid tribute to the Urom Horde; 1,306 were carried off.
+geo-phrase-512 e337 The Warrens of Skruz-Snugg defeated the Meald League in Sootsike Sward; 330 of the defeated and 86 of the victors fell.
+geo-phrase-512 e338 The Warrens of Skruz-Snugg abandoned Beerk Lookout, the land being lost.
+geo-phrase-512 e339 After the conquest, the Goblins and the Orcs lived side by side in Kunk-Slitch Hole.
+geo-phrase-512 e340 The Warrens of Skruz-Snugg defeated the Meald League in the Wolds of Scythes; 392 of the defeated and 82 of the victors fell.
+geo-phrase-512 e341 The Warrens of Skruz-Snugg besieged Brimham of the Meald League; it held.
+geo-phrase-512 e342 The Meald League defeated the Warrens of Skruz-Snugg in the Wolds of Scythes; 225 of the defeated and 87 of the victors fell.
+geo-phrase-512 e343 The Meald League raised Gorashol Watch in the Wolds of Scythes against the Warrens of Skruz-Snugg.
+geo-phrase-512 e344 The Meald League defeated the Warrens of Skruz-Snugg in Sootsike Sward; 199 of the defeated and 63 of the victors fell.
+geo-phrase-512 e345 The Meald League besieged Grorkbug Pit of the Warrens of Skruz-Snugg; it fell.
+geo-phrase-512 e346 The Meald League sacked Grorkbug Pit of the Warrens of Skruz-Snugg; 1,727 died and 4,032 fled.
+geo-phrase-512 e347 The seat of the Warrens of Skruz-Snugg moved to Gnix.
+geo-phrase-512 e348 The Urom Horde let the claim against the Meald League over the Wolds of Scythes lapse.
+geo-phrase-512 e349 The Warrens of Skruz-Snugg defeated the Meald League in Sootsike Sward; 320 of the defeated and 56 of the victors fell.
+geo-phrase-512 e350 The Warrens of Skruz-Snugg and the Meald League made peace after 21 years of war, neither the victor.
+geo-phrase-512 e351 The Warrens of Skruz-Snugg sent settlers from Gnix to found Grazzbit in Sootsike Sward.
+geo-phrase-512 e352 The Liemouvie Ring laid claim to Hawkthorn Wolds, held by the Gnokkirk Horde.
+geo-phrase-512 e353 Plague broke out in Krag'thuugh and spread to one other settlement; 733 died in all.
+geo-phrase-512 e354 The plague spread to Grughza; 37 died.
+geo-phrase-512 e355 The Skrab Mob laid claim to the Harrowed Crags, held by the Hold of Girinnam.
 world geo-seed-1-1024 1 1024 6000 all normal auto normal
 geo-seed-1-1024 input_region 4bc128ab7bd74cbf9b6f153bda790088c237f815577d7fbda5aff09509d28733
 geo-seed-1-1024 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
@@ -18297,26 +18259,26 @@ stress-4 q1817 0 e0
 stress-4 q1842 0 e0
 stress stress-5 5 6000 goblin,human,orc 4 calm
 stress-5 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
-stress-5 table beast_population 4af6d85378e02009d61fd33936dbb05c82fb7805865527bb395883d00d13652c
-stress-5 table civilization be475735a33daf9228a62dd23f54dcdb1578cb703a5f1ba0ce061b6c519fc02c
-stress-5 table event 35ae4c25efb10a11524935eb62856ebe447689285edac4c35aad01f4d1b0a535
-stress-5 table event_cause 7810bbed2e3a1c114f4cedd012f03eeeb085b07067895f2f097977ac7fbc6185
+stress-5 table beast_population 7d93b584cdf797f34b2ae6a55c18f7fe8d69c6fe7e61bda2671712c2e418ebbb
+stress-5 table civilization 1c37df628f48c8db8409156b171d3b999a45087556e65aff1b6f34dc3fec2ecf
+stress-5 table event 67b35f921d6a0576512c9e210af9135274eba90b056cc98e95cfceca470fd7f3
+stress-5 table event_cause cbc2768825e9b16198c75396027ae0fac63b65e29c782e5906963d8171ca4b17
 stress-5 table event_kind d4f379b3a3812846bdc9412a44f400071c4eebd3ef279c730e53e19b03586607
 stress-5 table event_kind_role 8745395fe4a1c46c68c624764fe314901aa306bcc1199f9b98238db570a75f9e
 stress-5 table event_kind_value 48f33d421fc18e95633553176b07aff9089584a06354b4e4b0a24a6b2b34f48b
-stress-5 table event_participant b57217e79c5634662ae3e93e610164d2233c73426ad5d5be22bc9fa1af38bb10
-stress-5 table event_value 6f2c7ae6cc258ca104f391319fd99c2b99b64f28aea3e10f6dcdc7e0239331d3
+stress-5 table event_participant 1048e992d15d504e637dbe94790c61e5485331e2efc236360475c451dcb7bb42
+stress-5 table event_value a549a14040c20b4244725b41976aa513014a809e6f17aada85cab7d2b61e373e
 stress-5 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
 stress-5 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
 stress-5 table phase d36aa8e60598bed90a30d1086a3b4070cbdac15b8566762a55ac9444634ea9aa
-stress-5 table race_relation a7033f817147a9c39b67f648300f04056df721863a9363e9c6957cdeee7a1809
-stress-5 table region_control 96e8e20260fa7879603b47349596f2ba0fde4ab18f55f2facc092347eefb609d
+stress-5 table race_relation fed85b6ff3ac96b25b5f4618c1f6691de97a0f3ab7918ecd7aab482ea663a1d6
+stress-5 table region_control 54ef7077e39e3b5f121ade96309900a3841e87b59b9d72665cd072337f2f952b
 stress-5 table region_name 10c07d54c8afb82e7283b04a540c137cbf24ecaa34a69ce59e87b6743348855d
-stress-5 table relation c06d81999382b8e4111e5e3087a14db1682cbccdf4e50366b9f5e573c5f2e34f
-stress-5 table settlement 8db5ab96082bb0479d01b013065bc2746d429a6e26aa63a8537705e50018d446
-stress-5 table settlement_census 845dd9e1f487df572b18ccdf7e0a7b11c2ec0b8361fbbf401dba0eeb9b4d8d9f
-stress-5 table settlement_race c76b0af944289e29f99cdc35f069d8ca3ad62002fcb8e8f0a09b4b0e3da5bff2
-stress-5 table site e7e5663a57324bbefee2a1b058a5b6377a4448d37c3cdcd68ddbdaa36312be16
+stress-5 table relation 0aab9e99b8b58e4e960cb99963da96e1162558d745bc3c66077ee233de39cdf1
+stress-5 table settlement 17fcb2074f0efb5fb6c0a89c69c94b78361f4a2462df0d12b7679f9b6dbd08c4
+stress-5 table settlement_census 57dd6aed04f03d4bfdfbced18592dd60a82e5aed3f2e65e0eb9a1ccedd73e6e9
+stress-5 table settlement_race 7c4b59db7cab6aa518049b88b777cea99d081bca4ef0f06a1192cdf44e699a10
+stress-5 table site e03da7ec3ea366b300d04b1fc191b94d35cb3a85cf8d4a96e1e77471bfdc5585
 stress-5 report end_year = 6000
 stress-5 report phases_opening = 3
 stress-5 report phases_quiet = 7
@@ -18324,48 +18286,48 @@ stress-5 report phases_flare = 5
 stress-5 report phases_final = 1
 stress-5 report simulated_years = 995
 stress-5 report simulated_permille = 165
-stress-5 report events = 734
+stress-5 report events = 772
 stress-5 report events_awakening = 3
 stress-5 report events_civ_founded = 6
 stress-5 report events_settlement_founded = 6
 stress-5 report events_quiet_era = 0
 stress-5 report events_flare_up = 5
 stress-5 report events_colony_founded = 15
-stress-5 report events_became_village = 10
+stress-5 report events_became_village = 11
 stress-5 report events_became_town = 7
 stress-5 report events_became_city = 0
-stress-5 report events_settlement_dwindled = 6
+stress-5 report events_settlement_dwindled = 10
 stress-5 report events_famine = 2
 stress-5 report events_plague = 0
 stress-5 report events_plague_spread = 1
-stress-5 report events_succession_crisis = 40
-stress-5 report events_civ_seceded = 11
+stress-5 report events_succession_crisis = 44
+stress-5 report events_civ_seceded = 12
 stress-5 report events_settlement_abandoned = 0
 stress-5 report events_capital_moved = 19
 stress-5 report events_civ_ended = 0
 stress-5 report events_ruin_faded = 1
-stress-5 report events_claim = 79
-stress-5 report events_war_declared = 37
-stress-5 report events_battle = 245
-stress-5 report events_battle_at_pass = 0
-stress-5 report events_siege = 105
-stress-5 report events_sacked = 11
+stress-5 report events_claim = 81
+stress-5 report events_war_declared = 43
+stress-5 report events_battle = 243
+stress-5 report events_battle_at_pass = 3
+stress-5 report events_siege = 113
+stress-5 report events_sacked = 13
 stress-5 report events_settlement_captured = 31
-stress-5 report events_peace = 8
-stress-5 report events_truce = 2
-stress-5 report events_region_ceded = 5
-stress-5 report events_civ_conquered = 13
-stress-5 report events_settlement_abandoned_to = 1
+stress-5 report events_peace = 6
+stress-5 report events_truce = 3
+stress-5 report events_region_ceded = 0
+stress-5 report events_civ_conquered = 14
+stress-5 report events_settlement_abandoned_to = 0
 stress-5 report events_refugees_settled = 3
-stress-5 report events_tribute = 9
-stress-5 report events_war_won = 9
+stress-5 report events_tribute = 16
+stress-5 report events_war_won = 14
 stress-5 report events_search_abandoned = 0
-stress-5 report events_refuge_held = 2
+stress-5 report events_refuge_held = 0
 stress-5 report events_plague_outbreak = 1
 stress-5 report events_quiet_stretch = 4
-stress-5 report events_claim_settlements = 6
+stress-5 report events_claim_settlements = 15
 stress-5 report events_settlements_ceded = 0
-stress-5 report events_claim_dropped = 2
+stress-5 report events_claim_dropped = 1
 stress-5 report events_refuge_hidden = 3
 stress-5 report events_region_renamed = 2
 stress-5 report events_monster_appeared = 0
@@ -18378,75 +18340,75 @@ stress-5 report events_monster_slain = 0
 stress-5 report events_monster_driven_off = 0
 stress-5 report events_monster_died = 0
 stress-5 report events_beasts_bold = 0
-stress-5 report events_outpost_built = 4
-stress-5 report events_outpost_abandoned = 4
+stress-5 report events_outpost_built = 3
+stress-5 report events_outpost_abandoned = 3
 stress-5 report events_settlement_fled = 0
 stress-5 report events_peoples_met = 3
-stress-5 report events_disposition_turned = 1
-stress-5 report events_refugees_arrived = 4
-stress-5 report events_settlement_mixed = 8
+stress-5 report events_disposition_turned = 2
+stress-5 report events_refugees_arrived = 5
+stress-5 report events_settlement_mixed = 5
 stress-5 report events_standing_changed = 0
 stress-5 report events_people_expelled = 0
-stress-5 report civilizations = 17
+stress-5 report civilizations = 18
 stress-5 report civilizations_alive = 4
 stress-5 report settlements = 24
-stress-5 report settlements_standing = 12
-stress-5 report regions_held = 6
-stress-5 report census_rows = 310
-stress-5 report relations = 56
+stress-5 report settlements_standing = 11
+stress-5 report regions_held = 5
+stress-5 report census_rows = 306
+stress-5 report relations = 70
 stress-5 report region_names = 2
 stress-5 report beasts = 5
 stress-5 report monster_kinds = 6
-stress-5 report beast_populations = 110
+stress-5 report beast_populations = 118
 stress-5 report monsters = 0
-stress-5 report sites = 4
+stress-5 report sites = 3
 stress-5 report race_relations = 16
-stress-5 report settlement_races = 56
-stress-5 report population = 9247
+stress-5 report settlement_races = 50
+stress-5 report population = 5905
 stress-5 report population_elf = 0
-stress-5 report population_goblin = 4087
+stress-5 report population_goblin = 3628
 stress-5 report population_dwarf = 0
 stress-5 report population_faerie = 0
-stress-5 report population_human = 127
-stress-5 report population_orc = 5033
+stress-5 report population_human = 888
+stress-5 report population_orc = 1389
 stress-5 report settlements_standing_elf = 0
-stress-5 report settlements_standing_goblin = 5
+stress-5 report settlements_standing_goblin = 4
 stress-5 report settlements_standing_dwarf = 0
 stress-5 report settlements_standing_faerie = 0
-stress-5 report settlements_standing_human = 1
-stress-5 report settlements_standing_orc = 6
+stress-5 report settlements_standing_human = 3
+stress-5 report settlements_standing_orc = 4
 stress-5 report regions_held_elf = 0
 stress-5 report regions_held_goblin = 2
 stress-5 report regions_held_dwarf = 0
 stress-5 report regions_held_faerie = 0
 stress-5 report regions_held_human = 1
-stress-5 report regions_held_orc = 3
-stress-5 stats civ_settlements_max = 6
+stress-5 report regions_held_orc = 2
+stress-5 stats civ_settlements_max = 4
 stress-5 stats settlements_colonies = 15
-stress-5 stats civilizations_seceded = 11
-stress-5 stats relations_enmity = 0
-stress-5 stats relations_peace = 19
-stress-5 stats war_years_total = 285
+stress-5 stats civilizations_seceded = 12
+stress-5 stats relations_enmity = 4
+stress-5 stats relations_peace = 23
+stress-5 stats war_years_total = 283
 stress-5 stats war_years_max = 25
-stress-5 stats civilizations_conquered = 13
-stress-5 stats settlements_sacked = 10
-stress-5 stats settlements_captured = 13
-stress-5 stats regions_conquered = 17
+stress-5 stats civilizations_conquered = 14
+stress-5 stats settlements_sacked = 12
+stress-5 stats settlements_captured = 9
+stress-5 stats regions_conquered = 11
 stress-5 stats races_alive = 3
 stress-5 stats wars_attacker_elf = 0
-stress-5 stats wars_attacker_goblin = 19
+stress-5 stats wars_attacker_goblin = 23
 stress-5 stats wars_attacker_dwarf = 0
 stress-5 stats wars_attacker_faerie = 0
 stress-5 stats wars_attacker_human = 0
-stress-5 stats wars_attacker_orc = 18
-stress-5 stats wars_hollow = 2
-stress-5 stats wars_hollow_permille = 54
-stress-5 stats wars_same_goal_max = 5
-stress-5 stats wars_same_goal_unchanged_max = 2
-stress-5 stats race_population_share_max_permille = 544
-stress-5 stats race_regions_share_max_permille = 500
+stress-5 stats wars_attacker_orc = 20
+stress-5 stats wars_hollow = 4
+stress-5 stats wars_hollow_permille = 93
+stress-5 stats wars_same_goal_max = 4
+stress-5 stats wars_same_goal_unchanged_max = 3
+stress-5 stats race_population_share_max_permille = 614
+stress-5 stats race_regions_share_max_permille = 400
 stress-5 stats wars_unfound = 0
-stress-5 stats refuges_held_no_destination = 2
+stress-5 stats refuges_held_no_destination = 0
 stress-5 war e13 60-71 c3 c4 rg10 claim e11 battles 10 sacked 0 taken 0 exhaustion won-c4-tribute
 stress-5 war e37 124-138 c3 c4 rg10 claim e35 battles 13 sacked 0 taken 0 exhaustion won-c4-tribute
 stress-5 war e82 550-556 c1 c4 rg10 claim e71 battles 6 sacked 1 taken 2 conquest -
@@ -18461,32 +18423,38 @@ stress-5 war e257 5362-5373 c8 c7 rg9 claim e253 battles 9 sacked 0 taken 0 exha
 stress-5 war e301 5379-5381 c1 c7 rg9 claim e244 battles 2 sacked 2 taken 0 goal-lost won-c1
 stress-5 war e318 5429-5443 c1 c9 rg2 claim e284 battles 12 sacked 0 taken 0 exhaustion won-c1-tribute
 stress-5 war e341 5444-5452 c1 c8 rg10 claim e319 battles 7 sacked 0 taken 1 goal-lost won-c1-tribute
-stress-5 war e367 5556-5568 c1 c9 rg2 claim e359 battles 12 sacked 0 taken 0 exhaustion won-c9-ceded
-stress-5 war e389 5569-5580 c1 c8 rg15 claim e358 battles 9 sacked 2 taken 0 no-front won-c8-tribute
-stress-5 war e407 5609-5613 c9 c1 rg4 claim e406 battles 4 sacked 0 taken 2 conquest -
-stress-5 war e423 5614-5617 c10 c9 rg5 claim e422 battles 3 sacked 0 taken 3 aim won-c10-ceded
-stress-5 war e450 5629-5640 c10 c9 rg2 claim e449 battles 10 sacked 0 taken 2 conquest -
-stress-5 war e451 5630-5633 c11 c10 rg4 claim e448 battles 3 sacked 0 taken 2 exhaustion won-c10-tribute
-stress-5 war e494 5683-5685 c10 c7 rg11 claim e491 battles 2 sacked 2 taken 0 goal-lost won-c10
-stress-5 war e506 5686-5689 c10 c11 rg5 claim e486 battles 3 sacked 0 taken 1 conquest -
-stress-5 war e517 5693-5701 c12 c10 rg4 claim e516 battles 7 sacked 0 taken 2 exhaustion won-c10-ceded
-stress-5 war e541 5751-5756 c10 c12 rg2 claim e535 battles 4 sacked 0 taken 2 conquest -
-stress-5 war e558 5788-5789 c13 c10 rg4 claim e557 battles 1 sacked 0 taken 0 goal-lost won-c10-ceded
-stress-5 war e568 5798-5801 c14 c10 rg5 claim e565 battles 3 sacked 0 taken 2 conquest -
-stress-5 war e594 5845-5851 c13 c10 rg4 claim e593 battles 2 sacked 0 taken 0 goal-lost truce
-stress-5 war e597 5846-5850 c16 c10 rg4 claim e596 battles 4 sacked 0 taken 0 exhaustion won-c16-ceded
-stress-5 war e601 5847-5860 c15 c13 rg2 claim e584 battles 8 sacked 0 taken 1 conquest -
-stress-5 war e613 5851-5860 c16 c13 rg2 claim e600 battles 8 sacked 1 taken 0 conquest -
-stress-5 war e644 5861-5866 c15 c10 rg7 claim e643 battles 4 sacked 0 taken 0 conquest -
-stress-5 war e649 5864-5866 c16 c10 rg7 claim e635 battles 2 sacked 0 taken 1 conquest -
-stress-5 war e659 5867-5870 c16 c15 rg2 claim e658 battles 3 sacked 0 taken 1 goal-lost won-c16-tribute
-stress-5 war e671 5881-5883 c16 c15 rg1 claim e670 battles 1 sacked 1 taken 0 conquest -
-stress-5 war e684 5943-5946 c16 c17 rg7 claim e679 battles 3 sacked 0 taken 1 conquest -
-stress-5 war e697 5987-open c8 c7 rg16 claim e696 battles 11 sacked 0 taken 0 open -
-stress-5 war e707 5992-open c2 c7 rg16 claim e695 battles 6 sacked 1 taken 1 open -
-stress-5 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
-stress-5 r19 t11 59 first_orc_war 59 claims39 0/0/6 cessions40 0 goal_differs 0
-stress-5 r22 fresh 4/1 dropped 2 refuge_hidden 3 repeated_tolls 12 mixed_tolls 0
+stress-5 war e368 5556-5563 c1 c9 rg2 claim e359 battles 7 sacked 0 taken 2 conquest -
+stress-5 war e389 5565-5580 c1 c8 rg15 claim e358 battles 12 sacked 2 taken 0 no-front won-c8-tribute
+stress-5 war e426 5635-5638 c11 c1 rg4 claim e425 battles 3 sacked 0 taken 1 conquest -
+stress-5 war e427 5636-5638 c12 c1 rg4 claim e424 battles 2 sacked 0 taken 1 conquest -
+stress-5 war e448 5671-5673 c10 c11 rg4 claim e447 battles 2 sacked 0 taken 1 goal-lost won-c10-tribute
+stress-5 war e450 5672-5673 c12 c11 rg4 claim e449 battles 1 sacked 0 taken 0 aim won-c12-tribute
+stress-5 war e469 5685-5688 c10 c7 rg11 claim e465 battles 3 sacked 2 taken 0 goal-lost won-c10
+stress-5 war e470 5685-5688 c11 c7 rg11 claim e468 battles 2 sacked 0 taken 0 goal-lost truce
+stress-5 war e472 5686-5688 c8 c7 rg11 claim e464 battles 1 sacked 0 taken 0 goal-lost won-c8
+stress-5 war e495 5691-5695 c10 c11 rg2 claim e467 battles 4 sacked 0 taken 2 conquest -
+stress-5 war e513 5700-5701 c10 c12 rg4 claim e512 battles 1 sacked 0 taken 1 aim won-c10-tribute
+stress-5 war e522 5712-5715 c10 c12 rg5 claim e521 battles 3 sacked 2 taken 1 conquest -
+stress-5 war e545 5788-5789 c13 c10 rg4 claim e544 battles 1 sacked 0 taken 1 goal-lost won-c13-tribute
+stress-5 war e558 5793-5797 c14 c10 rg7 claim e555 battles 4 sacked 0 taken 2 conquest -
+stress-5 war e572 5801-5811 c13 c10 rg4 claim e571 battles 8 sacked 1 taken 0 exhaustion won-c10-tribute
+stress-5 war e597 5825-5835 c13 c10 rg4 claim e596 battles 10 sacked 0 taken 1 exhaustion truce
+stress-5 war e612 5839-5844 c15 c10 rg4 claim e593 battles 4 sacked 0 taken 0 goal-lost won-c10-tribute
+stress-5 war e628 5845-5849 c13 c10 rg7 claim e627 battles 4 sacked 1 taken 0 conquest -
+stress-5 war e631 5846-5847 c15 c13 rg4 claim e630 battles 1 sacked 0 taken 1 goal-lost won-c15-tribute
+stress-5 war e632 5846-5849 c16 c10 rg7 claim e629 battles 2 sacked 0 taken 0 conquest -
+stress-5 war e655 5851-5857 c16 c13 rg2 claim e654 battles 6 sacked 0 taken 2 conquest -
+stress-5 war e671 5867-5872 c16 c15 rg4 claim e648 battles 3 sacked 0 taken 1 aim won-c16-tribute
+stress-5 war e684 5885-5888 c16 c15 rg1 claim e681 battles 3 sacked 0 taken 0 conquest -
+stress-5 war e690 5887-5888 c17 c15 rg1 claim e687 battles 1 sacked 1 taken 0 conquest -
+stress-5 war e704 5915-5925 c17 c16 rg4 claim e688 battles 8 sacked 0 taken 1 exhaustion won-c17-tribute
+stress-5 war e725 5937-5938 c17 c16 rg4 claim e724 battles 1 sacked 0 taken 1 conquest -
+stress-5 war e735 5957-5964 c18 c17 rg2 claim e734 battles 6 sacked 0 taken 2 conquest -
+stress-5 war e756 5992-open c2 c7 rg16 claim e752 battles 5 sacked 0 taken 0 open -
+stress-5 war e757 5993-open c8 c7 rg16 claim e754 battles 6 sacked 0 taken 0 open -
+stress-5 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 2/0/0/0
+stress-5 r19 t11 116 first_orc_war 116 claims39 4/4/7 cessions40 0 goal_differs 0
+stress-5 r22 fresh 3/3 dropped 1 refuge_hidden 3 repeated_tolls 10 mixed_tolls 0
 stress-5 r22 open_claims -
 stress-5 r22 hidden_refuges -
 stress-5 r21 renamings 2 2:662:conquest:e172,10:556:conquest:e108
@@ -18692,25 +18660,25 @@ stress-5 q5503 546 e359
 stress-5 q5528 1086 e359
 stress stress-6 6 2000 all 4 normal
 stress-6 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
-stress-6 table beast_population c7f3a09d71a3e70bf145240bdbf3b84f3e6bcba7638388545a35cd8ff4d8ae87
-stress-6 table civilization 8dec4beb3d00d5e0c06646a996242bea90f59a11de3fe196f39e393d29846f79
-stress-6 table event 9866a1c7084e1139007ae0e5afbd67527bb8eec9c2008bb55c095bfadeeb2316
-stress-6 table event_cause d0684bf00159330ddd5057aca2e6aa1d70eb0b75f4a4cfa78dc20992264852c8
+stress-6 table beast_population 64df72c3f2992b9329c22882ca68d2917113a021c9af9976e85d5b90e2c56ffc
+stress-6 table civilization 45e6ace8cd40a8ec81cac04c957d5d9b3c571cbc9166cf033c09e0e949e23e9d
+stress-6 table event 1b082604f72e2ae8a3e5e69df75a18c228d169fd7b7b8d8b1ec8cf0b4361c502
+stress-6 table event_cause ffc62abc28e32c1c9fa0ed7e46761af12b2d5a0807a16ebec5d170cc27e4bac0
 stress-6 table event_kind d4f379b3a3812846bdc9412a44f400071c4eebd3ef279c730e53e19b03586607
 stress-6 table event_kind_role 8745395fe4a1c46c68c624764fe314901aa306bcc1199f9b98238db570a75f9e
 stress-6 table event_kind_value 48f33d421fc18e95633553176b07aff9089584a06354b4e4b0a24a6b2b34f48b
-stress-6 table event_participant ea66ac65b1edddd527f473f76918455893e6c45c04c6a17016f07312452a3728
-stress-6 table event_value 2a0bcb4735d59746742ccf3f444b99e9de5e1f5b4fd4d66d8c22b9aa6f374d45
+stress-6 table event_participant 43b93bb35f4955525916358e4b956b43da6e4e3e61e83072e1faf2e17dbfa22b
+stress-6 table event_value bf13cadf4e663d10973fae4c43c6f9c6dd37fd2325cfda5c021bb8a53f60879b
 stress-6 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
 stress-6 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
 stress-6 table phase 304b96e7f1581def7508d7cda00cbff476e1f45cbbba20007092e6cb0b1b3f0f
-stress-6 table race_relation 364fe3cd67ced654b108fec724cb7b8b9faf4e40419b063911ae13f4ccef2dd6
-stress-6 table region_control 9d218f4520d84b847b9700d909efd1fd33b7aedf04f4b8c367603cb54b9dde73
+stress-6 table race_relation 4135b8e079a7606df01287725e3db2e3b9bc309b5831ddf12b5a160862f8c9c6
+stress-6 table region_control b425f67893313acdeeec3fef3e2df48bc902c46986ef0bccf57038481d88d36a
 stress-6 table region_name 59b89f8f7f21229072abbf5bee6501c51b612e51749fd139e929240ddb6a88d9
-stress-6 table relation e014f044c039eac598b4dba47237949a767cc9ff7835b972ea5e484ad80dd0e7
-stress-6 table settlement 4de789917e853147c081c58f99540be8e221498841b67e0f2af95de63a8ec1f5
-stress-6 table settlement_census c8d5313de3885ab226b32a30dd06e3486d9bcd1baa8368ae10a6ba6d78d8cf17
-stress-6 table settlement_race 77389550a58ae0546fee1ab16f7900c5769986ff9ab91925ffa0c92bb280e978
+stress-6 table relation 2800f7a509b5471495c8e8a90604352101763c6a066cc13b11aa5b2bf94c1931
+stress-6 table settlement 1be18d65bd8d3a4519b5aacff8fbb14531b1a95b484d04bc7e46068a5c74bd61
+stress-6 table settlement_census 034d5b4c93aa45a16e0719214cb043dd1e5bfdc0c9a0554b526fef33c4fbac42
+stress-6 table settlement_race f6f086c79fd64cb3159a05421a82227b3c51ec07f456dad696cdaa93be62dec9
 stress-6 table site 6b631aa7b916e8db0bd9874c79a2162ecd40986a796a220fb41817f92c782f75
 stress-6 report end_year = 2000
 stress-6 report phases_opening = 6
@@ -18719,7 +18687,7 @@ stress-6 report phases_flare = 9
 stress-6 report phases_final = 1
 stress-6 report simulated_years = 545
 stress-6 report simulated_permille = 272
-stress-6 report events = 662
+stress-6 report events = 642
 stress-6 report events_awakening = 6
 stress-6 report events_civ_founded = 11
 stress-6 report events_settlement_founded = 11
@@ -18736,24 +18704,24 @@ stress-6 report events_plague_spread = 0
 stress-6 report events_succession_crisis = 42
 stress-6 report events_civ_seceded = 6
 stress-6 report events_settlement_abandoned = 0
-stress-6 report events_capital_moved = 4
+stress-6 report events_capital_moved = 5
 stress-6 report events_civ_ended = 0
 stress-6 report events_ruin_faded = 0
-stress-6 report events_claim = 78
-stress-6 report events_war_declared = 38
-stress-6 report events_battle = 158
+stress-6 report events_claim = 76
+stress-6 report events_war_declared = 37
+stress-6 report events_battle = 146
 stress-6 report events_battle_at_pass = 49
-stress-6 report events_siege = 82
+stress-6 report events_siege = 79
 stress-6 report events_sacked = 5
-stress-6 report events_settlement_captured = 8
-stress-6 report events_peace = 10
+stress-6 report events_settlement_captured = 6
+stress-6 report events_peace = 11
 stress-6 report events_truce = 12
-stress-6 report events_region_ceded = 1
-stress-6 report events_civ_conquered = 4
+stress-6 report events_region_ceded = 0
+stress-6 report events_civ_conquered = 5
 stress-6 report events_settlement_abandoned_to = 4
 stress-6 report events_refugees_settled = 1
 stress-6 report events_tribute = 12
-stress-6 report events_war_won = 8
+stress-6 report events_war_won = 6
 stress-6 report events_search_abandoned = 0
 stress-6 report events_refuge_held = 11
 stress-6 report events_plague_outbreak = 7
@@ -18776,70 +18744,70 @@ stress-6 report events_beasts_bold = 0
 stress-6 report events_outpost_built = 4
 stress-6 report events_outpost_abandoned = 1
 stress-6 report events_settlement_fled = 0
-stress-6 report events_peoples_met = 14
+stress-6 report events_peoples_met = 15
 stress-6 report events_disposition_turned = 1
 stress-6 report events_refugees_arrived = 2
-stress-6 report events_settlement_mixed = 1
+stress-6 report events_settlement_mixed = 0
 stress-6 report events_standing_changed = 0
 stress-6 report events_people_expelled = 0
 stress-6 report civilizations = 17
-stress-6 report civilizations_alive = 13
+stress-6 report civilizations_alive = 12
 stress-6 report settlements = 26
 stress-6 report settlements_standing = 17
 stress-6 report regions_held = 14
-stress-6 report census_rows = 482
-stress-6 report relations = 119
+stress-6 report census_rows = 478
+stress-6 report relations = 117
 stress-6 report region_names = 3
 stress-6 report beasts = 5
 stress-6 report monster_kinds = 6
-stress-6 report beast_populations = 120
+stress-6 report beast_populations = 116
 stress-6 report monsters = 0
 stress-6 report sites = 4
 stress-6 report race_relations = 74
-stress-6 report settlement_races = 28
-stress-6 report population = 18149
-stress-6 report population_elf = 643
-stress-6 report population_goblin = 9834
-stress-6 report population_dwarf = 4918
+stress-6 report settlement_races = 26
+stress-6 report population = 18523
+stress-6 report population_elf = 633
+stress-6 report population_goblin = 9981
+stress-6 report population_dwarf = 5155
 stress-6 report population_faerie = 743
 stress-6 report population_human = 851
 stress-6 report population_orc = 1160
 stress-6 report settlements_standing_elf = 1
-stress-6 report settlements_standing_goblin = 6
-stress-6 report settlements_standing_dwarf = 7
+stress-6 report settlements_standing_goblin = 5
+stress-6 report settlements_standing_dwarf = 8
 stress-6 report settlements_standing_faerie = 1
 stress-6 report settlements_standing_human = 1
 stress-6 report settlements_standing_orc = 1
 stress-6 report regions_held_elf = 1
-stress-6 report regions_held_goblin = 5
-stress-6 report regions_held_dwarf = 5
+stress-6 report regions_held_goblin = 4
+stress-6 report regions_held_dwarf = 6
 stress-6 report regions_held_faerie = 1
 stress-6 report regions_held_human = 1
 stress-6 report regions_held_orc = 1
-stress-6 stats civ_settlements_max = 3
+stress-6 stats civ_settlements_max = 4
 stress-6 stats settlements_colonies = 14
 stress-6 stats civilizations_seceded = 6
 stress-6 stats relations_enmity = 51
-stress-6 stats relations_peace = 30
-stress-6 stats war_years_total = 247
+stress-6 stats relations_peace = 29
+stress-6 stats war_years_total = 236
 stress-6 stats war_years_max = 17
-stress-6 stats civilizations_conquered = 4
+stress-6 stats civilizations_conquered = 5
 stress-6 stats settlements_sacked = 5
-stress-6 stats settlements_captured = 7
-stress-6 stats regions_conquered = 7
+stress-6 stats settlements_captured = 5
+stress-6 stats regions_conquered = 3
 stress-6 stats races_alive = 6
 stress-6 stats wars_attacker_elf = 0
-stress-6 stats wars_attacker_goblin = 30
+stress-6 stats wars_attacker_goblin = 29
 stress-6 stats wars_attacker_dwarf = 8
 stress-6 stats wars_attacker_faerie = 0
 stress-6 stats wars_attacker_human = 0
 stress-6 stats wars_attacker_orc = 0
-stress-6 stats wars_hollow = 16
-stress-6 stats wars_hollow_permille = 421
+stress-6 stats wars_hollow = 15
+stress-6 stats wars_hollow_permille = 405
 stress-6 stats wars_same_goal_max = 4
 stress-6 stats wars_same_goal_unchanged_max = 3
-stress-6 stats race_population_share_max_permille = 541
-stress-6 stats race_regions_share_max_permille = 357
+stress-6 stats race_population_share_max_permille = 538
+stress-6 stats race_regions_share_max_permille = 428
 stress-6 stats wars_unfound = 0
 stress-6 stats refuges_held_no_destination = 11
 stress-6 war e23 808-815 c4 c1 rg14 claim e15 battles 7 sacked 1 taken 0 exhaustion won-c4
@@ -18875,15 +18843,14 @@ stress-6 war e498 1674-1688 c10 c13 rg20 claim e492 battles 13 sacked 0 taken 0 
 stress-6 war e536 1749-1750 c10 c15 rg23 claim e496 battles 1 sacked 1 taken 0 goal-lost won-c10
 stress-6 war e537 1749-1750 c13 c15 rg23 claim e497 battles 0 sacked 0 taken 0 goal-lost truce
 stress-6 war e550 1754-1766 c10 c13 rg20 claim e539 battles 10 sacked 0 taken 0 quiet won-c13-tribute
-stress-6 war e583 1855-1856 c6 c9 rg10 claim e570 battles 1 sacked 0 taken 1 aim won-c6-ceded
-stress-6 war e598 1902-1916 c6 c9 rg7 claim e597 battles 11 sacked 0 taken 2 exhaustion won-c9-tribute
-stress-6 war e623 1942-1956 c17 c14 rg2 claim e622 battles 13 sacked 0 taken 0 exhaustion truce
-stress-6 war e645 1964-1967 c6 c9 rg10 claim e643 battles 3 sacked 1 taken 0 goal-lost won-c6-tribute
-stress-6 war e660 1998-open c17 c14 rg2 claim e659 battles 1 sacked 0 taken 0 open -
+stress-6 war e584 1855-1859 c6 c9 rg10 claim e570 battles 4 sacked 0 taken 0 exhaustion won-c9-tribute
+stress-6 war e601 1927-1932 c6 c9 rg10 claim e599 battles 3 sacked 0 taken 0 exhaustion won-c9-tribute
+stress-6 war e612 1942-1948 c17 c14 rg2 claim e611 battles 5 sacked 1 taken 1 conquest -
+stress-6 war e632 1983-1991 c9 c6 rg9 claim e631 battles 5 sacked 0 taken 0 exhaustion truce
 stress-6 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
 stress-6 r19 t11 152 first_orc_war - claims39 0/0/3 cessions40 0 goal_differs 0
-stress-6 r22 fresh 2/0 dropped 2 refuge_hidden 1 repeated_tolls 28 mixed_tolls 0
-stress-6 r22 open_claims e112,e114,e163,e252,e334,e527,e577,e578,e589
+stress-6 r22 fresh 2/0 dropped 2 refuge_hidden 1 repeated_tolls 26 mixed_tolls 0
+stress-6 r22 open_claims e112,e114,e163,e252,e334,e527,e577,e578,e592
 stress-6 r22 hidden_refuges s24
 stress-6 r21 renamings 3 3:1606:conquest:e480,20:1413:conquest:e241,24:1183:conquest:e133
 stress-6 q50 0 e0
@@ -18944,26 +18911,26 @@ stress-6 q1791 148 e570
 stress-6 q1816 183 e570
 stress stress-7 7 6000 all 4 turbulent
 stress-7 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
-stress-7 table beast_population 8494245a25960d0c6807c2eda157f809e241762fd714c34cb826cebcc7eba4a9
-stress-7 table civilization 3fcdff68c910ff8706f13935018ec18d79c3bec09f5d9aa55bf1d34cf82d432a
-stress-7 table event 709a2af088cf729b46073a80912df3931d2f95e1ce245887747c82bd7a2824c7
-stress-7 table event_cause 29e3fc2c5a0d08114ab5fb01e3896c46a43fe25e5b5126f48ac2c3a9fa921a8b
+stress-7 table beast_population 58697923995d195b7c6d3d21715fa59cefd7e3a4c845c4b18210b267703b7bbe
+stress-7 table civilization 2e7320f0701c130192c01f5a6bfe94d1eb04ed7d6850759435b8ddf5a853112c
+stress-7 table event 144981ad3576fe09ad04e577568a629e8f7c77b88f41de2ec7707f818ad07670
+stress-7 table event_cause 653907a8e6fe67ee31ac853b21cee1dd59604217f36bf934f427f1bc3e98cb91
 stress-7 table event_kind d4f379b3a3812846bdc9412a44f400071c4eebd3ef279c730e53e19b03586607
 stress-7 table event_kind_role 8745395fe4a1c46c68c624764fe314901aa306bcc1199f9b98238db570a75f9e
 stress-7 table event_kind_value 48f33d421fc18e95633553176b07aff9089584a06354b4e4b0a24a6b2b34f48b
-stress-7 table event_participant 62eb505baef4899e5b4021373b35ae23057b85b67e91dd4ec11798d459621965
-stress-7 table event_value 351599a9509908cff9ba83501c0dac0977200e724387e53e4e1301876ddaee3c
+stress-7 table event_participant 592f27beead25c9273431a58dedb11c1727046d89fbd6fd816d1b12da6a10533
+stress-7 table event_value 04bc804e4a471959557e99a96a384b6b7ee7abacb68a630df2ebf33a216a88a7
 stress-7 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
 stress-7 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
 stress-7 table phase 81fb74902959c96137cdb406a7b2ce4e67240834a8a339d98c03572461dd1324
-stress-7 table race_relation 63574bf3e6ad2f2f1acb589242b41edfb0ca0d80b191a032e0012638eeaf6f58
-stress-7 table region_control 6d93add34d7e1f2749a3f87f379734e329659daed6d5d038c280913b9329d074
+stress-7 table race_relation 23e5876af08cc8132c07448ce606204cc0b6ce2d83c005358a32fa5e2c423714
+stress-7 table region_control 6d6642240f0ed6f5d8df3a09ac24a98046caac6ea0bd1d75f863ee3fedbae28e
 stress-7 table region_name a2b019cc61d7ace8bad273a1b867803b8b95642d395ac5f01f751d5075a3a27b
-stress-7 table relation 388bef03acf102bc06178da2a32f54e394ea6c8bbb8006e5e2484b5be6bc033c
-stress-7 table settlement 3b242d2bbac12fd7f64ccd613d270f85eb931b381b9ea9955d918b0282b7a173
-stress-7 table settlement_census f72284a268439d46a29bf625d2f5ac69f73f1627f0b1e1b133a1625fbaaac1c2
-stress-7 table settlement_race 6cf387b602c9c4dbf08784d2bef01bcdbb71f16025b45277021ac72fdf183f28
-stress-7 table site 664c71415b1e99a7a30af9759053bb67dbae0d6baf6d68bc7ea62901628d113f
+stress-7 table relation 3ccdaca070de6394c5f16c22e863f482f9c6c777c3a3915b946a7ca66492728c
+stress-7 table settlement 4223f7f937bbeb1842692d6b90385494403f5d53ca21261ac7a3bd815c400c34
+stress-7 table settlement_census bd288c55a025c5009d4fb4f04762b3c7cfc94cbcd19b771ac223d0ba876bd60b
+stress-7 table settlement_race 294545162d37ab8c2233018bdb2aa181e17451e8fd834bc7d3ddd412d3bbc4af
+stress-7 table site f61d43317795a3c72f8dc083344e6b78951777b6a675fbe00e272ffa45d7d9ae
 stress-7 report end_year = 6000
 stress-7 report phases_opening = 6
 stress-7 report phases_quiet = 29
@@ -18971,7 +18938,7 @@ stress-7 report phases_flare = 25
 stress-7 report phases_final = 1
 stress-7 report simulated_years = 2338
 stress-7 report simulated_permille = 389
-stress-7 report events = 2186
+stress-7 report events = 2204
 stress-7 report events_awakening = 6
 stress-7 report events_civ_founded = 16
 stress-7 report events_settlement_founded = 16
@@ -18981,7 +18948,7 @@ stress-7 report events_colony_founded = 34
 stress-7 report events_became_village = 16
 stress-7 report events_became_town = 10
 stress-7 report events_became_city = 0
-stress-7 report events_settlement_dwindled = 4
+stress-7 report events_settlement_dwindled = 5
 stress-7 report events_famine = 43
 stress-7 report events_plague = 0
 stress-7 report events_plague_spread = 3
@@ -18991,28 +18958,28 @@ stress-7 report events_settlement_abandoned = 0
 stress-7 report events_capital_moved = 27
 stress-7 report events_civ_ended = 0
 stress-7 report events_ruin_faded = 15
-stress-7 report events_claim = 266
-stress-7 report events_war_declared = 117
+stress-7 report events_claim = 270
+stress-7 report events_war_declared = 119
 stress-7 report events_battle = 280
-stress-7 report events_battle_at_pass = 248
-stress-7 report events_siege = 256
+stress-7 report events_battle_at_pass = 251
+stress-7 report events_siege = 254
 stress-7 report events_sacked = 33
-stress-7 report events_settlement_captured = 49
-stress-7 report events_peace = 11
-stress-7 report events_truce = 15
+stress-7 report events_settlement_captured = 50
+stress-7 report events_peace = 13
+stress-7 report events_truce = 14
 stress-7 report events_region_ceded = 1
 stress-7 report events_civ_conquered = 42
 stress-7 report events_settlement_abandoned_to = 4
 stress-7 report events_refugees_settled = 2
-stress-7 report events_tribute = 26
-stress-7 report events_war_won = 20
+stress-7 report events_tribute = 28
+stress-7 report events_war_won = 21
 stress-7 report events_search_abandoned = 3
 stress-7 report events_refuge_held = 0
 stress-7 report events_plague_outbreak = 49
 stress-7 report events_quiet_stretch = 12
 stress-7 report events_claim_settlements = 22
 stress-7 report events_settlements_ceded = 0
-stress-7 report events_claim_dropped = 6
+stress-7 report events_claim_dropped = 8
 stress-7 report events_refuge_hidden = 2
 stress-7 report events_region_renamed = 2
 stress-7 report events_monster_appeared = 0
@@ -19025,13 +18992,13 @@ stress-7 report events_monster_slain = 0
 stress-7 report events_monster_driven_off = 0
 stress-7 report events_monster_died = 0
 stress-7 report events_beasts_bold = 0
-stress-7 report events_outpost_built = 16
-stress-7 report events_outpost_abandoned = 13
+stress-7 report events_outpost_built = 17
+stress-7 report events_outpost_abandoned = 14
 stress-7 report events_settlement_fled = 0
 stress-7 report events_peoples_met = 15
-stress-7 report events_disposition_turned = 6
-stress-7 report events_refugees_arrived = 21
-stress-7 report events_settlement_mixed = 6
+stress-7 report events_disposition_turned = 5
+stress-7 report events_refugees_arrived = 22
+stress-7 report events_settlement_mixed = 7
 stress-7 report events_standing_changed = 4
 stress-7 report events_people_expelled = 0
 stress-7 report civilizations = 51
@@ -19039,23 +19006,23 @@ stress-7 report civilizations_alive = 9
 stress-7 report settlements = 52
 stress-7 report settlements_standing = 15
 stress-7 report regions_held = 9
-stress-7 report census_rows = 1605
-stress-7 report relations = 253
+stress-7 report census_rows = 1608
+stress-7 report relations = 257
 stress-7 report region_names = 2
 stress-7 report beasts = 5
 stress-7 report monster_kinds = 6
-stress-7 report beast_populations = 197
+stress-7 report beast_populations = 196
 stress-7 report monsters = 0
-stress-7 report sites = 16
-stress-7 report race_relations = 121
-stress-7 report settlement_races = 190
-stress-7 report population = 16713
+stress-7 report sites = 17
+stress-7 report race_relations = 122
+stress-7 report settlement_races = 194
+stress-7 report population = 16199
 stress-7 report population_elf = 449
-stress-7 report population_goblin = 8310
-stress-7 report population_dwarf = 2299
+stress-7 report population_goblin = 8317
+stress-7 report population_dwarf = 1847
 stress-7 report population_faerie = 403
-stress-7 report population_human = 1225
-stress-7 report population_orc = 4027
+stress-7 report population_human = 1227
+stress-7 report population_orc = 3956
 stress-7 report settlements_standing_elf = 1
 stress-7 report settlements_standing_goblin = 8
 stress-7 report settlements_standing_dwarf = 2
@@ -19072,25 +19039,25 @@ stress-7 stats civ_settlements_max = 3
 stress-7 stats settlements_colonies = 34
 stress-7 stats civilizations_seceded = 35
 stress-7 stats relations_enmity = 87
-stress-7 stats relations_peace = 49
-stress-7 stats war_years_total = 612
+stress-7 stats relations_peace = 51
+stress-7 stats war_years_total = 616
 stress-7 stats war_years_max = 24
 stress-7 stats civilizations_conquered = 42
 stress-7 stats settlements_sacked = 18
-stress-7 stats settlements_captured = 19
-stress-7 stats regions_conquered = 33
+stress-7 stats settlements_captured = 20
+stress-7 stats regions_conquered = 34
 stress-7 stats races_alive = 6
 stress-7 stats wars_attacker_elf = 1
 stress-7 stats wars_attacker_goblin = 98
-stress-7 stats wars_attacker_dwarf = 13
+stress-7 stats wars_attacker_dwarf = 15
 stress-7 stats wars_attacker_faerie = 0
 stress-7 stats wars_attacker_human = 1
 stress-7 stats wars_attacker_orc = 4
-stress-7 stats wars_hollow = 15
-stress-7 stats wars_hollow_permille = 131
+stress-7 stats wars_hollow = 14
+stress-7 stats wars_hollow_permille = 120
 stress-7 stats wars_same_goal_max = 5
 stress-7 stats wars_same_goal_unchanged_max = 3
-stress-7 stats race_population_share_max_permille = 497
+stress-7 stats race_population_share_max_permille = 513
 stress-7 stats race_regions_share_max_permille = 333
 stress-7 stats wars_unfound = 3
 stress-7 stats refuges_held_no_destination = 0
@@ -19203,18 +19170,20 @@ stress-7 war e1874 5457-5462 c18 c43 rg15 claim e1870 battles 5 sacked 1 taken 0
 stress-7 war e1900 5503-5507 c18 c43 rg13 claim e1898 battles 3 sacked 0 taken 0 quiet won-c18-tribute
 stress-7 war e1912 5532-5541 c1 c43 rg13 claim e1911 battles 8 sacked 0 taken 0 exhaustion truce
 stress-7 war e1930 5549-5551 c18 c43 rg13 claim e1928 battles 2 sacked 2 taken 0 goal-lost won-c18
-stress-7 war e1982 5645-5657 c48 c18 rg14 claim e1976 battles 12 sacked 0 taken 0 exhaustion truce
-stress-7 war e2008 5670-5683 c48 c18 rg14 claim e2007 battles 10 sacked 0 taken 0 exhaustion won-c18-tribute
-stress-7 war e2038 5697-5701 c32 c51 rg3 claim e1970 battles 4 sacked 1 taken 0 conquest -
-stress-7 war e2039 5697-5701 c50 c51 rg3 claim e1971 battles 3 sacked 0 taken 0 conquest -
-stress-7 war e2040 5698-5701 c2 c51 rg3 claim e1969 battles 2 sacked 0 taken 0 conquest -
-stress-7 war e2060 5702-5704 c32 c50 rg4 claim e1975 battles 2 sacked 0 taken 0 exhaustion won-c50-tribute
-stress-7 war e2074 5724-5729 c48 c18 rg14 claim e2037 battles 5 sacked 1 taken 0 conquest -
-stress-7 war e2151 5920-5931 c2 c43 rg10 claim e2134 battles 9 sacked 0 taken 0 exhaustion truce
+stress-7 war e1983 5645-5657 c48 c18 rg14 claim e1977 battles 11 sacked 0 taken 0 exhaustion won-c18-tribute
+stress-7 war e2007 5670-5680 c48 c18 rg14 claim e2006 battles 9 sacked 0 taken 0 exhaustion won-c18-tribute
+stress-7 war e2035 5697-5699 c32 c51 rg3 claim e1971 battles 2 sacked 0 taken 1 conquest -
+stress-7 war e2036 5697-5699 c50 c51 rg3 claim e1972 battles 0 sacked 0 taken 0 conquest -
+stress-7 war e2037 5698-5699 c2 c51 rg3 claim e1970 battles 0 sacked 0 taken 0 conquest -
+stress-7 war e2049 5700-5704 c32 c50 rg4 claim e1976 battles 3 sacked 1 taken 0 exhaustion truce
+stress-7 war e2070 5719-5730 c48 c18 rg14 claim e2032 battles 10 sacked 1 taken 0 conquest -
+stress-7 war e2096 5750-5753 c32 c50 rg4 claim e2094 battles 3 sacked 0 taken 0 exhaustion won-c32-tribute
+stress-7 war e2126 5795-5798 c32 c50 rg4 claim e2125 battles 3 sacked 0 taken 0 exhaustion won-c50-tribute
+stress-7 war e2170 5920-5930 c2 c43 rg10 claim e2153 battles 9 sacked 0 taken 0 exhaustion won-c2
 stress-7 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/0
 stress-7 r19 t11 8 first_orc_war 8 claims39 2/6/14 cessions40 0 goal_differs 0
-stress-7 r22 fresh 4/0 dropped 6 refuge_hidden 2 repeated_tolls 37 mixed_tolls 0
-stress-7 r22 open_claims e97,e237,e661,e1138,e1904,e1962,e1963,e1964,e1979,e2018,e2089,e2139,e2179
+stress-7 r22 fresh 4/0 dropped 8 refuge_hidden 2 repeated_tolls 35 mixed_tolls 0
+stress-7 r22 open_claims e97,e237,e661,e1138,e1904,e1962,e1963,e1964,e1980,e2020,e2158,e2197
 stress-7 r22 hidden_refuges -
 stress-7 r21 renamings 2 2:2128:conquest:e51,4:2443:conquest:e184
 stress-7 q150 0 e0

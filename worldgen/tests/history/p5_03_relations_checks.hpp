@@ -408,7 +408,11 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         }
     }
     for (const auto& [s, S] : x.stl) {   // every settlement has rows (6.3.1)
-        if (srows.count(s) == 0U) out.push_back("6.3.1: s" + n(s) + " has no settlement_race row");
+        // ... except one ruined in the step that founded it: rows are written at the end of a step for standing
+        // settlements only (6.7; a step is at most a quiet step of 25 years, P3-04's quiet_step_years)
+        const bool ruined_at_once = at(*S, 10) >= 3 && S->at(12).type == db::ValueType::integer &&
+                                    at(*S, 12) - at(*S, 6) < 25;
+        if (srows.count(s) == 0U && !ruined_at_once) out.push_back("6.3.1: s" + n(s) + " has no settlement_race row");
     }
 
     // 5: arrivals
@@ -479,16 +483,37 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         for (const std::int64_t a : x.events_of("refugees_arrived")) {
             rearrived = rearrived || (x.part(a, 1) == s && x.part(a, 4) == g && at(*x.ev.at(a), 1) == y);
         }
-        if (before && *before > share_max) out.push_back("6: e" + n(e) + " takes a share above expel_share_max");
+        // The share at the expulsion is that of the last row before y unless s changed earlier in the same year
+        // (an owner change or arrival before the expulsion in T6 rescales the shares; same-year rows replace).
+        bool changed_before = false;
+        for (const auto& [id, row] : x.ev) {
+            if (id < e && at(*row, 1) == y && at(*row, 6) == s) changed_before = true;
+        }
+        if (before && *before > share_max && !changed_before) {
+            out.push_back("6: e" + n(e) + " takes a share above expel_share_max");
+        }
         if (same_year_other && !rearrived) out.push_back("6.5: e" + n(e) + "'s race keeps a share that year");
     }
 
     // 6.3.6: mixed once per (settlement, race); 6.3.5 standing changes at phase starts
-    std::set<Pair> mixed;
+    // Once per entry: `mixed_told` lives on the entry (6.3.6), so a race whose entry left (a row with share 0)
+    // and came back may be told again.
+    std::map<Pair, std::int64_t> mixed;   // (settlement, race) -> year of the last settlement_mixed
     const std::int64_t mixed_min = rel("mixed_min_permille");
     for (const std::int64_t e : x.events_of("settlement_mixed")) {
         const Pair p{x.part(e, 1), x.part(e, 3)};
-        if (!mixed.insert(p).second) out.push_back("6.3.6: s" + n(p.first) + " race " + n(p.second) + " mixed twice");
+        const std::int64_t ye = at(*x.ev.at(e), 1);
+        if (const auto prev = mixed.find(p); prev != mixed.end()) {
+            bool left = false;
+            if (const auto it = srows.find(p.first); it != srows.end()) {
+                for (const Row* r : it->second) {
+                    left = left || (at(*r, 1) == p.second && at(*r, 3) == 0 && at(*r, 2) >= prev->second &&
+                                    at(*r, 2) <= ye);
+                }
+            }
+            if (!left) out.push_back("6.3.6: s" + n(p.first) + " race " + n(p.second) + " mixed twice");
+        }
+        mixed[p] = ye;
         if (x.val(e, 0) < mixed_min) out.push_back("6.3.6: e" + n(e) + " share below mixed_min_permille");
         if (x.part(e, 3) == x.part(e, 4)) out.push_back("6.3.6: e" + n(e) + " the ruling race mixed with itself");
     }

@@ -61,7 +61,8 @@ inline const std::vector<std::string>& ddl_tables() {
         "event_kind", "event_kind_role", "event_kind_value", "phase",      "event",
         "event_participant", "event_cause", "event_value", "civilization", "settlement",
         "settlement_census", "region_control", "relation", "region_name",   // region_name: schema 8 (r21 23.4)
-        "beast", "monster_kind", "beast_population", "monster", "site", "race_relation", "settlement_race"};    // P5-02 11.1 (schema 9)
+        "beast", "monster_kind", "beast_population", "monster", "site",      // P5-02 11.1 (schema 9)
+        "race_relation", "settlement_race"};                                 // P5-03 16.1 (schema 10)
     return v;
 }
 inline const std::vector<std::string>& hash_tables() {
@@ -78,7 +79,8 @@ inline std::size_t columns_of(std::string_view t) {
         {"event", 8},        {"event_participant", 5}, {"event_cause", 2},    {"event_value", 3},
         {"civilization", 10}, {"settlement", 15},    {"settlement_census", 6}, {"region_control", 5},
         {"relation", 9},     {"region_name", 5},     // settlement: 15 since P5-02 11.1 (ending)
-        {"beast", 6},        {"monster_kind", 7},    {"beast_population", 4}, {"monster", 11}, {"site", 14}};
+        {"beast", 7},        {"monster_kind", 8},    {"beast_population", 4}, {"monster", 11}, {"site", 14},
+        {"race_relation", 5}, {"settlement_race", 5}};   // P5-03 16.1: beast and monster_kind gain their phrases
     return m.find(t)->second;
 }
 

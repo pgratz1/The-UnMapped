@@ -83,10 +83,10 @@ TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v
     for (const std::string& t : {summary(), full()}) {
         const std::vector<std::string> lines = hrtest::lines_of(t);
         REQUIRE(!lines.empty());
-        CHECK(lines[0] == "# worldgen history v4");
+        CHECK(lines[0] == "# worldgen history v5");
     }
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v4");
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v4");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v5");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v5");
 }
 
 TEST_CASE("P3-07 r19 25.13 item 2: at most two calamity candidates per phase (25.2)") {

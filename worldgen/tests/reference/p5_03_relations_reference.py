@@ -59,8 +59,9 @@ R3 (6.7) settlement_race rows of a step are dated at its year Y, a quiet step's 
    ruling 6 at integration; phase 1 read Y + L - 1).
 R4 (6.7) the rows of "the previous phase's end" are dated Y - 1 (phases are contiguous); none at the first T1.
 R5 (6.3.4) the first drift's Δ is Y - 0 (the history's first year is 0).
-R6 (6.2.4) a race is awakened from the year of its `awakening` event; the meeting's presence is conflict's
-   presence(c) (P3-06 5.1 with 20.1's hidden places), read live at the relations step.
+R6 (6.2.4) a race is awakened from the year of its `awakening` event; the meeting's presence is P3-06 5.1's simple
+   definition (held regions and the regions of standing visible settlements, no 20.1 hidden places: lead ruling 6
+   at integration), read live at the relations step.
 R7 (7.2) the refugees of a cession (P3-06 7.7, 20.27, 22.5: the excess of a ceded settlement) go through the same
    `refugees` procedure as a capture's, so the ledger records them too, with the cession's event as the cause.
 R8 (7.2, 11.1) the capture and cession refugees go to the nearest other standing settlement of the defender with
@@ -71,8 +72,8 @@ R10 (6.5) an expulsion's people n = P_s x share div 1000 is read before the expu
 R11 (6.3.3 item 2) the other entries are scaled to fill 1000 - share_q: c_g = share_g x (1000 - share_q),
    T = 1000 - x (the sum of the others), shares c_g div T, leftovers by (c_g mod T descending, race ascending);
    when the old ruling race was the only other entry it takes all of 1000 - share_q.
-R12 (6.6) a settlement ruined in the step keeps its entries but writes no row (6.7); its pending moves still mix
-   into it (no row).
+R12 (6.6) a settlement ruined in the step keeps its entries but writes no row (6.7); a pending move into a
+   settlement no longer standing is skipped (lead ruling 6 at integration; phase 1 still mixed it, with no row).
 R13 (6.2.3) a pair's contributions are cleared at a turn and at the meeting; the causes of a turn are the
    contributions ascending (at most 8), else the last turn event, else the met event.
 R14 (8.2) a turn by decay alone and a settlement_mixed caused by an arrival or an abandonment start with "the":
@@ -383,6 +384,8 @@ class Relations:
             if r["kind"] != "move":
                 rest.append(r)
                 continue
+            if not self.w.standing(self.w.stl(r["to"])):
+                continue   # lead ruling 6 (integration): a move into a settlement no longer standing is skipped
             self.mix(r["to"], r["entries"], r["people"], r["P_to"] - r["people"], r["cause"])
             self.log.append((self.w.year, "move", r["frm"], r["to"], r["people"]))
         self.pending = rest
@@ -533,7 +536,9 @@ class Relations:
         if t["meet_hops"] < 0:
             return
         civs = [c for c in w.civs if c["ended_year"] is None and w.visible(c)]
-        pres = {c["id"]: w.presence(c["id"]) for c in civs}
+        # lead ruling 6 (integration): P3-06 5.1's simple presence (held regions and the regions of standing visible
+        # settlements), without 20.1's hidden places (R6 read conflict's presence(c))
+        pres = {c["id"]: sorted(set(w.held(c["id"])) | {x["region"] for x in w.svis(c["id"])}) for c in civs}
         for (a, b) in sorted(self.pairs):
             p = self.pairs[(a, b)]
             if p["met"] or a not in self.awakened or b not in self.awakened:

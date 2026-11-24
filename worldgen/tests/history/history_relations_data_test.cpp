@@ -148,7 +148,13 @@ TEST_CASE("P5-03 4.1: stances required; value int(-500, 500); at most 8 entries;
         Files f = files_024();
         std::string& t = f[elf];
         t.erase(t.find(st), st.size() + 1);
-        CHECK(has(one_error(load(f)).message, "race.elf.stances"));
+        // The definition does not load, so race_order_dense reports elf's order missing as well (the loader's
+        // behaviour for any missing race field): the stances error is among the errors.
+        const Load l = load(f);
+        REQUIRE_FALSE(l.ok());
+        bool found = false;
+        for (const wd::LoadError& e : l.errors) found = found || has(e.message, "missing required field 'race.elf.stances'");
+        CHECK(found);
     }
     CHECK_FALSE(load(with_edit(elf, st, "stances = [{ race = \"faerie\", value = 501 }]")).ok());
     CHECK_FALSE(load(with_edit(elf, st, "stances = [{ race = \"faerie\", value = -501 }]")).ok());
@@ -229,9 +235,9 @@ TEST_CASE("P5-03 9.4: the new history.monsters fields after prey_might_max_permi
     }
     const std::string p = "history/monsters.toml";
     field_bounds(p, "history.monsters", p503data::monsters_fields_024(), {"hunt_max_permille"});
-    check_failure(one_error(load(with_edit(p, "hunt_max_permille = 400", "hunt_max_permille = 19"))), p,
+    check_failure(one_error(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 19"))), p,
                   "monsters_hunt_ordered", "history.monsters", "hunt_permille 20 is above hunt_max_permille 19");
-    CHECK(load(with_edit(p, "hunt_max_permille = 400", "hunt_max_permille = 20")).ok());
+    CHECK(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 20")).ok());
 }
 
 TEST_CASE("P5-03 11.1: the new history.peoples fields after ghost_max_population; peoples_abandon_loss_ordered") {
@@ -306,8 +312,10 @@ TEST_CASE("P5-03 12.2: {place} in a dead kind's forms; monster_place_forms") {
                                            R"(name_forms = ["The Host of {place}", "The Restless of {root}"])"))),
                   undead, "monster_place_forms", "monster.undead",
                   "name_forms[1] 'The Restless of {root}' of a dead kind needs {place} and no {root}");
-    check_failure(one_error(load(with_edit(undead, forms, R"(name_forms = ["The Host"])"))), undead,
-                  "monster_place_forms", "monster.undead", "name_forms[0] 'The Host' of a dead kind needs {place} and no {root}");
+    // A form with neither {root} nor {place} fails the name_form grammar itself (one of the two exactly once),
+    // before the named check.
+    CHECK(has(one_error(load(with_edit(undead, forms, R"(name_forms = ["The Host"])"))).message,
+              "'monster.undead.name_forms[0]' is \"The Host\"; expected"));
     const std::string troll = "monsters/troll.toml";
     check_failure(one_error(load(with_edit(troll, "\"Mossback {root}\"", "\"Mossback of {place}\""))), troll,
                   "monster_place_forms", "monster.troll",

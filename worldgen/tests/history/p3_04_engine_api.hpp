@@ -131,6 +131,7 @@ struct Tables {
     std::vector<Row> event_kind, event_kind_role, event_kind_value, phase, event, event_participant, event_cause,
         event_value, civilization, settlement, settlement_census, region_control, relation, region_name;
     std::vector<Row> beast, monster_kind, beast_population, monster, site;   // P5-02 11.1
+    std::vector<Row> race_relation, settlement_race;                         // P5-03 16.1 (schema 10)
 
     // By table name (the names of 9.1).
     [[nodiscard]] const std::vector<Row>& of(std::string_view t) const {
@@ -153,6 +154,8 @@ struct Tables {
         if (t == "beast_population") return beast_population;
         if (t == "monster") return monster;
         if (t == "site") return site;
+        if (t == "race_relation") return race_relation;         // P5-03 16.1
+        if (t == "settlement_race") return settlement_race;
         throw worldgen::FatalError("eng::Tables::of: unknown table");
     }
     [[nodiscard]] std::vector<Row>& of(std::string_view t) {
@@ -217,10 +220,12 @@ inline Tables tables_of(const worldgen::stages::HistoryResult& r) {
     }
     // P5-02 11.1, 11.2: GUESS the members and row types (p5_02_monsters_api.hpp).
     for (const auto& x : r.beasts) {
-        t.beast.push_back({I(x.id), T(x.key), T(x.name), T(x.plural), I(x.menace), I(x.food)});
+        t.beast.push_back({I(x.id), T(x.key), T(x.name), T(x.plural), I(x.menace), I(x.food),
+                           T(x.bold_phrases)});   // P5-03 16.1
     }
     for (const auto& x : r.monster_kinds) {
-        t.monster_kind.push_back({I(x.id), T(x.key), T(x.name), T(x.noun), I(x.grouped), I(x.wake), I(x.might)});
+        t.monster_kind.push_back({I(x.id), T(x.key), T(x.name), T(x.noun), I(x.grouped), I(x.wake), I(x.might),
+                                  T(x.raid_phrases)});   // P5-03 16.1
     }
     for (const auto& x : r.beast_populations) {
         t.beast_population.push_back({I(x.region), I(x.beast), I(x.year), I(x.count)});
@@ -233,6 +238,13 @@ inline Tables tables_of(const worldgen::stages::HistoryResult& r) {
         t.site.push_back({I(x.id), T(x.name), I(x.kind), I(x.region), I(x.x), I(x.y), I(x.settlement),
                           I(x.founder_civ), I(x.monster), I(x.origin_year), I(x.origin_event), O(x.ended_year),
                           I(x.ending_event), I(x.ending)});
+    }
+    // P5-03 16.2: HistoryResult::race_relations and settlement_races, in key order.
+    for (const auto& x : r.race_relations) {
+        t.race_relation.push_back({I(x.race_a), I(x.race_b), I(x.year), I(x.disposition), I(x.band)});
+    }
+    for (const auto& x : r.settlement_races) {
+        t.settlement_race.push_back({I(x.settlement), I(x.race), I(x.year), I(x.share), I(x.standing)});
     }
     return t;
 }
@@ -449,6 +461,10 @@ inline void write_row(db::StageWriter& w, std::string_view table, const Row& c) 
     } else if (table == "site") {
         w.write_site(db::SiteRow{i(0), s(1), i(2), i(3), i(4), i(5), i(6), i(7), i(8), i(9), i(10), o(11), i(12),
                                  i(13)});
+    } else if (table == "race_relation") {   // P5-03 16.1
+        w.write_race_relation(db::RaceRelationRow{i(0), i(1), i(2), i(3), i(4)});
+    } else if (table == "settlement_race") {
+        w.write_settlement_race(db::SettlementRaceRow{i(0), i(1), i(2), i(3), i(4)});
     } else {
         throw worldgen::FatalError("eng::write_row: unknown table");
     }

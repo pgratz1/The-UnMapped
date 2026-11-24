@@ -123,7 +123,9 @@ TEST_CASE("P5-03 6.4.3 item 1: groups split by the shares, left-over by remainde
 
 TEST_CASE("P5-03 24.3: relations-small: every kind of part A happens; the invariants hold on the rows") {
     std::set<std::string> seen;
-    for (const std::uint64_t seed : stress_seeds()) {
+    // Stress seed 7 added at integration: with the calibrated data standing_changed happens on relations-small-7
+    // only among the golden file's fixture seeds (p5-03-relations.txt: 2 events).
+    for (const std::uint64_t seed : {0U, 1U, 2U, 3U, 7U}) {
         CAPTURE(seed);
         const p503check::World w = p503run::stage_fixture(seed, p503api::relations_small_content());
         CHECK(p503check::violations(w) == std::vector<std::string>{});

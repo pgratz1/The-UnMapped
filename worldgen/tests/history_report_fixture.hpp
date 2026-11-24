@@ -406,13 +406,14 @@ inline Fixture load_fixture(const std::string& name) {
             } else if (k == "settlement_overrun") {
                 ending = 2;
             } else if (k == "settlement_abandoned" || k == "settlement_abandoned_to") {
-                bool plague = false, famine = false;
+                bool plague = false, famine = false, fled = false;
                 for (const std::int64_t c : causes_of[ruin]) {
                     const std::string& ck = key_of_event[c];
                     plague = plague || ck == "plague" || ck == "plague_spread" || ck == "plague_outbreak";
                     famine = famine || ck == "famine";
+                    fled = fled || ck == "settlement_fled";   // P5-03 11.3: code 6, tested before 3 and 4
                 }
-                ending = plague ? 3 : famine ? 4 : 5;
+                ending = fled ? 6 : plague ? 3 : famine ? 4 : 5;
             }
             s.ending = ending;
         }
