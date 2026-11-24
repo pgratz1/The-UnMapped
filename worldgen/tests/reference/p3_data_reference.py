@@ -2525,6 +2525,8 @@ KINDS_024["monster"] = ("monsters", MONSTER_024)
 FILTER_WORDS_024 = ("bird",)
 # The commit whose game/data holds the 0.23.0 files (origin/p5/03-spec, main at 0.23.0 plus the spec).
 P5_03_BASE_COMMIT = "87fbda9"
+# The commit whose game/data holds the 0.24.0 files (origin/p5/03a-spec, main at 0.24.0 plus the spec).
+P5_03A_BASE_COMMIT = "fdf54cf"
 
 
 def phrase_ok(s):
@@ -2604,6 +2606,16 @@ def monster_check_messages_024(m, biomes=BIOME_KEYS_023, cultures=tuple(SITE_FOR
 def epithet(form):
     """12.1: the form with {root} removed and outer spaces trimmed."""
     return form.replace("{root}", "").strip(" ")
+
+
+def pre_025(path):
+    """A history directory older than 0.25.0 (P5-03a 10.1, 10.2): no peace_years in relations.toml or no
+    undead_dead_permille in monsters.toml."""
+    texts = {}
+    for n in ("relations.toml", "monsters.toml"):
+        p = os.path.join(path, n)
+        texts[n] = open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+    return "peace_years" not in texts["relations.toml"] or "undead_dead_permille" not in texts["monsters.toml"]
 
 
 def pre_024(path, kind):
@@ -2747,11 +2759,161 @@ def check_spec_024(c, races, cultures):
          {k: v for _, t in CULTURE_FILES_023.items() for k, v in tomllib.loads(t)["culture"].items()})
 
 
+# ---------------------------------------------------------------------------
+# The 0.25.0 listings (P5-03a, docs/specs/p5-03a-relations-followups.md r1: 10.1, 10.2, 10.3), derived from the
+# 0.24.0 ones by the edits the spec states, at the spec's shipped values (calibration of 11 may move them: then
+# RELATIONS_RANGES_025, MONSTERS_TUNING_025 and REPORT_TEMPLATES_025 are the one place to edit, then `golden`).
+# ---------------------------------------------------------------------------
+# 10.1: two changed values; eleven fields appended after expel_share_max, in this order (name, lo, hi, shipped).
+RELATIONS_CHANGED_025 = {"shelter_memory": 90, "conquest_settlers_permille": 50}
+RELATIONS_NEW_RANGES_025 = (
+    ("peace_years", 0, 100000, 100), ("peace_memory_per_century", 0, 10000, 60), ("peace_memory_max", 0, 2000, 300),
+    ("contact_hops", 0, 8, 1), ("foe_years", 1, 100000, 100), ("foe_war_memory", 0, 1000, 60),
+    ("foe_monster_memory", 0, 1000, 60), ("meet_sealed_hops", -1, 8, 3), ("meet_sealed_years", 0, 100000, 300),
+    ("conquest_settlers_span_permille", 0, 1000, 400), ("expel_gap_years", 0, 100000, 60))
+assert RELATIONS_RANGES_024[-1][0] == "expel_share_max"
+RELATIONS_RANGES_025 = tuple((n, lo, hi, RELATIONS_CHANGED_025.get(n, v)) for n, lo, hi, v in RELATIONS_RANGES_024) \
+    + RELATIONS_NEW_RANGES_025
+RELATIONS_025 = tuple((n, INT) for n, _, _, _ in RELATIONS_RANGES_025)
+RELATIONS_TUNING_025 = {n: v for n, _, _, v in RELATIONS_RANGES_025}
+# 10.1: the zero fixture: the *_memory fields (the new two included) and peace_memory_per_century 0, meet_sealed_hops
+# -1, conquest_settlers_span_permille 0 (expel_gap_years and the rest shipped).
+RELATIONS_ZERO_025 = dict(RELATIONS_TUNING_025, **{k: v for k, v in RELATIONS_ZERO_024.items()
+                                                   if v != RELATIONS_TUNING_024[k]},
+                          foe_war_memory=0, foe_monster_memory=0, peace_memory_per_century=0, meet_sealed_hops=-1,
+                          conquest_settlers_span_permille=0)
+# 10.2: undead_min_dead 4000 -> 1000 (now the floor); undead_dead_permille int(0, 1000) appended after
+# overrun_people_ref.
+MONSTERS_NEW_RANGES_025 = (("undead_dead_permille", 0, 1000, 25),)
+assert MONSTERS_024[-1][0] == "overrun_people_ref"
+MONSTERS_025 = MONSTERS_024 + tuple((n, INT) for n, _, _, _ in MONSTERS_NEW_RANGES_025)
+MONSTERS_TUNING_025 = dict(MONSTERS_TUNING_024, undead_min_dead=1000,
+                           **{n: v for n, _, _, v in MONSTERS_NEW_RANGES_025})
+# 10.3: the templates of 3.5, 4.2, 5.2, 5.3, 7.2 and 7.3 (saliences unchanged). 3.5 and 7.3 give words to append to
+# an existing {@causes:...} list (reading D3: appended after the list's last entry, in the order the spec lists them).
+CAUSES_58_ADD_025 = ("war_declared=wars against a common enemy,monster_raid=the raids of a common foe,"
+                     "settlement_overrun=the raids of a common foe,peoples_met=long years of peace,"
+                     "disposition_turned=long years apart")
+CAUSES_59_ADD_025 = ("settlement_abandoned=the abandonment of their home,settlement_abandoned_to=the abandonment of "
+                     "their home,plague=the plague,plague_outbreak=the plague,plague_spread=the plague,famine=the "
+                     "famine,settlement_fled=their flight,region_ceded=the cession,settlements_ceded=the cession")
+_T024 = {k: t for k, _s, t in REPORT_ENTRIES_024}
+_T023 = {k: t for k, _s, t in REPORT_ENTRIES_023}
+assert "refugees_arrived=years of shelter given|" in _T024["disposition_turned"]
+assert "people_expelled=the expulsion|" in _T024["refugees_arrived"]
+REPORT_TEMPLATES_025 = {
+    "peoples_met": "The {race_a:plural} {sealed?first had word of|first met} the {race_b:plural} in {@region}{band?, "
+                   "and hated them from the first|, and were wary of them|, and were glad of them}.",
+    "disposition_turned": _T024["disposition_turned"].replace("refugees_arrived=years of shelter given|",
+                                                              "refugees_arrived=years of shelter given," +
+                                                              CAUSES_58_ADD_025 + "|"),
+    "refugees_arrived": _T024["refugees_arrived"].replace("people_expelled=the expulsion|",
+                                                          "people_expelled=the expulsion," + CAUSES_59_ADD_025 + "|"),
+    "settlement_mixed": "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the "
+                        "cession,sacked=the sack,settlement_overrun=the ravage,refugees_arrived=the coming of refugees,"
+                        "refugees_settled=the flight,settlement_abandoned_to=the abandonment of a neighbour|After |, }in "
+                        "{settlement} the {ruling:plural} {standing?ruled over|tolerated|lived as equals with} the "
+                        "{race:plural}{majority?, who outnumbered them|}.",
+    "people_expelled": "Hating the {race:plural}, {civilization} drove them out of {settlement}, where it had "
+                       "{standing?held them as subjects|tolerated them|tolerated them} for {years} {years?year|years}; "
+                       "{people} left.",
+    "monster_appeared": "{monster}, {monster:kind}, made {monster:its} lair in {@region}.",
+    "settlement_overrun": "{monster} drove the people from {@settlement} and made it {monster:its} lair; "
+                          "{survivors?no one escaped|one escaped|# escaped}.",
+    "monster_driven_off": "{civilization} drove {monster} back to {monster:its} lair{monster:where}.",
+    "monster_slain": "{slayer} hunted down and slew {monster}{monster:aside}{monster:where}.",
+    "monster_died": "{monster}{monster:aside} died of great age{monster:where}.",
+    "undead_rose": "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }{monster} rose "
+                   "from {monster:its} graves{monster:where}.",
+}
+OLD_TEMPLATES_025 = dict(_T023, **_T024)
+
+
+def _report_025(text):
+    for k in sorted(REPORT_TEMPLATES_025):
+        text = _edit(text, 'template = "%s" }' % OLD_TEMPLATES_025[k], 'template = "%s" }' % REPORT_TEMPLATES_025[k])
+    return text
+
+
+def relations_file_025(t=None):
+    t = RELATIONS_TUNING_025 if t is None else t
+    return ("# Race relations, mixed settlements and migrations (spec P5-03 4.2; P5-03a 10.1). Generator 0.25.0.\n"
+            "[history.relations]\n" + "".join("%s = %d\n" % (n, t[n]) for n, _ in RELATIONS_025))
+
+
+def monsters_file_025():
+    return ("# Beasts and monsters (spec P5-02 4.3; P5-03 9.4; P5-03a 10.2). Generator 0.25.0.\n[history.monsters]\n" +
+            "".join("%s = %s\n" % (k, _toml_value(v)) for k, v in MONSTERS_TUNING_025.items()))
+
+
+HISTORY_FILES_025 = dict(HISTORY_FILES_024, **{
+    "report.toml": _report_025(HISTORY_FILES_024["report.toml"]), "monsters.toml": monsters_file_025(),
+    "relations.toml": relations_file_025()})
+SPEC_FILES_025 = dict(SPEC_FILES_024, history=HISTORY_FILES_025)
+KINDS_025 = dict(KINDS_024)
+KINDS_025["history"] = ("history", dict(KINDS_024["history"][1], monsters=MONSTERS_025, relations=RELATIONS_025))
+
+
+def relations_check_messages_025(t):
+    """relations_bands, then relations_peace_cap and relations_settlers (10.1), in that order."""
+    out = relations_check_messages(t)
+    if t["peace_memory_max"] > t["memory_max"]:
+        out.append("peace_memory_max %d is above memory_max %d" % (t["peace_memory_max"], t["memory_max"]))
+    if t["conquest_settlers_permille"] + t["conquest_settlers_span_permille"] > 1000:
+        out.append("conquest settlers %d + %d exceed 1000" % (t["conquest_settlers_permille"],
+                                                              t["conquest_settlers_span_permille"]))
+    return out
+
+
+def check_spec_025(c):
+    """The 0.25.0 listings say what P5-03a 10.1 to 10.3 state."""
+    h = parsed_spec("history")
+    rl = h["relations"]
+    check_record(RELATIONS_025, rl, "history.relations")
+    c.eq("history.relations fields in order (10.1)", list(rl), [n for n, _ in RELATIONS_025])
+    c.eq("history.relations shipped values (10.1)", rl, RELATIONS_TUNING_025)
+    c.eq("history.relations as at 0.24.0 but shelter_memory and conquest_settlers_permille",
+         {k: rl[k] for k in RELATIONS_TUNING_024 if k not in RELATIONS_CHANGED_025},
+         {k: v for k, v in RELATIONS_TUNING_024.items() if k not in RELATIONS_CHANGED_025})
+    c.eq("shelter_memory 90, conquest_settlers_permille 50", (rl["shelter_memory"], rl["conquest_settlers_permille"]),
+         (90, 50))
+    for n, lo, hi, _ in RELATIONS_RANGES_025:
+        c.ok("history.relations.%s inside int(%d, %d)" % (n, lo, hi), lo <= rl[n] <= hi)
+    c.eq("the shipped relations pass their three checks", relations_check_messages_025(rl), [])
+    c.eq("relations_peace_cap at equality", relations_check_messages_025(dict(rl, peace_memory_max=rl["memory_max"])),
+         [])
+    c.eq("relations_peace_cap one above", relations_check_messages_025(dict(rl, peace_memory_max=501)),
+         ["peace_memory_max 501 is above memory_max 500"])
+    c.eq("relations_settlers at 1000", relations_check_messages_025(dict(rl, conquest_settlers_span_permille=950)), [])
+    c.eq("relations_settlers one above", relations_check_messages_025(dict(rl, conquest_settlers_span_permille=951)),
+         ["conquest settlers 50 + 951 exceed 1000"])
+    c.eq("the zero tuning passes", relations_check_messages_025(RELATIONS_ZERO_025), [])
+    mo = h["monsters"]
+    check_record(MONSTERS_025, mo, "history.monsters")
+    c.eq("history.monsters fields in order (10.2)", list(mo), [n for n, _ in MONSTERS_025])
+    c.eq("history.monsters shipped (10.2)", mo, MONSTERS_TUNING_025)
+    c.eq("undead_min_dead 1000, undead_dead_permille 25", (mo["undead_min_dead"], mo["undead_dead_permille"]),
+         (1000, 25))
+    evl = h["report"]["events"]
+    c.eq("report lists 62 kinds (0.25.0)", len(evl), 62)
+    byk = {e["kind"]: e for e in evl}
+    for k, t in REPORT_TEMPLATES_025.items():
+        c.eq("template of %s (10.3)" % k, byk[k]["template"], t)
+    old = {e["kind"]: e for e in tomllib.loads(HISTORY_FILES_024["report.toml"])["history"]["report"]["events"]}
+    c.eq("saliences and order as at 0.24.0", [(e["kind"], e["salience"]) for e in evl],
+         [(e["kind"], e["salience"]) for e in tomllib.loads(HISTORY_FILES_024["report.toml"])["history"]["report"][
+             "events"]])
+    c.eq("other templates as at 0.24.0", {k: e["template"] for k, e in byk.items() if k not in REPORT_TEMPLATES_025},
+         {k: e["template"] for k, e in old.items() if k not in REPORT_TEMPLATES_025})
+    for k in ("renaming", "peoples", "chronology", "conflict", "engine"):
+        c.eq("history.%s as at 0.24.0" % k, h[k], tomllib.loads(HISTORY_FILES_024[k + ".toml"])["history"][k])
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
 
 
 def at_least(v):
@@ -2761,8 +2923,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0") else ("culture", "history", "race")
-    if v == "0.24.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0") else ("culture", "history", "race")
+    if v == "0.25.0":
+        KINDS, SPEC_FILES = KINDS_025, SPEC_FILES_025
+    elif v == "0.24.0":
         KINDS, SPEC_FILES = KINDS_024, SPEC_FILES_024
     elif v == "0.23.0":
         KINDS, SPEC_FILES = KINDS_023, SPEC_FILES_023
@@ -2785,7 +2949,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.24.0")
+use_version("0.25.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -2872,6 +3036,8 @@ def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
     if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2); phrases at 0.24.0 (P5-03 9.5, 13)
         return "0.23.0" if pre_024(path, kind) else "0.24.0"
+    if kind == "history" and not pre_024(path, kind) and not pre_025(path):
+        return "0.25.0"
     if kind in ("race", "history") and not pre_024(path, kind):
         return "0.24.0"
     if kind in ("race", "history") and pre_015(path, kind):
@@ -2903,6 +3069,8 @@ def same_version(kind, a, b):
         a, b = ("0.20.0" if x in ("0.21.0", "0.22.0", "0.23.0") else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.24.0
         a, b = ("0.23.0" if x == "0.24.0" else x for x in (a, b))
+    if kind in ("race", "culture", "beast", "monster"):   # P5-03a changes the history files only
+        a, b = (("0.23.0" if kind == "culture" else "0.24.0") if x == "0.25.0" else x for x in (a, b))
     return a == b
 
 
@@ -3178,6 +3346,14 @@ def fx_raw(v):
 
 def check_spec_invariants(c):
     """At 0.24.0: every check of the 0.23.0 listings on them, then check_spec_024 on the 0.24.0 listings."""
+    if at_least("0.25.0"):
+        use_version("0.24.0")
+        try:
+            check_spec_invariants(c)
+        finally:
+            use_version("0.25.0")
+        check_spec_025(c)
+        return None
     if at_least("0.24.0"):
         use_version("0.23.0")
         try:
@@ -3819,9 +3995,9 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.24.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.25.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P5_03_BASE_COMMIT if DATA_VERSION == "0.23.0" else P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+        base = P5_03A_BASE_COMMIT if DATA_VERSION == "0.24.0" else P5_03_BASE_COMMIT if DATA_VERSION == "0.23.0" else P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
             P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout

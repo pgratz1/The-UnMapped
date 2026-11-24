@@ -257,6 +257,9 @@ inline std::set<std::int64_t> shown_ids(const std::string& report) {
 // block whose fate line says the realm ended, the lines r19 25.5 leaves out at summary (home, the two peak lines,
 // events). An ended block's milestones are compared only where both levels print them (25.5: at most four at
 // summary), so the milestone lines of ended blocks are left out here and checked by check_invariants.
+// P5-03a 9.2 (format v6): at summary the milestones are `  milestones: <n>` and the quiet-stretch lines only, so
+// the milestone lines are left out at both levels and the head line is read as `  milestones:`; v6_milestones
+// checks n and the quiet-stretch lines against full.
 inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     std::vector<std::string> out;
     std::vector<std::string> blk;
@@ -265,8 +268,12 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
         for (const std::string& l : blk) ended = ended || l.rfind("  fate: ended in ", 0) == 0;
         bool in_milestones = false;
         for (const std::string& l : blk) {
-            if (l == "  milestones:") in_milestones = true;
-            if (ended && in_milestones && l.rfind("    ", 0) == 0) continue;
+            if (l == "  milestones:" || l.rfind("  milestones: ", 0) == 0) {
+                in_milestones = true;
+                out.push_back("  milestones:");
+                continue;
+            }
+            if (in_milestones && l.rfind("    ", 0) == 0) continue;
             if (full && ended && (l.rfind("  home: ", 0) == 0 || l.rfind("  peak regions: ", 0) == 0 ||
                                   l.rfind("  peak population: ", 0) == 0 || l.rfind("  events: ", 0) == 0)) {
                 continue;
@@ -288,6 +295,100 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     }
     flush();
     return out;
+}
+
+// P5-03a 9.2: per realm, n of `  milestones: <n>` at summary is the number of full's milestone lines, and the
+// summary's milestone lines are full's of kind quiet_stretch, in order.
+inline void v6_milestones(const std::string& summary, const std::string& full) {
+    auto per_civ = [](const std::string& text) {
+        std::map<std::string, std::pair<std::string, std::vector<std::string>>> out;
+        std::string civ;
+        bool in = false;
+        for (const std::string& l : block(text, "[civilizations]")) {
+            if (!l.empty() && l[0] == 'c') {
+                civ = l.substr(0, l.find(' '));
+                in = false;
+                continue;
+            }
+            if (l.rfind("  milestones:", 0) == 0) {
+                out[civ].first = l;
+                in = true;
+                continue;
+            }
+            if (in && l.rfind("    ", 0) == 0) {
+                out[civ].second.push_back(l);
+            } else {
+                in = false;
+            }
+        }
+        return out;
+    };
+    const auto s = per_civ(summary), f = per_civ(full);
+    CHECK(s.size() == f.size());
+    for (const auto& [civ, sv] : s) {
+        CAPTURE(civ);
+        const auto it = f.find(civ);
+        REQUIRE(it != f.end());
+        CHECK(it->second.first == "  milestones:");
+        CHECK(sv.first == "  milestones: " + std::to_string(it->second.second.size()));
+        std::vector<std::string> quiet;
+        for (const std::string& l : it->second.second) {
+            if (l.find(" quiet_stretch: ") != std::string::npos) quiet.push_back(l);
+        }
+        CHECK(sv.second == quiet);
+    }
+}
+
+// [present] without its ruin lines and `  and <x> more` (P5-03a 9.3 cuts them at summary; v6_ruins checks them).
+inline std::vector<std::string> v6_present(const std::vector<std::string>& ls) {
+    std::vector<std::string> out;
+    for (const std::string& l : ls) {
+        const bool ruin = l.rfind("  s", 0) == 0 && l.find(": ruined ") != std::string::npos &&
+                          l.find(", at ") == std::string::npos;
+        const bool more = l.rfind("  and ", 0) == 0 && l.size() > 5 && l.compare(l.size() - 5, 5, " more") == 0;
+        if (!ruin && !more) out.push_back(l);
+    }
+    return out;
+}
+
+// P5-03a 9.3: at most 15 ruins at summary are all of full's; more than 15: a subsequence of full's of 5 to 15 lines
+// then `  and <x> more` with x the rest. (Which ruins: the H15 case and the reference's text.)
+inline void v6_ruins(const std::string& summary, const std::string& full) {
+    auto ruins = [](const std::string& text) {
+        std::vector<std::string> out;
+        std::vector<std::string> more;
+        bool in = false;
+        for (const std::string& l : block(text, "[present]")) {
+            if (l.rfind("ruins: ", 0) == 0) {
+                in = true;
+                continue;
+            }
+            if (in && l.rfind("  s", 0) == 0 && l.find(": ruined ") != std::string::npos) {
+                out.push_back(l);
+            } else if (in && l.rfind("  and ", 0) == 0) {
+                more.push_back(l);
+            } else {
+                in = false;
+            }
+        }
+        return std::make_pair(out, more);
+    };
+    const auto [rs, ms] = ruins(summary);
+    const auto [rf, mf] = ruins(full);
+    CHECK(mf.empty());
+    if (rf.size() <= 15U) {
+        CHECK(rs == rf);
+        CHECK(ms.empty());
+        return;
+    }
+    CHECK(rs.size() >= 5U);
+    CHECK(rs.size() <= 15U);
+    std::vector<std::string> sub;
+    for (const std::string& l : rf) {
+        if (std::find(rs.begin(), rs.end(), l) != rs.end()) sub.push_back(l);
+    }
+    CHECK(sub == rs);
+    CHECK(ms == std::vector<std::string>{"  and " + std::to_string(rf.size() - rs.size()) + " more"});
 }
 
 // r19 25.2, 25.6: the phase of each event and the ids of the calamity kinds and of flare_up, from the stored rows.
@@ -362,7 +463,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         const std::vector<std::string> lines = lines_of(*text);
         REQUIRE(lines.size() >= 2U);
         // r19 25.1: the header is v2 (tested on the text: the spec names no library constant for it)
-        CHECK(lines[0] == "# worldgen history v5");   // P5-02 12.1
+        CHECK(lines[0] == "# worldgen history v6");   // P5-02 12.1; P5-03 17.1; P5-03a 9.1
         CHECK(lines[1] == (is_full ? "level = full" : "level = summary"));
         std::vector<std::string> got_heads;
         for (const std::string& l : lines) {
@@ -455,6 +556,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         CHECK(subset.size() == 17U);
     }
     CHECK(civ_common(summary, false) == civ_common(full, true));
+    v6_milestones(summary, full);
     std::vector<std::string> present_f;
     for (const std::string& l : block(full, "[present]")) {
         // a [present] region line `  rg<id> <name>: ...` (full only); r21 26.2's `  rg<id>: ...` is at both levels
@@ -465,7 +567,8 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         const bool beasts_line = l.rfind("beasts:", 0) == 0;   // P5-02 12.3: the world's beasts, full only
         if (!region_line && !settlement_line && !beasts_line) present_f.push_back(l);
     }
-    CHECK(present_f == block(summary, "[present]"));
+    CHECK(v6_present(present_f) == v6_present(block(summary, "[present]")));
+    v6_ruins(summary, full);
     // 13 item 6: [history] of the world report is a subset of [stats]
     for (const auto& [k, v] : world_history_section(r)) {
         CAPTURE(k);
@@ -551,7 +654,8 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
             }
         }
         CHECK(k_sum == af);
-        CHECK(war_adv + without == n_adv);   // r19 25.12 item 3
+        CHECK(without == 0);                 // P5-03a 9.2: no `without war:` line at v6
+        CHECK(war_adv <= n_adv);             // r19 25.12 item 3 without m
         CHECK(quiet_milestones == (qs_civs.count(std::stoll(id.substr(1))) != 0U ? 1 : 0));
         CHECK(quiet_noted);
     }

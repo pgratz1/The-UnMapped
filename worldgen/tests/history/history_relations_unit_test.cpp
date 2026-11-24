@@ -139,8 +139,10 @@ TEST_CASE("P5-03 24.3: relations-small: every kind of part A happens; the invari
 }
 
 TEST_CASE("P5-03 6.2.4: meet_hops -1: no pair ever meets, no row; meet_hops 0: presences share a region") {
-    const wd::ContentSet never =
-        p503api::with_history(p503api::relations_small_content(), "relations", {{"meet_hops", p503api::V(-1)}});
+    // (P5-03a 4.2: and meet_sealed_hops -1, or the peoples meet by word)
+    const wd::ContentSet never = p503api::with_history(
+        p503api::relations_small_content(), "relations",
+        {{"meet_hops", p503api::V(-1)}, {"meet_sealed_hops", p503api::V(-1)}});
     const wd::ContentSet same =
         p503api::with_history(p503api::relations_small_content(), "relations", {{"meet_hops", p503api::V(0)}});
     for (const std::uint64_t seed : stress_seeds()) {
@@ -168,8 +170,10 @@ TEST_CASE("P5-03 6.2.4: meet_hops -1: no pair ever meets, no row; meet_hops 0: p
 }
 
 TEST_CASE("P5-03 6.2.3: turns' causes are the pair's contributions (kinds of 6.2.2 naming both races) or its fallback") {
+    // (P5-03a 3.3: and the common enemies' war_declared, monster_raid and settlement_overrun)
     static const std::set<std::string> moving = {"war_won", "peace", "truce", "civ_conquered", "sacked",
-                                                 "settlement_captured", "people_expelled", "refugees_arrived"};
+                                                 "settlement_captured", "people_expelled", "refugees_arrived",
+                                                 "war_declared", "monster_raid", "settlement_overrun"};
     for (const std::uint64_t seed : stress_seeds()) {
         CAPTURE(seed);
         const p503check::World w = p503run::stage_fixture(seed, p503api::relations_small_content());

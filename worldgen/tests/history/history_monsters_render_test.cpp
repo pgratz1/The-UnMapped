@@ -278,7 +278,11 @@ TEST_CASE("P5-02 10.2, 10.3: the sentence of every new kind (names of types 8 an
     REQUIRE_MESSAGE(!err.has_value(), "HistoryView::load refused the scene: " << (err ? err->message : ""));
     auto at = [&](const char* label) { return eng::render(r, s.ev.at(label)); };
     CHECK(at("44") == "Old Grakh, a troll of the hills, made its lair in King's Fold.");
-    CHECK(at("45") == "After the slaughter, the dead of King's Fold rose as the Host of Edric.");
+    // P5-03a 7.2 (0.25.0): kinds 45 and 49 with {monster:its} (its for a kind of grouped 0, their for 1, read from
+    // the stored monster_kind row) and {monster:where} (the host is not named for King's Fold: " in King's Fold")
+    std::map<std::int64_t, std::string> its;
+    for (const auto& k : rows_of(r, "monster_kind")) its[k.at(0).integer] = k.at(4).integer != 0 ? "their" : "its";
+    CHECK(at("45") == "After the slaughter, the Host of Edric rose from " + its.at(5) + " graves in King's Fold.");
     CHECK(at("46") == "The Host of Edric woke again in King's Fold.");
     CHECK(at("47") == "Old Grakh sank into sleep in Grakh's Hollow.");
     CHECK(at("47b") == "Saelith the Black sank into sleep in the Lair of Saelith.");
@@ -287,7 +291,7 @@ TEST_CASE("P5-02 10.2, 10.3: the sentence of every new kind (names of types 8 an
     CHECK(at("48a") == "Old Grakh fell upon Drutnot Hole; no one died.");
     CHECK(at("48b") == "Old Grakh prowled the edges of Drutnot Hole; one died.");
     CHECK(at("48c") == "Old Grakh came down by night on Drutnot Hole; 41 died.");
-    CHECK(at("49") == "The Host of Edric drove the people from Nutskrank and made it its lair; 41 escaped.");
+    CHECK(at("49") == "The Host of Edric drove the people from Nutskrank and made it " + its.at(5) + " lair; 41 escaped.");
     CHECK(at("50") == "The Stinrild League hunted down and slew Saelith the Black, a dragon of the old world, in King's "
                       "Fold.");
     CHECK(at("51") == "The Snat Horde drove Old Grakh back to its lair in King's Fold.");

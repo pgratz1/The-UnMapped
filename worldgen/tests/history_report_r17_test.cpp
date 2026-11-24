@@ -164,11 +164,14 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
               "    Cendrel (c3): 2 wars, won 1, lost 0, drawn 1, open 0, 300-510; now enmity",
               "    Dunmark (c4): 1 war, won 1, lost 0, drawn 0, open 0, 1200-1210; now none",
               "    Skab (c6): 1 war, won 0, lost 0, drawn 0, open 1, 2600-2999; now at war",
-              "    Grork (c5): 1 war, won 0, lost 0, drawn 1, open 0, 2700-2800; now none",
-              "    without war: 2 (enmity 1, none 1)"});
+              "    Grork (c5): 1 war, won 0, lost 0, drawn 1, open 0, 2700-2800; now none"});
+    // (P5-03a 9.2, v6: no `without war:` line for f1 and Mog)
     // milestones: no quiet stretch; four sacks of salience 75 give two (e17, e18: ties broken by id); two
-    // declarations of 70 (e15, e16) of four; then the two endings of 60 and the conquest
-    CHECK(sub_lines(c1, "  milestones:") ==
+    // declarations of 70 (e15, e16) of four; then the two endings of 60 and the conquest. P5-03a 9.2 (v6): the list
+    // at full, its count at summary (no quiet stretch: no line)
+    CHECK(contains_line(c1, "  milestones: 8"));
+    CHECK(sub_lines(c1, "  milestones:").empty());
+    CHECK(sub_lines(civ_block(full("h9-realms"), 1), "  milestones:") ==
           std::vector<std::string>{
               "    0 e2 civ_founded: The Humans founded Alird in Alird Vale.",
               "    300 e15 war_declared: Alird declared war on Brannock over Bran Downs. (Claimed the same year.)",
@@ -203,16 +206,22 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     CHECK(civ_block(s, 4)[3] == "  last capital: none");
     CHECK(civ_block(s, 5)[3] == "  last capital: Grorkden (s9)");
     CHECK(civ_block(full("h9-realms"), 4)[4] == "  last capital: none");
-    // the ended Dunmark at summary: four milestones (founding, ending, then its own deeds by salience)
-    CHECK(sub_lines(civ_block(s, 4), "  milestones:") ==
-          std::vector<std::string>{"    0 e8 civ_founded: The Humans founded Dunmark in Dun Moor.",
-                                   "    0 e9 settlement_founded: Dunmark founded Dunwick in Dun Moor.",
-                                   "    800 e29 settlement_captured: Dunmark took Branford from Cendrel; 0 died.",
-                                   "    1210 e33 civ_conquered: Dunmark fell to Alird."});
-    CHECK(sub_lines(civ_block(s, 8), "  milestones:") ==
+    // the ended Dunmark: its milestones (founding, ending, then its own deeds by salience) at full; P5-03a 9.2 (v6):
+    // at summary the count of the full list ("an ended realm's n counts its full list") and no line
+    const std::vector<std::string> f4 = sub_lines(civ_block(full("h9-realms"), 4), "  milestones:");
+    for (const char* l : {"    0 e8 civ_founded: The Humans founded Dunmark in Dun Moor.",
+                          "    0 e9 settlement_founded: Dunmark founded Dunwick in Dun Moor.",
+                          "    800 e29 settlement_captured: Dunmark took Branford from Cendrel; 0 died.",
+                          "    1210 e33 civ_conquered: Dunmark fell to Alird."}) {
+        CHECK(contains_line(f4, l));
+    }
+    CHECK(contains_line(civ_block(s, 4), "  milestones: " + std::to_string(f4.size())));
+    CHECK(sub_lines(civ_block(s, 4), "  milestones:").empty());
+    CHECK(sub_lines(civ_block(full("h9-realms"), 8), "  milestones:") ==
           std::vector<std::string>{"    1800 e44 civ_seceded: Ruk broke away from Skab with one settlement.",
                                    "    1800 e45 settlement_founded: Ruk founded Rukhold in Ruk Crag.",
                                    "    2500 e51 war_declared: Mog declared war on Ruk over Ruk Crag."});
+    CHECK(contains_line(civ_block(s, 8), "  milestones: 3"));
     // the relation rows are kept at full, the adversary lines not
     const std::vector<std::string> f1 = civ_block(full("h9-realms"), 1);
     CHECK(contains_line(f1, "  relations: 12 (enmity 2, pact 1, peace 1, war 8)"));

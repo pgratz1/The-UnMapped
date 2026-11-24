@@ -267,7 +267,11 @@ inline wd::ContentSet zero_of(const wd::ContentSet& base) {
         base, "relations",
         {{"war_memory", V(0)}, {"conquest_memory", V(0)}, {"sack_memory", V(0)}, {"capture_memory", V(0)},
          {"expel_memory", V(0)}, {"shelter_memory", V(0)}, {"meet_hops", V(-1)}, {"welcome_min", V(2001)},
-         {"subject_years", V(100000)}, {"mixed_min_permille", V(1001)}, {"expel_permille", V(0)}}));
+         {"subject_years", V(100000)}, {"mixed_min_permille", V(1001)}, {"expel_permille", V(0)},
+         // P5-03a 10.1: the new *_memory fields and peace_memory_per_century 0, meet_sealed_hops -1, the
+         // settlers' span 0 (the reference's RELATIONS_ZERO_025)
+         {"foe_war_memory", V(0)}, {"foe_monster_memory", V(0)}, {"peace_memory_per_century", V(0)},
+         {"meet_sealed_hops", V(-1)}, {"conquest_settlers_span_permille", V(0)}}));
 }
 inline const wd::ContentSet& zero_content() {
     static const wd::ContentSet c = zero_of(conflict_test::shipped());
@@ -286,7 +290,12 @@ inline const std::map<std::string, wd::Value>& relations_small_edits() {
         {"war_memory", V(400)},      {"conquest_memory", V(600)},  {"sack_memory", V(300)},
         {"capture_memory", V(200)},  {"expel_memory", V(300)},     {"shelter_memory", V(300)},
         {"expel_permille", V(1000)}, {"welcome_min", V(-2000)},    {"conquest_settlers_permille", V(600)},
-        {"subject_years", V(0)}};
+        {"subject_years", V(0)},
+        // P5-03a 10.1 (the reference's RELATIONS_SMALL_025): meetings by word within 3 borders after 0 years, the
+        // new *_memory fields large as the others, no expulsion gap; the settlers' span 400 (600 + 400 = 1000 passes
+        // relations_settlers; reading X4)
+        {"meet_sealed_hops", V(3)},  {"meet_sealed_years", V(0)},  {"foe_war_memory", V(300)},
+        {"foe_monster_memory", V(300)}, {"expel_gap_years", V(0)}, {"conquest_settlers_span_permille", V(400)}};
     return m;
 }
 inline const wd::ContentSet& relations_small_content() {

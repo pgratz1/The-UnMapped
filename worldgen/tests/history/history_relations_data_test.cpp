@@ -19,13 +19,16 @@
 
 #include "../p3_01_history_support.hpp"
 #include "p5_03_relations_data.hpp"
+#include "p5_03a_relations_data.hpp"
 
 namespace {
 
 namespace wd = worldgen::data;
 using history_data::Files;
 using namespace history_test;
-using p503data::files_024;
+// P5-03a (0.25.0): the loader requires the eleven new history.relations fields and undead_dead_permille, so the
+// P5-03 cases run on the 0.25.0 listing (p5_03a_relations_data.hpp).
+Files files_024() { return p503a::files_025(); }
 
 Files with_edit(const std::string& path, std::string_view from, std::string_view to) {
     Files f = files_024();
@@ -189,11 +192,11 @@ TEST_CASE("P5-03 4.2: history.relations fields in order with the shipped values"
     const Load l = load_checked(files_024());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& r = definition(*l.content, "history", "relations").record;
-    REQUIRE(r.size() == p503data::relations_fields().size());
+    REQUIRE(r.size() == p503a::relations_fields().size());
     for (std::size_t i = 0; i < r.size(); ++i) {
         CAPTURE(i);
-        CHECK(r.name_at(i) == p503data::relations_fields()[i].name);
-        CHECK(r.get_int(p503data::relations_fields()[i].name) == p503data::relations_fields()[i].shipped);
+        CHECK(r.name_at(i) == p503a::relations_fields()[i].name);
+        CHECK(r.get_int(p503a::relations_fields()[i].name) == p503a::relations_fields()[i].shipped);
     }
     // a missing file: the fixed id is required
     Files f = files_024();
@@ -202,9 +205,11 @@ TEST_CASE("P5-03 4.2: history.relations fields in order with the shipped values"
 }
 
 TEST_CASE("P5-03 4.2: every history.relations field required and one step outside its range") {
-    // hatred_max, friend_min and band_margin are bound by relations_bands at their extremes
-    field_bounds("history/relations.toml", "history.relations", p503data::relations_fields(),
-                 {"hatred_max", "friend_min", "band_margin"});
+    // hatred_max, friend_min and band_margin are bound by relations_bands at their extremes; P5-03a 10.1: memory_max
+    // and peace_memory_max by relations_peace_cap, the two settlers' fields by relations_settlers
+    field_bounds("history/relations.toml", "history.relations", p503a::relations_fields(),
+                 {"hatred_max", "friend_min", "band_margin", "memory_max", "peace_memory_max",
+                  "conquest_settlers_permille", "conquest_settlers_span_permille"});
 }
 
 TEST_CASE("P5-03 4.2 relations_bands: hatred_max + band_margin < friend_min - band_margin") {
@@ -228,7 +233,7 @@ TEST_CASE("P5-03 9.4: the new history.monsters fields after prey_might_max_permi
     for (std::size_t i = 0; i < r.size(); ++i) {
         if (r.name_at(i) == "prey_might_max_permille") at = i;
     }
-    REQUIRE(at + p503data::monsters_fields_024().size() + 1U == r.size());
+    REQUIRE(at + p503data::monsters_fields_024().size() + p503a::new_monsters_fields().size() + 1U == r.size());
     for (std::size_t i = 0; i < p503data::monsters_fields_024().size(); ++i) {
         CHECK(r.name_at(at + 1 + i) == p503data::monsters_fields_024()[i].name);
         CHECK(r.get_int(p503data::monsters_fields_024()[i].name) == p503data::monsters_fields_024()[i].shipped);
@@ -364,7 +369,7 @@ TEST_CASE("P5-03 4, 9, 11, 12: the shipped game/data and both fixture roots load
         REQUIRE_MESSAGE(l.ok(), dump(l));
         CHECK(worldgen::history::check_history_data(*l.content).empty());
         const wd::Record& r = definition(*l.content, "history", "relations").record;
-        CHECK(r.size() == p503data::relations_fields().size());
+        CHECK(r.size() == p503a::relations_fields().size());
         CHECK(definition(*l.content, "history", "monsters").record.find("overrun_people_ref") != nullptr);
         CHECK(definition(*l.content, "history", "peoples").record.find("ghost_fade_years") != nullptr);
         CHECK(definition(*l.content, "race", "elf").record.find("stances") != nullptr);

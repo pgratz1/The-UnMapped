@@ -401,10 +401,24 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
             if (a1 != b1) out.push_back("4: refuge s" + n(s) + "'s first shares are not its origin's");
         } else {
             const std::int64_t r0 = x.civ_race(at(S, 5));
-            if (!(first.size() == 1U && first.count(r0) == 1U && first.at(r0).first == 1000 &&
-                  first.at(r0).second == p503api::RULING)) {
-                out.push_back("4: colony s" + n(s) + "'s first rows are not its founder's race at 1000");
+            bool ok = first.size() == 1U && first.count(r0) == 1U && first.at(r0).first == 1000 &&
+                      first.at(r0).second == p503api::RULING;
+            // P5-03a 12 item 1 (validation finding 1): a colony founded in the year its region changes hands has first
+            // rows already under the new rulers: 6.3.3 with 5.1's settlers applied to {founder's race: 1000}
+            std::int64_t owner_y0 = at(S, 5);
+            for (const Row& cr : t.settlement_census) {
+                if (at(cr, 0) == s && at(cr, 1) == y0) owner_y0 = at(cr, 2);
             }
+            const std::int64_t q = x.civ_race(owner_y0);
+            if (!ok && owner_y0 != at(S, 5) && q != 0 && q != r0 && first.size() == 2U && first.count(q) == 1U &&
+                first.count(r0) == 1U) {
+                const std::int64_t least = rel("conquest_settlers_permille");
+                const std::int64_t span = rel("conquest_settlers_span_permille");
+                const std::int64_t sq = first.at(q).first;
+                ok = first.at(q).second == p503api::RULING && first.at(r0).second == p503api::SUBJECT &&
+                     first.at(r0).first == 1000 - sq && sq >= least && sq <= least + span;
+            }
+            if (!ok) out.push_back("4: colony s" + n(s) + "'s first rows are not its founder's race at 1000");
         }
     }
     for (const auto& [s, S] : x.stl) {   // every settlement has rows (6.3.1)
@@ -438,10 +452,24 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         static const std::set<std::string> displacing = {"settlement_abandoned", "settlement_abandoned_to", "sacked",
                                                          "settlement_overrun", "settlement_captured",
                                                          "people_expelled"};
-        if (cs.size() != 1U || displacing.count(x.kind_of(cs[0])) == 0U) {
-            out.push_back("6.4.3: e" + n(e) + " cause is not the displacing event");
-        } else if (at(*x.ev.at(cs[0]), 6) != from) {
-            out.push_back("6.4.3: e" + n(e) + " cause is not at its origin");
+        // P5-03a 7.3: the record's cause (the displacing event at the origin) and, when it is an abandonment (kind
+        // 16 or 31), that abandonment's own causes too, ascending, without repeats
+        std::vector<std::int64_t> rec;
+        for (const std::int64_t c0 : cs) {
+            if (displacing.count(x.kind_of(c0)) != 0U && at(*x.ev.at(c0), 6) == from) rec.push_back(c0);
+        }
+        if (rec.empty()) {
+            out.push_back("6.4.3: e" + n(e) + " cause is not the displacing event at its origin");
+        } else {
+            const std::int64_t r0 = rec.back();   // an abandonment's own cause may be a sack of the same place
+            std::set<std::int64_t> want{r0};
+            const std::string k0 = x.kind_of(r0);
+            if (k0 == "settlement_abandoned" || k0 == "settlement_abandoned_to") {
+                for (const std::int64_t c1 : x.cause_list(r0)) want.insert(c1);
+            }
+            if (std::vector<std::int64_t>(want.begin(), want.end()) != cs) {
+                out.push_back("7.3: e" + n(e) + " causes are not the record's cause and its abandonment's causes");
+            }
         }
         // at war at the event (ruined origins only: their owner is fixed at the ruin)
         const Row& O = *x.stl.at(from);

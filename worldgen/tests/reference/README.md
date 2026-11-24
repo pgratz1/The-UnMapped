@@ -1732,6 +1732,42 @@ geo-seed-0-512 (two at 0.23.0); geo-seed-42-512's faded settlement 4 for the end
 the undead in the world cases (no host rises on monsters-small); standing_changed on relations-small-7; a kind 16
 abandonment on stress-13 with abandon_reach_hops 0.
 
+## Generator 0.25.0 (P5-03a: relations follow-ups)
+
+Written from `docs/specs/p5-03a-relations-followups.md` r1 (approved with every recommendation of section 17)
+without the engineer's branch. Every reference serves 0.25.0 by default and keeps `--version 0.24.0`, which
+reproduces the committed 0.24.0 fixture lines of `p5-03-relations.txt` byte for byte (checked after the change) and
+the 0.24.0 `p3-01-data.txt` of `fdf54cf` (`P5_03A_BASE_COMMIT`). The P5-03a rules are behind the conflict flag
+`p503a` (on from 0.25.0), the data behind `p3_data_reference.py`'s version, the renderer behind `RENDER_R25`, the
+report behind `V6`. Phase 1 records no golden.
+
+- `p3_data_reference.py`: `RELATIONS_RANGES_025` (shelter 90, settlers 50, eleven new fields), `RELATIONS_ZERO_025`,
+  `MONSTERS_TUNING_025` (undead_min_dead 1000, undead_dead_permille 25), `REPORT_TEMPLATES_025` (10.3; reading D3: the
+  added cause words appended after each list's last entry), `relations_check_messages_025` (`relations_peace_cap`,
+  `relations_settlers`), `pre_025`, `check_spec_025`.
+- `p3_engine_reference.py`: `VALUES_025`, `KINDS_025`, `COMPILED_025` (10.4), `RENDER_R25`: the forms `its`, `aside`,
+  `where` (7.1) with their `template_problem` message; the view's `monster_kind` and `region_at_year`.
+- `p5_03_relations_reference.py`: `credit` and the contributions by sign (3.5), `peace` (3.2), `war_foes` and
+  `monster_foe` (3.3), `meetings_025` with the border graph `bhops` (4.2), the settlers' draw (5.1), the mixed and
+  expulsion values and the gap (5.2, 5.3), the arrival causes (7.3), A1 (`keep_ruling`); the formulas `peace_gain`,
+  `settlers_permille`, `keep_ruling`, `undead_threshold_025`, `summary_ruins`; `check_units_025` and
+  `check_stub_units_025` (14 items 2 to 9 on stub worlds); invariants 12 (a) to (c) (`violations_025`,
+  `log_violations`) and invariant 4 of 12 item 1; the reader message of 12 item 2; stats `peoples_met_by_word` and
+  `dispositions_warmed`; `RELATIONS_SMALL_025` (reading X4); the golden case `p5-monsters-high-1024` (12 item 6).
+  Readings A1r to A8r, X4 and C1 in `readings`.
+- `p5_02_monsters_reference.py`: the undead threshold by world population (6, flag `p503a`); check-world invariants
+  5 (the toll above kill_max, bounded by the census) and 11 (the waking event and at most one earlier raid on the
+  place within raid_chain_years), 12 item 4.
+- `p5_12_renaming_reference.py`: check-world's invariant 2 reads an earlier row whose rule's conditions fail at E by
+  the cause kinds of every rule (`min_weight`, 12 item 3).
+- `p3_report_reference.py`: format v6 (`V6`): milestones as a count with the quiet stretch (9.2), no `without war`
+  line, the summary's ruins (9.3), `[peoples]` (9.4), the mixed candidates (9.5, `SUMMARY_MIXED_MAX` 3), the two
+  stats (9.6), fixture H15 (`h15-v6`, written by `p5_03a_h15_fixture.py`) with `check_fixture_facts_v6`.
+
+Phase 2 (integration) still has to: regenerate the inputs at 0.25.0 and record every golden of 14 from these
+references; bring `p4_timeline_reference.py`, `p4_markers_reference.py` and `p4_browser_reference.py` to 0.25.0
+(they still name 0.24.0).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

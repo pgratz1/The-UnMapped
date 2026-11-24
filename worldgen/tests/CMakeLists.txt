@@ -446,6 +446,11 @@ target_sources(worldgen-tests PRIVATE
     history/history_relations_golden_test.cpp
     history/history_monsters_p503_test.cpp
     history/history_peoples_p503_test.cpp
+    # P5-03a (generator 0.25.0, report v6): data, formulas, rows and seams (shard relations); the monster forms and
+    # templates of 7 (shard monsters). The guessed names are in history/p5_03a_relations_api.hpp, switched on by
+    # UNMAPPED_P503A_API at integration.
+    history/history_relations_p503a_test.cpp
+    history/history_monsters_p503a_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P5_03_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-03-relations.txt"

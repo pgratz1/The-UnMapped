@@ -130,7 +130,7 @@ FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
 FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")   # 0.21.0, 0.22.0: no peoples rule
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -168,7 +168,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.24.0")
+    use_version("0.16.0" if on else "0.25.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -343,6 +343,8 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 62 and pe.RENDER_R25:   # P5-03a 10.4: the five value rows
+        return pe.COMPILED_025
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
             42: COMPILED_021, 43: COMPILED_022, 55: COMPILED_023, 62: COMPILED_024}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
