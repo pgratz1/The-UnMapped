@@ -45,6 +45,7 @@ HATRED, WARINESS, FRIENDSHIP = 0, 1, 2
 SUBJECT, TOLERATED, ACCEPTED, RULING = 0, 1, 2, 3
 STANDING_WORDS = ("subject", "tolerated", "accepted", "ruling")
 BAND_WORDS = ("hatred", "wariness", "friendship")
+MIXED_SHARE_MIN = 100   # lead ruling 3: the report's constant (17.2, 17.4)
 P503_KINDS = ("settlement_fled", "peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed",
               "standing_changed", "people_expelled")
 
@@ -54,7 +55,8 @@ R1 (6.4.2, 6.3.2) the event a move's new entries date from (`since_event`, "the 
    its event (the abandonment, sack, overrun, capture, cession or refugees_settled) right before it calls.
 R2 (6.4.1) a `from` settlement the subsystem has not yet seen (created earlier in the step) has the entries of
    6.3.1 (its founder's race at 1000) at the call.
-R3 (6.7) settlement_race rows of a quiet step are dated Y + L - 1 (the end of the step), those of a tick step Y.
+R3 (6.7) settlement_race rows of a step are dated at its year Y, a quiet step's at its start like the census (lead
+   ruling 6 at integration; phase 1 read Y + L - 1).
 R4 (6.7) the rows of "the previous phase's end" are dated Y - 1 (phases are contiguous); none at the first T1.
 R5 (6.3.4) the first drift's Δ is Y - 0 (the history's first year is 0).
 R6 (6.2.4) a race is awakened from the year of its `awakening` event; the meeting's presence is conflict's
@@ -73,8 +75,8 @@ R12 (6.6) a settlement ruined in the step keeps its entries but writes no row (6
    into it (no row).
 R13 (6.2.3) a pair's contributions are cleared at a turn and at the meeting; the causes of a turn are the
    contributions ascending (at most 8), else the last turn event, else the met event.
-R14 (8.2) a turn by decay alone and a settlement_mixed caused by an arrival or an abandonment render with a
-   lower-case "the" at the start (the template is rendered as written; spec defect D1).
+R14 (8.2) a turn by decay alone and a settlement_mixed caused by an arrival or an abandonment start with "the":
+   lead ruling 1 (integration) capitalises a rendered sentence whose first byte is a to z (spec defect D1).
 X2 (24.3) relations-small adds conquest_settlers_permille 600 and subject_years 0
    to the spec's list (large *_memory, band_margin 0, expel_permille 1000, welcome_min -2000, abandon_reach_hops
    0), so that standing changes and expulsions happen on the small stress maps; the memory bounds are +-2000.
@@ -82,8 +84,8 @@ X3 (24.3) standing_changed happens on none of the ten relations-small maps (a ha
    phase start can change its standing, and conquests are between hated peoples); the stub-world units and H14
    cover it.
 R17 (6.3.3) a standing settlement whose owner becomes 0 (no realm) changes o_s only.
-R16 (17.2, 17.4) "mixed at E" needs mixed_min_permille, which the world does not store (spec defect D3): the
-   reference reads it from the data root (the shipped 100 for world cases).
+R16 (17.2, 17.4) "mixed at E" and settlements_mixed use the fixed constant MIXED_SHARE_MIN = 100 (lead ruling 3 at
+   integration; phase 1 read the data's mixed_min_permille, spec defect D3).
 R15 (12.1) the epithets excluded are those of every earlier monster of the world (any kind), read from each
    name's matched form; a host of a dead kind has no epithet.
 """
@@ -715,7 +717,8 @@ class Relations:
 
     # --- rows (6.7)
     def row_year(self, quiet):
-        return self.w.year + self.w.years - 1 if quiet else self.w.year
+        # lead ruling 6 (integration): a quiet step's rows at its start Y, like the census (R3 was Y + L - 1)
+        return self.w.year
 
     def end_rows(self, quiet):
         w = self.w
@@ -1428,13 +1431,13 @@ def golden_text(inputs, fixtures_only=False):
             res = fixture_case(seed, dat)
             o.append("case %s %d 0 %d %s --civs-per-race %s --event-intensity %s %s" % (name, seed, span, races, civs,
                                                                                        intensity, dname))
-            o += case_lines(name, res, span, dat.relations["mixed_min_permille"])
+            o += case_lines(name, res, span, MIXED_SHARE_MIN)
     if not fixtures_only:
         for name, seed, size, span, races, detail, civs, intensity in pcr.world_cases():
             res = pcr.world_case(name, seed, size, span, races, detail, inputs, pcr.data(), civs, intensity)
             o.append("case %s %d %d %d %s --history-detail %s --civs-per-race %s --event-intensity %s" % (
                 name, seed, size, span, races, detail, civs, intensity))
-            o += case_lines(name, res, span, pcr.data().relations["mixed_min_permille"])
+            o += case_lines(name, res, span, MIXED_SHARE_MIN)
     return "\n".join(o) + "\n"
 
 

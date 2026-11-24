@@ -104,8 +104,8 @@ SUMMARY_MONSTER_LINES = 2   # P5-02 12.4: a constant of P3-07 section 8
 # P5-03 10.1, 10.2: constants of P3-07 section 8
 SUMMARY_MONSTER_STORIES, SUMMARY_MONSTER_HARM_MIN, SUMMARY_MONSTER_TAKEN_HARM = 3, 200, 500
 SUMMARY_MONSTER_ENDED_LINES = 2
-# P5-03 17.2 "mixed at E" (6.3.6's mixed_min_permille, not stored in a world: reading R16 of
-# p5_03_relations_reference, the shipped value)
+# P5-03 17.2 "mixed at E": lead ruling 3 (integration), the fixed constant MIXED_SHARE_MIN = 100 of the
+# report, not the data field mixed_min_permille
 MIXED_MIN_PERMILLE = 100
 # P5-02 r1 12.9: the summary line limit (constants of P3-07 section 8). SUMMARY_LINES_CAP is the lead's ruling of
 # 2026-11-23 (L = min(1390, ...)), as is the rule that at level summary with C > SUMMARY_LINES_CIVS the [monsters]
@@ -1380,8 +1380,10 @@ def peoples_lines(w, level):
     def v1(e):
         v = [x[2] for x in w.vals.get(e[0], []) if x[1] == 1]
         return v[0] if v else 0
-    o.append("mixed: %d settlements at E; refugees: %d arrivals, %d people; expelled: %d times, %d people" % (
-        len(mixed), len(arr), sum(v1(e) for e in arr), len(exp), sum(v1(e) for e in exp)))
+    # lead ruling 3 (integration): "1 settlement" singular
+    o.append("mixed: %d %s at E; refugees: %d arrivals, %d people; expelled: %d times, %d people" % (
+        len(mixed), "settlement" if len(mixed) == 1 else "settlements", len(arr), sum(v1(e) for e in arr), len(exp),
+        sum(v1(e) for e in exp)))
     if level == "full":
         words = ("subject", "tolerated", "accepted", "ruling")
         stl = {x[0]: x for x in t["settlement"]}

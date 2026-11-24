@@ -871,7 +871,11 @@ def render(view, eid, links=None):
                 nm = view["name"](t, x, form)
                 link(nm, t, x)
                 out.append(nm)
-    return "".join(out)
+    text = "".join(out)
+    if RENDER_R24 and text and "a" <= text[0] <= "z":
+        # lead ruling 1 (P5-03 integration): a rendered sentence whose first byte is a to z is capitalised
+        text = text[0].upper() + text[1:]
+    return text
 
 
 # ---------------------------------------------------------------------------

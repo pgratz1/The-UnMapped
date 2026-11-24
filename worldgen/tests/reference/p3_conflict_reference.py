@@ -2954,6 +2954,8 @@ def check_peoples_invariants(c, res, inp, w, label):
     red = ("famine", "plague", "plague_spread", "succession_crisis", "battle", "battle_at_pass", "tribute")
     if FLAGS["monsters"]:   # P5-02 6.4.1, 6.2.3: a raid and the beasts' boldness are reductions (note_reduction)
         red += ("monster_raid", "beasts_bold")
+    if FLAGS["relations"]:   # P5-03 9.4: an abandonment for fear cites the flight; 6.5: an expulsion is a reduction
+        red += ("settlement_fled", "people_expelled")
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
@@ -2990,7 +2992,9 @@ def check_peoples_invariants(c, res, inp, w, label):
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
             # P5-12 6: the renaming subsystem runs in Q4 as well, charged to its namer (W9)
             quiet_ok = e[3] in QUIET_KINDS or (FLAGS["rename"] and key == "region_renamed") or (
-                FLAGS["monsters"] and key in ("monster_appeared", "monster_died", "outpost_abandoned"))   # P5-02 6.1 Q4
+                FLAGS["monsters"] and key in ("monster_appeared", "monster_died", "outpost_abandoned")) or (   # P5-02 6.1 Q4
+                FLAGS["relations"] and key in ("peoples_met", "disposition_turned", "refugees_arrived",
+                                               "settlement_mixed", "standing_changed"))   # P5-03 6.1 Q1, Q4
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
@@ -3031,9 +3035,17 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
         if r[4] == "enmity":
             c.true(lab + " one enmity per pair", (r[1], r[3]) not in seen_enmity)
             seen_enmity.add((r[1], r[3]))
-            c.true(lab + " since_event", sk in ("civ_founded", "civ_seceded"))
-            c.true(lab + " since = younger's founded_year", r[5] == civs[max(r[1], r[3])][6] and
-                   r[7] == civs[max(r[1], r[3])][7])
+            if FLAGS["relations"]:
+                # P5-03 7.1 (4.3): since_event = the larger of the younger's founding event and the hatred turn
+                yng = civs[max(r[1], r[3])]
+                c.true(lab + " since_event", sk in ("civ_founded", "civ_seceded", "disposition_turned") and
+                       r[7] >= yng[7])
+                # the row opens when the pair first qualifies (the year of the step), at or after since_event's
+                c.true(lab + " since at or after the year of since_event", r[5] >= ev[r[7]][1])
+            else:
+                c.true(lab + " since_event", sk in ("civ_founded", "civ_seceded"))
+                c.true(lab + " since = younger's founded_year", r[5] == civs[max(r[1], r[3])][6] and
+                       r[7] == civs[max(r[1], r[3])][7])
             if uk is not None:
                 c.true(lab + " until_event", uk in ("civ_ended", "civ_conquered"))
         elif r[4] == "war":
