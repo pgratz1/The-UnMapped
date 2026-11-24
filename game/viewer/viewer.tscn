@@ -1,5 +1,12 @@
 [gd_scene format=3]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ticker"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.6)
+
 [node name="Viewer" type="ViewerScreen"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -117,8 +124,72 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 0
 
+[node name="Ticker" type="PanelContainer" parent="Split/MapArea/MapRow/MapView"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ticker")
+
+[node name="TickerLines" type="VBoxContainer" parent="Split/MapArea/MapRow/MapView/Ticker"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
 [node name="YearBar" type="VBoxContainer" parent="Split/MapArea"]
 layout_mode = 2
+
+[node name="PlayRow" type="HBoxContainer" parent="Split/MapArea/YearBar"]
+layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="Split/MapArea/YearBar/PlayRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Play or pause (Space); stop: Shift+Space"
+text = "Play"
+
+[node name="YearTrack" type="VBoxContainer" parent="Split/MapArea/YearBar/PlayRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="YearSlider" type="HSlider" parent="Split/MapArea/YearBar/PlayRow/YearTrack"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+step = 1.0
+rounded = true
+
+[node name="YearMarks" type="YearMarks" parent="Split/MapArea/YearBar/PlayRow/YearTrack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="PlaySpeed" type="OptionButton" parent="Split/MapArea/YearBar/PlayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Speed in years per second (- and =)"
+
+[node name="PlaySkipQuiet" type="CheckBox" parent="Split/MapArea/YearBar/PlayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Pass years with nothing listed at ten times the speed (Q)"
+text = "Skip quiet"
 
 [node name="YearRow" type="HBoxContainer" parent="Split/MapArea/YearBar"]
 layout_mode = 2
@@ -151,22 +222,10 @@ focus_mode = 0
 tooltip_text = "Previous year in which a region changes hands ([)"
 text = "< change"
 
-[node name="YearTrack" type="VBoxContainer" parent="Split/MapArea/YearBar/YearRow"]
+[node name="YearSpacer" type="Control" parent="Split/MapArea/YearBar/YearRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
-
-[node name="YearSlider" type="HSlider" parent="Split/MapArea/YearBar/YearRow/YearTrack"]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-step = 1.0
-rounded = true
-
-[node name="YearMarks" type="YearMarks" parent="Split/MapArea/YearBar/YearRow/YearTrack"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
+mouse_filter = 2
 
 [node name="YearNextChange" type="Button" parent="Split/MapArea/YearBar/YearRow"]
 unique_name_in_owner = true

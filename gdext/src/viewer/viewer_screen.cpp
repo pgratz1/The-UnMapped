@@ -220,12 +220,18 @@ void ViewerScreen::_ready() {
     follow_first_ = require<godot::Button>("FollowFirst");
     event_list_ = require<godot::ItemList>("EventList");
     browser_detail_ = require<godot::RichTextLabel>("BrowserDetail");
+    play_button_ = require<godot::Button>("PlayButton");
+    play_speed_ = require<godot::OptionButton>("PlaySpeed");
+    play_skip_quiet_ = require<godot::CheckBox>("PlaySkipQuiet");
+    ticker_ = require<godot::Control>("Ticker");
+    ticker_lines_ = require<godot::Control>("TickerLines");
     wired_ = right_pane_ != nullptr && browser_back_ != nullptr && browser_forward_ != nullptr &&
              browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr &&
              search_results_ != nullptr && event_scope_ != nullptr && event_group_ != nullptr &&
              event_all_ != nullptr && event_from_ != nullptr && event_to_ != nullptr &&
              event_this_year_ != nullptr && follow_toggle_ != nullptr && follow_first_ != nullptr &&
-             event_list_ != nullptr && browser_detail_ != nullptr &&
+             event_list_ != nullptr && browser_detail_ != nullptr && play_button_ != nullptr &&
+             play_speed_ != nullptr && play_skip_quiet_ != nullptr && ticker_ != nullptr && ticker_lines_ != nullptr &&
              markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
              mark_passes_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
              meta_tree_ != nullptr && map_view_ != nullptr && status_label_ != nullptr && cell_label_ != nullptr &&
@@ -272,6 +278,7 @@ void ViewerScreen::_ready() {
         year_forward25_->connect("pressed", callable_mp(this, &ViewerScreen::on_step_year).bind(int64_t{25}));
         update_year_bar();
         wire_browser();
+        wire_playback();
         set_process_unhandled_key_input(true);
         set_process_input(true);
     }
@@ -339,6 +346,16 @@ void ViewerScreen::_ready() {
         } else if (arg == "--size" && i + 2 < args.size()) {
             start_width_ = args[++i].to_int();
             start_height_ = args[++i].to_int();
+        } else if (arg == "--play") {
+            // P4-06 9.1: parsed by parse_play_options; its values skipped here.
+            for (int n = 0; n < 2 && i + 1 < args.size() && !godot::String(args[i + 1]).begins_with("--"); ++n) {
+                ++i;
+            }
+        } else if ((arg == "--speed" || arg == "--skip-quiet") && i + 1 < args.size()) {
+            ++i;
+        } else if (arg == "--quit-at-end" || arg == "--play-log" || arg == "--no-pane" || arg == "--speed" ||
+                   arg == "--skip-quiet") {
+            // parse_play_options
         } else if (!arg.begins_with("--") && world_path.is_empty()) {
             world_path = arg;
         } else {
@@ -346,6 +363,11 @@ void ViewerScreen::_ready() {
         }
     }
 
+    if (bench_ && args.has("--play")) {
+        refuse_play("--play cannot be combined with --screenshot or --bench");
+        get_tree()->quit(1);
+        return;
+    }
     if (bench_) {
         // The bench opens the world itself, timed.
         bench_world_ = world_path;
@@ -366,7 +388,11 @@ void ViewerScreen::_ready() {
                 godot::UtilityFunctions::push_warning("Viewer: no layer or composite called ", start_view);
             }
         }
-        if (opened && has_start_year) {
+        // P4-06 9.1, 9.2: the play options (--check ignores them).
+        if (check_reference_dir_.is_empty()) {
+            apply_play_options(args);
+        }
+        if (opened && has_start_year && !play_pending_) {
             apply_start_year(start_year);
         }
         if (opened && start_faded_) {
@@ -375,11 +401,20 @@ void ViewerScreen::_ready() {
         if (opened) {
             apply_browser_options();
         }
+        if (play_pending_) {
+            prepare_play();  // the span's start, once --select and the filters are applied
+        }
+        if (play_pending_ && has_start_year) {
+            show_status("--year ignored: --play sets the start year", false);
+        }
         if (start_hover_x_ >= 0 && start_hover_y_ >= 0) {
             hover_cell(start_hover_x_, start_hover_y_);
         }
     } else if (wired_) {
         show_status("Open a world file (world.db) to view its layers.", false);
+        if (check_reference_dir_.is_empty()) {
+            apply_play_options(args);  // --play without a world is refused
+        }
     }
 
     if (!check_reference_dir_.is_empty()) {
@@ -400,6 +435,11 @@ void ViewerScreen::_ready() {
     } else if (!screenshot_path_.is_empty()) {
         get_tree()->create_timer(0.6)->connect("timeout", callable_mp(this, &ViewerScreen::apply_view_options));
         get_tree()->create_timer(1.2)->connect("timeout", callable_mp(this, &ViewerScreen::take_screenshot));
+    } else if (play_pending_) {
+        // 9.1: the view options once laid out, then play 1.0 s (process
+        // time) after the start.
+        get_tree()->create_timer(0.5)->connect("timeout", callable_mp(this, &ViewerScreen::apply_view_options));
+        get_tree()->create_timer(1.0)->connect("timeout", callable_mp(this, &ViewerScreen::start_play));
     }
 }
 
@@ -671,6 +711,8 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
     hovered_marker_ = -1;
     update_marker_controls();
     browser_world_opened();
+    on_playback_changed();
+    on_ticker_changed();
     if (count == 0) {
         map_view_->clear_image();
         show_status("This world has no layers.", false);
@@ -717,6 +759,8 @@ void ViewerScreen::on_world_closed() {
     update_year_bar();
     update_marker_controls();
     browser_world_closed();
+    on_playback_changed();
+    on_ticker_changed();
 }
 
 void ViewerScreen::on_view_selected(int64_t index) {
@@ -966,7 +1010,34 @@ void ViewerScreen::_unhandled_key_input(const godot::Ref<godot::InputEvent>& eve
     const char32_t unicode = key->get_unicode();
     const bool shift = key->is_shift_pressed();
     bool handled = true;
-    if (code == godot::KEY_LEFT) {
+    // P4-06 8.2: playback.
+    const bool echo = key->is_echo();
+    if (code == godot::KEY_SPACE) {
+        if (!echo) {
+            if (shift) {
+                model_->stop_playback();
+            } else {
+                model_->toggle_playback();
+            }
+        }
+    } else if (code == godot::KEY_MINUS || code == godot::KEY_KP_SUBTRACT) {
+        if (!echo) {
+            model_->step_playback_speed(-1);
+        }
+    } else if (code == godot::KEY_EQUAL || code == godot::KEY_KP_ADD || unicode == U'+') {
+        if (!echo) {
+            model_->step_playback_speed(1);
+        }
+    } else if (code == godot::KEY_Q && !shift) {
+        if (!echo) {
+            model_->set_playback_skip_quiet(!bool(model_->get_playback()["skip_quiet"]));
+        }
+    } else if (code == godot::KEY_T && !shift) {
+        if (!echo) {
+            ticker_shown_ = !ticker_shown_;
+            on_ticker_changed();
+        }
+    } else if (code == godot::KEY_LEFT) {
         model_->step_year(shift ? -25 : -1);
     } else if (code == godot::KEY_RIGHT) {
         model_->step_year(shift ? 25 : 1);
@@ -1263,7 +1334,7 @@ void ViewerScreen::finish_bench() {
     } else {
         godot::UtilityFunctions::print("UNMAPPED-BENCH: marker draw: the map view was not drawn (headless)");
     }
-    get_tree()->quit(0);
+    bench_playback();  // P4-06 10; quits
 }
 
 void ViewerScreen::_bind_methods() {

@@ -83,6 +83,8 @@ void ViewerModel::reset_views() {
     markers_array_ = godot::Array();
     browser_.reset();
     browser_timings_ = {};
+    playback_.reset();  // P4-06 4.4: a world closed or opened stops playback
+    playback_timings_ = {};
     mask_.clear();
     mask_width_ = 0;
     mask_height_ = 0;
@@ -599,6 +601,10 @@ bool ViewerModel::set_year(int64_t year) {
     const int64_t end = now_nsec();
     year_steps_.year_signal = end - signal_start;
     year_steps_.total = end - start;
+    // P4-06 5.3: a change not made by playback pauses an open session.
+    if (!playback_year_ && playback_.active()) {
+        playback_outside_change();
+    }
     return true;
 }
 
@@ -1189,6 +1195,7 @@ void ViewerModel::_bind_methods() {
     ADD_SIGNAL(MethodInfo("view_image_changed", PropertyInfo(Variant::INT, "index")));
     ADD_SIGNAL(MethodInfo("markers_changed"));
     bind_browser_methods();
+    bind_playback_methods();
 }
 
 }  // namespace unmapped

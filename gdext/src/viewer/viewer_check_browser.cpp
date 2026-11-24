@@ -1,4 +1,5 @@
 #include "viewer/viewer_check_browser.hpp"
+#include "viewer/viewer_check_reference.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -45,6 +46,8 @@
 
 namespace unmapped {
 
+using namespace check_ref;
+
 namespace {
 
 godot::String to_godot(const std::string& text) {
@@ -58,128 +61,6 @@ std::string to_utf8(const godot::String& text) {
 
 godot::String num(int64_t n) {
     return godot::String::num_int64(n);
-}
-
-// --- The references, as the check reads them (8.1) ----------------------------
-
-struct ChronicleLine {
-    int64_t id = 0, start = 0, end = 0, salience = 0, region = 0, settlement = 0;
-    std::string kind, text;          // text: between "<key>/<salience>: " and " {"
-    std::vector<std::string> refs;   // the tokens inside {...}
-    std::vector<int64_t> causes;
-};
-
-struct BlockText {
-    int64_t id = 0, race = 0, founded = -1, ended = -1, events = -1;
-    std::string name;
-    std::vector<std::string> lines;  // as printed, the first "c<id> <name>"
-};
-
-struct BrowserReport {
-    std::string problem;
-    std::vector<ChronicleLine> chronicle;  // ascending id
-    std::vector<BlockText> blocks;         // report order
-    std::map<int64_t, std::pair<int64_t, int64_t>> settlement_cells;  // [present]
-};
-
-BrowserReport read_browser_report(const godot::String& path) {
-    BrowserReport report;
-    if (path.is_empty() || !godot::FileAccess::file_exists(path)) {
-        report.problem = "no history report at " + to_utf8(path);
-        return report;
-    }
-    const std::string text = to_utf8(godot::FileAccess::get_file_as_string(path));
-    static const std::regex section_re(R"(^\[([a-z]+)\]$)");
-    static const std::regex event_re(
-        R"(^([0-9]+)(?:-([0-9]+))? e([0-9]+) ([a-z_]+)/([0-9]+): (.*) \{([^{}]*)\}(?: \[causes ([^\]]*)\])?$)");
-    static const std::regex civ_re(R"(^c([0-9]+) (.+)$)");
-    static const std::regex race_re(R"(^  race: .* \(ra([0-9]+)\)$)");
-    static const std::regex founded_re(R"(^  founded: ([0-9]+) )");
-    static const std::regex ended_re(R"(^  fate: ended in ([0-9]+))");
-    static const std::regex events_re(R"(^  events: ([0-9]+)$)");
-    static const std::regex settlement_re(R"(^  s([0-9]+) .*, at ([0-9]+) ([0-9]+) )");
-    static const std::regex cause_re(R"(e([0-9]+))");
-    std::string section;
-    std::size_t start = 0;
-    try {
-        while (start < text.size()) {
-            std::size_t stop = text.find('\n', start);
-            if (stop == std::string::npos) {
-                stop = text.size();
-            }
-            const std::string line = text.substr(start, stop - start);
-            start = stop + 1;
-            std::smatch m;
-            if (std::regex_match(line, m, section_re)) {
-                section = m[1];
-            } else if (section == "chronicle" && std::regex_match(line, m, event_re)) {
-                ChronicleLine e;
-                e.start = std::stoll(m[1]);
-                e.end = m[2].matched ? std::stoll(m[2]) : e.start;
-                e.id = std::stoll(m[3]);
-                e.kind = m[4];
-                e.salience = std::stoll(m[5]);
-                e.text = m[6];
-                const std::string refs = m[7];
-                std::size_t at = 0;
-                while (at < refs.size()) {
-                    std::size_t space = refs.find(' ', at);
-                    if (space == std::string::npos) {
-                        space = refs.size();
-                    }
-                    if (space > at) {
-                        e.refs.push_back(refs.substr(at, space - at));
-                    }
-                    at = space + 1;
-                }
-                for (const std::string& r : e.refs) {
-                    if (r.rfind("@rg", 0) == 0) {
-                        e.region = std::stoll(r.substr(3));
-                    } else if (r.rfind("@s", 0) == 0) {
-                        e.settlement = std::stoll(r.substr(2));
-                    }
-                }
-                if (m[8].matched) {
-                    const std::string causes = m[8];
-                    for (auto it = std::sregex_iterator(causes.begin(), causes.end(), cause_re);
-                         it != std::sregex_iterator(); ++it) {
-                        e.causes.push_back(std::stoll((*it)[1]));
-                    }
-                }
-                report.chronicle.push_back(std::move(e));
-            } else if (section == "civilizations") {
-                if (std::regex_match(line, m, civ_re)) {
-                    BlockText b;
-                    b.id = std::stoll(m[1]);
-                    b.name = m[2];
-                    b.lines.push_back(line);
-                    report.blocks.push_back(std::move(b));
-                } else if (!report.blocks.empty()) {
-                    BlockText& b = report.blocks.back();
-                    b.lines.push_back(line);
-                    if (std::regex_match(line, m, race_re)) {
-                        b.race = std::stoll(m[1]);
-                    } else if (std::regex_search(line, m, founded_re)) {
-                        b.founded = std::stoll(m[1]);
-                    } else if (std::regex_search(line, m, ended_re)) {
-                        b.ended = std::stoll(m[1]);
-                    } else if (std::regex_match(line, m, events_re)) {
-                        b.events = std::stoll(m[1]);
-                    }
-                }
-            } else if (section == "present" && std::regex_search(line, m, settlement_re)) {
-                report.settlement_cells[std::stoll(m[1])] = {std::stoll(m[2]), std::stoll(m[3])};
-            }
-        }
-    } catch (const std::exception& e) {
-        report.problem = std::string("cannot read ") + to_utf8(path) + ": " + e.what();
-    }
-    std::sort(report.chronicle.begin(), report.chronicle.end(),
-              [](const ChronicleLine& a, const ChronicleLine& b) { return a.id < b.id; });
-    if (report.problem.empty() && (report.chronicle.empty() || report.blocks.empty())) {
-        report.problem = to_utf8(path) + " has no chronicle lines or no civilization blocks";
-    }
-    return report;
 }
 
 // The report's trailing-space rule (P3-07 6.1): trailing spaces become \x20.
@@ -294,16 +175,121 @@ void send_motion(ViewerScreen& screen, godot::Vector2 position, godot::Vector2 r
     screen.map_view()->_gui_input(motion);
 }
 
-// The check's own read of the world.
-struct OwnWorld {
-    std::optional<worldgen::db::WorldReader> reader;
-    std::optional<worldgen::history::LoadedHistory> history;
-    std::optional<worldgen::inspect::MarkerIndex> markers;
-    std::optional<worldgen::inspect::BrowserIndex> browser;
-    std::map<int64_t, std::pair<int64_t, int64_t>> seeds;
-    std::string problem;
-};
+godot::Dictionary selection(ViewerModel& model) {
+    return model.get_selection();
+}
 
+int64_t selected_event(ViewerModel& model) {
+    return model.get_selection().get("event", int64_t{0});
+}
+
+}  // namespace
+
+namespace check_ref {
+
+// --- The references, as the check reads them (8.1) ----------------------------
+
+BrowserReport read_browser_report(const godot::String& path) {
+    BrowserReport report;
+    if (path.is_empty() || !godot::FileAccess::file_exists(path)) {
+        report.problem = "no history report at " + to_utf8(path);
+        return report;
+    }
+    const std::string text = to_utf8(godot::FileAccess::get_file_as_string(path));
+    static const std::regex section_re(R"(^\[([a-z]+)\]$)");
+    static const std::regex event_re(
+        R"(^([0-9]+)(?:-([0-9]+))? e([0-9]+) ([a-z_]+)/([0-9]+): (.*) \{([^{}]*)\}(?: \[causes ([^\]]*)\])?$)");
+    static const std::regex civ_re(R"(^c([0-9]+) (.+)$)");
+    static const std::regex race_re(R"(^  race: .* \(ra([0-9]+)\)$)");
+    static const std::regex founded_re(R"(^  founded: ([0-9]+) )");
+    static const std::regex ended_re(R"(^  fate: ended in ([0-9]+))");
+    static const std::regex events_re(R"(^  events: ([0-9]+)$)");
+    static const std::regex settlement_re(R"(^  s([0-9]+) .*, at ([0-9]+) ([0-9]+) )");
+    static const std::regex cause_re(R"(e([0-9]+))");
+    std::string section;
+    std::size_t start = 0;
+    try {
+        while (start < text.size()) {
+            std::size_t stop = text.find('\n', start);
+            if (stop == std::string::npos) {
+                stop = text.size();
+            }
+            const std::string line = text.substr(start, stop - start);
+            start = stop + 1;
+            std::smatch m;
+            if (std::regex_match(line, m, section_re)) {
+                section = m[1];
+            } else if (section == "chronicle" && std::regex_match(line, m, event_re)) {
+                ChronicleLine e;
+                e.start = std::stoll(m[1]);
+                e.end = m[2].matched ? std::stoll(m[2]) : e.start;
+                e.id = std::stoll(m[3]);
+                e.kind = m[4];
+                e.salience = std::stoll(m[5]);
+                e.text = m[6];
+                const std::string refs = m[7];
+                std::size_t at = 0;
+                while (at < refs.size()) {
+                    std::size_t space = refs.find(' ', at);
+                    if (space == std::string::npos) {
+                        space = refs.size();
+                    }
+                    if (space > at) {
+                        e.refs.push_back(refs.substr(at, space - at));
+                    }
+                    at = space + 1;
+                }
+                for (const std::string& r : e.refs) {
+                    if (r.rfind("@rg", 0) == 0) {
+                        e.region = std::stoll(r.substr(3));
+                    } else if (r.rfind("@s", 0) == 0) {
+                        e.settlement = std::stoll(r.substr(2));
+                    }
+                }
+                if (m[8].matched) {
+                    const std::string causes = m[8];
+                    for (auto it = std::sregex_iterator(causes.begin(), causes.end(), cause_re);
+                         it != std::sregex_iterator(); ++it) {
+                        e.causes.push_back(std::stoll((*it)[1]));
+                    }
+                }
+                report.chronicle.push_back(std::move(e));
+            } else if (section == "civilizations") {
+                if (std::regex_match(line, m, civ_re)) {
+                    BlockText b;
+                    b.id = std::stoll(m[1]);
+                    b.name = m[2];
+                    b.lines.push_back(line);
+                    report.blocks.push_back(std::move(b));
+                } else if (!report.blocks.empty()) {
+                    BlockText& b = report.blocks.back();
+                    b.lines.push_back(line);
+                    if (std::regex_match(line, m, race_re)) {
+                        b.race = std::stoll(m[1]);
+                    } else if (std::regex_search(line, m, founded_re)) {
+                        b.founded = std::stoll(m[1]);
+                    } else if (std::regex_search(line, m, ended_re)) {
+                        b.ended = std::stoll(m[1]);
+                    } else if (std::regex_match(line, m, events_re)) {
+                        b.events = std::stoll(m[1]);
+                    }
+                }
+            } else if (section == "present" && std::regex_search(line, m, settlement_re)) {
+                report.settlement_cells[std::stoll(m[1])] = {std::stoll(m[2]), std::stoll(m[3])};
+            }
+        }
+    } catch (const std::exception& e) {
+        report.problem = std::string("cannot read ") + to_utf8(path) + ": " + e.what();
+    }
+    std::sort(report.chronicle.begin(), report.chronicle.end(),
+              [](const ChronicleLine& a, const ChronicleLine& b) { return a.id < b.id; });
+    if (report.problem.empty() && (report.chronicle.empty() || report.blocks.empty())) {
+        report.problem = to_utf8(path) + " has no chronicle lines or no civilization blocks";
+    }
+    return report;
+}
+
+// The check's own read of the world.
 OwnWorld open_own_world(const godot::String& path) {
     OwnWorld w;
     try {
@@ -345,15 +331,7 @@ OwnWorld open_own_world(const godot::String& path) {
     return w;
 }
 
-godot::Dictionary selection(ViewerModel& model) {
-    return model.get_selection();
-}
-
-int64_t selected_event(ViewerModel& model) {
-    return model.get_selection().get("event", int64_t{0});
-}
-
-}  // namespace
+}  // namespace check_ref
 
 // --- B0 ---------------------------------------------------------------------------
 

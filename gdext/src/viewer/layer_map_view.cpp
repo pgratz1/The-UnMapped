@@ -300,6 +300,36 @@ void LayerMapView::_draw() {
         draw_rect(godot::Rect2(c - godot::Vector2(r + 2.0F, r + 2.0F), godot::Vector2(2.0F * r + 4.0F, 2.0F * r + 4.0F)),
                   godot::Color(0, 0, 0), false, 2.0F);
     }
+    // P4-06 7: the flashes, last.
+    for (const FlashRing& f : flashes_) {
+        if (f.x < 0 || f.y < 0 || f.x >= image_size_.x || f.y >= image_size_.y || f.life <= 0) {
+            continue;
+        }
+        const double t = std::clamp(static_cast<double>(f.age) / static_cast<double>(f.life), 0.0, 1.0);
+        const double cx = std::floor(static_cast<double>(offset_.x) + (static_cast<double>(f.x) + 0.5) * zoom_);
+        const double cy = std::floor(static_cast<double>(offset_.y) + (static_cast<double>(f.y) + 0.5) * zoom_);
+        const double radius = (6.0 + 14.0 * t) * static_cast<double>(g);
+        godot::Color colour(static_cast<float>((f.colour >> 16) & 0xFF) / 255.0F,
+                            static_cast<float>((f.colour >> 8) & 0xFF) / 255.0F,
+                            static_cast<float>(f.colour & 0xFF) / 255.0F, static_cast<float>(1.0 - t));
+        draw_arc(godot::Vector2(static_cast<float>(cx), static_cast<float>(cy)), static_cast<float>(radius), 0.0F,
+                 6.2831853F, 48, colour, static_cast<float>(2 * g), true);
+    }
+}
+
+void LayerMapView::set_flashes(const godot::Array& flashes) {
+    if (flashes_.empty() && flashes.is_empty()) {
+        return;
+    }
+    flashes_.clear();
+    flashes_.reserve(static_cast<std::size_t>(flashes.size()));
+    for (int64_t i = 0; i < flashes.size(); ++i) {
+        const godot::Dictionary f = flashes[i];
+        flashes_.push_back(FlashRing{f.get("x", int64_t{-1}), f.get("y", int64_t{-1}),
+                                     f.get("colour", int64_t{0xFFFFFF}), f.get("age", int64_t{0}),
+                                     f.get("life", int64_t{1})});
+    }
+    queue_redraw();
 }
 
 void LayerMapView::draw_marker_frame(int64_t index, godot::Color colour) {

@@ -47,6 +47,7 @@
 
 #include "viewer/browser_state.hpp"
 #include "viewer/history_state.hpp"
+#include "viewer/playback_state.hpp"
 #include "world_file.hpp"
 #include "world_layer.hpp"
 
@@ -260,6 +261,43 @@ public:
     // The value of layer `region` at a cell; 0 outside, -1 without the layer.
     int64_t get_region_at(int64_t x, int64_t y);
 
+    // --- Playback (P4-06 5.2) ------------------------------------------------
+    // Signals: playback_changed() (state, span, speed or skip changed),
+    // playback_finished(), ticker_changed().
+    // Every method answers false, empty or "stopped" without history.
+    // A session over [from, to] (-1: that end of the default span, 3); false
+    // for a span outside [0, E] or from > to.
+    bool play(int64_t from, int64_t to);
+    bool toggle_playback();
+    bool stop_playback();
+    // 4.2: the only time source; true when the year changed.
+    bool playback_advance(int64_t usec);
+    // {state, from, to, speed, skip_quiet, clock, stops}; while stopped, from
+    // and to are the default span.
+    [[nodiscard]] godot::Dictionary get_playback() const;
+    [[nodiscard]] godot::PackedInt64Array get_playback_speeds() const;
+    bool set_playback_speed(int64_t speed);
+    bool step_playback_speed(int64_t delta);
+    bool set_playback_skip_quiet(bool on);
+    [[nodiscard]] godot::PackedInt64Array get_playback_stop_years() const;
+    // Array of {year, event, kind, text, current}, oldest first (6.1).
+    [[nodiscard]] godot::Array get_ticker_lines() const;
+    // Array of {event, x, y, colour, age, life} (7).
+    [[nodiscard]] godot::Array get_flashes() const;
+
+    // C++ only.
+    [[nodiscard]] const PlaybackState& playback_state() const noexcept { return playback_; }
+    // The model's work of the last playback_advance without its set_year and
+    // without the signal handlers, and the ticker and flash part of its
+    // arrival, nanoseconds (--bench, 10).
+    struct PlaybackTimings {
+        int64_t advance = 0;
+        int64_t ticker = 0;
+        int64_t source = 0;          // the last list and stop recomputation (10: 2 ms)
+        int64_t slowest_source = 0;
+    };
+    [[nodiscard]] const PlaybackTimings& playback_timings() const noexcept { return playback_timings_; }
+
     // C++ only: the dimming mask of the highlight (one byte per cell, 1 =
     // dimmed; empty when nothing is dimmed), its size, and a counter that
     // changes whenever the mask is rebuilt.
@@ -314,7 +352,8 @@ public:
 
 protected:
     static void _bind_methods();
-    static void bind_browser_methods();  // viewer_model_browser.cpp
+    static void bind_browser_methods();   // viewer_model_browser.cpp
+    static void bind_playback_methods();  // viewer_model_playback.cpp
 
 private:
     // One entry of get_markers(): which list of the current YearMarkers and
@@ -342,6 +381,20 @@ private:
     void selection_changed(bool list);
     [[nodiscard]] godot::Dictionary linked_dictionary(const worldgen::history::LinkedText& text) const;
 
+    // Playback (viewer_model_playback.cpp). The list L, holder changes and
+    // phase starts handed to PlaybackState (3).
+    [[nodiscard]] PlaySource playback_source() const;
+    void refresh_playback_source();
+    // set_year made by playback (5.3: no pause).
+    void playback_set_year(int64_t year);
+    // 6.1, 7: the ticker entries and flashes of year y; true when the ticker
+    // changed.
+    bool playback_arrive(int64_t year);
+    // 5.3: a year change not made by playback, while a session is open.
+    void playback_outside_change();
+    // Starts a session over [p0, p1] (4.4 start rule) and emits.
+    void playback_start(int64_t p0, int64_t p1, int64_t start);
+
     void reset_views();
     bool decode_layer(int64_t layer_index);
     bool build_image(int64_t view_index);
@@ -360,6 +413,9 @@ private:
     HistoryState history_;
     BrowserState browser_;
     BrowserTimings browser_timings_;
+    PlaybackState playback_;
+    PlaybackTimings playback_timings_;
+    bool playback_year_ = false;  // the set_year in progress is playback's
     std::vector<std::uint8_t> mask_;
     std::uint32_t mask_width_ = 0;
     std::uint32_t mask_height_ = 0;

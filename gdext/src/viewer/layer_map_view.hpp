@@ -101,6 +101,14 @@ public:
     // Mask tile textures created or updated, and the time of the last
     // set_mask (nanoseconds).
     [[nodiscard]] int64_t mask_tiles_uploaded() const noexcept { return mask_tiles_uploaded_; }
+
+    // --- Flashes (P4-06 7), C++ only -------------------------------------------
+    // The model's get_flashes(): {x, y, colour, age, life}. Drawn last, above
+    // the markers and the highlight: a ring centred on the cell's screen
+    // centre, radius 6g + 14g age / life, width 2g, in the flash colour with
+    // alpha 1 - age / life. Redraws when the list changes.
+    void set_flashes(const godot::Array& flashes);
+    [[nodiscard]] std::size_t flash_count() const noexcept { return flashes_.size(); }
     [[nodiscard]] int64_t last_mask_nsec() const noexcept { return last_mask_nsec_; }
 
     // Shows cell (x, y) at the centre of the view at the given zoom (for
@@ -179,6 +187,12 @@ private:
     godot::Vector2i mask_size_;
     int64_t mask_tiles_uploaded_ = 0;
     int64_t last_mask_nsec_ = 0;
+    struct FlashRing {
+        int64_t x = 0, y = 0;
+        int64_t colour = 0xFFFFFF;
+        int64_t age = 0, life = 1;
+    };
+    std::vector<FlashRing> flashes_;
     std::vector<int64_t> gold_frames_;
     int64_t place_frame_ = -1;
     godot::Vector2i event_place_{-1, -1};
