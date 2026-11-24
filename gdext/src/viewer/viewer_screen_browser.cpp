@@ -11,6 +11,8 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/line_edit.hpp>
+#include <godot_cpp/classes/spin_box.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
 #include <godot_cpp/classes/v_scroll_bar.hpp>
 #include <godot_cpp/classes/viewport.hpp>
@@ -79,6 +81,11 @@ void ViewerScreen::wire_browser() {
     }
     for (std::size_t i = 0; i < 3; ++i) {
         event_scope_->add_item(SCOPE_LABELS[i], static_cast<int32_t>(i));
+    }
+    // Narrow year fields (four digits), so that the pane keeps its 380 px
+    // minimum at 1280 x 800 (6.1).
+    for (godot::SpinBox* box : {event_from_, event_to_}) {
+        box->get_line_edit()->add_theme_constant_override("minimum_character_width", 3);
     }
     browser_detail_->set_use_bbcode(false);
     browser_detail_->set_meta_underline(true);

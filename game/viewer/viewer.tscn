@@ -14,6 +14,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 6
 
 [node name="Sidebar" type="VBoxContainer" parent="Split"]
 custom_minimum_size = Vector2(340, 0)
@@ -292,13 +293,17 @@ layout_mode = 2
 
 [node name="EventScope" type="OptionButton" parent="Split/RightPane/Browser/EventFilters"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
+fit_to_longest_item = false
 focus_mode = 0
 tooltip_text = "Which events: all, those of the selected civilization, or those of the selected place"
 
 [node name="EventGroup" type="OptionButton" parent="Split/RightPane/Browser/EventFilters"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
+fit_to_longest_item = false
 size_flags_horizontal = 3
 focus_mode = 0
 tooltip_text = "Kinds of event"
@@ -332,7 +337,7 @@ focus_mode = 0
 tooltip_text = "Only the events of the year shown"
 text = "This year"
 
-[node name="FollowToggle" type="CheckButton" parent="Split/RightPane/Browser/EventYears"]
+[node name="FollowToggle" type="CheckBox" parent="Split/RightPane/Browser/EventYears"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0

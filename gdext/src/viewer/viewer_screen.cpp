@@ -216,7 +216,7 @@ void ViewerScreen::_ready() {
     event_from_ = require<godot::SpinBox>("EventFrom");
     event_to_ = require<godot::SpinBox>("EventTo");
     event_this_year_ = require<godot::CheckBox>("EventThisYear");
-    follow_toggle_ = require<godot::CheckButton>("FollowToggle");
+    follow_toggle_ = require<godot::CheckBox>("FollowToggle");
     follow_first_ = require<godot::Button>("FollowFirst");
     event_list_ = require<godot::ItemList>("EventList");
     browser_detail_ = require<godot::RichTextLabel>("BrowserDetail");

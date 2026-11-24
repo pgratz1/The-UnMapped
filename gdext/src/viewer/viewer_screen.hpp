@@ -160,7 +160,7 @@ public:
     [[nodiscard]] godot::SpinBox* event_from() const noexcept { return event_from_; }
     [[nodiscard]] godot::SpinBox* event_to() const noexcept { return event_to_; }
     [[nodiscard]] godot::CheckBox* event_this_year() const noexcept { return event_this_year_; }
-    [[nodiscard]] godot::CheckButton* follow_toggle() const noexcept { return follow_toggle_; }
+    [[nodiscard]] godot::CheckBox* follow_toggle() const noexcept { return follow_toggle_; }
     [[nodiscard]] godot::Button* follow_first_button() const noexcept { return follow_first_; }
     [[nodiscard]] godot::ItemList* event_list() const noexcept { return event_list_; }
     [[nodiscard]] godot::RichTextLabel* browser_detail() const noexcept { return browser_detail_; }
@@ -300,7 +300,7 @@ private:
     godot::SpinBox* event_from_ = nullptr;
     godot::SpinBox* event_to_ = nullptr;
     godot::CheckBox* event_this_year_ = nullptr;
-    godot::CheckButton* follow_toggle_ = nullptr;
+    godot::CheckBox* follow_toggle_ = nullptr;
     godot::Button* follow_first_ = nullptr;
     godot::ItemList* event_list_ = nullptr;
     godot::RichTextLabel* browser_detail_ = nullptr;
