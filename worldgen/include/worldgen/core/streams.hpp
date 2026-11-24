@@ -135,8 +135,14 @@ inline constexpr std::string_view hist_names_monster = "hist.names.monster";
 inline constexpr std::string_view hist_names_site = "hist.names.site";
 // P5-02 r1 (6.4.1): the target of a monster's raid.
 inline constexpr std::string_view hist_monsters_raid_target = "hist.monsters.raid_target";
+// P5-03 3: the species of bold beasts (13), the flight for fear (9.4), the
+// losses on the road of an abandonment (11.1), expulsions (6.5).
+inline constexpr std::string_view hist_beasts_bold_kind = "hist.beasts.bold_kind";
+inline constexpr std::string_view hist_monsters_fear = "hist.monsters.fear";
+inline constexpr std::string_view hist_peoples_abandon_loss = "hist.peoples.abandon_loss";
+inline constexpr std::string_view hist_relations_expel = "hist.relations.expel";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 72> all_stream_names = {
+inline constexpr std::array<std::string_view, 76> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -209,6 +215,10 @@ inline constexpr std::array<std::string_view, 72> all_stream_names = {
     hist_names_monster,
     hist_names_site,
     hist_monsters_raid_target,
+    hist_beasts_bold_kind,
+    hist_monsters_fear,
+    hist_peoples_abandon_loss,
+    hist_relations_expel,
 };
 
 }  // namespace worldgen::streams

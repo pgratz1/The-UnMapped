@@ -234,6 +234,36 @@ EventCatalogue build_compiled() {
                               {role(1, "civilization", EntityType::civilization, 1, 1),
                                role(2, "site", EntityType::site, 1, 1)},
                               {"reason"}, 0, {}});
+    // P5-03 11.3 (generator 0.24.0): kind 56, a small place left for fear of
+    // a monster; 8.1: kinds 57 to 62, race relations, mixed settlements and
+    // migrations.
+    c.kinds.push_back(KindDef{56, "settlement_fled", true, 1, 1,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
+    const auto two_races = [] {
+        return std::vector<RoleDef>{role(1, "race_a", EntityType::race, 1, 1), role(2, "race_b", EntityType::race, 1, 1)};
+    };
+    c.kinds.push_back(KindDef{57, "peoples_met", true, 1, 0, two_races(), {"disposition", "band"}, 0, {}});
+    c.kinds.push_back(KindDef{58, "disposition_turned", true, 0, 0, two_races(), {"disposition", "band"}, 0, {}});
+    c.kinds.push_back(KindDef{59, "refugees_arrived", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "origin", EntityType::settlement, 1, 1), role(4, "race", EntityType::race, 1, 1)},
+                              {"people", "standing"}, 0, {}});
+    c.kinds.push_back(KindDef{60, "settlement_mixed", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "race", EntityType::race, 1, 1), role(4, "ruling", EntityType::race, 1, 1)},
+                              {"share"}, 0, {}});
+    c.kinds.push_back(KindDef{61, "standing_changed", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "race", EntityType::race, 1, 1)},
+                              {"standing", "share"}, 0, {}});
+    c.kinds.push_back(KindDef{62, "people_expelled", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "race", EntityType::race, 1, 1)},
+                              {"people"}, 0, {}});
     return c;
 }
 
@@ -291,9 +321,10 @@ enum class TokenType : std::uint8_t {
     causes,
     region_former,  // r21 23.1
     beast,          // P5-02 10.3: {@beast}
+    beast_bold,     // P5-03 13: {@beast:bold}
 };
 
-enum class Form : std::uint8_t { name, plural, adjective, all, kind };  // kind: P5-02 10.3
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid };  // kind: P5-02 10.3; raid: P5-03 9.5
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -303,6 +334,10 @@ struct Token {
     std::string word_other;     // choice: the word otherwise
     std::string word_zero;      // three-word choice (r10): the word for 0
     bool three = false;         // three-word choice: w0 | w1 | w2, '#' is the value
+    // P5-03 8.2: the four-word choice w0 | w1 | w2 | w3 (w2 for 2, w3 for
+    // every other value; word_other holds w3, word_two w2).
+    bool four = false;
+    std::string word_two;
     // r12 20.2, {@causes:key=cword,...|before|after}: (kind key, cword) in
     // template order; the two words in word_one (before) and word_other (after).
     std::vector<std::pair<std::string, std::string>> cause_words;
@@ -403,11 +438,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
                 return "{@settlement} needs a kind with a settlement" + where;
             }
             out.type = TokenType::settlement;
-        } else if (body == "@beast") {  // P5-02 10.3
+        } else if (body == "@beast" || body == "@beast:bold") {  // P5-02 10.3; P5-03 13
             if (kind.value_seq("beast") == 0) {
-                return "{@beast} needs a kind with a value 'beast'" + where;
+                return "{" + std::string(body) + "} needs a kind with a value 'beast'" + where;
             }
-            out.type = TokenType::beast;
+            out.type = body == "@beast" ? TokenType::beast : TokenType::beast_bold;
         } else {
             return unknown;
         }
@@ -416,7 +451,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if (const std::size_t q = body.find('?'); q != std::string_view::npos) {
         const std::string_view name = body.substr(0, q);
         const std::string_view rest = body.substr(q + 1);
-        // Two words w1|w2, or (r10) three words w0|w1|w2; more bars are unknown.
+        // Two words w1|w2, (r10) three words w0|w1|w2 or (P5-03 8.2) four
+        // words w0|w1|w2|w3; more bars are unknown.
         std::vector<std::string_view> words;
         std::size_t from = 0;
         while (true) {
@@ -427,7 +463,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             }
             from = bar + 1;
         }
-        if (words.size() < 2U || words.size() > 3U || kind.value_seq(name) == 0) {
+        if (words.size() < 2U || words.size() > 4U || kind.value_seq(name) == 0) {
             return unknown;
         }
         for (const std::string_view w : words) {
@@ -437,7 +473,14 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
         }
         out.type = TokenType::choice;
         out.text = std::string(name);
-        if (words.size() == 3U) {
+        if (words.size() == 4U) {
+            out.three = true;  // the three-word rules (w0, w1, '#') hold
+            out.four = true;
+            out.word_zero = std::string(words[0]);
+            out.word_one = std::string(words[1]);
+            out.word_two = std::string(words[2]);
+            out.word_other = std::string(words[3]);
+        } else if (words.size() == 3U) {
             out.three = true;
             out.word_zero = std::string(words[0]);
             out.word_one = std::string(words[1]);
@@ -477,6 +520,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::all;
         } else if (*form == "kind") {  // P5-02 10.3
             out.form = Form::kind;
+        } else if (*form == "raid") {  // P5-03 9.5
+            out.form = Form::raid;
         } else {
             return unknown;
         }
@@ -486,6 +531,9 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     }
     if (out.form == Form::kind && r->type != EntityType::monster) {
         return "form 'kind' needs a monster role" + where;
+    }
+    if (out.form == Form::raid && r->type != EntityType::monster) {
+        return "form 'raid' needs a monster role" + where;
     }
     if (r->min_count == 0 && out.form != Form::all) {
         return "role '" + r->role + "' may have no participant" + where;
@@ -761,6 +809,21 @@ EventCatalogue read_event_catalogue(const db::WorldReader& world) {
 
 namespace {
 
+// P5-03 9.5, 13: a '|'-joined phrase list, split.
+std::vector<std::string> split_phrases(const std::string& list) {
+    std::vector<std::string> parts;
+    std::size_t from = 0;
+    while (true) {
+        const std::size_t bar = list.find('|', from);
+        parts.push_back(list.substr(from, bar == std::string::npos ? std::string::npos : bar - from));
+        if (bar == std::string::npos) {
+            break;
+        }
+        from = bar + 1;
+    }
+    return parts;
+}
+
 template <class T>
 const T* find_by_id(const std::vector<std::pair<std::int64_t, T>>& items, std::int64_t id) noexcept {
     const auto it = std::lower_bound(items.begin(), items.end(), id,
@@ -860,9 +923,11 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         v.site_rows_ = read(db::read_site_rows(world), db::SITE_TABLE);
         for (const db::BeastRow& r : v.beast_rows_) {
             v.beast_plurals_.emplace_back(r.id, r.plural);
+            v.beast_phrases_.emplace_back(r.id, split_phrases(r.bold_phrases));  // P5-03 13
         }
         for (const db::MonsterKindRow& r : v.monster_kind_rows_) {
             v.monster_kind_nouns_.emplace_back(r.id, r.noun);
+            v.monster_kind_phrases_.emplace_back(r.id, split_phrases(r.raid_phrases));  // P5-03 9.5
         }
         for (const db::MonsterRow& r : v.monster_rows_) {
             v.monsters_.emplace_back(r.id, MonsterNames{r.name, r.kind});
@@ -885,6 +950,8 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             // the checks report the row (P5-02 11.4).
             v.beast_plurals_.clear();
             v.monster_kind_nouns_.clear();
+            v.beast_phrases_.clear();
+            v.monster_kind_phrases_.clear();
             v.monsters_.clear();
             v.sites_.clear();
         }
@@ -1128,6 +1195,32 @@ const std::string* HistoryView::beast_plural(std::int64_t beast) const noexcept 
     return find_by_id(beast_plurals_, beast);
 }
 
+namespace {
+
+// Phrase number ((event - 1) mod n), or nullptr when there is none.
+const std::string* phrase_of(const std::vector<std::string>* list, std::int64_t event) {
+    if (list == nullptr || list->empty()) {
+        return nullptr;
+    }
+    const auto n = static_cast<std::int64_t>(list->size());
+    const std::int64_t k = event >= 1 ? (event - 1) % n : 0;
+    return &(*list)[static_cast<std::size_t>(k)];
+}
+
+}  // namespace
+
+const std::string* HistoryView::monster_raid_phrase(std::int64_t monster, std::int64_t event) const noexcept {
+    const MonsterNames* m = find_by_id(monsters_, monster);
+    if (m == nullptr) {
+        return nullptr;
+    }
+    return phrase_of(find_by_id(monster_kind_phrases_, m->kind), event);
+}
+
+const std::string* HistoryView::beast_bold_phrase(std::int64_t beast, std::int64_t event) const noexcept {
+    return phrase_of(find_by_id(beast_phrases_, beast), event);
+}
+
 const std::string* HistoryView::race_plural(std::int64_t id) const noexcept {
     const RaceNames* r = find_by_id(races_, id);
     return r != nullptr ? &r->plural : nullptr;
@@ -1301,6 +1394,35 @@ bool is_noun(std::string_view s) noexcept {
     return std::all_of(s.begin(), s.end(), [](char c) { return (c >= 'a' && c <= 'z') || c == ' ' || c == '\''; });
 }
 
+// P5-03 16.4: 1 to 4 phrases joined with '|', each of 1 to 48 bytes of the
+// phrase grammar (lower-case letters, single spaces, ' and -, starting and
+// ending with a letter).
+bool is_phrase_list(std::string_view s) noexcept {
+    std::size_t count = 0;
+    std::size_t from = 0;
+    while (true) {
+        const std::size_t bar = s.find('|', from);
+        const std::string_view p = s.substr(from, bar == std::string_view::npos ? std::string_view::npos : bar - from);
+        const auto lower = [](char c) { return c >= 'a' && c <= 'z'; };
+        if (p.empty() || p.size() > 48U || !lower(p.front()) || !lower(p.back())) {
+            return false;
+        }
+        for (std::size_t i = 0; i < p.size(); ++i) {
+            const char c = p[i];
+            const bool ok = lower(c) || c == '\'' || c == '-' || (c == ' ' && p[i + 1] != ' ');
+            if (!ok) {
+                return false;
+            }
+        }
+        ++count;
+        if (bar == std::string_view::npos) {
+            break;
+        }
+        from = bar + 1;
+    }
+    return count >= 1U && count <= 4U;
+}
+
 // A monster or site name: ASCII letters, space, ' and -, 1 to 64 bytes.
 bool is_entity_name(std::string_view s) noexcept {
     return is_region_name_text(s);
@@ -1316,6 +1438,10 @@ std::int64_t settlement_ending_code(std::string_view ruin_kind, std::span<const 
         return 2;
     }
     if (ruin_kind == "settlement_abandoned" || ruin_kind == "settlement_abandoned_to") {
+        // P5-03 11.3: fled for fear of a monster, tested before 3 and 4.
+        if (std::find(cause_kinds.begin(), cause_kinds.end(), std::string_view("settlement_fled")) != cause_kinds.end()) {
+            return 6;
+        }
         bool famine = false;
         for (const std::string_view k : cause_kinds) {
             if (k == "plague" || k == "plague_spread" || k == "plague_outbreak") {
@@ -1414,6 +1540,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (!is_plural(r.plural)) return at + "plural is not a plural";
         if (r.menace < 0 || r.menace > 1000) return at + "menace " + int_text(r.menace) + " outside 0 to 1000";
         if (r.food < 0 || r.food > 1000) return at + "food " + int_text(r.food) + " outside 0 to 1000";
+        if (!is_phrase_list(r.bold_phrases)) return at + "bold_phrases is not a phrase list";  // P5-03 16.4
     }
     // monster_kind.
     for (std::size_t i = 0; i < t.monster_kinds.size(); ++i) {
@@ -1428,6 +1555,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.grouped != 0 && r.grouped != 1) return at + "grouped " + int_text(r.grouped) + " is not 0 or 1";
         if (r.wake != 1 && r.wake != 2) return at + "wake " + int_text(r.wake) + " is not 1 or 2";
         if (r.might < 1 || r.might > 10000000) return at + "might " + int_text(r.might) + " outside 1 to 10000000";
+        if (!is_phrase_list(r.raid_phrases)) return at + "raid_phrases is not a phrase list";  // P5-03 16.4
     }
     // beast_population.
     const db::BeastPopulationRow* prev = nullptr;
@@ -1642,6 +1770,8 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
             s = view.race_plural(p.entity_id);
         } else if (form == Form::kind) {
             s = view.monster_noun(p.entity_id);  // P5-02 10.3
+        } else if (form == Form::raid) {
+            s = view.monster_raid_phrase(p.entity_id, event_id);  // P5-03 9.5
         } else if (form == Form::adjective) {
             s = view.race_adjective(p.entity_id);
         } else {
@@ -1699,7 +1829,10 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
             v = value_of(t.text);
         } else if (t.type == TokenType::choice && t.three) {
             v = value_of(t.text);
-            const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
+            const std::string& word = v == 0                ? t.word_zero
+                                      : v == 1            ? t.word_one
+                                      : (t.four && v == 2) ? t.word_two
+                                                           : t.word_other;
             is_number = word.find('#') != std::string::npos;
         }
         if (is_number && (v < 1 || v > 9)) {
@@ -1736,6 +1869,8 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                     const db::EventParticipantRow& p = *ps.front();
                     if (t.form == Form::name) {
                         append_name(name_of(p, t.form), static_cast<EntityType>(p.entity_type), p.entity_id);
+                    } else if (t.form == Form::raid) {
+                        out += name_of(p, t.form);  // P5-03 9.5: a phrase, no link
                     } else {
                         // Race words and monster nouns are copied as they are;
                         // the link names the race (type 1) or the monster (8).
@@ -1754,7 +1889,11 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                     break;
                 }
                 // r10: w0 for 0, w1 for 1, w2 otherwise; '#' is the value.
-                const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
+                // P5-03 8.2: with four words, w2 for 2 and w3 otherwise.
+                const std::string& word = v == 0                ? t.word_zero
+                                          : v == 1            ? t.word_one
+                                          : (t.four && v == 2) ? t.word_two
+                                                               : t.word_other;
                 for (const char c : word) {
                     if (c == '#') {
                         out += number_text(ti, v);  // r17 21.1, r19 22.1
@@ -1788,6 +1927,15 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
             case TokenType::beast: {  // P5-02 10.3: copied as stored
                 const std::int64_t b = value_of("beast");
                 const std::string* s = view.beast_plural(b);
+                if (s == nullptr) {
+                    fail(at + "no beast " + int_text(b));
+                }
+                out += *s;
+                break;
+            }
+            case TokenType::beast_bold: {  // P5-03 13: the phrase ((id - 1) mod n)
+                const std::int64_t b = value_of("beast");
+                const std::string* s = view.beast_bold_phrase(b, event_id);
                 if (s == nullptr) {
                     fail(at + "no beast " + int_text(b));
                 }
@@ -1831,6 +1979,12 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                 break;
             }
         }
+    }
+    // P5-03 (reading): a sentence whose first byte is a lower-case letter
+    // (a template that opens with a cause clause and a literal "the ", when
+    // no cause has a word) starts with its capital.
+    if (!out.empty() && out.front() >= 'a' && out.front() <= 'z') {
+        out.front() = static_cast<char>(out.front() - 'a' + 'A');
     }
     return linked;
 }

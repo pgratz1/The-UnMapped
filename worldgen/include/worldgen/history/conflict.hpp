@@ -251,6 +251,16 @@ struct EndDecision {
 [[nodiscard]] EndDecision end_decision(std::int64_t attacker, std::int64_t defender, bool aim, bool defender_there,
                                        bool ex_a, bool ex_b, std::int64_t by_score, bool over) noexcept;
 
+// P5-03 7.1: what conflict reads of the peoples' dispositions
+// (RelationsSubsystem). D(a, b) is symmetric, D(a, a) the camp value.
+class DispositionView {
+public:
+    virtual ~DispositionView() = default;
+    [[nodiscard]] virtual std::int64_t disposition(std::int64_t race_a, std::int64_t race_b) const = 0;
+    // The pair's last disposition_turned into band 0 (hatred), 0 when none.
+    [[nodiscard]] virtual std::int64_t hatred_event(std::int64_t race_a, std::int64_t race_b) const = 0;
+};
+
 // --- The subsystem (13) ----------------------------------------------------------------------
 
 // A war (7.1), keyed by its war_declared event id.
@@ -297,6 +307,10 @@ public:
     TensionReport tension(const StepContext& context) override;
 
     [[nodiscard]] const ConflictTuning& tuning() const noexcept { return tuning_; }
+    // P5-03 7.1: the peoples' dispositions (set once by the stage; nullptr:
+    // the camp table, as at 0.23.0) and the camp table they start from.
+    void set_dispositions(const DispositionView* view) noexcept { dispositions_ = view; }
+    [[nodiscard]] const ConflictCamp& camp_table() const noexcept { return tuning_.camp; }
 
     // Inspection (tests; not used by the engine).
     [[nodiscard]] const std::vector<ConflictWar>& wars() const noexcept { return wars_; }
@@ -433,7 +447,8 @@ private:
     void note_futile(const StepContext& context, const ConflictWar& w);
     void conquer(StepContext& context, std::int64_t y, std::int64_t x, std::int64_t cause, std::int64_t region);
     std::int64_t casualties(StepContext& context, std::int64_t civ, std::int64_t dead, std::int64_t event);
-    void refugees(StepContext& context, std::int64_t civ, std::int64_t from_settlement, std::int64_t people);
+    void refugees(StepContext& context, std::int64_t civ, std::int64_t from_settlement, std::int64_t people,
+                  std::int64_t cause);
     void end_checks(StepContext& context, std::size_t war, bool no_front);
     // 7.7: ends the war with winner (0 a truce); `sued` writes a peace (the
     // loser is exhausted), else a war_won (r10 20.15 item 4); false when a
@@ -491,6 +506,7 @@ private:
     std::set<std::int64_t> quarrel_pending_;
     // r17 22.1 item 1: a -> b while a's awakening quarrel with b is open.
     std::map<std::int64_t, std::int64_t> quarrel_with_;
+    const DispositionView* dispositions_ = nullptr;  // P5-03 7.1
 };
 
 }  // namespace worldgen::history

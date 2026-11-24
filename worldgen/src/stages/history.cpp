@@ -13,6 +13,7 @@
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/names.hpp"
 #include "worldgen/history/peoples.hpp"
+#include "worldgen/history/relations.hpp"
 #include "worldgen/history/renaming.hpp"
 
 namespace worldgen::stages {
@@ -71,10 +72,16 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     history::RenamingSubsystem renaming(peoples, renaming_tuning, catalogue);
     peoples.set_wild(&monsters);
     renaming.set_monsters(&monsters);
+    monsters.set_region_names(&renaming);  // P5-03 12.2
+    // P5-03 6.1, 6.6 item 3: the relations run after the monsters; they are
+    // peoples' ledger and conflict's disposition view.
+    history::RelationsSubsystem relations(peoples, conflict, content);
+    peoples.set_ledger(&relations);
+    conflict.set_dispositions(&relations);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming, &monsters};
+    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations};
     config.tension = {&conflict, &monsters};
     config.interventions = &none;
     config.catalogue = &catalogue;
@@ -86,6 +93,9 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     result.beast_populations = monsters.beast_population_rows();
     result.monsters = monsters.monster_rows();
     result.sites = monsters.site_rows();
+    relations.finish(inputs.params.span);  // P5-03 6.7: the rows of year E - 1
+    result.race_relations = relations.race_relation_rows();
+    result.settlement_races = relations.settlement_race_rows();
     check_monster_participants(result);  // P5-02 10.4
     return result;
 }
@@ -111,6 +121,9 @@ void write_history_result(StageContext& context, const HistoryResult& r) {
     for (const db::BeastPopulationRow& row : r.beast_populations) context.write_beast_population(row);
     for (const db::MonsterRow& row : r.monsters) context.write_monster(row);
     for (const db::SiteRow& row : r.sites) context.write_site(row);
+    // schema 10 (P5-03 16.1)
+    for (const db::RaceRelationRow& row : r.race_relations) context.write_race_relation(row);
+    for (const db::SettlementRaceRow& row : r.settlement_races) context.write_settlement_race(row);
 }
 
 void run_history(StageContext& context) {

@@ -55,13 +55,15 @@ enum Stream : std::size_t {
     LAIR_NAME,
     OUTPOST,
     RAID_TARGET,
+    BOLD_KIND,  // P5-03 13
+    FEAR,       // P5-03 9.4
 };
-constexpr std::array<std::string_view, 13> STREAM_NAMES = {
+constexpr std::array<std::string_view, 15> STREAM_NAMES = {
     streams::hist_beasts_bold,     streams::hist_monsters_wake,      streams::hist_monsters_rise,
     streams::hist_monsters_sleep,  streams::hist_monsters_rewake,    streams::hist_monsters_raid,
     streams::hist_monsters_raid_toll, streams::hist_monsters_overrun, streams::hist_monsters_hunt,
     streams::hist_monsters_hunt_outcome, streams::hist_monsters_lair_name, streams::hist_sites_outpost,
-    streams::hist_monsters_raid_target,
+    streams::hist_monsters_raid_target, streams::hist_beasts_bold_kind, streams::hist_monsters_fear,
 };
 
 constexpr std::array<Step, 5> STEPS = {Step::t1, Step::t4, Step::t6, Step::q1, Step::q4};
@@ -71,6 +73,42 @@ constexpr std::int64_t PPB = 1000000000;
 constexpr std::int64_t WATER_LAND = 0;  // layer water (P1-02): 0 land
 constexpr std::int64_t CIV_TYPE = static_cast<std::int64_t>(EntityType::civilization);
 constexpr std::string_view ROOT_SLOT = "{root}";
+constexpr std::string_view PLACE_SLOT = "{place}";  // P5-03 12.2
+
+// P5-03 12.1: the epithet of a name form, the form with {root} removed and
+// outer spaces trimmed.
+std::string epithet_of(std::string_view form) {
+    std::string out(form);
+    const std::size_t at = out.find(ROOT_SLOT);
+    if (at != std::string::npos) {
+        out.erase(at, ROOT_SLOT.size());
+    }
+    const std::size_t a = out.find_first_not_of(' ');
+    if (a == std::string::npos) {
+        return std::string();
+    }
+    const std::size_t b = out.find_last_not_of(' ');
+    return out.substr(a, b - a + 1);
+}
+
+// The form a name was built with (P5-02 9.2's matching: the first form in
+// list order whose parts around {root} enclose it), or nullptr.
+const std::string* matched_form(std::string_view name, const std::vector<std::string>& forms) {
+    for (const std::string& form : forms) {
+        const std::size_t at = form.find(ROOT_SLOT);
+        if (at == std::string::npos) {
+            continue;
+        }
+        const std::string_view f = form;
+        const std::string_view a = f.substr(0, at);
+        const std::string_view b = f.substr(at + ROOT_SLOT.size());
+        if (name.size() > a.size() + b.size() && name.substr(0, a.size()) == a &&
+            name.substr(name.size() - b.size()) == b) {
+            return &form;
+        }
+    }
+    return nullptr;
+}
 
 bool chance_scaled(std::uint64_t u, std::int64_t p, std::int64_t scale) {
     const std::int64_t raw = std::min(ONE_RAW, floor_div(checked_mul(std::max<std::int64_t>(0, p), ONE_RAW), scale));
@@ -208,6 +246,15 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.prey_hop_permille = r.get_int("prey_hop_permille");
     t.prey_might_ref = r.get_int("prey_might_ref");
     t.prey_might_max_permille = r.get_int("prey_might_max_permille");
+    // P5-03 9.1 to 9.4, 14.1.
+    t.raid_chain_years = r.get_int("raid_chain_years");
+    t.toll_over_permille = r.get_int("toll_over_permille");
+    t.hunt_raid_permille = r.get_int("hunt_raid_permille");
+    t.hunt_max_permille = r.get_int("hunt_max_permille");
+    t.fear_raids = r.get_int("fear_raids");
+    t.fear_years = r.get_int("fear_years");
+    t.fear_permille = r.get_int("fear_permille");
+    t.overrun_people_ref = r.get_int("overrun_people_ref");
     return t;
 }
 
@@ -228,6 +275,9 @@ std::vector<BeastDef> beast_defs_from(const data::ContentSet& content) {
         b.growth_permille = d.record.get_int("growth_permille");
         b.menace = d.record.get_int("menace");
         b.food = d.record.get_int("food");
+        if (d.record.find("bold_phrases") != nullptr) {  // P5-03 13
+            b.bold_phrases = string_list(d.record, "bold_phrases");
+        }
         out.push_back(std::move(b));
     }
     return out;
@@ -269,6 +319,9 @@ std::vector<MonsterKindDef> monster_kind_defs_from(const data::ContentSet& conte
         k.max_alive = r.get_int("max_alive");
         k.flare = r.get_bool("flare");
         k.hoard_permille = r.get_int("hoard_permille");
+        if (r.find("raid_phrases") != nullptr) {  // P5-03 9.5
+            k.raid_phrases = string_list(r, "raid_phrases");
+        }
         out.push_back(std::move(k));
     }
     return out;
@@ -315,6 +368,7 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
     for (std::size_t i = 0; i < STREAM_NAMES.size(); ++i) {
         keys_[i] = stream_key(in.seed, STREAM_NAMES[i]);
     }
+    name_key_ = stream_key(in.seed, streams::hist_names_monster);
     switch (in.params.monster_pressure) {
         case data::MonsterPressure::low: pressure_ = tuning_.pressure_low; break;
         case data::MonsterPressure::normal: pressure_ = tuning_.pressure_normal; break;
@@ -484,6 +538,11 @@ std::int64_t MonstersSubsystem::growth_permille(std::int64_t region) const {
     return growth_[static_cast<std::size_t>(region - 1)];
 }
 
+bool MonstersSubsystem::holds_site(std::int64_t settlement) const {
+    return std::any_of(sites_.begin(), sites_.end(),
+                       [settlement](const Site& t) { return !t.ended_year && t.settlement == settlement; });
+}
+
 bool MonstersSubsystem::shunned(std::int64_t region) const {
     if (region < 1 || static_cast<std::size_t>(region) > shunned_count_.size()) {
         return false;
@@ -513,7 +572,8 @@ MonstersSubsystem::Site& MonstersSubsystem::site(std::int64_t id) {
 }
 
 std::string MonstersSubsystem::monster_root(std::int64_t id) const {
-    return monster(id).root;
+    const Monster& m = monster(id);
+    return m.placed ? std::string() : m.root;  // P5-03 12.2: a host's root is its place, not a name
 }
 
 const std::string& MonstersSubsystem::monster_name(std::int64_t id) const {
@@ -656,13 +716,12 @@ void MonstersSubsystem::beasts_bold(StepContext& ctx) {
         const std::int64_t p = s.population;
         const std::int64_t dead = std::max<std::int64_t>(
             0, std::min(p - 1, std::max<std::int64_t>(1, floor_div(checked_mul(p, tuning_.bold_toll_permille), 1000))));
-        std::size_t best = 0;
-        for (std::size_t sp = 1; sp < ns; ++sp) {
-            if (checked_mul(count_[ri * ns + sp], beasts_[sp].menace) >
-                checked_mul(count_[ri * ns + best], beasts_[best].menace)) {
-                best = sp;
-            }
+        // P5-03 13: the species by a weighted draw of count x menace.
+        std::vector<std::int64_t> weights(ns, 0);
+        for (std::size_t sp = 0; sp < ns; ++sp) {
+            weights[sp] = checked_mul(count_[ri * ns + sp], beasts_[sp].menace);
         }
+        const std::size_t best = weighted(ctx.draw(key(BOLD_KIND), word(r), 0, 0), weights);
         const std::int64_t owner = s.owner_civ;
         EventSpec e = point_event(ctx, "beasts_bold", r, t);
         e.participants = {Participant{"settlement", EntityType::settlement, t},
@@ -740,7 +799,8 @@ bool MonstersSubsystem::rise(StepContext& ctx) {
         for (const WindowEntry& x : w) {
             sum = checked_add(sum, x.dead);
         }
-        if (sum < tuning_.undead_min_dead) {
+        // P5-03 14.2: the threshold falls with the pressure.
+        if (sum < floor_div(checked_mul(tuning_.undead_min_dead, 1000), std::max<std::int64_t>(1, pressure_))) {
             continue;
         }
         for (std::size_t k = 0; k < kinds_.size(); ++k) {
@@ -802,10 +862,6 @@ void MonstersSubsystem::create(StepContext& ctx, std::size_t k, std::int64_t reg
     Monster mon;
     mon.id = m;
     mon.kind = k;
-    mon.name = choose_name(kind_naming_[k], peoples_.name_filter(), def.naming_culture, NameKind::monster,
-                           ctx.inputs().seed, word(kind_culture_id_[k]), word(m), peoples_.mutable_name_registry())
-                   .name;
-    mon.root = realm_root(mon.name, def.name_forms);
     // The lair's cell (6.3.2: at a ruined sacked settlement, else the wild cell).
     std::int64_t lair_settlement = 0;
     std::vector<std::int64_t> causes;
@@ -829,6 +885,15 @@ void MonstersSubsystem::create(StepContext& ctx, std::size_t k, std::int64_t reg
             causes.push_back(w[i].event);
         }
         std::stable_sort(causes.begin(), causes.end());
+    }
+    // 9.1: the name, then the root of 9.2 (P5-03 12.2: a dead kind is named
+    // for its place, after the lair's settlement is known).
+    if (def.wake == 2) {
+        mon.name = place_name(ctx, k, m, region, lair_settlement, mon.root);
+        mon.placed = true;
+    } else {
+        mon.name = wild_name(ctx, k, m);
+        mon.root = realm_root(mon.name, def.name_forms);
     }
     Cell cell;
     if (lair_settlement != 0) {
@@ -1006,6 +1071,17 @@ std::int64_t MonstersSubsystem::raid_target(StepContext& ctx, std::int64_t id) c
     return ids[i];
 }
 
+std::vector<MonstersSubsystem::PlaceRaid> MonstersSubsystem::place_raids(std::int64_t id,
+                                                                         std::int64_t settlement) const {
+    const Monster& m = monster(id);
+    const auto it = std::lower_bound(m.places.begin(), m.places.end(), settlement,
+                                     [](const PlaceMemory& p, std::int64_t s) { return p.settlement < s; });
+    if (it == m.places.end() || it->settlement != settlement) {
+        return {};
+    }
+    return it->raids;
+}
+
 void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
     State& state = ctx.state();
     const MonsterKindDef& def = kinds_[monster(id).kind];
@@ -1013,6 +1089,7 @@ void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
     if (target == 0) {
         return;
     }
+    const std::int64_t y = ctx.year();
     const Settlement& t = state.settlement(target);
     const std::int64_t p = t.population;
     const std::int64_t c = t.owner_civ;
@@ -1020,14 +1097,27 @@ void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
         def.toll_min_permille +
         static_cast<std::int64_t>(pick(ctx.draw(key(RAID_TOLL), word(id), 0, 0),
                                        word(def.toll_max_permille - def.toll_min_permille + 1)));
-    const std::int64_t dead =
-        std::max<std::int64_t>(0, std::min({def.kill_max, floor_div(checked_mul(p, tau), 1000), p - 1}));
+    // P5-03 9.2: above kill_max the toll grows at toll_over_permille.
+    const std::int64_t raw = floor_div(checked_mul(p, tau), 1000);
+    std::int64_t dead = raw;
+    if (raw > def.kill_max) {
+        dead = checked_add(def.kill_max, floor_div(checked_mul(raw - def.kill_max, tuning_.toll_over_permille), 1000));
+    }
+    dead = std::max<std::int64_t>(0, std::min(dead, p - 1));
     const std::int64_t plunder = floor_div(checked_mul(p, def.hoard_permille), 1000);
+    // P5-03 9.1: the waking event and the last raid on t within raid_chain_years.
+    std::vector<std::int64_t> causes{monster(id).waking_event};
+    const std::vector<PlaceRaid> before = place_raids(id, target);
+    if (!before.empty() && y - before.back().year < tuning_.raid_chain_years &&
+        before.back().event != causes.front()) {
+        causes.push_back(before.back().event);
+        std::stable_sort(causes.begin(), causes.end());
+    }
     EventSpec e = point_event(ctx, "monster_raid", t.region, target);
     e.participants = {Participant{"monster", EntityType::monster, id},
                       Participant{"civilization", EntityType::civilization, c}};
     e.values = {dead, plunder};
-    e.causes = {monster(id).waking_event};
+    e.causes = std::move(causes);
     const std::int64_t ev = ctx.append(e);
     if (dead > 0) {
         state.set_population(target, p - dead);
@@ -1035,15 +1125,79 @@ void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
     peoples_.note_reduction(target, ev);
     Monster& m = monster(id);
     m.hoard = checked_add(m.hoard, plunder);
+    // The raid memory per civilization (6.4.2, with P5-03 9.3's years) and
+    // per settlement (P5-03 9.1, 9.4); entries older than the memories drop.
     auto it = std::lower_bound(m.raids.begin(), m.raids.end(), c,
                                [](const RaidMemory& r, std::int64_t civ) { return r.civ < civ; });
-    if (it != m.raids.end() && it->civ == c) {
-        *it = RaidMemory{c, ctx.year(), ev};
-    } else {
-        m.raids.insert(it, RaidMemory{c, ctx.year(), ev});
+    if (it == m.raids.end() || it->civ != c) {
+        it = m.raids.insert(it, RaidMemory{c, 0, 0, {}});
     }
+    it->year = y;
+    it->event = ev;
+    it->years.push_back(y);
+    std::size_t old = 0;
+    while (old < it->years.size() && y - it->years[old] > tuning_.hunt_memory_years) {
+        ++old;
+    }
+    it->years.erase(it->years.begin(), it->years.begin() + static_cast<std::ptrdiff_t>(old));
+    const std::int64_t keep = std::max(tuning_.raid_chain_years, tuning_.fear_years);
+    auto pl = std::lower_bound(m.places.begin(), m.places.end(), target,
+                               [](const PlaceMemory& q, std::int64_t s) { return q.settlement < s; });
+    if (pl == m.places.end() || pl->settlement != target) {
+        pl = m.places.insert(pl, PlaceMemory{target, {}});
+    }
+    std::vector<PlaceRaid>& raids = pl->raids;
+    raids.push_back(PlaceRaid{y, ev});
+    std::size_t drop = 0;
+    while (drop < raids.size() && y - raids[drop].year >= keep) {
+        ++drop;
+    }
+    raids.erase(raids.begin(), raids.begin() + static_cast<std::ptrdiff_t>(drop));
     ++stats_.raids;
     overrun(ctx, id, target, ev);
+    // P5-03 9.4: a place still standing may be left for fear.
+    const Settlement& after = state.settlement(target);
+    if (standing(after)) {
+        flight(ctx, id, target);
+    }
+}
+
+void MonstersSubsystem::flight(StepContext& ctx, std::int64_t id, std::int64_t target) {
+    const State& state = ctx.state();
+    const Settlement& t = state.settlement(target);
+    if (t.kind != SettlementKind::hamlet && t.kind != SettlementKind::village) {
+        return;
+    }
+    const std::int64_t c = t.owner_civ;
+    if (c < 1 || state.civ(c).capital == target) {
+        return;
+    }
+    const std::int64_t y = ctx.year();
+    std::vector<std::int64_t> recent;  // the raids on t within fear_years, ascending
+    for (const PlaceRaid& r : place_raids(id, target)) {
+        if (y - r.year < tuning_.fear_years) {
+            recent.push_back(r.event);
+        }
+    }
+    if (static_cast<std::int64_t>(recent.size()) < tuning_.fear_raids) {
+        return;
+    }
+    bool other = false;
+    for (std::int64_t sid = 1; sid <= settlement_count(state) && !other; ++sid) {
+        const Settlement& u = state.settlement(sid);
+        other = sid != target && standing(u) && u.owner_civ == c;
+    }
+    if (!other || !chance_pm(ctx.draw(key(FEAR), word(id), word(target), 0), tuning_.fear_permille)) {
+        return;
+    }
+    EventSpec e = point_event(ctx, "settlement_fled", t.region, target);
+    e.participants = {Participant{"monster", EntityType::monster, id},
+                      Participant{"civilization", EntityType::civilization, c}};
+    const std::size_t from = recent.size() > 4U ? recent.size() - 4U : 0U;
+    e.causes.assign(recent.begin() + static_cast<std::ptrdiff_t>(from), recent.end());
+    const std::int64_t ev = ctx.append(e);
+    peoples_.abandon(ctx, target, ev);
+    ++stats_.fled;
 }
 
 void MonstersSubsystem::overrun(StepContext& ctx, std::int64_t id, std::int64_t target, std::int64_t raid_event) {
@@ -1070,7 +1224,13 @@ void MonstersSubsystem::overrun(StepContext& ctx, std::int64_t id, std::int64_t 
     const bool other_lair = std::any_of(sites_.begin(), sites_.end(), [region, id](const Site& x) {
         return x.kind == 1 && !x.ended_year && x.region == region && x.monster != id;
     });
-    if (other_lair || !chance_pm(ctx.draw(key(OVERRUN), word(id), word(target), 0), def.overrun_permille)) {
+    // P5-03 14.1, 14.2: the chance scales with the pressure and falls for
+    // a place of more than overrun_people_ref people (after the raid).
+    const std::int64_t base = std::min<std::int64_t>(1000, floor_div(checked_mul(def.overrun_permille, pressure_), 1000));
+    const std::int64_t f_p = std::min<std::int64_t>(
+        1000, floor_div(checked_mul(tuning_.overrun_people_ref, 1000), std::max<std::int64_t>(1, t.population)));
+    if (other_lair ||
+        !chance_pm(ctx.draw(key(OVERRUN), word(id), word(target), 0), floor_div(checked_mul(base, f_p), 1000))) {
         return;
     }
     // 1. The new lair site.
@@ -1125,6 +1285,15 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
             state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
             continue;
         }
+        // P5-03 9.3: the raids on c still remembered (the loop's window, so
+        // at least one), and the chance they raise.
+        std::int64_t r_c = 0;
+        for (const std::int64_t year : r.years) {
+            r_c += ctx.year() - year <= tuning_.hunt_memory_years ? 1 : 0;
+        }
+        const std::int64_t p_hunt = std::min(
+            tuning_.hunt_max_permille,
+            checked_add(tuning_.hunt_permille, checked_mul(std::max<std::int64_t>(0, r_c - 1), tuning_.hunt_raid_permille)));
         std::int64_t hunters = 0;
         for (std::int64_t sid = 1; sid <= settlement_count(state); ++sid) {
             const Settlement& u = state.settlement(sid);
@@ -1144,7 +1313,7 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
         if (strength == 0) {
             continue;
         }
-        if (!chance_pm(ctx.draw(key(HUNT), word(id), word(c), 0), tuning_.hunt_permille)) {
+        if (!chance_pm(ctx.draw(key(HUNT), word(id), word(c), 0), p_hunt)) {
             continue;
         }
         const std::int64_t odds = std::min(tuning_.slay_max_permille,
@@ -1413,6 +1582,90 @@ void MonstersSubsystem::outposts_raised(StepContext& ctx) {
 
 // --- Names (9.2) --------------------------------------------------------------------------------------
 
+// P5-03 12.1: a wild monster's name, drawn from the kind's forms without
+// those whose epithet an earlier monster of the world bears.
+std::string MonstersSubsystem::wild_name(const StepContext& ctx, std::size_t k, std::int64_t m) {
+    const MonsterKindDef& def = kinds_[k];
+    std::vector<std::string> allowed;
+    for (const std::string& form : def.name_forms) {
+        const std::string ep = epithet_of(form);
+        if (ep.empty() || std::find(epithets_.begin(), epithets_.end(), ep) == epithets_.end()) {
+            allowed.push_back(form);
+        }
+    }
+    if (allowed.empty()) {
+        if (std::find(def.name_forms.begin(), def.name_forms.end(), std::string(ROOT_SLOT)) != def.name_forms.end()) {
+            allowed.push_back(std::string(ROOT_SLOT));
+        } else {
+            allowed = def.name_forms;
+        }
+    }
+    CultureNaming naming = kind_naming_[k];
+    naming.monster_forms = std::move(allowed);
+    std::string name = choose_name(naming, peoples_.name_filter(), def.naming_culture, NameKind::monster,
+                                   ctx.inputs().seed, word(kind_culture_id_[k]), word(m),
+                                   peoples_.mutable_name_registry())
+                           .name;
+    if (const std::string* form = matched_form(name, def.name_forms)) {
+        if (std::string ep = epithet_of(*form); !ep.empty()) {
+            epithets_.push_back(std::move(ep));
+        }
+    }
+    return name;
+}
+
+// P5-03 12.2: a host of the dead is named for the settlement at whose ruin
+// it rose, else for its region's name in force; the place is its root.
+std::string MonstersSubsystem::place_name(const StepContext& ctx, std::size_t k, std::int64_t m, std::int64_t region,
+                                          std::int64_t settlement, std::string& root) {
+    std::string place;
+    if (settlement != 0) {
+        place = ctx.state().settlement(settlement).name;
+    } else if (renaming_ != nullptr) {
+        place = renaming_->name_now(ctx, region);
+    } else {
+        place = ctx.inputs().regions[static_cast<std::size_t>(region - 1)].name;
+    }
+    constexpr std::string_view THE = "The ";
+    if (place.size() >= THE.size() && place.compare(0, THE.size(), THE) == 0) {
+        place[0] = 't';
+    }
+    root = place;
+    const std::vector<std::string>& forms = kinds_[k].name_forms;
+    if (forms.empty()) {
+        fail("history: monsters: monster '" + kinds_[k].key + "' has no name form");
+    }
+    const auto fill = [&place](const std::string& form) {
+        std::string out = form;
+        const std::size_t at = out.find(PLACE_SLOT);
+        if (at != std::string::npos) {
+            out.replace(at, PLACE_SLOT.size(), place);
+        }
+        return out;
+    };
+    const std::uint64_t n = forms.size();
+    const std::uint64_t start = pick(ctx.draw(name_key_, word(m), 0, 0), n);
+    NameRegistry& registry = peoples_.mutable_name_registry();
+    for (std::uint64_t j = 0; j < n; ++j) {
+        std::string name = fill(forms[static_cast<std::size_t>((start + j) % n)]);
+        if (name.size() <= NAME_ATTEMPT_MAX_BYTES && !registry.contains(name)) {
+            registry.add(name);
+            return name;
+        }
+    }
+    const std::string base = fill(forms[static_cast<std::size_t>(start)]);
+    for (std::uint64_t r = 2;; ++r) {
+        std::string name = base + " " + roman(r);
+        if (name.size() > NAME_MAX_BYTES) {
+            fail("names: a name longer than 64 bytes");
+        }
+        if (!registry.contains(name)) {
+            registry.add(name);
+            return name;
+        }
+    }
+}
+
 std::string MonstersSubsystem::lair_name(const StepContext& ctx, std::int64_t s, std::size_t kind,
                                          const std::string& root) {
     const std::vector<std::string>& forms = kinds_[kind].lair_forms;
@@ -1446,7 +1699,11 @@ std::string MonstersSubsystem::lair_name(const StepContext& ctx, std::int64_t s,
 std::vector<db::BeastRow> MonstersSubsystem::beast_rows() const {
     std::vector<db::BeastRow> out;
     for (const BeastDef& b : beasts_) {
-        out.push_back(db::BeastRow{b.id, b.key, b.name, b.plural, b.menace, b.food});
+        std::string phrases;  // P5-03 16.1: joined with '|'
+        for (const std::string& x : b.bold_phrases) {
+            phrases += phrases.empty() ? x : "|" + x;
+        }
+        out.push_back(db::BeastRow{b.id, b.key, b.name, b.plural, b.menace, b.food, std::move(phrases)});
     }
     return out;
 }
@@ -1454,7 +1711,12 @@ std::vector<db::BeastRow> MonstersSubsystem::beast_rows() const {
 std::vector<db::MonsterKindRow> MonstersSubsystem::monster_kind_rows() const {
     std::vector<db::MonsterKindRow> out;
     for (const MonsterKindDef& k : kinds_) {
-        out.push_back(db::MonsterKindRow{k.id, k.key, k.name, k.noun, k.grouped ? 1 : 0, k.wake, k.might});
+        std::string phrases;  // P5-03 16.1: joined with '|'
+        for (const std::string& x : k.raid_phrases) {
+            phrases += phrases.empty() ? x : "|" + x;
+        }
+        out.push_back(db::MonsterKindRow{k.id, k.key, k.name, k.noun, k.grouped ? 1 : 0, k.wake, k.might,
+                                         std::move(phrases)});
     }
     return out;
 }

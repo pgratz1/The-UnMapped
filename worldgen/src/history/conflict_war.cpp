@@ -282,6 +282,9 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     if (state.found_settlement(plan.site.x, plan.site.y, plan.region, y, kind, n, std::move(name), settled) != h) {
         fail("history: conflict: the settlement id is not the expected one");
     }
+    if (PeopleLedger* ledger = peoples_.ledger(); ledger != nullptr && n >= 1) {
+        ledger->moved(state, t, h, n, settled);  // P5-03 7.2
+    }
     state.set_region_owner(plan.region, y, settled);
     // r17 22.2: the hidden years of the founder's race.
     const std::int64_t hidden_years = race_of_civ(ctx, y).hidden_years;
@@ -362,7 +365,7 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
         }
         ev = ctx.append(e);
         state.set_population(t, after - excess);
-        refugees(ctx, y, t, excess);
+        refugees(ctx, y, t, excess, ev);
         state.set_settlement_owner(t, x, ev);
         // The conquest of the region when y keeps no standing settlement there.
         bool left_in_region = false;
@@ -409,10 +412,12 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
     }
 }
 
-void ConflictSubsystem::refugees(StepContext& ctx, std::int64_t civ, std::int64_t from, std::int64_t people) {
+void ConflictSubsystem::refugees(StepContext& ctx, std::int64_t civ, std::int64_t from, std::int64_t people,
+                                 std::int64_t cause) {
     if (people <= 0) {
         return;
     }
+    PeopleLedger* ledger = peoples_.ledger();  // P5-03 7.2
     State& state = ctx.state();
     const std::int64_t fx = state.settlement(from).x;
     const std::int64_t fy = state.settlement(from).y;
@@ -433,12 +438,24 @@ void ConflictSubsystem::refugees(StepContext& ctx, std::int64_t civ, std::int64_
         }
     }
     if (nearest == 0) {
+        if (ledger != nullptr) {
+            ledger->displaced(state, from, 0, people, cause);
+        }
         return;  // lost
     }
     const std::int64_t p = state.settlement(nearest).population;
     const std::int64_t cap = peoples_.view().capacity(state.settlement(nearest).region, race_of_civ(ctx, civ).id);
     const std::int64_t room = std::max<std::int64_t>(0, checked_sub(checked_mul(2, cap), p));
-    state.set_population(nearest, checked_add(p, std::min(people, room)));
+    const std::int64_t placed = std::min(people, room);
+    state.set_population(nearest, checked_add(p, placed));
+    if (ledger != nullptr) {
+        if (placed >= 1) {
+            ledger->moved(state, from, nearest, placed, cause);
+        }
+        if (people - placed >= 1) {
+            ledger->displaced(state, from, 0, people - placed, cause);
+        }
+    }
 }
 
 void ConflictSubsystem::close_relations_of(StepContext& ctx, std::int64_t civ, std::int64_t event) {
@@ -698,7 +715,7 @@ void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t
         const std::int64_t excess = std::max<std::int64_t>(0, p - room);
         if (excess > 0) {
             state.set_population(id, p - excess);
-            refugees(ctx, loser, id, excess);
+            refugees(ctx, loser, id, excess, cev);
         }
         state.set_settlement_owner(id, winner, cev);
     }

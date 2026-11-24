@@ -137,6 +137,14 @@ Schema race_cell_weights_schema() {
     });
 }
 
+// P5-03 4.1: one entry of a race's stances.
+Schema race_stance_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("race", Type::string(32)),
+        Field::required("value", Type::integer(-500, 500)),
+    });
+}
+
 Schema race_biome_schema() {
     return Schema(std::vector<Field>{
         Field::required("biome", Type::reference(std::string(BIOME_KIND))),
@@ -556,12 +564,25 @@ Schema history_peoples_schema() {
         i("crisis_small_salience", 0, 100),   // r6 (generator 0.17.0)
         i("ghost_permille", 0, 1000),         // P5-02 4.5 (generator 0.23.0)
         i("ghost_max_population", 0, 1000000),
+        // P5-03 11.1, 11.2 (generator 0.24.0).
+        i("abandon_reach_hops", 0, 16),
+        i("abandon_loss_min_permille", 0, 1000),
+        i("abandon_loss_max_permille", 0, 1000),
+        i("ghost_fade_years", 0, 100000),
     };
     std::vector<Check> checks{
         Check{"peoples_ladder", [](const Record& r) { return check_peoples_ladder(r); }},
         Check{"peoples_tolls", [](const Record& r) { return check_peoples_tolls(r); }},
         Check{"peoples_floor", [](const Record& r) { return check_peoples_floor(r); }},
         Check{"peoples_colonists", [](const Record& r) { return check_peoples_colonists(r); }},
+        Check{"peoples_abandon_loss_ordered",  // P5-03 11.1
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("abandon_loss_min_permille") > r.get_int("abandon_loss_max_permille")) {
+                      return "abandon_loss_min_permille " + int_text(r.get_int("abandon_loss_min_permille")) +
+                             " is above abandon_loss_max_permille " + int_text(r.get_int("abandon_loss_max_permille"));
+                  }
+                  return std::nullopt;
+              }},
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -938,6 +959,8 @@ Schema race_schema() {
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),
+        // P5-03 4.1 (generator 0.24.0): the race's leaning toward other races.
+        Field::required("stances", Type::array(Type::record(race_stance_schema()), 0, 8)),
     };
     std::vector<Check> checks{
         Check{"race_generation_below_lifespan", [](const Record& r) { return check_race_generation_below_lifespan(r); }},
@@ -1123,6 +1146,71 @@ std::optional<std::string> check_monster_overruns_unique(const Record& r) {
     return std::nullopt;
 }
 
+// P5-03 9.5: phrase: lower-case ASCII letters, single spaces, ' and -,
+// starting and ending with a letter.
+bool is_valid_phrase(std::string_view text) noexcept {
+    const auto lower = [](char c) { return c >= 'a' && c <= 'z'; };
+    if (text.empty() || !lower(text.front()) || !lower(text.back())) {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!lower(c) && c != '\'' && c != '-') {
+            return false;
+        }
+    }
+    return true;
+}
+
+StringGrammar phrase_grammar() noexcept {
+    return StringGrammar{"a phrase (lower-case letters, single spaces, ' and -, starting and ending with a letter)",
+                         &is_valid_phrase};
+}
+
+constexpr std::string_view PLACE_PLACEHOLDER = "{place}";
+
+// P5-03 12.2: a monster's name form: a name form with exactly one slot,
+// {root} or {place}.
+bool is_valid_monster_form(std::string_view text) noexcept {
+    if (is_valid_name_form(text)) {
+        return true;
+    }
+    const std::size_t at = text.find(PLACE_PLACEHOLDER);
+    if (at == std::string_view::npos || text.find(PLACE_PLACEHOLDER, at + 1) != std::string_view::npos) {
+        return false;
+    }
+    std::string as_root(text.substr(0, at));
+    as_root += ROOT_PLACEHOLDER;
+    as_root += text.substr(at + PLACE_PLACEHOLDER.size());
+    return is_valid_name_form(as_root);
+}
+
+StringGrammar monster_form_grammar() noexcept {
+    return StringGrammar{"a name form (letters, spaces, ' and -, with exactly one {root} or {place})",
+                         &is_valid_monster_form};
+}
+
+std::optional<std::string> check_monster_place_forms(const Record& r) {
+    const bool dead = r.get_string("wake") == "dead";
+    const std::vector<Value>& forms = r.get_array("name_forms");
+    for (std::size_t j = 0; j < forms.size(); ++j) {
+        const std::string& f = forms[j].as_string();
+        const bool place = f.find(PLACE_PLACEHOLDER) != std::string::npos;
+        const bool root = f.find(ROOT_PLACEHOLDER) != std::string::npos;
+        if (dead && (!place || root)) {
+            return "name_forms[" + uint_text(j) + "] '" + f + "' of a dead kind needs {place} and no {root}";
+        }
+        if (!dead && place) {
+            return "name_forms[" + uint_text(j) + "] '" + f + "' holds {place}, which only a dead kind may";
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<std::string> check_monster_bare_form_last(const Record& r) {
     const std::vector<Value>& forms = r.get_array("name_forms");
     for (std::size_t j = 0; j + 1 < forms.size(); ++j) {
@@ -1144,6 +1232,8 @@ Schema beast_schema() {
         Field::required("growth_permille", Type::integer(1, 1000)),
         Field::required("menace", Type::integer(0, 1000)),
         Field::required("food", Type::integer(0, 1000)),
+        // P5-03 13 (generator 0.24.0).
+        Field::required("bold_phrases", Type::array(Type::string(48, phrase_grammar()), 1, 4)),
     };
     std::vector<Check> checks{
         Check{"beast_habitat_biomes", [](const Record& r) { return check_habitat_repeats(r, "habitat"); }},
@@ -1156,6 +1246,8 @@ Schema monster_schema() {
         return Field::required(std::string(name), Type::integer(min, max));
     };
     const auto forms = [] { return Type::array(Type::string(48, name_form_grammar()), 1, 8); };
+    // P5-03 12.2: a monster's name forms may hold {place} in place of {root}.
+    const auto monster_forms = [] { return Type::array(Type::string(48, monster_form_grammar()), 1, 8); };
     std::vector<Field> fields{
         Field::required("name", Type::string(32, display_name_grammar())),
         Field::required("noun", Type::string(48, monster_noun_grammar())),
@@ -1164,7 +1256,7 @@ Schema monster_schema() {
         Field::required("biomes", Type::array(Type::record(habitat_entry_schema()), 0, 16)),
         i("wake_rate", 0, 10000000),
         Field::required("naming_culture", Type::string(32)),
-        Field::required("name_forms", forms()),
+        Field::required("name_forms", monster_forms()),
         Field::required("lair_forms", forms()),
         i("might", 1, 10000000),
         i("range_hops", 0, 4),
@@ -1180,6 +1272,8 @@ Schema monster_schema() {
         i("max_alive", 0, 64),
         Field::required("flare", Type::boolean()),
         i("hoard_permille", 0, 1000),
+        // P5-03 9.5 (generator 0.24.0).
+        Field::required("raid_phrases", Type::array(Type::string(48, phrase_grammar()), 1, 4)),
     };
     std::vector<Check> checks{
         Check{"monster_biomes", [](const Record& r) { return check_habitat_repeats(r, "biomes"); }},
@@ -1187,6 +1281,7 @@ Schema monster_schema() {
         Check{"monster_toll_ordered", [](const Record& r) { return check_monster_toll_ordered(r); }},
         Check{"monster_overruns_unique", [](const Record& r) { return check_monster_overruns_unique(r); }},
         Check{"monster_bare_form_last", [](const Record& r) { return check_monster_bare_form_last(r); }},
+        Check{"monster_place_forms", [](const Record& r) { return check_monster_place_forms(r); }},  // P5-03 12.2
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -1239,6 +1334,15 @@ Schema history_monsters_schema() {
         i("prey_hop_permille", 0, 1000),
         i("prey_might_ref", 1, 10000000),
         i("prey_might_max_permille", 0, 10000),
+        // P5-03 9.1 to 9.4, 14.1 (generator 0.24.0).
+        i("raid_chain_years", 1, 100000),
+        i("toll_over_permille", 0, 1000),
+        i("hunt_raid_permille", 0, 1000),
+        i("hunt_max_permille", 0, 1000),
+        i("fear_raids", 1, 100),
+        i("fear_years", 1, 100000),
+        i("fear_permille", 0, 1000),
+        i("overrun_people_ref", 1, 1000000),
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
@@ -1248,6 +1352,67 @@ Schema history_monsters_schema() {
                              " is above bold_on_permille " + int_text(r.get_int("bold_on_permille"));
                   }
                   return std::nullopt;
+              }},
+        Check{"monsters_hunt_ordered",  // P5-03 9.4
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("hunt_permille") > r.get_int("hunt_max_permille")) {
+                      return "hunt_permille " + int_text(r.get_int("hunt_permille")) + " is above hunt_max_permille " +
+                             int_text(r.get_int("hunt_max_permille"));
+                  }
+                  return std::nullopt;
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+Schema history_relations_schema() {
+    // P5-03 4.2, in the table's order.
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    std::vector<Field> fields{
+        i("hatred_max", -2000, 0),
+        i("friend_min", 0, 2000),
+        i("band_margin", 0, 500),
+        i("memory_min", -2000, 0),
+        i("memory_max", 0, 2000),
+        i("memory_decay_per_century", 0, 10000),
+        i("war_memory", 0, 1000),
+        i("conquest_memory", 0, 1000),
+        i("sack_memory", 0, 1000),
+        i("capture_memory", 0, 1000),
+        i("expel_memory", 0, 1000),
+        i("shelter_memory", 0, 1000),
+        i("meet_hops", -1, 8),
+        i("migrate_hops", 0, 8),
+        i("migrate_min", 1, 100000),
+        i("welcome_min", -2000, 2001),
+        i("subject_years", 0, 100000),
+        i("conquest_settlers_permille", 0, 1000),
+        i("drift_permille_per_century", 0, 1000),
+        i("fade_permille", 0, 1000),
+        i("mixed_min_permille", 1, 1001),
+        i("expel_permille", 0, 1000),
+        i("expel_share_max", 0, 1000),
+    };
+    std::vector<Check> checks{
+        Check{"relations_bands",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::int64_t h = r.get_int("hatred_max");
+                  const std::int64_t f = r.get_int("friend_min");
+                  const std::int64_t m = r.get_int("band_margin");
+                  if (h + m < f - m) {
+                      return std::nullopt;
+                  }
+                  return "bands overlap: hatred_max " + int_text(h) + " and friend_min " + int_text(f) +
+                         " with band_margin " + int_text(m);
+              }},
+        Check{"relations_memory",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("memory_min") <= 0 && r.get_int("memory_max") >= 0) {
+                      return std::nullopt;
+                  }
+                  return std::string("memory_min must not be above 0 nor memory_max below 0");
               }},
     };
     return Schema(std::move(fields), std::move(checks));

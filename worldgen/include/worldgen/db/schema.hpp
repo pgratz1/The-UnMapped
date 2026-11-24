@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 9;
+inline constexpr std::int64_t SCHEMA_VERSION = 10;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -224,10 +224,11 @@ inline constexpr std::string_view REGION_NAME_TABLE = "region_name";
 // monster.died, site.ended_year.
 inline constexpr std::string_view DDL_BEAST =
     "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
-    "menace INTEGER NOT NULL, food INTEGER NOT NULL) STRICT";
+    "menace INTEGER NOT NULL, food INTEGER NOT NULL, bold_phrases TEXT NOT NULL) STRICT";
 inline constexpr std::string_view DDL_MONSTER_KIND =
     "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT NOT "
-    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL) STRICT";
+    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL, raid_phrases TEXT NOT NULL) "
+    "STRICT";
 inline constexpr std::string_view DDL_BEAST_POPULATION =
     "CREATE TABLE beast_population (region INTEGER NOT NULL, beast INTEGER NOT NULL, year INTEGER NOT NULL, count "
     "INTEGER NOT NULL, PRIMARY KEY (region, beast, year)) STRICT, WITHOUT ROWID";
@@ -246,12 +247,26 @@ inline constexpr std::string_view BEAST_POPULATION_TABLE = "beast_population";
 inline constexpr std::string_view MONSTER_TABLE = "monster";
 inline constexpr std::string_view SITE_TABLE = "site";
 
+// DDL of the tables of P5-03 16.1 (schema version 10), executed after site,
+// in this order: the dispositions of the race pairs by year and the shares
+// and standings of the races of each settlement by year, written by the
+// history stage, empty when it did not run.
+inline constexpr std::string_view DDL_RACE_RELATION =
+    "CREATE TABLE race_relation (race_a INTEGER NOT NULL, race_b INTEGER NOT NULL, year INTEGER NOT NULL, "
+    "disposition INTEGER NOT NULL, band INTEGER NOT NULL, PRIMARY KEY (race_a, race_b, year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_SETTLEMENT_RACE =
+    "CREATE TABLE settlement_race (settlement INTEGER NOT NULL, race INTEGER NOT NULL, year INTEGER NOT NULL, share "
+    "INTEGER NOT NULL, standing INTEGER NOT NULL, PRIMARY KEY (settlement, race, year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view RACE_RELATION_TABLE = "race_relation";
+inline constexpr std::string_view SETTLEMENT_RACE_TABLE = "settlement_race";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
 // history tables of P3-04 9.1; schema 8: then region_name; schema 9: then
-// beast, monster_kind, beast_population, monster, site).
-inline constexpr std::array<std::string_view, 32> DDL_STATEMENTS = {
+// beast, monster_kind, beast_population, monster, site; schema 10: then
+// race_relation, settlement_race).
+inline constexpr std::array<std::string_view, 34> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -262,7 +277,8 @@ inline constexpr std::array<std::string_view, 32> DDL_STATEMENTS = {
     DDL_CIVILIZATION,   DDL_SETTLEMENT,      DDL_SETTLEMENT_CENSUS,
     DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME,
     DDL_BEAST,          DDL_MONSTER_KIND,    DDL_BEAST_POPULATION,
-    DDL_MONSTER,        DDL_SITE};
+    DDL_MONSTER,        DDL_SITE,            DDL_RACE_RELATION,
+    DDL_SETTLEMENT_RACE};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------

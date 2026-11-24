@@ -420,6 +420,7 @@ inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 inline constexpr std::string_view HISTORY_CONFLICT_ID = "conflict";  // P3-06 12.1
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
 inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
+inline constexpr std::string_view HISTORY_RELATIONS_ID = "relations";  // P5-03 4.2 (generator 0.24.0)
 inline constexpr std::string_view HISTORY_MONSTERS_ID = "monsters";  // P5-02 4.3 (generator 0.23.0)
 inline constexpr std::string_view HISTORY_RENAMING_ID = "renaming";  // P5-12 4 (generator 0.22.0)
 inline constexpr std::string_view HISTORY_REPORT_ID = "report";
@@ -450,6 +451,10 @@ inline constexpr std::string_view MONSTER_DIRECTORY = "monsters";
 // The schema of definition history.monsters (P5-02 4.3). Named check
 // monsters_bold_ordered.
 [[nodiscard]] Schema history_monsters_schema();
+
+// The schema of definition history.relations (P5-03 4.2). Named checks
+// relations_bands, relations_memory.
+[[nodiscard]] Schema history_relations_schema();
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);

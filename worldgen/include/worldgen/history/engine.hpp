@@ -66,6 +66,9 @@ struct Settlement {
     std::int64_t founded_year = 0;
     std::int64_t founding_event = 0;
     std::int64_t owner_civ = 0;
+    // P5-03 7.3: the event of its last set_settlement_owner, its
+    // founding_event at founding. Not stored in the world.
+    std::int64_t owner_event = 0;
     std::int64_t population = 0;
     SettlementKind kind = SettlementKind::hamlet;
     SettlementStatus status = SettlementStatus::thriving;
@@ -255,6 +258,9 @@ public:
     // has none. FatalError "history: state: event <e> does not exist".
     [[nodiscard]] std::string_view event_kind(std::int64_t event) const;
     [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const;
+    // P5-03 6.2.2: the entity ids of every participant of role `role`, in
+    // participant order (empty when it has none).
+    [[nodiscard]] std::vector<std::int64_t> event_participants(std::int64_t event, std::string_view role) const;
     // The `year` of event `event` (P3-05 r12 22.2: the cause memory).
     [[nodiscard]] std::int64_t event_year(std::int64_t event) const;
     // P3-04 r21 23.3 (P5-12): pure reads of the events appended so far. The
@@ -364,6 +370,10 @@ struct HistoryResult {
     std::vector<db::BeastPopulationRow> beast_populations;
     std::vector<db::MonsterRow> monsters;
     std::vector<db::SiteRow> sites;
+    // P5-03 6.7 (schema 10): the relations subsystem's rows, filled by the
+    // history stage, empty from run_engine.
+    std::vector<db::RaceRelationRow> race_relations;
+    std::vector<db::SettlementRaceRow> settlement_races;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

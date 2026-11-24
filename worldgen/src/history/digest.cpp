@@ -389,6 +389,9 @@ struct Kinds {
     Id settlement_abandoned = 0, settlement_abandoned_to = 0;
     Id region_renamed = 0;  // r21 26.5 (P5-12)
     Id monster_raid = 0, settlement_overrun = 0, undead_rose = 0, beasts_bold = 0;  // P5-02 12.6
+    // P5-03: kinds 56 to 62.
+    Id settlement_fled = 0, peoples_met = 0, disposition_turned = 0, refugees_arrived = 0, settlement_mixed = 0;
+    Id standing_changed = 0, people_expelled = 0;
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -435,6 +438,13 @@ struct Kinds {
         settlement_overrun = id("settlement_overrun");
         undead_rose = id("undead_rose");
         beasts_bold = id("beasts_bold");
+        settlement_fled = id("settlement_fled");
+        peoples_met = id("peoples_met");
+        disposition_turned = id("disposition_turned");
+        refugees_arrived = id("refugees_arrived");
+        settlement_mixed = id("settlement_mixed");
+        standing_changed = id("standing_changed");
+        people_expelled = id("people_expelled");
     }
     // 25.2: the calamity kinds of the summary's cap.
     [[nodiscard]] bool calamity(Id k) const noexcept {
@@ -474,6 +484,7 @@ public:
     HistoryDigest run() {
         index();
         civilizations();
+        monster_stories();  // P5-03 10.1
         summary();
         stats();
         return std::move(d_);
@@ -1087,6 +1098,10 @@ private:
         }
         // r21 26.5 item 1: every renaming e caused.
         add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
+        // P5-03 11.3: a flight for fear brings the abandonment it caused.
+        if (k == kinds_.settlement_fled) {
+            add_effects(e, [this](Id x) { return x == kinds_.settlement_abandoned || x == kinds_.settlement_abandoned_to; });
+        }
         // Part 3: the war frame.
         if (const Id d = war_of_[static_cast<std::size_t>(e)]; d != 0) {
             append_frame(out, d);
@@ -1211,6 +1226,13 @@ private:
                 add(e.row.id);
             }
         }
+        // P5-03 10.1: the floor starts as F with the stories of the told
+        // monsters, each with its unit.
+        for (const Id e : stories_) {
+            for (const Id u : unit(e)) {
+                add(u);
+            }
+        }
         std::vector<std::vector<Id>> by_age(t_.ages.size());
         for (const Id e : ranked) {  // rank order
             const std::size_t a = event_age[static_cast<std::size_t>(e)];
@@ -1296,6 +1318,7 @@ private:
         war_stats();
         renaming_stats();
         monster_stats();
+        relations_stats();  // P5-03 17.4
     }
 
     // P5-02 12.6: appended at the end, in this order.
@@ -1336,7 +1359,7 @@ private:
         }
         std::int64_t left = 0;
         for (const db::SettlementRow& x : t_.settlements) {
-            left += (x.ending >= 3 && x.ending <= 5) ? 1 : 0;
+            left += (x.ending >= 3 && x.ending <= 6) ? 1 : 0;  // P5-03 11.3: and fled
         }
         std::int64_t regions_shunned = 0;
         for (const std::uint8_t b : shunned) {
@@ -1354,6 +1377,145 @@ private:
         put("beasts_bold", bold);
         put("settlements_left", left);
         put("regions_shunned", regions_shunned);
+    }
+
+    // P5-03 10.1: harm(m), the told monsters and their stories.
+    void monster_stories() {
+        const std::size_t nm = t_.monsters.size();
+        d_.monster_harm.assign(nm, 0);
+        std::vector<Id> worst(nm, 0);        // the raid of the largest dead, then smaller id
+        std::vector<std::int64_t> worst_dead(nm, -1);
+        std::vector<Id> overrun(nm, 0);      // the first overrun
+        const auto add_harm = [](std::int64_t& h, std::int64_t v) {
+            v = std::max<std::int64_t>(0, v);
+            h = h > std::numeric_limits<std::int64_t>::max() - v ? std::numeric_limits<std::int64_t>::max() : h + v;
+        };
+        const auto monster_of = [this](const HistoryView::Event& e) -> std::size_t {
+            for (const db::EventParticipantRow& p : e.participants) {
+                if (p.entity_type == static_cast<std::int64_t>(EntityType::monster) && p.entity_id >= 1 &&
+                    static_cast<std::size_t>(p.entity_id) <= t_.monsters.size()) {
+                    return static_cast<std::size_t>(p.entity_id - 1);
+                }
+            }
+            return NONE;
+        };
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            if (k != kinds_.monster_raid && k != kinds_.settlement_overrun && k != kinds_.settlement_fled) {
+                continue;
+            }
+            const std::size_t m = monster_of(e);
+            if (m == NONE) {
+                continue;
+            }
+            if (k == kinds_.monster_raid) {
+                const std::int64_t dead = value_of(e, "dead");
+                add_harm(d_.monster_harm[m], dead);
+                if (dead > worst_dead[m]) {
+                    worst_dead[m] = dead;
+                    worst[m] = e.row.id;
+                }
+            } else {
+                add_harm(d_.monster_harm[m], SUMMARY_MONSTER_TAKEN_HARM);
+                if (k == kinds_.settlement_overrun && overrun[m] == 0) {
+                    overrun[m] = e.row.id;
+                }
+            }
+        }
+        std::vector<std::size_t> notable;
+        for (std::size_t m = 0; m < nm; ++m) {
+            if (d_.monster_harm[m] >= SUMMARY_MONSTER_HARM_MIN) {
+                notable.push_back(m);
+            }
+        }
+        std::stable_sort(notable.begin(), notable.end(), [this](std::size_t a, std::size_t b) {
+            return d_.monster_harm[a] != d_.monster_harm[b] ? d_.monster_harm[a] > d_.monster_harm[b] : a < b;
+        });
+        if (notable.size() > SUMMARY_MONSTER_STORIES) {
+            notable.resize(SUMMARY_MONSTER_STORIES);
+        }
+        d_.monster_stories = static_cast<std::int64_t>(notable.size());
+        const auto n_events = static_cast<Id>(events_.size());
+        for (const std::size_t m : notable) {
+            const db::MonsterRow& row = t_.monsters[m];
+            for (const Id e : {row.born_event, worst[m], overrun[m], row.death_event}) {
+                if (e >= 1 && e <= n_events && std::find(stories_.begin(), stories_.end(), e) == stories_.end()) {
+                    stories_.push_back(e);
+                }
+            }
+        }
+    }
+
+    // P5-03 17.4: the race relations, mixed settlements and migrations.
+    void relations_stats() {
+        put("race_relations", static_cast<std::int64_t>(t_.race_relations.size()));
+        put("settlement_races", static_cast<std::int64_t>(t_.settlement_races.size()));
+        std::int64_t present = 0;
+        for (const db::RaceRow& r : t_.races) {
+            present += r.present != 0 ? 1 : 0;
+        }
+        std::int64_t met = 0, hatred = 0, friendship = 0;
+        for (std::size_t i = 0; i < t_.race_relations.size(); ++i) {
+            const db::RaceRelationRow& r = t_.race_relations[i];
+            const bool last = i + 1 == t_.race_relations.size() || t_.race_relations[i + 1].race_a != r.race_a ||
+                              t_.race_relations[i + 1].race_b != r.race_b;
+            if (last) {
+                ++met;
+                hatred += r.band == 0 ? 1 : 0;
+                friendship += r.band == 2 ? 1 : 0;
+            }
+        }
+        std::int64_t turned = 0, arrivals = 0, arrived = 0, expelled = 0, expelled_people = 0, fled = 0;
+        std::int64_t without = 0, lost = 0;
+        std::vector<std::uint8_t> mixed_ever(t_.settlements.size() + 1, 0);
+        const auto sat_add = [](std::int64_t& h, std::int64_t v) {
+            v = std::max<std::int64_t>(0, v);
+            h = h > std::numeric_limits<std::int64_t>::max() - v ? std::numeric_limits<std::int64_t>::max() : h + v;
+        };
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            turned += k == kinds_.disposition_turned ? 1 : 0;
+            fled += k == kinds_.settlement_fled ? 1 : 0;
+            without += k == kinds_.settlement_abandoned ? 1 : 0;
+            if (k == kinds_.refugees_arrived) {
+                ++arrivals;
+                sat_add(arrived, value_of(e, "people"));
+            } else if (k == kinds_.people_expelled) {
+                ++expelled;
+                sat_add(expelled_people, value_of(e, "people"));
+            } else if (k == kinds_.settlement_abandoned_to) {
+                sat_add(lost, value_of(e, "lost"));
+            } else if (k == kinds_.settlement_mixed && e.row.settlement >= 1 &&
+                       static_cast<std::size_t>(e.row.settlement) < mixed_ever.size()) {
+                mixed_ever[static_cast<std::size_t>(e.row.settlement)] = 1;
+            }
+        }
+        std::int64_t ever = 0;
+        for (const std::uint8_t b : mixed_ever) {
+            ever += b;
+        }
+        std::optional<std::int64_t> oldest;
+        for (const db::SettlementRow& x : t_.settlements) {
+            if (x.status == 3 && x.ruined_year && (!oldest || *x.ruined_year < *oldest)) {
+                oldest = x.ruined_year;
+            }
+        }
+        put("race_pairs", present * (present - 1) / 2);
+        put("race_pairs_met", met);
+        put("dispositions_turned", turned);
+        put("pairs_hatred", hatred);
+        put("pairs_friendship", friendship);
+        put("refugees_arrived", arrivals);
+        put("refugees_people", arrived);
+        put("people_expelled", expelled);
+        put("expelled_people", expelled_people);
+        put("settlements_mixed", static_cast<std::int64_t>(mixed_at_end(t_).size()));
+        put("settlements_mixed_ever", ever);
+        put("settlements_fled", fled);
+        put("abandoned_without_destination", without);
+        put("abandonment_lost", lost);
+        put("monster_stories", d_.monster_stories);
+        put("ruins_oldest_year", oldest ? *oldest : STAT_NONE);
     }
 
     // r21 26.5 item 2 (P5-12): region_names, regions_renamed, refuges,
@@ -1771,6 +1933,7 @@ private:
     std::span<const HistoryView::Event> events_;
     Kinds kinds_;
     HistoryDigest d_;
+    std::vector<Id> stories_;  // P5-03 10.1: the told monsters' story events
     std::vector<std::vector<Id>> effects_;           // index event id: the events it caused, ascending
     std::vector<std::vector<Id>> civ_events_;        // index civ - 1: its events, ascending
     std::vector<std::size_t> war_row_;               // index event id: its war relation row, or NONE
@@ -1810,6 +1973,43 @@ void choose_summary_set(HistoryDigest& digest, std::int64_t budget) {
             s.second = digest.summary_events;
         }
     }
+}
+
+std::vector<MixedSettlement> mixed_at_end(const HistoryTables& t) {
+    std::vector<MixedSettlement> out;
+    const std::vector<db::SettlementRaceRow>& rows = t.settlement_races;  // (settlement, race, year) ascending
+    std::size_t i = 0;
+    while (i < rows.size()) {
+        const std::int64_t s = rows[i].settlement;
+        MixedSettlement m;
+        m.settlement = s;
+        while (i < rows.size() && rows[i].settlement == s) {
+            const std::int64_t race = rows[i].race;
+            const db::SettlementRaceRow* last = nullptr;
+            while (i < rows.size() && rows[i].settlement == s && rows[i].race == race) {
+                if (rows[i].year <= t.end_year - 1) {
+                    last = &rows[i];
+                }
+                ++i;
+            }
+            if (last != nullptr && last->share > 0) {
+                m.shares.push_back(*last);
+            }
+        }
+        const bool standing_now = s >= 1 && static_cast<std::size_t>(s) <= t.settlements.size() &&
+                                  (t.settlements[static_cast<std::size_t>(s - 1)].status == 1 ||
+                                   t.settlements[static_cast<std::size_t>(s - 1)].status == 2);
+        const bool mixed = std::any_of(m.shares.begin(), m.shares.end(), [](const db::SettlementRaceRow& r) {
+            return r.standing != 3 && r.share >= MIXED_SHARE_MIN;
+        });
+        if (standing_now && mixed) {
+            std::stable_sort(m.shares.begin(), m.shares.end(), [](const db::SettlementRaceRow& a, const db::SettlementRaceRow& b) {
+                return a.share != b.share ? a.share > b.share : a.race < b.race;
+            });
+            out.push_back(std::move(m));
+        }
+    }
+    return out;
 }
 
 }  // namespace worldgen::history

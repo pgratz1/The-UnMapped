@@ -1,4 +1,4 @@
-# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+# Monster kind (spec P5-02 4.2). Generator 0.24.0.
 [monster.giant]
 name = "Giant"
 noun = "a giant of the mountains"
@@ -7,7 +7,7 @@ wake = "wild"
 biomes = [{ biome = "alpine", weight = 900 }, { biome = "highland_moor", weight = 500 }]
 wake_rate = 25
 naming_culture = "dwarven"
-name_forms = ["{root} Stonehand", "{root}"]
+name_forms = ["{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"]
 lair_forms = ["{root}'s Seat", "The Hall of {root}"]
 might = 1200
 range_hops = 1
@@ -23,3 +23,4 @@ lifespan_years = 2500
 max_alive = 2
 flare = true
 hoard_permille = 8
+raid_phrases = ["came down from the heights upon", "hurled stones upon", "fell upon"]

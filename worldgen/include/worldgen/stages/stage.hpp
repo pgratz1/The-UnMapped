@@ -152,6 +152,8 @@ public:
     void write_beast_population(const db::BeastPopulationRow& row);
     void write_monster(const db::MonsterRow& row);
     void write_site(const db::SiteRow& row);
+    void write_race_relation(const db::RaceRelationRow& row);    // schema 10 (P5-03)
+    void write_settlement_race(const db::SettlementRaceRow& row);
 
 private:
     friend class detail::Pipeline;

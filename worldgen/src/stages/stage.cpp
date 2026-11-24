@@ -247,6 +247,14 @@ void StageContext::write_site(const db::SiteRow& row) {
     state_->stage.write_site(row);
 }
 
+void StageContext::write_race_relation(const db::RaceRelationRow& row) {
+    state_->stage.write_race_relation(row);
+}
+
+void StageContext::write_settlement_race(const db::SettlementRaceRow& row) {
+    state_->stage.write_settlement_race(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

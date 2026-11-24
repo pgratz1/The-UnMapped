@@ -36,3 +36,4 @@ hidden_years = 100
 awakening_population = 1200
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
+stances = []

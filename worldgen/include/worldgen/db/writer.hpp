@@ -390,6 +390,7 @@ struct BeastRow {
     std::string plural;
     std::int64_t menace = 0;
     std::int64_t food = 0;
+    std::string bold_phrases;  // schema 10 (P5-03 16.1): the phrases joined with '|'
 
     friend bool operator==(const BeastRow&, const BeastRow&) = default;
 };
@@ -402,6 +403,7 @@ struct MonsterKindRow {
     std::int64_t grouped = 0;  // 0 or 1
     std::int64_t wake = 0;     // 1 wild, 2 dead
     std::int64_t might = 0;
+    std::string raid_phrases;  // schema 10 (P5-03 16.1): the phrases joined with '|'
 
     friend bool operator==(const MonsterKindRow&, const MonsterKindRow&) = default;
 };
@@ -448,6 +450,27 @@ struct SiteRow {
     std::int64_t ending = 0;  // 0 open, 1 to 6 (P5-02 11.2)
 
     friend bool operator==(const SiteRow&, const SiteRow&) = default;
+};
+
+// Rows of the tables of P5-03 16.2 (schema 10).
+struct RaceRelationRow {
+    std::int64_t race_a = 0;
+    std::int64_t race_b = 0;
+    std::int64_t year = 0;
+    std::int64_t disposition = 0;
+    std::int64_t band = 0;  // 0 hatred, 1 wariness, 2 friendship
+
+    friend bool operator==(const RaceRelationRow&, const RaceRelationRow&) = default;
+};
+
+struct SettlementRaceRow {
+    std::int64_t settlement = 0;
+    std::int64_t race = 0;
+    std::int64_t year = 0;
+    std::int64_t share = 0;     // per mille, 0: the race left
+    std::int64_t standing = 0;  // 0 subject, 1 tolerated, 2 accepted, 3 ruling
+
+    friend bool operator==(const SettlementRaceRow&, const SettlementRaceRow&) = default;
 };
 
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
@@ -563,6 +586,10 @@ public:
     void write_beast_population(const BeastPopulationRow& row);
     void write_monster(const MonsterRow& row);
     void write_site(const SiteRow& row);
+    // The tables of P5-03 (schema 10): rows in ascending primary key
+    // ((race_a, race_b, year); (settlement, race, year)).
+    void write_race_relation(const RaceRelationRow& row);
+    void write_settlement_race(const SettlementRaceRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

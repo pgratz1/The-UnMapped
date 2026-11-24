@@ -1,0 +1,26 @@
+# Race relations, mixed settlements and migrations (spec P5-03 4.2).
+# Generator 0.24.0.
+[history.relations]
+hatred_max = -500
+friend_min = 150
+band_margin = 50
+memory_min = -250
+memory_max = 250
+memory_decay_per_century = 40
+war_memory = 25
+conquest_memory = 50
+sack_memory = 10
+capture_memory = 5
+expel_memory = 30
+shelter_memory = 15
+meet_hops = 3
+migrate_hops = 2
+migrate_min = 40
+welcome_min = -200
+subject_years = 200
+conquest_settlers_permille = 100
+drift_permille_per_century = 100
+fade_permille = 20
+mixed_min_permille = 100
+expel_permille = 30
+expel_share_max = 500

@@ -822,6 +822,10 @@ bool ConflictSubsystem::truce_over(const StepContext& ctx, std::int64_t a, std::
 }
 
 std::int64_t ConflictSubsystem::disposition_of(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
+    // P5-03 7.1: the peoples' disposition in place of the camp table.
+    if (dispositions_ != nullptr) {
+        return checked_sub(dispositions_->disposition(race_of_civ(ctx, a).id, race_of_civ(ctx, b).id), grudge(a, b));
+    }
     return disposition(tuning_, race_of_civ(ctx, a).camp, race_of_civ(ctx, b).camp, grudge(a, b));
 }
 
@@ -1148,22 +1152,30 @@ void ConflictSubsystem::housekeeping(StepContext& ctx) {
             }
         }
     }
-    // 3. Enmities.
-    std::vector<Pair> to_open;
+    // 3. Enmities (P5-03 7.1: on the peoples' disposition; the row cites
+    // the later of the younger's founding and the turn into hatred).
+    std::vector<std::pair<Pair, std::int64_t>> to_open;
     for (std::size_t i = 0; i < alive.size(); ++i) {
         for (std::size_t j = i + 1; j < alive.size(); ++j) {
             const Pair p{alive[i], alive[j]};
             if (enmity_opened_.count(p) != 0) {
                 continue;
             }
-            if (tuning_.camp.of(race_of_civ(ctx, p.first).camp, race_of_civ(ctx, p.second).camp) <=
-                tuning_.enmity_max) {
-                to_open.push_back(p);
+            const ConflictRace& ra = race_of_civ(ctx, p.first);
+            const ConflictRace& rb = race_of_civ(ctx, p.second);
+            const std::int64_t d =
+                dispositions_ != nullptr ? dispositions_->disposition(ra.id, rb.id) : tuning_.camp.of(ra.camp, rb.camp);
+            if (d <= tuning_.enmity_max) {
+                std::int64_t since = state.civ(p.second).founding_event;
+                if (dispositions_ != nullptr) {
+                    since = std::max(since, dispositions_->hatred_event(ra.id, rb.id));
+                }
+                to_open.emplace_back(p, since);
             }
         }
     }
-    for (const Pair& p : to_open) {
-        state.open_relation(symmetric_relation(p.first, p.second, "enmity"), state.civ(p.second).founding_event);
+    for (const auto& [p, since] : to_open) {
+        state.open_relation(symmetric_relation(p.first, p.second, "enmity"), since);
         enmity_opened_.insert(p);
     }
 }

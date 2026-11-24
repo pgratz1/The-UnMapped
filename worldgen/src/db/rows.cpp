@@ -442,6 +442,7 @@ Result<std::vector<BeastRow>> read_beast_rows(const WorldReader& world) {
         r.plural = c.text();
         r.menace = c.integer();
         r.food = c.integer();
+        r.bold_phrases = c.text();
         return r;
     });
 }
@@ -456,6 +457,7 @@ Result<std::vector<MonsterKindRow>> read_monster_kind_rows(const WorldReader& wo
         r.grouped = c.integer();
         r.wake = c.integer();
         r.might = c.integer();
+        r.raid_phrases = c.text();
         return r;
     });
 }
@@ -506,6 +508,31 @@ Result<std::vector<SiteRow>> read_site_rows(const WorldReader& world) {
         r.ended_year = c.nullable_integer();
         r.ending_event = c.integer();
         r.ending = c.integer();
+        return r;
+    });
+}
+
+// Schema 10 (P5-03 16.1).
+Result<std::vector<RaceRelationRow>> read_race_relation_rows(const WorldReader& world) {
+    return read_rows<RaceRelationRow>(world, RACE_RELATION_TABLE, [](Columns& c) {
+        RaceRelationRow r;
+        r.race_a = c.integer();
+        r.race_b = c.integer();
+        r.year = c.integer();
+        r.disposition = c.integer();
+        r.band = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<SettlementRaceRow>> read_settlement_race_rows(const WorldReader& world) {
+    return read_rows<SettlementRaceRow>(world, SETTLEMENT_RACE_TABLE, [](Columns& c) {
+        SettlementRaceRow r;
+        r.settlement = c.integer();
+        r.race = c.integer();
+        r.year = c.integer();
+        r.share = c.integer();
+        r.standing = c.integer();
         return r;
     });
 }

@@ -102,4 +102,4 @@ chance_permille = 600
 weight = 75
 name_role = "monster"
 namer_role = "civilization"
-forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"]
+forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"]

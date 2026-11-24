@@ -244,5 +244,9 @@ private:
 [[nodiscard]] Result<std::vector<BeastPopulationRow>> read_beast_population_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<MonsterRow>> read_monster_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<SiteRow>> read_site_rows(const WorldReader& world);
+// Schema 10 (P5-03 16.1): tables race_relation and settlement_race, in
+// primary-key order.
+[[nodiscard]] Result<std::vector<RaceRelationRow>> read_race_relation_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<SettlementRaceRow>> read_settlement_race_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

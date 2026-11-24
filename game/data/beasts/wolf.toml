@@ -1,4 +1,4 @@
-# Beast species (spec P5-02 4.1). Generator 0.23.0.
+# Beast species (spec P5-02 4.1). Generator 0.24.0.
 [beast.wolf]
 name = "Wolf"
 plural = "wolves"
@@ -7,3 +7,4 @@ density = 20
 growth_permille = 150
 menace = 10
 food = 0
+bold_phrases = ["hunted the roads from", "grew bold and stalked the herds of"]

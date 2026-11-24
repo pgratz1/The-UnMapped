@@ -78,6 +78,10 @@ struct PeoplesTuning {
     // P5-02 4.5, 8.2 (generator 0.23.0): the ghost rule; 0 (a hand-made
     // tuning) turns it off.
     std::int64_t ghost_permille = 0, ghost_max_population = 0;
+    // P5-03 11.1, 11.2 (generator 0.24.0). The defaults of a hand-made
+    // tuning leave 0.23.0's rules: any distance, no losses on the road.
+    std::int64_t abandon_reach_hops = 16, abandon_loss_min_permille = 0, abandon_loss_max_permille = 0;
+    std::int64_t ghost_fade_years = 0;
 };
 
 // The loaded definition (validated by the loader). FatalError "history:
@@ -179,6 +183,9 @@ public:
     virtual ~WildView() = default;
     [[nodiscard]] virtual std::int64_t growth_permille(std::int64_t region) const = 0;
     [[nodiscard]] virtual bool shunned(std::int64_t region) const = 0;
+    // P5-03 11.2: an open site (any kind) has the settlement as its
+    // settlement; such a ruin does not fade. A view that keeps no sites: none.
+    [[nodiscard]] virtual bool holds_site(std::int64_t /*settlement*/) const { return false; }
 };
 
 // --- Geography (sections 4 to 6) ------------------------------------------------------------
@@ -281,6 +288,23 @@ private:
 
 class PeoplesSubsystem;
 
+// P5-03 6.4.1: the people ledger. Each call only records (no State change,
+// no append, no draw). Readings: `state` is the live state at the call (the
+// ledger copies the from-settlement's shares and owner at the call), and a
+// move names the event it came with (`cause`: the ruin, the capture or
+// cession, the refuge's founding), which the races new to `to` date from.
+class PeopleLedger {
+public:
+    virtual ~PeopleLedger() = default;
+    // `people` of settlement `from` were just added to settlement `to`.
+    virtual void moved(const State& state, std::int64_t from, std::int64_t to, std::int64_t people,
+                       std::int64_t cause) = 0;
+    // `people` of `from` have nowhere to go (race 0: of every race by its
+    // shares; else of that race); `cause` displaced them.
+    virtual void displaced(const State& state, std::int64_t from, std::int64_t race, std::int64_t people,
+                           std::int64_t cause) = 0;
+};
+
 // The read-only view P3-06 uses. Valid during any step of the run of its
 // subsystem, after the first awakening. The functions that read the state
 // take the step's context (spec 13 lists them without it; a member may not
@@ -336,6 +360,15 @@ public:
     [[nodiscard]] const PeoplesView& view() const noexcept { return view_; }
     // P5-02 7.1: the wild view, set once by the stage (nullptr: none).
     void set_wild(const WildView* wild) noexcept { wild_ = wild; }
+    // P5-03 6.4.1: the people ledger, set once by the stage (nullptr: none).
+    void set_ledger(PeopleLedger* ledger) noexcept { ledger_ = ledger; }
+    [[nodiscard]] PeopleLedger* ledger() const noexcept { return ledger_; }
+    // P5-03 9.4: 8.5's abandonment of a standing settlement with `cause` as
+    // the blow (items 1 to 6, the decline start added when declining).
+    void abandon(StepContext& context, std::int64_t settlement, std::int64_t cause);
+    // P5-03 11.1: the owner's nearest other standing settlement within
+    // abandon_reach_hops (squared distance, then id), 0 if none.
+    [[nodiscard]] std::int64_t destination(const State& state, std::int64_t settlement) const;
     // P3-06 after casualties: the cause of a later abandonment.
     void note_reduction(std::int64_t settlement, std::int64_t event);
     // r15 22.7a (P3-06 r17 22.3): the latest flight of civ, to the refuge
@@ -420,7 +453,9 @@ private:
     // r12 22.2: `event` if within cause_memory_years of the step's year, else 0.
     [[nodiscard]] std::int64_t recent(const StepContext& context, std::int64_t event) const;
     [[nodiscard]] std::int64_t dwindle_cause(const StepContext& context, std::int64_t settlement) const;
-    void abandon(StepContext& context, std::int64_t settlement, std::int64_t cause);
+    // P5-03 11.1: the dead of the road of an abandonment of `population`.
+    [[nodiscard]] std::int64_t road_loss(const StepContext& context, std::int64_t settlement,
+                                         std::int64_t population) const;
     // 8.5: the events an abandonment of s would append.
     [[nodiscard]] std::int64_t abandon_events(const State& state, std::int64_t settlement) const;
     void end_civilization(StepContext& context, std::int64_t civ, std::int64_t region, std::int64_t settlement,
@@ -486,8 +521,9 @@ private:
     NameRegistry registry_;
     NameCores cores_;  // P3-02 r10 12.2: the cores of the civilization and settlement names drawn
     NameFilter filter_;  // P3-02 r5: the world's name filter
-    std::array<std::uint64_t, 13> keys_{};  // P5-02: + hist.peoples.ghost
+    std::array<std::uint64_t, 14> keys_{};  // P5-02: + hist.peoples.ghost; P5-03: + hist.peoples.abandon_loss
     const WildView* wild_ = nullptr;        // P5-02 7.1
+    PeopleLedger* ledger_ = nullptr;        // P5-03 6.4.1
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;
     std::int64_t homes_serial_ = -1;          // the step serial the cached homes were computed in; -1 none

@@ -180,11 +180,12 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     }
     // Schema 9 (P5-02 11.1).
     for (const Row& r : h.rows[14]) {
-        t.beasts.push_back(db::BeastRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5)});
+        t.beasts.push_back(
+            db::BeastRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5), r[6].bytes});
     }
     for (const Row& r : h.rows[15]) {
         t.monster_kinds.push_back(
-            db::MonsterKindRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5), i64(r, 6)});
+            db::MonsterKindRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5), i64(r, 6), r[7].bytes});
     }
     for (const Row& r : h.rows[16]) {
         t.beast_populations.push_back(db::BeastPopulationRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3)});
@@ -196,6 +197,13 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     for (const Row& r : h.rows[18]) {
         t.sites.push_back(db::SiteRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
                                       i64(r, 7), i64(r, 8), i64(r, 9), i64(r, 10), opt(r, 11), i64(r, 12), i64(r, 13)});
+    }
+    // Schema 10 (P5-03 16.1).
+    for (const Row& r : h.rows[19]) {
+        t.race_relations.push_back(db::RaceRelationRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4)});
+    }
+    for (const Row& r : h.rows[20]) {
+        t.settlement_races.push_back(db::SettlementRaceRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4)});
     }
 }
 

@@ -58,6 +58,7 @@ struct BeastDef {
     std::int64_t growth_permille = 1;
     std::int64_t menace = 0;
     std::int64_t food = 0;
+    std::vector<std::string> bold_phrases;  // P5-03 13
 
     friend bool operator==(const BeastDef&, const BeastDef&) = default;
 };
@@ -89,6 +90,7 @@ struct MonsterKindDef {
     std::int64_t max_alive = 0;
     bool flare = false;
     std::int64_t hoard_permille = 0;
+    std::vector<std::string> raid_phrases;  // P5-03 9.5
 
     friend bool operator==(const MonsterKindDef&, const MonsterKindDef&) = default;
 };
@@ -110,6 +112,12 @@ struct MonstersTuning {
     std::array<std::int64_t, 6> prey_weight{};
     std::int64_t prey_capital_permille = 0, prey_hop_permille = 0;
     std::int64_t prey_might_ref = 1, prey_might_max_permille = 0;
+    // P5-03 9.1 to 9.4, 14.1 (generator 0.24.0). The defaults of a hand-made
+    // tuning are the shipped values.
+    std::int64_t raid_chain_years = 100, toll_over_permille = 250;
+    std::int64_t hunt_raid_permille = 60, hunt_max_permille = 400;
+    std::int64_t fear_raids = 3, fear_years = 50, fear_permille = 300;
+    std::int64_t overrun_people_ref = 800;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -133,6 +141,7 @@ struct MonstersStats {
     std::int64_t raids = 0;
     std::int64_t overruns = 0;
     std::int64_t outposts = 0;
+    std::int64_t fled = 0;  // P5-03 9.4
 };
 
 class MonstersSubsystem final : public Subsystem, public TensionSource, public WildView, public MonsterNames {
@@ -155,6 +164,11 @@ public:
     // 9.2, 9.3: the root of a monster's name; its name.
     [[nodiscard]] std::string monster_root(std::int64_t monster) const override;
     [[nodiscard]] const std::string& monster_name(std::int64_t monster) const;
+    // P5-03 12.2: the region names in force (the renaming subsystem, set by
+    // the history stage; without it a host is named for region.name).
+    void set_region_names(const RenamingSubsystem* renaming) noexcept { renaming_ = renaming; }
+    // P5-03 11.2 (WildView): an open site stands on the settlement.
+    [[nodiscard]] bool holds_site(std::int64_t settlement) const override;
 
     // 6.2.2: the beast rows of the run's end (year end_year - 1), called by
     // the stage once the engine has run. Idempotent.
@@ -175,6 +189,17 @@ private:
         std::int64_t civ = 0;
         std::int64_t year = 0;
         std::int64_t event = 0;
+        std::vector<std::int64_t> years;  // P5-03 9.3: the raids on civ within hunt_memory_years, ascending
+    };
+    // P5-03 9.1, 9.4: the raids on one settlement within max(raid_chain_years,
+    // fear_years), ascending.
+    struct PlaceRaid {
+        std::int64_t year = 0;
+        std::int64_t event = 0;
+    };
+    struct PlaceMemory {
+        std::int64_t settlement = 0;
+        std::vector<PlaceRaid> raids;
     };
     struct Monster {
         std::int64_t id = 0;
@@ -191,6 +216,8 @@ private:
         std::int64_t hoard = 0;
         bool holds_settlement = false;
         std::vector<RaidMemory> raids;  // ascending civ
+        std::vector<PlaceMemory> places;  // P5-03: ascending settlement
+        bool placed = false;  // P5-03 12.2: a host named for its place (its root is the place)
         std::optional<std::int64_t> died;
         std::int64_t death_event = 0;
         std::int64_t slayer = 0;
@@ -236,6 +263,14 @@ private:
     [[nodiscard]] std::int64_t raid_target(StepContext& context, std::int64_t monster) const;
     void raid(StepContext& context, std::int64_t monster);
     void overrun(StepContext& context, std::int64_t monster, std::int64_t target, std::int64_t raid_event);
+    // P5-03 9.4: the flight for fear after a raid on a standing target.
+    void flight(StepContext& context, std::int64_t monster, std::int64_t target);
+    // P5-03 9.1: the raids of a monster on a settlement still remembered.
+    [[nodiscard]] std::vector<PlaceRaid> place_raids(std::int64_t monster, std::int64_t settlement) const;
+    // P5-03 12.1, 12.2: a monster's name.
+    [[nodiscard]] std::string wild_name(const StepContext& context, std::size_t kind, std::int64_t monster);
+    [[nodiscard]] std::string place_name(const StepContext& context, std::size_t kind, std::int64_t monster,
+                                         std::int64_t region, std::int64_t settlement, std::string& root);
     void hunts(StepContext& context, std::int64_t monster);
     void deaths_of_age_quiet(StepContext& context);
     // 6.6.
@@ -258,7 +293,7 @@ private:
     std::vector<BeastDef> beasts_;
     std::vector<MonsterKindDef> kinds_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 13> keys_{};
+    std::array<std::uint64_t, 15> keys_{};  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear
     std::int64_t pressure_ = 1000;  // M
     std::int64_t threshold_ = 0;    // T_d
     std::int64_t region_count_ = 0;
@@ -296,6 +331,9 @@ private:
     std::int64_t cursor_ = 1;
     std::int64_t pending_flare_ = 0;
     MonstersStats stats_;
+    const RenamingSubsystem* renaming_ = nullptr;  // P5-03 12.2
+    std::uint64_t name_key_ = 0;                   // P5-03 12.2: hist.names.monster
+    std::vector<std::string> epithets_;            // P5-03 12.1: of the wild monsters' names, creation order
 };
 
 }  // namespace worldgen::history

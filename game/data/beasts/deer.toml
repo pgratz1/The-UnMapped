@@ -1,4 +1,4 @@
-# Beast species (spec P5-02 4.1). Generator 0.23.0.
+# Beast species (spec P5-02 4.1). Generator 0.24.0.
 [beast.deer]
 name = "Deer"
 plural = "deer"
@@ -7,3 +7,4 @@ density = 100
 growth_permille = 250
 menace = 0
 food = 60
+bold_phrases = ["strayed into the fields of"]

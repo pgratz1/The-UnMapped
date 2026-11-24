@@ -992,13 +992,16 @@ void StageWriter::write_beast(const BeastRow& row) {
     require_open(state_, "write_beast");
     require_next_id("write_beast", "beast", row.id, state_->history_keys.beast);
     const std::int64_t ints[2] = {row.menace, row.food};
-    insert_row(state_->db.get(), "INSERT INTO beast (id, key, name, plural, menace, food) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+    insert_row(state_->db.get(),
+               "INSERT INTO beast (id, key, name, plural, menace, food, bold_phrases) VALUES (?1, ?2, ?3, ?4, ?5, ?6, "
+               "?7)",
                5, ints,
                [&row](detail::Statement& stmt) {
                    int rc = stmt.bind_int64(1, row.id);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.plural);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(7, row.bold_phrases);
                    return rc;
                },
                "beast row " + format_i64(row.id));
@@ -1010,14 +1013,15 @@ void StageWriter::write_monster_kind(const MonsterKindRow& row) {
     require_next_id("write_monster_kind", "monster_kind", row.id, state_->history_keys.monster_kind);
     const std::int64_t ints[3] = {row.grouped, row.wake, row.might};
     insert_row(state_->db.get(),
-               "INSERT INTO monster_kind (id, key, name, noun, grouped, wake, might) VALUES (?1, ?2, ?3, ?4, ?5, ?6, "
-               "?7)",
+               "INSERT INTO monster_kind (id, key, name, noun, grouped, wake, might, raid_phrases) VALUES (?1, ?2, "
+               "?3, ?4, ?5, ?6, ?7, ?8)",
                5, ints,
                [&row](detail::Statement& stmt) {
                    int rc = stmt.bind_int64(1, row.id);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.noun);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(8, row.raid_phrases);
                    return rc;
                },
                "monster_kind row " + format_i64(row.id));
@@ -1081,6 +1085,38 @@ void StageWriter::write_site(const SiteRow& row) {
                },
                "site row " + format_i64(row.id));
     state_->history_keys.site = row.id;
+}
+
+void StageWriter::write_race_relation(const RaceRelationRow& row) {
+    require_open(state_, "write_race_relation");
+    const std::tuple<std::int64_t, std::int64_t, std::int64_t> key{row.race_a, row.race_b, row.year};
+    const std::string key_str = "(" + format_i64(row.race_a) + ", " + format_i64(row.race_b) + ", " +
+                                format_i64(row.year) + ")";
+    if (row.race_a < 1 || key <= state_->history_keys.race_relation) {
+        fatal_text("StageWriter::write_race_relation: row " + key_str +
+                   " is not above the previous row with a first key column >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[5] = {row.race_a, row.race_b, row.year, row.disposition, row.band};
+    insert_row(state_->db.get(),
+               "INSERT INTO race_relation (race_a, race_b, year, disposition, band) VALUES (?1, ?2, ?3, ?4, ?5)", 1, ints,
+               NO_TEXT, "race_relation row " + key_str);
+    state_->history_keys.race_relation = key;
+}
+
+void StageWriter::write_settlement_race(const SettlementRaceRow& row) {
+    require_open(state_, "write_settlement_race");
+    const std::tuple<std::int64_t, std::int64_t, std::int64_t> key{row.settlement, row.race, row.year};
+    const std::string key_str = "(" + format_i64(row.settlement) + ", " + format_i64(row.race) + ", " +
+                                format_i64(row.year) + ")";
+    if (row.settlement < 1 || key <= state_->history_keys.settlement_race) {
+        fatal_text("StageWriter::write_settlement_race: row " + key_str +
+                   " is not above the previous row with a first key column >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[5] = {row.settlement, row.race, row.year, row.share, row.standing};
+    insert_row(state_->db.get(),
+               "INSERT INTO settlement_race (settlement, race, year, share, standing) VALUES (?1, ?2, ?3, ?4, ?5)", 1,
+               ints, NO_TEXT, "settlement_race row " + key_str);
+    state_->history_keys.settlement_race = key;
 }
 
 void StageWriter::write_region_name(const RegionNameRow& row) {

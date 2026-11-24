@@ -140,6 +140,33 @@ void check_monster_cultures(const data::ContentSet& content, std::vector<data::L
     }
 }
 
+// P5-03 4.1: race_stances, the first failing entry of each race.
+void check_race_stances(const data::ContentSet& content, const data::Definition& race,
+                        std::vector<data::LoadError>& out) {
+    const std::vector<data::Value>& list = race.record.get_array("stances");
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        const std::string& r = list[i].as_record().get_string("race");
+        const std::string at = "stances[" + db::format_u64(i) + "].race '" + r + "' ";
+        std::string problem;
+        if (content.find(data::RACE_KIND, r) == nullptr) {
+            problem = at + "is not a race";
+        } else if (r == race.id) {
+            problem = at + "is the race itself";
+        } else {
+            for (std::size_t j = 0; j < i; ++j) {
+                if (list[j].as_record().get_string("race") == r) {
+                    problem = at + "is listed twice";
+                    break;
+                }
+            }
+        }
+        if (!problem.empty()) {
+            out.push_back(monster_error(data::RACE_DIRECTORY, "race_stances", data::RACE_KIND, race.id, problem));
+            return;
+        }
+    }
+}
+
 }  // namespace
 
 std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective) {
@@ -172,6 +199,7 @@ std::vector<data::LoadError> check_history_data(const data::ContentSet& content)
         const data::Definition* race = content.find(data::RACE_KIND, id);
         check_race_biomes(content, *race, out);
         check_race_culture(content, *race, out);
+        check_race_stances(content, *race, out);  // P5-03 4.1
         if (tuning != nullptr) {
             check_race_age_name(tuning->record.get_string("age_name_form"), *race, out);
         }

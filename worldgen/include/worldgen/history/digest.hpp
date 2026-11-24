@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -48,6 +49,18 @@ inline constexpr std::int64_t SUMMARY_BUDGET_MIN = 100;
 // The cap on L: L = min(SUMMARY_LINES_CAP, SUMMARY_LINES_MAX + ...).
 inline constexpr std::int64_t SUMMARY_LINES_CAP = 1390;
 inline constexpr std::size_t SUMMARY_MONSTER_LINES = 2;
+// P5-03 10.1, 10.2 (format v5): the monster floor of the summary set and the
+// ended monsters of [monsters] at summary.
+inline constexpr std::size_t SUMMARY_MONSTER_STORIES = 3;
+inline constexpr std::int64_t SUMMARY_MONSTER_HARM_MIN = 200;
+inline constexpr std::int64_t SUMMARY_MONSTER_TAKEN_HARM = 500;
+inline constexpr std::size_t SUMMARY_MONSTER_ENDED_LINES = 2;
+// P5-03 17.2 (a reading): a settlement is mixed at E when a race other than
+// the ruling one has at least this share (the shipped mixed_min_permille;
+// the report reads the world only).
+inline constexpr std::int64_t MIXED_SHARE_MIN = 100;
+// P5-03 17.4: a [stats] value printed as "-" (ruins_oldest_year with no ruin).
+inline constexpr std::int64_t STAT_NONE = std::numeric_limits<std::int64_t>::min();
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
 // r21 26.5 item 2 (format v3): and regions_renamed, refuges_hidden.
 inline constexpr std::array<std::string_view, 17> SUMMARY_STATS = {
@@ -95,6 +108,9 @@ struct HistoryTables {
     std::vector<db::BeastPopulationRow> beast_populations;
     std::vector<db::MonsterRow> monsters;
     std::vector<db::SiteRow> sites;
+    // Schema 10 (P5-03 16.4): tables race_relation and settlement_race.
+    std::vector<db::RaceRelationRow> race_relations;
+    std::vector<db::SettlementRaceRow> settlement_races;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };
@@ -185,7 +201,18 @@ struct HistoryDigest {
     // refuge_hidden with it as settlement, smallest id first; -1 when none.
     std::vector<std::int64_t> refuge_hidden_end;
     std::vector<std::pair<std::string, std::int64_t>> stats;  // section 9 with 21.5, 21.8, 22, 23, in order
+    // P5-03 10.1: harm(m) per monster (index id - 1) and the told monsters.
+    std::vector<std::int64_t> monster_harm;
+    std::int64_t monster_stories = 0;
 };
+
+// P5-03 17.2: a mixed standing settlement at E with its shares in force at
+// E - 1 (the last row per race, share > 0), by share descending, then race.
+struct MixedSettlement {
+    std::int64_t settlement = 0;
+    std::vector<db::SettlementRaceRow> shares;
+};
+[[nodiscard]] std::vector<MixedSettlement> mixed_at_end(const HistoryTables& t);
 
 // Pure, does not fail: everything it relies on was checked by
 // read_history_tables and HistoryView::load on the same world.

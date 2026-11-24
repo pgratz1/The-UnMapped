@@ -1,4 +1,4 @@
-# Beast species (spec P5-02 4.1). Generator 0.23.0.
+# Beast species (spec P5-02 4.1). Generator 0.24.0.
 [beast.boar]
 name = "Boar"
 plural = "boar"
@@ -7,3 +7,4 @@ density = 40
 growth_permille = 250
 menace = 3
 food = 100
+bold_phrases = ["trampled the fields of", "tore up the gardens of"]

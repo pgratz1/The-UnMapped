@@ -308,6 +308,13 @@ public:
             return 2;
         }
         if (key == "settlement_abandoned" || key == "settlement_abandoned_to") {
+            // P5-03 11.3: ending 6 (fled) before 3 and 4.
+            for (const std::int64_t c : e.causes) {
+                if (config_.catalogue->find_id(events_[static_cast<std::size_t>(c - 1)].row.kind)->key ==
+                    "settlement_fled") {
+                    return 6;
+                }
+            }
             bool famine = false;
             for (const std::int64_t c : e.causes) {
                 const std::string& ck = config_.catalogue->find_id(events_[static_cast<std::size_t>(c - 1)].row.kind)->key;
@@ -425,6 +432,22 @@ public:
             }
         }
         return 0;
+    }
+
+    // P5-03 6.2.2: every participant of the role, in participant order.
+    [[nodiscard]] std::vector<std::int64_t> event_participants(std::int64_t event, std::string_view role) const {
+        const StoredEvent& e = stored(event);
+        const RoleDef* r = config_.catalogue->find_id(e.row.kind)->find_role(role);
+        std::vector<std::int64_t> out;
+        if (r == nullptr) {
+            return out;
+        }
+        for (const db::EventParticipantRow& p : e.participants) {
+            if (p.role == r->seq) {
+                out.push_back(p.entity_id);
+            }
+        }
+        return out;
     }
 
 private:
@@ -1097,6 +1120,7 @@ std::int64_t State::found_settlement(std::int64_t x, std::int64_t y, std::int64_
     s.founded_year = engine_.year();
     s.founding_event = event;
     s.owner_civ = founder_civ;
+    s.owner_event = event;  // P5-03 7.3
     s.population = population;
     s.kind = kind;
     s.status = SettlementStatus::thriving;
@@ -1128,6 +1152,7 @@ void State::set_settlement_owner(std::int64_t id, std::int64_t civ, std::int64_t
     }
     require_event(event, what);
     s.owner_civ = civ;
+    s.owner_event = event;  // P5-03 7.3
 }
 
 void State::set_settlement_kind(std::int64_t id, SettlementKind kind, std::int64_t event) {
@@ -1278,6 +1303,10 @@ std::int64_t StepContext::event_year(std::int64_t event) const {
 
 std::int64_t StepContext::event_participant(std::int64_t event, std::string_view role) const {
     return engine_.event_participant(event, role);
+}
+
+std::vector<std::int64_t> StepContext::event_participants(std::int64_t event, std::string_view role) const {
+    return engine_.event_participants(event, role);
 }
 
 std::int64_t StepContext::last_event_id() const {

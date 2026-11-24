@@ -22,30 +22,32 @@ using Rows = std::vector<std::vector<db::ColumnValue>>;
 struct Shape {
     std::string_view table;
     std::size_t columns;
-    std::array<std::size_t, 3> text;  // unused slots hold `columns`
+    std::array<std::size_t, 4> text;  // unused slots hold `columns`
     std::size_t nullable;
 };
 
-constexpr std::array<Shape, 19> SHAPES = {{
-    {db::EVENT_KIND_TABLE, 7, {1, 6, 7}, 7},
-    {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6, 6}, 6},
-    {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3, 3}, 3},
-    {db::PHASE_TABLE, 6, {6, 6, 6}, 6},
-    {db::EVENT_TABLE, 8, {8, 8, 8}, 8},
-    {db::EVENT_PARTICIPANT_TABLE, 5, {5, 5, 5}, 5},
-    {db::EVENT_CAUSE_TABLE, 2, {2, 2, 2}, 2},
-    {db::EVENT_VALUE_TABLE, 3, {3, 3, 3}, 3},
-    {db::CIVILIZATION_TABLE, 10, {1, 10, 10}, 8},
-    {db::SETTLEMENT_TABLE, 15, {1, 15, 15}, 12},  // schema 9: column ending
-    {db::SETTLEMENT_CENSUS_TABLE, 6, {6, 6, 6}, 6},
-    {db::REGION_CONTROL_TABLE, 5, {5, 5, 5}, 2},
-    {db::RELATION_TABLE, 9, {4, 9, 9}, 6},
-    {db::REGION_NAME_TABLE, 5, {2, 5, 5}, 5},  // schema 8 (P3-04 r21 23.4)
-    {db::BEAST_TABLE, 6, {1, 2, 3}, 6},        // schema 9 (P5-02 11.1)
-    {db::MONSTER_KIND_TABLE, 7, {1, 2, 3}, 7},
-    {db::BEAST_POPULATION_TABLE, 4, {4, 4, 4}, 4},
-    {db::MONSTER_TABLE, 11, {1, 11, 11}, 6},
-    {db::SITE_TABLE, 14, {1, 14, 14}, 11},
+constexpr std::array<Shape, 21> SHAPES = {{
+    {db::EVENT_KIND_TABLE, 7, {1, 6, 7, 7}, 7},
+    {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6, 6, 6}, 6},
+    {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3, 3, 3}, 3},
+    {db::PHASE_TABLE, 6, {6, 6, 6, 6}, 6},
+    {db::EVENT_TABLE, 8, {8, 8, 8, 8}, 8},
+    {db::EVENT_PARTICIPANT_TABLE, 5, {5, 5, 5, 5}, 5},
+    {db::EVENT_CAUSE_TABLE, 2, {2, 2, 2, 2}, 2},
+    {db::EVENT_VALUE_TABLE, 3, {3, 3, 3, 3}, 3},
+    {db::CIVILIZATION_TABLE, 10, {1, 10, 10, 10}, 8},
+    {db::SETTLEMENT_TABLE, 15, {1, 15, 15, 15}, 12},  // schema 9: column ending
+    {db::SETTLEMENT_CENSUS_TABLE, 6, {6, 6, 6, 6}, 6},
+    {db::REGION_CONTROL_TABLE, 5, {5, 5, 5, 5}, 2},
+    {db::RELATION_TABLE, 9, {4, 9, 9, 9}, 6},
+    {db::REGION_NAME_TABLE, 5, {2, 5, 5, 5}, 5},  // schema 8 (P3-04 r21 23.4)
+    {db::BEAST_TABLE, 7, {1, 2, 3, 6}, 7},        // schema 9 (P5-02 11.1); 10: bold_phrases (P5-03 16.1)
+    {db::MONSTER_KIND_TABLE, 8, {1, 2, 3, 7}, 8},  // 10: raid_phrases
+    {db::BEAST_POPULATION_TABLE, 4, {4, 4, 4, 4}, 4},
+    {db::MONSTER_TABLE, 11, {1, 11, 11, 11}, 6},
+    {db::SITE_TABLE, 14, {1, 14, 14, 14}, 11},
+    {db::RACE_RELATION_TABLE, 5, {5, 5, 5, 5}, 5},  // schema 10 (P5-03 16.1)
+    {db::SETTLEMENT_RACE_TABLE, 5, {5, 5, 5, 5}, 5},
 }};
 
 std::string row_at(const std::vector<db::ColumnValue>& row) {
@@ -59,7 +61,7 @@ std::optional<std::string> shape_problem(const Shape& s, const std::vector<db::C
         return "has " + db::format_u64(row.size()) + " columns, expected " + db::format_u64(s.columns);
     }
     for (std::size_t k = 0; k < s.columns; ++k) {
-        const bool is_text = s.text[0] == k || s.text[1] == k || s.text[2] == k;
+        const bool is_text = s.text[0] == k || s.text[1] == k || s.text[2] == k || s.text[3] == k;
         if (is_text) {
             if (row[k].type != db::ValueType::text) {
                 return "column " + db::format_u64(k + 1U) + " is not text";
@@ -236,6 +238,8 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
     st.beast_populations = n(rows[16].size());
     st.monsters = n(rows[17].size());
     st.sites = n(rows[18].size());
+    st.race_relations = n(rows[19].size());  // P5-03 16.3
+    st.settlement_races = n(rows[20].size());
     // P3-05 15.4: per race. Race rows: column 1 id, 2 key.
     std::vector<std::int64_t> race_ids;
     for (const std::vector<db::ColumnValue>& row : tables.races) {
@@ -317,6 +321,8 @@ std::string history_section_text(const HistoryStats& st) {
     line("beast_populations", st.beast_populations);
     line("monsters", st.monsters);
     line("sites", st.sites);
+    line("race_relations", st.race_relations);  // P5-03 16.3
+    line("settlement_races", st.settlement_races);
     line("population", st.population);
     for (const HistoryStats::RaceStats& r : st.races) {
         line("population_" + r.key, r.population);

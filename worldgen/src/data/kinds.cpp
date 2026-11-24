@@ -624,6 +624,7 @@ KindRegistry builtin_kinds() {
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
                                             IdSchema{std::string(HISTORY_MONSTERS_ID), history_monsters_schema()},
                                             IdSchema{std::string(HISTORY_PEOPLES_ID), history_peoples_schema()},
+                                            IdSchema{std::string(HISTORY_RELATIONS_ID), history_relations_schema()},
                                             IdSchema{std::string(HISTORY_RENAMING_ID), history_renaming_schema()},
                                             IdSchema{std::string(HISTORY_REPORT_ID), history_report_schema()},
                                         });

@@ -219,6 +219,13 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.crisis_small_salience = r.get_int("crisis_small_salience");
     t.ghost_permille = r.get_int("ghost_permille");  // P5-02 4.5
     t.ghost_max_population = r.get_int("ghost_max_population");
+    // P5-03 11.1, 11.2 (absent from a hand-made record: the defaults).
+    if (r.find("abandon_reach_hops") != nullptr) {
+        t.abandon_reach_hops = r.get_int("abandon_reach_hops");
+        t.abandon_loss_min_permille = r.get_int("abandon_loss_min_permille");
+        t.abandon_loss_max_permille = r.get_int("abandon_loss_max_permille");
+        t.ghost_fade_years = r.get_int("ghost_fade_years");
+    }
     return t;
 }
 

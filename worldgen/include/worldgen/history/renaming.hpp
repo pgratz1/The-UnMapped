@@ -147,6 +147,9 @@ public:
     // P5-02 9.3: the monsters whose roots a monster name_role reads (the
     // history stage sets it; without it such a role gives no {name}).
     void set_monsters(const MonsterNames* monsters) noexcept { monsters_ = monsters; }
+    // P5-03 12.2: the name of region `region` in force now: its last
+    // region_name row, else region.name (FatalError for an unknown region).
+    [[nodiscard]] std::string name_now(const StepContext& context, std::int64_t region) const;
 
 private:
     struct WindowEntry {

@@ -198,6 +198,11 @@ public:
     // order).
     [[nodiscard]] const std::string* monster_noun(std::int64_t monster) const noexcept;
     [[nodiscard]] const std::string* beast_plural(std::int64_t beast) const noexcept;
+    // P5-03 9.5, 13: the raid phrase of a monster's kind and the bold phrase
+    // of a beast for event `event` (phrase number (event - 1) mod n of the
+    // stored list); nullptr when the row does not exist.
+    [[nodiscard]] const std::string* monster_raid_phrase(std::int64_t monster, std::int64_t event) const noexcept;
+    [[nodiscard]] const std::string* beast_bold_phrase(std::int64_t beast, std::int64_t event) const noexcept;
     [[nodiscard]] std::span<const db::BeastRow> beast_rows() const noexcept { return beast_rows_; }
     [[nodiscard]] std::span<const db::MonsterKindRow> monster_kind_rows() const noexcept { return monster_kind_rows_; }
     [[nodiscard]] std::span<const db::MonsterRow> monster_rows() const noexcept { return monster_rows_; }
@@ -235,6 +240,9 @@ private:
     std::vector<std::pair<std::int64_t, std::string>> monster_kind_nouns_;  // ascending id
     std::vector<std::pair<std::int64_t, MonsterNames>> monsters_;           // ascending id
     std::vector<std::pair<std::int64_t, std::string>> sites_;               // ascending id
+    // P5-03 (schema 10): the phrase lists, ascending id.
+    std::vector<std::pair<std::int64_t, std::vector<std::string>>> beast_phrases_;
+    std::vector<std::pair<std::int64_t, std::vector<std::string>>> monster_kind_phrases_;
 };
 
 // P3-07 r21 26.6: the first problem of the region_name rows (primary-key

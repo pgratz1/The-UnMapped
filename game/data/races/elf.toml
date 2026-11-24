@@ -34,3 +34,4 @@ hidden_years = 300
 awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
+stances = [{ race = "faerie", value = 200 }]

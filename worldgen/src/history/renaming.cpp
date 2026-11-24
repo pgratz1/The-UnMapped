@@ -169,6 +169,19 @@ void check_renaming_rules(const RenamingTuning& tuning, const EventCatalogue& ca
 
 // --- Names (5.1, 5.3) ------------------------------------------------------------------------------
 
+std::string RenamingSubsystem::name_now(const StepContext& ctx, std::int64_t region) const {
+    for (auto it = rows_.rbegin(); it != rows_.rend(); ++it) {  // creation order: the last row wins
+        if (it->region == region) {
+            return it->name;
+        }
+    }
+    const std::vector<db::RegionRow>& regions = ctx.inputs().regions;
+    if (region < 1 || static_cast<std::size_t>(region) > regions.size()) {
+        fail("history: renaming: region " + db::format_i64(region) + " does not exist");
+    }
+    return regions[static_cast<std::size_t>(region - 1)].name;
+}
+
 std::string realm_root(std::string_view name, const std::vector<std::string>& civilization_forms) {
     for (const std::string& form : civilization_forms) {
         const std::size_t at = form.find(ROOT_SLOT);

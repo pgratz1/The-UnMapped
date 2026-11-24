@@ -50,13 +50,14 @@ enum Stream : std::size_t {
     CRISIS,
     SPLIT,
     GHOST,  // P5-02 3
+    ABANDON_LOSS,  // P5-03 3
 };
-constexpr std::array<std::string_view, 13> STREAM_NAMES = {
+constexpr std::array<std::string_view, 14> STREAM_NAMES = {
     streams::hist_peoples_home,         streams::hist_peoples_civs,        streams::hist_peoples_found,
     streams::hist_peoples_outward,      streams::hist_peoples_famine,      streams::hist_peoples_famine_toll,
     streams::hist_peoples_plague,       streams::hist_peoples_plague_toll, streams::hist_peoples_plague_spread,
     streams::hist_peoples_abandon,      streams::hist_peoples_crisis,      streams::hist_peoples_split,
-    streams::hist_peoples_ghost,
+    streams::hist_peoples_ghost,        streams::hist_peoples_abandon_loss,
 };
 
 constexpr std::array<Step, 6> STEPS = {Step::t1, Step::t2, Step::t4, Step::q1, Step::q3, Step::q4};
@@ -591,13 +592,25 @@ void PeoplesSubsystem::ruin(StepContext& ctx, std::int64_t settlement, std::int6
     const std::int64_t p = s0.population;
     const std::int64_t region = s0.region;
     const std::int64_t n = settlement_count(state);
-    // 2. The survivors join the nearest other standing settlement of c, up
-    // to its room (the rule the plague plan replays, 10.2).
+    // 2. The survivors join the nearest other standing settlement of c
+    // within reach (P5-03 11.1), up to its room (the rule the plague plan
+    // replays, 10.2); P5-03 7.2: the ledger records who moved and who had
+    // nowhere to go.
     const SettlementsNow now{state, nullptr, nullptr};
     const std::int64_t nearest = nearest_standing(now, settlement);
+    std::int64_t settled = 0;
     if (nearest != 0) {
         const std::int64_t room = refugee_room(now, nearest, race_of_civ(state, c));
-        state.set_population(nearest, checked_add(state.settlement(nearest).population, std::min(p, room)));
+        settled = std::min(p, room);
+        state.set_population(nearest, checked_add(state.settlement(nearest).population, settled));
+    }
+    if (ledger_ != nullptr) {
+        if (settled >= 1) {
+            ledger_->moved(state, settlement, nearest, settled, event);
+        }
+        if (p - settled >= 1) {
+            ledger_->displaced(state, settlement, 0, p - settled, event);
+        }
     }
     // 3. The ruin.
     state.set_population(settlement, 0);
@@ -693,15 +706,27 @@ bool PeoplesSubsystem::other_standing(const SettlementsNow& now, std::int64_t se
     return false;
 }
 
+std::int64_t PeoplesSubsystem::destination(const State& state, std::int64_t settlement) const {
+    return nearest_standing(SettlementsNow{state, nullptr, nullptr}, settlement);
+}
+
 std::int64_t PeoplesSubsystem::nearest_standing(const SettlementsNow& now, std::int64_t settlement) const {
     const Settlement& s = now.state.settlement(settlement);
     std::int64_t nearest = 0;
     std::int64_t nearest_d = 0;
+    // P5-03 11.1: within abandon_reach_hops of the settlement's region.
+    const std::vector<std::int64_t>& hops = geo().hops(s.region);
     for (std::int64_t id = 1; id <= settlement_count(now.state); ++id) {
         if (id == settlement || !now.up(id, s.owner_civ)) {
             continue;
         }
         const Settlement& t = now.state.settlement(id);
+        const std::int64_t h = t.region >= 1 && static_cast<std::size_t>(t.region) <= hops.size()
+                                   ? hops[static_cast<std::size_t>(t.region - 1)]
+                                   : -1;
+        if (h < 0 || h > tuning_.abandon_reach_hops) {
+            continue;
+        }
         const std::int64_t d = (t.x - s.x) * (t.x - s.x) + (t.y - s.y) * (t.y - s.y);
         if (nearest == 0 || d < nearest_d) {
             nearest = id;
@@ -762,6 +787,17 @@ bool PeoplesSubsystem::shunned(std::int64_t region) const {
     return wild_ != nullptr && wild_->shunned(region);
 }
 
+std::int64_t PeoplesSubsystem::road_loss(const StepContext& ctx, std::int64_t settlement, std::int64_t p) const {
+    if (p < 1) {
+        return 0;
+    }
+    const std::int64_t span = tuning_.abandon_loss_max_permille - tuning_.abandon_loss_min_permille + 1;
+    const std::int64_t rate =
+        tuning_.abandon_loss_min_permille +
+        static_cast<std::int64_t>(pick(ctx.draw(key(ABANDON_LOSS), word(settlement), 0, 0), word(span)));
+    return std::min(floor_div(checked_mul(p, rate), 1000), p - 1);
+}
+
 void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::int64_t cause) {
     State& state = ctx.state();
     const Settlement& s = state.settlement(settlement);
@@ -779,12 +815,14 @@ void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::i
         }
     }
     // 1. The event (r6): with a destination when survivors reach another
-    // standing settlement of c (kind 31), else kind 16.
+    // standing settlement of c (kind 31), else kind 16. P5-03 11.1: the
+    // destination lies within reach, and some die on the road.
+    const std::int64_t road = road_loss(ctx, settlement, p);
     const SettlementsNow now{state, nullptr, nullptr};
     const std::int64_t dest = nearest_standing(now, settlement);
     std::int64_t settled = 0;
     if (dest != 0) {
-        settled = std::min(p, refugee_room(now, dest, race_of_civ(state, c)));
+        settled = std::min(p - road, refugee_room(now, dest, race_of_civ(state, c)));
     }
     EventSpec e = point_event(ctx, settled >= 1 ? "settlement_abandoned_to" : "settlement_abandoned", region,
                               settlement);
@@ -794,10 +832,13 @@ void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::i
         e.participants.push_back(Participant{"destination", EntityType::settlement, dest});
         e.values = {settled, p - settled};
     } else {
-        e.values = {p};
+        e.values = {p - road};
     }
     e.causes = causes;
     const std::int64_t ev = ctx.append(e);
+    if (road > 0) {
+        state.set_population(settlement, p - road);  // the dead of the road, before the ruin
+    }
     // 2 to 5.
     ruin(ctx, settlement, ev);
     // 6. A people with no settlement left ends.
@@ -1110,10 +1151,12 @@ PeoplesSubsystem::PlaguePlan PeoplesSubsystem::planned_plague(const StepContext&
         }
         // 8.5 item 2 (ruin): the survivors join the nearest other standing
         // settlement, up to its room.
+        // P5-03 11.1: the same reach and the same losses on the road.
         const std::int64_t nearest = nearest_standing(now, u);
         if (nearest != 0) {
+            const std::int64_t road = road_loss(ctx, u, r.after);
             std::int64_t& q = pop[static_cast<std::size_t>(nearest)];
-            q = checked_add(q, std::min(r.after, refugee_room(now, nearest, race)));
+            q = checked_add(q, std::min(r.after - road, refugee_room(now, nearest, race)));
         }
         up[static_cast<std::size_t>(u)] = 0;
         pop[static_cast<std::size_t>(u)] = 0;
@@ -1356,6 +1399,13 @@ void PeoplesSubsystem::fade_ruins(StepContext& ctx) {
         const Settlement& s = state.settlement(id);
         if (s.status != SettlementStatus::ruined || !ctx.visible(s) || !s.ruined_year ||
             ctx.year() - *s.ruined_year < tuning_.ruin_fade_years) {
+            continue;
+        }
+        // P5-03 11.2: only a burned ruin fades (or, with ghost_fade_years,
+        // an old one left standing), and none while a site stands on it.
+        const bool burned = s.ruin_event != 0 && ctx.event_kind(s.ruin_event) == "sacked";
+        const bool old_ghost = tuning_.ghost_fade_years > 0 && ctx.year() - *s.ruined_year >= tuning_.ghost_fade_years;
+        if ((!burned && !old_ghost) || (wild_ != nullptr && wild_->holds_site(id))) {
             continue;
         }
         if (ctx.quiet_events_left(0) <= 0) {
