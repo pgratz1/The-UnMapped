@@ -1,7 +1,8 @@
 [history.conflict]
 camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
 enmity_max = -500
-border_friction = 200
+# P5-03a calibration (generator 0.25.0): 200 -> 300, restoring the wars that peace between neighbours removed.
+border_friction = 300
 want_weight = 500
 hunger_full = 300
 fear_share = 400

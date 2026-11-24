@@ -439,7 +439,12 @@ std::optional<std::string> RenamingSubsystem::build_name(const StepContext& ctx,
         } else if (id != 0 && role->type == EntityType::settlement) {
             of_settlement(id);
         } else if (id != 0 && role->type == EntityType::monster && monsters_ != nullptr) {
-            name_value = monsters_->monster_root(id);  // P5-02 9.3
+            // P5-02 9.3. A host named for its place (P5-03 12.2) has no root:
+            // no {name} then, so only the forms without one can be chosen
+            // (P5-03a proposals entry; an empty root gave "'s Shadow").
+            if (std::string root = monsters_->monster_root(id); !root.empty()) {
+                name_value = std::move(root);
+            }
         }
     }
     if (name_value && !stem_value) {
