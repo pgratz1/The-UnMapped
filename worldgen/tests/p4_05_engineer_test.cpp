@@ -112,7 +112,9 @@ TEST_CASE("P4-05 engineer: render_event_linked") {
             if (type == wh::EntityType::monster) {
                 const std::string* noun = h.view.monster_noun(l.id);
                 name = h.view.name(type, l.id);
-                CHECK(((noun != nullptr && s == *noun) || (name != nullptr && s == *name)));
+                // P5-03a 7.2: a host's name ("The Dead of ...") mid-sentence.
+                CHECK(((noun != nullptr && s == *noun) ||
+                       (name != nullptr && (s == *name || (name->rfind("The ", 0) == 0 && s == "the " + name->substr(4))))));
                 continue;
             }
             name = h.view.name(type, l.id);

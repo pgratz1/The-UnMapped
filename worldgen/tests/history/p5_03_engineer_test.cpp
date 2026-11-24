@@ -58,7 +58,13 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
                                           {"welcome_min", wd::Value::integer(2001)},
                                           {"subject_years", wd::Value::integer(100000)},
                                           {"mixed_min_permille", wd::Value::integer(1001)},
-                                          {"expel_permille", wd::Value::integer(0)}});
+                                          {"expel_permille", wd::Value::integer(0)},
+                                          // P5-03a 10.1: the zero values of the new fields.
+                                          {"peace_memory_per_century", wd::Value::integer(0)},
+                                          {"foe_war_memory", wd::Value::integer(0)},
+                                          {"foe_monster_memory", wd::Value::integer(0)},
+                                          {"meet_sealed_hops", wd::Value::integer(-1)},
+                                          {"conquest_settlers_span_permille", wd::Value::integer(0)}});
     return with_fields(c, "race", "", {{"stances", wd::Value::array({})}});
 }
 
