@@ -76,6 +76,17 @@
 //   --search <text>            after opening, type this into the search field
 //   --tab <browser|legend>     after opening, show this tab of the right pane
 //   --size <w> <h>             with --screenshot: the window size
+//   --play <from> <to>         play the history movie over [from, to] ("-":
+//                              the default end) one second after opening
+//                              (P4-06 9.1); --speed <s>, --skip-quiet on|off,
+//                              --quit-at-end, --play-log, --no-pane
+//
+// Playback (spec P4-06 8): %PlayButton, %PlaySpeed and %PlaySkipQuiet on the
+// year bar's first row (with %YearSlider), %Ticker (over the bottom of
+// %MapView) with %TickerLines. _process hands the frame's time to the
+// model's playback_advance; the flashes go to %MapView. Keys: Space play or
+// pause, Shift+Space stop, - and = the speed, Q skip quiet years, T the
+// ticker.
 
 #include <cstdint>
 #include <map>
@@ -117,6 +128,7 @@ public:
     void _ready() override;
     void _unhandled_key_input(const godot::Ref<godot::InputEvent>& event) override;
     void _input(const godot::Ref<godot::InputEvent>& event) override;
+    void _process(double delta) override;
 
     // --- Bound to Godot ------------------------------------------------------
     [[nodiscard]] godot::Ref<ViewerModel> get_model() const;
@@ -170,6 +182,15 @@ public:
     // handler (mask upload, frames), nanoseconds.
     [[nodiscard]] int64_t last_list_rebuild_nsec() const noexcept { return last_list_rebuild_nsec_; }
     [[nodiscard]] int64_t last_highlight_nsec() const noexcept { return last_highlight_nsec_; }
+    // Playback (P4-06 8).
+    [[nodiscard]] godot::Button* play_button() const noexcept { return play_button_; }
+    [[nodiscard]] godot::OptionButton* play_speed() const noexcept { return play_speed_; }
+    [[nodiscard]] godot::CheckBox* play_skip_quiet() const noexcept { return play_skip_quiet_; }
+    [[nodiscard]] godot::Control* ticker() const noexcept { return ticker_; }
+    [[nodiscard]] godot::Control* ticker_lines() const noexcept { return ticker_lines_; }
+    [[nodiscard]] bool ticker_shown() const noexcept { return ticker_shown_; }
+    // Lays the ticker out for the map view's current size (6.2).
+    void layout_ticker();
     // The eight buttons of the year row, in their order in the row.
     [[nodiscard]] std::vector<godot::Button*> year_buttons() const;
     // The texts of %YearLabel and %YearCounts for the model's year (4.4).
@@ -247,6 +268,29 @@ private:
     void add_linked_text(const godot::Dictionary& linked, int64_t from_char = 0);
     void add_link(const godot::String& target, const godot::String& text);
     void apply_browser_options();
+
+    // Playback (viewer_screen_playback.cpp).
+    void wire_playback();
+    void on_playback_changed();
+    void on_ticker_changed();
+    void on_playback_finished();
+    void on_play_pressed();
+    void on_play_speed_selected(int64_t index);
+    void on_play_skip_toggled(bool on);
+    void update_play_controls();
+    void rebuild_ticker();
+    // 9.1, 9.2: after the world opened and the start options were applied.
+    // Returns false when --play was refused; sets play_pending_ when it will
+    // play.
+    bool apply_play_options(const godot::PackedStringArray& args);
+    void refuse_play(const godot::String& text);
+    // Resolves the default span and shows its start year (9.1).
+    void prepare_play();
+    void start_play();
+    void quit_after_play();
+    void bench_playback();
+    void bench_play_frame();
+    void finish_bench_playback();
 
     void show_status(const godot::String& text, bool is_error);
     void show_legend();
@@ -333,6 +377,27 @@ private:
     std::vector<int64_t> view_item_;  // per view: list item
     int64_t start_hover_x_ = -1;
     int64_t start_hover_y_ = -1;
+
+    godot::Button* play_button_ = nullptr;
+    godot::OptionButton* play_speed_ = nullptr;
+    godot::CheckBox* play_skip_quiet_ = nullptr;
+    godot::Control* ticker_ = nullptr;
+    godot::Control* ticker_lines_ = nullptr;
+    bool ticker_shown_ = true;  // key T
+    // --play (9.1).
+    bool play_pending_ = false;
+    int64_t play_from_ = -1;  // as given; -1 for "-"
+    int64_t play_to_ = -1;
+    int64_t play_p0_ = -1;  // resolved by prepare_play
+    int64_t play_p1_ = -1;
+    bool play_log_ = false;
+    bool quit_at_end_ = false;
+    bool play_logging_ = false;  // a --play session is running: frames are counted
+    int64_t play_frame_ = 0;
+    // --bench (10): the real-frame playback pass.
+    bool bench_play_frames_ = false;
+    int64_t bench_play_last_ = -1;
+    std::vector<int64_t> bench_play_times_;
 
     godot::String check_reference_dir_;
     int64_t check_expect_layers_ = -1;

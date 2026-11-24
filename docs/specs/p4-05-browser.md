@@ -1,6 +1,6 @@
 # P4-05 Browser of civilizations and events
 
-Status: **r1 draft, 2026-11-23**, for approval by Paul or the lead. Phase P4 Viewer v1, stage 5 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-05", 3.2, rules V1 to V10, 7 row P4-05, 8, 9, 10). Builds on P4-01 (`Timeline`, `LoadedHistory`), P4-03 r4 (year bar, `HistoryState`, H1 to H9), P4-04 r2 (`MarkerIndex`, markers, hover, M0 to M9) and P3-07 (the digest, `[civilizations]`, the chronicle line), as on `origin/main` at 61d2e23 (generator 0.22.0, schema 8). Design doc 10 ("World viewer": "a browser for civilizations, figures and events with their causes") and 13 (P4 row and exit check). Section 12 carries the world critic's P4-04 findings and the slow year change.
+Status: **r2, 2026-11-23**: correction round, the text brought in line with what was built and ruled (revision notes at the end). r1 was approved by the lead and built on `p4/05-*` with P5-02 merged in between, so the stage merged at generator 0.23.0, schema 9. Phase P4 Viewer v1, stage 5 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-05", 3.2, rules V1 to V10, 7 row P4-05, 8, 9, 10). Builds on P4-01 (`Timeline`, `LoadedHistory`), P4-03 r4 (year bar, `HistoryState`, H1 to H9), P4-04 r2 (`MarkerIndex`, markers, hover, M0 to M9) and P3-07 (the digest, `[civilizations]`, the chronicle line), as on `origin/main` at 61d2e23 (generator 0.22.0, schema 8). Design doc 10 ("World viewer": "a browser for civilizations, figures and events with their causes") and 13 (P4 row and exit check). Section 12 carries the world critic's P4-04 findings and the slow year change.
 
 **No world byte changes.** Generator stays **0.22.0**, schema stays **8**; `report` and `hash` bytes unchanged. New golden file `worldgen/tests/golden/p4-05-browser.txt`. The carried-over glyph and colour changes (12.2) re-record `p4-04-markers.txt` and change the `markers.txt` hashes of `world-hashes.sh`; nothing else moves.
 
@@ -88,21 +88,23 @@ using BlockLine = std::vector<Segment>;
                                                            const history::HistoryTables& tables);
 ```
 
-The tag is the report's `ref` prefix plus the id (`ra`, `g`, `c`, `s`, `rg`, `f`, `fa`, `m`, `si`). A region's name is its name at E, as `ref` gives it today. A note is a `text` segment. Each `" (" + note + ")"` in a milestone line is split into a literal `" ("`, a text and a literal `")"`.
+The tag is the report's `ref` prefix plus the id (`ra`, `g`, `c`, `s`, `rg`, `f`, `fa`, `m`, `si`), given by `history_entity_tag(type, id)` (public, `history_report.hpp`; `?<id>` for a type code outside 1 to 9). A region's name is its name at E, as `ref` gives it today.
+
+As built (r2): an entity segment with an empty name shows its tag in the display form, as an **untagged** link over the tag (the report form prints the tag alone), so B4's transform still gives the report form. `civilization_block` throws FatalError `civilization_block: no civilization <c>` for an unknown civilization and `civilization_block: bad level` for a level that is neither summary nor full. A note is a `text` segment. Each `" (" + note + ")"` in a milestone line is split into a literal `" ("`, a text and a literal `")"`.
 
 **The report is refactored to print its blocks from these lines.** `Report::civilization` becomes a loop: `line(block_line_report_text(view, l))` over `civilization_block(...)`. Its bytes must stay the same. The P3-07 goldens (`p3-07-report.txt`), the `history.*.txt` files of `world-hashes.sh` and the P3-07 test suites prove it, and any difference is a defect. `build_history_report` calls `history_report_digest`.
 
 ### 4.3 The digest entry, and P5-02
 
-Today `history_report_digest` = `digest_history`. On `origin/p5/02-impl-r1` (generator 0.23.0, schema 9), the report chooses the summary set a second time, with a budget that depends on its own line counts (P5-02 12.9, `choose_summary_set`). With that change, `history_report_digest` becomes the function that returns the digest after that second choice, and the report and the browser both call it. Whichever of P4-05 Part A and P5-02 merges second moves the step into `history_report_digest`. The browser must never call `digest_history` directly. `render_event_linked` must likewise cover any token P5-02 adds (form `kind`: a link to the monster, type 8). Whichever merges second adds it.
+Today `history_report_digest` = `digest_history`. On `origin/p5/02-impl-r1` (generator 0.23.0, schema 9), the report chooses the summary set a second time, with a budget that depends on its own line counts (P5-02 12.9, `choose_summary_set`). With that change, `history_report_digest` becomes the function that returns the digest after that second choice, and the report and the browser both call it. Whichever of P4-05 Part A and P5-02 merges second moves the step into `history_report_digest`. The browser must never call `digest_history` directly. `render_event_linked` must likewise cover any token P5-02 adds (form `kind`: a link to the monster, type 8). Whichever merges second adds it. (r2: both done. P5-02 merged first; `history_report_digest` makes the second choice, and a `kind` token is a link to the monster, type 8.)
 
 ### 4.4 Kind groups (`history_browser.hpp`)
 
 ```cpp
-enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4 };
-inline constexpr std::uint32_t ALL_GROUPS = 0x1F;
+enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5 };
+inline constexpr std::uint32_t ALL_GROUPS = 0x3F;
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;      // bytes; default other
-[[nodiscard]] std::string_view event_group_word(EventGroup) noexcept;          // "realms" ... "other"
+[[nodiscard]] std::string_view event_group_word(EventGroup) noexcept;          // "realms" ... "other", "monsters"
 ```
 
 | Group | Kind keys |
@@ -111,9 +113,10 @@ inline constexpr std::uint32_t ALL_GROUPS = 0x1F;
 | `settlements` | `settlement_founded`, `colony_founded`, `became_village`, `became_town`, `became_city`, `settlement_dwindled`, `settlement_abandoned`, `settlement_abandoned_to`, `ruin_faded`, `refugees_settled`, `refuge_hidden` |
 | `war` | `flare_up`, `claim`, `claim_settlements`, `claim_dropped`, `war_declared`, `battle`, `battle_at_pass`, `siege`, `sacked`, `settlement_captured`, `peace`, `truce`, `war_won`, `region_ceded`, `settlements_ceded`, `tribute`, `search_abandoned`, `refuge_held` |
 | `calamity` | `famine`, `plague`, `plague_spread`, `plague_outbreak` |
-| `other` | any other key (V7: kinds by key; P5 kinds fall here until a row is added) |
+| `other` | any other key (V7: kinds by key) |
+| `monsters` | `monster_appeared`, `undead_rose`, `monster_woke`, `monster_slept`, `monster_raid`, `settlement_overrun`, `monster_slain`, `monster_driven_off`, `monster_died`, `beasts_bold`, `outpost_built`, `outpost_abandoned` (P5-02's kinds 44 to 55) |
 
-This covers every one of the 43 shipped kinds. A new kind gets its row when it is added. The test in 10.2 item 2 fails if a compiled kind has no row.
+This covers every one of the 55 shipped kinds (lead ruling at the P4-05 integration with P5-02: group `monsters` appended as code 5, `ALL_GROUPS` = 0x3F; codes are never reused). No shipped kind falls to `other`. A new kind gets its row when it is added. The test in 10.2 item 2 fails if a compiled kind has no row.
 
 ### 4.5 The browser index (`worldgen/inspect/history_browser.hpp`)
 
@@ -177,19 +180,21 @@ Rules:
 - **select**: the candidates are `Timeline::events_of_civilization`, `events_of_settlement` or `events_of_region` for the first non-zero entity field, else every event. Each candidate is kept when it is in every other non-zero entity list (a merge of sorted lists), in the year span, in `groups`, and, when `summary_only`, has `digest.summary[id − 1]` = 1. An entity id the world lacks gives FatalError `browser: no <type> <id>`.
 - **block**: `block_line_display` of each line of `civilization_block(view, tables, digest, civ, level)`.
 - **search**: the query is bytes. Comparison is ASCII case-insensitive (A–Z folded to a–z; every other byte compared as is), and a match is a substring of a name. Names are searched in this order: civilizations by id, settlements by id, then regions by id. A region tries its name at E, then its geographic name, then its `region_name` rows by ascending `from_year`, and the first name that matches is reported. There is at most one match per (type, id), and at most `limit` matches in that order. An empty query gives none.
-- **Errors**: FatalError `browser: no event <e>`, `browser: no civilization <c>`, `browser: bad level` for a caller's bad argument. Nothing else throws on a history `load_history` accepted.
+- **Errors** (as built): FatalError `browser: no event <e>`, `browser: no civilization <c>`, `browser: no settlement <s>`, `browser: no region <r>` (from `select`'s entity fields, `event_detail`, `row_text` and `block`), `browser: bad level` for a caller's bad argument; `browser: the history is not the one the index was built from` when a call passes another history than `build` had. Nothing else throws on a history `load_history` accepted.
 
 ### 4.6 The place of an event (`worldgen/inspect/markers.hpp`)
 
 ```cpp
 // P4-04 3.4: the settlement's cell, else the region's seed cell, else none.
 [[nodiscard]] std::optional<std::array<std::int64_t, 2>> MarkerIndex::event_place(
-    const history::LoadedHistory& history, std::int64_t event) const;   // FatalError for an unknown event
+    const history::LoadedHistory& history, std::int64_t event) const;   // FatalError "markers: no event <e>"
 ```
 
 `markers_at` uses it for its places, so the rule is written once. `p4-04-markers.txt` lines that 12.2 does not move stay as they are.
 
-### 4.7 Cost (release, 1024 seed 42 and a 3,000-event world)
+### 4.7 Cost (release; budgets for a 3,000-event world)
+
+The budgets apply to a world of about 3,000 events only (r2).
 
 | Call | Budget at 3,000 events |
 | --- | --- |
@@ -199,7 +204,9 @@ Rules:
 | `block` (full) | 1 ms |
 | `search` | 2 ms |
 
-These are measured in the skipped suite `timeline-bench` (prints only). The report's time is unchanged within noise.
+These are measured in the skipped suite `browser-bench` (`worldgen/tests/p4_05_engineer_test.cpp`, run by hand with `worldgen-tests -ts=browser-bench --no-skip`; prints only). The report's time is unchanged within noise.
+
+**Measured** (r2, the engineer's runs on `linux-gcc-release`, generator 0.23.0): on the default 1024 world `sample-42-1024`, `BrowserIndex::build` takes 4 to 9 ms. The bench's large world (seed 42 at 1024, detail dense, intensity turbulent, four civilizations per race, span 12,000 years) has 8,685 events, almost three times the budget world: there `build` takes 26 to 39 ms and the full block of its largest civilization 3 to 6 ms. No budget applies to a world of that size or to the default world: the table's budgets are for the 3,000-event world only.
 
 ## 5. Viewer model (Part B)
 
@@ -231,7 +238,7 @@ Every method is valid without history or browser. It then answers empty, −1 or
 | `select_civilization(c)` | entity = c (0 clears), scope `entity`, follow on (off when cleared), place cleared; pushes the path |
 | `select_event(e)` | event = e; `set_year(e.year)`; pushes the path |
 | `select_place(type, id)` | type 4 or 5; scope `place`; pushes the path |
-| `follow_link(target)` | `c<id>`: `select_civilization`; `s<id>`, `rg<id>`: `select_place`; `e<id>`: `select_event`; any other tag: false (`ra`, `g` and, until section 9, `m`, `si`, `f`, `fa`) |
+| `follow_link(target)` | `c<id>`: `select_civilization`; `s<id>`, `rg<id>`: `select_place`; `e<id>`: `select_event`; any other tag: false (`ra`, `g` and, until section 9, `m`, `si`, `f`, `fa`). As built: `can_follow_link(target)` answers whether a target has one of the four followable forms, and the screen renders only those as links (underlined, `push_meta`); every other reference is plain text |
 | `browser_back()`, `browser_forward()`, `can_browser_back()`, `can_browser_forward()` | restore the previous / next path entry: selection, filter scope and year |
 | `set_follow(on)`, `get_follow()` | follow (5.3) |
 | `follow_first()` | `select_event` of the first id of the current list; false when it is empty |
@@ -271,8 +278,8 @@ RightPane (TabContainer)
     %EntityTabs TabBar ("Civilizations"; section 9)
     %CivList Tree (4 columns: name with swatch, race, years, fate; stretch 0.30)
     %SearchResults ItemList (hidden while the search text is empty; replaces %CivList while shown)
-    EventFilters (HBox): %EventScope OptionButton (All / Selected / Place)  %EventGroup OptionButton (All kinds / realms / settlements / war / calamity / other)  %EventAll CheckBox "All events"
-    EventYears (HBox): %EventFrom SpinBox  %EventTo SpinBox  %EventThisYear CheckBox "This year"  %FollowToggle CheckButton "Follow"  %FollowFirst Button "First event"
+    EventFilters (HBox): %EventScope OptionButton (All / Selected / Place)  %EventGroup OptionButton (All kinds, then the words of get_event_groups() in code order: realms / settlements / war / calamity / other / monsters)  %EventAll CheckBox "All events"
+    EventYears (HBox): %EventFrom SpinBox  %EventTo SpinBox  %EventThisYear CheckBox "This year"  %FollowToggle CheckBox "Follow" (r2: a check box, as built, so the row fits 1280 × 800)  %FollowFirst Button "First event"
     %EventList ItemList (one column, text trimmed, tooltip the full row; stretch 0.40)
     %BrowserDetail RichTextLabel (selectable text, stretch 0.30)
   Legend (the moved LegendPanel)
@@ -325,7 +332,7 @@ The lists, the search field and the spin boxes take focus when clicked. While on
 
 `--bench` adds the build time of the index and row texts, the slowest and mean `select` with `get_event_rows` and `%EventList` rebuild at full / all (3,000 rows on the large world), the number of `event_list_changed` and `highlight_changed` emissions over 0 … E and back with the first civilization selected, and the slowest mask rebuild. The validation note records them. A budget missed by more than a factor of two is a defect.
 
-The large world for budgets is `generate --seed 42 --map-size 1024 --event-intensity high --civs-per-race 3`. If that does not reach about 3,000 events, the viewer engineer picks settings that do and records them in `gdext/README.md`.
+The large world for budgets is `generate --seed 42 --map-size 1024 --event-intensity turbulent --civs-per-race 3` (r2: the CLI has no intensity `high`; `turbulent` is its highest). It has 2,646 events at generator 0.23.0; `gdext/README.md` records it with the measured figures.
 
 ## 8. Headless check (P4-00 7 row P4-05)
 
@@ -363,7 +370,7 @@ P5-02 (generator 0.23.0, schema 9) adds monsters (type 8) and sites (type 9), th
 - **Selection**: already generic (`entity_type`, `entity_id`). `select_entity(type, id)` replaces `select_civilization`, which stays as a wrapper. `follow_link` accepts `m` and `si`.
 - **Filter**: `EventFilter` gains `monster` and `site` (from `Timeline` lists of the same form). Follow works unchanged, since it walks the list.
 - **Highlight**: a site's cell is framed like a place settlement, and a monster's lair site at Y (`monster_at`) likewise.
-- **Kind groups**: a `monsters` group, appended as code 5 with `ALL_GROUPS` widened (codes never reused).
+- **Kind groups**: done (r2). The `monsters` group is code 5 and `ALL_GROUPS` is 0x3F (4.4).
 - **Figures** (P5-06, type 6) and factions (7) attach the same way.
 
 Nothing in Part A or B may assume that the entity list holds civilizations only.
@@ -390,7 +397,7 @@ The 1024 cases run in `worldgen-tests-slow-browser`. The golden is re-recorded o
 ### 10.2 Unit tests (`worldgen-tests-browser`)
 
 1. `render_event_linked`: its text equals `render_event` for every event of every golden case. On T3, links are checked for `{role}`, `{role:all}` with three participants, `{role:plural}` and `{role:adjective}`, a lower-cased `The `, a region renamed after the event (former name), `{settlement}`, and a name with non-ASCII bytes (offsets in bytes). Links never overlap and ascend.
-2. `event_group` for every key of the table, every compiled kind (none falls to `other`), `""` and `"warx"`.
+2. `event_group` for every key of the table, every one of the 55 compiled kinds (none falls to `other`), `""` and `"warx"`.
 3. Block lines: `block_line_report_text` over `civilization_block` equals the block lines of `build_history_report` at both levels for every golden case. This holds after the refactor too, and the P3-07 goldens are the independent guard. Display and report forms agree under B4's transform. A civilization with no capital, an ended one, a seceded one and one with an adversary of another type appear on T3.
 4. `select`: every filter rule of 4.5 on T3 (span overlap at both ends, multi-year events, two entity fields together, `summary_only`), and FatalErrors.
 5. `search`: case folding A–Z only (a non-ASCII byte is not folded); a region found by a former name; the limit; an empty query.
@@ -484,6 +491,18 @@ Each has a recommendation and the interim choice the implementation takes.
 
 1. "Its block as the history report shows it" means the report's own lines, without escapes and tags and with links, at the browser's level (4.2, 6.4).
 2. "The summary set" is the report's digest set, through `history_report_digest`, so that it follows P5-02's second choice (4.3).
-3. Event kind groups are a library table by key (4.4). The design names no groups, and five cover the 43 kinds.
+3. Event kind groups are a library table by key (4.4). The design names no groups, and six cover the 55 kinds (r2: `monsters` added for P5-02's kinds).
 4. Events at a place are the timeline's lists for a settlement or region (P4-01), selected from the map by marker or by region cell (5.5).
 5. The browser's link targets use the report's tags (`c3`, `e57`), one encoding for the viewer, the check and the golden.
+
+## 16. Open items (r2)
+
+From the determinism audit of Part A (`docs/reviews/p4-05-browser-library-audit.md`), both advisories, neither blocking:
+
+- **A1. Empty name against no name in a block line.** `BlockBuilder::entity` turns a missing name into an empty `Segment::text`, and `block_line_report_text` prints the tag alone for an empty text, where the former `Report::ref` did so only for a missing name. Generated worlds never have an empty civilization, settlement or race name, so no report byte changes; on a damaged file with an empty name the report text differs from the text before the refactor. Remedy if wanted: a `has_name` flag in `Segment`, or empty names refused on load as `is_region_name_text` does for regions.
+- **A2. `search` relies on the `region_name` rows being ordered by region.** `std::lower_bound` over `region_names()` holds because the rows are read in primary-key order; the P5-12 audit's A1 (no check that the rows ascend) is the related open item. Viewer-only output, not in the cross-platform contract.
+
+## Revision notes
+
+- **r2** (2026-11-23), text only, from what was built and ruled; no change to code or output. 4.4: group `monsters` = 5 for kinds 44 to 55, `ALL_GROUPS` = 0x3F, all 55 kinds covered, `other` holds no shipped kind (lead ruling). 4.2: `history_entity_tag`; an entity without a name displays its tag as an untagged link; the FatalErrors of `civilization_block`. 4.5: the error texts as built. 4.6: `markers: no event <e>`. 4.7: budgets for the 3,000-event world only, the bench suite's real name (`browser-bench`) and the measured costs. 5.2: only `c`, `s`, `rg` and `e` are links in the viewer. 6.1: the group menu from `get_event_groups()`, Follow a check box. 4.3: the P5-02 step done. 7: the large world at `--event-intensity turbulent` (2,646 events). 9: the kind-groups bullet done. 10.2 item 2 and 15.3: 55 kinds. 16: the audit's advisories A1 and A2 as open items.
+- **r1** (2026-11-23): first draft.

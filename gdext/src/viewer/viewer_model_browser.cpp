@@ -182,6 +182,11 @@ void ViewerModel::refresh_browser(bool list) {
 
 void ViewerModel::selection_changed(bool list) {
     refresh_browser(list);
+    // P4-06 5.4: a selection or filter change recomputes the stops of an
+    // open session; the span is kept.
+    if (playback_.active()) {
+        refresh_playback_source();
+    }
     if (browser_.available()) {
         emit_signal("browser_selection_changed");
     }
