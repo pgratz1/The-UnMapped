@@ -208,9 +208,12 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
     // (c2) now leads with its sacks of the House of Nife's towns (e141 of 3307, e144 of 3311), and the House of
     // Nife (c1) with its won wars, the first by the Mob's peace e108 of 2920 (with the cession e109); report text
     // confirmed byte for byte by p3_report_reference.py --version 0.23.0.
-    CHECK(std::find(a.begin(), a.end(), "    2920 e108 peace") != a.end());
+    // P5-03 (generator 0.24.0, test writer at integration): the roles swap back. The House of Nife (c1) now leads
+    // with its sacks of the Baskeeb Mob's towns (e261 of 5022, e271 of 5041), and the Baskeeb Mob (c2) with its won
+    // wars, the first the war_won e111 of 3101; text confirmed with p3_report_reference.py on the 0.24.0 inputs.
+    CHECK(std::find(b.begin(), b.end(), "    3101 e111 war_won") != b.end());
     std::int64_t sacks = 0;
-    for (const std::string& x : b) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
+    for (const std::string& x : a) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
     CHECK(sacks == 2);
 }
 
