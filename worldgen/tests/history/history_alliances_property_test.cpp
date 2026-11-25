@@ -205,4 +205,36 @@ TEST_CASE("P5-04 18.2: the invariants of 13 and AL9 at 1024, seeds 0 to 19") {
     for (std::uint64_t seed = 0; seed < 20; ++seed) check_world_file(seed, 1024);
 }
 
+// Validation finding 1 (0.26.0): seed 6 at 1024 with four civilizations per race, where a third realm's conquest
+// (e1954, c8 conquers c5) ended the war of the principal c17, who then settled spoils on it (e1955). Spec 13 item 11
+// and 6.11: a share is owed only on an end whose own winner is the principal; no spoils event may cite another
+// realm's conquest.
+TEST_CASE("P5-04 13 item 11: no spoils on a war a third realm ended by conquest (civs 4, seed 6 at 1024)") {
+    chrono_api::Params p = chrono_test::params_with(6000, chrono_test::races_of_text("all"));
+    p.civs = 4;
+    const std::string path = chrono_test::world_dir().file("civs4-seed-6-1024.db");
+    const worldgen::WorldParams wp = chrono_test::world_params(6, 1024, p, conflict_test::shipped());
+    REQUIRE(worldgen::generate_world(wp, conflict_test::shipped(), path, db::Overwrite::refuse).ok());
+    const db::WorldReader r = chrono_test::open_world(path);
+    const p503check::World w = p503check::world_of_file(r, conflict_test::shipped());
+    const p504check::Rows rows(w);
+    const p503check::Index x(w);
+    std::int64_t conquest_cited = 0;
+    for (const char* k : {"spoils_shared", "spoils_withheld"}) {
+        for (const std::int64_t e : rows.of(k)) {
+            for (const std::int64_t c : x.cause_list(e)) {
+                if (rows.kind(c) != "civ_conquered") continue;
+                ++conquest_cited;
+                CAPTURE(e);
+                CAPTURE(c);
+                CHECK(rows.one(c, "conqueror") == rows.one(e, "principal"));
+                CHECK(rows.one(c, "civilization") == rows.one(e, "enemy"));
+            }
+        }
+    }
+    MESSAGE("spoils events citing a conquest: " << conquest_cited);
+    const p504check::Geo g = p504check::geo_of_file(r);
+    CHECK(p504check::violations(w, g, p504check::data_of(conflict_test::shipped())) == std::vector<std::string>{});
+}
+
 }  // TEST_SUITE

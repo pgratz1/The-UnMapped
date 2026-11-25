@@ -1272,8 +1272,12 @@ def alliance_line(w, r):
     if foe:
         line += " against c%d" % foe[0]
     line += ", e%d" % e
-    hi = r[8] if r[6] is not None else None
-    within = lambda x: x > e and (hi is None or x <= hi)
+    # Lead's ruling on P5-04 validation finding 2: the pair's events count by
+    # year inside the alliance's span [from, to] (to = E while standing), the
+    # ending year included, whatever their id order against the ending event
+    # (a share withheld in the year of the break, after it, counts).
+    hi = r[6] if r[6] is not None else w.E
+    within = lambda x: r[5] <= w.year(x) <= hi
     pair = {a, b}
     ren = sum(1 for x in w.of("alliance_renewed") if within(x) and {w.one(x, "ally_a"), w.one(x, "ally_b")} == pair)
     if ren:
@@ -2118,7 +2122,13 @@ class Alliances:
 
         # lead ruling (integration): a share is owed only when the war ends by peace, war_won or civ_conquered
         ek = w.events[sp["end_event"] - 1]["key"] if sp["end_event"] else None
-        cited = ek in ("peace", "war_won", "civ_conquered")
+        cited = ek in ("peace", "war_won")
+        if ek == "civ_conquered":
+            # 13 item 11 (validation finding 1, the lead's ruling): the end event's own winner is the principal; a
+            # conquest of the enemy by a third realm owes nothing
+            ev = w.events[sp["end_event"] - 1]
+            seq = [q["seq"] for q in w.cat_by_key["civ_conquered"]["roles"] if q["role"] == "conqueror"][0]
+            cited = [x for (_i, s_, _typ, x) in ev["participants"] if s_ == seq] == [W]
 
         def owed(q):
             return (cited and W == q["partner"] and q["closed_by"] == "end" and not self.ended(q["z"]) and W

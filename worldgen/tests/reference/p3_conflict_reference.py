@@ -768,6 +768,7 @@ class World(pp.World):
         self.claim_blocked = set()  # (civ, phase, reason): a claim the strain called for, refused by 5.3's tests
         self.claim_refused = set()  # (civ, target, phase): the same, per target (r16 (16))
         self.pair_contact = {}      # (a, b) -> first phase id in which a and b are in contact (r16 (16))
+        self.pair_contact_year = {}  # (a, b) -> the first year of that contact (P5-04: an oath before it)
         # r17 members (22.1), keyed by ids
         self.quarrel_with = {}     # a -> b while a's awakening quarrel with b is open (22.1 item 1)
         self.quarrel_closed = set()  # a whose quarrel entry was erased (never set again)
@@ -1817,6 +1818,7 @@ class World(pp.World):
                 for x in (a, b):
                     self.contact_log.setdefault(x, self.phase)
             self.pair_contact.setdefault((a, b), self.phase)
+            self.pair_contact_year.setdefault((a, b), self.year)
 
     def declare_p(self, a, b):
         """7.2 item 3: the yearly chance of a's declaration on b, or None below declare_min (no draw)."""
@@ -4383,8 +4385,16 @@ def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, v
         claimed = any(x[3] in CLAIMS and x[4] == ph and role(x[0], 1) == [a] and role(x[0], 2) == [b]
                       for x in res["event"])
         refused = (a, b, ph) in w.claim_refused
+        # P5-04 r3 6.3, 6.4 (the lead's ruling at integration): an alliance_formed of the pair drops its strain both
+        # ways, so an oath sworn after the quarrel and before the pair's first contact leaves no claim owed
+        # (validation finding 3: high seed 25 at 1024, c7 and c2 allied in 5817, first in contact in 5952)
+        y0, y1 = _y, w.pair_contact_year.get((a, b), _y)
+        forgiven = FLAGS["alliances"] and any(
+            x[3] == K["alliance_formed"] and y0 <= x[1] <= y1 and sorted(role(x[0], 1) + role(x[0], 2)) == sorted((a, b))
+            for x in res["event"])
         c.true("%s r16 (16) c%d claims against its quarrel neighbour c%d in phase %d, their first phase of contact, "
-               "or the claim pass refuses it" % (label, a, b, ph), claimed or refused)
+               "or the claim pass refuses it, or an alliance of the two forgave the quarrel first" % (label, a, b, ph),
+               claimed or refused or forgiven)
 
 
 def last_battle_winner(res, d, idx):

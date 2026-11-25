@@ -1921,6 +1921,23 @@ T1) and the marker dump with the `site` lines (reading K2); the browser dumps th
 the other race's check too; the relation checks of 9.1 are tested in `HistoryView::load` only (r3; the engineer's
 reading 12); invariant 13 no longer reads a town's population from the census rows.
 
+### 0.26.0, validation fix round (`docs/reviews/p5-04-alliances-trade-validation.md` findings 1 to 3)
+
+- Finding 1 (engine defect, fixed in the engine and in the replay): a share is owed only on an end whose own winner
+  is the principal (13 item 11, 6.11). A `civ_conquered` counts only when its `conqueror` is `war_spoils(w).winner`;
+  a war ended by a third realm's conquest of the enemy owes nothing (civs4 seed 6 at 1024: e1955 cited e1954, c8's
+  conquest of c5, with principal c17). The replay's `Alliances.spoils` makes the same test; `check-world`'s
+  invariant 11 already had it.
+- Finding 2 (the lead's ruling, the engine's reading): an alliance line's counts (`renewed`, `joined`/`refused`,
+  `spoils`) take the pair's events whose year lies in the alliance's span [from, to], `to` = E while standing, both
+  years included, whatever their id order against the forming or ending event. A `spoils_withheld` dated in the
+  year of the break and written after the break counts (civs4 seed 27 at 1024, e2752 after e2745). `alliance_line`
+  reads years, not ids, for all four counts, as the C++ does.
+- Finding 3 (stale check): `p3_conflict_reference.py` invariant r16 (16) forgives the quarrel claim when an
+  `alliance_formed` of the pair lies between the quarrel's year and the pair's first year of contact
+  (`World.pair_contact_year`), since the oath drops the pair's strain both ways (r3 6.3, 6.4). High seed 25 at 1024:
+  c7's quarrel on c2 set in 5584, their alliance e451 in 5817, first contact in 5952 (phase 20) with no strain left.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file
