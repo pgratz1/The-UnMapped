@@ -490,7 +490,7 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     REQUIRE_FALSE(bytes.empty());
     CHECK(dbtest::read_file(dir.file("content.db")) == bytes);
     // The empty world of seed 0 with the content hash of no data, generator
-    // 0.25.0 (schema version 10). The CLI case empty-seed-0 of P0-04 section 9 carries the content
+    // 0.26.0 (schema version 11). The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
     CHECK(worldgen::sha256_hex(bytes) == "7b1a975b6a039fc83da71e26c1e84cda4dfdd51a3a2f96f8113203830420c46b");
