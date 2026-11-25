@@ -18,6 +18,7 @@
 #include "history_report_fixture.hpp"
 #include "worldgen/core/sha256.hpp"
 #include "worldgen/db/reader.hpp"
+#include "worldgen/history/digest.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/report.hpp"
@@ -103,13 +104,14 @@ public:
             }
             return out;
         };
-        // P5-04 11.1: allied_battle is a battle kind wherever P3-07 names battle and battle_at_pass
-        W_ = ids({"war_declared", "battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held",
+        // P5-04 11.1: allied_battle is a battle kind wherever P3-07 names battle and battle_at_pass; P5-06 11.1:
+        // battle_led likewise
+        W_ = ids({"war_declared", "battle", "battle_at_pass", "allied_battle", "battle_led", "siege", "sacked", "settlement_captured", "refuge_held",
                   "peace", "war_won", "truce"});
-        EW_ = ids({"battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held", "peace",
+        EW_ = ids({"battle", "battle_at_pass", "allied_battle", "battle_led", "siege", "sacked", "settlement_captured", "refuge_held", "peace",
                    "war_won", "truce", "search_abandoned", "region_ceded", "settlements_ceded", "tribute",
                    "capital_moved", "refugees_settled", "civ_conquered"});
-        battles_ = ids({"battle", "battle_at_pass", "allied_battle"});
+        battles_ = ids({"battle", "battle_at_pass", "allied_battle", "battle_led"});
         renamed_ = ids({"region_renamed"});
         falls_ = ids({"sacked", "settlement_captured"});
         conseq_ = ids({"capital_moved", "refugees_settled", "civ_conquered"});
@@ -266,9 +268,16 @@ inline std::set<std::int64_t> shown_ids(const std::string& report) {
 // P5-03a 9.2 (format v6): at summary the milestones are `  milestones: <n>` and the quiet-stretch lines only, so
 // the milestone lines are left out at both levels and the head line is read as `  milestones:`; v6_milestones
 // checks n and the quiet-stretch lines against full.
+// P5-06 10.3: with more than SUMMARY_LINES_CIVS civilizations the summary prints no `  rulers:` line, so the
+// rulers lines (and full's per-ruler lines below them) are left out at both levels then.
 inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     std::vector<std::string> out;
     std::vector<std::string> blk;
+    std::int64_t civs = 0;
+    for (const std::string& l : block(text, "[civilizations]")) {
+        civs += l.size() > 1U && l[0] == 'c' && l[1] >= '0' && l[1] <= '9' ? 1 : 0;
+    }
+    const bool no_rulers = civs > worldgen::history::SUMMARY_LINES_CIVS;
     auto flush = [&]() {
         bool ended = false;
         for (const std::string& l : blk) ended = ended || l.rfind("  fate: ended in ", 0) == 0;
@@ -295,7 +304,7 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     bool skip = false;
     for (const std::string& l : block(text, "[civilizations]")) {
         if (!l.empty() && l[0] == 'c') flush();
-        if (l.rfind(full ? "  relations:" : "  adversaries:", 0) == 0) {
+        if (l.rfind(full ? "  relations:" : "  adversaries:", 0) == 0 || (no_rulers && l.rfind("  rulers: ", 0) == 0)) {
             skip = true;
             continue;
         }

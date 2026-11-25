@@ -1281,7 +1281,8 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if m[9] in (SLAIN, DIED) and (lair[13] == OPEN or lair[11] != m[6]):
             out.append("6: ended monster %d lair ended %s, died %s" % (m[0], lair[11], m[6]))
     for s in x.sites:
-        if s[6] and s[2] != MINE:   # P5-04 9.2: a mine's settlement is its town (the alliances' check-world)
+        # P5-04 9.2, P5-06 7.8: a mine's settlement is its town, a library's its city; rule 6 reads lairs and outposts
+        if s[6] and s[2] in (LAIR, OUTPOST):
             k = x.kind_of(s[10])
             st = x.stl.get(s[6])
             if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose"):

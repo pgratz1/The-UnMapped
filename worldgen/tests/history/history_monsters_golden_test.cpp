@@ -337,7 +337,8 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
     std::map<std::int64_t, const Row*> stl;
     for (const Row& s : t.settlement) stl[at(s, 0)] = &s;
     for (const Row& s : t.site) {
-        if (at(s, 6) == 0 || at(s, 2) == 3) continue;   // P5-04 7.16: P5-02's site rules read kinds 1 and 2
+        // P5-04 7.16, P5-06 7.8: P5-02's site rules read kinds 1 and 2 (a mine's town and a library's city stand)
+        if (at(s, 6) == 0 || (at(s, 2) != 1 && at(s, 2) != 2)) continue;
         const Row* x = stl[at(s, 6)];
         if (x == nullptr || (at(*x, 10) != 3 && at(*x, 10) != 4)) out.push_back("6: a site's settlement stands");
     }

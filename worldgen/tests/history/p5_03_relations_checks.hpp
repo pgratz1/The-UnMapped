@@ -401,6 +401,14 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
             for (const auto& [g, v] : want) b1[g] = v.first;
             if (a1 != b1) out.push_back("4: refuge s" + n(s) + "'s first shares are not its origin's");
         } else {
+            // P5-03a validation finding 1 (the Python reference's invariant 4): a settlement_mixed of the colony in
+            // its founding year (5.1's movers reaching it the same year) leaves first rows already mixed; the census
+            // holds the year's last state
+            bool mixed_first_year = false;
+            for (const std::int64_t e : x.events_of("settlement_mixed")) {
+                if (at(*x.ev.at(e), 6) == s && at(*x.ev.at(e), 1) == y0) mixed_first_year = true;
+            }
+            if (mixed_first_year) continue;
             const std::int64_t r0 = x.civ_race(at(S, 5));
             bool ok = first.size() == 1U && first.count(r0) == 1U && first.at(r0).first == 1000 &&
                       first.at(r0).second == p503api::RULING;
