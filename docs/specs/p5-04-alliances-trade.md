@@ -59,7 +59,7 @@ The runaway bound of P5-00 8.3 is extended to blocs and kept by rule (6.7, 7.3).
 | A2 | `AlliancesSubsystem`: formation, origin, calls, betrayal, renewal, lapse, breaks, blocs, credits | 5, 6 | P3-04 6.4 (configuration) | yes |
 | A3 | Seams into conflict: allied strain, fear of blocs, deterrence, joined allies, allied battles, withdrawal, ends | 7 | P3-06 5.1, 5.2, 6.1, 7.2, 7.3, 7.7, 7.8, 8.1, 20.15 | yes |
 | A4 | Event kinds 63 to 71; renderer forms `with`, `against` | 8 | P3-04 8.2, 8.4 | yes |
-| A5 | Spoils: the share owed, granted or withheld, and the alliance spurned; events 74 to 76; seams `war_spoils`, `add_grudge` | 6.7, 6.11, 7.15, 8 | P3-06 4.2 (a grudge source), 7.10 | yes |
+| A5 | Spoils: the share owed, granted or withheld, and the alliance spurned; events 74 to 76; seams `war_spoils`, `add_grudge_seam` | 6.7, 6.11, 7.15, 8 | P3-06 4.2 (a grudge source), 7.10 | yes |
 | B1 | Trade: relation `trade`, its strength, credit, events 72, 73 | 6.8, 7.5, 8 | P3-06 6.1 | yes |
 | C1 | Mines: race field `mining_permille`, site kind 3 `mine`, event 77 | 4.1, 4.2, 6.12, 8, 9.2 | P3-01, P5-02 11 | yes, schema 11 |
 | C2 | Forges and arms: strength of a realm with a mine and of its buyers, event 78 | 4.3, 6.13, 7.5, 8 | P3-06 6.1 | yes |
@@ -72,7 +72,7 @@ The runaway bound of P5-00 8.3 is extended to blocs and kept by rule (6.7, 7.3).
 ## 3. Inputs, streams, draws
 
 - **Live state** (`State`): civilizations (race, founded year and event, ended), settlements (owner, region, status, population, founding event), regions (owner, owner event, `ore_reach_cells` of P1-06), relations (`war`, `peace`, `alliance`, `trade`), sites (P5-02; this stage adds and ends `mine` sites, 6.12).
-- **Conflict's const reads** (7.13, 7.15): `disposition_of`, `at_war`, `open_wars_of`, `force`, `reaches`, `truce_over`, `lying_low`, `share`, `last_peace`, `war_open`, `war_end_event`, `war_spoils`; and three mutators, `join_war` (7.6), `add_grudge` (7.15) and `forgive` (7.2).
+- **Conflict's const reads** (7.13, 7.15): `disposition_of`, `at_war`, `open_wars_of`, `force`, `reaches`, `truce_over`, `lying_low`, `share`, `last_peace`, `war_open`, `war_end_event`, `war_spoils`; and three mutators, `join_war` (7.6), `add_grudge_seam` (7.15) and `forgive` (7.2).
 - **Relations**: `DispositionView` (`disposition`, `band`, `met`, `hatred_event`, and the new `turn_event`, 7.13), `RelationsSubsystem::credit` (P5-03a 3.5) and the new `RelationsSubsystem::met_event(race_a, race_b)` (the pair's `peoples_met`, 0 when they have not met; 6.8).
 - **Peoples**: `PeoplesView::hops` (open borders, P3-05 4.4), `population`.
 - **The log**: `war_declared` events from a cursor (6.5), through `StepContext`'s reads.
@@ -240,7 +240,7 @@ All read once per step into the cache (live state at the step's start for this s
 - **Lately at war** (x, y): at war, or the pair's `last_peace` year (P3-06 3.2) is above Y − `ally_after_war_years` (for trade, − `trade_after_war_years`).
 - **Reasons** of a pair (x, y), each with its cause event and, for the first two, its foe z:
   1. **Common enemy**: the z ∉ {x, y}, alive and visible, with a `war_declared` between z and one of x, y (either side, as principal) that is open or whose year is above Y − `foe_years`, such that the other of x, y has d(·, z) < 0 and is in reach of z. Cause: the latest such `war_declared` (largest id); z its other side. (A joined war does not make a common enemy; only declarations do.)
-  2. **Fear**: the z ∉ {x, y} with bs(z) ≥ `fear_share`, alive and visible, not allied with x or y, in reach of both, with d(x, z) < 0 and d(y, z) < 0; the z of the largest bs(z), then the smaller id. **bs(z) here is the bloc share of the step's start** (the cache), not changed by the alliances formed or ended earlier in the step; the bloc test of 6.3 reads the bloc shares live. Cause: the largest `owner_event` among the regions z holds (the latest gain of land).
+  2. **Fear**: the z ∉ {x, y} with bs(z) ≥ `fear_share`, alive and visible, not allied with x or y, in reach of both, with d(x, z) < 0 and d(y, z) < 0; the z of the largest bs(z), then the smaller id. **bs(z) here is the bloc share of the step's start** (the cache), not changed by the alliances formed or ended earlier in the step; the bloc test of 6.3 reads the bloc shares live. Cause: the largest `owner_event` among the regions z holds (the latest gain of land); when z holds no region, z's `founding_event` (reading A10).
   3. **Trade**: an open trade between x and y opened at least `trade_ally_years` before Y. Cause: its `trade_opened`.
   4. **Friendship**: d(x, y) ≥ `ally_friend_disposition`. Cause: the later of the younger realm's `founding_event` and `turn_event(r_x, r_y)` when that turn was into friendship (7.13); for r_x = r_y the younger's founding event.
 - **Basis** of an alliance: 0 **origin** (6.4), 1 **common enemy**, 2 **fear**, 3 **friendship**, 4 **trade**: the first reason present in the order common enemy, fear, trade, friendship (codes 1, 2, 4, 3).
@@ -277,6 +277,7 @@ For each pair (x, y), x < y ascending, alive, visible and free, not allied, not 
 - `ConflictSubsystem::reaches(z, e)` (z's armies can reach the enemy, 7.13);
 - Y ≥ `founded_year`(e) + `shelter_years` (P3-06 7.2's shelter: a new realm is not attacked in its first years, by allies either);
 - `open_wars_of(z)` < `ally_wars_max`;
+- the war w is still open (`ConflictSubsystem::war_open(w)`);
 - for an attack call only: `truce_over(z, e)` and d(z, e) < 0.
 
 **The chance.**
@@ -414,7 +415,7 @@ g     = clamp(spoils_grant_permille + spoils_warmth_permille × w(W, z) div 1000
 (own_dead and pop0 = `winner_dead` and `winner_pop0`, the principal's own in w, as 7.7 item 1's exhaustion reads them), the share is **granted** if `chance_pm(D(hist.alliances.spoils; w, z, 0), g)`, else **withheld**. A warm pair, an ally that bled much and a principal that bled little make a grant likely; a cold pair and a bled-out principal make keeping likely. Shipped, a pair at warmth 600 with an ally at part 200 and a principal half-way to exhaustion: g = 350 + 180 + 100 − 200 = 430.
 
 - **Granted**: append **`spoils_shared`** (region: w's goal region; settlement 0; participants W `principal`, z `ally`, the loser `enemy`; value `share`; causes the war's ending event and z's `ally_joined_war`, ascending); `credit(r_W, r_z, share_memory, event)`.
-- **Withheld**: append **`spoils_withheld`** (the same shape); `credit(r_W, r_z, −withheld_memory, event)`; `ConflictSubsystem::add_grudge(W, z, withheld_grudge)` (7.15: the grievance between the two realms, which `credit` cannot carry when they are of one race); if W and z have an open alliance: its term's withheld count += 1 and its withheld record = (this event, w's goal region, z). 6.7 decides what the alliance does with it.
+- **Withheld**: append **`spoils_withheld`** (the same shape); `credit(r_W, r_z, −withheld_memory, event)`; `ConflictSubsystem::add_grudge_seam(W, z, withheld_grudge)` (7.15: the grievance between the two realms, which `credit` cannot carry when they are of one race); if W and z have an open alliance: its term's withheld count += 1 and its withheld record = (this event, w's goal region, z). 6.7 decides what the alliance does with it.
 
 The record is settled. In Q4 either event needs `quiet_events_left(W)` > 0 (the principal is its first civilization participant), else the record waits unsettled for the next T6 or Q4. Each record draws at most once (the key is the war and the ally).
 
@@ -429,7 +430,7 @@ Sites are kept by `MonstersSubsystem` (P5-02 5), which writes table `site`; mine
 | 5 the founder's realm fell | c has ended | c's `ending_event` |
 | 4 the founder lost the land | t is not standing, or t's owner is not c, or R's owner is not c | t's `ruin_event` when t is not standing; else the event that last changed t's owner (a `settlement_captured`, `region_ceded` or `settlements_ceded`) when it is not c; else R's `owner_event` |
 
-`end_site(site, year of that event, that event, ending)` (7.16); the mine is dropped from the open mines; no event of its own (as an outpost lost, P5-02 6.6.3). **The ended year is the ending event's own year** (r3, as built; the reader checks that `ending_event` is of `ended_year`, 9.2). That is Y in every case this section names when the loss happens in a step before this subsystem's in the same year (closings run in T2, T6 and Q4); a town or region lost after this subsystem's Q4 (later in the quiet step) closes the mine at the next step, still with that event's year.
+`end_site_seam(site, year of that event, that event, ending)` (7.16); the mine is dropped from the open mines; no event of its own (as an outpost lost, P5-02 6.6.3). **The ended year is the ending event's own year** (r3, as built; the reader checks that `ending_event` is of `ended_year`, 9.2). That is Y in every case this section names when the loss happens in a step before this subsystem's in the same year (closings run in T2, T6 and Q4); a town or region lost after this subsystem's Q4 (later in the quiet step) closes the mine at the next step, still with that event's year.
 
 **Openings** (T2 and Q4, after the closings): for each civilization c ascending, alive, visible and free, with `mining_permille`(r_c) > 0; for each region R ascending with owner c, `ore_reach_cells`(R) ≥ `mine_ore_min`, and no open mine of c in R: t = c's standing settlement in R with the largest population (then the smaller id) among those that never had a mine, hidden settlements included (reading A12); none, or its population below `mine_settlement_min`: skip (there is no fallback to a settlement that already had a mine).
 
@@ -438,7 +439,7 @@ p = mine_permille × mining_permille(r_c) div 1000          T2
 p = min(1000, p × L)                                       Q4
 ```
 
-If `chance_pm(D(hist.alliances.mine; c, R, 0), p)`: id = `next_site_id()`; append **`mine_opened`** (region R, settlement t; participants c `civilization`, id `site`; cause the larger of R's `owner_event` and t's `founding_event`); `open_site` (kind 3; name `mine_forms[(id − 1) mod n]` with `{settlement}` t's name, a leading `The ` lowered to `the ` (P1-06 r3 14.7); region R; cell and settlement of t; `founder_civ` c; `monster` 0; origin Y and the event); record the mine and t. One mine per settlement ever, so mine names are unique. In Q4 the event needs `quiet_events_left(c)` > 0.
+If `chance_pm(D(hist.alliances.mine; c, R, 0), p)`: id = `next_site_id()`; append **`mine_opened`** (region R, settlement t; participants c `civilization`, id `site`; cause the larger of R's `owner_event` and t's `founding_event`); `open_site` (kind 3; name `mine_forms[(id − 1) mod n]` with `{settlement}` t's name, a leading `The ` of it lowered to `the ` (P1-06 r3 14.7) only when `{settlement}` is not at the start of the form (reading P8; at the start the name is kept); region R; cell and settlement of t; `founder_civ` c; `monster` 0; origin Y and the event); record the mine and t. One mine per settlement ever, so mine names are unique. In Q4 the event needs `quiet_events_left(c)` > 0.
 
 ### 6.13 Forges and arms (part C; T2 and Q4, after the mines)
 
@@ -539,7 +540,7 @@ Unchanged in rule: 8.1 item 1 already closes every open relation of an ended sid
 
 ### 7.13 Other reads
 
-`ConflictSubsystem` makes public, as const reads with the live state of the step: `disposition_of(ctx, a, b)`, `at_war(a, b)` (now: any open `war` relation either way), `open_wars_of(c)`, `force(ctx, c)`, `truce_over(ctx, a, b)`, `lying_low(ctx, c)`, `share(ctx, c)`, `last_peace(a, b)` (year and event, or none), `reaches(ctx, x, y)` (true when 5.1's `front(x, y)` with x's march hops, 8.1's `enmity_hops` where an enmity row exists, is not empty), `war_open(w)`, `war_end_event(w)`, `ally_left(w, z)`, `war_spoils(w)` (7.15); and the mutator `forgive(a, b)` (7.2). `DispositionView` gains `std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const` (the pair's last `disposition_turned`, 0 none) and its band.
+`ConflictSubsystem` makes public, as const reads with the live state of the step: `disposition_of(ctx, a, b)`, `at_war(a, b)` (now: any open `war` relation either way), `open_wars_of(c)`, `force(ctx, c)`, `truce_over(ctx, a, b)`, `lying_low(ctx, c)`, `share(ctx, c)`, `last_peace(a, b)` (year and event, or none), `reaches(ctx, x, y)` (true when 5.1's `front(x, y)` with x's march hops, 8.1's `enmity_hops` where an enmity row exists, is not empty), `war_open(w)`, `war_end_event(w)`, `ally_left(w, z)`, `ally_record(w, z)` (the ally's record of 7.6 in war w: side, join event, dead, pop0, open, and the event and code that closed it; fatal when z did not join w), `war_spoils(w)` (7.15); and the mutator `forgive(a, b)` (7.2). `DispositionView` gains `std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const` (the pair's last `disposition_turned`, 0 none) and its band.
 
 ### 7.14 Proof obligation I0
 
@@ -560,10 +561,10 @@ struct WarSpoils {
 };
 WarSpoils war_spoils(std::int64_t war) const;                       // fatal while the war is open
 std::int64_t ally_dead(std::int64_t war, std::int64_t ally) const;  // the ally's dead in the war
-void add_grudge(std::int64_t a, std::int64_t b, std::int64_t units);
+void add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units);
 ```
 
-`add_grudge` (a ≠ b, units ≥ 0, fatal otherwise): grudge{min(a, b), max(a, b)} += units. It is a new grudge source of P3-06 4.2's table ("an ally's share of the spoils withheld", 6.11) and decays as every grudge. It is called only from 6.11, at one fixed point of this subsystem's T6 and Q4; conflict reads it at its next call. Conflict keeps each ended war's record (allies, dead, plunder, tribute, end) at least until every joined record of it is settled and credited by this subsystem (keeping every ended war is simplest; the reads are the contract, the storage the engineer's).
+`add_grudge_seam` (a ≠ b, units ≥ 0, fatal otherwise): grudge{min(a, b), max(a, b)} += units. It is a new grudge source of P3-06 4.2's table ("an ally's share of the spoils withheld", 6.11) and decays as every grudge. It is called only from 6.11, at one fixed point of this subsystem's T6 and Q4; conflict reads it at its next call. Conflict keeps each ended war's record (allies, dead, plunder, tribute, end) at least until every joined record of it is settled and credited by this subsystem (keeping every ended war is simplest; the reads are the contract, the storage the engineer's).
 
 ### 7.16 The site seam (new; amends P5-02 5, 6.6, 11)
 
@@ -572,7 +573,7 @@ void add_grudge(std::int64_t a, std::int64_t b, std::int64_t units);
 ```cpp
 std::int64_t next_site_id() const;                                  // the id the next site will take
 void open_site(const SiteSpec&);                                    // kind 3 only from this stage; fatal unless spec.id == next_site_id()
-void end_site(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);  // as P5-02's
+void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);  // as P5-02's
 ```
 
 with `SiteSpec` {id, kind, name, region, x, y, settlement, founder_civ, monster, origin_year, origin_event}. Monsters runs before alliances in every step (6.1), so ids are allocated in one order. Every loop of P5-02 over sites (outposts' ends, lairs, `holds_site`, the report's lairs and outposts counts) tests the kind and skips kind 3 (`holds_site` and the lair's "occupied" test of 6.12 included). `site_rows()` writes every site, mines included, in id order.
@@ -690,7 +691,7 @@ A `war` row whose `since_event` is an `ally_joined_war` is an ally's row, not a 
 
 ### 10.5 `[stats]` (appended, full only; `SUMMARY_STATS` unchanged)
 
-In this order: `alliances_formed`, `alliances_standing`, `alliances_cross_race`, `alliances_origin`, `alliances_lapsed`, `alliances_broken`, `alliances_betrayed`, `alliances_ended_with_realm`, `alliances_years_median` (median length of ended alliances, `-` when none), `allies_joined`, `allies_joined_defence`, `allies_refused`, `allies_withdrew`, `wars_with_ally`, `allied_battles`, `bloc_share_max_permille`, `bloc_over_800_years` (the longest run of consecutive years in which some bloc's share is above 800‰), `trade_opened`, `trade_standing`, `trade_broken`, `alliances_spurned`, `spoils_owed`, `spoils_granted`, `spoils_withheld`, `spoils_granted_permille` (granted × 1000 div owed, `-` when none owed), `spoils_people_owed`, `mines_opened`, `mines_open`, `arms_sold`, `arms_buyers_at_end` (realms with arms(c) = 1 at E − 1).
+In this order: `alliances_formed`, `alliances_standing`, `alliances_cross_race`, `alliances_origin`, `alliances_lapsed`, `alliances_broken`, `alliances_betrayed`, `alliances_ended_with_realm`, `alliances_years_median` (the lower median of the lengths, until − since, of ended alliances: the element at index (n − 1) div 2 of the ascending list; `-` when none), `allies_joined`, `allies_joined_defence`, `allies_refused`, `allies_withdrew`, `wars_with_ally`, `allied_battles`, `bloc_share_max_permille`, `bloc_over_800_years` (the longest run of consecutive years in which some bloc's share is above 800‰), `trade_opened`, `trade_standing`, `trade_broken`, `alliances_spurned`, `spoils_owed`, `spoils_granted`, `spoils_withheld`, `spoils_granted_permille` (granted × 1000 div owed, `-` when none owed), `spoils_people_owed`, `mines_opened`, `mines_open`, `arms_sold`, `arms_buyers_at_end` (realms with arms(c) = 1 at E − 1).
 
 ### 10.6 `[sites]`
 
@@ -770,7 +771,7 @@ In force at Y: since ≤ Y < until (P3-04 10's half-open rule). `alliance_groups
 - Containers: `std::map` keyed by id pairs for alliances and trades, `std::set` for betrayed pairs, a vector of joined records in record order; conflict's `ConflictWar::allies` in join order. No unordered container, no pointer keys.
 - The log cursor reads events in ascending id. Opens and closes of relations are made on key copies (6.10). The join seam changes conflict's members only through `join_war`, called at one fixed point of this subsystem's T2.
 - Arithmetic int64, checked multiplication: largest products force × 1000 (force < 2^40, 7.5) < 2^50; shares ≤ 1000; disposition terms within ±10^4 × 1000.
-- `credit` calls (6.9) are at fixed points with existing events (A4); `add_grudge` (7.15) at one fixed point of 6.11; `forgive` (7.2) at each `alliance_formed`, right after its row opens.
+- `credit` calls (6.9) are at fixed points with existing events (A4); `add_grudge_seam` (7.15) at one fixed point of 6.11; `forgive` (7.2) at each `alliance_formed`, right after its row opens.
 - The per-step set of pairs closed in the step (A9) is an ordered set, cleared at the start of each `run`.
 - Site ids: allocated by `MonstersSubsystem::next_site_id()` and checked by `open_site` (7.16); the monsters subsystem runs before this one in every step, so the id order is the order of 6.1 within a step.
 - Mine names are filled from `mine_forms` by the site id (6.12), no draw.
@@ -816,7 +817,7 @@ At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. 
 | **T16** | repeated battles (allied battles included) | ≤ 2 per thousand | 1.44 per thousand |
 | **G2** | standing settlements; population at E | medians ≥ 81 and the bound in force after P5-03a (205,000 proposed) | 83; 208,364 |
 | **T18** | summary lines | default median ≤ 620; every world ≤ L(C); `civs4` median ≤ 1,050 | default median 577, max 742; `civs4` median 932, max 1,070 |
-| **P** | participation (P5-00 8.3) | every race is a participant of an alliance or trade event in ≥ 90% of worlds where it has a realm in reach of another (reported per race) | of all worlds: dwarf 89%, human 92%, goblin 98%, orc 97%, elf 100%, faerie 100% |
+| **P** | participation (P5-00 8.3) | every race is a participant of an alliance or trade event in ≥ 90% of worlds where it has a realm in reach of another (reported per race; validation measures it with this denominator) | over all worlds, not the bound's denominator: dwarf 89%, human 92%, goblin 98%, orc 97%, elf 100%, faerie 100% |
 | **timing** | `generate` seed 0 1024 release | at most 5 s over 0.25.0 (P5-00 8.1) | 17.4 s (0.25.0: 15.5 to 18.9 s on the same machine) |
 
 ### 15.2 Calibration (data only, the engineer, in this order; values into r3)
@@ -844,7 +845,7 @@ One branch, one engineer, one test writer working from the specs separately. `GE
 | --- | --- | --- |
 | 1 | Version and schema 11; data: race fields, `history.alliances`, conflict fields, `history.report` entries, renaming data; both fixture roots | 4, 8.3, 9.2, 11.1 |
 | 2 | Catalogue 63–78; forms `with`, `against` | 8 |
-| 3 | Conflict seams: `AllianceView`, allied strain, fear of blocs, deterrence, trade, forge and arms strength, `join_war`, allied battles, score, withdrawal, ends, spoils reads, `add_grudge`; public reads | 7 |
+| 3 | Conflict seams: `AllianceView`, allied strain, fear of blocs, deterrence, trade, forge and arms strength, `join_war`, allied battles, score, withdrawal, ends, spoils reads, `add_grudge_seam`; public reads | 7 |
 | 4 | The site seam in monsters | 7.16 |
 | 5 | `AlliancesSubsystem` (A, B, spoils, mines, arms), its streams | 5, 6 |
 | 6 | Battle kinds set in monsters, digest, markers, browser groups; the mine marker in the library (`markers_at`, `draw_markers`, glyph 19) | 11 |
@@ -887,8 +888,8 @@ Every world file changes (`GENERATOR_VERSION`, schema 11 in `user_version` and `
 6. Betrayal: a declaration between allies, its events, the betrayed set, calls without the betrayer, trade broken.
 7. Keeping: cooling at `ally_break_disposition` ± 1; bloc lapse sheds the smallest share first until within the bound; renewal with each reason, lapse without; quiet budget and Q4's renewal test.
 8. Trade: openings at their chance in T2 and Q4, the cause; no reopening in the step of a break (A9); breaks by war, cooling and reach (+ 1 margin); credits in T2 and over a quiet step of several periods.
-9. Conflict seams: allied strain; fear by bloc share; deterrence in odds and tension; trade, forge and arms strength in force and local force (the three factors in order, floor division each); `join_war` (relations opened and closed, strains, claims, fatal reasons); allied battle (side forces, casualties split with remainder to the principal, the kind chosen only with an ally present, `pass`); the score with allies' dead; withdrawal; ends with allies (peace rows, `last_peace`, grudge); ends by a side's end; plunder and tribute recorded for `war_spoils`; `add_grudge` and its decay; no view: 0.25.0's behaviour.
-10. **Spoils**: V with tribute only, sacks only (`spoils_plunder_permille`), both, none (no event); captures and cessions not counted; owed only on the winning side, not after a truce, not to a withdrawn or ended ally, not with dead 0, after an end by the enemy's end (V from sacks), not after the partner's end; part at the floor, in between and at the cap; two and three allies with the shares never above V (join order, remainder); g at `spoils_grant_min` and `spoils_grant_max`, and each of its terms alone; granted: event, causes, credit; withheld: event, credit, `add_grudge`, the alliance's withheld record (none when the pair has no open alliance); the quiet-step wait for the principal's budget; one draw per (war, ally).
+9. Conflict seams: allied strain; fear by bloc share; deterrence in odds and tension; trade, forge and arms strength in force and local force (the three factors in order, floor division each); `join_war` (relations opened and closed, strains, claims, fatal reasons); allied battle (side forces, casualties split with remainder to the principal, the kind chosen only with an ally present, `pass`); the score with allies' dead; withdrawal; ends with allies (peace rows, `last_peace`, grudge); ends by a side's end; plunder and tribute recorded for `war_spoils`; `add_grudge_seam` and its decay; no view: 0.25.0's behaviour.
+10. **Spoils**: V with tribute only, sacks only (`spoils_plunder_permille`), both, none (no event); captures and cessions not counted; owed only on the winning side, not after a truce, not to a withdrawn or ended ally, not with dead 0, after an end by the enemy's end (V from sacks), not after the partner's end; part at the floor, in between and at the cap; two and three allies with the shares never above V (join order, remainder); g at `spoils_grant_min` and `spoils_grant_max`, and each of its terms alone; granted: event, causes, credit; withheld: event, credit, `add_grudge_seam`, the alliance's withheld record (none when the pair has no open alliance); the quiet-step wait for the principal's budget; one draw per (war, ally).
 11. **Spurned**: with `withheld_to_break` 2, one withheld share and a reason at the renewal: renewed, count reset; `withheld_to_break` shares in a term: spurned at the renewal (reason 0, region and causes); cooling with a withheld share in the term: spurned (reason 1), without: broken; an origin alliance with withheld shares: renewed silently, never spurned; the region named at the year of the break (a renamed region, P5-12).
 12. **Mines**: each condition of 6.12 (race field 0, region not held, ore below `mine_ore_min`, town below `mine_settlement_min`, a settlement that had a mine, an open mine in the region); the chance in T2 and Q4; the site row (id from `next_site_id`, name form by id with `The` lowered, cell, settlement, founder); the event and its cause; each closing (realm fell, town ruined, town captured, region ceded, town ceded, region lost with the town still the founder's) with its ending code and event of year Y; P5-02's loops skip kind 3 (`holds_site`, outposts).
 13. **Arms**: a trade with one seller: `arms_sold` once, its causes and credit; two sellers: none; a seller's first mine opening during a trade: the sale then; trade broken and reopened: sold anew; forged and arms flags; the opening boost `arms_trade_permille`.
@@ -960,7 +961,7 @@ P5-00 3.1 (P5-04's row) and 6.1 (P5-04's tables) are **superseded** by this spec
 - `alliance_formed`'s `basis` is extended by appending codes (a figure's marriage, a god's blessing) with a new kind if roles change (P3-04 8.2).
 - Trade's, forges' and arms' strength are factors in `force_of` (7.5); wealth can later replace the partner count and the flags without moving any call site.
 - A share of the spoils is a value in people (6.11); when wealth comes, `share` can be read as its measure, or a new kind can carry goods, without changing 74 and 75.
-- `credit` (6.9) remains the one path by which these events move peoples' dispositions; `add_grudge` (7.15) the one path by which they move a grudge between realms.
+- `credit` (6.9) remains the one path by which these events move peoples' dispositions; `add_grudge_seam` (7.15) the one path by which they move a grudge between realms.
 - Mines are `site` rows of kind 3 made through the site seam (7.16); P5-07 deepens them (6.14).
 - Roads (P5-05) change `PeoplesView::hops`, and reach and trade reach follow.
 
@@ -1010,5 +1011,5 @@ Two entries in `docs/design/proposals.md`: "History: alliances and trade, P5-04 
 ## Revision notes
 
 - r1 (2026-11-24): first draft, for Paul's approval.
-- r3 (2026-11-24): as built and ruled; no design change. The nine changes listed under the status line: A9 (6.3, 6.4, 6.8); `forgive` at every formation (6.3, 6.4, 7.2, 7.13, 3, 14, 18.1); the shipped values (4.2, 4.3, plan, 6.7, 6.11's example, 15.2, 24 L2); the engineer's readings (6.2, 6.3, 6.5, 6.7, 6.11, 6.12, 7.6, 7.15, 9.1, 10.3); the test writer's readings on output (10.2, 10.4, 13 item 8, AL9); the mine glyph's cells (11.3); the reader messages (9.1, 9.2); the measured column (15.1); 82 streams, `turn_event`, `met_event`, kind 3 skipped by `holds_site` and the lair's occupied test (3, 6.8, 6.12, 7.16).
+- r3 (2026-11-24): as built and ruled; no design change. The nine changes listed under the status line: A9 (6.3, 6.4, 6.8); `forgive` at every formation (6.3, 6.4, 7.2, 7.13, 3, 14, 18.1); the shipped values (4.2, 4.3, plan, 6.7, 6.11's example, 15.2, 24 L2); the engineer's readings (6.2, 6.3, 6.5, 6.7, 6.11, 6.12, 7.6, 7.15, 9.1, 10.3); the test writer's readings on output (10.2, 10.4, 13 item 8, AL9); the mine glyph's cells (11.3); the reader messages (9.1, 9.2); the measured column (15.1); 82 streams, `turn_event`, `met_event`, kind 3 skipped by `holds_site` and the lair's occupied test (3, 6.8, 6.12, 7.16). Then, by the lead's rulings on the spec writer's list of differences (the code stands): the call condition `war_open` (6.5), A10's fear cause (6.2), P8's mine-name rule (6.12), the seam names `add_grudge_seam` and `end_site_seam` and the public `ally_record` (7.13, 7.15, 7.16 and every mention), the lower median (10.5), participation's denominator (15.1).
 - r2 (2026-11-24): approved by Paul with his decisions (24). Part C taken now and folded into the numbered sections (4.1–4.3, 5, 6.12–6.14, 7.1, 7.5, 7.16, 8, 9.2, 10.6, 11.3, 19); schema 11; report format v7 (lead); spoils of war for allies (6.11, 7.15, events 74 and 75) and the alliance spurned over spoils kept (6.7, event 76); mine and arms kinds renumbered 77 and 78; the forge's own strength (L5); targets SP1–SP3 and MC1–MC3, calibration order, tests, goldens and amendments updated; open questions replaced by the decided list; P5-00 superseded on three points (20).
