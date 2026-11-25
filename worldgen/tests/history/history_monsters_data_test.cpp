@@ -359,7 +359,7 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     for (const auto& [cid, forms] : site) {
         CAPTURE(cid);
         const wd::Record& n = definition(*l.content, "culture", cid).record.get_record("naming");
-        REQUIRE(n.size() == 12U);
+        REQUIRE(n.size() == 17U);
         CHECK(n.name_at(10) == "settlement_forms");
         CHECK(n.name_at(11) == "site_forms");
         CHECK(strings(n.value_at(11)) == forms);
