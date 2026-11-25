@@ -7,19 +7,19 @@ reign_min_permille = 500
 reign_span_permille = 1000
 accession_age_permille = 250
 accession_span_permille = 250
-temper_strain_permille = { steady = 1000, warlike = 1300, peaceable = 700, grasping = 1000, just = 1000 }
+temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
 temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
-temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -200, just = 200 }
+temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
 short_reign_permille = 500
 short_reign_split_permille = 100
 exile_permille = 250
 exile_hops = 3
-general_scale_permille = 1000
-skill_min = 100
-skill_max = 300
+general_scale_permille = 850
+skill_min = 500
+skill_max = 800
 career_permille = 300
-fall_loser_permille = 150
-fall_winner_permille = 30
+fall_loser_permille = 120
+fall_winner_permille = 25
 general_age_permille = 300
 general_age_span_permille = 300
 hero_age_permille = 150
@@ -27,8 +27,8 @@ hero_age_span_permille = 200
 life_min_permille = 700
 life_span_permille = 500
 hero_scale_permille = 1000
-hero_hunt_permille = 30
-hero_might_permille = 500
+hero_hunt_permille = 20
+hero_might_permille = 1000
 hero_fall_permille = 300
 caster_ppm = 1500
 caster_age_permille = 400
