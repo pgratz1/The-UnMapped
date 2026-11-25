@@ -717,7 +717,7 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'deities' for kind 'history'; expected one of 'alliances', 'chronology', 'conflict', 'engine', 'monsters', "
+          "unknown id 'deities' for kind 'history'; expected one of 'alliances', 'chronology', 'conflict', 'engine', 'figures', 'monsters', "
           "'peoples', 'relations', 'renaming', 'report'");   // relations: P5-03 4.2
 }
 

@@ -136,7 +136,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 11);  // schema 11 (P5-04 9.2)
+    CHECK(dbtest::be32(b, 60) == 12);  // schema 12 (P5-06)
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -848,8 +848,8 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         CHECK(r.error().message == "world schema version 4, this build reads 12");
     }
-    SUBCASE("meta.schema_version 12, 7 and 4") {   // 12: above this build's 11 (P5-04 9.2)
-        CHECK(open_code(variant("msv12.db", "UPDATE meta SET value = '12' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 13, 7 and 4") {   // 13: above this build's 12
+        CHECK(open_code(variant("msv13.db", "UPDATE meta SET value = '13' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("msv7.db", "UPDATE meta SET value = '7' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
@@ -946,7 +946,7 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
     SUBCASE("validation order: the earlier check wins") {
         CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 10")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 12; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 13; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

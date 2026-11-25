@@ -185,11 +185,11 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     INFO("stderr: ", rep.err);
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\nschema_version = 11\n"));
+    CHECK(contains(rep.out, "\nschema_version = 12\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
     CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.27.0");  // P5-03; P5-03a; P5-04
-    CHECK(contains(rep.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = " + std::to_string(rows.size()) +
-                                "\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
+    CHECK(contains(rep.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 1\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = " + std::to_string(rows.size()) +
+                                "\nphase = 0\nrace = 0\nrace_biome = 0\nbook = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nbook = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);
     std::string block;
@@ -216,7 +216,7 @@ TEST_CASE("cli P1-00 10.3: the pass keys of a world without a site, and with no 
     REQUIRE(g.exit_code == EXIT_OK);
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
+    CHECK(contains(rep.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nbook = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nbook = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
     CHECK(contains(rep.out, "\npasses = 0\nnatural_gaps = 0\npasses_capped = 0\npass_col_m = n/a n/a n/a\n"
                             "passes_walkable = 0\n"));
     // --until none: no [geography] section, so no pass key, but the table.
@@ -225,7 +225,7 @@ TEST_CASE("cli P1-00 10.3: the pass keys of a world without a site, and with no 
             EXIT_OK);
     const ProcessResult rn = sb.cli({"report", "--db", u8(none)});
     REQUIRE(rn.exit_code == EXIT_OK);
-    CHECK(contains(rn.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
+    CHECK(contains(rn.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nbook = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nbook = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
     CHECK_FALSE(contains(rn.out, "passes ="));
     CHECK_FALSE(contains(rn.out, "[geography]"));
     const ProcessResult hn = sb.cli({"hash", "--db", u8(none), "--detail"});
