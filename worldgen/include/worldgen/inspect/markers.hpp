@@ -29,7 +29,7 @@ enum class MarkerType : std::uint8_t {
     faded = 3,
     ruin = 4,
     standing = 5,
-    site = 6 /*P5-04 11.3: mines (kind 3) only*/,
+    site = 6 /*P5-04 11.3, P5-06 11.4: mines (kind 3) and towers (kind 4)*/,
     figure = 7 /*reserved*/
 };
 // The symbol of an event place (3.4); the enumerator order is the priority.
@@ -47,6 +47,9 @@ struct SettlementMarker {
     std::int64_t kind = 0, status = 0, owner = 0, population = 0, since = 0, founded = 0;
     bool capital = false;                           // standing only (3.2)
     std::int64_t ruined_year = -1, ruin_event = 0;  // ruin and faded only (3.3); standing: -1 and 0
+    // P5-06 25.1 (e): a status 3 entry whose ruin is OLD_RUIN_YEARS or more
+    // before Y, an entry of type faded (an old ruin).
+    bool old_ruin = false;
     friend bool operator==(const SettlementMarker&, const SettlementMarker&) = default;
 };
 struct PlaceMarker {
@@ -59,16 +62,33 @@ struct PassMarker {
     std::int64_t pass = 0, x = 0, y = 0, kind = 0;
     friend bool operator==(const PassMarker&, const PassMarker&) = default;
 };
-// P5-04 11.3: a site of kind 3 (a mine) existing at Y, at its cell.
+// P5-04 11.3: a site of kind 3 (a mine) existing at Y, at its cell; P5-06
+// 11.4: or of kind 4 (a tower; settlement its library's settlement, 0 for a
+// tower in the wild).
 struct SiteMarker {
     std::int64_t site = 0, x = 0, y = 0, kind = 0, founder = 0;
+    std::int64_t settlement = 0;
     friend bool operator==(const SiteMarker&, const SiteMarker&) = default;
 };
-inline constexpr std::uint8_t GLYPH_MINE = 19;  // 16 + kind 3
+inline constexpr std::uint8_t GLYPH_MINE = 19;   // 16 + kind 3
+inline constexpr std::uint8_t GLYPH_TOWER = 20;  // 16 + kind 4 (P5-06 11.4)
 inline constexpr Rgb MARKER_MINE{60, 60, 60};
-// The site glyph is drawn one glyph cell (7 cells) to the upper right of
-// the site's cell, so that a town does not hide its own mine.
+inline constexpr Rgb MARKER_TOWER{120, 60, 180};
+// The mine glyph is drawn one glyph cell (7 cells) to the upper right of
+// the site's cell, so that a town does not hide its own mine; a library's
+// one glyph cell to the upper left of its settlement; a tower in the wild
+// at its own cell (P5-06 11.4).
 inline constexpr std::int64_t SITE_GLYPH_OFFSET = 7;
+// P5-06 25.1 (e): a ruin this many years old or more is an old ruin, an
+// entry of type faded.
+inline constexpr std::int64_t OLD_RUIN_YEARS = 1500;
+
+// The offset (dx, dy; y southward) of a site's glyph centre from its cell:
+// a mine (+7, -7), a library (-7, -7), a tower in the wild (0, 0).
+[[nodiscard]] std::array<std::int64_t, 2> site_glyph_offset(const SiteMarker& site) noexcept;
+// The glyph key of a site entry: GLYPH_MINE for kind 3, GLYPH_TOWER for kind
+// 4, base 0 otherwise.
+[[nodiscard]] std::uint8_t site_glyph_base(const SiteMarker& site) noexcept;
 
 struct YearMarkers {
     std::int64_t year = 0;
@@ -187,9 +207,12 @@ inline constexpr Rgb MARKER_NO_OWNER{128, 128, 128};
 // (8) and faded (9) as P4-05 12.1 F3.
 [[nodiscard]] Glyph marker_glyph(GlyphKey key);
 // The key of a settlement entry: status 1 or 2 base = kind (0 for a kind
-// outside 1..5), declining = status 2, capital; status 3 base 8; status 4
-// base 9; any other status base 0.
+// outside 1..5), declining = status 2, capital; status 3 base 8 (an old
+// ruin, P5-06 25.1 (e): base 9); status 4 base 9; any other status base 0.
 [[nodiscard]] GlyphKey glyph_of(const SettlementMarker& marker) noexcept;
+// The type of a settlement entry: standing (status 1 or 2), faded (status
+// 4, or an old ruin), else ruin.
+[[nodiscard]] MarkerType settlement_marker_type(const SettlementMarker& marker) noexcept;
 
 // Draws the markers onto an RGB buffer laid out as render_rgb (width x
 // height cells at scale k), in the order of 6.1. colours:

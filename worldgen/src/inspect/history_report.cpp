@@ -1,6 +1,6 @@
-// The history report, format "# worldgen history v6" (spec P3-07 section 6
+// The history report, format "# worldgen history v8" (spec P3-07 section 6
 // with amendments 21 to 26; P5-02 12, generator 0.23.0; P5-03 17; P5-03a 9,
-// generator 0.25.0).
+// generator 0.25.0; P5-04 10, generator 0.26.0; P5-06 10, generator 0.27.0).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -155,6 +155,184 @@ const std::string* find_biome_key(const history::HistoryTables& t, Id id) {
     return nullptr;
 }
 
+// As the report's ref(): a region by its name at E; no name: the tag alone.
+Segment entity_segment(const HistoryView& v, const history::HistoryTables& t, Id type, Id id) {
+    const std::optional<EntityType> et = history::entity_type_from_code(type);
+    const std::string* name = !et ? nullptr
+                              : *et == EntityType::region ? v.region_name_at_year(id, t.end_year)
+                                                          : v.name(*et, id);
+    return Segment{SegmentKind::entity, name != nullptr ? *name : std::string(), type, id};
+}
+
+// P5-06 10.2, 10.3: the figure row of id f, or nullptr (ids 1, 2, ..., 9.4 F1).
+const db::FigureRow* find_figure(const history::HistoryTables& t, Id f) {
+    return f >= 1 && static_cast<std::uint64_t>(f) <= t.figures.size() ? &t.figures[static_cast<std::size_t>(f - 1)]
+                                                                        : nullptr;
+}
+
+// The ruled relation row of figure f (relation rows in primary-key order,
+// a_type first), or nullptr.
+const db::RelationRow* ruled_row(const history::HistoryTables& t, Id f) {
+    constexpr Id FIGURE = static_cast<Id>(EntityType::figure);
+    auto it = std::lower_bound(t.relations.begin(), t.relations.end(), f, [](const db::RelationRow& r, Id x) {
+        return r.a_type != FIGURE ? r.a_type < FIGURE : r.a_id < x;
+    });
+    for (; it != t.relations.end() && it->a_type == FIGURE && it->a_id == f; ++it) {
+        if (it->kind == "ruled") {
+            return &*it;
+        }
+    }
+    return nullptr;
+}
+
+// "<year>" of a reign's end (its ruled row's until), else "E".
+std::string reign_end(const history::HistoryTables& t, Id f) {
+    const db::RelationRow* r = ruled_row(t, f);
+    return r != nullptr && r->until ? num(*r->until) : std::string("E");
+}
+
+// The recorded rulers of civilization c (role 1), ascending reign_no.
+std::vector<const db::FigureRow*> rulers_of(const history::HistoryTables& t, Id c) {
+    std::vector<const db::FigureRow*> out;
+    for (const db::FigureRow& f : t.figures) {
+        if (f.role == 1 && f.civ == c) {
+            out.push_back(&f);
+        }
+    }
+    std::stable_sort(out.begin(), out.end(),
+                     [](const db::FigureRow* a, const db::FigureRow* b) { return a->reign_no < b->reign_no; });
+    return out;
+}
+
+// P5-06 10.2: a figure's line of [figures], without its two leading spaces.
+BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, const history::HistoryDigest& d,
+                      const db::FigureRow& f) {
+    static const history::FigureDigest NO_DEEDS;
+    const history::FigureDigest& g =
+        f.id >= 1 && static_cast<std::uint64_t>(f.id) <= d.figures.size() ? d.figures[static_cast<std::size_t>(f.id - 1)]
+                                                                           : NO_DEEDS;
+    const std::string* adjective = v.race_adjective(f.race);
+    BlockLine l{lit("f" + num(f.id) + " "), entity_segment(v, t, 6, f.id), lit(": " + std::string(history::figure_role_word(f.role)) + " of "),
+                entity_segment(v, t, 3, f.civ), lit(", ")};
+    // The name as text, not as a tagged reference (as "c<id> <name>").
+    l[1] = txt(l[1].text);
+    l.push_back(adjective != nullptr ? txt(*adjective) : lit("?"));
+    l.push_back(lit(", " + num(f.born) + "-" + (f.died ? num(*f.died) : std::string("E"))));
+    if (f.role == 1) {
+        l.push_back(lit(", reigned " + num(f.office_from) + "-" + reign_end(t, f.id) + " (reign " + num(f.reign_no) +
+                        ", " + std::string(history::figure_temper_word(f.temper)) + ")"));
+    }
+    bool first = true;
+    const auto deed = [&]() {
+        l.push_back(lit(first ? "; " : ", "));
+        first = false;
+    };
+    if (g.wars_declared != 0) {
+        deed();
+        l.push_back(lit(pl(g.wars_declared, "war") + " declared"));
+    }
+    if (g.wars_won != 0) {
+        deed();
+        l.push_back(lit(num(g.wars_won) + " won"));
+    }
+    if (g.realms_conquered != 0) {
+        deed();
+        l.push_back(lit(pl(g.realms_conquered, "realm") + " conquered"));
+    }
+    if (g.battles_led != 0) {
+        deed();
+        l.push_back(lit(pl(g.battles_led, "battle") + " led, " + num(g.battles_won) + " won"));
+    }
+    for (const Id m : g.slew) {
+        deed();
+        l.push_back(lit("slew "));
+        l.push_back(entity_segment(v, t, 8, m));
+    }
+    if (g.books != 0) {
+        deed();
+        l.push_back(lit(pl(g.books, "book")));
+    }
+    if (g.blight) {
+        deed();
+        l.push_back(lit("a blight"));
+    }
+    const std::string when = f.died ? num(*f.died) + " " : std::string();
+    switch (f.status) {
+        case 1: l.push_back(lit("; alive")); break;
+        case 2:
+            if (g.host != 0) {
+                l.push_back(lit("; in exile with "));
+                l.push_back(entity_segment(v, t, 3, g.host));
+            } else {
+                l.push_back(lit("; in the wilds"));
+            }
+            break;
+        case 3:
+            l.push_back(lit("; died " + when));
+            l.push_back(event_ref(f.death_event));
+            break;
+        case 4:
+            l.push_back(lit("; fell in battle " + when));
+            l.push_back(event_ref(f.death_event));
+            l.push_back(lit(" in "));
+            l.push_back(entity_segment(v, t, 5, f.death_region));
+            break;
+        case 5:
+            l.push_back(lit("; slain by "));
+            l.push_back(entity_segment(v, t, 8, g.slain_by));
+            l.push_back(lit(" " + when));
+            l.push_back(event_ref(f.death_event));
+            break;
+        case 6:
+            l.push_back(lit("; fell with the realm " + when));
+            l.push_back(event_ref(f.death_event));
+            break;
+        default: l.push_back(lit("; ?")); break;
+    }
+    return l;
+}
+
+// P5-06 10.3: "  rulers: <n> reigns, <k> recorded; first <ref>[; at the end
+// <ref>]", then at full one line per recorded ruler.
+std::vector<BlockLine> rulers_lines(const HistoryView& v, const history::HistoryTables& t, const db::CivilizationRow& c,
+                                    HistoryLevel level) {
+    const std::vector<const db::FigureRow*> rulers = rulers_of(t, c.id);
+    std::int64_t reigns = 0;
+    for (const db::FigureRow* f : rulers) {
+        reigns = std::max(reigns, f->reign_no);
+    }
+    BlockLine head{lit("  rulers: " + pl(reigns, "reign") + ", " + num(static_cast<std::int64_t>(rulers.size())) +
+                       " recorded")};
+    if (!rulers.empty()) {
+        head.push_back(lit("; first "));
+        head.push_back(entity_segment(v, t, 6, rulers.front()->id));
+        const db::FigureRow* last = nullptr;  // the ruler whose reign is open at E
+        if (!c.ended_year) {
+            for (const db::FigureRow* f : rulers) {
+                const db::RelationRow* r = ruled_row(t, f->id);
+                if (r != nullptr && !r->until) {
+                    last = f;
+                }
+            }
+        }
+        if (last != nullptr) {
+            head.push_back(lit("; at the end "));
+            head.push_back(entity_segment(v, t, 6, last->id));
+        }
+    }
+    std::vector<BlockLine> out;
+    out.push_back(std::move(head));
+    if (level != HistoryLevel::full) {
+        return out;
+    }
+    for (const db::FigureRow* f : rulers) {
+        out.push_back(BlockLine{lit("    "), entity_segment(v, t, 6, f->id),
+                                lit(": " + num(f->office_from) + "-" + reign_end(t, f->id) + ", reign " +
+                                    num(f->reign_no) + ", " + std::string(history::figure_temper_word(f->temper)))});
+    }
+    return out;
+}
+
 // The lines of one civilization's block (6.6 with 24.5, 25.3 to 25.5), the
 // report's former Report::civilization written as segments.
 class BlockBuilder {
@@ -195,9 +373,10 @@ public:
                                                             " in " + num(d.peak_population.year)
                                                       : std::string("  peak population: 0"))});
         }
+        // r19 25.3 item 3; P5-06 25.1 (d): ", <d> faded" only when d > 0.
         add({lit("  settlements: " + num(d.settlements_founded) + " founded, " + num(d.settlements_held) +
-                 " held at the end, " + num(d.settlements_ruined) + " ruined, " + num(d.settlements_faded) +
-                 " faded")});  // r19 25.3 item 3
+                 " held at the end, " + num(d.settlements_ruined) + " ruined" +
+                 (d.settlements_faded > 0 ? ", " + num(d.settlements_faded) + " faded" : std::string()))});
         add({lit("  wars: " + num(d.wars_declared) + " declared, " + num(d.wars_defended) + " defended; won " +
                  num(d.wars_won) + ", lost " + num(d.wars_lost) + ", drawn " + num(d.wars_drawn) + ", open " +
                  num(d.wars_open))});
@@ -237,17 +416,18 @@ public:
             add(std::move(l));
         }
         allies(c);  // P5-04 10.3
+        // P5-06 10.3: the rulers, after the allies; at summary not at all
+        // with more than SUMMARY_LINES_CIVS civilizations.
+        if (!summary || static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
+            for (BlockLine& l : rulers_lines(v_, t_, c, level_)) {
+                add(std::move(l));
+            }
+        }
         return std::move(lines_);
     }
 
     // As the report's ref(): a region by its name at E; no name: the tag alone.
-    [[nodiscard]] Segment entity(Id type, Id id) const {
-        const std::optional<EntityType> t = history::entity_type_from_code(type);
-        const std::string* name = !t ? nullptr
-                                  : *t == EntityType::region ? v_.region_name_at_year(id, t_.end_year)
-                                                             : v_.name(*t, id);
-        return Segment{SegmentKind::entity, name != nullptr ? *name : std::string(), type, id};
-    }
+    [[nodiscard]] Segment entity(Id type, Id id) const { return entity_segment(v_, t_, type, id); }
 
 private:
     static Segment entity_named(Id type, Id id, const std::string& name) {
@@ -373,7 +553,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V7));  // P5-04 10.1
+        line(std::string(HISTORY_REPORT_HEADER_V8));  // P5-06 10.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -394,6 +574,7 @@ public:
         sites();     // P5-02 12.5
         peoples();   // P5-03 17.2
         alliances();  // P5-04 10.2
+        figures();    // P5-06 10.2
         stats();
         return std::move(out_);
     }
@@ -658,8 +839,10 @@ private:
                 largest = &s;
             }
         }
+        // P5-06 25.1 (d): ", faded <n4>" only when n4 > 0.
         line("settlements: " + num(static_cast<std::int64_t>(t_.settlements.size())) + "; thriving " + num(status[0]) +
-             ", declining " + num(status[1]) + ", ruined " + num(status[2]) + ", faded " + num(status[3]));
+             ", declining " + num(status[1]) + ", ruined " + num(status[2]) +
+             (status[3] > 0 ? ", faded " + num(status[3]) : std::string()));
         if (level_ == HistoryLevel::full) {
             for (const db::SettlementRow& s : t_.settlements) {
                 settlement_line(s);
@@ -778,7 +961,14 @@ private:
             switch (m->status) {
                 case 1: state = "awake"; break;
                 case 2: state = "asleep"; break;
-                case 3: state = "slain by " + civ(m->slain_by); break;
+                case 3: {
+                    // P5-06 10.3: a slaying by a hero names the hero.
+                    const history::KindDef* by_hero = v_.catalogue().find("monster_slain_by_hero");
+                    const HistoryView::Event* d = v_.event(m->death_event);
+                    const Id hero = by_hero != nullptr && d != nullptr && d->row.kind == by_hero->id ? role_of(*d, "hero") : 0;
+                    state = hero != 0 ? "slain by " + ref(6, hero) + " of " + civ(m->slain_by) : "slain by " + civ(m->slain_by);
+                    break;
+                }
                 default: state = "died"; break;
             }
             const db::SiteRow& lair = t_.sites[static_cast<std::size_t>(m->lair_site - 1)];  // a lair (11.4)
@@ -802,25 +992,37 @@ private:
     // P5-02 12.5: [sites].
     void sites() {
         line("[sites]");
-        std::int64_t open = 0, lairs = 0, outposts = 0, mines = 0;
+        std::int64_t open = 0, lairs = 0, outposts = 0, mines = 0, towers = 0;
         for (const db::SiteRow& x : t_.sites) {
             open += x.ended_year ? 0 : 1;
             lairs += x.kind == 1 ? 1 : 0;
             outposts += x.kind == 2 ? 1 : 0;
-            mines += x.kind == 3 ? 1 : 0;  // P5-04 10.6
+            mines += x.kind == 3 ? 1 : 0;   // P5-04 10.6
+            towers += x.kind == 4 ? 1 : 0;  // P5-06 10.4
         }
         line("sites: " + num(static_cast<std::int64_t>(t_.sites.size())) + "; open " + num(open) + "; lairs " +
-             num(lairs) + ", outposts " + num(outposts) + ", mines " + num(mines));
+             num(lairs) + ", outposts " + num(outposts) + ", mines " + num(mines) + ", towers " + num(towers));
         if (level_ != HistoryLevel::full) {
             return;
         }
         static constexpr std::array<std::string_view, 6> ENDING = {"slain", "died", "moved", "lost", "fell", "quiet"};
         for (const db::SiteRow& x : t_.sites) {
-            std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + ": " +
-                            (x.kind == 1 ? "lair" : (x.kind == 2 ? "outpost" : "mine")) + " in " + region(x.region) + " at " + num(x.x) + " " +
-                            num(x.y) + ", since " + num(x.origin_year) + " e" + num(x.origin_event);
+            // P5-06 10.4: a tower, or a library when it stands in a settlement.
+            const std::string_view what = x.kind == 1   ? "lair"
+                                          : x.kind == 2 ? "outpost"
+                                          : x.kind == 3 ? "mine"
+                                          : x.settlement != 0 ? "library"
+                                                              : "tower";
+            std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + ": " + std::string(what) + " in " +
+                            region(x.region) + " at " + num(x.x) + " " + num(x.y) + ", since " + num(x.origin_year) +
+                            " e" + num(x.origin_event);
             if (x.founder_civ != 0) {
                 l += ", of " + civ(x.founder_civ);
+            }
+            if (x.kind == 4) {
+                const HistoryView::Event* o = v_.event(x.origin_event);
+                const Id caster = o != nullptr ? role_of(*o, "figure") : 0;
+                l += ", by " + (caster != 0 ? ref(6, caster) : std::string("no one"));
             }
             if (x.settlement != 0) {
                 l += ", at " + settlement(x.settlement);
@@ -1454,6 +1656,60 @@ private:
         }
     }
 
+    // --- [figures] (P5-06 10.2) ---------------------------------------------
+
+    void figures() {
+        line("[figures]");
+        std::array<std::int64_t, 6> by_role{};
+        std::int64_t alive = 0;
+        for (const db::FigureRow& f : t_.figures) {
+            if (f.role >= 1 && f.role <= 5) {
+                ++by_role[static_cast<std::size_t>(f.role)];
+            }
+            alive += (f.status == 1 || f.status == 2) ? 1 : 0;
+        }
+        const auto n = static_cast<std::int64_t>(t_.figures.size());
+        line("figures: " + num(n) + "; rulers " + num(by_role[1]) + ", claimants " + num(by_role[2]) + ", generals " +
+             num(by_role[3]) + ", heroes " + num(by_role[4]) + ", casters " + num(by_role[5]) + "; alive at the end " +
+             num(alive));
+        const bool full = level_ == HistoryLevel::full;
+        if (!full && static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS) {
+            return;  // as [monsters] (P5-02 23 item 4): the heading and count line only
+        }
+        std::vector<const db::FigureRow*> shown;
+        for (const db::FigureRow& f : t_.figures) {
+            const auto i = static_cast<std::size_t>(f.id - 1);  // ids 1, 2, ... (9.4 F1)
+            if (full || (i < d_.figures.size() && d_.figures[i].renown > 0)) {
+                shown.push_back(&f);
+            }
+        }
+        if (!full) {
+            // The figures of note, by (renown descending, id ascending).
+            std::stable_sort(shown.begin(), shown.end(), [this](const db::FigureRow* a, const db::FigureRow* b) {
+                const std::int64_t ra = d_.figures[static_cast<std::size_t>(a->id - 1)].renown;
+                const std::int64_t rb = d_.figures[static_cast<std::size_t>(b->id - 1)].renown;
+                return ra != rb ? ra > rb : a->id < b->id;
+            });
+            if (shown.size() > history::SUMMARY_FIGURES_MAX) {
+                shown.resize(history::SUMMARY_FIGURES_MAX);
+            }
+        }
+        for (const db::FigureRow* f : shown) {
+            line("  " + block_line_report_text(v_, figure_line(v_, t_, d_, *f)));
+        }
+        if (const std::int64_t more = n - static_cast<std::int64_t>(shown.size()); more > 0) {
+            line("  and " + num(more) + " more");
+        }
+        std::string books = "books: " + num(static_cast<std::int64_t>(t_.books.size()));
+        if (full) {
+            for (const db::BookRow& b : t_.books) {
+                books += "; " + escape_history_text(b.title) + " by " + ref(6, b.author) + " at " + ref(9, b.site) +
+                         ", " + num(b.year) + " e" + num(b.event);
+            }
+        }
+        line(std::move(books));
+    }
+
     void stats() {
         line("[stats]");
         for (const auto& [key, value] : d_.stats) {
@@ -1527,6 +1783,27 @@ std::vector<BlockLine> civilization_block(const HistoryView& view, const history
     }
     const auto k = static_cast<std::size_t>(it - tables.civilizations.begin());
     return BlockBuilder(view, tables, level).build(*it, digest.civilizations[k]);
+}
+
+std::vector<BlockLine> figure_block(const HistoryView& view, const history::HistoryTables& tables,
+                                    const history::HistoryDigest& digest, std::int64_t figure, HistoryLevel level) {
+    if (level != HistoryLevel::summary && level != HistoryLevel::full) {
+        throw FatalError("figure_block: bad level");
+    }
+    const db::FigureRow* f = find_figure(tables, figure);
+    if (f == nullptr || f->id != figure) {
+        throw FatalError("figure_block: no figure " + num(figure));
+    }
+    std::vector<BlockLine> out;
+    out.push_back(figure_line(view, tables, digest, *f));
+    if (f->role == 1) {
+        if (const db::CivilizationRow* c = find_civilization(tables, f->civ)) {
+            for (BlockLine& l : rulers_lines(view, tables, *c, level)) {
+                out.push_back(std::move(l));
+            }
+        }
+    }
+    return out;
 }
 
 std::string block_line_report_text(const HistoryView& view, const BlockLine& line) {
