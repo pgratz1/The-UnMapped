@@ -72,7 +72,7 @@ GROUP_OF_NEW = dict([(k, GROUP_ALLIANCES) for k in range(63, 71)] + [(71, GROUP_
 # 11.3: the mine marker (P4-04 entry type 6 site, glyph code 16 + kind)
 MARKER_SITE_TYPE, MINE_GLYPH = 6, 19
 MINE_GLYPH_COLOUR = (60, 60, 60)
-BATTLE_KINDS = ("battle", "battle_at_pass", "allied_battle")            # 11.1
+BATTLE_KINDS = ("battle", "battle_at_pass", "allied_battle", "battle_led")   # 11.1; P5-06 11.1 battle_led
 CIV, SITE, SETTLEMENT, REGION, RACE = 3, 9, 4, 5, 1
 THRIVING, DECLINING, RUINED, FADED = 1, 2, 3, 4
 OPENING, QUIET, FLARE, FINAL = 1, 2, 3, 4   # P3-04 6.1 (phase.kind)
@@ -255,10 +255,10 @@ def principal_need(own_dead, pop0, exhaustion_permille, muster_permille):
     return min(1000, own_dead * 1000 // max(1, exhaustion_permille * max(1, pop0 * muster_permille // 1000) // 1000))
 
 
-def grant_chance(w, part, ex, t):
-    """6.11: g."""
+def grant_chance(w, part, ex, t, temper=0):
+    """6.11: g; P5-06 7.3: + temper_spoils_permille[tau(W)] inside the clamp (temper)."""
     return clamp(t["spoils_grant_permille"] + t["spoils_warmth_permille"] * w // 1000 +
-                 t["spoils_part_permille"] * part // 1000 - t["spoils_need_permille"] * ex // 1000,
+                 t["spoils_part_permille"] * part // 1000 - t["spoils_need_permille"] * ex // 1000 + temper,
                  t["spoils_grant_min"], t["spoils_grant_max"])
 
 
@@ -893,7 +893,8 @@ def invariant_violations(w, t, races):
     for r in w.rows.get("war", ()):
         if r[7] in w.ev and w.kind(r[7]) == "ally_joined_war":
             joined_rows.setdefault((r[1], r[3]), []).append(r)
-    for b in w.of("allied_battle"):
+    for b in sorted(w.of("allied_battle") + [x for x in w.of("battle_led") if w.role(x, "winner_ally") +
+                                              w.role(x, "loser_ally")]):   # P5-06 11.1: battle_led with allies
         W_, L_ = w.one(b, "winner"), w.one(b, "loser")
         wa, la = w.role(b, "winner_ally"), w.role(b, "loser_ally")
         if not wa and not la:
@@ -946,7 +947,7 @@ def invariant_violations(w, t, races):
         if d is None:
             continue
         if not any(z in w.role(b, "winner_ally") + w.role(b, "loser_ally")
-                   for b in w.war_events(d) if w.kind(b) == "allied_battle"):
+                   for b in w.war_events(d) if w.kind(b) in ("allied_battle", "battle_led")):
             out.append("11: spoils e%d: c%d fought in no battle of e%d" % (s, z, d))
         for x in w.of("ally_withdrew"):
             if j < x < E_ and (w.one(x, "ally"), w.one(x, "partner"), w.one(x, "enemy")) == (z, P, en):
@@ -1160,9 +1161,11 @@ def reader_problems(w):
         if k == "allied_battle":
             if not w.role(e, "winner_ally") and not w.role(e, "loser_ally"):
                 out.append("event %d: allied_battle without an ally" % e)
+    four = int(w.meta.get("schema_version", "11")) >= 12   # P5-06 9.4: site kind 4 tower
     for x in w.t["site"]:
-        if x[2] not in (1, 2, 3):
-            out.append("corrupt table 'site': row %d: kind %d is not 1, 2 or 3" % (x[0], x[2]))
+        if x[2] not in ((1, 2, 3, 4) if four else (1, 2, 3)):
+            out.append("corrupt table 'site': row %d: kind %d is not %s" % (x[0], x[2],
+                                                                           "1, 2, 3 or 4" if four else "1, 2 or 3"))
         elif x[2] == SITE_MINE:
             if x[7] not in w.civ:
                 out.append("corrupt table 'site': row %d: unknown civilization %d" % (x[0], x[7]))
@@ -1235,7 +1238,8 @@ def stats(w):
          ("allies_refused", len(w.of("ally_refused"))),
          ("allies_withdrew", len(w.of("ally_withdrew"))),
          ("wars_with_ally", len(decl_with)),
-         ("allied_battles", len(w.of("allied_battle")))]
+         ("allied_battles", len(w.of("allied_battle")) + sum(   # P5-06 11.1: battle_led with an ally participant
+             1 for b in w.of("battle_led") if w.role(b, "winner_ally") + w.role(b, "loser_ally")))]
     _series, best = w.bloc_series()
     o += [("bloc_share_max_permille", best[0] if best else 0),
           ("bloc_over_800_years", w.longest_run_above(800)),
@@ -2148,7 +2152,8 @@ class Alliances:
             return
         z = r["z"]
         ex = principal_need(sp["winner_dead"], sp["winner_pop0"], w.ct["exhaustion_permille"], w.muster(W))
-        g = grant_chance(self.warmth(W, z), part, ex, t)
+        fv = w.figures   # P5-06 7.3: the principal's temper (0 without the view)
+        g = grant_chance(self.warmth(W, z), part, ex, t, fv.spoils_permille(W) if fv is not None else 0)
         granted = _pcr().chance_pm(w.draw("hist.alliances.spoils", r["w"], z, 0), g)
         e = w.append("spoils_shared" if granted else "spoils_withheld", region=sp["goal_region"],
                      participants=(("principal", CIV, W), ("ally", CIV, z), ("enemy", CIV, sp["loser"])),

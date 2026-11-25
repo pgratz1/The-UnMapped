@@ -383,6 +383,32 @@ KINDS_026 = (
     kind_def(78, "arms_sold", 1, 0, 0, _C2("seller", "buyer") + (("site", SITE, 1, 1),), ()),
 )
 COMPILED_026 = COMPILED_025 + KINDS_026
+# P5-06 8.1 (generator 0.27.0): kinds 79 to 92 appended (fig = 6, civ = 3, monster = 8, site = 9; unlisted counts
+# 1-1); settlement use 2 (optional) for 80, 81 and 90, 1 for 87.
+FIGURE = 6
+_F1 = lambda n: (n, FIGURE, 1, 1)
+_C1 = lambda n: (n, CIV, 1, 1)
+KINDS_027 = (
+    kind_def(79, "came_to_rule", 1, 1, 0, (_F1("figure"), _C1("civilization")), ()),
+    kind_def(80, "figure_died", 1, 1, 2, (_F1("figure"), _C1("civilization")), ("how", "age")),
+    kind_def(81, "succession_disputed", 1, 1, 2, (_C1("civilization"), _F1("ruler"), _F1("claimant"),
+                                                  ("new_realm", CIV, 0, 1)), ("outcome",)),
+    kind_def(82, "exiled", 1, 1, 0, (_F1("figure"), _C1("civilization"), ("host", CIV, 0, 1)), ("hosted",)),
+    kind_def(83, "reigned_at_end", 0, 1, 0, (_F1("figure"), _C1("civilization")), ()),
+    kind_def(84, "general_appointed", 1, 1, 0, (_F1("figure"), _C1("civilization"), _C1("enemy")), ("again",)),
+    kind_def(85, "battle_led", 1, 1, 0, (_C1("winner"), _C1("loser"), ("winner_ally", CIV, 0, 16),
+                                         ("loser_ally", CIV, 0, 16), ("winner_general", FIGURE, 0, 1),
+                                         ("loser_general", FIGURE, 0, 1)), ("winner_dead", "loser_dead", "pass")),
+    kind_def(86, "fell_in_battle", 1, 1, 0, (_F1("figure"), _C1("civilization"), _C1("enemy")), ()),
+    kind_def(87, "hero_rose", 1, 1, 1, (_F1("figure"), _C1("civilization"), ("monster", MONSTER, 1, 1)), ()),
+    kind_def(88, "monster_slain_by_hero", 1, 1, 0, (("monster", MONSTER, 1, 1), _C1("slayer"), _F1("hero")),
+             ("hunters",)),
+    kind_def(89, "hero_slain", 1, 1, 0, (_F1("figure"), _C1("civilization"), ("monster", MONSTER, 1, 1)), ()),
+    kind_def(90, "tower_founded", 1, 1, 2, (_F1("figure"), _C1("civilization"), ("site", SITE, 1, 1)), ("library",)),
+    kind_def(91, "book_written", 1, 1, 0, (_F1("figure"), _C1("civilization"), ("site", SITE, 1, 1)), ()),
+    kind_def(92, "blight", 1, 1, 0, (_F1("figure"), _C1("civilization"), ("site", SITE, 1, 1)), ("dead",)),
+)
+COMPILED_027 = COMPILED_026 + KINDS_027
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -437,12 +463,16 @@ RENDER_R25 = True
 #   RENDER_R26      8.2 the forms `with` (", with " + all + ",") and `against` (" against " + all) of any role, empty
 #                   when the role has no participant; schema 11 (9.2: site kind 3).
 RENDER_R26 = True
+# P5-06 (generator 0.27.0):
+#   RENDER_R27      7.9 the display name of entity type 6 (the figure's display name), the form `under`, the
+#                   placeholder {@book}; schema 12 (9.4: tables figure and book, site kind 4).
+RENDER_R27 = False
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0")
+            "0.26.0", "0.27.0")
 
 
 def at_least(v):
@@ -458,13 +488,14 @@ def use_version(v):
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
-    global RENDER_R26
+    global RENDER_R26, RENDER_R27
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
-                "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026}[v]
+                "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026,
+                "0.27.0": COMPILED_027}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -475,12 +506,13 @@ def use_version(v):
     RENDER_R24 = i >= VERSIONS.index("0.24.0")
     RENDER_R25 = i >= VERSIONS.index("0.25.0")
     RENDER_R26 = i >= VERSIONS.index("0.26.0")
+    RENDER_R27 = i >= VERSIONS.index("0.27.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
     COLUMNS = (COLUMNS_024 if RENDER_R24 else COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21
                else COLUMNS_021)
-    SCHEMA_VERSION = 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
+    SCHEMA_VERSION = 12 if RENDER_R27 else 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
@@ -525,7 +557,7 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where", "with", "against")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
+FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where", "with", "against", "under")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
 
 
 def _is_word(w):
@@ -665,6 +697,8 @@ def placeholder_problem(kind, body, at):
             return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
         if RENDER_R24 and body == "@beast:bold":   # P5-03 13: template_problem as {@beast}'s, naming itself (built)
             return None if "beast" in values else "{@beast:bold} needs a kind with a value 'beast' at byte %d" % at
+        if RENDER_R27 and body == "@book":   # P5-06 7.9
+            return None if kind["key"] == "book_written" else "{@book} needs the kind book_written at byte %d" % at
         return unknown
     if "?" in body:
         v, rest = body.split("?", 1)
@@ -680,7 +714,7 @@ def placeholder_problem(kind, body, at):
         role, form = body.split(":", 1)
         if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23) or (
                 form == "raid" and not RENDER_R24) or (form in MONSTER_FORMS_025 and not RENDER_R25) or (
-                form in ("with", "against") and not RENDER_R26):
+                form in ("with", "against") and not RENDER_R26) or (form == "under" and not RENDER_R27):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
@@ -691,7 +725,9 @@ def placeholder_problem(kind, body, at):
             return "form 'raid' needs a monster role at byte %d" % at
         if form in MONSTER_FORMS_025 and r["type"] != MONSTER:   # P5-03a 7.1
             return "form '%s' needs a monster role at byte %d" % (form, at)
-        if form not in ("all", "with", "against") and r["min"] == 0:   # P5-04 8.2: with, against as all
+        if form == "under" and r["type"] not in (6, CIV):   # P5-06 7.9
+            return "form 'under' needs a figure or civilization role at byte %d" % at
+        if form not in ("all", "with", "against", "under") and r["min"] == 0:   # P5-04 8.2, P5-06 7.9: as all
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
     if body in roles:
@@ -863,6 +899,8 @@ def render(view, eid, links=None):
         elif RENDER_R24 and body == "@beast:bold":   # P5-03 13: phrase ((id - 1) mod n) of the beast's bold_phrases
             ph = view["beast_bold"](ev["values"][val_seq["beast"]])
             out.append(ph[(eid - 1) % len(ph)])
+        elif RENDER_R27 and body == "@book":   # P5-06 7.9: the title of the book row of this event
+            out.append(view["book_title"](eid))
         elif RENDER_R12 and body.startswith("@causes:"):
             # r12 20.2: L = the entries' cwords of the causes' kind keys in ascending cause id, first
             # occurrence kept; nothing when L is empty; else word1, L joined as {role:all}, word2.
@@ -898,6 +936,19 @@ def render(view, eid, links=None):
                     out.append(fmt_value(ev["values"][val_seq[body]], dg))
                     continue
             ps = of_role(role)
+            if form == "under":   # P5-06 7.9: " under " + all for a figure role; the recorded ruler for a civ role
+                if ps and ps[0][0] == 6:
+                    out.append(" under ")
+                    for k, (t, x) in enumerate(ps):
+                        if k > 0:
+                            out.append(" and " if k == len(ps) - 1 else ", ")
+                        put_name(view["name"](t, x, "name"), t, x)
+                elif ps and "ruler_at" in view:
+                    f = view["ruler_at"](ps[0][1], eid)
+                    if f:
+                        out.append(" under ")
+                        put_name(view["name"](6, f, "name"), 6, f)
+                continue
             if form in ("with", "against"):   # P5-04 8.2: nothing when the role has no participant
                 if ps:
                     out.append(", with " if form == "with" else " against ")
