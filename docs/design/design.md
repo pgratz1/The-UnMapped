@@ -780,7 +780,7 @@ The individual layer is a bell-shaped spread around the settlement's baseline, w
 **The range of receptions.** A cold reception is what a player meets among a people who are enemies of their own, such as a goblin among elves. It is one end of a range:
 
 - **Own kind and friends.** People are warm to a player of their own race or of a friendly one. Elves are quite welcoming to an elf or a faerie.
-- **Neither friend nor enemy.** The reception follows the host race's general manner toward outsiders, a value set per race in data. Dwarves are somewhat suspicious of all outsiders; humans are relatively gregarious.
+- **Neither friend nor enemy.** The reception follows the host race's general manner toward outsiders, a value set per race in data. Dwarves are somewhat suspicious of all outsiders; humans are relatively gregarious; elves are reserved; faeries are shy and hard to find; goblins and orcs are rough with everyone, their own kind included.
 - **Enemies.** Usually cold, and hostile only with a fresh cause as described under Player race.
 
 Which peoples count as friends and enemies comes from the world's race relations, so it can differ between worlds.
