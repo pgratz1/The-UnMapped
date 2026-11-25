@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.25.0"
+GENERATOR_VERSION = "0.26.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -228,7 +228,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.25.0")
+    use_version("0.16.0" if on else "0.26.0")
 
 
 class rules:
@@ -4095,6 +4095,11 @@ def open_claims_from_rows(res):
         k = kind[e[0]]
         if k in (K.get("ally_joined_war"), K.get("ally_withdrew")):
             a, b = role(e[0], 1)[0], role(e[0], 3)[0]
+            for pr in ((a, b), (b, a)):
+                last.pop(pr, None)
+        if k is not None and k == K.get("alliance_formed"):
+            # P5-04 r3 6.3, 6.4: the oath drops the pair's claims on each other both ways (forgive)
+            a, b = role(e[0], 1)[0], role(e[0], 2)[0]
             for pr in ((a, b), (b, a)):
                 last.pop(pr, None)
         for (a, b) in joined_by_end.get(e[0], ()) if k in (K["peace"], K["truce"], K["war_won"],
