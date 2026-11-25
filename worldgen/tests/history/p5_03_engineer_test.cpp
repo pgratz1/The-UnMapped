@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "p3_06_conflict_support.hpp"
+#include "p5_03_relations_api.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/relations.hpp"
@@ -69,7 +70,9 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
     const wd::ContentSet a = with_fields(c, "history", "alliances",
                                          {{"ally_hops", wd::Value::integer(-1)}, {"trade_hops", wd::Value::integer(-1)},
                                           {"mine_permille", wd::Value::integer(0)}});
-    return with_fields(a, "race", "", {{"stances", wd::Value::array({})}, {"origin_allies", wd::Value::array({})}});
+    // P5-06 7.11: and the figures at their zero
+    return p503api::figures_zero_of(
+        with_fields(a, "race", "", {{"stances", wd::Value::array({})}, {"origin_allies", wd::Value::array({})}}));
 }
 
 // The shipped configuration without RelationsSubsystem, no ledger and no

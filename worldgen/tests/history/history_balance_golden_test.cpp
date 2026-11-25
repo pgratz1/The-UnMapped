@@ -14,6 +14,7 @@
 //
 // Written from the spec only; needs no new library name. Runs by default (one 512 world, two threads).
 
+#include "p5_06_history_section.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -66,7 +67,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     REQUIRE(rep.ok());
     std::string want = "[history]\n";
     for (const std::string& l : g.report) want += l + "\n";
-    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(p506section::strip_figure_counts(section(rep.value(), "[history]")) == want);   // P5-06 9.4: figures and books keys close the section
     CHECK(stats_lines_06(t, in) == g.stats);
     CHECK(war_lines_from_rows(t) == golden_wars_without_how(g));
     const std::vector<std::string> sent = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));

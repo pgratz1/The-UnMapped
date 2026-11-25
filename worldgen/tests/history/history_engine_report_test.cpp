@@ -106,7 +106,7 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
         "race_relations = 0\nsettlement_races = 0\n";   // P5-03 16.3
     // P3-05 15.4 appends the population keys after relations.
     const std::string p305 = "population = 200\n""population_elf = 200\n""population_goblin = 0\n""population_dwarf = 0\n""population_faerie = 0\n""population_human = 0\n""population_orc = 0\n""settlements_standing_elf = 1\n""settlements_standing_goblin = 0\n""settlements_standing_dwarf = 0\n""settlements_standing_faerie = 0\n""settlements_standing_human = 0\n""settlements_standing_orc = 0\n""regions_held_elf = 0\n""regions_held_goblin = 0\n""regions_held_dwarf = 1\n""regions_held_faerie = 0\n""regions_held_human = 0\n""regions_held_orc = 0\n";
-    CHECK(section(text, "[history]") == want + p305);
+    CHECK(section(text, "[history]") == want + "figures = 0\nbooks = 0\n" + p305);   // P5-06 9.4: after settlement_races
     // the keys recomputed from the stored rows
     std::string again = "[history]\n";
     for (const std::string& l : report_lines(tables_of_world(open_world(path)), 6000)) {

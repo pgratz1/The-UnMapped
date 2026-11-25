@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "p5_06_history_section.hpp"
 #include "p3_04_engine_support.hpp"
 #include "worldgen/db/testing.hpp"
 #include "worldgen/inspect/report.hpp"
@@ -74,7 +75,7 @@ inline void check_world_case(const GoldenWorld& g) {
     for (const std::string& l : g.report) {
         want += l + "\n";
     }
-    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(p506section::strip_figure_counts(section(rep.value(), "[history]")) == want);   // P5-06 9.4
     const std::vector<std::string> got = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));
     REQUIRE(got.size() == g.sentences.size());
     for (std::size_t i = 0; i < got.size(); ++i) {

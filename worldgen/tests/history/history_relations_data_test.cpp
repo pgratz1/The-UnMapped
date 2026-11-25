@@ -233,7 +233,8 @@ TEST_CASE("P5-03 9.4: the new history.monsters fields after prey_might_max_permi
     for (std::size_t i = 0; i < r.size(); ++i) {
         if (r.name_at(i) == "prey_might_max_permille") at = i;
     }
-    REQUIRE(at + p503data::monsters_fields_024().size() + p503a::new_monsters_fields().size() + 1U == r.size());
+    // P5-06 4.5: undead_regions_ref is appended after undead_dead_permille (the one + 1U)
+    REQUIRE(at + p503data::monsters_fields_024().size() + p503a::new_monsters_fields().size() + 1U + 1U == r.size());
     for (std::size_t i = 0; i < p503data::monsters_fields_024().size(); ++i) {
         CHECK(r.name_at(at + 1 + i) == p503data::monsters_fields_024()[i].name);
         CHECK(r.get_int(p503data::monsters_fields_024()[i].name) == p503data::monsters_fields_024()[i].shipped);
@@ -272,8 +273,9 @@ TEST_CASE("P5-03 9.5, 13: raid_phrases after hoard_permille, bold_phrases after 
     for (const p503data::MonsterEdit& m : p503data::monster_edits()) {
         CAPTURE(m.kind);
         const wd::Record& r = definition(*l.content, "monster", m.kind).record;
-        CHECK(r.name_at(r.size() - 1U) == "raid_phrases");
-        CHECK(r.name_at(r.size() - 2U) == "hoard_permille");
+        CHECK(r.name_at(r.size() - 2U) == "raid_phrases");
+        CHECK(r.name_at(r.size() - 1U) == "slayer_epithet");  // P5-06 4.3
+        CHECK(r.name_at(r.size() - 3U) == "hoard_permille");
         CHECK(r.get_array("raid_phrases").size() == 3U);
         if (m.kind == "undead" || m.kind == "wyvern") CHECK(r.get_int("hoard_permille") == 0);   // 9.2
     }
@@ -371,7 +373,7 @@ TEST_CASE("P5-03 4, 9, 11, 12: the shipped game/data and both fixture roots load
         const wd::Record& r = definition(*l.content, "history", "relations").record;
         CHECK(r.size() == p503a::relations_fields().size());
         CHECK(definition(*l.content, "history", "monsters").record.find("overrun_people_ref") != nullptr);
-        CHECK(definition(*l.content, "history", "peoples").record.find("ghost_fade_years") != nullptr);
+        CHECK(definition(*l.content, "history", "peoples").record.find("ghost_fade_years") == nullptr);
         CHECK(definition(*l.content, "race", "elf").record.find("stances") != nullptr);
     }
 }

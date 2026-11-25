@@ -366,12 +366,12 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     }
     // 4.5: ghost_permille 200, ghost_max_population 600 (r1) appended after crisis_small_salience
     const wd::Record& pe = definition(*l.content, "history", "peoples").record;
-    // P5-03 11.1, 11.2 (0.24.0): four fields follow
+    // P5-03 11.1, 11.2 (0.24.0): four fields follow; P5-06 25.1: ghost_fade_years is gone, so three
     REQUIRE(pe.size() >= 7U);
-    CHECK(pe.name_at(pe.size() - 7) == "crisis_small_salience");
-    CHECK(pe.name_at(pe.size() - 6) == "ghost_permille");
-    CHECK(pe.name_at(pe.size() - 5) == "ghost_max_population");
-    CHECK(pe.name_at(pe.size() - 4) == "abandon_reach_hops");
+    CHECK(pe.name_at(pe.size() - 6) == "crisis_small_salience");
+    CHECK(pe.name_at(pe.size() - 5) == "ghost_permille");
+    CHECK(pe.name_at(pe.size() - 4) == "ghost_max_population");
+    CHECK(pe.name_at(pe.size() - 3) == "abandon_reach_hops");
     CHECK(pe.get_int("ghost_permille") == 200);
     CHECK(pe.get_int("ghost_max_population") == 600);
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
@@ -492,8 +492,8 @@ TEST_CASE("P5-02 4.2: every monster field required; ranges one step outside; enu
     };
     for (const R& r : {R{"wake_rate", 0, 10000000, 50}, R{"might", 1, 10000000, 300}, R{"range_hops", 0, 4, 1},
                        R{"raid_permille", 0, 1000, 150}, R{"kill_max", 0, 10000000, 60},
-                       R{"overrun_permille", 0, 1000, 900}, R{"active_years", 1, 100000, 120},
-                       R{"rewake_ppm", 0, 1000000, 5000}, R{"lifespan_years", 0, 100000, 2000},
+                       R{"overrun_permille", 0, 1000, 1000}, R{"active_years", 1, 100000, 120},
+                       R{"rewake_ppm", 0, 1000000, 1500}, R{"lifespan_years", 0, 100000, 4000},
                        R{"max_alive", 0, 64, 3}, R{"hoard_permille", 0, 1000, 5}}) {
         CAPTURE(r.field);
         for (const std::int64_t v : {r.lo - 1, r.hi + 1}) {
