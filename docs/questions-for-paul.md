@@ -89,6 +89,21 @@ The proposals entry is still marked "Status: open"; the spec was merged on its i
 | --- | --- | --- | --- | --- |
 | Q-P4-06-7 | Confirm the documented movie-recording command once on Windows (no CI job records). | Documented command at 1600x900; confirmed on Linux only. The review of 2026-11-24 approved the viewer but said recording on Windows remains untried. | [P4-06 14 item 7](specs/p4-06-history-movie.md); proposals "Paul's review of P4 Viewer v1" | |
 
+### H. P5-06 figures (spec r1 on branch `p5/06-spec`, draft for approval)
+
+The spec's "Plan for approval" is its first section, readable alone. Nothing is implemented yet; the interim choice is what the spec specifies.
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-06-1 | Scope: A (rulers only), B (rulers, generals, heroes) or C (B with minimal casters: towers and libraries, named books, rare blights; about a quarter more work)? | C, since the scope decision of 2026-11-24 folds minimal casters into figures; B if the stage should be smaller (casters would then wait with the deferred P5-09). | [P5-06 22 item 1](specs/p5-06-figures.md) (branch `p5/06-spec`) | |
+| Q-P5-06-2 | Which rulers are named? By deed (founders; the ruler under whom a realm declared war, broke faith, gave or kept spoils, or fell; the rivals of a disputed succession; the ruler at the end): about 55 a world, the rest of each line counted. Or every reign that begins in an active phase: about 360 a world, most of them goblin chiefs. | By deed. | Same spec, 22 item 2, 6.4 | |
+| Q-P5-06-3 | Regnal numbers ("Aldric II")? Names are unique in a world, so this needs an exception to the name registry. | No regnal numbers now. | Same spec, 22 item 3 | |
+| Q-P5-06-4 | Rulers' tempers (steady, warlike, peaceable, grasping, just) lean by race, with each race's average quarrelling kept as now? Or the same mix for every race? | By race, average kept. | Same spec, 22 item 4, 4.1, 7.2 | |
+| Q-P5-06-5 | The last ruler of a conquered realm: falls with the realm, or flees into exile (another heir in exile for P6)? | Falls with the realm (exiles come from disputed successions). | Same spec, 22 item 5, 6.4 rule 4 | |
+| Q-P5-06-6 | Epithets earned by deeds and kept with the name in every sentence ("Grishnak the Conqueror", "Maela Dragonslayer"), each used by at most two figures of a world? | Yes. | Same spec, 22 item 6, 6.10 | |
+| Q-P5-06-7 | Births are never events (a figure enters the record by an office or a deed; its birth year is on its row)? | Yes; a birth worth telling can come with P5-08's champions. | Same spec, 22 item 7 | |
+| Q-P5-06-8 | Summary length: one `rulers:` line per realm and a `[figures]` block of at most nine lines add about 20 lines to a default summary. Accept a default median bound of 645 (your bound of 2026-11-22 is 700)? | Yes. | Same spec, 22 item 8, 10.6 | |
+
 ---
 
 ## 2. Decided

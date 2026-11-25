@@ -1424,3 +1424,32 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the three viewer specs left eighteen choices open for Paul to judge in the running viewer (marker size by kind, one ring per event place, no markers without history, hidden refuges shown, markers on by default; the browser in a right-hand pane, follow on the filtered list, one level for list and block, highlight by dimming, the glyph changes, a click selects; quiet years at ten times the speed, playback of the browser's list, scrubbing pauses, the ticker over the map, the defaults, the two-row year bar, AVI recording).
 - Decision (Paul, 2026-11-24, after using the viewer on seed 42 at generator 0.24.0): "the viewer works great, no concerns with it." The phase is approved and every interim choice stands as built. The lead's lean towards a ticker strip below the map is dropped. Recording on Windows remains untried.
 
+
+### History depth: the rest of P5 after Paul's scope decision
+
+- Date: 2026-11-24
+- Raised by: lead (session of 2026-11-24; `docs/questions-for-paul.md` Q-P5-00-1), recorded by the spec writer with `docs/specs/p5-06-figures.md` r1
+- Design doc section: 5 ("The plan for phase P5, history depth": twelve stages), 13 (the P5 row)
+- Problem: P5-00 3.1 plans twelve stages; with P5-04's mines in, the lead proposed to keep figures, the pantheon and artifacts, defer roads and the mountain depths, and fold minimal casters into figures and cults into the pantheon.
+- Decision (Paul, 2026-11-24): "take the recommendation except for mountain depths". The rest of P5 is: P5-06 Figures with a minimal form of casters folded in (towers and libraries, named books, rare blights; no spells); P5-07 Mountain depths, kept as a small stage on P5-04's mines; P5-08 Pantheon and interventions with cults folded in; P5-11 Artifacts. P5-05 Roads and improved passes go to P6. P5-09's spell invention (the `spell` table, `magic_schools`) and P5-10's factions (noble houses, bandit bands, orders) are deferred. P5-00 3.1 carries a note at each affected stage. The design doc's list of twelve stages (section 5) is out of date on these points; Paul brings it to the design conversation.
+- Status: accepted
+
+### History: figures, P5-06 (readings and scope)
+
+- Date: 2026-11-24
+- Raised by: spec writer (`docs/specs/p5-06-figures.md` r1)
+- Design doc section: 5 ("Entities": figures; "Quiet intervals": ruling lines counted, long-lived figures persist; "Magic in history"; the tick loop item 3; "From history to play": tombs, an heir in exile), 6 (`figure`, `relation`)
+- Problem: the design names figures (rulers, generals, heroes, outlaws), their ties and casters without rules or numbers; a default world has about 740 reigns, too many to name.
+- Readings taken: (1) every realm has a ruling line of reigns drawn at their start (length about one `generation_years`, accession age and a temper from the race's `temper_weights`), advanced in T3 and, without ticking, in quiet steps (`draw_at`, a keyed draw at the reign's own start year); (2) rulers are named by deed: founders, the ruler under whom the realm declared war, broke faith, granted or kept spoils or fell, the rivals of a disputed succession, and the ruler at the end of the age (about 55 a world); the rest of the line is a count; (3) a succession crisis ends a reign; a split names the winner and the claimant (the new realm's founder), a failed claim may exile the claimant to the friendliest realm in reach; (4) generals named at declarations lead their war's battles (new kind `battle_led`, since a role cannot be added to a shipped battle kind) and may fall; (5) heroes rise after raids, hunt sooner and stronger, and slay (`monster_slain_by_hero`) or are slain (`hero_slain`); (6) minimal casters raise towers (site kind 4), write named books (table `book`) and rarely cause a blight; (7) effects bounded: tempers on strain (normalized per race), spoils and allied strain; a general's skill in the win chance only; a hero in hunts; a short reign in secession; (8) ruler names enter existing sentences (war declarations, betrayals, spoils, falls of realms) by a render form `{r:under}` that reads the `ruled` rows, not by new kinds; (9) epithets earned by deeds; (10) no birth is an event; (11) ties are `ruled`, `served`, `rival`, `parent` relation rows; deeds stay events; (12) report v8 with `[figures]` and a `rulers:` line per realm; browser group `figures` = 8.
+- Interim choice: as proposed. Open for Paul in the spec (22): scope C, B or A; naming by deed or every reign of the active phases; regnal numbers; tempers by race; the last ruler of a conquered realm; epithets; births; the summary bound.
+- Status: open
+
+### Schema 12: figures and books (P5-06)
+
+- Date: 2026-11-24
+- Raised by: spec writer (P5-06 9.4), hard rule 7
+- Design doc section: 5 (figures; "Magic in history": books), 6 (`figure`; `spellbook` later)
+- Problem: figures need a table (design 6 `figure`), and minimal casters a site kind for towers and a stored name for each book.
+- Proposal: schema 11 → 12 with the generator of the P5-06 merge (planned 0.27.0): table `figure` (design 6's columns plus epithet, race, culture, office year, start event, death event, place of death, status, reign number, temper, skill) and, with part C, table `book` (title, author, tower, year, event), appended after schema 11's last statement; `site.kind` gains code 4 `tower` (part C); entity type 6 comes into use; readers refuse version 11; the empty world grows by two pages (to be measured); event kinds 79 to 92 appended; relation kinds `ruled`, `served`, `rival`, `parent` (text keys).
+- Interim choice: as proposed, with part C (question 1 of the spec). Without part C, `figure` only.
+- Status: open
