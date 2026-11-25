@@ -1029,7 +1029,6 @@ def invariant_violations(w, t, races):
         # reading (integration): the population at the opening is not in the rows (P3-04 6.7 writes a census row
         # only at a change of owner, kind or status and at a phase's end; civs4-seed-7-1024 si35: s105's last row
         # says 152 fifty years before its mine opened); mine_settlement_min is checked by the replay, not here
-        del pop, pop_min
         if w.region[R][27] < ore_min:
             out.append("13: mine si%d: r%d ore_reach_cells %d" % (sid, R, w.region[R][27]))
         if races.get(rkey(c), ([], 0, 0))[2] <= 0:
