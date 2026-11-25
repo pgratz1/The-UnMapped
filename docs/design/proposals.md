@@ -1417,3 +1417,10 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: parts A and B only (no schema change); this entry waits for Paul's answer to P5-04 question 6.
 - Decision (Paul, 2026-11-24): option C now. Schema 10 → 11 with generator 0.26.0 in the P5-04 merge, as proposed (event kinds `mine_opened` and `arms_sold` are 77 and 78 in P5-04 r2, after the spoils kinds; provisional until the merge order is fixed). P5-07 Mountain depths deepens the same mines and needs no second mine kind (P5-04 r2 6.14).
 - Status: decided
+
+### Paul's review of P4 Viewer v1 (2026-11-24)
+
+- Section: 13 (phase P4); specs P4-04 section 16, P4-05 section 14, P4-06 section 14.
+- Problem: the three viewer specs left eighteen choices open for Paul to judge in the running viewer (marker size by kind, one ring per event place, no markers without history, hidden refuges shown, markers on by default; the browser in a right-hand pane, follow on the filtered list, one level for list and block, highlight by dimming, the glyph changes, a click selects; quiet years at ten times the speed, playback of the browser's list, scrubbing pauses, the ticker over the map, the defaults, the two-row year bar, AVI recording).
+- Decision (Paul, 2026-11-24, after using the viewer on seed 42 at generator 0.24.0): "the viewer works great, no concerns with it." The phase is approved and every interim choice stands as built. The lead's lean towards a ticker strip below the map is dropped. Recording on Windows remains untried.
+
