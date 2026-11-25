@@ -1462,3 +1462,15 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Spoils: agreed with the recommendation. A first withheld share sours the alliance; a second, or one large kept share, ends it. To be built in the follow-up stage P5-04a, with the world critic's notes on P5-04.
 - Status: decided
 
+### History: P5-04a relations and alliances follow-ups (readings)
+
+- Section: 13 (phase P5); spec `docs/specs/p5-04a-relations-alliances-followups.md` r1 (generator 0.28.0, after P5-06; schema stays 12; report v9).
+- Problem: the P5-04 and P5-03a reviews left alliances with refusals and betrayals that state no motive, a spurning that can follow a kept share by a century, 538 identical renewal lines in 16 worlds, a thaw worded as a decline, pairs that flip every few centuries, summary milestones that are a cap, and expulsions after a thousand years of subjection. Paul decided the spoils rule on 2026-11-25.
+- Readings taken (the spec writer's; for the lead):
+  - Spoils (Paul's rule): "large" is a share of at least 600 people or an ally that bore three tenths of its side's dead; a large or second kept share ends the alliance at once, in the same year, so cause and effect read together; a first sours it (memory, grudge, an even chance at the next renewal, a halved chance at the next call). SP2 is restated to 10% to 35% of worlds (question Q-P5-04a-1).
+  - Refusals: the defence chance is a product of eight named factors and the smallest names the motive; weariness and a war of its own excuse a refusal (it does not count toward a break); a grasping ruler (P5-06) names the ruler. Attack refusals still write nothing.
+  - Renewals: no event unless the pair fought together, shared spoils or changed its basis since; renewals fall on a fixed chain from the formation and `alliance_formed` carries `term`, so the report still counts them.
+  - Dwarves' participation restated to 85%: sealed uplands are out of open-border reach; contact across closed borders comes with roads in P6.
+  - Expulsions: a people held 800 years or more is expelled only within 150 years of a fresh turn into hatred; the elves' share of expulsions is history (they are the goblins' usual conquest), not a rule.
+  - No schema change: value rows on seven kinds and a new code on kind 76's `reason` value, as P5-03a did.
+- Status: proposed (r1, for the lead's approval).
