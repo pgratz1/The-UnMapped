@@ -153,11 +153,11 @@ public:
     [[nodiscard]] std::vector<std::int64_t> allies_of(std::int64_t civ, std::int64_t year) const;
     [[nodiscard]] std::vector<std::vector<std::int64_t>> alliance_groups_at(std::int64_t year) const;
     [[nodiscard]] std::vector<std::pair<std::int64_t, std::int64_t>> trades_at(std::int64_t year) const;
-    // P5-06 12: the recorded ruler of civ at Y (office_from <= Y < the
-    // reign's end: its ruled row's until, else E), 0 none; the figures with
-    // born <= Y < died (or E), ascending id; the generals of civ at Y (its
-    // served rows with since <= Y < until, else E), ascending id; a figure
-    // at Y. FatalError "timeline: no figure <f>", "timeline: no civilization
+    // P5-06 12: the recorded ruler of civ at Y (office_from <= Y < its ruled
+    // row's until, or <= E when the row is open), 0 none; the figures with
+    // born <= Y < died (or <= E when alive at the end), ascending id; the
+    // generals of civ at Y (served rows with since <= Y < until, or <= E when
+    // open), ascending id; a figure at Y (alive by the same rule). FatalError "timeline: no figure <f>", "timeline: no civilization
     // <c>" for an id the world does not have.
     [[nodiscard]] std::int64_t ruler_at(std::int64_t civ, std::int64_t year) const;
     [[nodiscard]] std::vector<std::int64_t> figures_alive(std::int64_t year) const;
@@ -258,7 +258,8 @@ private:
     std::vector<std::size_t> share_offsets_;
     // P5-06 12: the figure rows (index id - 1), per figure the year of its
     // first exiled event (-1 none) and its events; per civilization (index
-    // id - 1) its rulers as (office_from, end, figure) ascending office_from,
+    // id - 1) its rulers as (office_from, end, figure) ascending office_from
+    // (end exclusive: until, or E + 1 for an open row),
     // and its served rows as (since, end, figure) in row order.
     struct Term {
         std::int64_t from = 0, to = 0, figure = 0;

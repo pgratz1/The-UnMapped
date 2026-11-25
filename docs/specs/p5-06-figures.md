@@ -844,14 +844,14 @@ Counts: 20 halo, 3 fill, 10 ink, 0 interior. Drawn in P4-04 6.1's site position 
 
 ```cpp
 struct FigureState { std::int64_t id, role, civ, status; bool alive; };
-std::int64_t ruler_at(std::int64_t civ, std::int64_t year) const;            // the recorded ruler with office_from <= Y < the reign's end (its ruled row's until, else E); 0 none
-std::vector<std::int64_t> figures_alive(std::int64_t year) const;           // born <= Y < died (or E), ascending id
-std::vector<std::int64_t> generals_of(std::int64_t civ, std::int64_t year) const;  // served rows in force at Y (since <= Y < until)
+std::int64_t ruler_at(std::int64_t civ, std::int64_t year) const;            // the recorded ruler with office_from <= Y < its ruled row's until, or office_from <= Y <= E when the row is open; 0 none
+std::vector<std::int64_t> figures_alive(std::int64_t year) const;           // born <= Y < died, or born <= Y <= E when alive at the end; ascending id
+std::vector<std::int64_t> generals_of(std::int64_t civ, std::int64_t year) const;  // served rows in force at Y (since <= Y < until, or <= E when open)
 FigureState figure_at(std::int64_t figure, std::int64_t year) const;
 std::span<const std::int64_t> events_of_figure(std::int64_t figure) const;  // ascending: events with it as participant, and events whose text names it through {r:under} (7.9's lookup)
 ```
 
-`ruler_at` gives 0 for a year of an unrecorded reign (the viewer shows "unrecorded"). Dumps (P4-01 13.1): D(Y) gains `ruler <civ> <figure>` per alive civilization with a recorded ruler at Y, ascending. The viewer's hover text on a realm may add `ruled by <name>` (the viewer engineer, P4-03's hover).
+(r3, lead ruling 2026-11-25) A reign, life or service still open at the history's end year E holds at Y = E inclusive, so the present has its rulers, living figures and generals; a row closed in year E keeps the exclusive rule and does not hold at E. `ruler_at` gives 0 for a year of an unrecorded reign (the viewer shows "unrecorded"). Dumps (P4-01 13.1): D(Y) gains `ruler <civ> <figure>` per alive civilization with a recorded ruler at Y, ascending. The viewer's hover text on a realm may add `ruled by <name>` (the viewer engineer, P4-03's hover).
 
 ## 13. Invariants
 

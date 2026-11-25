@@ -1328,6 +1328,9 @@ void FiguresSubsystem::books(StepContext& ctx) {
         }
         for (std::uint64_t j = 2; title.empty(); ++j) {
             std::string candidate = titles[static_cast<std::size_t>(start)] + " " + roman(j);
+            if (candidate.size() > NAME_MAX_BYTES) {
+                fail("names: a name longer than 64 bytes");
+            }
             if (!registry.contains(candidate)) {
                 title = std::move(candidate);
             }
