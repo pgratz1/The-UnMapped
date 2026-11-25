@@ -215,8 +215,9 @@ F2  12 ruler_at: a reign is a `ruled` row (a_type 6, b_type 3) taken from its fi
     half-open. 13 item 1 says reigns of a realm do not overlap; should two qualify, the one begun last (largest
     office_from, then largest figure id) is taken, as the engine does (Timeline::ruler_at, the latest reign
     begun wins). `check` counts such overlaps on the input worlds (none expected).
-F3  12: by the half-open rule ruler_at(c, E) is 0 for every c (an open row ends at E), so D(E) has no ruler line;
-    the present's ruler is ruler_at(c, E - 1). The engine does the same.
+F3  12, the lead's ruling of 2026-11-25: a reign still open at E holds at Y = E (ruler_at(c, E) is the present
+    ruler; likewise figures_alive(E) holds the living), so D(E) has the ruler lines of the realms alive at E. The
+    engine of 2750025 used the half-open rule (no ruler at E); its library fix follows the integration.
 F4  The brief's "7.9's inclusive lookup" is the rendering lookup by event (since_event <= e <= until_event) of
     the form `under`; 12 defines ruler_at by years, which is what D(Y) uses.
 F5  Fixtures at 0.27.0: the C++ writer gives the P3-07 fixtures and T1 (and P4-04's T2) the schema 12 tables
@@ -563,7 +564,8 @@ class History:
                 f = self.figures.get(r[1])
                 if f is None:
                     raise ValueError("ruled row of figure %d names no figure" % r[1])
-                out.append((f[8], self.E if r[6] is None else r[6], r[1]))
+                # the lead's ruling (F3): an open reign holds at E too, so its end is E + 1
+                out.append((f[8], self.E + 1 if r[6] is None else r[6], r[1]))
         return sorted(out)
 
     def ruler_at(self, civ, y):
@@ -1872,8 +1874,8 @@ def check_p504(c):
 
 def check_p506(c):
     """P5-06 12 (P4-01 r7): ruler_at and D(Y)'s ruler lines on fixture H16 with hand-made figure and ruled rows
-    (no P3-07 fixture holds a figure): office_from before the row's since, the half-open end, an open row ending
-    at E, an unrecorded gap, a general's served row (not a reign), an overlap (reading F2)."""
+    (no P3-07 fixture holds a figure): office_from before the row's since, the half-open end, an open row holding
+    at E (the lead's ruling, F3), an unrecorded gap, a general's served row (not a reign), an overlap (reading F2)."""
     h = History(fixture_db("h16-alliances"))
     E = h.E
 
@@ -1890,7 +1892,7 @@ def check_p506(c):
         (6, 5, 3, 2, "ruled", 1500, 1700, 0, 0), (6, 6, 3, 2, "ruled", 1600, 1800, 0, 0)]   # overlap 1600..1699
     for (civ, y), want in (((1, 0), 0), ((1, 99), 0), ((1, 100), 1), ((1, 119), 1), ((1, 289), 1), ((1, 290), 2),
                            ((1, 450), 2), ((1, 599), 2), ((1, 600), 0), ((1, 699), 0), ((1, 700), 4),
-                           ((1, E - 1), 4), ((1, E), 0), ((2, 1499), 0), ((2, 1500), 5), ((2, 1599), 5),
+                           ((1, E - 1), 4), ((1, E), 4), ((2, 1499), 0), ((2, 1500), 5), ((2, 1599), 5),
                            ((2, 1600), 6), ((2, 1699), 6), ((2, 1799), 6), ((2, 1800), 0), ((3, 1000), 0)):
         c.eq("P5-06 12 ruler_at(%d, %d)" % (civ, y), h.ruler_at(civ, y), want)
     c.eq("P5-06 12 overlaps of civ 2", h.reign_overlaps(2), [(5, 6, 1600, 1700)])
@@ -1899,8 +1901,9 @@ def check_p506(c):
     d = year_dump(h, 1650).decode().splitlines()
     want = ["ruler %d %d" % (cv, f) for cv, f in ((1, 4), (2, 6)) if cv in alive]
     c.eq("P5-06 12 D(1650)'s ruler lines (last)", d[len(d) - len(want):], want)
-    c.eq("P5-06 12 D(E) has no ruler line", [x for x in year_dump(h, E).decode().splitlines()
-                                             if x.startswith("ruler ")], [])
+    c.eq("P5-06 12 D(E): the open reign holds at E (the lead's ruling, F3)",
+         [x for x in year_dump(h, E).decode().splitlines() if x.startswith("ruler ")],
+         ["ruler 1 4"] if 1 in h.alive(E) else [])
 
 
 def check_rulers_world(c, name, h):

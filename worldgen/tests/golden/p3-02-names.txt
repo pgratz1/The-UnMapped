@@ -53,6 +53,9 @@ stream 42 hist.names.god 0xd8391ab6f3db9483
 stream 0 hist.names.monster 0xc983ba0afc04a0a4
 stream 1 hist.names.monster 0xd11fe07997b5a2b6
 stream 42 hist.names.monster 0x60a9dd3a947b52ed
+stream 0 hist.names.person 0xd270c485372913b7
+stream 1 hist.names.person 0xeac92a7321591084
+stream 42 hist.names.person 0xfffd12491bb7d347
 stream 0 hist.names.settlement 0x969c418ddf3c5edc
 stream 1 hist.names.settlement 0xbd305f064eba5e67
 stream 42 hist.names.settlement 0x3a37bdf1cb643acd

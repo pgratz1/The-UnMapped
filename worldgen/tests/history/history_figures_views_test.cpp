@@ -195,3 +195,32 @@ TEST_CASE("P5-06 12: ruler_at, figures_alive, generals_of, figure_at, events_of_
 }
 
 }  // TEST_SUITE
+
+// The lead's ruling of 2026-11-25 (integration): a reign or a life still open at the end year E holds at Y = E, so
+// ruler_at(c, E) is the present ruler and figures_alive(E) holds every living figure. EXPECTED TO FAIL until the
+// library fix that follows the P5-06 integration (the engine of 2750025 uses since <= Y < E for open rows).
+TEST_SUITE("history") {
+
+TEST_CASE("P5-06 12 (lead's ruling): ruler_at and figures_alive hold an open reign or life at Y = E") {
+    P506_REQUIRE_INTEGRATED();
+    const db::WorldReader r = chrono_test::open_world(world());
+    auto lh = h::load_history(r);
+    REQUIRE_MESSAGE(lh.ok(), (lh.ok() ? "" : lh.error().message));
+    const h::Timeline& t = lh.value().timeline;
+    const p506check::World w = p506check::world_of_file(r);
+    const auto alive = p506api::figures_alive(t, w.E);
+    std::size_t open_reigns = 0;
+    for (const auto& [id, f] : w.figs) {
+        CAPTURE(id);
+        if (f.death_event == 0) CHECK(std::find(alive.begin(), alive.end(), id) != alive.end());
+        for (const p506check::Rel& rel : w.rels) {
+            if (rel.kind == "ruled" && rel.a == id && rel.until_event == 0) {
+                ++open_reigns;
+                CHECK(p506api::ruler_at(t, f.civ, w.E) == id);
+            }
+        }
+    }
+    CHECK(open_reigns > 0U);
+}
+
+}  // TEST_SUITE
