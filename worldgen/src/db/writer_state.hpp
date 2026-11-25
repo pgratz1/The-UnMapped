@@ -42,6 +42,9 @@ struct HistoryKeys {
     // schema 10 (P5-03)
     std::tuple<std::int64_t, std::int64_t, std::int64_t> race_relation{0, 0, 0};
     std::tuple<std::int64_t, std::int64_t, std::int64_t> settlement_race{0, 0, 0};
+    // schema 12 (P5-06)
+    std::int64_t figure = 0;
+    std::int64_t book = 0;
 };
 
 struct WriterState {

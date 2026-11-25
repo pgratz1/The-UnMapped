@@ -39,3 +39,7 @@ stances = [{ race = "dwarf", value = -100 }]
 origin_allies = []
 ally_join_permille = 400
 mining_permille = 0
+temper_weights = { steady = 300, warlike = 300, peaceable = 50, grasping = 300, just = 50 }
+general_permille = 250
+hero_permille = 40
+magic_permille = 150

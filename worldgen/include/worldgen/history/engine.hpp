@@ -252,6 +252,11 @@ public:
     // draw(stream_key, year(), a, b, k) (P3-02 4.1).
     [[nodiscard]] std::uint64_t draw(std::uint64_t stream_key, std::uint64_t a, std::uint64_t b,
                                      std::uint64_t k) const noexcept;
+    // P5-06 7.10: draw(stream_key, year, a, b, k) for a stored or computed
+    // year of the decision inside the step (year() to year() + years() - 1).
+    // FatalError "history: draw_at: year <y> outside the step <Y>-<Z>".
+    [[nodiscard]] std::uint64_t draw_at(std::uint64_t stream_key, std::int64_t year, std::uint64_t a, std::uint64_t b,
+                                        std::uint64_t k) const;
     // Read-only access to the log (P3-06 8.1 item 2: the parent of a
     // secession is the `from` of its civ_seceded). The key of event `event`'s
     // kind; the entity id of its first participant in role `role`, 0 when it
@@ -376,6 +381,10 @@ struct HistoryResult {
     // history stage, empty from run_engine.
     std::vector<db::RaceRelationRow> race_relations;
     std::vector<db::SettlementRaceRow> settlement_races;
+    // P5-06 9.1, 9.3 (schema 12): the figures subsystem's rows, filled by the
+    // history stage, empty from run_engine.
+    std::vector<db::FigureRow> figures;
+    std::vector<db::BookRow> books;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

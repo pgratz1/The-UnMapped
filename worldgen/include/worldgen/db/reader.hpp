@@ -248,5 +248,8 @@ private:
 // primary-key order.
 [[nodiscard]] Result<std::vector<RaceRelationRow>> read_race_relation_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<SettlementRaceRow>> read_settlement_race_rows(const WorldReader& world);
+// Schema 12 (P5-06 9.1, 9.3): tables figure and book, in primary-key order.
+[[nodiscard]] Result<std::vector<FigureRow>> read_figure_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<BookRow>> read_book_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

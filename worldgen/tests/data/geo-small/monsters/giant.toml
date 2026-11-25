@@ -24,3 +24,4 @@ max_alive = 2
 flare = true
 hoard_permille = 8
 raid_phrases = ["came down from the heights upon", "hurled stones upon", "fell upon"]
+slayer_epithet = "Giantsbane"

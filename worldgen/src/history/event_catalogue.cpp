@@ -5,12 +5,15 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
+#include <set>
 #include <tuple>
 #include <cstddef>
 #include <new>
 #include <utility>
 
 #include "worldgen/core/error.hpp"
+#include "worldgen/core/roman.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/db/schema.hpp"
 
@@ -300,6 +303,43 @@ EventCatalogue build_compiled() {
                               {civ(1, "civilization"), role(2, "site", EntityType::site, 1, 1)}, {}, 0, {}});
     c.kinds.push_back(KindDef{78, "arms_sold", true, 0, 0,
                               {civ(1, "seller"), civ(2, "buyer"), role(3, "site", EntityType::site, 1, 1)}, {}, 0, {}});
+    // P5-06 8.1 (generator 0.27.0): kinds 79 to 92, the figures.
+    const auto fig = [](std::int64_t seq, std::string_view name, std::int64_t lo = 1, std::int64_t hi = 1) {
+        return role(seq, name, EntityType::figure, lo, hi);
+    };
+    const auto fig_civ = [&fig, &civ] { return std::vector<RoleDef>{fig(1, "figure"), civ(2, "civilization")}; };
+    const auto fig_civ_site = [&fig, &civ] {
+        return std::vector<RoleDef>{fig(1, "figure"), civ(2, "civilization"), role(3, "site", EntityType::site, 1, 1)};
+    };
+    c.kinds.push_back(KindDef{79, "came_to_rule", true, 1, 0, fig_civ(), {}, 0, {}});
+    c.kinds.push_back(KindDef{80, "figure_died", true, 1, 2, fig_civ(), {"how", "age"}, 0, {}});
+    c.kinds.push_back(KindDef{81, "succession_disputed", true, 1, 2,
+                              {civ(1, "civilization"), fig(2, "ruler"), fig(3, "claimant"), civ(4, "new_realm", 0, 1)},
+                              {"outcome"}, 0, {}});
+    c.kinds.push_back(KindDef{82, "exiled", true, 1, 0, {fig(1, "figure"), civ(2, "civilization"), civ(3, "host", 0, 1)},
+                              {"hosted"}, 0, {}});
+    c.kinds.push_back(KindDef{83, "reigned_at_end", false, 1, 0, fig_civ(), {}, 0, {}});
+    c.kinds.push_back(KindDef{84, "general_appointed", true, 1, 0,
+                              {fig(1, "figure"), civ(2, "civilization"), civ(3, "enemy")}, {"again"}, 0, {}});
+    c.kinds.push_back(KindDef{85, "battle_led", true, 1, 0,
+                              {civ(1, "winner"), civ(2, "loser"), civ(3, "winner_ally", 0, 16),
+                               civ(4, "loser_ally", 0, 16), fig(5, "winner_general", 0, 1),
+                               fig(6, "loser_general", 0, 1)},
+                              {"winner_dead", "loser_dead", "pass"}, 0, {}});
+    c.kinds.push_back(KindDef{86, "fell_in_battle", true, 1, 0,
+                              {fig(1, "figure"), civ(2, "civilization"), civ(3, "enemy")}, {}, 0, {}});
+    c.kinds.push_back(KindDef{87, "hero_rose", true, 1, 1,
+                              {fig(1, "figure"), civ(2, "civilization"), role(3, "monster", EntityType::monster, 1, 1)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{88, "monster_slain_by_hero", true, 1, 0,
+                              {role(1, "monster", EntityType::monster, 1, 1), civ(2, "slayer"), fig(3, "hero")},
+                              {"hunters"}, 0, {}});
+    c.kinds.push_back(KindDef{89, "hero_slain", true, 1, 0,
+                              {fig(1, "figure"), civ(2, "civilization"), role(3, "monster", EntityType::monster, 1, 1)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{90, "tower_founded", true, 1, 2, fig_civ_site(), {"library"}, 0, {}});
+    c.kinds.push_back(KindDef{91, "book_written", true, 1, 0, fig_civ_site(), {}, 0, {}});
+    c.kinds.push_back(KindDef{92, "blight", true, 1, 0, fig_civ_site(), {"dead"}, 0, {}});
     return c;
 }
 
@@ -358,10 +398,12 @@ enum class TokenType : std::uint8_t {
     region_former,  // r21 23.1
     beast,          // P5-02 10.3: {@beast}
     beast_bold,     // P5-03 13: {@beast:bold}
+    book,           // P5-06 7.9: {@book}
 };
 
 // kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against };
+// under: P5-06 7.9.
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against, under };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -480,6 +522,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
                 return "{" + std::string(body) + "} needs a kind with a value 'beast'" + where;
             }
             out.type = body == "@beast" ? TokenType::beast : TokenType::beast_bold;
+        } else if (body == "@book") {  // P5-06 7.9
+            if (kind.key != "book_written") {
+                return "{@book} needs the kind book_written" + where;
+            }
+            out.type = TokenType::book;
         } else {
             return unknown;
         }
@@ -569,6 +616,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::with;
         } else if (*form == "against") {
             out.form = Form::against;
+        } else if (*form == "under") {  // P5-06 7.9
+            out.form = Form::under;
         } else {
             return unknown;
         }
@@ -586,7 +635,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
         r->type != EntityType::monster) {
         return "form '" + std::string(*form) + "' needs a monster role" + where;
     }
-    if (r->min_count == 0 && out.form != Form::all && out.form != Form::with && out.form != Form::against) {
+    if (out.form == Form::under && r->type != EntityType::figure && r->type != EntityType::civilization) {
+        return "form 'under' needs a figure or civilization role" + where;
+    }
+    if (r->min_count == 0 && out.form != Form::all && out.form != Form::with && out.form != Form::against &&
+        out.form != Form::under) {
         return "role '" + r->role + "' may have no participant" + where;
     }
     return std::nullopt;
@@ -988,6 +1041,17 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::SiteRow& r : v.site_rows_) {
             v.sites_.emplace_back(r.id, r.name);
         }
+        // P5-06 (schema 12): figures by display name, books by event.
+        v.figure_rows_ = read(db::read_figure_rows(world), db::FIGURE_TABLE);
+        v.book_rows_ = read(db::read_book_rows(world), db::BOOK_TABLE);
+        for (const db::FigureRow& r : v.figure_rows_) {
+            v.figures_.emplace_back(r.id, figure_display_name(r));
+        }
+        for (const db::BookRow& r : v.book_rows_) {
+            v.book_titles_.emplace_back(r.event, r.title);
+        }
+        std::stable_sort(v.book_titles_.begin(), v.book_titles_.end(),
+                         [](const auto& a, const auto& b) { return a.first < b.first; });
         const auto ascending = [](const auto& list) {
             for (std::size_t i = 1; i < list.size(); ++i) {
                 if (list[i].first <= list[i - 1].first) {
@@ -996,6 +1060,9 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             }
             return true;
         };
+        if (!ascending(v.figures_)) {
+            v.figures_.clear();  // P5-06 9.4 F1 reports the row
+        }
         if (!ascending(v.beast_plurals_) || !ascending(v.monster_kind_nouns_) || !ascending(v.monsters_) ||
             !ascending(v.sites_)) {
             // A file whose ids do not ascend is refused by the 11.4 checks;
@@ -1008,6 +1075,7 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             v.monsters_.clear();
             v.sites_.clear();
         }
+        std::vector<db::RaceRow> race_rows = read(db::read_race_rows(world), db::RACE_TABLE);
         std::vector<std::int64_t> culture_ids;
         for (const db::CultureRow& r : read(db::read_culture_rows(world), db::CULTURE_TABLE)) {
             culture_ids.push_back(r.id);
@@ -1054,7 +1122,9 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             }
             // P5-02 11.4: a monster or site participant is checked with the
             // tables of schema 9 below.
-            if (*type != EntityType::monster && *type != EntityType::site && v.name(*type, r.entity_id) == nullptr) {
+            // P5-06 9.4 E1: a figure participant likewise.
+            if (*type != EntityType::monster && *type != EntityType::site && *type != EntityType::figure &&
+                v.name(*type, r.entity_id) == nullptr) {
                 view_fail(at + std::string(entity_type_key(*type)) + " " + int_text(r.entity_id) + " does not exist");
             }
             e.participants.push_back(r);
@@ -1195,6 +1265,36 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             if (std::optional<std::string> why = monster_tables_problem(mt)) {
                 view_fail(*why);
             }
+            // P5-06 9.4 (schema 12), after P5-04's checks.
+            std::vector<std::int64_t> sorted_cultures = culture_ids;
+            std::stable_sort(sorted_cultures.begin(), sorted_cultures.end());
+            FigureTables ft;
+            ft.figures = v.figure_rows_;
+            ft.books = v.book_rows_;
+            ft.relations = relation_rows;
+            ft.races = race_rows;
+            ft.culture_ids = sorted_cultures;
+            ft.civ_ids = civ_ids;
+            ft.civ_endings = ending_of;
+            ft.region_ids = region_ids;
+            ft.settlements = settlement_rows;
+            ft.sites = v.site_rows_;
+            ft.events = event_rows;
+            ft.participants = participants;
+            ft.values = values;
+            ft.catalogue = &v.catalogue_;
+            if (std::optional<std::string> why = figure_tables_problem(ft)) {
+                view_fail(*why);
+            }
+            for (const db::RelationRow& r : relation_rows) {
+                if (r.kind == "ruled" && r.a_type == static_cast<std::int64_t>(EntityType::figure) &&
+                    r.b_type == static_cast<std::int64_t>(EntityType::civilization)) {
+                    v.reigns_.push_back(Reign{r.b_id, r.since_event, r.until_event, r.a_id});
+                }
+            }
+            std::stable_sort(v.reigns_.begin(), v.reigns_.end(), [](const Reign& a, const Reign& b) {
+                return std::tie(a.civ, a.since) < std::tie(b.civ, b.since);
+            });
         }
         v.region_name_range_.assign(v.regions_.size(), {0, 0});
         for (std::size_t i = 0; i < v.region_names_.size(); ++i) {
@@ -1249,10 +1349,27 @@ const std::string* HistoryView::name(EntityType type, std::int64_t id) const noe
             return m != nullptr ? &m->name : nullptr;
         }
         case EntityType::site: return find_by_id(sites_, id);
-        case EntityType::figure:
+        case EntityType::figure: return find_by_id(figures_, id);  // P5-06 7.9: the display name
         case EntityType::faction: return nullptr;
     }
     return nullptr;
+}
+
+std::int64_t HistoryView::ruler_at_event(std::int64_t civ, std::int64_t event) const noexcept {
+    auto it = std::lower_bound(reigns_.begin(), reigns_.end(), civ,
+                               [](const Reign& r, std::int64_t c) { return r.civ < c; });
+    for (; it != reigns_.end() && it->civ == civ && it->since <= event; ++it) {
+        if (it->until == 0 || event <= it->until) {
+            return it->figure;
+        }
+    }
+    return 0;
+}
+
+const std::string* HistoryView::book_title_of_event(std::int64_t event) const noexcept {
+    const auto it = std::lower_bound(book_titles_.begin(), book_titles_.end(), event,
+                                     [](const auto& b, std::int64_t e) { return b.first < e; });
+    return it != book_titles_.end() && it->first == event ? &it->second : nullptr;
 }
 
 const std::string* HistoryView::monster_noun(std::int64_t monster) const noexcept {
@@ -2007,7 +2124,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.id != static_cast<std::int64_t>(i) + 1) {
             return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
         }
-        if (r.kind != 1 && r.kind != 2 && r.kind != 3) return at + "kind " + int_text(r.kind) + " is not 1, 2 or 3";
+        if (r.kind < 1 || r.kind > 4) return at + "kind " + int_text(r.kind) + " is not 1, 2, 3 or 4";
         if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
         if (r.x < 0 || r.y < 0 || r.x >= t.map_size || r.y >= t.map_size) {
             return at + "cell " + int_text(r.x) + " " + int_text(r.y) + " outside the map";
@@ -2025,15 +2142,18 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         } else if (r.kind == 2) {
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "monster " + int_text(r.monster) + " of an outpost";
-        } else {  // P5-04 9.2: a mine
+        } else if (r.kind == 3) {  // P5-04 9.2: a mine
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "mine with a monster";
             if (r.settlement == 0) return at + "mine without a settlement";
+        } else {  // P5-06 9.4: a tower
+            if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
+            if (r.monster != 0) return at + "tower with a monster";
         }
         if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
         const std::string_view ok = kind_key(r.origin_event);
         const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
-                                ok == "outpost_built" || ok == "mine_opened") &&
+                                ok == "outpost_built" || ok == "mine_opened" || ok == "tower_founded") &&
                                year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
         if (!origin_ok) {
             return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
@@ -2054,6 +2174,9 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.ending < 0 || r.ending > 6) return at + "ending " + int_text(r.ending) + " outside 0 to 6";
         if (r.kind == 3 && r.ending != 0 && r.ending != 4 && r.ending != 5) {
             return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a mine";
+        }
+        if (r.kind == 4 && r.ending != 0) {
+            return at + "ending " + int_text(r.ending) + " is not 0 for a tower";
         }
     }
     // monster.
@@ -2079,7 +2202,8 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         const bool alive = r.status == 1 || r.status == 2;
         if (alive != !r.died.has_value() || alive != (r.death_event == 0)) return at + "end columns disagree";
         if (r.status == 3) {
-            const bool ok3 = r.slain_by != 0 && kind_key(r.death_event) == "monster_slain" &&
+            const std::string_view dk = kind_key(r.death_event);  // P5-06 9.4: or by a hero
+            const bool ok3 = r.slain_by != 0 && (dk == "monster_slain" || dk == "monster_slain_by_hero") &&
                              year_of(r.death_event) == *r.died && participant(r.death_event, "monster") == r.id &&
                              participant(r.death_event, "slayer") == r.slain_by;
             if (!ok3) return at + "death_event " + int_text(r.death_event) + " is not this monster's slaying";
@@ -2153,6 +2277,420 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         return why;
     }
     return alliance_tables_problem(t, kind_key, participant, causes);
+}
+
+// --- P5-06 9.4 ------------------------------------------------------------------------------
+
+std::string_view figure_role_word(std::int64_t role) noexcept {
+    switch (role) {
+        case 1: return "ruler";
+        case 2: return "claimant";
+        case 3: return "general";
+        case 4: return "hero";
+        case 5: return "caster";
+        default: return "?";
+    }
+}
+
+std::string_view figure_temper_word(std::int64_t temper) noexcept {
+    switch (temper) {
+        case 0: return "steady";
+        case 1: return "warlike";
+        case 2: return "peaceable";
+        case 3: return "grasping";
+        case 4: return "just";
+        default: return "?";
+    }
+}
+
+std::string figure_display_name(const db::FigureRow& row) {
+    std::string out = row.name;
+    if (row.regnal >= 2 && row.regnal <= 100000) {
+        out += " ";
+        out += roman_numeral(row.regnal);
+    }
+    if (!row.epithet.empty()) {
+        out += " ";
+        out += row.epithet;
+    }
+    return out;
+}
+
+namespace {
+
+// P5-06 4.3: the grammar epithet (empty allowed for a row).
+bool is_epithet_text(std::string_view text) noexcept {
+    if (text.empty()) {
+        return true;
+    }
+    if (text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+}  // namespace
+
+std::optional<std::string> figure_tables_problem(const FigureTables& t) {
+    const EventCatalogue& cat = *t.catalogue;
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const auto n_figures = static_cast<std::int64_t>(t.figures.size());
+    const auto kind_key = [&](std::int64_t event) -> std::string_view {
+        if (event < 1 || event > n_events) {
+            return {};
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        return k != nullptr ? std::string_view(k->key) : std::string_view();
+    };
+    const auto year_of = [&](std::int64_t event) -> std::optional<std::int64_t> {
+        if (event < 1 || event > n_events) {
+            return std::nullopt;
+        }
+        return t.events[static_cast<std::size_t>(event - 1)].year;
+    };
+    std::vector<std::pair<std::size_t, std::size_t>> parts(t.events.size(), {0, 0});
+    for (std::size_t i = 0; i < t.participants.size(); ++i) {
+        const std::int64_t e = t.participants[i].event;
+        if (e >= 1 && e <= n_events) {
+            auto& r = parts[static_cast<std::size_t>(e - 1)];
+            if (r.first == r.second) {
+                r = {i, i};
+            }
+            r.second = i + 1;
+        }
+    }
+    const auto participant = [&](std::int64_t event, std::string_view role) -> std::int64_t {
+        if (event < 1 || event > n_events) {
+            return 0;
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        const RoleDef* r = k != nullptr ? k->find_role(role) : nullptr;
+        if (r == nullptr) {
+            return 0;
+        }
+        const auto [a, b] = parts[static_cast<std::size_t>(event - 1)];
+        for (std::size_t i = a; i < b; ++i) {
+            if (t.participants[i].role == r->seq) {
+                return t.participants[i].entity_id;
+            }
+        }
+        return 0;
+    };
+    const auto ending_of = [&t](std::int64_t civ) -> std::int64_t {
+        const auto it = std::lower_bound(t.civ_ids.begin(), t.civ_ids.end(), civ);
+        if (it == t.civ_ids.end() || *it != civ || t.civ_endings.size() != t.civ_ids.size()) {
+            return 0;
+        }
+        return t.civ_endings[static_cast<std::size_t>(it - t.civ_ids.begin())];
+    };
+    const auto figure_of = [&](std::int64_t id) -> const db::FigureRow* {
+        if (id < 1 || id > n_figures || t.figures[static_cast<std::size_t>(id - 1)].id != id) {
+            return nullptr;
+        }
+        return &t.figures[static_cast<std::size_t>(id - 1)];
+    };
+    const auto n_settlements = static_cast<std::int64_t>(t.settlements.size());
+    // figure (F1 to F28).
+    std::map<std::string, std::vector<std::int64_t>> by_name;  // earlier ids per name
+    std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> last_reign;  // civ -> (reign_no, figure)
+    for (std::size_t i = 0; i < t.figures.size(); ++i) {
+        const db::FigureRow& r = t.figures[i];
+        const std::string at = "corrupt table 'figure': row " + int_text(r.id) + ": ";
+        const std::string word(figure_role_word(r.role));
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (!is_entity_name(r.name)) return at + "name is not a name";
+        if (!is_epithet_text(r.epithet)) return at + "epithet is not an epithet";
+        if (r.role < 1 || r.role > 5) return at + "role " + int_text(r.role) + " outside 1 to 5";
+        const db::RaceRow* race = nullptr;
+        for (const db::RaceRow& x : t.races) {
+            race = x.id == r.race ? &x : race;
+        }
+        if (race == nullptr) return at + "unknown race " + int_text(r.race);
+        if (!sorted_has(t.culture_ids, r.culture)) return at + "unknown culture " + int_text(r.culture);
+        if (!sorted_has(t.civ_ids, r.civ)) return at + "unknown civilization " + int_text(r.civ);
+        const std::optional<std::int64_t> start_year = year_of(r.start_event);
+        if (!start_year) return at + "start_event " + int_text(r.start_event) + " is not an event";
+        if (r.born > r.office_from) {
+            return at + "born " + int_text(r.born) + " after office_from " + int_text(r.office_from);
+        }
+        if (!race->awakening_year || r.born < *race->awakening_year) {
+            return at + "born " + int_text(r.born) + " before the race's awakening";
+        }
+        if (r.office_from > *start_year) {
+            return at + "office_from " + int_text(r.office_from) + " after the year of start_event";
+        }
+        if (r.status < 1 || r.status > 6) return at + "status " + int_text(r.status) + " outside 1 to 6";
+        const bool alive = r.status == 1 || r.status == 2;
+        if (r.died.has_value() == alive || (r.death_event == 0) != alive ||
+            (alive && (r.death_region != 0 || r.death_settlement != 0))) {
+            return at + "end columns disagree";
+        }
+        if (!alive) {
+            if (*r.died < r.office_from) return at + "died " + int_text(*r.died) + " before office_from";
+            const std::string_view dk = kind_key(r.death_event);
+            const std::optional<std::int64_t> dy = year_of(r.death_event);
+            const bool own = dy && *dy == *r.died && participant(r.death_event, "figure") == r.id;
+            bool ok = false;
+            if (r.status == 3) ok = own && dk == "figure_died";
+            if (r.status == 4) ok = own && dk == "fell_in_battle";
+            if (r.status == 5) ok = own && dk == "hero_slain";
+            if (r.status == 6) ok = r.death_event != 0 && r.death_event == ending_of(r.civ);
+            if (!ok) return at + "death_event " + int_text(r.death_event) + " is not this figure's death";
+            if (!sorted_has(t.region_ids, r.death_region)) {
+                return at + "death_region " + int_text(r.death_region) + " is not a region";
+            }
+        }
+        if (r.death_settlement != 0 &&
+            (r.death_settlement < 1 || r.death_settlement > n_settlements ||
+             t.settlements[static_cast<std::size_t>(r.death_settlement - 1)].id != r.death_settlement)) {
+            return at + "death_settlement " + int_text(r.death_settlement) + " is not a settlement";
+        }
+        if ((r.reign_no >= 1) != (r.role == 1)) return at + "reign_no " + int_text(r.reign_no) + " of a " + word;
+        if (r.role == 1) {
+            const auto it = last_reign.find(r.civ);
+            if (it != last_reign.end() && r.reign_no <= it->second.first) {
+                return at + "reign_no " + int_text(r.reign_no) + " not above " + int_text(it->second.first) +
+                       " of figure " + int_text(it->second.second);
+            }
+            last_reign[r.civ] = {r.reign_no, r.id};
+        }
+        if (r.regnal != 0 && (r.regnal < 2 || r.regnal > 39)) {
+            return at + "regnal " + int_text(r.regnal) + " outside 0 or 2 to 39";
+        }
+        if (r.regnal != 0 && r.role != 1) return at + "regnal " + int_text(r.regnal) + " of a " + word;
+        std::vector<std::int64_t>& earlier = by_name[r.name];
+        for (const std::int64_t f : earlier) {
+            const db::FigureRow& o = t.figures[static_cast<std::size_t>(f - 1)];
+            if (o.role != 1 || o.civ != r.civ) {
+                return at + "name repeats figure " + int_text(f);
+            }
+        }
+        const auto k = static_cast<std::int64_t>(earlier.size());
+        if ((r.regnal >= 2 && k != r.regnal - 1) || (r.regnal == 0 && k != 0)) {
+            return at + "regnal " + int_text(r.regnal) + " but " + int_text(k) + " earlier bearers";
+        }
+        earlier.push_back(r.id);
+        if (r.temper < 0 || r.temper > 4) return at + "temper " + int_text(r.temper) + " outside 0 to 4";
+        if (r.temper != 0 && r.role != 1) return at + "temper " + int_text(r.temper) + " of a " + word;
+        if (r.role == 3 && (r.skill < 1 || r.skill > 1000)) {
+            return at + "skill " + int_text(r.skill) + " outside 1 to 1000";
+        }
+        if (r.skill != 0 && r.role != 3) return at + "skill " + int_text(r.skill) + " of a " + word;
+        if (r.status == 2 && r.role != 2) return at + "in exile but not a claimant";
+    }
+    // book (K1 to K6).
+    const auto n_sites = static_cast<std::int64_t>(t.sites.size());
+    std::set<std::int64_t> book_events;
+    for (std::size_t i = 0; i < t.books.size(); ++i) {
+        const db::BookRow& r = t.books[i];
+        const std::string at = "corrupt table 'book': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (!is_entity_name(r.title)) return at + "title is not a name";
+        const db::FigureRow* author = figure_of(r.author);
+        if (author == nullptr || author->role != 5) return at + "author " + int_text(r.author) + " is not a caster";
+        const db::SiteRow* site =
+            r.site >= 1 && r.site <= n_sites && t.sites[static_cast<std::size_t>(r.site - 1)].id == r.site
+                ? &t.sites[static_cast<std::size_t>(r.site - 1)]
+                : nullptr;
+        if (site == nullptr || site->kind != 4 || participant(site->origin_event, "figure") != r.author) {
+            return at + "site " + int_text(r.site) + " is not the author's tower";
+        }
+        const std::optional<std::int64_t> ey = year_of(r.event);
+        if (!(kind_key(r.event) == "book_written" && ey && *ey == r.year && participant(r.event, "figure") == r.author &&
+              participant(r.event, "site") == r.site)) {
+            return at + "event " + int_text(r.event) + " is not a book_written of year " + int_text(r.year) +
+                   " naming the author and the site";
+        }
+        if (!book_events.insert(r.event).second) return at + "event " + int_text(r.event) + " has two book rows";
+    }
+    // relation rows of the four kinds (L1 to L9), key order.
+    std::map<std::int64_t, std::vector<const db::RelationRow*>> ruled_of;  // civ -> its ruled rows
+    for (const db::RelationRow& r : t.relations) {
+        const bool fk = r.kind == "ruled" || r.kind == "served" || r.kind == "rival" || r.kind == "parent";
+        if (!fk) {
+            continue;
+        }
+        const std::string at = "corrupt table 'relation': row (" + int_text(r.a_type) + ", " + int_text(r.a_id) + ", " +
+                               int_text(r.b_type) + ", " + int_text(r.b_id) + ", " + r.kind + ", " +
+                               int_text(r.since) + "): ";
+        const bool civ_b = r.kind == "ruled" || r.kind == "served";
+        if (r.a_type != 6 || r.b_type != (civ_b ? 3 : 6)) {
+            return at + r.kind + " with sides of types " + int_text(r.a_type) + " and " + int_text(r.b_type);
+        }
+        const db::FigureRow* a = figure_of(r.a_id);
+        const std::string_view sk = kind_key(r.since_event);
+        if (r.kind == "ruled") {
+            if (a == nullptr || a->role != 1 || a->civ != r.b_id) {
+                return at + "ruled a " + int_text(r.a_id) + " is not a ruler of civilization " + int_text(r.b_id);
+            }
+            if (r.since_event != a->start_event) {
+                return at + "ruled since_event " + int_text(r.since_event) + " is not the ruler's record";
+            }
+            if (r.until) {
+                const bool ends = (r.until_event == a->death_event && kind_key(r.until_event) == "figure_died") ||
+                                  (r.until_event != 0 && r.until_event == ending_of(r.b_id));
+                if (!ends) {
+                    return at + "ruled until_event " + int_text(r.until_event) + " does not end the reign";
+                }
+            }
+            ruled_of[r.b_id].push_back(&r);
+        } else if (r.kind == "served") {
+            const bool ok = a != nullptr && a->role == 3 && a->civ == r.b_id && sk == "general_appointed" &&
+                            participant(r.since_event, "figure") == r.a_id &&
+                            participant(r.since_event, "civilization") == r.b_id;
+            if (!ok) {
+                return at + "served since_event " + int_text(r.since_event) + " is not a general_appointed of the pair";
+            }
+            if (r.until) {
+                const std::string_view uk = kind_key(r.until_event);
+                // Engineer's reading: search_abandoned ends a war too (P3-06 r10 20.17).
+                const bool ends = uk == "peace" || uk == "war_won" || uk == "truce" || uk == "civ_conquered" ||
+                                  uk == "civ_ended" || uk == "search_abandoned" ||
+                                  ((uk == "fell_in_battle" || uk == "figure_died") &&
+                                   participant(r.until_event, "figure") == r.a_id) ||
+                                  (r.until_event != 0 && r.until_event == ending_of(r.b_id));
+                if (!ends) {
+                    return at + "served until_event " + int_text(r.until_event) + " does not end the command";
+                }
+            }
+        } else if (r.kind == "rival") {
+            const std::int64_t ru = participant(r.since_event, "ruler");
+            const std::int64_t cl = participant(r.since_event, "claimant");
+            const bool ok = r.a_id < r.b_id && sk == "succession_disputed" &&
+                            ((ru == r.a_id && cl == r.b_id) || (ru == r.b_id && cl == r.a_id));
+            if (!ok) {
+                return at + "rival since_event " + int_text(r.since_event) + " is not a succession_disputed of the pair";
+            }
+            if (r.until) {
+                const db::FigureRow* b = figure_of(r.b_id);
+                const bool ends = r.until_event != 0 && ((a != nullptr && r.until_event == a->death_event) ||
+                                                         (b != nullptr && r.until_event == b->death_event));
+                if (!ends) {
+                    return at + "rival until_event " + int_text(r.until_event) + " is not a death of the pair";
+                }
+            }
+        } else {  // parent
+            const bool ok = sk == "succession_disputed" && (participant(r.since_event, "ruler") == r.b_id ||
+                                                             participant(r.since_event, "claimant") == r.b_id);
+            if (!ok) {
+                return at + "parent since_event " + int_text(r.since_event) + " is not a succession_disputed of the child";
+            }
+            if (r.until) {
+                return at + "parent with an end";
+            }
+        }
+    }
+    for (auto& [civ, rows] : ruled_of) {
+        std::stable_sort(rows.begin(), rows.end(),
+                         [](const db::RelationRow* x, const db::RelationRow* y) { return x->since_event < y->since_event; });
+        for (std::size_t i = 1; i < rows.size(); ++i) {
+            const db::RelationRow& p = *rows[i - 1];
+            const db::RelationRow& r = *rows[i];
+            if (!p.until || r.since_event <= p.until_event) {
+                const std::string at = "corrupt table 'relation': row (" + int_text(r.a_type) + ", " + int_text(r.a_id) +
+                                       ", " + int_text(r.b_type) + ", " + int_text(r.b_id) + ", " + r.kind + ", " +
+                                       int_text(r.since) + "): ";
+                return at + "two rulers of civilization " + int_text(civ) + " at event " + int_text(r.since_event);
+            }
+        }
+    }
+    // Events (E1 to E5).
+    for (const db::EventParticipantRow& p : t.participants) {
+        if (p.entity_type == static_cast<std::int64_t>(EntityType::figure) && figure_of(p.entity_id) == nullptr) {
+            return "corrupt table 'event': row " + int_text(p.event) + ": figure " + int_text(p.entity_id) +
+                   " has no row";
+        }
+    }
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "battle_led" && participant(e.id, "winner_general") == 0 &&
+            participant(e.id, "loser_general") == 0) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": battle_led without a general";
+        }
+    }
+    constexpr std::int64_t MAX = std::numeric_limits<std::int64_t>::max();
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const std::string_view k = kind_key(v.event);
+        const KindDef* kind = cat.find(k);
+        if (kind == nullptr) {
+            continue;
+        }
+        std::string_view key;
+        std::int64_t hi = 1;
+        const auto is = [&](std::string_view kk, std::string_view vk) {
+            if (k == kk && v.seq == kind->value_seq(vk)) {
+                key = vk;
+                return true;
+            }
+            return false;
+        };
+        if (is("figure_died", "how")) {
+            hi = 2;
+        } else if (is("succession_disputed", "outcome") || is("exiled", "hosted") || is("general_appointed", "again") ||
+                   is("tower_founded", "library")) {
+            hi = 1;
+        } else if (is("figure_died", "age") || is("blight", "dead") || is("monster_slain_by_hero", "hunters") ||
+                   is("battle_led", "pass")) {
+            hi = MAX;
+        } else {
+            continue;
+        }
+        if (v.value < 0 || v.value > hi) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value " + std::string(key) + " " +
+                   int_text(v.value) + " outside 0 to " + (hi == MAX ? std::string("its maximum") : int_text(hi));
+        }
+    }
+    std::vector<std::pair<std::size_t, std::size_t>> vals(t.events.size(), {0, 0});
+    for (std::size_t i = 0; i < t.values.size(); ++i) {
+        const std::int64_t e = t.values[i].event;
+        if (e >= 1 && e <= n_events) {
+            auto& r = vals[static_cast<std::size_t>(e - 1)];
+            if (r.first == r.second) {
+                r = {i, i};
+            }
+            r.second = i + 1;
+        }
+    }
+    const auto value_of = [&](std::int64_t event, std::string_view key) -> std::int64_t {
+        const KindDef* kind = cat.find(kind_key(event));
+        const std::int64_t seq = kind != nullptr ? kind->value_seq(key) : 0;
+        const auto [a, b] = vals[static_cast<std::size_t>(event - 1)];
+        for (std::size_t i = a; i < b; ++i) {
+            if (t.values[i].seq == seq) {
+                return t.values[i].value;
+            }
+        }
+        return -1;
+    };
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        if (k == "succession_disputed" && (value_of(e.id, "outcome") == 1) != (participant(e.id, "new_realm") != 0)) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": succession_disputed roles and values disagree";
+        }
+        if (k == "exiled" && (value_of(e.id, "hosted") == 1) != (participant(e.id, "host") != 0)) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": exiled roles and values disagree";
+        }
+        if (k == "book_written" && book_events.count(e.id) == 0) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": book_written without its book row";
+        }
+    }
+    return std::nullopt;
 }
 
 // --- render_event (8.5) ------------------------------------------------------------------
@@ -2324,10 +2862,26 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         ps.push_back(&p);
                     }
                 }
-                if ((t.form == Form::with || t.form == Form::against) && !ps.empty()) {
-                    out += t.form == Form::with ? ", with " : " against ";  // P5-04 8.2
+                if (t.form == Form::under && (ps.empty() || ps.front()->entity_type ==
+                                                               static_cast<std::int64_t>(EntityType::civilization))) {
+                    // P5-06 7.9: a civilization role names the ruler recorded
+                    // at the event of its first participant, else nothing.
+                    const std::int64_t f =
+                        ps.empty() ? 0 : view.ruler_at_event(ps.front()->entity_id, event_id);
+                    if (f != 0) {
+                        const std::string* n = view.name(EntityType::figure, f);
+                        if (n == nullptr) {
+                            fail(at + "no name for figure " + int_text(f));
+                        }
+                        out += " under ";
+                        append_name(*n, EntityType::figure, f);
+                    }
+                    break;
                 }
-                if (t.form == Form::all || t.form == Form::with || t.form == Form::against) {
+                if ((t.form == Form::with || t.form == Form::against || t.form == Form::under) && !ps.empty()) {
+                    out += t.form == Form::with ? ", with " : (t.form == Form::under ? " under " : " against ");
+                }
+                if (t.form == Form::all || t.form == Form::with || t.form == Form::against || t.form == Form::under) {
                     for (std::size_t i = 0; i < ps.size(); ++i) {
                         if (i > 0) {
                             out += i + 1 == ps.size() ? " and " : ", ";
@@ -2418,6 +2972,22 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                     fail(at + "no beast " + int_text(b));
                 }
                 out += *s;
+                break;
+            }
+            case TokenType::book: {  // P5-06 7.9: the book row of this event
+                const std::string* s = view.book_title_of_event(event_id);
+                if (s == nullptr) {
+                    fail(at + "no book for event " + int_text(event_id));
+                }
+                // A title has no link; its leading "The " is lowered as a name's.
+                const bool sentence_start =
+                    out.empty() || (out.size() >= 2U && out.compare(out.size() - 2U, 2U, ". ") == 0);
+                if (!sentence_start && s->compare(0, 4, "The ") == 0) {
+                    out += "the ";
+                    out.append(*s, 4, std::string::npos);
+                } else {
+                    out += *s;
+                }
                 break;
             }
             case TokenType::causes: {

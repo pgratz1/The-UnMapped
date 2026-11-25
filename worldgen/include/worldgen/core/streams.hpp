@@ -148,8 +148,24 @@ inline constexpr std::string_view hist_alliances_join = "hist.alliances.join";
 inline constexpr std::string_view hist_alliances_trade = "hist.alliances.trade";
 inline constexpr std::string_view hist_alliances_spoils = "hist.alliances.spoils";
 inline constexpr std::string_view hist_alliances_mine = "hist.alliances.mine";
+// P5-06 3 (generator 0.27.0).
+inline constexpr std::string_view hist_figures_reign = "hist.figures.reign";
+inline constexpr std::string_view hist_figures_regnal = "hist.figures.regnal";
+inline constexpr std::string_view hist_figures_life = "hist.figures.life";
+inline constexpr std::string_view hist_figures_appoint = "hist.figures.appoint";
+inline constexpr std::string_view hist_figures_skill = "hist.figures.skill";
+inline constexpr std::string_view hist_figures_fall = "hist.figures.fall";
+inline constexpr std::string_view hist_figures_exile = "hist.figures.exile";
+inline constexpr std::string_view hist_figures_hero = "hist.figures.hero";
+inline constexpr std::string_view hist_figures_caster = "hist.figures.caster";
+inline constexpr std::string_view hist_figures_book = "hist.figures.book";
+inline constexpr std::string_view hist_figures_blight = "hist.figures.blight";
+inline constexpr std::string_view hist_figures_tower_name = "hist.figures.tower_name";
+inline constexpr std::string_view hist_names_person = "hist.names.person";
+inline constexpr std::string_view hist_names_book = "hist.names.book";
+inline constexpr std::string_view hist_monsters_hero_fall = "hist.monsters.hero_fall";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 82> all_stream_names = {
+inline constexpr std::array<std::string_view, 97> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -232,6 +248,21 @@ inline constexpr std::array<std::string_view, 82> all_stream_names = {
     hist_alliances_trade,
     hist_alliances_spoils,
     hist_alliances_mine,
+    hist_figures_reign,
+    hist_figures_regnal,
+    hist_figures_life,
+    hist_figures_appoint,
+    hist_figures_skill,
+    hist_figures_fall,
+    hist_figures_exile,
+    hist_figures_hero,
+    hist_figures_caster,
+    hist_figures_book,
+    hist_figures_blight,
+    hist_figures_tower_name,
+    hist_names_person,
+    hist_names_book,
+    hist_monsters_hero_fall,
 };
 
 }  // namespace worldgen::streams

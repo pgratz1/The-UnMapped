@@ -210,6 +210,16 @@ public:
     [[nodiscard]] std::span<const db::MonsterRow> monster_rows() const noexcept { return monster_rows_; }
     [[nodiscard]] std::span<const db::SiteRow> site_rows() const noexcept { return site_rows_; }
 
+    // P5-06 7.9 (schema 12): the rows of tables figure and book as read; the
+    // recorded ruler of civilization `civ` at event `event` (the figure a of
+    // the ruled row (a, civ) with since_event <= event and (until_event 0 or
+    // event <= until_event); the first such row by since_event), 0 when none;
+    // the title of the book row whose event is `event`, nullptr when none.
+    [[nodiscard]] std::span<const db::FigureRow> figure_rows() const noexcept { return figure_rows_; }
+    [[nodiscard]] std::span<const db::BookRow> book_rows() const noexcept { return book_rows_; }
+    [[nodiscard]] std::int64_t ruler_at_event(std::int64_t civ, std::int64_t event) const noexcept;
+    [[nodiscard]] const std::string* book_title_of_event(std::int64_t event) const noexcept;
+
 private:
     struct MonsterNames {
         std::string name;
@@ -245,6 +255,17 @@ private:
     // P5-03 (schema 10): the phrase lists, ascending id.
     std::vector<std::pair<std::int64_t, std::vector<std::string>>> beast_phrases_;
     std::vector<std::pair<std::int64_t, std::vector<std::string>>> monster_kind_phrases_;
+    // P5-06 (schema 12): the figure and book rows, the display names
+    // (ascending id), the ruled rows as (civ, since_event, until_event,
+    // figure) sorted, and (event, title) ascending event.
+    std::vector<db::FigureRow> figure_rows_;
+    std::vector<db::BookRow> book_rows_;
+    std::vector<std::pair<std::int64_t, std::string>> figures_;
+    struct Reign {
+        std::int64_t civ = 0, since = 0, until = 0, figure = 0;
+    };
+    std::vector<Reign> reigns_;
+    std::vector<std::pair<std::int64_t, std::string>> book_titles_;
 };
 
 // P3-07 r21 26.6: the first problem of the region_name rows (primary-key
@@ -296,6 +317,40 @@ struct MonsterTables {
     std::span<const std::int64_t> civ_endings;
 };
 [[nodiscard]] std::optional<std::string> monster_tables_problem(const MonsterTables& t);
+
+// P5-06 9.4 (schema 12): the first problem of the tables figure and book, of
+// the relation rows of the kinds ruled, served, rival and parent, and of the
+// events of kinds 79 to 92, in the order of 9.4, or std::nullopt. Called by
+// both readers after their monster checks, so both give the same first
+// error. Spans as for MonsterTables; races in primary-key order (their
+// awakening years), culture_ids ascending.
+struct FigureTables {
+    std::span<const db::FigureRow> figures;
+    std::span<const db::BookRow> books;
+    std::span<const db::RelationRow> relations;
+    std::span<const db::RaceRow> races;
+    std::span<const std::int64_t> culture_ids;
+    std::span<const std::int64_t> civ_ids;
+    std::span<const std::int64_t> civ_endings;  // per civ_ids entry, 0 none
+    std::span<const std::int64_t> region_ids;
+    std::span<const db::SettlementRow> settlements;
+    std::span<const db::SiteRow> sites;
+    std::span<const db::EventRow> events;
+    std::span<const db::EventParticipantRow> participants;
+    std::span<const db::EventValueRow> values;
+    const EventCatalogue* catalogue = nullptr;
+};
+[[nodiscard]] std::optional<std::string> figure_tables_problem(const FigureTables& t);
+
+// P5-06 9.4: the role words ruler, claimant, general, hero, caster (roles 1
+// to 5), "?" otherwise; the temper words steady, warlike, peaceable,
+// grasping, just (0 to 4).
+[[nodiscard]] std::string_view figure_role_word(std::int64_t role) noexcept;
+[[nodiscard]] std::string_view figure_temper_word(std::int64_t temper) noexcept;
+
+// P5-06 6.10, 6.14: the display name of a figure row: name, " " + the roman
+// numeral of regnal when it is 2 or more, " " + the epithet when not empty.
+[[nodiscard]] std::string figure_display_name(const db::FigureRow& row);
 
 // P5-02 8.3: the ending code of a settlement whose ruin event is `ruin` (0
 // when unknown: 5), given the kind key of an event and its causes.

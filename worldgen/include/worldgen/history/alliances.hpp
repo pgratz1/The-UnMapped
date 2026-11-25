@@ -88,6 +88,8 @@ public:
     // 7.16: the sites of the world (set once by the stage); without it no
     // mine opens.
     void set_sites(MonstersSubsystem* monsters) noexcept { sites_ = monsters; }
+    // P5-06 7.1, 7.3: the figures (set once by the stage; nullptr: none).
+    void set_figures(const FigureView* figures) noexcept { figures_ = figures; }
 
     [[nodiscard]] std::span<const Step> steps() const override;  // T2, T6, Q4
     void run(StepContext& context) override;
@@ -197,6 +199,7 @@ private:
     ConflictSubsystem& conflict_;
     RelationsSubsystem& relations_;
     MonstersSubsystem* sites_ = nullptr;
+    const FigureView* figures_ = nullptr;  // P5-06 7.1
     AlliancesTuning tuning_;
     bool prepared_ = false;
     std::uint64_t form_key_ = 0, join_key_ = 0, trade_key_ = 0, spoils_key_ = 0, mine_key_ = 0;

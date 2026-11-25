@@ -255,6 +255,14 @@ void StageContext::write_settlement_race(const db::SettlementRaceRow& row) {
     state_->stage.write_settlement_race(row);
 }
 
+void StageContext::write_figure(const db::FigureRow& row) {
+    state_->stage.write_figure(row);
+}
+
+void StageContext::write_book(const db::BookRow& row) {
+    state_->stage.write_book(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

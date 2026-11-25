@@ -1,0 +1,43 @@
+#pragma once
+
+// The const reads the other history subsystems make of the figures (spec
+// docs/specs/p5-06-figures.md 7.1). Declared apart from figures.hpp so that
+// conflict, peoples, monsters and alliances can hold a FigureView without
+// including the subsystem.
+
+#include <cstdint>
+
+namespace worldgen::history {
+
+// Valid from construction: with nothing named every factor is neutral. With
+// no view set, every reader is as at 0.26.0.
+class FigureView {
+public:
+    virtual ~FigureView() = default;
+    // 7.2: the strain factor of civ's current reign, normalized by its race
+    // (1000 with no reign).
+    [[nodiscard]] virtual std::int64_t strain_permille(std::int64_t civ) const = 0;
+    // 7.3: the factor on strain toward an ally (1000 with no reign).
+    [[nodiscard]] virtual std::int64_t allied_strain_permille(std::int64_t civ) const = 0;
+    // 7.3: added to the grant of a share of spoils (0 with no reign; may be negative).
+    [[nodiscard]] virtual std::int64_t spoils_permille(std::int64_t civ) const = 0;
+    // 7.4: added to split_permille at a crisis of civ in the current year.
+    [[nodiscard]] virtual std::int64_t split_bonus_permille(std::int64_t civ) const = 0;
+    // 7.6: the serving general of civ in the war of declaration event `war`;
+    // figure 0: none (skill 0).
+    struct General {
+        std::int64_t figure = 0, skill = 0;
+    };
+    [[nodiscard]] virtual General general_of(std::int64_t war, std::int64_t civ) const = 0;
+    // 7.7: civ's living hero; figure 0: none (every term 0). fall_permille
+    // is the chance that a failed hunt kills the hero (engineer's reading:
+    // the tuning hero_fall_permille, which monsters applies).
+    struct Hero {
+        std::int64_t figure = 0, hunt_permille = 0, might_permille = 0, fall_permille = 0;
+    };
+    [[nodiscard]] virtual Hero hero_of(std::int64_t civ) const = 0;
+    // 8.5: the stage's write check.
+    [[nodiscard]] virtual bool figure_exists(std::int64_t figure) const = 0;
+};
+
+}  // namespace worldgen::history

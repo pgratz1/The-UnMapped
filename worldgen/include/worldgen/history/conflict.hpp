@@ -25,6 +25,7 @@
 
 #include "worldgen/data/content.hpp"
 #include "worldgen/history/engine.hpp"
+#include "worldgen/history/figures_view.hpp"
 #include "worldgen/history/peoples.hpp"
 
 namespace worldgen::history {
@@ -383,6 +384,8 @@ public:
     // P5-04 7.1: alliances, trade and arms (set once by the stage; nullptr:
     // none, as at 0.25.0).
     void set_alliances(const AllianceView* view) noexcept { alliances_ = view; }
+    // P5-06 7.1: the figures (set once by the stage; nullptr: none, as at 0.26.0).
+    void set_figures(const FigureView* view) noexcept { figures_ = view; }
 
     // P5-04 7.13: const reads with the live state of the step.
     [[nodiscard]] std::int64_t disposition_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
@@ -618,6 +621,7 @@ private:
     std::map<std::int64_t, std::int64_t> quarrel_with_;
     const DispositionView* dispositions_ = nullptr;  // P5-03 7.1
     const AllianceView* alliances_ = nullptr;        // P5-04 7.1
+    const FigureView* figures_ = nullptr;            // P5-06 7.1
 };
 
 }  // namespace worldgen::history

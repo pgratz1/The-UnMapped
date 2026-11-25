@@ -205,6 +205,16 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     for (const Row& r : h.rows[20]) {
         t.settlement_races.push_back(db::SettlementRaceRow{i64(r, 0), i64(r, 1), i64(r, 2), i64(r, 3), i64(r, 4)});
     }
+    // Schema 12 (P5-06 9.1, 9.3).
+    for (const Row& r : h.rows[21]) {
+        t.figures.push_back(db::FigureRow{i64(r, 0), r[1].bytes, r[2].bytes, i64(r, 3), i64(r, 4), i64(r, 5),
+                                          i64(r, 6), i64(r, 7), i64(r, 8), i64(r, 9), opt(r, 10), i64(r, 11),
+                                          i64(r, 12), i64(r, 13), i64(r, 14), i64(r, 15), i64(r, 16), i64(r, 17),
+                                          i64(r, 18)});
+    }
+    for (const Row& r : h.rows[22]) {
+        t.books.push_back(db::BookRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5)});
+    }
 }
 
 // --- The checks of 5.3 ------------------------------------------------------
@@ -649,6 +659,42 @@ private:
         if (std::optional<std::string> why = monster_tables_problem(mt)) {
             throw Corrupt{*why};
         }
+        // P5-06 9.4 (schema 12), after P5-03's checks.
+        std::vector<std::int64_t> culture_ids;
+        for (const Row& r : cultures_) {
+            if (!r.empty() && r[0].type == db::ValueType::integer) {
+                culture_ids.push_back(r[0].integer);
+            }
+        }
+        std::stable_sort(culture_ids.begin(), culture_ids.end());
+        std::vector<std::pair<std::int64_t, std::int64_t>> endings;
+        for (const db::CivilizationRow& c : t_.civilizations) {
+            endings.emplace_back(c.id, c.ending_event);
+        }
+        std::stable_sort(endings.begin(), endings.end());
+        std::vector<std::int64_t> ending_of;
+        for (const auto& [id, ending] : endings) {
+            (void)id;
+            ending_of.push_back(ending);
+        }
+        FigureTables ft;
+        ft.figures = t_.figures;
+        ft.books = t_.books;
+        ft.relations = t_.relations;
+        ft.races = t_.races;
+        ft.culture_ids = culture_ids;
+        ft.civ_ids = civ_ids;
+        ft.civ_endings = ending_of;
+        ft.region_ids = region_ids;
+        ft.settlements = t_.settlements;
+        ft.sites = t_.sites;
+        ft.events = events;
+        ft.participants = participants;
+        ft.values = values;
+        ft.catalogue = &cat;
+        if (std::optional<std::string> why = figure_tables_problem(ft)) {
+            throw Corrupt{*why};
+        }
     }
 
     void gods_and_races() const {
@@ -800,7 +846,10 @@ std::optional<std::string> history_reads_disagree(const HistoryView& view, const
     // view's events.
     if (!std::equal(view.monster_rows().begin(), view.monster_rows().end(), t.monsters.begin(), t.monsters.end()) ||
         !std::equal(view.site_rows().begin(), view.site_rows().end(), t.sites.begin(), t.sites.end()) ||
-        !std::equal(view.beast_rows().begin(), view.beast_rows().end(), t.beasts.begin(), t.beasts.end())) {
+        !std::equal(view.beast_rows().begin(), view.beast_rows().end(), t.beasts.begin(), t.beasts.end()) ||
+        // Schema 12: the report names figures and books of the tables by the view.
+        !std::equal(view.figure_rows().begin(), view.figure_rows().end(), t.figures.begin(), t.figures.end()) ||
+        !std::equal(view.book_rows().begin(), view.book_rows().end(), t.books.begin(), t.books.end())) {
         return std::string("corrupt table 'event': the file changed while it was read");
     }
     // P5-03: the report and the timeline name the races of the tables'

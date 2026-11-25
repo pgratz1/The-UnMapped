@@ -41,3 +41,5 @@ fear_years = 50
 fear_permille = 400
 overrun_people_ref = 800
 undead_dead_permille = 25
+# P5-06 25.3 (generator 0.27.0).
+undead_regions_ref = 64

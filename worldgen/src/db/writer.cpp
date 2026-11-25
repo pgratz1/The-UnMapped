@@ -1119,6 +1119,46 @@ void StageWriter::write_settlement_race(const SettlementRaceRow& row) {
     state_->history_keys.settlement_race = key;
 }
 
+void StageWriter::write_figure(const FigureRow& row) {
+    require_open(state_, "write_figure");
+    require_next_id("write_figure", "figure", row.id, state_->history_keys.figure);
+    const std::int64_t mid[7] = {row.role, row.race, row.culture, row.civ, row.born, row.office_from, row.start_event};
+    const std::int64_t tail[8] = {row.death_event, row.death_region, row.death_settlement, row.status,
+                                  row.reign_no,    row.regnal,       row.temper,           row.skill};
+    insert_row(state_->db.get(),
+               "INSERT INTO figure (id, name, epithet, role, race, culture, civ, born, office_from, start_event, died, "
+               "death_event, death_region, death_settlement, status, reign_no, regnal, temper, skill) VALUES (?1, "
+               "?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
+               4, mid,
+               [&row, &tail](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.epithet);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 11, row.died);
+                   for (int i = 0; rc == SQLITE_OK && i < 8; ++i) {
+                       rc = stmt.bind_int64(12 + i, tail[static_cast<std::size_t>(i)]);
+                   }
+                   return rc;
+               },
+               "figure row " + format_i64(row.id));
+    state_->history_keys.figure = row.id;
+}
+
+void StageWriter::write_book(const BookRow& row) {
+    require_open(state_, "write_book");
+    require_next_id("write_book", "book", row.id, state_->history_keys.book);
+    const std::int64_t ints[4] = {row.author, row.site, row.year, row.event};
+    insert_row(state_->db.get(),
+               "INSERT INTO book (id, title, author, site, year, event) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", 3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.title);
+                   return rc;
+               },
+               "book row " + format_i64(row.id));
+    state_->history_keys.book = row.id;
+}
+
 void StageWriter::write_region_name(const RegionNameRow& row) {
     require_open(state_, "write_region_name");
     const std::pair<std::int64_t, std::int64_t> key{row.region, row.from_year};

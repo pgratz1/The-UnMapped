@@ -40,3 +40,7 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+temper_weights = { steady = 250, warlike = 500, peaceable = 50, grasping = 150, just = 50 }
+general_permille = 400
+hero_permille = 80
+magic_permille = 150

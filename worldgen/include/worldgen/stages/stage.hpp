@@ -154,6 +154,8 @@ public:
     void write_site(const db::SiteRow& row);
     void write_race_relation(const db::RaceRelationRow& row);    // schema 10 (P5-03)
     void write_settlement_race(const db::SettlementRaceRow& row);
+    void write_figure(const db::FigureRow& row);  // schema 12 (P5-06)
+    void write_book(const db::BookRow& row);
 
 private:
     friend class detail::Pipeline;

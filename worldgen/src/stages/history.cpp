@@ -11,6 +11,7 @@
 #include "worldgen/history/alliances.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
+#include "worldgen/history/figures.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/names.hpp"
 #include "worldgen/history/peoples.hpp"
@@ -26,19 +27,23 @@ namespace {
 void check_monster_participants(const HistoryResult& r) {
     const auto monsters = static_cast<std::int64_t>(r.monsters.size());
     const auto sites = static_cast<std::int64_t>(r.sites.size());
+    const auto figures = static_cast<std::int64_t>(r.figures.size());  // P5-06 8.5
     for (const db::EventParticipantRow& p : r.event_participants) {
         const bool monster = p.entity_type == static_cast<std::int64_t>(history::EntityType::monster);
         const bool site = p.entity_type == static_cast<std::int64_t>(history::EntityType::site);
-        if ((monster && (p.entity_id < 1 || p.entity_id > monsters)) || (site && (p.entity_id < 1 || p.entity_id > sites))) {
+        const bool figure = p.entity_type == static_cast<std::int64_t>(history::EntityType::figure);
+        const std::int64_t n = monster ? monsters : (site ? sites : figures);
+        if ((monster || site || figure) && (p.entity_id < 1 || p.entity_id > n)) {
+            const char* what = monster ? "monster " : (site ? "site " : "figure ");
             const db::EventRow& e = r.events[static_cast<std::size_t>(p.event - 1)];
             for (const db::EventKindRow& row : r.event_kinds) {
                 if (row.id == e.kind) {
-                    throw FatalError("history: event " + db::format_i64(p.event) + " (" + row.key + "): " +
-                                     (monster ? "monster " : "site ") + db::format_i64(p.entity_id) + " has no row");
+                    throw FatalError("history: event " + db::format_i64(p.event) + " (" + row.key + "): " + what +
+                                     db::format_i64(p.entity_id) + " has no row");
                 }
             }
-            throw FatalError("history: event " + db::format_i64(p.event) + ": " + (monster ? "monster " : "site ") +
-                             db::format_i64(p.entity_id) + " has no row");
+            throw FatalError("history: event " + db::format_i64(p.event) + ": " + what + db::format_i64(p.entity_id) +
+                             " has no row");
         }
     }
 }
@@ -85,10 +90,19 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     history::AlliancesSubsystem alliances(peoples, conflict, relations, content);
     conflict.set_alliances(&alliances);
     alliances.set_sites(&monsters);
+    // P5-06 6.13 item 3: the figures run after the alliances and are every
+    // other subsystem's figure view.
+    history::FiguresSubsystem figures(peoples, content);
+    conflict.set_figures(&figures);
+    peoples.set_figures(&figures);
+    monsters.set_figures(&figures);
+    alliances.set_figures(&figures);
+    figures.set_sites(&monsters);
+    figures.set_conflict(&conflict);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances};
+    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances, &figures};
     config.tension = {&conflict, &monsters};
     config.interventions = &none;
     config.catalogue = &catalogue;
@@ -103,7 +117,9 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     relations.finish(inputs.params.span);  // P5-03 6.7: the rows of year E - 1
     result.race_relations = relations.race_relation_rows();
     result.settlement_races = relations.settlement_race_rows();
-    check_monster_participants(result);  // P5-02 10.4
+    result.figures = figures.figure_rows();  // P5-06 9.1, 9.3
+    result.books = figures.book_rows();
+    check_monster_participants(result);  // P5-02 10.4, P5-06 8.5
     return result;
 }
 
@@ -131,6 +147,9 @@ void write_history_result(StageContext& context, const HistoryResult& r) {
     // schema 10 (P5-03 16.1)
     for (const db::RaceRelationRow& row : r.race_relations) context.write_race_relation(row);
     for (const db::SettlementRaceRow& row : r.settlement_races) context.write_settlement_race(row);
+    // schema 12 (P5-06 9.1, 9.3)
+    for (const db::FigureRow& row : r.figures) context.write_figure(row);
+    for (const db::BookRow& row : r.books) context.write_book(row);
 }
 
 void run_history(StageContext& context) {

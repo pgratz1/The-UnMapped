@@ -116,6 +116,9 @@ struct HistoryTables {
     // Schema 10 (P5-03 16.4): tables race_relation and settlement_race.
     std::vector<db::RaceRelationRow> race_relations;
     std::vector<db::SettlementRaceRow> settlement_races;
+    // Schema 12 (P5-06 9.1, 9.3): tables figure and book.
+    std::vector<db::FigureRow> figures;
+    std::vector<db::BookRow> books;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };

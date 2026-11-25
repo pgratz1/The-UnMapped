@@ -24,3 +24,4 @@ max_alive = 3
 flare = false
 hoard_permille = 5
 raid_phrases = ["came down by night on", "fell upon", "prowled the edges of"]
+slayer_epithet = "Trollbane"

@@ -1095,6 +1095,9 @@ void AlliancesSubsystem::spoils(StepContext& ctx, Joined& j) {
     g = checked_add(g, floor_div(checked_mul(tuning_.spoils_warmth_permille, warmth(ctx, s.winner, j.ally)), 1000));
     g = checked_add(g, floor_div(checked_mul(tuning_.spoils_part_permille, part), 1000));
     g = checked_sub(g, floor_div(checked_mul(tuning_.spoils_need_permille, ex), 1000));
+    if (figures_ != nullptr) {  // P5-06 7.3: the principal's temper, inside the clamp
+        g = checked_add(g, figures_->spoils_permille(s.winner));
+    }
     g = clamp_i(g, tuning_.spoils_grant_min, tuning_.spoils_grant_max);
     const bool granted = chance_pm(ctx.draw(spoils_key_, word(j.war), word(j.ally), 0), g);
     EventSpec e = point_event(ctx, granted ? "spoils_shared" : "spoils_withheld", s.goal_region, 0);

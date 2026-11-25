@@ -113,6 +113,75 @@ StringGrammar name_form_grammar() noexcept {
     return StringGrammar{"a name form (letters, spaces, ' and -, with exactly one {root})", &is_valid_name_form};
 }
 
+// P5-06 4.3: epithet: ASCII letters, single spaces and -, not starting or
+// ending with a space (and not empty).
+bool is_valid_epithet(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!is_ascii_letter(c) && c != '-') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// P5-06 4.4 (engineer's reading): an epithets entry's text is an epithet or
+// the slot {slayer} alone.
+bool is_valid_epithet_text(std::string_view text) noexcept {
+    return text == "{slayer}" || is_valid_epithet(text);
+}
+
+// P5-06 4.2: book_title: ASCII letters, single spaces, ' and -, starting
+// with an upper-case letter.
+bool is_valid_book_title(std::string_view text) noexcept {
+    if (text.empty() || !(text.front() >= 'A' && text.front() <= 'Z') || text.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!is_ascii_letter(c) && !is_separator(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+StringGrammar epithet_grammar() noexcept {
+    return StringGrammar{"an epithet (ASCII letters, single spaces and -, not starting or ending with a space)",
+                         &is_valid_epithet};
+}
+
+StringGrammar epithet_text_grammar() noexcept {
+    return StringGrammar{"an epithet (ASCII letters, single spaces and -) or {slayer}", &is_valid_epithet_text};
+}
+
+StringGrammar book_title_grammar() noexcept {
+    return StringGrammar{"a book title (ASCII letters, single spaces, ' and -, starting with an upper-case letter)",
+                         &is_valid_book_title};
+}
+
+// P5-06 4.1, 4.4: a record {steady, warlike, peaceable, grasping, just}.
+constexpr std::string_view TEMPER_FIELDS[] = {"steady", "warlike", "peaceable", "grasping", "just"};
+
+Schema temper_schema(std::int64_t min, std::int64_t max) {
+    std::vector<Field> fields;
+    for (const std::string_view name : TEMPER_FIELDS) {
+        fields.push_back(Field::required(std::string(name), Type::integer(min, max)));
+    }
+    return Schema(std::move(fields));
+}
+
 // --- race (P3-01 section 3) ---------------------------------------------------------
 
 constexpr std::string_view SITE_WEIGHT_FIELDS[] = {"fertility", "forage", "timber", "ore", "fresh_water"};
@@ -559,7 +628,6 @@ Schema history_peoples_schema() {
         i("split_min_settlements", 2, 1000),
         i("split_min_regions", 2, 1000),
         i("split_permille", 0, 1000),
-        i("ruin_fade_years", 1, 100000),
         i("colony_new_region_salience", 0, 100),
         i("plague_small_salience", 0, 100),
         i("plague_major_dead", 0, 1000000),   // r6 (generator 0.17.0)
@@ -570,7 +638,8 @@ Schema history_peoples_schema() {
         i("abandon_reach_hops", 0, 16),
         i("abandon_loss_min_permille", 0, 1000),
         i("abandon_loss_max_permille", 0, 1000),
-        i("ghost_fade_years", 0, 100000),
+        // P5-06 25.1 (generator 0.27.0): ruin_fade_years and ghost_fade_years
+        // removed (every ruin stays).
     };
     std::vector<Check> checks{
         Check{"peoples_ladder", [](const Record& r) { return check_peoples_ladder(r); }},
@@ -976,12 +1045,29 @@ Schema race_schema() {
         Field::required("origin_allies", Type::array(Type::string(32), 0, 8)),
         Field::required("ally_join_permille", Type::integer(0, 1000)),
         Field::required("mining_permille", Type::integer(0, 1000)),
+        // P5-06 4.1 (generator 0.27.0): tempers, generals, heroes and magic.
+        Field::required("temper_weights", Type::record(temper_schema(0, 1000))),
+        Field::required("general_permille", Type::integer(0, 1000)),
+        Field::required("hero_permille", Type::integer(0, 1000)),
+        Field::required("magic_permille", Type::integer(0, 1000)),
     };
     std::vector<Check> checks{
         Check{"race_generation_below_lifespan", [](const Record& r) { return check_race_generation_below_lifespan(r); }},
         Check{"race_site_weights_positive", [](const Record& r) { return check_race_site_weights_positive(r); }},
         Check{"race_biomes_unique", [](const Record& r) { return check_race_biomes_unique(r); }},
         Check{"race_settlement_kinds_unique", [](const Record& r) { return check_race_settlement_kinds_unique(r); }},
+        Check{"race_temper_weights",  // P5-06 4.1
+              [](const Record& r) -> std::optional<std::string> {
+                  const Record& w = r.get_record("temper_weights");
+                  std::int64_t sum = 0;
+                  for (const std::string_view t : TEMPER_FIELDS) {
+                      sum += w.get_int(t);  // five fields of at most 1000
+                  }
+                  if (sum < 1) {
+                      return std::string("temper_weights must not all be 0");
+                  }
+                  return std::nullopt;
+              }},
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -1015,6 +1101,12 @@ Schema culture_naming_schema() {
         Field::required("civilization_forms", forms()),
         Field::required("settlement_forms", forms()),
         Field::required("site_forms", forms()),  // P5-02 4.4 (generator 0.23.0)
+        // P5-06 4.2 (generator 0.27.0).
+        Field::required("person_forms", forms()),
+        Field::required("tower_forms", forms()),
+        Field::required("library_forms", forms()),
+        Field::required("book_titles", Type::array(Type::string(48, book_title_grammar()), 4, 32)),
+        Field::required("regnal_permille", Type::integer(0, 1000)),
     });
 }
 
@@ -1289,6 +1381,8 @@ Schema monster_schema() {
         i("hoard_permille", 0, 1000),
         // P5-03 9.5 (generator 0.24.0).
         Field::required("raid_phrases", Type::array(Type::string(48, phrase_grammar()), 1, 4)),
+        // P5-06 4.3 (generator 0.27.0).
+        Field::required("slayer_epithet", Type::string(24, epithet_grammar())),
     };
     std::vector<Check> checks{
         Check{"monster_biomes", [](const Record& r) { return check_habitat_repeats(r, "biomes"); }},
@@ -1359,6 +1453,7 @@ Schema history_monsters_schema() {
         i("fear_permille", 0, 1000),
         i("overrun_people_ref", 1, 1000000),
         i("undead_dead_permille", 0, 1000),  // P5-03a 10.2
+        i("undead_regions_ref", 0, 100000),  // P5-06 25.3 (generator 0.27.0)
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
@@ -1501,6 +1596,98 @@ Schema history_alliances_schema() {
               [above](const Record& r) -> std::optional<std::string> {
                   if (r.get_int("trade_min_disposition") >= r.get_int("ally_full_disposition")) {
                       return above(r, "trade_min_disposition", "ally_full_disposition", " is not below ");
+                  }
+                  return std::nullopt;
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+// P5-06 4.4 (generator 0.27.0): the tuning id history.figures, in the
+// table's order, with its three checks.
+Schema history_figures_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    const Schema epithet(std::vector<Field>{
+        Field::required("role", Type::enumeration({"ruler", "claimant", "general", "hero", "caster"})),
+        Field::required("deed", Type::enumeration({"founded_years", "wars_won", "conquests", "betrayals", "realm_fell",
+                                                   "reign_permille", "battles_won", "battles_unbeaten", "slew_might",
+                                                   "exiled", "books", "blights"})),
+        i("min", 1, 100000),
+        i("substantial", 0, 100000),
+        Field::required("text", Type::string(24, epithet_text_grammar())),
+    });
+    std::vector<Field> fields{
+        Field::required("name_rulers", Type::boolean()),
+        i("reign_min_permille", 1, 4000),
+        i("reign_span_permille", 0, 4000),
+        i("accession_age_permille", 0, 1000),
+        i("accession_span_permille", 0, 1000),
+        Field::required("temper_strain_permille", Type::record(temper_schema(0, 4000))),
+        Field::required("temper_allied_permille", Type::record(temper_schema(0, 4000))),
+        Field::required("temper_spoils_permille", Type::record(temper_schema(-1000, 1000))),
+        i("short_reign_permille", 0, 4000),
+        i("short_reign_split_permille", 0, 1000),
+        i("exile_permille", 0, 1000),
+        i("exile_hops", 0, 8),
+        i("general_scale_permille", 0, 1000),
+        i("skill_min", 0, 1000),
+        i("skill_max", 0, 1000),
+        i("career_permille", 0, 1000),
+        i("fall_loser_permille", 0, 1000),
+        i("fall_winner_permille", 0, 1000),
+        i("general_age_permille", 0, 1000),
+        i("general_age_span_permille", 0, 1000),
+        i("hero_age_permille", 0, 1000),
+        i("hero_age_span_permille", 0, 1000),
+        i("life_min_permille", 0, 4000),
+        i("life_span_permille", 0, 4000),
+        i("hero_scale_permille", 0, 1000),
+        i("hero_hunt_permille", 0, 1000),
+        i("hero_might_permille", 0, 4000),
+        i("hero_fall_permille", 0, 1000),
+        i("caster_ppm", 0, 1000000),
+        i("caster_age_permille", 0, 1000),
+        i("caster_age_span_permille", 0, 1000),
+        i("book_permille", 0, 1000),
+        i("books_max", 0, 16),
+        i("blight_ppm", 0, 1000000),
+        i("blight_toll_permille", 0, 1000),
+        i("regnal_max", 2, 39),
+        Field::required("epithets", Type::array(Type::record(epithet), 0, 32)),
+        i("epithet_repeat_max", 1, 100),
+    };
+    std::vector<Check> checks{
+        Check{"figures_skill_ordered",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("skill_min") > r.get_int("skill_max")) {
+                      return "skill_min " + int_text(r.get_int("skill_min")) + " is above skill_max " +
+                             int_text(r.get_int("skill_max"));
+                  }
+                  return std::nullopt;
+              }},
+        Check{"figures_epithet_slayer",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::vector<Value>& list = r.get_array("epithets");
+                  for (std::size_t k = 0; k < list.size(); ++k) {
+                      const Record& e = list[k].as_record();
+                      if (e.get_string("text") == "{slayer}" && e.get_string("deed") != "slew_might") {
+                          return "epithets[" + uint_text(k) + "]: {slayer} needs the deed slew_might";
+                      }
+                  }
+                  return std::nullopt;
+              }},
+        Check{"figures_epithet_thresholds",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::vector<Value>& list = r.get_array("epithets");
+                  for (std::size_t k = 0; k < list.size(); ++k) {
+                      const Record& e = list[k].as_record();
+                      const std::int64_t sub = e.get_int("substantial");
+                      if (sub != 0 && sub < e.get_int("min")) {
+                          return "epithets[" + uint_text(k) + "]: substantial " + int_text(sub) + " is below min " +
+                                 int_text(e.get_int("min"));
+                      }
                   }
                   return std::nullopt;
               }},

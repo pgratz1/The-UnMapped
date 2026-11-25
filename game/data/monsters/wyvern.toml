@@ -24,3 +24,4 @@ max_alive = 2
 flare = false
 hoard_permille = 0
 raid_phrases = ["stooped on", "swept down on", "came screaming down on"]
+slayer_epithet = "Wyrmbane"

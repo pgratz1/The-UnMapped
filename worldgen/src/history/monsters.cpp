@@ -57,13 +57,15 @@ enum Stream : std::size_t {
     RAID_TARGET,
     BOLD_KIND,  // P5-03 13
     FEAR,       // P5-03 9.4
+    HERO_FALL,  // P5-06 7.7
 };
-constexpr std::array<std::string_view, 15> STREAM_NAMES = {
+constexpr std::array<std::string_view, 16> STREAM_NAMES = {
     streams::hist_beasts_bold,     streams::hist_monsters_wake,      streams::hist_monsters_rise,
     streams::hist_monsters_sleep,  streams::hist_monsters_rewake,    streams::hist_monsters_raid,
     streams::hist_monsters_raid_toll, streams::hist_monsters_overrun, streams::hist_monsters_hunt,
     streams::hist_monsters_hunt_outcome, streams::hist_monsters_lair_name, streams::hist_sites_outpost,
     streams::hist_monsters_raid_target, streams::hist_beasts_bold_kind, streams::hist_monsters_fear,
+    streams::hist_monsters_hero_fall,
 };
 
 constexpr std::array<Step, 5> STEPS = {Step::t1, Step::t4, Step::t6, Step::q1, Step::q4};
@@ -256,6 +258,7 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.fear_permille = r.get_int("fear_permille");
     t.overrun_people_ref = r.get_int("overrun_people_ref");
     t.undead_dead_permille = r.get_int("undead_dead_permille");
+    t.undead_regions_ref = r.get_int("undead_regions_ref");  // P5-06 25.3
     return t;
 }
 
@@ -322,6 +325,9 @@ std::vector<MonsterKindDef> monster_kind_defs_from(const data::ContentSet& conte
         k.hoard_permille = r.get_int("hoard_permille");
         if (r.find("raid_phrases") != nullptr) {  // P5-03 9.5
             k.raid_phrases = string_list(r, "raid_phrases");
+        }
+        if (r.find("slayer_epithet") != nullptr) {  // P5-06 4.3
+            k.slayer_epithet = r.get_string("slayer_epithet");
         }
         out.push_back(std::move(k));
     }
@@ -541,13 +547,15 @@ std::int64_t MonstersSubsystem::growth_permille(std::int64_t region) const {
 
 bool MonstersSubsystem::holds_site(std::int64_t settlement) const {
     return std::any_of(sites_.begin(), sites_.end(),
-                       [settlement](const Site& t) { return t.kind != 3 && !t.ended_year && t.settlement == settlement; });
+                       [settlement](const Site& t) {
+                           return (t.kind == 1 || t.kind == 2) && !t.ended_year && t.settlement == settlement;  // P5-06 7.8
+                       });
 }
 
 void MonstersSubsystem::open_site(const SiteSpec& spec) {
-    if (spec.id != next_site_id() || spec.kind != 3) {
+    if (spec.id != next_site_id() || (spec.kind != 3 && spec.kind != 4)) {  // P5-06 7.8
         fail("history: monsters: open_site: site " + int_text(spec.id) + " of kind " + int_text(spec.kind) +
-             " is not the next site of kind 3");
+             " is not the next site of kind 3 or 4");
     }
     Site t;
     t.id = spec.id;
@@ -569,6 +577,19 @@ void MonstersSubsystem::end_site_seam(std::int64_t id, std::int64_t year, std::i
         fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine");
     }
     end_site(id, year, event, ending);
+}
+
+std::size_t MonstersSubsystem::monster_kind_of(std::int64_t id) const {
+    return monster(id).kind;
+}
+
+std::optional<MonstersSubsystem::HeightCell> MonstersSubsystem::height_cell(const StepContext& ctx,
+                                                                            std::int64_t region) const {
+    const std::optional<Cell> c = wild_cell(ctx, region, true);
+    if (!c) {
+        return std::nullopt;
+    }
+    return HeightCell{c->x, c->y};
 }
 
 bool MonstersSubsystem::shunned(std::int64_t region) const {
@@ -800,7 +821,8 @@ void MonstersSubsystem::read_log(const StepContext& ctx) {
             continue;
         }
         std::int64_t dead = -1;
-        if (kind == "battle" || kind == "battle_at_pass" || kind == "allied_battle") {  // P5-04 11.1
+        if (kind == "battle" || kind == "battle_at_pass" || kind == "allied_battle" ||
+            kind == "battle_led") {  // P5-04 11.1, P5-06 11.1
             dead = checked_add(ctx.event_value(e, "winner_dead"), ctx.event_value(e, "loser_dead"));
         } else if (kind == "sacked") {
             dead = ctx.event_value(e, "dead");
@@ -829,9 +851,15 @@ bool MonstersSubsystem::rise(StepContext& ctx) {
             world_people = checked_add(world_people, s.population);
         }
     }
-    const std::int64_t threshold = std::max(
-        tuning_.undead_min_dead, floor_div(checked_mul(world_people, tuning_.undead_dead_permille), 1000));
-    const std::int64_t need = floor_div(checked_mul(threshold, 1000), std::max<std::int64_t>(1, pressure_));
+    // P5-06 25.3: the population term scaled by undead_regions_ref on large
+    // maps, and no rise in the needed slaughter below normal pressure.
+    std::int64_t tpop = floor_div(checked_mul(world_people, tuning_.undead_dead_permille), 1000);
+    if (tuning_.undead_regions_ref > 0) {
+        tpop = floor_div(checked_mul(tpop, tuning_.undead_regions_ref),
+                         std::max(tuning_.undead_regions_ref, region_count_));
+    }
+    const std::int64_t threshold = std::max(tuning_.undead_min_dead, tpop);
+    const std::int64_t need = floor_div(checked_mul(threshold, 1000), std::max<std::int64_t>(1000, pressure_));
     for (std::int64_t r = 1; r <= region_count_; ++r) {
         const std::vector<WindowEntry>& w = windows_[static_cast<std::size_t>(r - 1)];
         std::int64_t sum = 0;
@@ -914,7 +942,7 @@ void MonstersSubsystem::create(StepContext& ctx, std::size_t k, std::int64_t reg
             const bool dead_place = x != 0 && (state.settlement(x).status == SettlementStatus::ruined ||
                                                state.settlement(x).status == SettlementStatus::faded);
             const bool occupied = std::any_of(sites_.begin(), sites_.end(), [x](const Site& t) {
-                return t.kind != 3 && !t.ended_year && t.settlement == x;
+                return (t.kind == 1 || t.kind == 2) && !t.ended_year && t.settlement == x;  // P5-06 7.8
             });
             if (dead_place && !occupied) {
                 lair_settlement = x;
@@ -1330,9 +1358,13 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
         for (const std::int64_t year : r.years) {
             r_c += ctx.year() - year <= tuning_.hunt_memory_years ? 1 : 0;
         }
+        // P5-06 7.7: the realm's hero, if any, raises the chance and the strength.
+        const FigureView::Hero hero = figures_ != nullptr ? figures_->hero_of(c) : FigureView::Hero{};
         const std::int64_t p_hunt = std::min(
-            tuning_.hunt_max_permille,
-            checked_add(tuning_.hunt_permille, checked_mul(std::max<std::int64_t>(0, r_c - 1), tuning_.hunt_raid_permille)));
+            checked_add(tuning_.hunt_max_permille, hero.hunt_permille),
+            checked_add(checked_add(tuning_.hunt_permille,
+                                    checked_mul(std::max<std::int64_t>(0, r_c - 1), tuning_.hunt_raid_permille)),
+                        hero.hunt_permille));
         std::int64_t hunters = 0;
         for (std::int64_t sid = 1; sid <= settlement_count(state); ++sid) {
             const Settlement& u = state.settlement(sid);
@@ -1348,7 +1380,8 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
         for (const auto& [race, value] : prowess_) {
             prowess = race == state.civ(c).race ? value : prowess;
         }
-        const std::int64_t strength = floor_div(checked_mul(hunters, prowess), 1000);
+        std::int64_t strength = floor_div(checked_mul(hunters, prowess), 1000);
+        strength = floor_div(checked_mul(strength, checked_add(1000, hero.might_permille)), 1000);
         if (strength == 0) {
             continue;
         }
@@ -1360,9 +1393,12 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
         const auto u = static_cast<std::int64_t>(pick(ctx.draw(key(HUNT_OUTCOME), word(id), word(c), 0), 1000));
         const std::int64_t region = lair_region(monster(id));
         if (u < odds) {
-            EventSpec e = point_event(ctx, "monster_slain", region, 0);
+            EventSpec e = point_event(ctx, hero.figure != 0 ? "monster_slain_by_hero" : "monster_slain", region, 0);
             e.participants = {Participant{"monster", EntityType::monster, id},
                               Participant{"slayer", EntityType::civilization, c}};
+            if (hero.figure != 0) {
+                e.participants.push_back(Participant{"hero", EntityType::figure, hero.figure});
+            }
             e.values = {hunters};
             e.causes = {r.event};
             const std::int64_t ev = ctx.append(e);
@@ -1384,6 +1420,17 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
             m.status = MonsterStatus::asleep;
             m.sleeping_event = ev;
             m.drive_until = checked_add(ctx.year(), tuning_.drive_years);
+            return;
+        }
+        // P5-06 7.7: a failed hunt led by a hero may kill the hero; either
+        // ends the hunts of the year.
+        if (hero.figure != 0 && chance_pm(ctx.draw(key(HERO_FALL), word(id), word(c), 0), hero.fall_permille)) {
+            EventSpec e = point_event(ctx, "hero_slain", region, 0);
+            e.participants = {Participant{"figure", EntityType::figure, hero.figure},
+                              Participant{"civilization", EntityType::civilization, c},
+                              Participant{"monster", EntityType::monster, id}};
+            e.causes = {r.event};
+            (void)ctx.append(e);
             return;
         }
     }

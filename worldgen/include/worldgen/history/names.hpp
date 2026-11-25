@@ -39,6 +39,13 @@ struct CultureNaming {
     // P5-02 9.1: a monster kind's name_forms; empty in a culture's naming
     // (the monsters subsystem fills a copy of the naming culture's record).
     std::vector<std::string> monster_forms;
+    // P5-06 4.2 (generator 0.27.0): persons, towers, libraries, book titles
+    // and the chance of a regnal name.
+    std::vector<std::string> person_forms;
+    std::vector<std::string> tower_forms;
+    std::vector<std::string> library_forms;
+    std::vector<std::string> book_titles;
+    std::int64_t regnal_permille = 0;
 };
 
 // Reads the naming record of a culture (the value of its `naming` field,
@@ -53,9 +60,10 @@ enum class NameKind : std::uint8_t {
     settlement,
     monster,  // P5-02 9.1
     site,
+    person,  // P5-06 6.11
 };
 
-// "god", "civilization", "settlement", "monster" or "site".
+// "god", "civilization", "settlement", "monster", "site" or "person".
 [[nodiscard]] std::string_view name_kind_text(NameKind kind) noexcept;
 
 // The stream name of a kind: hist.names.<kind> (P3-02 4.5).

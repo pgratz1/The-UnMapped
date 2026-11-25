@@ -38,3 +38,7 @@ stances = [{ race = "faerie", value = 200 }]
 origin_allies = ["faerie"]
 ally_join_permille = 700
 mining_permille = 0
+temper_weights = { steady = 450, warlike = 100, peaceable = 250, grasping = 50, just = 150 }
+general_permille = 500
+hero_permille = 100
+magic_permille = 1000

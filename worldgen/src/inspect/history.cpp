@@ -26,7 +26,7 @@ struct Shape {
     std::size_t nullable;
 };
 
-constexpr std::array<Shape, 21> SHAPES = {{
+constexpr std::array<Shape, 23> SHAPES = {{
     {db::EVENT_KIND_TABLE, 7, {1, 6, 7, 7}, 7},
     {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6, 6, 6}, 6},
     {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3, 3, 3}, 3},
@@ -48,6 +48,8 @@ constexpr std::array<Shape, 21> SHAPES = {{
     {db::SITE_TABLE, 14, {1, 14, 14, 14}, 11},
     {db::RACE_RELATION_TABLE, 5, {5, 5, 5, 5}, 5},  // schema 10 (P5-03 16.1)
     {db::SETTLEMENT_RACE_TABLE, 5, {5, 5, 5, 5}, 5},
+    {db::FIGURE_TABLE, 19, {1, 2, 19, 19}, 10},  // schema 12 (P5-06 9.1)
+    {db::BOOK_TABLE, 6, {1, 6, 6, 6}, 6},
 }};
 
 std::string row_at(const std::vector<db::ColumnValue>& row) {
@@ -240,6 +242,8 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
     st.sites = n(rows[18].size());
     st.race_relations = n(rows[19].size());  // P5-03 16.3
     st.settlement_races = n(rows[20].size());
+    st.figures = n(rows[21].size());  // P5-06 9.4
+    st.books = n(rows[22].size());
     // P3-05 15.4: per race. Race rows: column 1 id, 2 key.
     std::vector<std::int64_t> race_ids;
     for (const std::vector<db::ColumnValue>& row : tables.races) {
@@ -323,6 +327,8 @@ std::string history_section_text(const HistoryStats& st) {
     line("sites", st.sites);
     line("race_relations", st.race_relations);  // P5-03 16.3
     line("settlement_races", st.settlement_races);
+    line("figures", st.figures);  // P5-06 9.4
+    line("books", st.books);
     line("population", st.population);
     for (const HistoryStats::RaceStats& r : st.races) {
         line("population_" + r.key, r.population);

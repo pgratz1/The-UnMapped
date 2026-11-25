@@ -24,3 +24,4 @@ max_alive = 1
 flare = true
 hoard_permille = 40
 raid_phrases = ["fell in fire upon", "burned the fields of", "came down in flame on"]
+slayer_epithet = "Dragonslayer"

@@ -473,6 +473,42 @@ struct SettlementRaceRow {
     friend bool operator==(const SettlementRaceRow&, const SettlementRaceRow&) = default;
 };
 
+// Rows of the tables of P5-06 9.1 and 9.3 (schema 12).
+struct FigureRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::string epithet;
+    std::int64_t role = 0;  // 1 ruler, 2 claimant, 3 general, 4 hero, 5 caster
+    std::int64_t race = 0;
+    std::int64_t culture = 0;
+    std::int64_t civ = 0;
+    std::int64_t born = 0;
+    std::int64_t office_from = 0;
+    std::int64_t start_event = 0;
+    std::optional<std::int64_t> died;
+    std::int64_t death_event = 0;
+    std::int64_t death_region = 0;
+    std::int64_t death_settlement = 0;
+    std::int64_t status = 0;  // 1 alive, 2 in exile, 3 died, 4 fell in battle, 5 slain, 6 fell with its realm
+    std::int64_t reign_no = 0;
+    std::int64_t regnal = 0;
+    std::int64_t temper = 0;  // 0 steady, 1 warlike, 2 peaceable, 3 grasping, 4 just
+    std::int64_t skill = 0;
+
+    friend bool operator==(const FigureRow&, const FigureRow&) = default;
+};
+
+struct BookRow {
+    std::int64_t id = 0;
+    std::string title;
+    std::int64_t author = 0;
+    std::int64_t site = 0;
+    std::int64_t year = 0;
+    std::int64_t event = 0;
+
+    friend bool operator==(const BookRow&, const BookRow&) = default;
+};
+
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
 // while open.
 struct RelationRow {
@@ -590,6 +626,9 @@ public:
     // ((race_a, race_b, year); (settlement, race, year)).
     void write_race_relation(const RaceRelationRow& row);
     void write_settlement_race(const SettlementRaceRow& row);
+    // The tables of P5-06 (schema 12): rows in ascending id.
+    void write_figure(const FigureRow& row);
+    void write_book(const BookRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

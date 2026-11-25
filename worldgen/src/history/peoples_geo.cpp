@@ -212,7 +212,6 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.split_min_settlements = r.get_int("split_min_settlements");
     t.split_min_regions = r.get_int("split_min_regions");
     t.split_permille = r.get_int("split_permille");
-    t.ruin_fade_years = r.get_int("ruin_fade_years");
     t.colony_new_region_salience = r.get_int("colony_new_region_salience");
     t.plague_small_salience = r.get_int("plague_small_salience");
     t.plague_major_dead = r.get_int("plague_major_dead");
@@ -224,7 +223,6 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
         t.abandon_reach_hops = r.get_int("abandon_reach_hops");
         t.abandon_loss_min_permille = r.get_int("abandon_loss_min_permille");
         t.abandon_loss_max_permille = r.get_int("abandon_loss_max_permille");
-        t.ghost_fade_years = r.get_int("ghost_fade_years");
     }
     return t;
 }

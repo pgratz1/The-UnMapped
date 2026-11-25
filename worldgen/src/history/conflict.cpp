@@ -1446,6 +1446,12 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             std::int64_t rate = strain_rate(ga, drive, k);
             if (allied(a, b)) {  // P5-04 7.2
                 rate = floor_div(checked_mul(rate, tuning_.allied_strain_permille), 1000);
+                if (figures_ != nullptr) {  // P5-06 7.3: the attacker's temper toward an ally
+                    rate = floor_div(checked_mul(rate, figures_->allied_strain_permille(a)), 1000);
+                }
+            }
+            if (figures_ != nullptr) {  // P5-06 7.2: the attacker's temper, normalized by race
+                rate = floor_div(checked_mul(rate, figures_->strain_permille(a)), 1000);
             }
             const std::int64_t next = strain_after(tuning_, strain(a, b), rate, years, permille, intensity_);
             if (next > BOUND_2_40) {

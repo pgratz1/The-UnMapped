@@ -24,3 +24,4 @@ max_alive = 2
 flare = false
 hoard_permille = 0
 raid_phrases = ["came out of the barrows against", "walked by night in", "crept into"]
+slayer_epithet = "the Gravewarden"
