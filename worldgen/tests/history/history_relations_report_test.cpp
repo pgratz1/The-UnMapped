@@ -258,14 +258,14 @@ Counts counts() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v7` at both levels; H14 equals the reference's") {
+TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v8` at both levels; H14 equals the reference's") {
     if (!fixture_present()) {
         MESSAGE("h14-v5.toml absent: skipped (written with the reference)");
         return;
     }
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v7");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v8");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         const auto& g = hrtest::golden();
         const auto it = g.find(H14);
@@ -419,8 +419,8 @@ TEST_CASE("P5-03a 9.1, 9.4: H15 header and [peoples] at both levels (by word, fr
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full, H15));
     REQUIRE_FALSE(s.empty());
     REQUIRE_FALSE(f.empty());
-    CHECK(s.front() == "# worldgen history v7");
-    CHECK(f.front() == "# worldgen history v7");
+    CHECK(s.front() == "# worldgen history v8");
+    CHECK(f.front() == "# worldgen history v8");
     CHECK(between(s, "[peoples]", "[alliances]") ==   // P5-04 10.2: [alliances] after [peoples]
           std::vector<std::string>{
               "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",

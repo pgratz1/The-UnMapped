@@ -89,14 +89,13 @@ const std::vector<Range>& ranges() {
         {"plague_toll_max", 0, 1000}, {"plague_spread_permille", 0, 1000}, {"plague_spread_toll_permille", 0, 1000},
         {"crisis_per_generation_permille", 0, 1000}, {"crisis_loss_permille", 0, 1000},
         {"split_min_settlements", 2, 1000}, {"split_min_regions", 2, 1000}, {"split_permille", 0, 1000},
-        {"ruin_fade_years", 1, 100000}, {"colony_new_region_salience", 0, 100}, {"plague_small_salience", 0, 100},
+        {"colony_new_region_salience", 0, 100}, {"plague_small_salience", 0, 100},
         // r6 (0.17.0, P3-08): after plague_small_salience
         {"plague_major_dead", 0, 1000000}, {"crisis_small_salience", 0, 100},
         // P5-02 4.5 (0.23.0): after crisis_small_salience
         {"ghost_permille", 0, 1000}, {"ghost_max_population", 0, 1000000},
         // P5-03 11.1, 11.2 (0.24.0): after ghost_max_population
         {"abandon_reach_hops", 0, 16}, {"abandon_loss_min_permille", 0, 1000}, {"abandon_loss_max_permille", 0, 1000},
-        {"ghost_fade_years", 0, 100000},
     };
     return v;
 }

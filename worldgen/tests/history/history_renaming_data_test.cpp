@@ -337,7 +337,7 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
     for (const wd::Definition& d : h->definitions) {
         if (d.id != "report") continue;
         const std::vector<wd::Value>& ev = d.record.get("events").as_array();
-        REQUIRE(ev.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.2
+        REQUIRE(ev.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.2
         const wd::Record& last = ev[42].as_record();   // kind 43; kinds 44 to 55 follow (P5-02 10.2)
         CHECK(last.get_string("kind") == "region_renamed");
         CHECK(last.get_int("salience") == 60);

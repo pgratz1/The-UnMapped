@@ -969,7 +969,7 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+    o = ["# worldgen history v8" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
          "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
@@ -2366,7 +2366,7 @@ def check_fixture_facts_v2(c):
     w = load_world(path)
     d = Digest(w)
     s, f = report(w, "summary").decode("ascii"), report(w, "full").decode("ascii")
-    hv = ("# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3
+    hv = ("# worldgen history v8" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3
           else "# worldgen history v2")   # P5-02 12.1, P5-03 17.1
     c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), (hv, hv))
     c.eq("H11 T = 100 (300 chants of 100)", d.T, 100)
@@ -2481,7 +2481,7 @@ def check_fixture_facts_v7(c):
     w = load_world(fixture_db("h16-alliances"))
     f = report(w, "full").decode("latin-1").splitlines()
     s = report(load_world(fixture_db("h16-alliances")), "summary").decode("latin-1").splitlines()
-    c.eq("H16 header", (f[0], s[0]), ("# worldgen history v7", "# worldgen history v7"))
+    c.eq("H16 header", (f[0], s[0]), ("# worldgen history v8", "# worldgen history v7"))
     i, j = f.index("[alliances]"), f.index("[stats]")
     c.eq("H16 [alliances] full count lines", [l for l in f[i:j] if not l.startswith("  ")][1:], [
         "alliances: 6 formed, 1 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 1 betrayed, 0 with a realm",
@@ -2503,7 +2503,7 @@ def check_fixture_facts_v6(c):
     w = load_world(fixture_db("h15-v6"))
     s = report(w, "summary").decode("ascii").split("\n")
     f = report(w, "full").decode("ascii").split("\n")
-    hv = "# worldgen history v7" if V7 else "# worldgen history v6"   # P5-04 10.1
+    hv = "# worldgen history v8" if V7 else "# worldgen history v6"   # P5-04 10.1
     c.eq("H15 9.1 header v6 at both levels", (s[0], f[0]), (hv, hv))
 
     def block(ls, head, nxt):

@@ -93,7 +93,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     auto opened = worldgen::db::WorldReader::open(u8(world));
     REQUIRE(opened.ok());
     const worldgen::db::WorldReader& w = opened.value();
-    CHECK(w.schema_version() == 11);   // P5-02 11.1
+    CHECK(w.schema_version() == 12);   // P5-02 11.1
     CHECK(w.table_columns("pass").value() == std::vector<std::string>{"id", "range_id", "kind", "capped", "col_x",
                                                                        "col_y", "saddle_dm", "col_dm", "path"});
     const auto raw = w.table_rows("pass");
@@ -167,13 +167,13 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const ProcessResult h = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(h.exit_code == EXIT_OK);
     const std::vector<std::string> hl = lines_of(h.out);
-    REQUIRE(hl.size() == 37U);  // thirty-four tables since schema 10 (P5-03 16.1)
-    const char* const names[] = {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    REQUIRE(hl.size() == 39U);  // thirty-four tables since schema 10 (P5-03 16.1)
+    const char* const names[] = {"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                  "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                 "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome",
+                                 "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome",
                                  "race_relation", "region", "region_biome", "region_border", "region_control", "region_name",
                                  "relation", "settlement", "settlement_census", "settlement_race", "site"};   // schema 10
-    for (std::size_t k = 0; k < 34; ++k) {
+    for (std::size_t k = 0; k < 36; ++k) {
         CHECK(starts_with(hl[2 + k], std::string("table ") + names[k] + " "));
     }
     CHECK(hl[21] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));   // schema 9: four tables before
@@ -187,7 +187,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     REQUIRE(rep.exit_code == EXIT_OK);
     CHECK(contains(rep.out, "\nschema_version = 11\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");  // P5-03; P5-03a; P5-04
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.27.0");  // P5-03; P5-03a; P5-04
     CHECK(contains(rep.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = " + std::to_string(rows.size()) +
                                 "\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n"));
     const std::vector<std::string> want =

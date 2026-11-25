@@ -201,7 +201,6 @@ inline const wd::ContentSet& stress_content() {
         {"plague_ppm", by_kind(20000, 20000, 20000, 20000, 20000)},
         {"abandon_permille", by_kind(1000, 1000, 500, 200, 200)},
         {"abandon_frail_max", I64(100000)},
-        {"ruin_fade_years", I64(200)},
         {"split_min_settlements", I64(2)},
         {"split_min_regions", I64(2)},
         {"split_permille", I64(1000)},

@@ -209,7 +209,7 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(static_cast<int>(EventGroup::other) == 4);
     CHECK(static_cast<int>(EventGroup::monsters) == 5);
     CHECK(static_cast<int>(EventGroup::peoples) == 6);   // P5-03 lead ruling 4: kinds 57 to 62
-    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0xFF);   // P5-04 11.2
+    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0x1FF);   // P5-06 (figures = 8)
     CHECK(brapi::event_group_word(static_cast<EventGroup>(7)) == "alliances");
     CHECK(brapi::event_group_word(EventGroup::peoples) == "peoples");
     CHECK(brapi::event_group_word(EventGroup::realms) == "realms");

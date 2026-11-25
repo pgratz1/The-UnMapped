@@ -259,9 +259,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));

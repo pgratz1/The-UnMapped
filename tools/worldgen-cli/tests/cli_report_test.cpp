@@ -101,8 +101,8 @@ TEST_CASE("cli 12.4: test-pattern world") {
     CHECK(lines[18] == "stages = test_pattern");
     CHECK(lines[19] == "[tables]");
     std::vector<std::string> tables;
-    for (const char* t : {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
-                          "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer",
+    for (const char* t : {"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
+                          "event_kind_role", "event_kind_value", "event_participant", "event_value", "figure", "god", "layer",
                           "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "race_relation", "region", "region_biome", "region_border",
                           "region_control", "region_name", "relation", "settlement", "settlement_census", "settlement_race", "site"}) {
         const std::string n(t);

@@ -220,9 +220,9 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
         }
         hex[l[0] + " " + l[1]] = l[2];
     }
-    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                             "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
+                                             "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                              "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
                                              "settlement_census", "settlement_race", "site"});
@@ -462,7 +462,7 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code == EXIT_INPUT);
-        CHECK(contains(r.err, "world schema version 4, this build reads 11"));
+        CHECK(contains(r.err, "world schema version 4, this build reads 12"));
         CHECK(r.out.empty());
     }
     // Plain `hash` hashes the bytes without opening the world (P0-04 8).

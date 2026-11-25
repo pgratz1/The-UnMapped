@@ -337,7 +337,7 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
           "48f6ad624a8b3fd76af51c8162872dc926ca75997000c3fcc42be9b0be6a9d4e");   // p3-01-data.txt game/data at the calibrated values
     CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");
-    CHECK(worldgen::db::SCHEMA_VERSION == 11);
+    CHECK(worldgen::db::SCHEMA_VERSION == 12);
 }
 
 TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold the 0.26.0 data") {

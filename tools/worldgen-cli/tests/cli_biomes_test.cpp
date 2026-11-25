@@ -421,7 +421,7 @@ TEST_CASE("cli P1-03 3, P0-02 amendment 16: a schema-3 world is refused by repor
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code != EXIT_OK);
         CHECK(r.out.empty());
-        CHECK(contains(r.err, "world schema version 3, this build reads 11"));
+        CHECK(contains(r.err, "world schema version 3, this build reads 12"));
     }
     CHECK_FALSE(fs::exists(w.sb.file("schema3.png")));
     // Plain `hash` hashes the file's bytes without opening it as a world

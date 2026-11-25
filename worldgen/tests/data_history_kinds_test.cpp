@@ -209,7 +209,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 9U);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 10U);   // figures (P5-06);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
     CHECK(history->definitions[0].id == "alliances");   // P5-04 4.2: ids in byte order
     const wd::Definition& chrono = history->definitions[1];
     CHECK(chrono.id == "chronology");
@@ -265,17 +265,18 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 9U);   // P5-04 4.2: alliances  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+    REQUIRE(history.id_schemas.size() == 10U);   // P5-06: figures;   // P5-04 4.2: alliances  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
                                                // renaming P5-12 (r16 5.4); monsters P5-02 4.3; relations P5-03 4.2
     CHECK(history.id_schemas[0].id == "alliances");   // P5-04 4.2
     CHECK(history.id_schemas[1].id == "chronology");
     CHECK(history.id_schemas[2].id == "conflict");
     CHECK(history.id_schemas[3].id == "engine");
-    CHECK(history.id_schemas[4].id == "monsters");
-    CHECK(history.id_schemas[5].id == "peoples");
-    CHECK(history.id_schemas[6].id == "relations");   // P5-03 4.2
-    CHECK(history.id_schemas[7].id == "renaming");
-    CHECK(history.id_schemas[8].id == "report");
+    CHECK(history.id_schemas[4].id == "figures");   // P5-06
+    CHECK(history.id_schemas[5].id == "monsters");
+    CHECK(history.id_schemas[6].id == "peoples");
+    CHECK(history.id_schemas[7].id == "relations");   // P5-03 4.2
+    CHECK(history.id_schemas[8].id == "renaming");
+    CHECK(history.id_schemas[9].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -390,7 +391,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 9U);  // alliances.toml from 0.26.0 (P5-04 4.2),
+    CHECK(directory_from_disk(data, "history").entries.size() == 10U);  // figures.toml from 0.27.0 (P5-06); alliances.toml from 0.26.0 (P5-04 4.2),
                                                                          // relations.toml from 0.24.0 (P5-03 4.2),
                                                                          // conflict.toml from 0.16.0 (P3-06 12.1),
                                                                          // renaming.toml from 0.22.0 (P5-12 4),
