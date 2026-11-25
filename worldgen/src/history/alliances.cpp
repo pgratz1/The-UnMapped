@@ -1143,7 +1143,10 @@ void AlliancesSubsystem::mine_closings(StepContext& ctx) {
         if (ending == 0) {
             continue;
         }
-        sites_->end_site_seam(site, ctx.year(), ev, ending);
+        // Reading: the ended year is the ending event's year (Y in every
+        // case 6.12 names; a town lost after this step's Q4 closes the mine
+        // at the next step with the event's own year, as the reader checks).
+        sites_->end_site_seam(site, ctx.event_year(ev), ev, ending);
         mines_.erase(key);
     }
 }
@@ -1199,11 +1202,11 @@ void AlliancesSubsystem::mine_openings(StepContext& ctx) {
             const std::string& form = tuning_.mine_forms[static_cast<std::size_t>((id - 1) %
                                                                                   static_cast<std::int64_t>(tuning_.mine_forms.size()))];
             std::string place = town.name;
-            if (place.rfind("The ", 0) == 0) {
-                place[0] = 't';
-            }
             std::string name = form;
             const std::size_t at = name.find("{settlement}");
+            if (at != 0 && place.rfind("The ", 0) == 0) {  // mid-sentence (P1-06 r3 14.7)
+                place[0] = 't';
+            }
             if (at != std::string::npos) {
                 name.replace(at, std::string_view("{settlement}").size(), place);
             }

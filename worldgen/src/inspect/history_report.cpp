@@ -289,7 +289,7 @@ private:
             const Id other = r->a_id == c.id ? r->b_id : r->a_id;
             const db::CivilizationRow* o = find_civilization(t_, other);
             add({lit("    c" + num(other) + " "), txt(o != nullptr ? o->name : std::string()),
-                 lit(": " + num(r->since) + "-" + (r->until ? num(*r->until) : num(t_.end_year)) + ", " +
+                 lit(": " + num(r->since) + "-" + (r->until ? num(*r->until) : std::string("E")) + ", " +
                      std::string(alliance_basis_word(v_, r->since_event)))});
         }
     }
@@ -1353,7 +1353,7 @@ private:
                     continue;
                 }
                 std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
-                                (r->until ? num(*r->until) : num(t_.end_year)) + ", " +
+                                (r->until ? num(*r->until) : std::string("E")) + ", " +
                                 std::string(alliance_basis_word(v_, r->since_event));
                 const HistoryView::Event& f = event(r->since_event);
                 if (const Id foe = role_of(f, "foe"); foe != 0) {
@@ -1435,7 +1435,7 @@ private:
         }
         for (const db::RelationRow* r : trades) {
             std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
-                            (r->until ? num(*r->until) : num(t_.end_year)) + ", e" + num(r->since_event);
+                            (r->until ? num(*r->until) : std::string("E")) + ", e" + num(r->since_event);
             const std::int64_t last = r->until ? *r->until : t_.end_year;
             for (const HistoryView::Event& e : v_.events()) {
                 if (e.row.kind == arms && e.row.year >= r->since && e.row.year <= last) {
