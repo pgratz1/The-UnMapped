@@ -125,7 +125,7 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
     for (const char ch : tables) {
         n += ch == '\n' ? 1 : 0;
     }
-    CHECK(n == 35U);  // header + 34 (P5-03 16.3: race_relations, settlement_races)
+    CHECK(n == 37U);  // header + 36 (P5-06: figure, book); header + 34 (P5-03 16.3: race_relations, settlement_races)
     for (const std::string& t : hash_tables()) {
         CHECK_MESSAGE(tables.find("\n" + t + " = ") != std::string::npos, t);
     }

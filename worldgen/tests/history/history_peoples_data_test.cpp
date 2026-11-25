@@ -141,7 +141,7 @@ TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 73 fiel
     // r12 22.2, 22.5 (0.19.0)
     CHECK(r.get_int("cause_memory_years") == 50);
     CHECK(r.get_int("inland_cap") == 20);
-    CHECK(r.size() == 77U);   // P5-03 11.1, 11.2: four more
+    CHECK(r.size() == 75U);   // P5-06 25.1: ruin_fade_years and ghost_fade_years removed; P5-03 11.1, 11.2: four more
     // the shipped content (game/data) holds the same record (12.1: identical copies)
     CHECK(peoples_record(shipped_content()) == r);
 }

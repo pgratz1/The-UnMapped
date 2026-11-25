@@ -702,7 +702,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                                              "event_participant", "event_cause", "event_value", "civilization",
                                              "settlement", "settlement_census", "region_control",
                                              "relation", "region_name", "beast", "monster_kind", "beast_population",
-                                             "monster", "site", "race_relation", "settlement_race"});   // schema 10
+                                             "monster", "site", "race_relation", "settlement_race", "figure", "book"});   // schema 12 (P5-06 9.1, 9.3)
                                              // (P3-04 9.1, P5-12 7.2, P5-02 11.1, P5-03 16.1)
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' ORDER BY name") ==
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_beast_1"},
@@ -715,7 +715,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
     // P1-04 12, P0-02 amendment 15: 8 pages, root pages: sqlite_schema, meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate.
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 184320U);  // 45 pages at schema 10 (P5-03a 12 item 5; 43 at schema 9, 35 at 8)
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 192512U);   // 47 pages at schema 12 (P5-06; 45 pages at schema 10) at schema 10 (P5-03a 12 item 5; 43 at schema 9, 35 at 8)
 }
 
 TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {

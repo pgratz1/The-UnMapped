@@ -325,7 +325,7 @@ TEST_CASE("P5-04 8.3, 11.1: the report entries of kinds 63 to 78; allied_battle 
         CHECK(d->templ.find("allied_battle=" + word) != std::string::npos);
     }
     const Files f = p504data::files_026();
-    CHECK(f.at("history/renaming.toml").find(R"(kinds = ["battle", "battle_at_pass", "allied_battle"])") !=
+    CHECK(f.at("history/renaming.toml").find(R"(kinds = ["battle", "battle_at_pass", "allied_battle", "battle_led"])") !=
           std::string::npos);
 }
 

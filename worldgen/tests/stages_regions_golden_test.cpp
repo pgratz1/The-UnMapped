@@ -947,10 +947,10 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 184320U);   // 45 pages at schema 10 (P5-03a 12 item 5)
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 192512U);   // 47 pages at schema 12 (P5-06; 45 pages at schema 10) at schema 10 (P5-03a 12 item 5)
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"45"}});
+    CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"47"}});
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"12"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"12"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {

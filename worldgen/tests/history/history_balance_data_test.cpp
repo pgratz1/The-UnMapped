@@ -215,7 +215,7 @@ TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-42 in k
 
 TEST_CASE("P3-06 r9 20.10, r10 20.17 item 5: one new stream, hist.conflict.search, after hist.conflict.sack (53)") {
     const auto names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 82U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    CHECK(names.size() == 97U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t conflict = 0, sack = 0, search = 0, toll = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         const std::string_view n(names[i]);

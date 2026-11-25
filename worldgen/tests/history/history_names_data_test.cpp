@@ -109,6 +109,22 @@ std::string culture_toml(std::string_view id, std::string_view race, std::string
     const auto it = site_forms.find(id);
     o << "site_forms = " << toml_array(it != site_forms.end() ? it->second : std::vector<std::string>{"{root} Watch"})
       << "\n";
+    // P5-06 (0.27.0): the required person_forms, tower_forms, library_forms, book_titles and regnal_permille,
+    // taken from the shipped file of the same culture.
+    const wd::MemoryDataRoot shipped = shipped_in_memory();
+    for (const wd::MemoryDirectory& d : shipped.directories) {
+        if (d.name != "cultures") continue;
+        for (const wd::MemoryEntry& e : d.entries) {
+            if (e.name != std::string(id) + ".toml") continue;
+            std::istringstream in(e.bytes);
+            std::string line;
+            while (std::getline(in, line)) {
+                for (const char* key : {"person_forms", "tower_forms", "library_forms", "book_titles", "regnal_permille"}) {
+                    if (line.rfind(std::string(key) + " =", 0) == 0) o << line << "\n";
+                }
+            }
+        }
+    }
     return o.str();
 }
 

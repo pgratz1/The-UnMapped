@@ -542,7 +542,7 @@ TEST_CASE("P5-04 11.2: browser groups of kinds 63 to 78; alliances = 7; ALL_GROU
     }
     // every kind of the compiled catalogue is in a group other than `other` (P4-05 10.2 item 2), 78 of them
     const h::EventCatalogue& cat = h::compiled_event_catalogue();
-    CHECK(cat.kinds.size() == 78U);
+    CHECK(cat.kinds.size() == 92U);
     for (const h::KindDef& k : cat.kinds) {
         CAPTURE(k.key);
         CHECK(ins::event_group(k.key) != ins::EventGroup::other);

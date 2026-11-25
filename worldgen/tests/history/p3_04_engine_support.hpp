@@ -52,7 +52,7 @@ using eng::Tables;
 // bytes) is the spec writer's measurement with Python's SQLite 3.46.1 and
 // is UNCONFIRMED with the vendored SQLite; the engineer records the
 // confirmed figure in 16.5, and this is the one constant to change.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 45;   // 45 at schema 10 (P5-03 16.1: two tables);   // P5-02 11.1 (r1): 35 + the roots of five tables and two indexes + one sqlite_schema page
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 47;   // 45 at schema 10 (P5-03 16.1: two tables);   // P5-02 11.1 (r1): 35 + the roots of five tables and two indexes + one sqlite_schema page
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 // The thirteen tables of 9.1 in DDL order, and in hash --detail order.
