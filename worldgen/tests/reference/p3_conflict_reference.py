@@ -7493,7 +7493,7 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    want_schema = "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))

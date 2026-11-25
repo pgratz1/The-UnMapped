@@ -27,7 +27,7 @@
 #include "worldgen/inspect/history_browser.hpp"
 #include "worldgen/inspect/markers.hpp"
 
-// #define UNMAPPED_P506_API 1
+#define UNMAPPED_P506_API 1
 
 namespace p506api {
 
