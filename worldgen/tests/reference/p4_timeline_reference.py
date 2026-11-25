@@ -50,7 +50,9 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p4_timeline_reference.py golden [PATH|-] [--inputs DIR] [--rules R]
         Writes worldgen/tests/golden/p4-01-timeline.txt ("-": stdout). World cases are read from DIR
-        (default ~/.cache/the-unmapped/out/p5-12-int/inputs, the 0.22.0 worlds, also for --rules p5-12; with --rules p4-03
+        (default ~/.cache/the-unmapped/out/p5-06-int/report-inputs, the 0.27.0 worlds of rule set p5-06; --rules p5-04
+        ~/.cache/the-unmapped/out/p5-04-int/report-inputs, the 0.26.0 ones; formerly
+        ~/.cache/the-unmapped/out/p5-12-int/inputs, the 0.22.0 worlds, also for --rules p5-12; with --rules p4-03
         ~/.cache/the-unmapped/out/p4-03-tests/inputs, the 0.21.0 ones, no `name` lines; with --rules p4-01
         ~/.cache/the-unmapped/out/p4-01-tests/inputs, the 0.20.0 ones), one <case>.db per case, generated
         by worldgen-cli with the checkout's game/data as tools/ci/world-hashes.sh does (sample-42-1024:
@@ -97,8 +99,12 @@ SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
 # 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
 # (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p5-04"
-RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
+RULES = "p5-06"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04", "p5-06")
+# P5-06 (0.27.0, the default rule set "p5-06"; P4-01 r7 = P5-06 12): the figure table and the ruled and served rows,
+# ruler_at and D(Y)'s `ruler <civ> <figure>` lines (READINGS F1 to F4); schema 12 fixtures (empty figure and book
+# tables, meta 0.27.0 and 12; READINGS F5). `--rules p5-04` keeps the 0.26.0 file.
+INPUTS_P5_06 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-06-int", "report-inputs")
 # P5-04 (0.26.0, the default rule set "p5-04"; P4-01 r6): alliances and trades by year (12) and their dump lines;
 # the 0.26.0 report inputs (phase 2). `--rules p5-03a` keeps the 0.25.0 file.
 INPUTS_P5_04 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-04-int", "report-inputs")
@@ -110,40 +116,45 @@ INPUTS_P5_03A = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", 
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
+    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04", "p5-06")
 
 
 def p403a():
     """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
-    return RULES in ("p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
+    return RULES in ("p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04", "p5-06")
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
+    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04", "p5-06")
 
 
 def r4():
     """P4-01 r4 (P5-02 13): sites, monsters, beasts and settlement endings in the dumps (READINGS P5)."""
-    return RULES in ("p5-02", "p5-03", "p5-03a", "p5-04")
+    return RULES in ("p5-02", "p5-03", "p5-03a", "p5-04", "p5-06")
 
 
 def r5():
     """P4-01 r5 (P5-03 18): race relations and settlement shares by year, and their dump lines."""
-    return RULES in ("p5-03", "p5-03a", "p5-04")
+    return RULES in ("p5-03", "p5-03a", "p5-04", "p5-06")
 
 
 def r6():
     """P4-01 r6 (P5-04 12): alliances and trades by year, and their dump lines."""
-    return RULES == "p5-04"
+    return RULES in ("p5-04", "p5-06")
+
+
+def r7():
+    """P4-01 r7 (P5-06 12): figures by year (ruler_at and D(Y)'s ruler lines); schema 12."""
+    return RULES == "p5-06"
 
 
 def default_inputs():
-    return INPUTS_P5_04 if r6() else INPUTS_P5_03A if RULES == "p5-03a" else INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_06 if r7() else INPUTS_P5_04 if r6() else INPUTS_P5_03A if RULES == "p5-03a" else INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.26.0" if r6() else "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.27.0" if r7() else "0.26.0" if r6() else "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -194,6 +205,25 @@ Q3  P4-03a 5 (a): "the two header comment lines naming the P4-03 rules gain 'and
     "with the colours of P4-03 and P4-03a", line 2 "(P4-03 9.6 and P4-03a)."
 Q4  P4-03a 7 item 5 "the golden years of the 512 world cases": the years of the territory lines (scales 1
     and 3), and the years of the year lines at scale 1 (timeline_colours_p403a_test.cpp).
+P5-06 readings (generator 0.27.0, rule set p5-06; P5-06 r3 12 = P4-01 r7):
+F1  12 "D(Y) gains `ruler <civ> <figure>` per alive civilization with a recorded ruler at Y, ascending": the lines
+    come after every earlier line of D(Y) (after P5-04's trade lines), one per civilization of the alive list
+    (ascending id) whose ruler_at(c, Y) is not 0. The C++ dump of worldgen/tests/timeline_support.hpp had no
+    ruler line before this change; its year_dump gains the same lines at the same place.
+F2  12 ruler_at: a reign is a `ruled` row (a_type 6, b_type 3) taken from its figure's office_from (not the row's
+    since: 6.4 rule 3, an accession may precede the event that opened the row) to the row's until, else E,
+    half-open. 13 item 1 says reigns of a realm do not overlap; should two qualify, the one begun last (largest
+    office_from, then largest figure id) is taken, as the engine does (Timeline::ruler_at, the latest reign
+    begun wins). `check` counts such overlaps on the input worlds (none expected).
+F3  12: by the half-open rule ruler_at(c, E) is 0 for every c (an open row ends at E), so D(E) has no ruler line;
+    the present's ruler is ruler_at(c, E - 1). The engine does the same.
+F4  The brief's "7.9's inclusive lookup" is the rendering lookup by event (since_event <= e <= until_event) of
+    the form `under`; 12 defines ruler_at by years, which is what D(Y) uses.
+F5  Fixtures at 0.27.0: the C++ writer gives the P3-07 fixtures and T1 (and P4-04's T2) the schema 12 tables
+    (figure and book, empty) and meta generator_version 0.27.0 and schema_version 12; the rows are 0.26.0's
+    (no fixture fills a figure). The P3-07 reference serves no 0.27.0 yet, so fixture_ddl and fixture_meta
+    adjust its 0.26.0 output; before p5-06 they drop figure and book (schema.md holds version 12 since P5-06,
+    which prr.ddl_statements does not filter), so `--rules p5-04` reproduces the 0.26.0 file.
 """
 
 def fixture_names_p3():
@@ -204,7 +234,7 @@ T1_NAME = "t1-edges"
 WORLD_CASES = ("geo-phrase-512", "geo-seed-0-512", "geo-seed-1-1024", "geo-seed-42-512", "hist-dense-1024",
                "hist-races-elf-orc-1024", "hist-span-2000-512", "sample-42-1024")
 
-CIV, SETTLEMENT, REGION = 3, 4, 5
+CIV, SETTLEMENT, REGION, FIGURE = 3, 4, 5, 6
 
 # ---------------------------------------------------------------------------
 # Colours (5.5)
@@ -323,6 +353,9 @@ class History:
                                   "name = 'race_relation'").fetchone()[0] == 1
             for tn in ("race_relation", "settlement_race"):   # schema 10 (P5-03 16.1)
                 t[tn] = prr.pk_rows(conn, tn)[1] if has_rr else []
+            has_fig = conn.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND "
+                                   "name = 'figure'").fetchone()[0] == 1
+            t["figure"] = prr.pk_rows(conn, "figure")[1] if has_fig else []   # schema 12 (P5-06 9.1)
         finally:
             conn.close()
         self.E = int(self.meta["history_end_year"])
@@ -362,6 +395,9 @@ class History:
         self.beast_rows = t["beast_population"]
         self.race_relation = t.get("race_relation", [])      # race_a, race_b, year, disposition, band
         self.settlement_race = t.get("settlement_race", [])  # settlement, race, year, share, standing
+        # P5-06 9.1 (schema 12): id, name, epithet, role, race, culture, civ, born, office_from, start_event, died,
+        # death_event, death_region, death_settlement, status, reign_no, regnal, temper, skill
+        self.figures = {f[0]: f for f in t["figure"]}
         self.kind_key = {}
         self.kind_ids = {}
         conn2 = prr.connect(path)
@@ -517,6 +553,38 @@ class History:
         return sorted((r[1], r[3]) for r in self.relations
                       if r[4] == "trade" and r[5] <= y and (r[6] is None or y < r[6]))
 
+    # P5-06 12 (P4-01 r7): figures by year
+    def reigns(self, civ):
+        """The recorded reigns of civ: (office_from, end, figure) per `ruled` row (a figure 6, b civilization 3),
+        end = the row's until, else E (12). Ascending (office_from, figure)."""
+        out = []
+        for r in self.relations:
+            if r[4] == "ruled" and r[0] == FIGURE and r[2] == CIV and r[3] == civ:
+                f = self.figures.get(r[1])
+                if f is None:
+                    raise ValueError("ruled row of figure %d names no figure" % r[1])
+                out.append((f[8], self.E if r[6] is None else r[6], r[1]))
+        return sorted(out)
+
+    def ruler_at(self, civ, y):
+        """P5-06 12: the recorded ruler with office_from <= Y < the reign's end; 0 none. Reading F2: when more
+        than one reign qualifies, the one begun last (largest office_from, then largest figure id)."""
+        if not 0 <= y <= self.E:
+            raise ValueError("year outside 0..E")
+        got = [f for a, b, f in self.reigns(civ) if a <= y < b]
+        return got[-1] if got else 0
+
+    def reign_overlaps(self, civ):
+        """The years at which two or more reigns of civ qualify (13 item 1 says none)."""
+        rs = self.reigns(civ)
+        out = []
+        for i in range(len(rs)):
+            for j in range(i + 1, len(rs)):
+                lo, hi = max(rs[i][0], rs[j][0]), min(rs[i][1], rs[j][1])
+                if lo < hi:
+                    out.append((rs[i][2], rs[j][2], lo, hi))
+        return out
+
     def relations_in_force(self, y):
         return [i for i, r in enumerate(self.relations) if r[5] <= y and (r[6] is None or y < r[6])]
 
@@ -647,6 +715,11 @@ def year_dump(h, y):
         for r in sorted((r for r in h.relations if r[4] == "trade" and r[5] <= y and (r[6] is None or y < r[6])),
                         key=lambda r: (r[1], r[3])):
             out.append("trade %d %d %d" % (r[1], r[3], r[5]))
+    if r7():   # P5-06 12 (READINGS F1: after every earlier line of D(Y)): the ruler of each alive civilization
+        for c in h.alive(y):
+            f = h.ruler_at(c, y)
+            if f:
+                out.append("ruler %d %d" % (c, f))
     return ("\n".join(out) + "\n").encode("ascii")
 
 
@@ -1053,14 +1126,56 @@ def load_t1():
         return tomllib.load(f)
 
 
-def write_t1(out):
-    fx = load_t1()
-    meta, rows = prr.expand_fixture(fx)
+FIGURE_TABLES = ("figure", "book")   # schema 12 (P5-06 9.1, 9.3)
+
+
+def fixture_ddl():
+    """The DDL of a fixture of the rule set's schema. schema.md holds version 12 since P5-06, so before p5-06 the
+    figure and book tables are left out (the P3-07 reference serves schema 11 and older only; READINGS F5)."""
+    out = prr.ddl_statements()
+    if not r7():
+        return [s for s in out if s.split(" ")[2] not in FIGURE_TABLES]
+    have = {s.split(" ")[2] for s in out}
+    assert all(t in have for t in FIGURE_TABLES), "schema.md lacks the schema 12 tables"
+    return out
+
+
+def fixture_meta(meta):
+    """READINGS F5: a 0.27.0 fixture is the 0.26.0 one with meta generator_version 0.27.0 and schema_version 12."""
+    if r7():
+        meta = dict(meta, generator_version="0.27.0", schema_version="12")
+    return meta
+
+
+def write_p3_fixture(name, out):
+    """prr.write_fixture with the rule set's schema (fixture_ddl, fixture_meta)."""
+    meta, rows = prr.expand_fixture(prr.load_fixture(name))
+    meta = fixture_meta(meta)
     if os.path.exists(out):
         os.remove(out)
     conn = sqlite3.connect(out)
     try:
-        for s in prr.ddl_statements():
+        for s in fixture_ddl():
+            conn.execute(s)
+        for k in sorted(meta):
+            conn.execute("INSERT INTO meta VALUES (?, ?)", (k, meta[k]))
+        for table, rs in rows.items():
+            for r in rs:
+                conn.execute('INSERT INTO "%s" VALUES (%s)' % (table, ", ".join("?" * len(r))), r)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def write_t1(out):
+    fx = load_t1()
+    meta, rows = prr.expand_fixture(fx)
+    meta = fixture_meta(meta)
+    if os.path.exists(out):
+        os.remove(out)
+    conn = sqlite3.connect(out)
+    try:
+        for s in fixture_ddl():
             conn.execute(s)
         for k in sorted(meta):
             conn.execute("INSERT INTO meta VALUES (?, ?)", (k, meta[k]))
@@ -1082,7 +1197,7 @@ def fixture_db(name):
     if name == T1_NAME:
         write_t1(out)
     else:
-        prr.write_fixture(name, out)
+        write_p3_fixture(name, out)
     return out
 
 
@@ -1134,6 +1249,9 @@ def golden_text(inputs):
                          "<year> <count>` after the settlement lines;")
             first.append("# D(Y)'s settlement lines gain the ending at Y, and D(Y) ends with `site <id>` per open site "
                          "and `monster <id> <awake> <lair> <region>`.")
+        if r7():
+            first.append("# P5-06 12 (P4-01 r7): D(Y) ends with `ruler <civ> <figure>` per alive civilization with a "
+                         "recorded ruler at Y, ascending.")
     else:
         first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s."
                  % generator_version()]
@@ -1752,6 +1870,56 @@ def check_p504(c):
          ["alliance 1 2 50", "alliance 1 3 1300", "trade 1 5 410", "trade 3 5 400"])
 
 
+def check_p506(c):
+    """P5-06 12 (P4-01 r7): ruler_at and D(Y)'s ruler lines on fixture H16 with hand-made figure and ruled rows
+    (no P3-07 fixture holds a figure): office_from before the row's since, the half-open end, an open row ending
+    at E, an unrecorded gap, a general's served row (not a reign), an overlap (reading F2)."""
+    h = History(fixture_db("h16-alliances"))
+    E = h.E
+
+    def fig(i, civ, role, office_from):
+        return (i, "F%d" % i, "", role, 1, 1, civ, office_from - 20, office_from, 0, None, 0, 0, 0, 1,
+                1 if role == 1 else 0, 0, 0, 0)
+    h.figures = {1: fig(1, 1, 1, 100), 2: fig(2, 1, 1, 290), 3: fig(3, 1, 3, 400), 4: fig(4, 1, 1, 700),
+                 5: fig(5, 2, 1, 1500), 6: fig(6, 2, 1, 1600)}
+    h.relations = list(h.relations) + [
+        (6, 1, 3, 1, "ruled", 120, 290, 0, 0),   # office_from 100 precedes since 120; ends at 290
+        (6, 2, 3, 1, "ruled", 300, 600, 0, 0),   # accession 290, row from 300
+        (6, 3, 3, 1, "served", 400, 500, 0, 0),  # a general: no reign
+        (6, 4, 3, 1, "ruled", 700, None, 0, 0),  # open: to E
+        (6, 5, 3, 2, "ruled", 1500, 1700, 0, 0), (6, 6, 3, 2, "ruled", 1600, 1800, 0, 0)]   # overlap 1600..1699
+    for (civ, y), want in (((1, 0), 0), ((1, 99), 0), ((1, 100), 1), ((1, 119), 1), ((1, 289), 1), ((1, 290), 2),
+                           ((1, 450), 2), ((1, 599), 2), ((1, 600), 0), ((1, 699), 0), ((1, 700), 4),
+                           ((1, E - 1), 4), ((1, E), 0), ((2, 1499), 0), ((2, 1500), 5), ((2, 1599), 5),
+                           ((2, 1600), 6), ((2, 1699), 6), ((2, 1799), 6), ((2, 1800), 0), ((3, 1000), 0)):
+        c.eq("P5-06 12 ruler_at(%d, %d)" % (civ, y), h.ruler_at(civ, y), want)
+    c.eq("P5-06 12 overlaps of civ 2", h.reign_overlaps(2), [(5, 6, 1600, 1700)])
+    c.eq("P5-06 12 no overlap in civ 1", h.reign_overlaps(1), [])
+    alive = h.alive(1650)
+    d = year_dump(h, 1650).decode().splitlines()
+    want = ["ruler %d %d" % (cv, f) for cv, f in ((1, 4), (2, 6)) if cv in alive]
+    c.eq("P5-06 12 D(1650)'s ruler lines (last)", d[len(d) - len(want):], want)
+    c.eq("P5-06 12 D(E) has no ruler line", [x for x in year_dump(h, E).decode().splitlines()
+                                             if x.startswith("ruler ")], [])
+
+
+def check_rulers_world(c, name, h):
+    """P5-06 12 on a generated world: every recorded ruler is a role-1 figure of its civilization, and no two
+    reigns of a realm overlap in years (13 item 1; reading F2)."""
+    overlaps = 0
+    for civ in h.civs:
+        ov = h.reign_overlaps(civ[0])
+        overlaps += len(ov)
+        if ov:
+            print("info: %s civ %d reigns overlap: %r" % (name, civ[0], ov[:3]))
+        for a, b, f in h.reigns(civ[0]):
+            fr = h.figures[f]
+            if fr[3] != 1 or fr[6] != civ[0]:
+                c.eq("%s ruled row of figure %d is a ruler of civ %d" % (name, f, civ[0]), (fr[3], fr[6]),
+                     (1, civ[0]))
+    c.eq("%s reigns do not overlap (13 item 1)" % name, overlaps, 0)
+
+
 def cmd_check(argv):
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else default_inputs()
     quick = "--quick" in argv
@@ -1773,6 +1941,8 @@ def cmd_check(argv):
         check_p503(c)
     if r6():
         check_p504(c)
+    if r7():
+        check_p506(c)
     for name in fixture_names_p3() + (T1_NAME,):
         check_invariants(c, name, fixture_db(name))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)
@@ -1781,6 +1951,8 @@ def cmd_check(argv):
         for name in WORLD_CASES:
             path = os.path.join(inputs, name + ".db")
             check_invariants(c, name, path, every_year=name.endswith("-512"))
+            if r7():
+                check_rulers_world(c, name, History(path))
             if p403():
                 # 7.3 item 4: the world's table biome holds the shipped colours, so B is the same
                 _, rows = read_layers(path)
@@ -1875,7 +2047,7 @@ def main(argv):
         if rest[0] == T1_NAME:
             write_t1(rest[1])
         else:
-            prr.write_fixture(rest[0], rest[1])
+            write_p3_fixture(rest[0], rest[1])
         return 0
     if cmd == "golden":
         inputs = rest[rest.index("--inputs") + 1] if "--inputs" in rest else default_inputs()

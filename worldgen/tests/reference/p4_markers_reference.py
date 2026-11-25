@@ -43,7 +43,8 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         committed golden file against a fresh computation. Exit 1 on any disagreement.
 
     --rules p4-04 (before any command) keeps P4-04's ruin and faded glyphs and plague colour (P4-05 12.1 F3, F5
-    are the default); --version 0.22.0 implies it.
+    are the default); --version 0.22.0 implies it. The default is generator 0.27.0 (P5-06 11.4 towers, 25.1 (e)
+    old ruins; inputs ~/.cache/the-unmapped/out/p5-06-int/report-inputs); --version 0.26.0 serves the P5-04 file.
 
 Readings chosen where the spec is open are listed in READINGS below and in the test writer's report.
 Never regenerate the golden file to make a C++ test pass.
@@ -80,9 +81,27 @@ INPUTS_025 = tl.INPUTS_P5_03A
 # site existing at Y, offset one glyph cell to the upper right) and allied_battle as a battle (11.1). The glyph's
 # pixels are not given by the spec (reading K1): the entries and their dump lines are here, the drawn mine glyph is
 # not, so `golden` at 0.26.0 refuses a world with a mine until the glyph is ruled.
-INPUTS = tl.INPUTS_P5_04
-GENERATOR_VERSION = "0.26.0"
+INPUTS_026 = tl.INPUTS_P5_04
+# P5-06 (0.27.0, the default; P5-06 r3 11.4, 25.1 (e)): the tower (site kind 4, glyph 20, violet fill, the grid of
+# 11.4), drawn at the library's settlement one glyph cell to the upper left, or in the wild at its own cell; old
+# ruins (a status 3 settlement ruined OLD_RUIN_YEARS or more before Y is an entry of type faded); the golden years
+# gain R(s) + OLD_RUIN_YEARS <= E; the glyph dump gains `glyph tower 3` (READINGS K3 to K7). Timeline rules p5-06.
+# `--version 0.26.0` serves the committed P5-04 file.
+INPUTS = tl.INPUTS_P5_06
+GENERATOR_VERSION = "0.27.0"
 MINE_GLYPH = 19   # 16 + site kind 3
+TOWER_GLYPH = 20  # 16 + site kind 4 (P5-06 11.4)
+TOWER_FILL = (120, 60, 180)   # MARKER_TOWER
+OLD_RUIN_YEARS = 1500   # P5-06 25.1 (e)
+
+
+def v027():
+    return GENERATOR_VERSION == "0.27.0"
+
+
+def site_kinds():
+    """The site kinds that are marker entries: none before 0.26.0, mines at 0.26.0, mines and towers at 0.27.0."""
+    return (3, 4) if v027() else (3,) if GENERATOR_VERSION == "0.26.0" else ()
 # Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
 # halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
 # (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
@@ -117,8 +136,11 @@ def use_version(v):
         GENERATOR_VERSION, INPUTS = "0.25.0", INPUTS_025
         tl.RULES = "p5-03a"
         prr.use_version("0.25.0")
-    elif v != "0.26.0":
-        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0, 0.25.0 or 0.26.0")
+    elif v == "0.26.0":
+        GENERATOR_VERSION, INPUTS = "0.26.0", INPUTS_026
+        tl.RULES = "p5-04"
+    elif v != "0.27.0":
+        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0, 0.25.0, 0.26.0 or 0.27.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """
@@ -153,6 +175,24 @@ M9  12 invariant 4 (every alive civilization has a capital) is a property of gen
 M11 10.3 item 4 "the smallest ruined year": R(s) of 3.3 over every settlement, faded ones included (seed 42 at
     512: 2477), not the smallest settlement.ruined_year (4984, which 9.1's R0 reads from [present]); the
     golden years of item 2 likewise take R(s) of every settlement ever ruined.
+P5-04 and P5-06 readings:
+K1  P5-04 11.3: the mine glyph is the lead's grid (MINE_ROWS), drawn with its centre SITE_OFFSET right of and
+    above its site's cell.
+K2  P5-04 11.3: M(Y)'s site lines `site <id> <x> <y> <kind> <glyph>` come after the pass lines, ascending id.
+K3  P5-06 11.4: a tower's site line is the mine's form with kind 4 and glyph 20; the site's own cell is printed
+    (the offset is the drawing's). Mines and towers share one list in ascending site id, so in draw position (5)
+    they interleave by id.
+K4  P5-06 11.4: a library's glyph is centred SITE_OFFSET left of and above the site's cell, read as "its
+    settlement's" cell (every library of the 0.27.0 worlds at hand sits on its settlement's cell); a tower in the
+    wild at its own cell.
+K5  P5-06 11.4 "the glyph dump gains `glyph tower 3` ... at its end, after P5-04's `mine` (as built the dump holds
+    24 glyphs; it then holds 25)": as built the dump has no mine (24 = 20 settlement keys + ruin, faded, pass,
+    ring), so the count rules: the tower is appended after `ring` and the dump holds 25; the mine stays out.
+K6  P5-06 25.1 (e): an old ruin is an entry with status 3 at Y, R(s) != -1 (3.3) and Y - R(s) >= 1500; its type is
+    `faded` (the dump's type word), its status, ruined year and ruin event stay a ruin's; the option `faded` and
+    draw position (3) apply as to a status 4 entry. Invariant 3 accordingly.
+K7  P5-06 25.1 (e) "the year list gains the years R(s) + 1500 <= E of every ruin": R(s) of every settlement ever
+    ruined (M11), the fixtures' faded rows included.
 """
 
 CIV, SETTLEMENT = 3, 4
@@ -176,7 +216,9 @@ SYMBOL_KEYS = {b"sacked": SACK, b"settlement_captured": SACK, b"siege": SIEGE, b
 
 
 def event_symbol(key):
-    """key: bytes."""
+    """key: bytes. P5-06 11.1: battle_led is a battle at 0.27.0."""
+    if key == b"battle_led" and v027():
+        return BATTLE
     return SYMBOL_KEYS.get(key, PLAIN)
 
 
@@ -286,9 +328,11 @@ class World:
             ex, owner, kind, status, pop, since = self.state(sid, y)
             if not ex:
                 continue
-            if status == 4 and not faded:
-                continue
             typ = {1: "standing", 2: "standing", 3: "ruin", 4: "faded"}[status]
+            if v027() and status == 3 and self.R[sid] != -1 and y - self.R[sid] >= OLD_RUIN_YEARS:
+                typ = "faded"   # P5-06 25.1 (e): an old ruin (READINGS K6)
+            if typ == "faded" and not faded:
+                continue
             cap = typ == "standing" and self.capital(owner, y, alive) == sid if owner else False
             standing = typ == "standing"
             out.append({"settlement": sid, "x": s[2], "y": s[3], "type": typ, "kind": kind, "status": status,
@@ -324,9 +368,10 @@ class World:
             raise ValueError("year %d outside 0 to %d" % (y, self.E))
         m = {"year": y, "settlements": self.settlement_entries(y, faded),
              "places": self.places(y) if events else [], "passes": list(self.passes) if passes else []}
-        if GENERATOR_VERSION == "0.26.0":   # P5-04 11.3: the kind 3 sites existing at Y (half-open), ascending id
-            m["sites"] = [dict(site=x[0], x=x[4], y=x[5], kind=x[2], glyph=16 + x[2], founder=x[7], since=x[9])
-                          for x in self.h.sites if x[2] == 3 and x[9] <= y and (x[11] is None or y < x[11])]
+        if site_kinds():   # P5-04 11.3: the kind 3 sites existing at Y (half-open), ascending id; P5-06 11.4 kind 4
+            m["sites"] = [dict(site=x[0], x=x[4], y=x[5], kind=x[2], glyph=16 + x[2], founder=x[7], since=x[9],
+                               settlement=x[6])
+                          for x in self.h.sites if x[2] in site_kinds() and x[9] <= y and (x[11] is None or y < x[11])]
         return m
 
 
@@ -441,6 +486,18 @@ def glyph(base, declining=False, capital=False):
         rows = MINE_ROWS
         cells = [{"H": 1, "F": 2, ".": 0}[ch] for row in rows for ch in row]
         return 3, cells
+    if base == TOWER_GLYPH and v027():   # P5-06 11.4: fill dx = 0, -1 <= dy <= 1; ink (|dx| = 1, -1 <= dy <= 2) or
+        # (dx = 0, dy = -2 or 2); then the halo rule; radius 3
+        radius, n = 3, 7
+        cells = [0] * (n * n)
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                i = (dy + radius) * n + dx + radius
+                if dx == 0 and -1 <= dy <= 1:
+                    cells[i] = 2
+                elif (abs(dx) == 1 and -1 <= dy <= 2) or (dx == 0 and dy in (-2, 2)):
+                    cells[i] = 3
+        return radius, halo(radius, cells)
     if base == 11:
         radius = 11
         n = 2 * radius + 1
@@ -464,15 +521,26 @@ MINE_FILL = (60, 60, 60)
 SITE_OFFSET = 7
 
 
+def site_offset(x):
+    """P5-06 11.4 (r3): the drawn centre's offset from a site's cell: a mine (+7, -7), a library (kind 4 with a
+    settlement) (-7, -7), a tower in the wild (0, 0)."""
+    if x["kind"] == 4:
+        return (-SITE_OFFSET, -SITE_OFFSET) if x["settlement"] else (0, 0)
+    return (SITE_OFFSET, -SITE_OFFSET)
+
+
 def glyph_name(base, declining=False, capital=False):
     if base in KIND_WORD:
         return KIND_WORD[base] + (" declining" if declining else "") + (" capital" if capital else "")
-    return {8: "ruin", 9: "faded", 10: "pass", 11: "ring"}[base]
+    return {8: "ruin", 9: "faded", 10: "pass", 11: "ring", MINE_GLYPH: "mine", TOWER_GLYPH: "tower"}[base]
 
 
 def glyph_keys():
     keys = [(b, d, c) for b in range(1, 6) for d in (False, True) for c in (False, True)]
-    return keys + [(8, False, False), (9, False, False), (10, False, False), (11, False, False)]
+    keys += [(8, False, False), (9, False, False), (10, False, False), (11, False, False)]
+    if v027():   # P5-06 11.4: `glyph tower 3` at the end (READINGS K5: the mine was never in the dump)
+        keys.append((TOWER_GLYPH, False, False))
+    return keys
 
 
 def glyph_dump():
@@ -521,8 +589,12 @@ def draw_list(m, colours):
     out += [(s["x"], s["y"], (9, False, False), FADED) for s in ss if s["type"] == "faded"]
     out += [(s["x"], s["y"], (8, False, False), None) for s in ss if s["type"] == "ruin"]
     # P5-04 r3 11.3: the mines between ruins and standing settlements, ascending site id
-    out += [(x["x"] + SITE_OFFSET, x["y"] - SITE_OFFSET, (MINE_GLYPH, False, False), MINE_FILL)
-            for x in sorted(m.get("sites", ()), key=lambda x: x["site"])]
+    # P5-06 11.4: the towers among them (ascending site id), each at its offset
+    for x in sorted(m.get("sites", ()), key=lambda x: x["site"]):
+        dx, dy = site_offset(x)
+        key, col = ((TOWER_GLYPH, False, False), TOWER_FILL) if x["kind"] == 4 else ((MINE_GLYPH, False, False),
+                                                                                     MINE_FILL)
+        out.append((x["x"] + dx, x["y"] + dy, key, col))
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and not s["capital"]]
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and s["capital"]]
     return out
@@ -588,11 +660,12 @@ def write_t2(out):
     """T2 through SQL: the P3-07 expansion, then the region seed cells and the pass rows of [markers]."""
     fx = load_t2()
     meta, rows = prr.expand_fixture(fx)
+    meta = tl.fixture_meta(meta)
     if os.path.exists(out):
         os.remove(out)
     conn = sqlite3.connect(out)
     try:
-        for s in prr.ddl_statements():
+        for s in tl.fixture_ddl():
             conn.execute(s)
         for k in sorted(meta):
             conn.execute("INSERT INTO meta VALUES (?, ?)", (k, meta[k]))
@@ -619,7 +692,7 @@ def fixture_db(name):
     elif name == tl.T1_NAME:
         tl.write_t1(out)
     else:
-        prr.write_fixture(name, out)
+        tl.write_p3_fixture(name, out)
     return out
 
 
@@ -640,6 +713,8 @@ def golden_years(w):
     s.update(a[2] for a in w.h.ages)
     s.update(r for r in w.R.values() if r != -1)
     s.update(e[1] for e in w.h.events if w.kind_key[e[3]] == b"ruin_faded")
+    if v027():   # P5-06 25.1 (e): the years an old ruin first shows as one
+        s.update(r + OLD_RUIN_YEARS for r in w.R.values() if r != -1)
     return sorted(y for y in s if 0 <= y <= w.E)
 
 
@@ -686,12 +761,14 @@ def golden_text(inputs):
         lines += case_lines(name, path, is_world)
     head = [
         "# P4-04 marker golden values (docs/specs/p4-04-markers.md 10.3), generator %s%s." % (
-            GENERATOR_VERSION, "" if RULES == "p4-04" else ", glyphs and colours of P4-05 12.1 F3 and F5"),
+            GENERATOR_VERSION, ("" if RULES == "p4-04" else ", glyphs and colours of P4-05 12.1 F3 and F5")
+            + (", towers and old ruins of P5-06 11.4 and 25.1 (e)" if v027() else "")),
         "# Written by worldgen/tests/reference/p4_markers_reference.py golden; never edited by hand.",
         "# Cases ascending: the world cases of tools/ci/world-hashes.sh with history, sample-42-1024 (generate",
         "# --seed 42 --map-size 1024), the P3-07 fixtures, T1 (t1-edges) and T2 (t2-markers).",
         "#   <case> static <sha256 of the static dump of 10.1>",
-        "#   <case> markers <Y> <sha256 of M(Y)>   Y in {0, E / 2, E - 1, E} + age starts + ruined years + ruin_faded years",
+        "#   <case> markers <Y> <sha256 of M(Y)>   Y in {0, E / 2, E - 1, E} + age starts + ruined years + ruin_faded years"
+        + (" + ruined years + %d (P5-06 25.1 (e))" % OLD_RUIN_YEARS if v027() else ""),
         "#   <case> markers-years <sha256 of M(0) M(1) ... M(E)>",
         "#   <case> overlay <Y> <sha256 of the RGB buffer>   world cases: render_territory at Y, then draw_markers",
         "#                                                    (all options on) at scale 1; Y in {first ruin, E / 2, E}",
@@ -768,7 +845,21 @@ def check_glyphs(c):
     band = [(dx, dy) for dy in range(-11, 12) for dx in range(-11, 12)
             if disc(9, dx, dy) and not disc(8, dx, dy)]
     c.eq("5.4 band clear of capital city", any(max(abs(dx), abs(dy)) <= 6 for dx, dy in band), False)
-    c.eq("glyph dump has 24 glyphs", glyph_dump().count(b"glyph "), 24)
+    c.eq("glyph dump has %d glyphs" % (25 if v027() else 24), glyph_dump().count(b"glyph "), 25 if v027() else 24)
+    if v027():   # P5-06 11.4: the tower's drawing and counts, and its place at the dump's end
+        rows = ["--hhh--", "-hhKhh-", "-hKFKh-", "-hKFKh-", "-hKFKh-", "-hKKKh-", "-hhhhh-"]
+        radius, cells = glyph(TOWER_GLYPH)
+        c.eq("11.4 tower radius", radius, 3)
+        c.eq("11.4 tower drawing", cells, [CODE[ch] for row in rows for ch in row])
+        c.eq("11.4 tower counts", counts(cells), (20, 3, 10, 0))
+        c.eq("11.4 dump ends with the tower", glyph_dump().split(b"glyph ")[-1].split(b"\n")[:2],
+             [b"tower 3", b"0011100"])
+        for bad in ((TOWER_GLYPH, True, False), (TOWER_GLYPH, False, True)):
+            try:
+                glyph(*bad)
+                c.eq("11.4 glyph %r refused" % (bad,), False, True)
+            except ValueError:
+                c.count += 1
 
 
 def check_t2(c):
@@ -864,11 +955,65 @@ def check_draw_order(c):
     for (x, y), rgb in want.items():
         c.eq("6.1 pixel (%d, %d)" % (x, y), px(x, y), rgb)
     # every pixel changed is one of the marker colours
-    allowed = {INK, HALO, NO_OWNER, (200, 0, 200), MINE_FILL} | set(colours)
+    allowed = {INK, HALO, NO_OWNER, (200, 0, 200), MINE_FILL, TOWER_FILL} | set(colours)
     c.eq("12 inv 9 colours", {px(x, y) for y in range(h_) for x in range(w_)} - allowed - {bg}, set())
     # scale 3 equals scale 1 scaled
     img3 = draw(bytearray(bytes(bg) * (w_ * h_ * 9)), w_, h_, 3, m, colours)
     c.eq("6.2 scale 3 = scale 1 scaled", bytes(img3), upscale(bytes(img), w_, h_, 3))
+
+
+def check_p506(c):
+    """P5-06 11.4 and 25.1 (e): a mine and a library of one city side by side above it, a tower in the wild at its
+    own cell, their order among the glyphs, the dump's site lines; old ruins on T2 (its s5, ruined in 1300, moved
+    back in memory to 400 so that it is old from 1900)."""
+    w_, h_ = 40, 30
+    colours = [(10, 20, 30)]
+    bg = (7, 77, 177)
+    m = {"year": 0, "passes": [], "places": [],
+         "settlements": [{"settlement": 1, "x": 20, "y": 20, "type": "standing", "kind": 4, "status": 1, "owner": 1,
+                          "capital": False}],
+         "sites": [dict(site=1, x=20, y=20, kind=3, glyph=19, founder=1, since=0, settlement=1),
+                   dict(site=2, x=20, y=20, kind=4, glyph=20, founder=1, since=0, settlement=1),
+                   dict(site=3, x=33, y=5, kind=4, glyph=20, founder=1, since=0, settlement=0)]}
+    img = draw(bytearray(bytes(bg) * (w_ * h_)), w_, h_, 1, m, colours)
+
+    def px(x, y, im=img, ww=w_):
+        i = 3 * (y * ww + x)
+        return tuple(im[i:i + 3])
+    want = {(13, 13): TOWER_FILL, (13, 12): TOWER_FILL, (13, 14): TOWER_FILL, (13, 11): INK, (12, 13): INK,
+            (13, 15): INK, (14, 15): INK, (13, 10): HALO, (11, 13): HALO, (10, 13): bg,   # the library at (-7, -7)
+            (27, 13): MINE_FILL if glyph(MINE_GLYPH)[1][3 * 7 + 3] == 2 else HALO,          # the mine at (+7, -7)
+            (33, 5): TOWER_FILL, (33, 3): INK, (33, 2): HALO, (33, 6): TOWER_FILL,          # the wild tower at its cell
+            (17, 20): colours[0]}
+    for (x, y), rgb in want.items():
+        c.eq("11.4 pixel (%d, %d)" % (x, y), px(x, y), rgb)
+    # the library's glyph and the mine's do not overlap, and neither covers the city (radius 5 + halo)
+    lib = {(13 + dx, 13 + dy) for dy in range(-3, 4) for dx in range(-3, 4)}
+    mine = {(27 + dx, 13 + dy) for dy in range(-3, 4) for dx in range(-3, 4)}
+    c.eq("11.4 library and mine side by side", lib & mine, set())
+    c.eq("11.4 dump site lines", [x for x in marker_dump(dict(m, settlements=[])).decode().splitlines() if x.startswith("site ")],
+         ["site 1 20 20 3 19", "site 2 20 20 4 20", "site 3 33 5 4 20"])
+    # draw order: sites after ruins and before standing settlements
+    order = [k for _x, _y, k, _c in draw_list(dict(m, settlements=m["settlements"] + [
+        {"settlement": 2, "x": 5, "y": 5, "type": "ruin", "kind": 1, "status": 3, "owner": 0, "capital": False}]),
+        colours)]
+    c.eq("11.4 draw order", order, [(8, False, False), (MINE_GLYPH, False, False), (TOWER_GLYPH, False, False),
+                                    (TOWER_GLYPH, False, False), (4, False, False)])
+    # 25.1 (e) on T2
+    w = World(fixture_db(T2_NAME))
+    w.R[5] = 400
+
+    def ent5(y, faded=True):
+        return [(s["type"], s["status"], s["ruined_year"], s["ruin_event"]) for s in w.settlement_entries(y, faded)
+                if s["settlement"] == 5]
+    c.eq("25.1 (e) T2 s5 at 1899", ent5(1899), [("ruin", 3, 400, 17)])
+    c.eq("25.1 (e) T2 s5 at 1900 (old)", ent5(1900), [("faded", 3, 400, 17)])
+    c.eq("25.1 (e) T2 s5 at 1900 without the option", ent5(1900, False), [])
+    c.eq("25.1 (e) T2 s5 at 1899 without the option", ent5(1899, False), [("ruin", 3, 400, 17)])
+    c.eq("25.1 (e) golden years gain R + 1500", (1900 in golden_years(w), 1300 + OLD_RUIN_YEARS in golden_years(w)),
+         (True, False))
+    keys = [k for x, y, k, _c in draw_list(w.markers(1900), [(1, 1, 1)] * 3) if (x, y) == (w.srow[5][2], w.srow[5][3])]
+    c.eq("25.1 (e) an old ruin draws the faded glyph", keys, [(9, False, False)])
 
 
 def check_invariants(c, name, w, every_year=True, report=None, generated=False):
@@ -896,7 +1041,7 @@ def check_invariants(c, name, w, every_year=True, report=None, generated=False):
                 continue   # M9: a hand-made ruin without a status-3 census row (h11-v2 s11); 3.3 gives -1
             if R != -1 and y >= R:
                 f = became_faded.get(sid)
-                want_t = "faded" if f is not None and y >= f else "ruin"
+                want_t = "faded" if (f is not None and y >= f) or (v027() and y - R >= OLD_RUIN_YEARS) else "ruin"
                 if s["type"] != want_t:
                     c.eq("%s inv 3 s%d at %d" % (name, sid, y), s["type"], want_t)
             elif s["type"] != "standing":
@@ -973,8 +1118,10 @@ def check_present(c, name, w, end, text):
     c.eq("%s [present] settlement lines" % name, got, want)
     cnt = [ln for ln in pres if ln.startswith("settlements: ")][0]
     by = {st: sum(1 for s in end["settlements"] if s["status"] == st) for st in (1, 2, 3, 4)}
-    c.eq("%s [present] counts" % name, cnt, "settlements: %d; thriving %d, declining %d, ruined %d, faded %d" % (
-        len(end["settlements"]), by[1], by[2], by[3], by[4]))
+    want_cnt = "settlements: %d; thriving %d, declining %d, ruined %d" % (len(end["settlements"]), by[1], by[2], by[3])
+    if by[4] or not v027():   # P5-06 25.1 (d): `, faded <n4>` only when n4 > 0
+        want_cnt += ", faded %d" % by[4]
+    c.eq("%s [present] counts" % name, cnt, want_cnt)
     kc = [ln for ln in pres if ln.startswith("settlement kinds: ")][0]
     kk = {k: sum(1 for s in end["settlements"] if s["kind"] == k) for k in range(1, 6)}
     c.eq("%s [present] kinds" % name, kc, "settlement kinds: hamlet %d, village %d, town %d, city %d, fortress %d"
@@ -991,6 +1138,8 @@ def cmd_check(argv):
     check_glyphs(c)
     check_draw_order(c)
     check_t2(c)
+    if v027():
+        check_p506(c)
     for name in fixture_names():
         check_invariants(c, name, World(fixture_db(name)))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)

@@ -2033,6 +2033,27 @@ cases in `--inputs DIR` (default `~/.cache/the-unmapped/out/p4-01-tests/inputs`:
 hand-checked facts and pixels, the invariants of section 8 on the fixtures and, unless `--quick`, on the
 input worlds with the golden file's currency. The readings it chose are listed in its `READINGS` string.
 
+### P4-01 r7 at generator 0.27.0 (P5-06 12, phase 2)
+
+Rule set `p5-06` is the new default: `History` reads table `figure`; `reigns`, `ruler_at` (a `ruled` row from its
+figure's `office_from` to its `until`, else E, half-open) and `reign_overlaps`; D(Y) ends with `ruler <civ>
+<figure>` per alive civilization with a recorded ruler at Y, after the trade lines. Fixtures at 0.27.0 are the
+0.26.0 rows with the empty `figure` and `book` tables and meta 0.27.0 / 12 (`fixture_ddl`, `fixture_meta`,
+`write_p3_fixture`; P4-04's T1 and T2 use them too); before `p5-06` the two tables are dropped, since `schema.md`
+holds version 12. `--rules p5-04` reproduces the committed 0.26.0 file byte for byte (checked). The C++ dump of
+`timeline_support.hpp` gains the same ruler lines. Readings `READINGS` F1 to F5.
+
+```
+python3 -B worldgen/tests/reference/p4_timeline_reference.py check --quick
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden --inputs <0.27.0 report inputs>   # default p5-06-int/report-inputs
+python3 -B worldgen/tests/reference/p4_timeline_reference.py --rules p5-04 golden -                  # = the 0.26.0 file
+```
+
+`check` adds the hand-made reigns on H16 (office_from before since, the half-open end, an open row, a gap, a
+general's row, one overlap) and, on input worlds, that every reign is a role-1 figure of its realm and no two
+reigns of a realm overlap. On the engine's 0.27.0 worlds (`p5-06-int/src`) all checks pass but the golden
+currency; ruler_at agrees with every `came_to_rule` (at its year) and `reigned_at_end` (at E - 1) of four worlds.
+
 ### P4-03 colours, holders and inner borders (generator 0.21.0)
 
 Written from `docs/specs/p4-03-history-view.md` (sections 7, 8, 9.2, 9.4, 9.6, 11.1) without the engineer's
@@ -2166,6 +2187,29 @@ committed file). Checked: `--rules p4-04 golden` reproduces the file of `origin/
 byte. The re-record moved, against it, exactly the header line, the `glyphs` line, 19 of the 24 `overlay` lines
 and all 8 `overlay-scale3` lines of the world cases; no `static`, `markers`, `markers-years` or `table` line
 moved, as 12.2 says.
+
+### Generator 0.27.0 (P5-06 11.4, 11.1, 25.1 (e), phase 2)
+
+`--version 0.27.0` is the default (timeline rules `p5-06`); `--version 0.26.0` reproduces the committed P5-04
+file byte for byte (checked). Added: site entries of kind 4 (glyph 20, dump line `site <id> <x> <y> 4 20`), the
+tower glyph of 11.4 (radius 3; 20 halo, 3 fill, 10 ink) filled (120, 60, 180), drawn in the site position with
+the mines in ascending site id, a library centred (-7, -7) from its cell, a tower in the wild at its cell (the
+mine stays at (+7, -7)); `glyph tower 3` at the end of the glyph dump (25 glyphs); `battle_led` a battle symbol
+(11.1); old ruins (status 3, Y - R(s) >= 1500: type `faded`, glyph 9, only with the option); the golden years
+gain R(s) + 1500 <= E; invariant 3 and the `[present]` count line of 25.1 (d). The C++ helpers of
+`markers_support.hpp` follow (type word of an old ruin, the tower key, the years). Readings `READINGS` K1 to K7.
+
+```
+python3 -B worldgen/tests/reference/p4_markers_reference.py check --quick
+python3 -B worldgen/tests/reference/p4_markers_reference.py golden --inputs <0.27.0 report inputs>   # default p5-06-int/report-inputs
+python3 -B worldgen/tests/reference/p4_markers_reference.py --version 0.26.0 golden -              # = the 0.26.0 file
+```
+
+Compared with `worldgen-cli render --composite territory --year Y --markers [--faded]` of the engine (0.27.0,
+`p506-impl`): seed-1-512, geo-seed-42-512, seed-4-512, sample-42-1024 and civs4-seed-7-1024 (a library) at the
+overlay years, the first old-ruin year and the year before, the first and median tower years and each library's
+year, with and without `--faded`, and fixture T1 at its ruin and edge years: pixel for pixel equal once
+`battle_led` was a battle (the reference had drawn its place white; seed-4-512 at 5124).
 
 ## P4-05 browser of civilizations and events (Part A; generator 0.23.0, no world change)
 
