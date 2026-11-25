@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 2, decided 194, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 0, decided 196, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,12 +16,7 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None.
 
-### Not blocking (the build carries an interim choice)
-
-| # | Question | Recommendation / what the build does now | Source | Answer |
-| --- | --- | --- | --- | --- |
-| Q-P5-03a-1 | P5-02's target M4 asks for a living monster at the end of history in at least 85 of 100 default worlds. Since 0.25.0 the undead rise through the whole history instead of mostly after year 5500 (as intended), so fewer worlds end with a late undead host as their one living monster: 82 and 83 worlds in two samples (0.24.0: 87 and 89). Restate the bound, or tune so that more monsters live at the end? | Recommended: recalibrate in P5-06 rather than restate. At 0.26.0 the figure fell again (77 and 81 worlds), and worlds with a lair on a former settlement fell to 58 and 55 against your bound of 65; P5-06's rule that every ruin stays will move both, so the lead will tune monsters and lairs back to 85 and 65 there. Built: nothing changed. | P5-03a validation finding 2 (`docs/reviews/p5-03a-relations-followups-validation.md`) | Agree, we should recalibrate since the living monsters will be a major highlight of the game when players explore the land |
-| Q-P5-04-8 | Spoils, after calibration. You decided that an ally kept from its share "might sour the relationship", and agreed (Q-P5-04-3) that one withheld share would not by itself end an alliance. To reach the target of a spurned alliance in 20% to 60% of worlds, the engineer's calibration made one withheld share end the alliance at once (`withheld_to_break` 1; the spec began at 2). Measured on 100 worlds: a share is granted 68% of the time, 28 worlds have a spurning, 5% of ended alliances end that way. Keep one, or go back to two and accept fewer spurnings? | Recommended now (changed 2026-11-25 after the world critic's review, which finds the ending abrupt: the break can come up to 106 years after the withholding): go back to what you first agreed, a first withheld share sours the alliance and a second, or one large kept share, ends it; the lead will do this in the follow-up stage P5-04a unless you say otherwise. Built and merged at 0.26.0: one. | P5-04 spec r3 section 24; engineer's report | Agreed|
+No open questions. (2026-11-25: Paul answered the two rows on monsters and lairs and on spoils; they are in section 2.)
 
 Work the lead took from the answers (not questions): record a famine or plague in a large world's summary when its impact is significant (Q-P5-01-1), in the next stage that changes the report; recording a movie on Windows stays untested until a Windows machine is at hand (Q-P4-06-7).
 
@@ -29,6 +24,15 @@ Work the lead took from the answers (not questions): record a famine or plague i
 
 
 ## 2. Decided
+
+### Answered by Paul on 2026-11-25 (in this file)
+
+Recorded in `proposals.md` as "Paul's answers of 2026-11-25". Both go into work in flight: the recalibration into P5-06, the spoils rule into the follow-up stage P5-04a.
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-03a-M4 | P5-02's target M4 asks for a living monster at the end of history in at least 85 of 100 default worlds. Since 0.25.0 the undead rise through the whole history instead of mostly after year 5500 (as intended), so fewer worlds end with a late undead host as their one living monster: 82 and 83 worlds in two samples (0.24.0: 87 and 89). Restate the bound, or tune so that more monsters live at the end? | Recommended: recalibrate in P5-06 rather than restate. At 0.26.0 the figure fell again (77 and 81 worlds), and worlds with a lair on a former settlement fell to 58 and 55 against your bound of 65; P5-06's rule that every ruin stays will move both, so the lead will tune monsters and lairs back to 85 and 65 there. Built: nothing changed. | P5-03a validation finding 2 (`docs/reviews/p5-03a-relations-followups-validation.md`) | Agree, we should recalibrate since the living monsters will be a major highlight of the game when players explore the land |
+| Q-P5-04-8 | Spoils, after calibration. You decided that an ally kept from its share "might sour the relationship", and agreed (Q-P5-04-3) that one withheld share would not by itself end an alliance. To reach the target of a spurned alliance in 20% to 60% of worlds, the engineer's calibration made one withheld share end the alliance at once (`withheld_to_break` 1; the spec began at 2). Measured on 100 worlds: a share is granted 68% of the time, 28 worlds have a spurning, 5% of ended alliances end that way. Keep one, or go back to two and accept fewer spurnings? | Recommended now (changed 2026-11-25 after the world critic's review, which finds the ending abrupt: the break can come up to 106 years after the withholding): go back to what you first agreed, a first withheld share sours the alliance and a second, or one large kept share, ends it; the lead will do this in the follow-up stage P5-04a unless you say otherwise. Built and merged at 0.26.0: one. | P5-04 spec r3 section 24; engineer's report | Agreed|
 
 ### Answered by Paul on 2026-11-24 (in this file, and for group H in the session)
 

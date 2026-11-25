@@ -1452,3 +1452,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Weak names (`Thassie`, `fag` anywhere, dwarven `din`): "Leave them in."
   - Movie recording on Windows: not a concern for now; "we can come back and fix it if its broken."
   - Follow-ups (Paul, 2026-11-24, later the same day): "Agree with both proposals, roads and ships in P6." Contact by sea for peoples alone on a land mass is built with roads in one P6 stage; every ruin, sacked ones included, stays to the end of the history (scheduled with P5-06).
+
+### Paul's answers of 2026-11-25
+
+- Section: 13 (phase P5); `docs/questions-for-paul.md` rows Q-P5-03a-M4 and Q-P5-04-8.
+- Problem: two questions were left open by the merges of P5-03a and P5-04: the worlds with a living monster at the end and with a lair on a former settlement had fallen under their bounds (85 and 65 of 100), and calibration had made one withheld share of spoils end an alliance, against the reading Paul had agreed to.
+- Decision (Paul, 2026-11-25):
+  - Monsters and lairs: "Agree, we should recalibrate since the living monsters will be a major highlight of the game when players explore the land." The bounds stay at 85 and 65; P5-06 (spec r3, 25.3) tunes back to them.
+  - Spoils: agreed with the recommendation. A first withheld share sours the alliance; a second, or one large kept share, ends it. To be built in the follow-up stage P5-04a, with the world critic's notes on P5-04.
+- Status: decided
+
