@@ -176,8 +176,8 @@ relation = [
 region_name = []
 beast = []
 monster_kind = [
-    [1, "troll", "Troll", "troll", 0, 1, 400, "fell upon"],
-    [2, "dragon", "Dragon", "dragon", 0, 1, 6000, "burned"],
+    [1, "troll", "Troll", "a troll of the hills", 0, 1, 400, "fell upon"],
+    [2, "dragon", "Dragon", "a dragon of the old world", 0, 1, 6000, "burned the fields of"],
 ]
 beast_population = []
 monster = [

@@ -125,7 +125,7 @@ TEST_CASE("P5-06 9.4: book, relation and event rows refused with their messages;
     P506_REQUIRE_INTEGRATED();
     const Base& b = base();
     const std::string B = "corrupt table 'book': row " + n(b.last_book) + ": ";
-    refused("K2", "UPDATE book SET title = 'x' WHERE id = " + n(b.last_book) + ";", B + "title is not a name");
+    refused("K2", "UPDATE book SET title = '' WHERE id = " + n(b.last_book) + ";", B + "title is not a name");
     refused("K3", "UPDATE book SET author = " + n(b.ruler) + " WHERE id = " + n(b.last_book) + ";",
             B + "author " + n(b.ruler) + " is not a caster");
     refused("E5", "DELETE FROM book WHERE id = " + n(b.last_book) + ";",

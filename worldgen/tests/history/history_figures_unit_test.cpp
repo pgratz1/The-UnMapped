@@ -56,8 +56,10 @@ std::pair<std::int64_t, std::int64_t> life(std::int64_t lam, std::int64_t aw, st
     return {born, std::max(y + 1, born + lam * (700 + pick(u1, 501)) / 1000)};
 }
 
-// 7.2: mean_r and strain_pm with the shipped temper_strain_permille (1000, 1300, 700, 1000, 1000).
+// 7.2: mean_r and strain_pm with the spec's starting temper_strain_permille (1000, 1300, 700, 1000, 1000), and with
+// the shipped (calibrated, 15.2 step 4) one (1000, 2000, 0, 1000, 1000).
 constexpr std::array<std::int64_t, 5> TSP = {1000, 1300, 700, 1000, 1000};
+constexpr std::array<std::int64_t, 5> TSP_SHIPPED = {1000, 2000, 0, 1000, 1000};
 std::int64_t mean_r(const std::array<std::int64_t, 5>& w, const std::array<std::int64_t, 5>& f) {
     std::int64_t a = 0, b = 0;
     for (std::size_t i = 0; i < 5; ++i) {
@@ -174,6 +176,14 @@ TEST_CASE("P5-06 7.2, 18.1 item 11: the temper normalization by race and the zer
     CHECK(strain_pm(2, race("goblin").temper, TSP) == 651);
     CHECK(mean_r(race("elf").temper, TSP) == 955);
     CHECK(mean_r(race("orc").temper, TSP) == 1135);
+    // the calibrated values, by hand: goblin (300 + 600 + 0 + 300 + 50) = 1250, warlike 2000000 div 1250 = 1600
+    CHECK(mean_r(race("goblin").temper, TSP_SHIPPED) == 1250);
+    CHECK(strain_pm(1, race("goblin").temper, TSP_SHIPPED) == 1600);
+    CHECK(strain_pm(2, race("goblin").temper, TSP_SHIPPED) == 0);
+    CHECK(mean_r(race("elf").temper, TSP_SHIPPED) == 850);
+    CHECK(mean_r(race("orc").temper, TSP_SHIPPED) == 1450);
+    CHECK(contains(std::string(p506data::FIGURES_TOML),
+                   "temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }"));
     for (const auto& r : p506data::RACES) {
         CAPTURE(std::string(r.race));
         std::int64_t a = 0, b = 0;
@@ -182,6 +192,9 @@ TEST_CASE("P5-06 7.2, 18.1 item 11: the temper normalization by race and the zer
             b += r.temper[t];
         }
         CHECK(std::abs(a / b - 1000) <= 2);   // each race's average rate as at 0.26.0 (rounding only)
+        std::int64_t a2 = 0;
+        for (std::size_t t = 0; t < 5; ++t) a2 += r.temper[t] * strain_pm(t, r.temper, TSP_SHIPPED);
+        CHECK(std::abs(a2 / b - 1000) <= 2);
         for (std::size_t t = 0; t < 5; ++t) CHECK(strain_pm(t, r.temper, {1000, 1000, 1000, 1000, 1000}) == 1000);
     }
 }
@@ -357,11 +370,11 @@ TEST_CASE("P5-06 4, 18.1 item 1: the 0.27.0 data load; each new figures field re
         t.replace(at, from.size(), to);
         return load(g);
     };
-    const Load bad = with("skill_min = 100", "skill_min = 301");
+    const Load bad = with("skill_min = 500", "skill_min = 801");   // the shipped 500 and 800 (15.2 step 3)
     REQUIRE_FALSE(bad.ok());
-    CHECK(contains(dump(bad), "check 'figures_skill_ordered' failed for 'history.figures': skill_min 301 is above "
-                              "skill_max 300"));
-    CHECK(with("skill_min = 100", "skill_min = 300").ok());
+    CHECK(contains(dump(bad), "check 'figures_skill_ordered' failed for 'history.figures': skill_min 801 is above "
+                              "skill_max 800"));
+    CHECK(with("skill_min = 500", "skill_min = 800").ok());
     const Load th = with("min = 1, substantial = 2, text = \"the Conqueror\"", "min = 3, substantial = 2, text = \"the "
                                                                               "Conqueror\"");
     REQUIRE_FALSE(th.ok());

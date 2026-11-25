@@ -482,6 +482,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_figures_reader_test.cpp
     history/history_figures_views_test.cpp
     history/history_figures_golden_test.cpp
+    history/history_figures_h17_test.cpp
 )
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]

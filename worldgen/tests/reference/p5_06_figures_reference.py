@@ -2014,7 +2014,7 @@ def rows_hash(ncols, rows):
     return hashlib.sha256(bytes(data)).hexdigest()
 
 
-def case_lines(name, w, world_case=True):
+def case_lines(name, w, world_case=True, G=None):
     out = ["%s figure %d %s" % (name, len(w.t["figure"]), rows_hash(19, w.t["figure"])),
            "%s book %d %s" % (name, len(w.t["book"]), rows_hash(6, w.t["book"]))]
     for kind in RELATION_KINDS:
@@ -2032,7 +2032,8 @@ def case_lines(name, w, world_case=True):
     for k, v in stats(w):
         out.append("%s stat %s %s" % (name, k, v))
     if world_case:
-        G, _m = major_calamities(w)
+        if G is None:
+            G, _m = major_calamities(w)
         out.append("%s calamities %d %s" % (name, len(G), " ".join("e%d" % e for e in G) or "-"))
     return out
 
@@ -2049,11 +2050,20 @@ GOLDEN_HEADER = """\
 """
 
 
+def report_G(path):
+    """25.2's G as the report reads it (integration: reading R28's candidates are the report's, P3-07 24.3 item 1,
+    so G is p3_report_reference's, the one the summary set holds)."""
+    import p3_report_reference as prr
+    d = prr.Digest(prr.load_world(path))
+    return list(d.frames.major)
+
+
 def golden_text(inputs):
     names = sorted(n[:-3] for n in os.listdir(inputs) if n.endswith(".db"))
     out = [GOLDEN_HEADER.rstrip("\n")]
     for n in names:
-        out += case_lines(n, fw_of(os.path.join(inputs, n + ".db")))
+        p = os.path.join(inputs, n + ".db")
+        out += case_lines(n, fw_of(p), G=report_G(p))
     return "\n".join(out) + "\n"
 
 

@@ -90,6 +90,8 @@ TEST_CASE("P5-06 10.1, 10.2, 10.4, 10.5: report v8: header, [figures], [sites] w
         if (level == HistoryLevel::full) {
             CHECK(listed == w.figs.size());
             CHECK(starts(fb.back(), "books: " + std::to_string(w.books.size()) + ";"));
+        } else if (w.civs.size() > 16U) {   // 10.2: more than SUMMARY_LINES_CIVS realms: the count line only
+            CHECK(fb.size() == 1U);
         } else {
             CHECK(listed <= static_cast<std::size_t>(p506api::SUMMARY_FIGURES_MAX_SPEC));
             CHECK(fb.back() == "books: " + std::to_string(w.books.size()));
@@ -176,8 +178,17 @@ TEST_CASE("P5-06 12: ruler_at, figures_alive, generals_of, figure_at, events_of_
         for (const auto& [role, side] : std::vector<std::pair<std::string, std::string>>{{"winner_general", "winner"},
                                                                                          {"loser_general", "loser"}}) {
             for (const std::int64_t g : w.role(b, role)) {
-                const auto gs = p506api::generals_of(t, w.one(b, side), w.year(b));
-                CHECK(std::find(gs.begin(), gs.end(), g) != gs.end());
+                const std::int64_t c = w.one(b, side), y = w.year(b);
+                const auto gs = p506api::generals_of(t, c, y);
+                // 12: in force at Y is since <= Y < until; a command that ends in the battle's own year (a fall in
+                // it, the war's end in that year) is not in force at Y (integration: a test reading, not the spec's)
+                bool ends_that_year = false;
+                for (const p506check::Rel& rel : w.rels) {
+                    ends_that_year = ends_that_year || (rel.kind == "served" && rel.a == g && rel.b == c &&
+                                                        rel.since <= y && rel.until_event != 0 &&
+                                                        w.year(rel.until_event) == y);
+                }
+                CHECK((std::find(gs.begin(), gs.end(), g) != gs.end() || ends_that_year));
             }
         }
     }

@@ -941,6 +941,44 @@ def major_calamities(w, candidates):
     return [e for _a, _b, e in sorted(out)[:SUMMARY_CALAMITY_MAJOR_MAX]]
 
 
+def check_major_calamities(w):
+    """P5-06 13 invariant 15, read independently of major_calamities' ranking code: every famine, plague and
+    plague_outbreak of salience >= SUMMARY_MIN_SALIENCE is weighed by 25.2's definitions; G must be the first
+    SUMMARY_CALAMITY_MAJOR_MAX majors by (ended desc, I desc, id), and in the summary set."""
+    d = Digest(w)
+    G, shown = list(d.frames.major), d.shown
+    K = w.K
+    ruin_causes = set()
+    for st in w.t["settlement"]:
+        if st[10] == 3 and st[13]:
+            ruin_causes.update(w.causes.get(st[13], []))
+    weighed = []
+    for e in w.t["event"]:
+        if e[3] not in (K["famine"], K["plague"], K["plague_outbreak"]) or e[7] < SUMMARY_MIN_SALIENCE:
+            continue
+        civ = ([p[4] for p in sorted(w.parts.get(e[0], [])) if p[3] == CIV] or [0])[0]
+        before = {}
+        for r in w.t["settlement_census"]:
+            if r[1] < e[1]:
+                before[r[0]] = r   # key order: the last row of a settlement before the year is its latest
+        P = sum(max(0, r[5]) for r in before.values() if civ and r[2] == civ and r[4] in (1, 2))
+        key = "total" if e[3] == K["plague_outbreak"] else "dead"
+        seq = [v[1] for v in w.values.get(e[3], []) if v[2] == key][0]
+        dead = ([v[2] for v in w.vals.get(e[0], []) if v[1] == seq] or [0])[0]
+        I = dead * 1000 // P if P > 0 and dead > 0 else 0
+        ended = e[0] in ruin_causes
+        if ended or I >= SUMMARY_CALAMITY_MAJOR_PERMILLE:
+            weighed.append((0 if ended else 1, -I, e[0]))
+    want = [e for _a, _b, e in sorted(weighed)][:SUMMARY_CALAMITY_MAJOR_MAX]
+    out = []
+    if G != want:
+        out.append("G %s, want %s" % (G, want))
+    if len(G) > SUMMARY_CALAMITY_MAJOR_MAX:
+        out.append("|G| %d above %d" % (len(G), SUMMARY_CALAMITY_MAJOR_MAX))
+    out += ["e%d of G not in the summary set" % x for x in G if x not in shown]
+    return out
+
+
 def first_role(w, eid, role):
     ids = role_ids(w, eid, role)
     return ids[0] if ids else 0
@@ -2553,6 +2591,9 @@ def check_invariants(c, name, w):
         cut = ("  home: ", "  peak regions: ", "  peak population: ", "  events: ")
         c.eq("%s: 25.5 ended blocks" % name, {k: v for k, v in sb.items() if k in ended},
              {k: strip(v, cut) for k, v in fb.items() if k in ended})
+    if V8:   # P5-06 13 invariant 15 (25.2): G in the summary set, |G| <= the cap, ranked first among the majors
+        for x in check_major_calamities(w):
+            c.true("%s: P5-06 invariant 15: %s" % (name, x), False)
     pres_s = block(s, "[present]")
     if V6:   # P5-03a 9.3: the summary's ruins are a subset of full's, in order, then "and <x> more"
         rs = [x for x in pres_s if x.startswith("  s") and ": ruined " in x]

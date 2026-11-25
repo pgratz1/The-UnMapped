@@ -3615,7 +3615,8 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for x in res["civilization"]:
         if x[8] is not None:
             c.true("%s inv 4 ended c%d no open relation" % (label, x[0]),
-                   not any(r[6] is None and x[0] in (r[1], r[3]) for r in rel))
+                   not any(r[6] is None and ((r[0] == CIV and r[1] == x[0]) or (r[2] == CIV and r[3] == x[0]))
+                           for r in rel))   # P5-06: by entity type (a figure's id may equal the civilization's)
     # 5 territory: every owner change by P3-06 is a capture or a cession
     for r in res["region_control"]:
         c.true("%s inv 5 region_control %s event kind" % (label, r), KEY_OF[kind[r[4]]] in (

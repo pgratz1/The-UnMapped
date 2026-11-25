@@ -428,8 +428,8 @@ sites = [[1, "The Mines of Kazad Rune", 3, 3, 30, 30, 3, 3, 0, 450, n(mine1), -1
          [3, "The Troll-Holes of Skarr", 1, 12, 120, 120, 0, 0, 1, 1300, n(app1), 1350, n(slain1), 1],
          [4, "The Wyrm-Hall of the Cold Peaks", 1, 13, 130, 130, 0, 0, 2, 1310, n(app2), -1, 0, 0],
          [5, "The Leaf-House of Iensath", 4, 1, 10, 10, 1, 1, 0, 1360, n(tf1), -1, 0, 0]]
-monster_kinds = [[1, "troll", "Troll", "troll", 0, 1, 400, "fell upon"], [2, "dragon", "Dragon", "dragon", 0, 1, 6000,
-                                                                          "burned"]]
+monster_kinds = [[1, "troll", "Troll", "a troll of the hills", 0, 1, 400, "fell upon"],
+                 [2, "dragon", "Dragon", "a dragon of the old world", 0, 1, 6000, "burned the fields of"]]
 monsters = [[1, "Skarr", 1, 3, 1300, n(app1), 1350, n(slain1), 3, 3, 0],
             [2, "Saelith", 2, 4, 1310, n(app2), -1, 0, 0, 1, 500]]
 KINDS = ["awakening", "civ_founded", "settlement_founded", "war_declared", "battle", "siege", "sacked",
