@@ -344,6 +344,8 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 78:   # P5-04 8.1 (0.26.0): kinds 63 to 78
+        return pe.COMPILED_026
     if len(pe.COMPILED) == 62 and pe.RENDER_R25:   # P5-03a 10.4: the five value rows
         return pe.COMPILED_025
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
@@ -875,7 +877,8 @@ class World(pe.World):
     def open_site_at(self, sid):
         """11.2 (b): an open site (any kind) has the settlement sid (through the monsters, when installed)."""
         m = getattr(self, "monsters", None)
-        return m is not None and any(x["settlement"] == sid and x["ending"] == 0 for x in m.sites)
+        # P5-04 7.16: a mine (kind 3) does not hold back a ruin's fading
+        return m is not None and any(x["settlement"] == sid and x["ending"] == 0 and x["kind"] != 3 for x in m.sites)
 
     def ending_now(self, s):
         """P5-02 8.3 (with 11.3's code 6) of a ruined settlement, from its ruin event."""

@@ -71,6 +71,7 @@ def undead_threshold_025(min_dead, permille, P_W, M):
 CIV, SETTLEMENT, REGION, MONSTER, SITE = pe.CIV, pe.SETTLEMENT, pe.REGION, pe.MONSTER, pe.SITE
 AWAKE, ASLEEP, SLAIN, DIED = 1, 2, 3, 4
 LAIR, OUTPOST = 1, 2
+MINE = 3   # P5-04 9.2: written by the alliances subsystem through the site seam (7.16); every loop here skips it
 # 11.2 site.ending
 OPEN, END_SLAIN, END_DIED, END_MOVED, END_LOST, END_FELL, END_QUIET = 0, 1, 2, 3, 4, 5, 6
 BEAST_MAX = 1000000
@@ -282,7 +283,7 @@ class Monsters:
 
     def taken(self):
         t = set((s["x"], s["y"]) for s in self.w.settlements)
-        t |= set((s["x"], s["y"]) for s in self.sites if s["ending"] == OPEN)
+        t |= set((s["x"], s["y"]) for s in self.sites if s["ending"] == OPEN and s["kind"] != MINE)   # P5-04 7.16
         return t
 
     def cells_of(self, rid):
@@ -574,7 +575,7 @@ class Monsters:
             r = ev["region"]
             if r == 0:
                 continue
-            if key in ("battle", "battle_at_pass"):
+            if key in ("battle", "battle_at_pass", "allied_battle"):   # P5-04 11.1: the battle kinds set
                 dead = ev["values"][1] + ev["values"][2]
             elif key == "sacked":
                 dead = ev["values"][1]
@@ -614,7 +615,7 @@ class Monsters:
                 if bev["key"] == "sacked":
                     x = bev["settlement"]
                     if x and w.stl(x)["status"] in (3, 4) and not any(
-                            s["settlement"] == x and s["ending"] == OPEN for s in self.sites):
+                            s["settlement"] == x and s["ending"] == OPEN and s["kind"] != MINE for s in self.sites):
                         at = x
                 self.appear(k, r, key="undead_rose", causes=causes, at_settlement=at)
                 self.W[r] = []

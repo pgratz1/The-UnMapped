@@ -546,6 +546,7 @@ class Data(pp.Data):
         self.conflict = hist.get("conflict")
         self.renaming = hist.get("renaming")   # P5-12 4 (0.22.0); an older root has none
         self.relations = hist.get("relations")   # P5-03 4.2 (0.24.0); an older root has none
+        self.alliances = hist.get("alliances")   # P5-04 4.2 (0.26.0); an older root has none
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -561,6 +562,10 @@ class Data(pp.Data):
             self.race[rid]["hidden_years"] = t.get("hidden_years", 300)
             # P5-03 4.1 (0.24.0): (race key, value) of the race's stances; an older root has none
             self.race[rid]["stances"] = [(x["race"], x["value"]) for x in t.get("stances", [])]
+            # P5-04 4.1 (0.26.0): the race keys of origin_allies, the readiness to join and to mine
+            self.race[rid]["origin_allies"] = list(t.get("origin_allies", []))
+            self.race[rid]["ally_join"] = t.get("ally_join_permille", 0)
+            self.race[rid]["mining"] = t.get("mining_permille", 0)
 
 
 _DATA = {}
@@ -578,6 +583,7 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d.conflict.update(conflict or {})
     d.renaming = copy.deepcopy(getattr(dat, "renaming", None))
     d.relations = copy.deepcopy(getattr(dat, "relations", None))
+    d.alliances = copy.deepcopy(getattr(dat, "alliances", None))
     return d
 
 
@@ -774,6 +780,15 @@ class World(pp.World):
             import p5_03_relations_reference as p503
             self.race_relations = p503.relations_of(dat, self)
             self.set_ledger(self.race_relations)
+        # P5-04: the alliances subsystem after relations (p5_04_alliances_reference.Alliances), its AllianceView
+        # read by conflict (7.1); None: no view, 0.25.0's conflict
+        self.alliances = None
+        self.war_index = {}        # declaration event -> war record (P5-04 7.13's reads by war)
+        self.joined_open = set()   # (min, max) of the open joined war rows (P5-04 7.6)
+        self.n_joined_open = {}    # civilization -> its open joined records
+        if conflict and FLAGS["alliances"] and getattr(dat, "alliances", None) is not None:
+            import p5_04_alliances_reference as p504
+            self.alliances = p504.Alliances(self, dat, inp)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -788,6 +803,8 @@ class World(pp.World):
         self.foundings(quiet=False)          # T2: peoples
         if self.conflict_on:
             self.c_t2()                      # T2: conflict (same step)
+        if self.alliances is not None:
+            self.alliances.t2()              # T2: alliances (P5-04 6.1: after relations, which has no T2)
         self.begin()                         # T3
         self.t4()                            # T4
         if self.monsters is not None:
@@ -804,6 +821,8 @@ class World(pp.World):
             self.monsters.t6()               # T6: monsters (same step, after renaming)
         if self.race_relations is not None:
             self.race_relations.t6()
+        if self.alliances is not None:
+            self.alliances.t6()              # T6: alliances (after relations)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -831,6 +850,8 @@ class World(pp.World):
             self.monsters.q4()              # Q4: monsters (same step, after renaming)
         if self.race_relations is not None:
             self.race_relations.q4()
+        if self.alliances is not None:
+            self.alliances.q4()             # Q4: alliances (after relations)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -912,8 +933,19 @@ class World(pp.World):
         g0 = self.claim[(a, b)][1]
         ent = [e for e in self.front(a, b) if e[0] == g0]
         dv = self.defence(g0, ent[0][2], b)[0] if ent else 1000
-        fb = self.force(b) * dv // 1000
+        fb = self.deterred(a, b) * dv // 1000      # P5-04 7.4 (reading A1: 24.2 reads 20.6 item 3's fb)
         return min(1000, self.force(a) * 1000 // max(1, fb * t["declare_ratio"] // 1000))
+
+    def deterred(self, a, b):
+        """P5-04 7.4: force(b) + ally_deterrence x the forces of b's allies z != a, not allied with a, that reach
+        a (div 1000); force(b) without allies."""
+        fb = self.force(b)
+        if self.alliances is None:
+            return fb
+        zs = [z for z in self.alliances.allies(b) if z != a and not self.allied(z, a) and self.reaches(z, a)]
+        if not zs:
+            return fb
+        return fb + self.ct["ally_deterrence_permille"] * sum(self.force(z) for z in zs) // 1000
 
     def close_quarrel(self, a, b):
         """22.1 item 1: a war between a and b starts (either side attacking): the open quarrel of the pair ends."""
@@ -1064,7 +1096,184 @@ class World(pp.World):
 
     def fear(self, b):
         t = self.ct
-        return t["fear_weight"] * max(0, self.share(b) - t["fear_share"]) // (1000 - t["fear_share"])
+        # P5-04 7.3: the bloc share in place of the share (equal to it without allies)
+        return t["fear_weight"] * max(0, self.bloc_share(b) - t["fear_share"]) // (1000 - t["fear_share"])
+
+    # --- P5-04 7.1: the AllianceView (no view: no alliance, no trade, no mine)
+    def allied(self, a, b):
+        return self.alliances is not None and self.alliances.allied(a, b)
+
+    def allies_of(self, c):
+        return self.alliances.allies(c) if self.alliances is not None else []
+
+    def bloc_share(self, c):
+        """7.3: min(1000, share(c) + the shares of c's allies)."""
+        s = self.share(c)
+        if self.alliances is None:
+            return s
+        return min(1000, s + sum(self.share(z) for z in self.alliances.allies(c)))
+
+    def strengthened(self, f, c):
+        """7.5: the trade, forge and arms factors, in this order, each with floor division."""
+        al = self.alliances
+        if al is None:
+            return f
+        t = self.ct
+        f = f * (1000 + t["trade_strength_permille"] * min(al.trade_partners(c), t["trade_strength_max"])) // 1000
+        f = f * (1000 + t["forge_strength_permille"] * (1 if al.forged(c) else 0)) // 1000
+        f = f * (1000 + t["arms_strength_permille"] * (1 if al.arms(c) else 0)) // 1000
+        return f
+
+    def open_ally_records(self, c):
+        """7.6: the open joined records of c (war, record), in war order then join order."""
+        return [(w, r) for w in self.wars for r in w.get("allies", ()) if r["open"] and r["z"] == c]
+
+    def open_wars_of(self, c):
+        """7.6: the open wars with c as a side and the open joined records of c."""
+        return self.wars_of(c) + self.n_joined_open.get(c, 0)
+
+    def reaches(self, x, y):
+        """7.13: front(x, y) (x's march hops, enmity_hops where an enmity row exists) is not empty."""
+        return bool(self.front(x, y))
+
+    def war_of(self, w):
+        return self.war_index[w]
+
+    def war_open(self, w):
+        return self.war_index[w]["open"]
+
+    def ally_record(self, w, z):
+        for r in self.war_index[w].get("allies", ()):
+            if r["z"] == z:
+                return r
+        return None
+
+    def ally_left(self, w, z):
+        r = self.ally_record(w, z)
+        return r is not None and not r["open"]
+
+    def ally_dead(self, w, z):
+        r = self.ally_record(w, z)
+        return r["dead"] if r is not None else 0
+
+    def side_dead(self, war, c):
+        """7.8: the dead of c's side in war: c's own and every ally's of that side (open or withdrawn)."""
+        side = 1 if c == war["a"] else 0
+        return war["dead"][c] + sum(r["dead"] for r in war.get("allies", ()) if r["side"] == side)
+
+    def war_spoils(self, w):
+        """7.15: WarSpoils of an ended war (fatal while it is open)."""
+        war = self.war_index[w]
+        if war["open"]:
+            fatal("history: conflict: war_spoils: war %d is open" % w)
+        W, L = war.get("spoils_pair", (0, 0))
+        return dict(winner=W, loser=L, end_event=war.get("end_event", 0), goal_region=war["goal"],
+                    tribute_people=war.get("tribute_people", 0), tribute_event=war.get("tribute_event", 0),
+                    plunder=war.get("plunder", {}).get(W, 0) if W else 0,
+                    winner_dead=war["dead"][W] if W else 0, winner_pop0=war["pop0"][W] if W else 0,
+                    side_dead=self.side_dead(war, W) if W else 0)
+
+    def join_war(self, w, z, e):
+        """7.6: the ally z joins war w (its declaration event) with event e."""
+        war = self.war_index.get(w)
+        if war is None or not war["open"]:
+            fatal("history: conflict: join_war: the war is not open")
+        if z in (war["a"], war["b"]) or any(r["z"] == z for r in war["allies"]):
+            fatal("history: conflict: join_war: the ally is a side or an ally of the war")
+        ev = self.events[e - 1]
+        side = ev["values"][1]
+        enemy = war["a"] if side == 0 else war["b"]
+        if rel_key(z, enemy, "war") in self.relations or rel_key(enemy, z, "war") in self.relations:
+            fatal("history: conflict: join_war: the ally is at war with the enemy")
+        war["allies"].append(dict(z=z, side=side, join=e, dead=0, pop0=self.population(z), open=True,
+                                  enemy=enemy, partner=war["b"] if side == 0 else war["a"], close_event=0,
+                                  closed_by=None))
+        pk = sym_key(z, enemy, "peace")
+        if pk in self.relations:
+            self.close_rel(pk, e)
+        self.open_rel(rel_key(z, enemy, "war"), e)
+        self.joined_open.add((min(z, enemy), max(z, enemy)))
+        self.n_joined_open[z] = self.n_joined_open.get(z, 0) + 1
+        self.zero_strain(z, enemy)
+        self.drop_claims(z, enemy)
+
+    def close_ally(self, r, e, how):
+        r["open"], r["close_event"], r["closed_by"] = False, e, how
+        self.joined_open.discard((min(r["z"], r["enemy"]), max(r["z"], r["enemy"])))
+        self.n_joined_open[r["z"]] -= 1
+
+    def allies_at_end(self, war, e):
+        """7.10: the war ends with e (peace, war_won, truce; reading A3: search_abandoned too): each open ally's
+        war row closes with e, its peace row opens with e, last_peace, the grudge, strains and claims."""
+        t = self.ct
+        for r in war.get("allies", ()):
+            if not r["open"]:
+                continue
+            m, en = r["z"], r["enemy"]
+            self.close_rel(rel_key(m, en, "war"), e)
+            self.open_rel(sym_key(m, en, "peace"), e)
+            self.last_peace[(min(m, en), max(m, en))] = (self.year, e)
+            self.add_grudge(m, en, t["war_grudge"])
+            self.zero_strain(m, en)
+            self.drop_claims(m, en)
+            self.close_ally(r, e, "end")
+        war["end_event"] = e
+
+    def allies_at_side_end(self, war):
+        """7.11 after the relation pass of a side's end: an ally whose enemy ended had its row closed by that pass;
+        an ally whose partner ended has its row closed with the partner's ending event; no peace row."""
+        for r in war.get("allies", ()):
+            if not r["open"]:
+                continue
+            m, en, p = r["z"], r["enemy"], r["partner"]
+            if self.civ(en)["ended_year"] is not None:
+                ev = self.civ(en)["ending_event"]
+            else:
+                ev = self.civ(p)["ending_event"]
+                self.close_rel(rel_key(m, en, "war"), ev)
+                self.close_ally(r, ev, "side")
+                continue
+            self.close_ally(r, ev, "end")     # the enemy's end is the war's end (6.11)
+
+    def allies_ended(self):
+        """7.11: an ally that ended: its record closes with its ending event (its rows closed by the relation
+        pass)."""
+        for war in self.wars:
+            for r in war.get("allies", ()):
+                if r["open"] and self.civ(r["z"])["ended_year"] is not None:
+                    self.close_ally(r, self.civ(r["z"])["ending_event"], "ally")
+
+    def side_end_spoils(self, war):
+        """7.15: the winner and loser of a war closed by a principal's end: the survivor and the ended (both ended:
+        0, 0); end_event the ended side's ending event (both: the smaller id's)."""
+        a, b = war["a"], war["b"]
+        ea, eb = self.civ(a)["ended_year"] is not None, self.civ(b)["ended_year"] is not None
+        if ea and eb:
+            war["spoils_pair"] = (0, 0)
+            war["end_event"] = self.civ(min(a, b))["ending_event"]
+        elif ea or eb:
+            dead, alive = (a, b) if ea else (b, a)
+            war["spoils_pair"] = (alive, dead)
+            war["end_event"] = self.civ(dead)["ending_event"]
+
+    def withdrawals(self, war):
+        """7.9 (T6, before the end check: reading A4): each open ally bled to exhaustion leaves the war."""
+        t = self.ct
+        for r in war.get("allies", ()):
+            if not r["open"]:
+                continue
+            m, en = r["z"], r["enemy"]
+            if not r["dead"] * 1000 >= t["exhaustion_permille"] * max(1, r["pop0"] * self.muster(m) // 1000):
+                continue
+            e = self.append("ally_withdrew", participants=(("ally", CIV, m), ("partner", CIV, r["partner"]),
+                                                            ("enemy", CIV, en)), causes=(war["last"],))
+            self.close_ally(r, e, "withdrew")
+            self.close_rel(rel_key(m, en, "war"), e)
+            self.open_rel(sym_key(m, en, "peace"), e)
+            self.last_peace[(min(m, en), max(m, en))] = (self.year, e)
+            self.add_grudge(m, en, t["war_grudge"])
+            self.zero_strain(m, en)
+            self.drop_claims(m, en)
 
     def wanted_held(self, c):
         """PeoplesView::wanted_held (P3-05 20): held by another, every outward test but 'free'."""
@@ -1100,6 +1309,7 @@ class World(pp.World):
         f = levy * self.pd.race[self.race_c(c)]["prowess"] // 1000
         if FLAGS["muster"]:
             f = f * self.muster(c) // 1000         # r9 20.6 item 1
+        f = self.strengthened(f, c)                # P5-04 7.5: before the bound check
         if f > (1 << 40):
             fatal("history: bound: conflict force of civilization %d exceeds 2^40" % c)
         return f
@@ -1112,13 +1322,16 @@ class World(pp.World):
         lim = self.ct["levy_hops"]
         levy = sum(s["population"] * lv[KIND_KEY[s["kind"]]] // 1000 for s in self.svis(c)
                    if s["region"] in hops and hops[s["region"]] <= lim)
-        return levy * self.pd.race[self.race_c(c)]["prowess"] // 1000 * self.muster(c) // 1000
+        return self.strengthened(levy * self.pd.race[self.race_c(c)]["prowess"] // 1000 * self.muster(c) // 1000,
+                                 c)   # P5-04 7.5
 
     def wars_of(self, c):
         return sum(1 for w in self.wars if w["open"] and c in (w["a"], w["b"]))
 
     def at_war(self, a, b):
-        return any(w["open"] and {w["a"], w["b"]} == {a, b} for w in self.wars)
+        # P5-04 7.6: any open war relation either way (a principal war or a joined one)
+        return any(w["open"] and {w["a"], w["b"]} == {a, b} for w in self.wars) or (
+            self.alliances is not None and (min(a, b), max(a, b)) in self.joined_open)
 
     def truce_length(self, a):
         """r9 20.6 item 4: a's truce after a peace, shorter for a people more warlike than
@@ -1252,9 +1465,14 @@ class World(pp.World):
             if ea or eb:
                 side = min(a, b) if (ea and eb) else (a if ea else b)
                 self.close_rel(k, self.civ(side)["ending_event"])
+        if self.alliances is not None:
+            self.allies_ended()               # P5-04 7.11: an ally that ended
         for w in self.wars:
             if w["open"] and (ended(w["a"]) or ended(w["b"])):
                 self.close_war(w, "ended", None)
+                if self.alliances is not None:
+                    self.side_end_spoils(w)   # P5-04 7.11, 7.15
+                    self.allies_at_side_end(w)
         for k in sorted(self.claim):
             if ended(k[0]) or ended(k[1]):
                 del self.claim[k]
@@ -1318,6 +1536,8 @@ class World(pp.World):
                     want = t["want_weight"] * min(hunger[a], t["hunger_full"]) // t["hunger_full"]
                 drive = max(0, t["border_friction"] - self.disp(a, b) + want + self.fear(b))
                 rate = g * g // 1000 * drive // 1000 * (1000 // k) // 1000
+                if self.allied(a, b):          # P5-04 7.2: after 5.2's evaluation, before the step's product
+                    rate = rate * t["allied_strain_permille"] // 1000
                 v = self.strain.get((a, b), 0) + rate * years * permille * I // 1000
                 v = min(v, t["strain_max"] * 1000)
                 if v > (1 << 40):
@@ -1447,6 +1667,12 @@ class World(pp.World):
                               pop0={a: self.population(a), b: self.population(b)}, open=True, end=None,
                               battles=0, sacked=0, captured=0, flare=draw_free, ceded=False,
                               owner0=self.hold(goal), cost=None, fled=0, fought=set()))
+        if self.alliances is not None:     # P5-04 7.6, 7.15
+            self.wars[-1].update(allies=[], end_event=0, plunder={a: 0, b: 0}, tribute_people=0, tribute_event=0,
+                                 spoils_pair=(0, 0))
+        else:
+            self.wars[-1]["allies"] = []
+        self.war_index[e] = self.wars[-1]
         return e
 
     def fresh_claim(self, a, b, c, g):
@@ -1597,6 +1823,7 @@ class World(pp.World):
         g = self.aggression(a, b)
         fb = self.force(b)
         if FLAGS["odds"]:
+            fb = self.deterred(a, b)                # P5-04 7.4
             g0 = self.claim[(a, b)][1]
             ent = [e for e in self.front(a, b) if e[0] == g0]
             dv = self.defence(g0, ent[0][2], b)[0] if ent else 1000
@@ -1687,6 +1914,8 @@ class World(pp.World):
         sack_p = min(1000, t["sack_base"] + self.hostility(x, y) * t["sack_hostility"] // 1000)
         capital = self.civ(y)["capital"] == t_s["id"]
         if chance_pm(self.draw("hist.conflict.sack", war["w"], t_s["id"], 0), sack_p):
+            if "plunder" in war:               # P5-04 7.15: the population at the fall, before its toll
+                war["plunder"][x] += t_s["population"]
             dead = t_s["population"] * t["sack_toll_permille"] // 1000
             t_s["population"] -= dead
             e = self.append("sacked", region=r, settlement=t_s["id"],
@@ -1730,9 +1959,14 @@ class World(pp.World):
         self.version += 1
         for k in sorted([k for k in self.relations if y in (k[1], k[3])], key=key_order):
             self.close_rel(k, e2)
+        if self.alliances is not None:
+            self.allies_ended()               # P5-04 7.11: y as an ally of another war
         for w in self.wars:
             if w["open"] and y in (w["a"], w["b"]):
                 self.close_war(w, "conquest", w["a"] if w["b"] == y else w["b"])
+                if self.alliances is not None:
+                    self.side_end_spoils(w)   # P5-04 7.11, 7.15
+                    self.allies_at_side_end(w)
         for k in sorted(self.claim):
             if y in k:
                 del self.claim[k]
@@ -1749,6 +1983,8 @@ class World(pp.World):
             if not war["open"] or war["start"] == self.year:
                 continue
             self.fight(war)
+            if war["open"] and war["allies"]:
+                self.withdrawals(war)          # P5-04 7.9 (reading A4: after the battle, before 7.7's checks)
             if war["open"]:
                 self.end_check(war)
 
@@ -1777,9 +2013,13 @@ class World(pp.World):
             return                 # r14 21.7 item 2: a battlefield of this war needs no search
         if not chance_pm(self.draw("hist.conflict.battle", w, 0, 0), t["battle_permille"]):
             return
-        if FLAGS["levies"]:     # r9 20.6 item 2: each side's local force at R
-            A = self.local_force(x, r) // self.wars_of(x)
-            D = self.local_force(y, r) // self.wars_of(y)
+        allied = self.alliances is not None and any(q["open"] for q in war["allies"])
+        if allied:              # P5-04 7.7: each side is its principal and its open allies of that side
+            A, fx = self.side_forces(war, x, r)
+            D, fy = self.side_forces(war, y, r)
+        elif FLAGS["levies"]:     # r9 20.6 item 2: each side's local force at R (P5-04 7.6: over its open wars)
+            A = self.local_force(x, r) // self.open_wars_of(x)
+            D = self.local_force(y, r) // self.open_wars_of(y)
         else:
             A = self.force(x) // self.wars_of(x)
             D = self.force(y) // self.wars_of(y)
@@ -1788,14 +2028,24 @@ class World(pp.World):
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
         dead_w, dead_l = self.battle_tolls(FW, FL, w)
-        if pass_id:
+        if allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1])):
+            fw, fl = (fx, fy) if xwin else (fy, fx)
+            e = self.append("allied_battle", region=r,
+                            participants=(("winner", CIV, W), ("loser", CIV, L)) +
+                            tuple(("winner_ally", CIV, z) for z, f in fw[1] if f > 0) +
+                            tuple(("loser_ally", CIV, z) for z, f in fl[1] if f > 0),
+                            values=(dead_w, dead_l, pass_id), causes=(w,))
+            self.allied_casualties(W, dead_w, fw, e, war)
+            self.allied_casualties(L, dead_l, fl, e, war)
+        elif pass_id:
             e = self.append("battle_at_pass", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l, pass_id), causes=(w,))
         else:
             e = self.append("battle", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l), causes=(w,))
-        self.casualties(W, dead_w, e, war)
-        self.casualties(L, dead_l, e, war)
+        if not (allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1]))):
+            self.casualties(W, dead_w, e, war)
+            self.casualties(L, dead_l, e, war)
         war["fought"].add(r)
         war["won"][W] += 1
         war["battles"] += 1
@@ -1852,6 +2102,32 @@ class World(pp.World):
         elif fell:
             self.fall(war, ts, x, y, r, es)
 
+    def side_forces(self, war, c, r):
+        """P5-04 7.7: (F_S, (F_principal, [(ally, F_m)] ascending id)) of principal c's side at R: the principal's
+        local force divided by its open wars, each open ally's local force divided by its open wars times
+        ally_effort_permille div 1000."""
+        side = 1 if c == war["a"] else 0
+        fp = self.local_force(c, r) // self.open_wars_of(c)
+        fa = []
+        for q in sorted((q for q in war["allies"] if q["open"] and q["side"] == side), key=lambda q: q["z"]):
+            m = q["z"]
+            fa.append((m, self.local_force(m, r) // self.open_wars_of(m) * self.ct["ally_effort_permille"] // 1000))
+        return fp + sum(f for _m, f in fa), (fp, fa)
+
+    def allied_casualties(self, c, d_S, fs, e, war):
+        """P5-04 7.7: each ally m with F_m > 0 takes d_S x F_m div F_S (ascending id), the principal the rest;
+        each ally's dead in the war += its share (reading A6: the share, as stated)."""
+        fp, fa = fs
+        F_S = fp + sum(f for _m, f in fa)
+        shares = [(m, d_S * f // F_S) for m, f in fa if f > 0]
+        rest = d_S - sum(x for _m, x in shares)
+        for m, x in shares:
+            self.casualties(m, x, e, None)
+            for q in war["allies"]:
+                if q["z"] == m:
+                    q["dead"] += x
+        self.casualties(c, rest, e, war)
+
     def battle_tolls(self, FW, FL, w):
         """7.3 item 4 with r7, r10 20.16 and r22 24.5: (dead_W, dead_L) of a battle of war w in this year."""
         t = self.ct
@@ -1907,6 +2183,8 @@ class World(pp.World):
         self.zero_strain(a, b)
         self.drop_claims(a, b)
         self.close_war(war, "unfound", None)
+        if self.alliances is not None:
+            self.allies_at_end(war, e)        # P5-04 7.10 (reading A3: the truce bookkeeping of 7.7)
 
     # --- r9 20.1: the flight of a last refuge
     def flight_destination(self, x, y, ts):
@@ -1945,6 +2223,8 @@ class World(pp.World):
         race = self.race_c(y)
         war.setdefault("taken_pop", {war["a"]: 0, war["b"]: 0})[x] += ts["population"]   # r10 20.15
         # 1 the sack (no sack draw: a refuge that falls is always sacked)
+        if "plunder" in war:                   # P5-04 7.15 (reading A5: the refuge's sack is a sack)
+            war["plunder"][x] += ts["population"]
         dead = ts["population"] * t["sack_toll_permille"] // 1000
         ts["population"] -= dead
         e = self.append("sacked", region=r, settlement=ts["id"], participants=(("attacker", CIV, x), ("defender", CIV, y)),
@@ -1995,6 +2275,8 @@ class World(pp.World):
         a, b = war["a"], war["b"]
         if FLAGS["score"]:   # r10 20.15 item 1: dead inflicted and people taken
             tp = war.get("taken_pop", {a: 0, b: 0})
+            if war["allies"]:                 # P5-04 7.8: the dead of each side
+                return (self.side_dead(war, b) - self.side_dead(war, a)) + (tp[a] - tp[b])
             return (war["dead"][b] - war["dead"][a]) + (tp[a] - tp[b])
         return (war["won"][a] - war["won"][b]) + 2 * (war["taken"][a] - war["taken"][b])
 
@@ -2082,6 +2364,15 @@ class World(pp.World):
         return self.owner[g][0] == L and self.stl(self.civ(L)["capital"])["region"] != g
 
     def end_war(self, war, winner, how, kind="peace"):
+        e = self.end_war_025(war, winner, how, kind)
+        if self.alliances is not None:
+            # P5-04 7.10, 7.15: after the costs (and the tribute's people), the allies' rows; the winner and loser
+            war["spoils_pair"] = (winner, war["b"] if winner == war["a"] else war["a"]) if winner is not None \
+                else (0, 0)
+            self.allies_at_end(war, e)
+        return e
+
+    def end_war_025(self, war, winner, how, kind="peace"):
         t = self.ct
         a, b = war["a"], war["b"]
         years = self.year - war["start"]
@@ -2104,20 +2395,22 @@ class World(pp.World):
         self.drop_claims(a, b)
         self.close_war(war, how, winner)
         if winner is None:
-            return
+            return e
         plan = self.cost_plan(war, winner)
         if plan is None:
             self.after_cost(war, winner)
-            return
+            return e
         L = b if winner == a else a
         if plan[0] == "tribute":
             n = plan[1]
             et = self.append("tribute", participants=(("payer", CIV, L), ("payee", CIV, winner)), values=(n,),
                              causes=(e,))
             self.casualties(L, n, et, None)
+            if "tribute_event" in war:          # P5-04 7.15: the tribute's people and id for war_spoils
+                war["tribute_people"], war["tribute_event"] = n, et
             war["cost"] = "tribute"
             self.after_cost(war, winner)
-            return
+            return e
         g = plan[1]
         if plan[0] == "foothold" and FLAGS["foot40"]:
             # r19 23.3: kind 40 with the settlements that pass (every standing settlement of L in G, hidden ones
@@ -2147,7 +2440,7 @@ class World(pp.World):
             war["ceded"] = True
             war["cost"] = "foothold"
             self.after_cost(war, winner)
-            return
+            return e
         if FLAGS["cede_all"]:
             # r13 20.27 item 1: every settlement of L standing in G (all of State, not only visible(): hidden
             # ones and those created earlier in the step), ascending, the list taken before any change
@@ -2169,6 +2462,7 @@ class World(pp.World):
         war["ceded"] = True
         war["cost"] = plan[0]
         self.after_cost(war, winner)
+        return e
 
     def after_cost(self, war, winner):
         """r17 invariant (17), in the run: right after the cost of a peace or war_won won by the attacker W over L
@@ -2263,9 +2557,6 @@ KNOWN_EXTINCT_018 = ()   # r10 20.20 closed it (stress-1, -12, -14 were the case
 
 
 def history_stage(dat, inp, extra_draw=False, conflict=True):
-    if FLAGS.get("alliances"):
-        raise NotImplementedError("P5-04 (0.26.0): the alliances replay is not in this reference yet "
-                                  "(p5_04_alliances_reference.REPLAY_TODO); use --version 0.25.0")
     """3.3 history_stage with peoples and conflict installed (0.16.0); conflict=False is the
     peoples-only configuration (p3_peoples_reference.history_stage at 0.16.0)."""
     msg = pp.entry_checks(dat, inp)

@@ -1444,6 +1444,690 @@ def golden_text(inputs):
 
 
 # ---------------------------------------------------------------------------
+# The replay (sections 5, 6): AlliancesSubsystem inside p3_conflict_reference.World, after the relations
+# subsystem in T2, T6 and Q4; the conflict seams of 7 are in that World (allied, allies_of, bloc_share,
+# strengthened, open_wars_of, join_war, side_forces, allies_at_end, withdrawals, war_spoils, ...).
+# ---------------------------------------------------------------------------
+
+def _pcr():
+    import p3_conflict_reference as pcr
+    return pcr
+
+
+class Alliances:
+    """AlliancesSubsystem (5, 6) and its AllianceView (7.1) for a conflict World w."""
+
+    def __init__(self, w, dat, inp):
+        import core_reference as cr
+        self.w = w
+        self.t = dat.alliances
+        self.dat = dat
+        for s in STREAMS:
+            w.keys[s] = cr.stream_key(inp.seed, s)
+        key_id = {dat.race[r]["key"]: r for r in dat.race}
+        self.origin = {r: {key_id[k] for k in dat.race[r].get("origin_allies", []) if k in key_id}
+                       for r in dat.race}
+        self.alliances = {}       # (x, y) -> record (5)
+        self.betrayed = set()     # (x, y)
+        self.trades = {}          # (x, y) -> dict(year, event, next)
+        self.joined = []          # records in record order
+        self.mines = {}           # (c, R) -> (site id, settlement)
+        self.had_mine = set()     # settlements that ever had a mine
+        self.arms_sold = set()    # (seller, buyer)
+        self.cursor = 1
+        self.closed_now = set()   # reading A9: pairs whose alliance row closed in this step
+        self.trade_closed_now = set()   # ... whose trade row closed in this step
+        self.step_key = None
+        self.pres = {}
+        self.shares = {}
+        self.sellers0 = set()
+        self.log = []             # (year, what, ...) for the checks (not state)
+
+    # --- the AllianceView (7.1): the records until this subsystem drops them (reading A7)
+    def allied(self, a, b):
+        return (min(a, b), max(a, b)) in self.alliances
+
+    def allies(self, c):
+        return sorted(({x for x, y in self.alliances if y == c} | {y for x, y in self.alliances if x == c}))
+
+    def trade_partners(self, c):
+        return sum(1 for x, y in self.trades if c in (x, y))
+
+    def sellers(self):
+        return {c for (c, _R) in self.mines}
+
+    def forged(self, c):
+        return any(k[0] == c for k in self.mines)
+
+    def arms(self, c):
+        if self.forged(c):
+            return False
+        sel = self.sellers()
+        return any((y if x == c else x) in sel for x, y in self.trades if c in (x, y))
+
+    # --- terms (6.2)
+    def quiet(self):
+        return self.w.quiet_used is not None
+
+    def budget(self, c):
+        return not self.quiet() or self.w.quiet_events_left(c) > 0
+
+    def avf(self, c):
+        """Alive, visible and free."""
+        w = self.w
+        cv = w.civ(c)
+        return cv["ended_year"] is None and w.visible(cv) and not w.hides(c)
+
+    def av(self, c):
+        cv = self.w.civ(c)
+        return cv["ended_year"] is None and self.w.visible(cv)
+
+    def ended(self, c):
+        return self.w.civ(c)["ended_year"] is not None
+
+    def cache(self):
+        """6.2: presences and shares at the step's start; the sellers of 6.13 at the step's start."""
+        w = self.w
+        self.pres = {}
+        for cv in w.civs:
+            c = cv["id"]
+            if cv["ended_year"] is None and w.visible(cv):
+                self.pres[c] = sorted(set(w.held(c)) | {s["region"] for s in w.svis(c)})
+        self.shares = {c: w.share(c) for c in self.pres}
+        self.hops_cache = {}
+        self.sellers0 = self.sellers()
+        self.closed_now = set()
+        self.trade_closed_now = set()
+
+    def s(self, c):
+        return self.shares.get(c, 0)
+
+    def bs(self, c):
+        return min(1000, self.s(c) + sum(self.s(z) for z in self.allies(c)))
+
+    def hops(self, x, y):
+        k = (min(x, y), max(x, y))
+        if k not in self.hops_cache:
+            best = None
+            geo = self.w.geo
+            py = self.pres.get(y, [])
+            for rx in self.pres.get(x, []):
+                h = geo.hops(rx)
+                for ry in py:
+                    v = h.get(ry)
+                    if v is not None and (best is None or v < best):
+                        best = v
+            self.hops_cache[k] = best
+        return self.hops_cache[k]
+
+    def in_reach(self, x, y):
+        return in_reach(self.hops(x, y), self.t["ally_hops"])
+
+    def in_trade_reach(self, x, y):
+        return in_reach(self.hops(x, y), self.t["trade_hops"])
+
+    def d(self, x, y):
+        return self.w.disp(x, y)
+
+    def warmth(self, x, y):
+        t = self.t
+        return warmth(self.d(x, y), t["ally_min_disposition"], t["ally_full_disposition"])
+
+    def lately_at_war(self, x, y, years):
+        w = self.w
+        if w.at_war(x, y):
+            return True
+        lp = w.last_peace.get((min(x, y), max(x, y)))
+        return lp is not None and lp[0] > w.year - years
+
+    def race(self, c):
+        return self.w.race_c(c)
+
+    def credit(self, a, b, units, e):
+        """6.9: RelationsSubsystem::credit (acts only when the races differ and have met)."""
+        rel = self.w.race_relations
+        ra, rb = self.race(a), self.race(b)
+        if rel is None or ra == rb:
+            return
+        rel.credit(ra, rb, units, e)
+        self.log.append((self.w.year, "credit", ra, rb, units, e))
+
+    def younger_founding(self, x, y):
+        return max(self.w.civ(x)["founding_event"], self.w.civ(y)["founding_event"])
+
+    def reasons(self, x, y):
+        """6.2: {reason: (cause event, foe)} of the pair (x, y)."""
+        w, t = self.w, self.t
+        Y = w.year
+        out = {}
+        best = None
+        for war in w.wars:
+            if not (war["open"] or war["start"] > Y - t["foe_years"]):
+                continue
+            for v in (x, y):
+                if v not in (war["a"], war["b"]):
+                    continue
+                z = war["b"] if war["a"] == v else war["a"]
+                if z in (x, y) or not self.av(z):
+                    continue
+                o = y if v == x else x
+                if self.d(o, z) < 0 and self.in_reach(o, z):
+                    if best is None or war["w"] > best[0]:
+                        best = (war["w"], z)
+        if best is not None:
+            out[COMMON_ENEMY] = best
+        fz = None
+        for z in sorted(self.pres):
+            if z in (x, y) or not self.av(z) or self.allied(z, x) or self.allied(z, y):
+                continue
+            b = self.bs(z)
+            if b < t["fear_share"] or not (self.in_reach(x, z) and self.in_reach(y, z)):
+                continue
+            if self.d(x, z) < 0 and self.d(y, z) < 0 and (fz is None or b > fz[0]):
+                fz = (b, z)
+        if fz is not None:
+            z = fz[1]
+            evs = [w.owner[r][1] for r in w.held(z)]
+            # reading A10: a feared bloc whose head holds no region: its founding event
+            out[FEAR] = (max(evs) if evs else w.civ(z)["founding_event"], z)
+        tr = self.trades.get((x, y))
+        if tr is not None and Y - tr["year"] >= t["trade_ally_years"]:
+            out[TRADE] = (tr["event"], 0)
+        if self.d(x, y) >= t["ally_friend_disposition"]:
+            cause = self.younger_founding(x, y)
+            rel = w.race_relations
+            ra, rb = self.race(x), self.race(y)
+            if rel is not None and ra != rb:
+                p = rel.pair(ra, rb)
+                import p5_03_relations_reference as p503
+                if p["band"] == p503.FRIENDSHIP and p["turn_event"]:
+                    cause = max(cause, p["turn_event"])
+            out[FRIENDSHIP] = (cause, 0)
+        return out
+
+    def term_event(self, k):
+        return self.alliances[k]["renew_event"]
+
+    # --- relations (6.10 item 1: through the symmetric helper, on key copies)
+    def open_alliance(self, x, y, e):
+        self.w.open_rel(_pcr().sym_key(x, y, "alliance"), e)
+
+    def close_alliance(self, k, e):
+        self.w.close_rel(_pcr().sym_key(k[0], k[1], "alliance"), e)
+        del self.alliances[k]
+        self.closed_now.add(k)
+
+    def close_trade(self, k, e):
+        self.w.close_rel(_pcr().sym_key(k[0], k[1], "trade"), e)
+        del self.trades[k]
+        self.trade_closed_now.add(k)
+        for p in ((k[0], k[1]), (k[1], k[0])):
+            self.arms_sold.discard(p)
+
+    def drop_closed(self):
+        """6.7, 6.8: an alliance or trade whose row conflict closed (a side's end) is dropped with no event."""
+        rel = self.w.relations
+        pcr = _pcr()
+        for k in sorted(self.alliances):
+            if pcr.sym_key(k[0], k[1], "alliance") not in rel:
+                del self.alliances[k]
+                self.log.append((self.w.year, "dropped-alliance", k))
+        for k in sorted(self.trades):
+            if pcr.sym_key(k[0], k[1], "trade") not in rel:
+                del self.trades[k]
+                for p in ((k[0], k[1]), (k[1], k[0])):
+                    self.arms_sold.discard(p)
+
+    def inert(self, k):
+        """Reading A8: a pair with an ended side waits for conflict's housekeeping."""
+        return self.ended(k[0]) or self.ended(k[1])
+
+    # --- 6.5, 6.6, 6.8 broken by war: the log
+    def read_log(self):
+        w = self.w
+        last = len(w.events)
+        first = self.cursor
+        self.cursor = last + 1
+        for e in range(first, last + 1):
+            ev = w.events[e - 1]
+            if ev["key"] != "war_declared":
+                continue
+            a = [x for (_i, rs, _t, x) in ev["participants"] if rs == 1][0]
+            b = [x for (_i, rs, _t, x) in ev["participants"] if rs == 2][0]
+            self.betrayal(e, a, b)
+            self.trade_war(e, a, b)
+            self.calls(e, a, b)
+
+    def betrayal(self, wd, a, b):
+        k = (min(a, b), max(a, b))
+        if k not in self.alliances:
+            return
+        e = self.w.append("alliance_betrayed", participants=(("betrayer", CIV, a), ("betrayed", CIV, b)),
+                          causes=tuple(sorted({wd, self.term_event(k)})))
+        self.close_alliance(k, e)
+        self.betrayed.add(k)
+        self.credit(a, b, -self.t["betray_memory"], e)
+        self.log.append((self.w.year, "betrayed", a, b, e))
+
+    def trade_war(self, wd, a, b):
+        k = (min(a, b), max(a, b))
+        if k not in self.trades:
+            return
+        e = self.w.append("trade_broken", participants=(("partner_a", CIV, k[0]), ("partner_b", CIV, k[1])),
+                          values=(0,), causes=(wd,))
+        self.close_trade(k, e)
+
+    def calls(self, wd, a, b):
+        w, t, ct = self.w, self.t, self.w.ct
+        Y = w.year
+        for side, p, e in ((DEFENCE, b, a), (ATTACK, a, b)):
+            for z in self.allies(p):
+                k = (min(z, p), max(z, p))
+                if k not in self.alliances:
+                    continue        # broken earlier in this declaration's calls
+                if not self.avf(z) or z in (a, b) or self.allied(z, e):
+                    continue
+                if w.at_war(z, e) or w.at_war(z, p) or not w.reaches(z, e):
+                    continue
+                if Y < w.civ(e)["founded_year"] + ct["shelter_years"]:
+                    continue
+                if w.open_wars_of(z) >= t["ally_wars_max"]:
+                    continue
+                join = self.dat.race[self.race(z)]["ally_join"]
+                if side == ATTACK:
+                    if not w.past_truce(z, e) or self.d(z, e) >= 0:
+                        continue
+                    pch = attack_chance(t["attack_permille"], join, self.d(z, e), t["hostility_full"])
+                else:
+                    pch = defence_chance(t["defend_permille"], join, self.warmth(z, p), w.force(z), w.force(p),
+                                         w.force(e))
+                rec = self.alliances[k]
+                if _pcr().chance_pm(w.draw("hist.alliances.join", wd, z, 0), pch):
+                    ej = w.append("ally_joined_war", participants=(("ally", CIV, z), ("partner", CIV, p),
+                                                                    ("enemy", CIV, e)), values=(side,),
+                                  causes=tuple(sorted({wd, rec["renew_event"]})))
+                    w.join_war(wd, z, ej)
+                    self.joined.append(dict(w=wd, z=z, p=p, e=e, join=ej, credited=False, settled=False))
+                    self.credit(z, p, t["join_memory"], ej)
+                    self.log.append((Y, "joined", wd, z, side, pch))
+                elif side == DEFENCE and not rec["origin"]:
+                    er = w.append("ally_refused", participants=(("ally", CIV, z), ("partner", CIV, p),
+                                                                 ("enemy", CIV, e)),
+                                  causes=tuple(sorted({wd, rec["renew_event"]})))
+                    rec["refusals"] += 1
+                    self.credit(z, p, -t["refuse_memory"], er)
+                    if rec["refusals"] >= t["refusals_to_break"]:
+                        eb = w.append("alliance_broken", participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])),
+                                      values=(0,), causes=(er,))
+                        self.close_alliance(k, eb)
+
+    # --- 6.7 keeping
+    def keeping(self):
+        w, t = self.w, self.t
+        quiet = self.quiet()
+        for k in sorted(self.alliances):          # 1 cooling
+            if k not in self.alliances or self.inert(k):
+                continue
+            rec = self.alliances[k]
+            if rec["origin"] or self.d(k[0], k[1]) >= t["ally_break_disposition"]:
+                continue
+            if rec["withheld"] == 0:
+                if not self.budget(k[0]):
+                    continue
+                e = w.append("alliance_broken", participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])),
+                             values=(1,), causes=(rec["renew_event"],))
+            else:
+                if not self.budget(rec["w_ally"]):
+                    continue
+                e = self.spurned(k, rec, 1)
+            self.close_alliance(k, e)
+        for c in sorted({x for k in self.alliances for x in k}):   # 2 blocs too great
+            while self.bs(c) > t["bloc_lapse_share"]:
+                zs = [z for z in self.allies(c) if not self.inert((min(c, z), max(c, z)))]
+                if not zs:
+                    break
+                z = min(zs, key=lambda z: (self.s(z), -z))
+                k = (min(c, z), max(c, z))
+                if not self.budget(k[0]):
+                    break
+                e = w.append("alliance_lapsed", participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])),
+                             values=(1,), causes=(self.alliances[k]["renew_event"],))
+                self.close_alliance(k, e)
+        for k in sorted(self.alliances):          # 3 renewal
+            if k not in self.alliances or self.inert(k):
+                continue
+            rec = self.alliances[k]
+            if not renewal_due(w.year, rec["renew_year"], t["term_years"], w.years if quiet else None):
+                continue
+            if rec["origin"]:
+                rec["renew_year"] = w.year
+                rec["withheld"] = 0
+                continue
+            if rec["withheld"] >= t["withheld_to_break"]:
+                if not self.budget(rec["w_ally"]):
+                    continue
+                e = self.spurned(k, rec, 0)
+                self.close_alliance(k, e)
+                continue
+            rs = self.reasons(k[0], k[1])
+            if not self.budget(k[0]):
+                continue
+            if rs:
+                basis = basis_of(rs)
+                foe = rs[basis][1] if basis in (COMMON_ENEMY, FEAR) else 0
+                e = w.append("alliance_renewed",
+                             participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])) +
+                             ((("foe", CIV, foe),) if foe else ()), values=(basis,),
+                             causes=tuple(sorted({v[0] for v in rs.values()} | {rec["renew_event"]})))
+                rec["renew_year"], rec["renew_event"], rec["withheld"] = w.year, e, 0
+                self.credit(k[0], k[1], t["renew_memory"], e)
+            else:
+                e = w.append("alliance_lapsed", participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])),
+                             values=(0,), causes=(rec["renew_event"],))
+                self.close_alliance(k, e)
+
+    def spurned(self, k, rec, reason):
+        z = rec["w_ally"]
+        P = k[0] if z == k[1] else k[1]
+        return self.w.append("alliance_spurned", region=rec["w_region"],
+                             participants=(("ally", CIV, z), ("principal", CIV, P)), values=(reason,),
+                             causes=tuple(sorted({rec["w_event"], rec["renew_event"]})))
+
+    # --- 6.3, 6.4 formation
+    def bloc_ok(self, x, y):
+        return bloc_test(self.bs(x), self.s(x), [self.s(z) for z in self.allies(x)],
+                         self.bs(y), self.s(y), [self.s(z) for z in self.allies(y)], self.t["bloc_share_max"])
+
+    def form(self, x, y, basis, foe, causes, origin):
+        w, t = self.w, self.t
+        e = w.append("alliance_formed", participants=(("ally_a", CIV, x), ("ally_b", CIV, y)) +
+                     ((("foe", CIV, foe),) if foe else ()), values=(basis,), causes=tuple(sorted(set(causes))))
+        self.open_alliance(x, y, e)
+        self.alliances[(x, y)] = dict(year=w.year, event=e, basis=basis, foe=foe, origin=origin, renew_year=w.year,
+                                      renew_event=e, refusals=0, withheld=0, w_event=0, w_region=0, w_ally=0)
+        self.credit(x, y, t["ally_memory"], e)
+        self.log.append((w.year, "formed", x, y, basis, e))
+
+    def candidates(self):
+        cs = [c for c in sorted(self.pres) if self.avf(c)]
+        return [(x, y) for i, x in enumerate(cs) for y in cs[i + 1:]]
+
+    def origins(self):
+        t = self.t
+        for x, y in self.candidates():
+            k = (x, y)
+            if k in self.alliances or k in self.betrayed or k in self.closed_now or self.w.at_war(x, y):
+                continue
+            rx, ry = self.race(x), self.race(y)
+            if ry not in self.origin.get(rx, ()) or rx not in self.origin.get(ry, ()):
+                continue
+            if len(self.allies(x)) >= t["allies_max"] or len(self.allies(y)) >= t["allies_max"]:
+                continue
+            if not self.bloc_ok(x, y):
+                continue
+            self.form(x, y, ORIGIN, 0, [self.younger_founding(x, y)], True)
+
+    def formations(self):
+        w, t = self.w, self.t
+        for x, y in self.candidates():
+            k = (x, y)
+            if k in self.alliances or k in self.betrayed or k in self.closed_now:
+                continue
+            if self.lately_at_war(x, y, t["ally_after_war_years"]) or not self.in_reach(x, y):
+                continue
+            if self.d(x, y) < t["ally_min_disposition"]:
+                continue
+            if len(self.allies(x)) >= t["allies_max"] or len(self.allies(y)) >= t["allies_max"]:
+                continue
+            rs = self.reasons(x, y)
+            p = form_chance(set(rs), self.warmth(x, y), t)
+            if p <= 0 or not self.bloc_ok(x, y):
+                continue
+            if not _pcr().chance_pm(w.draw("hist.alliances.form", x, y, 0), p):
+                continue
+            basis = basis_of(rs)
+            foe = rs[basis][1] if basis in (COMMON_ENEMY, FEAR) else 0
+            self.form(x, y, basis, foe, [v[0] for v in rs.values()], False)
+
+    # --- 6.8 trade
+    def trade_breaks(self):
+        w, t = self.w, self.t
+        for k in sorted(self.trades):
+            if k not in self.trades or self.inert(k):
+                continue
+            tr = self.trades[k]
+            if self.d(k[0], k[1]) < t["trade_min_disposition"] - t["trade_break_margin"]:
+                reason = 1
+            elif trade_out_of_reach(self.hops(k[0], k[1]), t["trade_hops"]):
+                reason = 2
+            else:
+                continue
+            if not self.budget(k[0]):
+                continue
+            e = w.append("trade_broken", participants=(("partner_a", CIV, k[0]), ("partner_b", CIV, k[1])),
+                         values=(reason,), causes=(tr["event"],))
+            self.close_trade(k, e)
+
+    def n_trades(self, c):
+        return self.trade_partners(c)
+
+    def trade_openings(self):
+        w, t = self.w, self.t
+        quiet = self.quiet()
+        for x, y in self.candidates():
+            k = (x, y)
+            if k in self.trades or k in self.trade_closed_now:
+                continue
+            if self.lately_at_war(x, y, t["trade_after_war_years"]) or not self.in_trade_reach(x, y):
+                continue
+            dxy = self.d(x, y)
+            if dxy < t["trade_min_disposition"]:
+                continue
+            if self.n_trades(x) >= t["trade_max"] or self.n_trades(y) >= t["trade_max"]:
+                continue
+            wt = trade_weight(dxy, t["trade_min_disposition"], t["ally_full_disposition"])
+            one = (x in self.sellers0) != (y in self.sellers0)
+            p = trade_chance(t["trade_permille"], wt, w.years if quiet else None, one, t["arms_trade_permille"])
+            if not _pcr().chance_pm(w.draw("hist.alliances.trade", x, y, 0), p):
+                continue
+            if not self.budget(x):
+                continue
+            causes = [self.younger_founding(x, y)]
+            lp = w.last_peace.get(k)
+            if lp is not None:
+                causes.append(lp[1])
+            rel = w.race_relations
+            if rel is not None and self.race(x) != self.race(y):
+                pr = rel.pair(self.race(x), self.race(y))
+                if pr["met_event"]:
+                    causes.append(pr["met_event"])
+            e = w.append("trade_opened", participants=(("partner_a", CIV, x), ("partner_b", CIV, y)),
+                         causes=(max(causes),))
+            w.open_rel(_pcr().sym_key(x, y, "trade"), e)
+            self.trades[k] = dict(year=w.year, event=e, next=w.year + t["trade_credit_years"])
+
+    def trade_credits(self):
+        w, t = self.w, self.t
+        quiet = self.quiet()
+        for k in sorted(self.trades):
+            tr = self.trades[k]
+            if self.inert(k):
+                continue
+            n, nxt = trade_credit_periods(w.year, tr["next"], t["trade_credit_years"], w.years if quiet else None)
+            if n == 0:
+                continue
+            self.credit(k[0], k[1], t["trade_memory"] * n, tr["event"])
+            tr["next"] = nxt
+
+    # --- 6.12 mines (part C), through the monsters' sites (7.16)
+    def mine_closings(self):
+        w = self.w
+        m = w.monsters
+        for (c, R), (sid, ts) in sorted(self.mines.items(), key=lambda kv: kv[1][0]):
+            st = w.stl(ts)
+            if self.ended(c):
+                ev, ending = w.civ(c)["ending_event"], ENDING_FELL
+            elif not w.standing(st):
+                ev, ending = st["ruin_event"], ENDING_LOST
+            elif st["owner_civ"] != c:
+                ev, ending = st["owner_event"], ENDING_LOST
+            elif w.owner[R][0] != c:
+                ev, ending = w.owner[R][1], ENDING_LOST
+            else:
+                continue
+            m.end_site(sid, ev, ending)
+            del self.mines[(c, R)]
+            self.log.append((w.year, "mine-closed", sid, ending, ev))
+
+    def mine_openings(self):
+        w, t = self.w, self.t
+        quiet = self.quiet()
+        m = w.monsters
+        for c in sorted(self.pres):
+            if not self.avf(c):
+                continue
+            mp = self.dat.race[self.race(c)]["mining"]
+            if mp <= 0:
+                continue
+            for R in sorted(w.held(c)):
+                if w.geo.reg[R]["ore_reach_cells"] < t["mine_ore_min"] or (c, R) in self.mines:
+                    continue
+                ts = [s for s in w.standing_of(c) if s["region"] == R and s["id"] not in self.had_mine]
+                if not ts:
+                    continue
+                st = min(ts, key=lambda s: (-s["population"], s["id"]))
+                if st["population"] < t["mine_settlement_min"]:
+                    continue
+                p = mine_chance(t["mine_permille"], mp, w.years if quiet else None)
+                if not _pcr().chance_pm(w.draw("hist.alliances.mine", c, R, 0), p):
+                    continue
+                if not self.budget(c):
+                    continue
+                sid = len(m.sites) + 1
+                e = w.append("mine_opened", region=R, settlement=st["id"],
+                             participants=(("civilization", CIV, c), ("site", SITE, sid)),
+                             causes=(max(w.owner[R][1], st["founding_event"]),))
+                m.sites.append(dict(id=sid, name=mine_name(t["mine_forms"], sid, st["name"]), kind=SITE_MINE,
+                                    region=R, x=st["x"], y=st["y"], settlement=st["id"], founder=c, monster=0,
+                                    origin_year=w.year, origin_event=e, ended_year=None, ending_event=0,
+                                    ending=0, hostile=None))
+                self.mines[(c, R)] = (sid, st["id"])
+                self.had_mine.add(st["id"])
+                self.log.append((w.year, "mine", sid, c, R, st["id"]))
+
+    def arms_sales(self):
+        w, t = self.w, self.t
+        sel = self.sellers()
+        for k in sorted(self.trades):
+            if self.inert(k):
+                continue
+            x, y = k
+            if (x in sel) == (y in sel):
+                continue
+            s_, b_ = (x, y) if x in sel else (y, x)
+            if (s_, b_) in self.arms_sold:
+                continue
+            if not self.budget(s_):
+                continue
+            sid = min(v[0] for kk, v in self.mines.items() if kk[0] == s_)
+            site = w.monsters.site(sid)
+            e = w.append("arms_sold", participants=(("seller", CIV, s_), ("buyer", CIV, b_), ("site", SITE, sid)),
+                         causes=tuple(sorted({self.trades[k]["event"], site["origin_event"]})))
+            self.arms_sold.add((s_, b_))
+            self.credit(s_, b_, t["trade_memory"], e)
+
+    # --- 6.9, 6.11: ends of joined wars
+    def joined_ends(self):
+        w, t = self.w, self.t
+        for r in self.joined:
+            if not r["settled"]:
+                self.spoils(r)
+            if not r["credited"]:
+                rec = w.ally_record(r["w"], r["z"])
+                if not w.war_open(r["w"]) or not rec["open"]:
+                    self.credit(r["z"], r["e"], -t["ally_war_memory"], rec["close_event"])
+                    r["credited"] = True
+
+    def spoils(self, r):
+        w, t = self.w, self.t
+        if w.war_open(r["w"]):
+            return
+        sp = w.war_spoils(r["w"])
+        W = sp["winner"]
+        V = spoils_value(sp["tribute_people"], sp["plunder"], t["spoils_plunder_permille"])
+        war = w.war_of(r["w"])
+
+        def owed(q):
+            return (W == q["partner"] and q["closed_by"] == "end" and not self.ended(q["z"]) and W
+                    and not self.ended(W) and q["dead"] > 0 and V > 0)
+        recs = [q for q in war["allies"] if owed(q)]
+        me = w.ally_record(r["w"], r["z"])
+        if me not in recs:
+            r["settled"] = True
+            return
+        shares = spoils_shares(V, [q["dead"] for q in recs], sp["side_dead"], t["spoils_floor_permille"],
+                               t["spoils_cap_permille"])
+        part, share = shares[recs.index(me)]
+        if share <= 0:
+            r["settled"] = True
+            return
+        if not self.budget(W):
+            return
+        z = r["z"]
+        ex = principal_need(sp["winner_dead"], sp["winner_pop0"], w.ct["exhaustion_permille"], w.muster(W))
+        g = grant_chance(self.warmth(W, z), part, ex, t)
+        granted = _pcr().chance_pm(w.draw("hist.alliances.spoils", r["w"], z, 0), g)
+        e = w.append("spoils_shared" if granted else "spoils_withheld", region=sp["goal_region"],
+                     participants=(("principal", CIV, W), ("ally", CIV, z), ("enemy", CIV, sp["loser"])),
+                     values=(share,), causes=tuple(sorted({sp["end_event"], r["join"]})))
+        if granted:
+            self.credit(W, z, t["share_memory"], e)
+        else:
+            self.credit(W, z, -t["withheld_memory"], e)
+            w.add_grudge(W, z, t["withheld_grudge"])
+            k = (min(W, z), max(W, z))
+            if k in self.alliances:
+                a = self.alliances[k]
+                a["withheld"] += 1
+                a["w_event"], a["w_region"], a["w_ally"] = e, sp["goal_region"], z
+        r["settled"] = True
+        self.log.append((w.year, "spoils", r["w"], z, share, granted, g))
+
+    # --- the steps (6.1)
+    def t2(self):
+        self.cache()
+        self.drop_closed()
+        self.read_log()
+        self.keeping()
+        self.origins()
+        self.formations()
+        self.trade_breaks()
+        self.trade_openings()
+        self.trade_credits()
+        self.mine_closings()
+        self.mine_openings()
+        self.arms_sales()
+
+    def t6(self):
+        self.cache()
+        self.drop_closed()
+        self.joined_ends()
+        self.mine_closings()
+
+    def q4(self):
+        self.cache()
+        self.drop_closed()
+        self.joined_ends()
+        self.keeping()
+        self.trade_breaks()
+        self.trade_openings()
+        self.trade_credits()
+        self.mine_closings()
+        self.mine_openings()
+        self.arms_sales()
+
+
+# ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
 
