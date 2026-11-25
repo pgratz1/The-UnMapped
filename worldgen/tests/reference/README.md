@@ -1905,6 +1905,21 @@ report-src` (`p5-04-int` is a link to it), then `build-inputs report-src report-
 phase 2 command list of P5-03a (`I=~/.cache/the-unmapped/out/p5-02-tests/inputs`) and
 `p5_04_alliances_reference.py golden --inputs report-inputs` (new: `p5-04-alliances.txt`, read by
 `history/history_alliances_golden_test.cpp`).
+`p4_browser_reference.py`: a civilization block's `allies` lines (10.3, plain segments as the C++ prints them) and
+its war counts and adversaries without the joined war rows (10.4), as the report's block. The alliances-small seeds
+are 3, 5, 6 and 7 with every race (reading A11; the calibrated values make spurnings rare: seed 5 holds two), in the
+reference (`SMALL_SEEDS`'s first four) and in the C++ fixture.
+
+Test-side fixes at integration: the full test configuration (`ConflictConfig`) builds the alliances as the stage
+does; the I0 tests of P5-02 and P5-03 (and the engineers' tests of them) run the stage with P5-04's zero tuning,
+since their configurations "without" a subsystem build no alliances; the conflict checkers know the relation kinds
+`alliance` and `trade`, the joined war rows (out of the war counts and the war ends), `allied_battle` as a battle
+kind (last battles, sieges' causes, refuge_held, repeated tolls) and the claims an oath, a join or a withdrawal
+drops; the report checker's war frames skip joined rows; D(Y) ends with the `alliance` and `trade` lines (reading
+T1) and the marker dump with the `site` lines (reading K2); the browser dumps the eighth group; the race checks of
+4.1 are read through `check_history_data` (they do not run in the loader), and an edit of one race's list can fail
+the other race's check too; the relation checks of 9.1 are tested in `HistoryView::load` only (r3; the engineer's
+reading 12); invariant 13 no longer reads a town's population from the census rows.
 
 ## P3-07 history report
 
