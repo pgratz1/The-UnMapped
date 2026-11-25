@@ -74,7 +74,7 @@ GROUP_OF_NEW = dict([(k, GROUP_FIGURES) for k in (79, 80, 81, 82, 83, 84, 86, 87
 GLYPH_TOWER = 20
 MARKER_TOWER = (120, 60, 180)
 SITE_GLYPH_OFFSET = 7
-TOWER_ROWS = ("··hhh··", "·hhKhh·", "·hKFKh·", "·hKFKh·", "·hKFKh·", "·hKKKh·", "·hhhhh·")
+TOWER_ROWS = ("..hhh..", ".hhKhh.", ".hKFKh.", ".hKFKh.", ".hKFKh.", ".hKKKh.", ".hhhhh.")
 # 10.2, 25.1 (e), 25.2: constants of other sections
 SUMMARY_FIGURES_MAX = 6
 OLD_RUIN_YEARS = 1500
@@ -103,6 +103,9 @@ G4 (6.4 rule 4, 9.1 F15, 9.4 L4) a ruler named by rule 4 at a civ_ended or civ_c
    (no reader refuses it).
 G5 (6.5 item 2, 6.3) a split with name_rulers false still starts reign 1 of c' at Y (6.3: the first reign starts at
    the claimant's secession) with its draws: the reading this reference takes (else c' has no temper for 7.2).
+G7 (4.4, 9.4 F26) skill_min is int(0, 1000) and a general's skill is skill_min + pick(...): with skill_min 0 a skill
+   of 0 can be drawn, which F26 (1 <= skill <= 1000) refuses. Either skill_min's range starts at 1 or F26 reads
+   0 <= skill; the shipped 100 never meets it.
 G6 (9.4 L7) served closed by "b's ending_event": a general whose realm ends while its war is open (the realm is the
    side) is closed by standing down with war_end_event = the civ_conquered or civ_ended (in the list).
 The replay's readings (where the spec leaves an order, a tie, a rounding or a wording open; integration compares):
@@ -167,6 +170,27 @@ R31 (9.4 F22) F22 tests the earlier rows of the name (role 1 and the row's civ),
 R32 (9.4) reader checks run in 9.4's order (figure rows, book rows, relation rows of the four kinds in key order,
    then events, then the amended site and monster checks); this reference lists every failure, the first is the
    reader's message.
+R34 (6.2) the reign tallies follow the step order: a T2 declaration or betrayal is read in T3's log before the lines,
+   so it counts for (and names) the reign current at the start of the year, also when that reign ends in the same
+   T3; T6's peace, war_won and conquests count for the reign current after T3.
+R35 (6.4 rule 3) a deed event of a realm already ended (its ending event before the deed) names no ruler (a guard;
+   none occurs).
+R36 (6.5) a crisis in the accession year of a reign already named (a founder named in that year): f_w is that ruler,
+   its ruled row stays (not reopened with the dispute); no parent row (no ruler died).
+R37 (6.6) a general's "first command" is its office_from (the year of its first general_appointed); a re-appointment
+   keeps its start_event and office_from.
+R38 (6.8) "no open site of kind 4 has t as its settlement" reads every kind 4 site with ending 0 (towers never end).
+R39 (6.8) T3's casters in this order: the rises over every alive visible realm, then the books of every living
+   caster, then the blights of every living caster (each loop ascending).
+R40 (6.1, 6.9) Q4: the lines before the deaths of age (6.1's order); a death of age in Q4 waits while the budget of
+   the figure's realm is 0.
+R41 (7.2, 7.3) the strain's floors in this order: rate x allied_strain_permille div 1000 x temper_allied_permille div
+   1000 (allied pairs), then x strain_pm div 1000.
+R42 (7.7) S_c = H x prowess div 1000 x (1000 + might) div 1000, left to right.
+R43 (25.3) R is the number of region rows of the world (islets included), as P5-03a's.
+R44 (7.8) P5-02's "taken" cells include every open site but mines (towers and libraries: a tower's cell is taken).
+R45 (6.6) a war closed by a side's end (conquest or civ_ended) stands its generals down at the next T6 or Q4 with
+   war_end_event = that ending event.
 R33 (18.3) figures-small adds P5-02's monsters-small edits (every monster kind's wake_rate x 2000 up to 10^7,
    living_permille 1000, overrun_permille 1000) to the alliances stress data, so that heroes rise, slay and fall on
    the small maps; the spec's list names the alliances stress data only."""
@@ -352,7 +376,7 @@ def tower_glyph_cells():
 def tower_rows_from_rule():
     cls = tower_glyph_cells()
     ch = {1: "h", 2: "F", 3: "K"}
-    return tuple("".join(ch.get(cls.get((dx, dy), 0), "·") for dx in range(-3, 4)) for dy in range(-3, 4))
+    return tuple("".join(ch.get(cls.get((dx, dy), 0), ".") for dx in range(-3, 4)) for dy in range(-3, 4))
 
 
 def site_glyph_offset(kind, settlement):
@@ -1698,8 +1722,9 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
                                                                      f["start_event"]))
         lam = w.race[f["race"]][6]
         if f["died"] is not None and f["died"] - f["born"] > 2 * lam:
-            de = f["death_event"]
-            quiet = de in w.ev and w.phase.get(w.ev[de][4], (0, 0, 0))[2] == 2
+            # a death that waited for a quiet step's budget: some quiet phase lies between 2 lifespans and the death
+            lo_y, hi_y = f["born"] + 2 * lam, f["died"]
+            quiet = any(ph[2] == 2 and ph[3] <= hi_y and ph[4] >= lo_y for ph in w.phase.values())
             if not quiet:
                 out.append("4: f%d lived %d years, lifespan %d" % (f["id"], f["died"] - f["born"], lam))
     # 5
@@ -2139,8 +2164,9 @@ def i0_026_differences(run, base_root=None):
         old = run(pcr.data(base_root) if base_root else None)
     finally:
         use_027()
-    with riders_off():
-        new = run(faded_data(zero_data(pcr.data(base_root) if base_root else None)))
+    d = faded_data(zero_data(pcr.data(base_root) if base_root else data_027()))   # before riders_off: data_027
+    with riders_off():                                                             # resets the flags
+        new = run(d)
     return [t for t in I0_TABLES if old.get(t, []) != new.get(t, [])], old, new
 
 
@@ -2207,12 +2233,21 @@ def check_fixtures(c, seeds=SMALL_SEEDS, i0_seeds=I0_SEEDS, verbose=False):
     seen = set()
     small = small_data()
     regnal_seen = set()
+    stops = 0
     for seed in seeds:
         t0 = time.time()
         res = fixture_run(seed, small, small_case(seed))
         ks = kinds_of(res)
         seen |= ks
         regnal_seen |= {r[16] for r in res["figure"]}
+        # 18.3: the regnal_max stop: a line whose name has regnal_max (3) recorded bearers, none above
+        lines = {}
+        for r in res["figure"]:
+            if r[3] == RULER:
+                lines.setdefault((r[6], r[1]), []).append(r[16])
+        stops += sum(1 for v in lines.values() if len(v) >= small.figures["regnal_max"])
+        c.ok("figures-small-%d: no regnal number above regnal_max" % seed,
+             max([r[16] for r in res["figure"]] or [0]) <= small.figures["regnal_max"])
         for v in res_problems(res, small):
             c.ok("figures-small-%d: %s" % (seed, v), False)
         if verbose:
@@ -2221,6 +2256,7 @@ def check_fixtures(c, seeds=SMALL_SEEDS, i0_seeds=I0_SEEDS, verbose=False):
             sys.stdout.flush()
     c.eq("18.3: every kind of 79 to 92 happens on figures-small", sorted(set(FIGURE_KIND_KEYS) - seen), [])
     c.ok("18.3: regnal numbers up to III on figures-small (seen %s)" % sorted(regnal_seen), 3 in regnal_seen)
+    c.ok("18.3: a name reaches regnal_max bearers on figures-small (%d lines)" % stops, stops > 0)
     shipped = pcr.stress_data()
     for seed in i0_seeds:
         t0 = time.time()
@@ -2579,7 +2615,7 @@ def write_world_db(res, path, template):
     try:
         for tname in I0_TABLES + ("event_kind",):
             rows = res.get(tname)
-            if rows is None:
+            if rows is None or not conn.execute("SELECT 1 FROM sqlite_schema WHERE name = ?", (tname,)).fetchone():
                 continue
             ncol = len(conn.execute('SELECT * FROM "%s" LIMIT 0' % tname).description)
             conn.execute('DELETE FROM "%s"' % tname)
