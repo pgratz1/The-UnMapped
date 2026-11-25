@@ -1300,7 +1300,9 @@ def trade_line(w, r):
              and {w.one(x, "seller"), w.one(x, "buyer")} == {a, b}]
     if sells:
         line += "; arms from c%d" % w.one(sells[0], "seller")
-    if r[6] is not None and r[8] in w.ev and w.kind(r[8]) == "trade_broken":
+    # reading (integration; spec gap, the engine's form taken): `; broken e<id>` names the row's closing event
+    # whatever its kind (a trade_broken, or a side's ending event when conflict's housekeeping closed it)
+    if r[6] is not None:
         line += "; broken e%d" % r[8]
     return line
 

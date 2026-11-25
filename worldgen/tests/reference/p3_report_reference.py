@@ -763,7 +763,7 @@ class Frames:
         if V7:   # P5-04 10.3: the companions of alliances
             K, k = w.K, w.ev[eid][3]
             calls = kset(w, ("ally_joined_war", "ally_refused", "alliance_betrayed"))
-            ends = kset(w, ("peace", "war_won", "truce", "civ_conquered"))
+            ends = kset(w, ("peace", "war_won", "civ_conquered"))   # the endings that owe spoils (6.11 ruling)
             spoils = kset(w, ("spoils_shared", "spoils_withheld"))
             if k == K["war_declared"]:
                 out |= {x for x in self.kids.get(eid, []) if w.ev[x][3] in calls}
@@ -785,6 +785,8 @@ def summary24(w, fr, candidates_only=False, budget=None):
     ev = w.ev
     excl_kinds = kset(w, ("claim", "claim_settlements", "battle", "battle_at_pass", "allied_battle", "plague_spread",
                           "quiet_stretch"))
+    if V7:   # P5-04 r3 10.3 (lead's ruling): a call to arms is in the summary as a companion of its war only
+        excl_kinds |= kset(w, ("ally_joined_war", "ally_refused"))
     quiet = w.K["quiet_stretch"]
     cands = [e for e in w.t["event"] if e[7] >= SUMMARY_MIN_SALIENCE and e[3] not in excl_kinds and
              e[0] not in fr.excluded]
