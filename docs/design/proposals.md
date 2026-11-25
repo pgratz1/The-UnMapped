@@ -1460,5 +1460,6 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision (Paul, 2026-11-25):
   - Monsters and lairs: "Agree, we should recalibrate since the living monsters will be a major highlight of the game when players explore the land." The bounds stay at 85 and 65; P5-06 (spec r3, 25.3) tunes back to them.
   - Spoils: agreed with the recommendation. A first withheld share sours the alliance; a second, or one large kept share, ends it. To be built in the follow-up stage P5-04a, with the world critic's notes on P5-04.
+  - The spoils target under that rule (Q-P5-04a-1, later the same day): "I'm good with the way that rule plays out, you can continue." SP2 is restated to a spurning in 10% to 35% of worlds; the P5-04a spec (r1, branch `p5/04a-spec`) is approved.
 - Status: decided
 
