@@ -484,6 +484,30 @@ The game builds playable space on demand from `world.db`, and every piece is a p
 
 **Steep ground and weather.** Some high ground is too steep to walk, by design. The runtime keeps those slopes as they are; roads and improved passes from history are the built ways through, and spells such as levitate give casters others. The stored prevailing wind and per-world temperature feed weather and vegetation at runtime.
 
+**What makes each biome distinct**
+
+The nine land biomes are all cool and northern (alpine, highland moor, heath, steppe, grassland, temperate forest, wet woodland, fen and marsh), so several could blur together on foot. Each biome gets a signature across five channels, and no two biomes may share more than two of them:
+
+- **Silhouette.** Vegetation height and density, and small-scale ground shape: tussocks, peat hags, scree, reed beds, standing water.
+- **Light and weather.** Fog in the fens, wind and long sight lines on the steppe, low cloud on the moor, dim green light under forest canopy.
+- **Movement.** Each biome changes how the player travels. Fen slows and hides deep water, forest blocks sight, alpine ground forces the player onto passes, steppe leaves them exposed.
+- **Life and resources.** One or two beasts, a gatherable and a hazard that belong mainly to that biome, driven by the stored resource and beast layers.
+- **A landmark type.** Something visible from a distance that occurs only there, such as tors on the moor, standing stones on the heath or ancient giant trees in the forest.
+
+The signatures are data: each biome's TOML file names its scatter sets, weather, movement rules, gatherables and landmark types.
+
+**Land marked by history**
+
+History alters the ground. The runtime lays these marks over the natural biome wherever the database records the cause, with its place and year, and older marks are more overgrown:
+
+- Battlefields: grave mounds, broken arms, earthworks.
+- Plague and famine villages: fields gone wild, burial pits.
+- Land burnt by a dragon or ravaged by monsters: dead trees, scorched rock, the renamed region around it.
+- The forest around a hidden refuge, especially a faerie one: denser, stranger, harder to cross.
+- Sacked and abandoned places, and the roads that once served them.
+
+Every mark traces back to events the player can learn about, so the land is evidence for the history.
+
 **Terrain approach: Terrain3D first, with a test**
 
 Terrain3D supplies level of detail, texturing, collision that follows the player, holes for cave and dungeon mouths, and foliage instancing. Custom chunk meshes would mean writing all of those, in exchange for full control of threading and streaming.
@@ -505,6 +529,32 @@ The deciding test:
 4. Keep Terrain3D if VR holds 90 Hz throughout. Switch to custom chunk meshes if region loading causes hitches that cannot be fixed from outside the plugin.
 
 Other reasons to switch later: worlds well beyond 32 km, or open-world terrain a heightmap cannot express, such as overhangs.
+
+**Style of built places: four layers**
+
+Every city, town, village, tower, hold, mine, lair and ruin takes its look from four independent layers, so no kit is authored per race and biome pair:
+
+| Layer | Decides | Source in the world file |
+| --- | --- | --- |
+| Site kind | Layout grammar: what a city, town, tower, mine or lair consists of | Settlement and site kind, population |
+| Builder race and culture | Form: proportions, roof shapes, defences, street pattern, ornament | Founding race, mixed-race shares, later holders |
+| Biome | Material and adaptation: timber, stone, turf, thatch; stilts in fen, terraces on slopes | Biome and resource layers at the site |
+| History | Age and condition: burnt, abandoned intact, overgrown, reoccupied, renamed | Founding year, how it ended, later holders |
+
+This needs six race kits, nine material palettes and a set of adaptation rules.
+
+- **Races are strongly distinct.** A player who has travelled for a while can tell who built a place by looking at it. The races differ in layout grammar as well as ornament: dwarves build mostly underground with little showing above, faeries build small within living trees, goblins dig warrens, and elves, humans and orcs build above ground in forms that cannot be mistaken for one another. Each race's kit is fixed in its own spec.
+- **Biome sets material.** The same dwarven hold reads as dwarven whether it is cut into alpine granite or dug under a moor; an elven town in forest is built differently from one on the steppe.
+- **History shows.** A place left by plague stands intact with belongings in place; a sacked one is burnt and broken; one overrun by monsters is a lair. A town founded by one people and held by another shows the work of both, and a mixed settlement has quarters in each people's style.
+
+Built in two tiers:
+
+1. **Site plans at world creation**, in phase P6: footprint, walls, gates, districts and roads, stored in the world file so they are identical on every machine.
+2. **Geometry at runtime**: buildings, interiors and loose objects are generated from the plan and a seed when the player approaches.
+
+Interiors load behind a door, as in Skyrim. Seamless interiors were considered for VR and set aside for their performance cost.
+
+Cities are the most expensive kind. The layers are proved first on a vertical slice: one race's village in two biomes, plus its ruined form.
 
 **Cities and villages**
 
