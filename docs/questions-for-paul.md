@@ -1,10 +1,10 @@
 # Questions for Paul
 
-A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-24 (generator 0.24.0 on main; P5-03a, P5-04 and P5-06 specs on branches).
+A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-25 (generator 0.25.0 on main; P5-04 and P5-06 specs on branches).
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 0, decided 194, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 2, decided 194, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -14,9 +14,14 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 ### Blocking
 
-None. (2026-11-24: Paul answered every open question of this file; his answers are in section 2.)
+None.
 
-No open questions. (2026-11-24: Paul answered the two follow-ups; they are in section 2.)
+### Not blocking (the build carries an interim choice)
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-03a-1 | P5-02's target M4 asks for a living monster at the end of history in at least 85 of 100 default worlds. Since 0.25.0 the undead rise through the whole history instead of mostly after year 5500 (as intended), so fewer worlds end with a late undead host as their one living monster: 82 and 83 worlds in two samples (0.24.0: 87 and 89). Restate the bound, or tune so that more monsters live at the end? | Recommended: restate M4 as at least 80 worlds. The other 17 or so still have lairs, ruins and slain monsters to find. Built: nothing changed. | P5-03a validation finding 2 (`docs/reviews/p5-03a-relations-followups-validation.md`) | |
+| Q-P5-04-8 | Spoils, after calibration. You decided that an ally kept from its share "might sour the relationship", and agreed (Q-P5-04-3) that one withheld share would not by itself end an alliance. To reach the target of a spurned alliance in 20% to 60% of worlds, the engineer's calibration made one withheld share end the alliance at once (`withheld_to_break` 1; the spec began at 2). Measured on 100 worlds: a share is granted 68% of the time, 28 worlds have a spurning, 5% of ended alliances end that way. Keep one, or go back to two and accept fewer spurnings? | Recommended: keep one; with two, a spurning would be rare (few wars are won twice by the same allies inside one 150-year term). Built: one (P5-04, not merged yet). | P5-04 spec r3 section 24; engineer's report | |
 
 Work the lead took from the answers (not questions): record a famine or plague in a large world's summary when its impact is significant (Q-P5-01-1), in the next stage that changes the report; recording a movie on Windows stays untested until a Windows machine is at hand (Q-P4-06-7).
 
@@ -72,7 +77,7 @@ The spec's section 17 says all six questions were decided by the lead "as r1 rec
 | Q-P5-03-4 | Do settlers flee a place a monster keeps raiding (a small place flees after two raids in 50 years), and are hunts called sooner after repeated raids? | Yes (hunts sooner, flight for fear; tribute to a monster waits for wealth). Built so; no choice was needed beyond confirming. | [P5-03 28 item 4](specs/p5-03-race-relations.md); same proposals entry | Agreed with recommendation |
 | Q-P5-03-5 | The `civs4` summary length. Paul's bound was "about 1,100"; measured median 1,112. Accept the lead's restatement to at most 1,150? | The lead's ruling in r2 (21 T18). Alternative: no `[peoples]` lines at summary in worlds of more than 16 realms. | [P5-03 28 item 5](specs/p5-03-race-relations.md); decided earlier: [P5-02](specs/p5-02-beasts-monsters.md) 23 item 4 | Agreed with recommendation |
 | Q-P5-03-6 | One stage or two (P5-02a first, then P5-03)? | Built as one stage. No decision found; nothing depends on it now. | [P5-03 28 item 6](specs/p5-03-race-relations.md) | Agreed with recommendation |
-| Q-P5-03-7 | Do race relations now move enough? With the calibrated memory a default world has a median of one change of band between peoples; most pairs keep the feeling their camps give them. Should dispositions move more (larger memory, smaller `band_margin`, stances nearer the bands)? | Shipped values. To be judged after the world critic's review of P5-03a. This is also the question P5-03a answers. | [P5-03 28 item 7](specs/p5-03-race-relations.md); P5-03a spec 17.1 (branch); lead, session of 2026-11-24 | Agreed, lets see what the critic says |
+| Q-P5-03-7 | Do race relations now move enough? With the calibrated memory a default world has a median of one change of band between peoples; most pairs keep the feeling their camps give them. Should dispositions move more (larger memory, smaller `band_margin`, stances nearer the bands)? | Shipped values. To be judged after the world critic's review of P5-03a. This is also the question P5-03a answers. | [P5-03 28 item 7](specs/p5-03-race-relations.md); P5-03a spec 17.1 (branch); lead, session of 2026-11-24 | Agreed, lets see what the critic says The world critic at 0.25.0 (2026-11-24, `docs/reviews/p5-03a-relations-followups-world-critic.md`): relations now move enough (every one of 12 default worlds ends with 2 to 5 friendships); its notes are on wording ("grew wary" is also used for a thaw from hatred) and on pairs that flip back and forth, taken into the next stage that changes world bytes. |
 | Q-P5-03-8 | M4: a lair on a former settlement open at the end. Paul's bound (2026-11-23) is 65 of 100 worlds; two samples of 100 gave 62 and 66. Is the bound met, or keep it and calibrate further, or lower it? | No decision found. Validation figure pending. | [P5-03 28 item 8](specs/p5-03-race-relations.md); proposals "Paul's wish of 2026-11-23" (the 65 bound); lead, session of 2026-11-24 | Sounds fine |
 
 #### E. P5-12 regions renamed by history ([spec section 17](specs/p5-12-renamed-regions.md))
