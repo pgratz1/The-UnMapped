@@ -45,8 +45,8 @@ sys.path.insert(0, _HERE)
 
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p5-04-alliances.txt")
-GENERATOR_VERSION = "0.26.0"
-SCHEMA_VERSION = 11
+GENERATOR_VERSION = "0.27.0"   # P5-06 phase 2: 0.27.0 worlds (schema 12)
+SCHEMA_VERSION = 12
 
 # 3: appended to streams.hpp after hist.relations.settlers, in this order
 STREAMS = ("hist.alliances.form", "hist.alliances.join", "hist.alliances.trade", "hist.alliances.spoils",
@@ -973,6 +973,8 @@ def invariant_violations(w, t, races):
         if r[4] in spoils_ids:
             out.append("11: region_control row of r%d by spoils e%d" % (r[0], r[4]))
     for r in w.t["relation"]:
+        if r[0] == 6:   # P5-06 6.4 rule 3: a spoils event may open a ruled row (the ruler it names)
+            continue
         if r[7] in spoils_ids or (r[6] is not None and r[8] in spoils_ids):
             out.append("11: relation row %r by a spoils event" % (r[:6],))
     # 12: spurned
@@ -1486,7 +1488,7 @@ def case_lines(name, w):
 
 
 GOLDEN_HEADER = """\
-# P5-04 alliances golden vectors for generator 0.26.0 (schema 11), written by
+# P5-04 alliances golden vectors for generator 0.27.0 (schema 12), written by
 # worldgen/tests/reference/p5_04_alliances_reference.py golden from world files of the reference chain.
 # <case> rows <alliance|trade|war_joined> <n> <sha256 of the rows, P0-04 8's encoding, 9 columns>
 # <case> events <n> <sha256 of the event rows of kinds 63 to 78>; participants, causes, values of those events

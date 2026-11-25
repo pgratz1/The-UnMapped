@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.26.0"
+GENERATOR_VERSION = "0.27.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -154,12 +154,12 @@ FLAGS = dict(
     p503a=True,         # P5-03a 3 to 8: long peace, common enemies, credit and contributions by sign, meetings by
                         # word, graded settlers, the expulsion gap, A1; the undead threshold by world population (6)
     # P5-04 (generator 0.26.0)
-    alliances=False,    # P5-04 6, 7: alliances, trade, mines and arms (p5_04_alliances_reference.Alliances after the
+    alliances=True,     # P5-04 6, 7: alliances, trade, mines and arms (p5_04_alliances_reference.Alliances after the
                         # relations; the seams of 7 in World), the AllianceView read by conflict
     # P5-06 (generator 0.27.0)
-    figures=False,      # P5-06 5 to 7: the figures subsystem after the alliances (p5_06_figures_reference.Figures), the
+    figures=True,       # P5-06 5 to 7: the figures subsystem after the alliances (p5_06_figures_reference.Figures), the
                         # FigureView read by conflict, peoples, monsters and alliances; battle_led; schema 12
-    riders=False,       # P5-06 25.3 (the two undead rules) and 7.8 (P5-02's site loops test kinds 1 and 2); 25.1 is the
+    riders=True,        # P5-06 25.3 (the two undead rules) and 7.8 (P5-02's site loops test kinds 1 and 2); 25.1 is the
                         # peoples flag nofade
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
@@ -236,7 +236,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.26.0")   # 0.27.0 (P5-06) is served on request: use_version("0.27.0")
+    use_version("0.16.0" if on else "0.27.0")   # P5-06 phase 2: 0.27.0 by default (--version 0.26.0: P5-04)
 
 
 class rules:
@@ -3403,7 +3403,8 @@ def check_peoples_invariants(c, res, inp, w, label):
                                                "settlement_mixed", "standing_changed")) or (   # P5-03 6.1 Q1, Q4
                 FLAGS["alliances"] and key in ("alliance_renewed", "alliance_lapsed", "alliance_broken",
                                                "trade_opened", "trade_broken", "spoils_shared", "spoils_withheld",
-                                               "alliance_spurned", "mine_opened", "arms_sold"))   # P5-04 6.1 Q4
+                                               "alliance_spurned", "mine_opened", "arms_sold")) or (   # P5-04 6.1 Q4
+                FLAGS["figures"] and e[3] >= K.get("came_to_rule", 1 << 30))   # P5-06 6.1 Q4, 6.13 (invariant 8 there)
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
@@ -3434,6 +3435,8 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     rel = res["relation"]
     seen_enmity = set()
     for r in rel:
+        if FLAGS["figures"] and r[0] == FIGURE:
+            continue   # P5-06 9.2: ruled, served, rival, parent (checked by p5_06_figures_reference's 9.4 and 13)
         lab = "%s inv 1 relation %s" % (label, r)
         c.true(lab + " types", r[0] == CIV and r[2] == CIV)
         al = FLAGS["alliances"]

@@ -900,7 +900,9 @@ def render(view, eid, links=None):
             ph = view["beast_bold"](ev["values"][val_seq["beast"]])
             out.append(ph[(eid - 1) % len(ph)])
         elif RENDER_R27 and body == "@book":   # P5-06 7.9: the title of the book row of this event
-            out.append(view["book_title"](eid))
+            # integration reading (spec gap, the engine's): the title is a name for 8.5 r10, so a leading "The "
+            # mid-sentence becomes "the " (no link: a book is no entity)
+            put_name(view["book_title"](eid))
         elif RENDER_R12 and body.startswith("@causes:"):
             # r12 20.2: L = the entries' cwords of the causes' kind keys in ascending cause id, first
             # occurrence kept; nothing when L is empty; else word1, L joined as {role:all}, word2.
@@ -2031,7 +2033,40 @@ def view_from_rows(res, regions, races, gods):
         view["region_at"] = region_at_event_fn(names[REGION], res.get("region_name", []))
         rn_rows = res.get("region_name", [])
         view["region_at_year"] = lambda rid, y: region_at_year(names[REGION], rn_rows, rid, y)
+    if RENDER_R27 and "figure" in res:   # P5-06 7.9: display names of type 6, the recorded ruler, {@book}
+        names[6] = {f[0]: figure_display_name(f[1], f[16], f[2]) for f in res["figure"]}
+        view["ruler_at"] = ruler_at_fn(res.get("relation", []))
+        titles = {b[5]: b[1] for b in res.get("book", [])}
+        view["book_title"] = lambda e: titles[e]
     return view
+
+
+def figure_display_name(name, regnal, epithet):
+    """P5-06 6.10, 6.14: the name, then ' ' + the roman numeral when regnal >= 2, then ' ' + the epithet."""
+    out = name
+    if regnal >= 2:
+        out += " " + pnr.roman(regnal)
+    if epithet:
+        out += " " + epithet
+    return out
+
+
+def ruler_at_fn(relation):
+    """P5-06 7.9: the recorded ruler of civilization c at event e: the figure a of the ruled row (a, c) with
+    since_event <= e and (until_event 0 or e <= until_event); rows by (civ, since_event), the first that qualifies
+    (13 item 1: at most one does)."""
+    by = {}
+    for r in sorted((r for r in relation if r[4] == "ruled" and r[0] == 6 and r[2] == 3), key=lambda r: (r[3], r[7])):
+        by.setdefault(r[3], []).append((r[7], r[8] or 0, r[1]))
+
+    def at(c, e):
+        for since, until, f in by.get(c, ()):
+            if since > e:
+                break
+            if until == 0 or e <= until:
+                return f
+        return 0
+    return at
 
 
 def region_at_event_fn(geo, rows):
@@ -4289,7 +4324,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.26.0")   # P5-04 (generator 0.26.0); --version 0.25.0 serves the P5-03a file
+use_version("0.27.0")   # P5-06 (generator 0.27.0); --version 0.26.0 serves the P5-04 file
 
 
 def main(argv):

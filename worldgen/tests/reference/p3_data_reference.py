@@ -3683,7 +3683,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.26.0")
+use_version("0.27.0")   # P5-06 phase 2; --version 0.26.0 serves the P5-04 listings
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)

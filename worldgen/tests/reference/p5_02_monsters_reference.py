@@ -1197,7 +1197,8 @@ class Rows:
 
 
 MONSTER_EVENT_KINDS = ("monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid",
-                       "settlement_overrun", "monster_slain", "monster_driven_off", "monster_died")
+                       "settlement_overrun", "monster_slain", "monster_driven_off", "monster_died",
+                       "monster_slain_by_hero", "hero_rose", "hero_slain")   # P5-06 11.2: kinds naming a monster
 
 
 def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, quarter=True):
@@ -1246,7 +1247,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
                 out.append("4: monster %d event e%d outside its life" % (m[0], e[0]))
         if sum(1 for e in evs if x.key[e[3]] == "settlement_overrun") > 1:
             out.append("4: monster %d overran twice" % m[0])
-        sl = [e for e in evs if x.key[e[3]] == "monster_slain"]
+        sl = [e for e in evs if x.key[e[3]] in ("monster_slain", "monster_slain_by_hero")]   # P5-06 11.2
         di = [e for e in evs if x.key[e[3]] == "monster_died"]
         if (m[9] == SLAIN) != (len(sl) == 1) or len(sl) > 1 or (m[9] == DIED) != (len(di) == 1) or len(di) > 1:
             out.append("4: monster %d status %d with %d slain, %d died" % (m[0], m[9], len(sl), len(di)))
@@ -2019,7 +2020,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.26.0"   # P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
+    version = "0.27.0"   # P5-06 phase 2 (--version 0.26.0: P5-04's file); P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

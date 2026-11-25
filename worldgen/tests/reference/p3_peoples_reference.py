@@ -125,7 +125,7 @@ FLAGS = dict(
                         # standing do not fade; 7.2: the ledger calls of the ruin procedure; 7.3 owner_event; 9.4
                         # abandon public (with causes)
     # P5-06 (generator 0.27.0)
-    nofade=False,       # P5-06 25.1 (a): no ruin fades (Q3 does nothing); ruin_fade_years and ghost_fade_years gone
+    nofade=True,        # P5-06 25.1 (a): no ruin fades (Q3 does nothing); ruin_fade_years and ghost_fade_years gone
 )
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
@@ -172,7 +172,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.25.0")
+    use_version("0.16.0" if on else "0.27.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -318,7 +318,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62, 78)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62, 78, 92)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
