@@ -263,6 +263,20 @@ BIOME_KEYS = {1: "ocean", 2: "lake", 3: "temperate_forest", 4: "grassland", 5: "
 COVER_BIOMES = ("temperate_forest", "wet_woodland", "fen", "marsh")
 
 
+def principal_war_rows(res):
+    """The war rows of declarations (P5-04 10.4: a row opened by an ally_joined_war is an ally's, not a war)."""
+    key = (len(res["relation"]), len(res["event"]))
+    if _PWR.get("rel") is not res["relation"] or _PWR.get("ev") is not res["event"] or _PWR.get("key") != key:
+        _PWR["rel"], _PWR["ev"] = res["relation"], res["event"]
+        j = K.get("ally_joined_war")
+        joined = {e[0] for e in res["event"] if e[3] == j}
+        _PWR["key"], _PWR["rows"] = key, [r for r in res["relation"] if r[4] == "war" and r[7] not in joined]
+    return _PWR["rows"]
+
+
+_PWR = {}
+
+
 def BATTLES():
     """P5-04 11.1: the battle kinds set (allied_battle where the catalogue has it)."""
     return (K["battle"], K["battle_at_pass"]) + ((K["allied_battle"],) if "allied_battle" in K else ())
@@ -2649,7 +2663,8 @@ def stats_lines(res, inp):
     E = inp.params["span"]
     o.append("relations_enmity = %d" % sum(1 for r in rel if r[4] == "enmity"))
     o.append("relations_peace = %d" % sum(1 for r in rel if r[4] == "peace"))
-    yrs = [(r[6] if r[6] is not None else E) - r[5] for r in rel if r[4] == "war"]
+    pw = principal_war_rows(res)   # P5-04 10.4: a joined war row is an ally's, not a war
+    yrs = [(r[6] if r[6] is not None else E) - r[5] for r in pw]
     o.append("war_years_total = %d" % sum(yrs))
     o.append("war_years_max = %d" % (max(yrs) if yrs else 0))
     o.append("civilizations_conquered = %d" % sum(1 for c in res["civilization"]
@@ -2662,7 +2677,7 @@ def stats_lines(res, inp):
                                                                    for c in res["civilization"])))
     civ_race = {c[0]: c[2] for c in res["civilization"]}
     for r in inp.races:
-        o.append("wars_attacker_%s = %d" % (r[1], sum(1 for x in rel if x[4] == "war" and civ_race[x[1]] == r[0])))
+        o.append("wars_attacker_%s = %d" % (r[1], sum(1 for x in pw if civ_race[x[1]] == r[0])))
     if pe.at_least("0.18.0"):
         o += stats21_lines(res, inp)       # P3-07 r8 21.5
     return o
@@ -3605,7 +3620,7 @@ def weary_violations(res, ww, E, count_open=False):
             run += 1
             last_end = y1
         if count_open:   # 20.23: the wars over (b, g) open at e, by any attacker
-            opened = sum(1 for r in res["relation"] if r[4] == "war" and r[7] < e[0] and
+            opened = sum(1 for r in principal_war_rows(res) if r[7] < e[0] and
                          ev[r[7]][5] == g and role(r[7], 2) == b and (r[6] is None or r[8] > e[0]))
             now = run if (last_end is not None and not any(last_end <= y <= e[1] for y in ch)) else 0
             if now + opened >= ww:
@@ -3794,8 +3809,8 @@ def replay_r17(res, dat=None):
         rc_by_event.setdefault(rc[4], []).append(rc)
     dat = dat or data()
     hy = {rid: r.get("hidden_years", 300) for rid, r in dat.race.items()}
-    war_of_end = {r[8]: r[7] for r in res["relation"] if r[4] == "war" and r[6] is not None}
-    war_start = {r[7]: r for r in res["relation"] if r[4] == "war"}
+    war_of_end = {r[8]: r[7] for r in principal_war_rows(res) if r[6] is not None}
+    war_start = {r[7]: r for r in principal_war_rows(res)}
     sf = role_of(res, "colony_founded", "founder")
 
     def holder(g, y, before_event=None):
@@ -4306,7 +4321,7 @@ def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, v
             c.true("%s r14 21.6 war e%d aim ending logged" % (label, war["w"]),
                    any(x[0] == war["w"] and x[1] == "aim" for x in w.aim_log))
     # 21.7 item 2: no search_abandoned in a region where its war fought a battle; item 3: salience
-    war_of_end = {r[8]: r[7] for r in res["relation"] if r[4] == "war" and r[6] is not None}
+    war_of_end = {r[8]: r[7] for r in principal_war_rows(res) if r[6] is not None}
     base35 = [x[5] for x in res["event_kind"] if x[0] == K["search_abandoned"]][0]
     first35 = True
     for e in res["event"]:
@@ -4403,7 +4418,7 @@ def check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, v
     idx = (kind, ev, causes, kids, parts)
     t = w.ct
     role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
-    war_of_end = {r[8]: r[7] for r in res["relation"] if r[4] == "war" and r[6] is not None}
+    war_of_end = {r[8]: r[7] for r in principal_war_rows(res) if r[6] is not None}
     ends = {war["w"]: war for war in w.wars}
     for e in res["event"]:
         k = e[3]

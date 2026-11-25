@@ -1844,8 +1844,21 @@ kept as written) without the engineer's branch. Phase 1 records no golden.
   reading R18: alliance and trade rows are no adversaries either), `allied_battle` in the battle kinds (11.1),
   fixture H16, the fixture DDL at schema 11.
 - `p3_conflict_reference.py`: `BATTLES()` (the battle kinds set of 11.1 in its row checks and `stats21_lines`), the
-  flag `alliances` (0.26.0): `history_stage` refuses at 0.26.0 (the replay of 6 and 7 is not written in phase 1, see
-  `p5_04_alliances_reference.REPLAY_TODO`); `p3_peoples_reference.py`: 0.26.0 in `VERSIONS` (no peoples rule).
+  flag `alliances` (0.26.0) and the seams of 7 in `World` (`allied`, `allies_of`, `bloc_share`, `strengthened`,
+  `deterred`, `open_wars_of`, `join_war`, `side_forces`, `allied_casualties`, `withdrawals`, `allies_at_end`,
+  `allies_ended`, `allies_at_side_end`, `side_end_spoils`, `war_spoils`, `principal_war_rows`); its row checks know
+  kinds 63 to 78 and the `alliance`, `trade` and joined `war` rows (check-world at schema 11);
+  `p3_peoples_reference.py`: 0.26.0 in `VERSIONS` (no peoples rule; a mine holds back no ruin's fading);
+  `p5_02_monsters_reference.py`: `allied_battle` in the violent dead, kind 3 skipped by its site loops;
+  `p5_03_relations_reference.py`: the P5-04 kinds among the contributions of its turn checks.
+- The replay (phase 1, second part): `p5_04_alliances_reference.Alliances` (5, 6), installed after the relations in
+  T2, T6 and Q4; `REPLAY_TODO` names what is where, `readings` lists A1 to A19 (the places integration compares).
+  `fixtures [--quick]`: alliances-small (18.3; reading A11: every race, `SMALL_SEEDS`, every kind of 63 to 78 on
+  seeds 3, 6, 10), check-world's invariants and the reader checks on its histories and on the shipped tuning's stress
+  histories, I0 against no subsystem and against 0.25.0 on stress seeds 0, 1, 2, 5 (about 4 minutes);
+  `i0-world --inputs DIR CASE...` I0 on world cases (geo-seed-0-512 and geo-seed-42-512 equal 0.25.0's, every
+  history table; 3 minutes). `p3_report_reference.py build-inputs` writes schema 11 worlds at 0.26.0 from 0.25.0
+  C++ sources (region names kept); a 1024 world takes about 15 s of CPU.
 - `p4_timeline_reference.py`: rule set `p5-04` (default; P4-01 r6): `alliances_at`, `allies_of`, `alliance_groups_at`,
   `trades_at`, the dump lines `alliance` and `trade` after every earlier line of D(Y) (reading T1), `check_p504` on
   H16; `--rules p5-03a` reproduces `p4-01-timeline.txt` byte for byte.
@@ -1855,9 +1868,10 @@ kept as written) without the engineer's branch. Phase 1 records no golden.
 - `p4_browser_reference.py` (default 0.26.0; `--version 0.25.0` reproduces `p4-05-browser.txt`): `GROUP_KEYS_026`
   (11.2: `alliances` = 7, 71 in `war`, 77 in `settlements`, `ALL_GROUPS` 0xFF).
 
-Phase 2 needs, before any world-dependent golden can be recorded from the references: the replay of P5-04 inside
-`p3_conflict_reference.py` (REPLAY_TODO), then the calibrated values in the listings above, then the command list of
-P5-03's phase 2 with `p5_04_alliances_reference.py golden --inputs <the reference's worlds>` added.
+Phase 2 needs, before any world-dependent golden can be recorded from the references: the calibrated values in the
+listings above, the mine glyph's bitmap in the spec (11.3), then the command list of P5-03's phase 2 with
+`p5_04_alliances_reference.py golden --inputs <the reference's worlds>` added (the golden itself reads world files:
+a second or two for fifteen cases; building them with `build-inputs` is the cost).
 
 ## P3-07 history report
 
