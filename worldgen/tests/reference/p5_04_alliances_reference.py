@@ -1017,7 +1017,14 @@ def invariant_violations(w, t, races):
             continue
         cen = w.census_at(s_, y0)
         pop = cen[5] if cen is not None else st[11]
-        if (cen is not None and cen[2] != c) or w.holder_at(R, y0) != c:
+        # the rows show the end of year y0: a mine whose town or region was lost later in its opening year (its
+        # site ended in y0 by a later event) is read at y0 - 1
+        lost_same_year = x[11] == y0 and x[12] > x[10]
+        if lost_same_year:
+            cen = w.census_at(s_, y0 - 1) or cen
+            pop = cen[5] if cen is not None else pop
+        held = w.holder_at(R, y0) == c or (lost_same_year and w.holder_at(R, y0 - 1) == c)
+        if (cen is not None and cen[2] != c) or not held:
             out.append("13: mine si%d: s%d or r%d not of c%d at %d" % (sid, s_, R, c, y0))
         if pop < pop_min:
             out.append("13: mine si%d: s%d of %d people below %d" % (sid, s_, pop, pop_min))
