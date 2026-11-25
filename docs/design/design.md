@@ -676,7 +676,7 @@ The first version keeps the ruleset small so effort goes to the world. Each syst
 
 - **Disposition.** Every NPC has a disposition toward the player that starts from the relation between their race and the player's, as history left it. An elf-founded town that fought goblins for a thousand years is cold to a goblin player.
 - **Local variation.** Disposition is then adjusted by the settlement's racial mix and its own history, the NPC's faction, and the NPC's personal record. A mixed trading town is more tolerant than an isolated hold.
-- **Effects.** Disposition sets the tone of dialogue, how much an NPC will share, prices, and which services and quests are offered. Low disposition means being shunned or refused; it does not by itself start a fight.
+- **Effects.** Disposition sets the tone of dialogue, how much an NPC will share, prices, and which services and quests are offered. Low disposition usually means a cold reception, being shunned or refused service. Attack on sight is rare and needs a fresh cause, such as a raid or battle by the player's people against that settlement within recent years; the window is a tuning value.
 - **Earned standing.** The player's deeds move disposition over time, per settlement and per faction, so a shunned outsider can win acceptance and a welcome one can lose it.
 - **Dialogue.** Disposition and its reasons go into the NPC's fact sheet, so the wording reflects both the attitude and the history behind it.
 - **Start.** The player begins in or near a settlement where their race is present, when the world has one.
@@ -748,6 +748,38 @@ Research lets the player compose a new spell from components they know, inside h
 Constraints that keep research in check: one effect per spell at first, with a perk unlocking a second; parameter caps per school skill; and the same cost formula for fixed and researched spells, so a researched spell cannot undercut an equivalent fixed one.
 
 All schools, effects, forms, compatibility rules and formula constants live in data files.
+
+### Townspeople
+
+Every named NPC in a settlement has a record, generated from the settlement's site plan and a seed, so the same world always holds the same people.
+
+**The NPC record**
+
+- **Identity.** Name from their culture's name lists, race, age, and household: who they live with and are related to.
+- **Role.** Occupation, workplace building and home building. Roles follow the settlement's kind, size and resources: a mining town has miners and smiths, a fen village has fishers and reed cutters.
+- **Schedule.** A daily timetable of blocks (work, meals, tavern, temple, sleep) drawn from a template for the role, with small per-person shifts and a weekly variation such as a market day. A blacksmith works the smithy by day and goes home at night.
+- **Temperament.** A few seeded traits, among them how open the person is to strangers.
+- **Knowledge.** Which local events and people they know about, for the fact sheet used in dialogue.
+
+**Schedules are timetables.** An NPC's place is a function of the time of day, so the game puts everyone where they belong when the player arrives, with no simulation of the town while the player is away. Bad weather, danger and festivals interrupt the timetable. All six races keep the same daytime hours for now; night-active goblins and orcs were considered and set aside as more trouble than they are worth.
+
+**How many people are realized.** On the player's first visit the game generates full records for up to about two hundred residents, starting with those whose roles the settlement needs. The rest of the recorded population appears as background figures. A background figure the player engages with gets a full record at that moment, drawn from the same seed, and keeps it.
+
+**Attitude, person by person.** An NPC's disposition (see Player race above) is the sum of five layers, and each layer carries a reason the NPC can voice:
+
+| Layer | Source | Example |
+| --- | --- | --- |
+| Their people's view of the player's | Race relations at the present year | Elves and goblins have hated each other for 2,000 years in this world |
+| Local history | Events at this settlement | The town was sacked by goblins 80 years ago, or it has a goblin quarter and is used to them |
+| The individual | Temperament, role and personal history | An innkeeper or trader is more tolerant, a guard less; someone lost family in a raid |
+| The player's deeds | Reputation earned in play | The player cleared the lair that threatened the town |
+| The moment | Current behaviour | Weapon drawn, caught stealing |
+
+The individual layer is a bell-shaped spread around the settlement's baseline, with its width set per race in data. A goblin player in an elven town meets mostly cold receptions, a few people openly hostile and a few willing to deal fairly. Earned reputation can in time outweigh race.
+
+**Memory of the player.** An NPC remembers their dealings with the player: what was said, trades, favours, slights, tasks given and how they ended. The memory is kept in the save file, moves that NPC's disposition, and goes into their fact sheet, so a person the player has dealt with for a long time becomes distinct from their neighbours.
+
+**Quest givers.** Between one in five and one in ten named NPCs has a task for the player who talks to them; the share is a tuning value. A task grows out of the NPC's role and the world around them, and its target is a real place or people in the world file. A blacksmith might need mithril for an important weapon and send the player to the nearest dwarven hold that mines it. Relations between the peoples involved, the road there and what lives along it all come from history, so the same kind of task plays differently in each world.
 
 ### Local LLM dialogue
 
