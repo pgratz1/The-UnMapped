@@ -216,7 +216,7 @@ void check_world(const tltest::WorldSpec& spec) {
     const std::int64_t mid = E / 2;
     const std::vector<std::uint8_t> plain = wi::render_territory(base, h.timeline, colours, mid, 1);
     const std::vector<std::uint8_t> one = overlay(base, h, ix, mid, 1);
-    std::set<std::tuple<int, int, int>> allowed = {{0, 0, 0}, {240, 240, 240}, {150, 150, 150}, {128, 128, 128}};
+    std::set<std::tuple<int, int, int>> allowed = {{0, 0, 0}, {240, 240, 240}, {150, 150, 150}, {128, 128, 128}, {120, 60, 180}};   // P5-06 11.4: the tower's fill
     for (const wi::Rgb& c : colours) allowed.insert({c.r, c.g, c.b});
     for (const wi::EventSymbol sy : {wi::EventSymbol::plain, wi::EventSymbol::plague, wi::EventSymbol::battle,
                                      wi::EventSymbol::siege, wi::EventSymbol::sack}) {

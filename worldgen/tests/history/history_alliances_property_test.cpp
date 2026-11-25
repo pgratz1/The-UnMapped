@@ -67,7 +67,7 @@ const wd::ContentSet& zero() {
 // elves and faeries ally by origin), on stress seeds of the conflict golden file (together every kind of 63 to
 // 78 at the calibrated values; seed 5 holds the spurnings).
 const std::vector<std::uint64_t>& fixture_seeds() {
-    static const std::vector<std::uint64_t> v = {3U, 5U, 6U, 7U};
+    static const std::vector<std::uint64_t> v = {3U, 5U, 6U, 7U, 9U, 12U, 13U, 14U};   // P5-06: spoils_shared and alliance_spurned no longer occur on 3, 5, 6, 7 (stress geographies of the golden) (temper_spoils, figures)
     return v;
 }
 

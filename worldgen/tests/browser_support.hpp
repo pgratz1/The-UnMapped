@@ -282,7 +282,7 @@ inline std::vector<std::pair<std::string, brapi::EventFilter>> filter_list(const
         f.region = r;
         out.emplace_back("region " + num(r) + " full", f);
     }
-    for (std::uint8_t g = 0; g <= 7; ++g) {  // the eight groups: monsters (5), peoples (6, P5-03 ruling 4), alliances (7, P5-04 11.2)
+    for (std::uint8_t g = 0; g <= 8; ++g) {  // the nine groups: monsters (5), peoples (6, P5-03 ruling 4), alliances (7, P5-04 11.2), figures (8, P5-06 11.3)
         brapi::EventFilter f = full_filter();
         f.groups = 1U << g;
         out.emplace_back("group " + std::string(brapi::event_group_word(static_cast<brapi::EventGroup>(g))) + " full",
@@ -338,6 +338,9 @@ inline std::string dump_search(const Opened& o) {
     for (const auto& [q, limit] : search_queries(o)) {
         out += "query " + unum(limit) + " " + dtext(q) + "\n";
         for (const brapi::NameMatch& m : o.index.search(o.h, q, limit)) {
+            // P5-06 11.5 adds figures (type 6) after the regions; the reference's search and its golden
+            // (p4-05-browser.txt) know only the three older entity types, so the dump leaves them out.
+            if (m.type == 6) continue;
             out += "match " + num(m.type) + " " + num(m.id) + " " + dtext(m.name) + "\n";
         }
     }

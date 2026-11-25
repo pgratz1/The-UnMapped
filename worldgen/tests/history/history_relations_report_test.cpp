@@ -351,7 +351,10 @@ TEST_CASE("P5-03 17.4: the [stats] keys appended at the end of the full list, in
     // events_<key> lines of the new kinds come with the existing per-kind lines; 17.4's keys close the list
     REQUIRE(keys.size() >= want.size());
     // P5-04 10.5 appends its 30 keys after them
-    const std::ptrdiff_t p504 = 30;
+    // P5-06 10.4 then appends the [figures] keys after P5-04's
+    const auto arms_end = std::find(keys.begin(), keys.end(), "arms_buyers_at_end");
+    REQUIRE(arms_end != keys.end());
+    const std::ptrdiff_t p504 = 30 + (keys.end() - (arms_end + 1));
     REQUIRE(keys.size() >= want.size() + 30U);
     CHECK(std::vector<std::string>(keys.end() - p504 - static_cast<std::ptrdiff_t>(want.size()), keys.end() - p504) ==
           want);
@@ -455,7 +458,7 @@ TEST_CASE("P5-03a 9.2: H15 milestones as a count with the quiet stretch at summa
           std::vector<std::string>{"  milestones: 8",
                                    "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was "
                                    "quiet; one realm held it. (The Krurz Horde: 15 new generations of rulers.)",
-                                   "  allies: 0"});   // P5-04 10.3
+                                   "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3; P5-06 10.3
     std::int64_t full_heads = 0, summary_heads = 0;
     for (const std::string& l : hrtest::lines_of(f)) full_heads += l == "  milestones:" ? 1 : 0;
     for (const std::string& l : hrtest::lines_of(s)) summary_heads += l.rfind("  milestones: ", 0) == 0 ? 1 : 0;
@@ -509,9 +512,11 @@ TEST_CASE("P5-03a 9.5, 9.6: H15's mixed events in the summary (first of each rac
     CHECK(shown.count(52) == 0U);   // dwarf-goblin, the second
     CHECK(p503a_api::SUMMARY_MIXED_MAX_SPEC == 3);
     const std::vector<std::string> st = hrtest::block(f, "[stats]");
-    REQUIRE(st.size() >= 32U);   // P5-04 10.5 appends 30 keys after them
-    CHECK(st[st.size() - 32U] == "peoples_met_by_word = 1");
-    CHECK(st[st.size() - 31U] == "dispositions_warmed = 1");
+    REQUIRE(st.size() >= 32U);   // P5-04 10.5 appends 30 keys after them (and P5-06 10.4 its [figures] keys)
+    const auto met = std::find(st.begin(), st.end(), "peoples_met_by_word = 1");
+    REQUIRE(met != st.end());
+    REQUIRE(st.end() - met >= 32);
+    CHECK(*(met + 1) == "dispositions_warmed = 1");
     for (const std::string& l : hrtest::block(s, "[stats]")) CHECK(l.rfind("peoples_met_by_word", 0) != 0U);
 }
 

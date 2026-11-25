@@ -150,8 +150,8 @@ TEST_CASE("P5-03a 10.2: undead_min_dead 1000 and undead_dead_permille int(0, 100
     CHECK(r.get_int("undead_min_dead") == 1000);
     const std::string p = "history/monsters.toml";
     CHECK_FALSE(load(without(p, "undead_dead_permille")).ok());
-    for (const std::int64_t v : {-1, 1001}) CHECK_FALSE(load(edited(p, line("undead_dead_permille", 25), line("undead_dead_permille", v))).ok());
-    for (const std::int64_t v : {0, 1000}) CHECK(load(edited(p, line("undead_dead_permille", 25), line("undead_dead_permille", v))).ok());
+    for (const std::int64_t v : {-1, 1001}) CHECK_FALSE(load(edited(p, line("undead_dead_permille", 28), line("undead_dead_permille", v))).ok());
+    for (const std::int64_t v : {0, 1000}) CHECK(load(edited(p, line("undead_dead_permille", 28), line("undead_dead_permille", v))).ok());
 }
 
 TEST_CASE("P5-03a 10.1, 10.2: the shipped game/data and both fixture roots hold the 0.25.0 fields") {

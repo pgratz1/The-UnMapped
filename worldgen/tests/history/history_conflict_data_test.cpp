@@ -24,6 +24,7 @@
 #include <string_view>
 #include <vector>
 
+#include "p5_04_alliances_data.hpp"
 #include "../p3_01_history_data.hpp"
 #include "../p3_01_history_support.hpp"
 #include "p3_04_engine_support.hpp"
@@ -285,8 +286,8 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
             }
         }
         CHECK(cat.kinds[i + 19].salience == w.salience);
-        CHECK(cat.kinds[i + 19].templ == w.templ);
-        CHECK(eng::template_problem(cat.kinds[i + 19], w.templ) == std::nullopt);
+        CHECK(cat.kinds[i + 19].templ == p504data::with_p506_templates(w.templ));   // P5-06 8.2: {r:under}
+        CHECK(eng::template_problem(cat.kinds[i + 19], cat.kinds[i + 19].templ) == std::nullopt);
     }
     // the kinds of P3-04 and P3-05 are unchanged (a shipped kind is never edited, P3-04 8.2)
     CHECK(compiled.kinds[0].key == "awakening");
@@ -328,10 +329,18 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
     // P5-04 3 (generator 0.26.0): the five hist.alliances streams after hist.relations.settlers, in this order
     const std::vector<std::string_view> p504 = {"hist.alliances.form", "hist.alliances.join", "hist.alliances.trade",
                                                 "hist.alliances.spoils", "hist.alliances.mine"};
-    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() == names.size() - 1);
+    // P5-06 3 (generator 0.27.0): fifteen more after hist.alliances.mine, in this order
+    const std::vector<std::string_view> p506 = {
+        "hist.figures.reign", "hist.figures.regnal", "hist.figures.life", "hist.figures.appoint", "hist.figures.skill",
+        "hist.figures.fall", "hist.figures.exile", "hist.figures.hero", "hist.figures.caster", "hist.figures.book",
+        "hist.figures.blight", "hist.figures.tower_name", "hist.names.person", "hist.names.book",
+        "hist.monsters.hero_fall"};
+    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() + p506.size() == names.size() - 1);
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
     for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
     for (std::size_t i = 0; i < p504.size(); ++i) CHECK(names[at + 10 + p502.size() + p503.size() + i] == p504[i]);
+    for (std::size_t i = 0; i < p506.size(); ++i)
+        CHECK(names[at + 10 + p502.size() + p503.size() + p504.size() + i] == p506[i]);
 }
 
 }  // TEST_SUITE

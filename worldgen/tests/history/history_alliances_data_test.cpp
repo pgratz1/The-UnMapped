@@ -312,7 +312,7 @@ TEST_CASE("P5-04 8.3, 11.1: the report entries of kinds 63 to 78; allied_battle 
         const h::KindDef* d = cat.find(k);
         REQUIRE(d != nullptr);
         CHECK(d->salience == st.first);
-        CHECK(d->templ == st.second);
+        CHECK(d->templ == p504data::with_p506_templates(st.second));   // P5-06 8.2: {r:under}
     }
     for (const std::string& k : p504data::cause_kinds()) {
         CAPTURE(k);
@@ -335,8 +335,8 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     const Load l = load(p504data::files_026());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
-          "48f6ad624a8b3fd76af51c8162872dc926ca75997000c3fcc42be9b0be6a9d4e");   // p3-01-data.txt game/data at the calibrated values
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");
+          "f3300c304c22204d826c178f64affab2adc4d4a7b959b284fd1a15ef3357d1ac");   // p3-01-data.txt game/data at 0.27.0 (P5-06)
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.27.0");   // P5-06
     CHECK(worldgen::db::SCHEMA_VERSION == 12);
 }
 
