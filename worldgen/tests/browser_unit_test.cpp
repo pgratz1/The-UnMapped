@@ -172,6 +172,13 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
         {EventGroup::peoples,
          {"peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed", "standing_changed",
           "people_expelled"}},
+        // P5-04 11.2: 71 in war, 77 in settlements, the others of 63 to 78 in the new group alliances (code 7)
+        {EventGroup::war, {"allied_battle"}},
+        {EventGroup::settlements, {"mine_opened"}},
+        {static_cast<EventGroup>(7),
+         {"alliance_formed", "alliance_renewed", "alliance_lapsed", "alliance_broken", "alliance_betrayed",
+          "ally_joined_war", "ally_refused", "ally_withdrew", "trade_opened", "trade_broken", "spoils_shared",
+          "spoils_withheld", "alliance_spurned", "arms_sold"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {
@@ -181,10 +188,10 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 62U);
+    CHECK(n == 78U);   // P5-04 8.1
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() == 62U);
+    REQUIRE(kinds.size() == 78U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
         CHECK(brapi::event_group(k.key) != EventGroup::other);
@@ -202,7 +209,8 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(static_cast<int>(EventGroup::other) == 4);
     CHECK(static_cast<int>(EventGroup::monsters) == 5);
     CHECK(static_cast<int>(EventGroup::peoples) == 6);   // P5-03 lead ruling 4: kinds 57 to 62
-    CHECK(brapi::ALL_GROUPS == 0x7FU);
+    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0xFF);   // P5-04 11.2
+    CHECK(brapi::event_group_word(static_cast<EventGroup>(7)) == "alliances");
     CHECK(brapi::event_group_word(EventGroup::peoples) == "peoples");
     CHECK(brapi::event_group_word(EventGroup::realms) == "realms");
     CHECK(brapi::event_group_word(EventGroup::settlements) == "settlements");
