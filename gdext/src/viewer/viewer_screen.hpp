@@ -21,14 +21,15 @@
 // present. Without history the year bar is disabled.
 //
 // Markers (spec P4-04 8.2): %MarkersToggle, %MarkFaded, %MarkEvents,
-// %MarkPasses, %MarkMines call the model; %MarkerLegend is the key list. On
+// %MarkPasses, %MarkSites call the model; %MarkerLegend is the key list. On
 // markers_changed and view_selected the screen hands the model's markers and
 // their glyphs to %MapView. Key M toggles the markers. While the mouse is on
 // a marker, %CellLabel shows its description instead of the cell's.
 //
 // Browser (spec P4-05 6): the right pane %RightPane (a TabContainer with
 // the tabs Browser and Legend) holds %BrowserBack, %BrowserForward,
-// %BrowserSearch, %EntityTabs, %CivList, %SearchResults, %EventScope,
+// %BrowserSearch, %EntityTabs (Civilizations, Figures), %CivList,
+// %FigureList (P5-06 11.3), %SearchResults, %EventScope,
 // %EventGroup, %EventAll, %EventFrom, %EventTo, %EventThisYear,
 // %FollowToggle, %FollowFirst, %EventList and %BrowserDetail. Every control
 // calls the model; the screen mirrors the model on browser_selection_changed,
@@ -63,7 +64,7 @@
 //                              centre at z screen pixels per cell
 //   --mouse <x> <y>            with --screenshot: a mouse motion over the
 //                              centre of cell (x, y) (markers hover too)
-//   --faded                    start with the faded ruins shown
+//   --faded                    start with the old (and faded) ruins shown
 //   --expect-marker-years <a,b,...>  with --check: the years compared with
 //                              <dir>/markers-<Y>.png (P4-04 9)
 //   --expect-passes <n>        with --check: the world report's passes
@@ -159,13 +160,15 @@ public:
     [[nodiscard]] godot::CheckBox* mark_faded() const noexcept { return mark_faded_; }
     [[nodiscard]] godot::CheckBox* mark_events() const noexcept { return mark_events_; }
     [[nodiscard]] godot::CheckBox* mark_passes() const noexcept { return mark_passes_; }
-    [[nodiscard]] godot::CheckBox* mark_mines() const noexcept { return mark_mines_; }
+    [[nodiscard]] godot::CheckBox* mark_sites() const noexcept { return mark_sites_; }
     [[nodiscard]] godot::ItemList* marker_legend() const noexcept { return marker_legend_; }
     [[nodiscard]] godot::TabContainer* right_pane() const noexcept { return right_pane_; }
     [[nodiscard]] godot::Button* browser_back_button() const noexcept { return browser_back_; }
     [[nodiscard]] godot::Button* browser_forward_button() const noexcept { return browser_forward_; }
     [[nodiscard]] godot::LineEdit* browser_search() const noexcept { return browser_search_; }
     [[nodiscard]] godot::Tree* civ_list() const noexcept { return civ_list_; }
+    [[nodiscard]] godot::Tree* figure_list() const noexcept { return figure_list_; }
+    [[nodiscard]] godot::TabBar* entity_tabs() const noexcept { return entity_tabs_; }
     [[nodiscard]] godot::ItemList* search_results() const noexcept { return search_results_; }
     [[nodiscard]] godot::OptionButton* event_scope() const noexcept { return event_scope_; }
     [[nodiscard]] godot::OptionButton* event_group() const noexcept { return event_group_; }
@@ -247,6 +250,10 @@ private:
     void on_highlight_changed();
     void on_cell_clicked(int64_t x, int64_t y, int64_t marker);
     void on_civ_list_selected();
+    void on_figure_list_selected();
+    void on_entity_tab_changed(int64_t tab);
+    // Shows the list of the current entity tab (or the search results).
+    void show_entity_list();
     void on_event_row_selected(int64_t index);
     void on_search_changed(const godot::String& text);
     void on_search_result_selected(int64_t index);
@@ -331,7 +338,7 @@ private:
     godot::CheckBox* mark_faded_ = nullptr;
     godot::CheckBox* mark_events_ = nullptr;
     godot::CheckBox* mark_passes_ = nullptr;
-    godot::CheckBox* mark_mines_ = nullptr;  // P5-04 11.3
+    godot::CheckBox* mark_sites_ = nullptr;  // P5-04 11.3, P5-06 11.4: mines and towers
     godot::ItemList* marker_legend_ = nullptr;
     godot::TabContainer* right_pane_ = nullptr;
     godot::Button* browser_back_ = nullptr;
@@ -339,6 +346,7 @@ private:
     godot::LineEdit* browser_search_ = nullptr;
     godot::TabBar* entity_tabs_ = nullptr;
     godot::Tree* civ_list_ = nullptr;
+    godot::Tree* figure_list_ = nullptr;  // P5-06 11.3: the Figures tab of %EntityTabs
     godot::ItemList* search_results_ = nullptr;
     godot::OptionButton* event_scope_ = nullptr;
     godot::OptionButton* event_group_ = nullptr;

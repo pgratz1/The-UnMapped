@@ -202,7 +202,7 @@ void ViewerScreen::_ready() {
     mark_faded_ = require<godot::CheckBox>("MarkFaded");
     mark_events_ = require<godot::CheckBox>("MarkEvents");
     mark_passes_ = require<godot::CheckBox>("MarkPasses");
-    mark_mines_ = require<godot::CheckBox>("MarkMines");
+    mark_sites_ = require<godot::CheckBox>("MarkSites");
     marker_legend_ = require<godot::ItemList>("MarkerLegend");
     right_pane_ = require<godot::TabContainer>("RightPane");
     browser_back_ = require<godot::Button>("BrowserBack");
@@ -210,6 +210,7 @@ void ViewerScreen::_ready() {
     browser_search_ = require<godot::LineEdit>("BrowserSearch");
     entity_tabs_ = require<godot::TabBar>("EntityTabs");
     civ_list_ = require<godot::Tree>("CivList");
+    figure_list_ = require<godot::Tree>("FigureList");
     search_results_ = require<godot::ItemList>("SearchResults");
     event_scope_ = require<godot::OptionButton>("EventScope");
     event_group_ = require<godot::OptionButton>("EventGroup");
@@ -227,14 +228,14 @@ void ViewerScreen::_ready() {
     ticker_ = require<godot::Control>("Ticker");
     ticker_lines_ = require<godot::Control>("TickerLines");
     wired_ = right_pane_ != nullptr && browser_back_ != nullptr && browser_forward_ != nullptr &&
-             browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr &&
+             browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr && figure_list_ != nullptr &&
              search_results_ != nullptr && event_scope_ != nullptr && event_group_ != nullptr &&
              event_all_ != nullptr && event_from_ != nullptr && event_to_ != nullptr &&
              event_this_year_ != nullptr && follow_toggle_ != nullptr && follow_first_ != nullptr &&
              event_list_ != nullptr && browser_detail_ != nullptr && play_button_ != nullptr &&
              play_speed_ != nullptr && play_skip_quiet_ != nullptr && ticker_ != nullptr && ticker_lines_ != nullptr &&
              markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
-             mark_passes_ != nullptr && mark_mines_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
+             mark_passes_ != nullptr && mark_sites_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
              meta_tree_ != nullptr && map_view_ != nullptr && status_label_ != nullptr && cell_label_ != nullptr &&
              legend_title_ != nullptr && legend_list_ != nullptr && year_slider_ != nullptr &&
              year_marks_ != nullptr && year_field_ != nullptr && year_label_ != nullptr && year_counts_ != nullptr;
@@ -266,8 +267,8 @@ void ViewerScreen::_ready() {
                               callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("events")));
         mark_passes_->connect("toggled",
                               callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("passes")));
-        mark_mines_->connect("toggled",
-                             callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("mines")));
+        mark_sites_->connect("toggled",
+                             callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("sites")));
         update_marker_controls();
         year_slider_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_slider_changed));
         year_field_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_field_changed));
@@ -625,7 +626,7 @@ void ViewerScreen::update_marker_controls() {
     markers_toggle_->set_pressed_no_signal(enabled);
     markers_toggle_->set_disabled(!available);
     const std::array<std::pair<godot::CheckBox*, const char*>, 4> boxes{
-        {{mark_faded_, "faded"}, {mark_events_, "events"}, {mark_passes_, "passes"}, {mark_mines_, "mines"}}};
+        {{mark_faded_, "faded"}, {mark_events_, "events"}, {mark_passes_, "passes"}, {mark_sites_, "sites"}}};
     for (const auto& [box, name] : boxes) {
         // Without markers the boxes show the defaults (8.2: faded off).
         box->set_pressed_no_signal(available ? model_->get_marker_option(name) : godot::String(name) != "faded");

@@ -177,8 +177,9 @@ public:
     [[nodiscard]] bool get_markers_enabled() const;
     // False and nothing changed when the markers are not available.
     bool set_markers_enabled(bool on);
-    // "faded", "events", "passes", "mines" (MarkerOptions::sites, P5-04
-    // 11.3); false for any other name or when not
+    // "faded" (old ruins, P5-06 25.1 (e)), "events", "passes", "sites"
+    // (MarkerOptions::sites: mines and towers, P5-04 11.3, P5-06 11.4; "mines"
+    // is accepted as its former name); false for any other name or when not
     // available.
     [[nodiscard]] bool get_marker_option(const godot::String& name) const;
     bool set_marker_option(const godot::String& name, bool on);
@@ -213,6 +214,11 @@ public:
     // Array of {text, links} at the current level; links Array of {start,
     // length (characters), target, tagged}.
     [[nodiscard]] godot::Array get_civilization_block(int64_t civilization) const;
+    // P5-06 11.3: Array of {id, name (display name), role (word), civ,
+    // civ_name, born, died (-1 alive), events}, ascending id.
+    [[nodiscard]] godot::Array get_figure_list() const;
+    // figure_block's lines at the current level, as get_civilization_block.
+    [[nodiscard]] godot::Array get_figure_block(int64_t figure) const;
     [[nodiscard]] godot::PackedInt64Array get_event_ids() const;
     [[nodiscard]] godot::PackedStringArray get_event_rows() const;
     // Dictionary of 5.2; empty for an unknown id.
@@ -229,6 +235,8 @@ public:
     // 0 clears. Scope entity, follow on (off when cleared), event and place
     // cleared; pushes the path.
     bool select_civilization(int64_t civilization);
+    // P5-06 11.3: a figure, as select_civilization (0 clears).
+    bool select_figure(int64_t figure);
     // event = e and Y its year; pushes the path.
     bool select_event(int64_t event);
     // type 4 (settlement) or 5 (region); scope place, event cleared; pushes
@@ -236,9 +244,9 @@ public:
     bool select_place(int64_t type, int64_t id);
     // Everything cleared, scope all, follow off; pushes the path (key Escape).
     bool clear_selection();
-    // c<id>, s<id>, rg<id>, e<id>; false for any other tag.
+    // c<id>, s<id>, rg<id>, e<id>, f<id> (P5-06 11.3); false for any other tag.
     bool follow_link(const godot::String& target);
-    // Whether follow_link would follow a target of this form (c, s, rg, e).
+    // Whether follow_link would follow a target of this form (c, s, rg, e, f).
     [[nodiscard]] bool can_follow_link(const godot::String& target) const;
     bool browser_back();
     bool browser_forward();

@@ -119,6 +119,16 @@ const worldgen::inspect::CivilizationEntry* BrowserState::civilization(std::int6
     return it != civs.end() && it->id == id ? &*it : nullptr;
 }
 
+const worldgen::inspect::FigureEntry* BrowserState::figure(std::int64_t id) const noexcept {
+    if (!index_) {
+        return nullptr;
+    }
+    const auto figures = index_->figures();
+    const auto it = std::lower_bound(figures.begin(), figures.end(), id,
+                                     [](const worldgen::inspect::FigureEntry& f, std::int64_t key) { return f.id < key; });
+    return it != figures.end() && it->id == id ? &*it : nullptr;
+}
+
 const std::string& BrowserState::row(std::int64_t id) const noexcept {
     const worldgen::inspect::EventEntry* e = event(id);
     if (e == nullptr) {
@@ -134,12 +144,18 @@ bool BrowserState::event_filter(std::int64_t year, worldgen::inspect::EventFilte
         case BrowserScope::all:
             break;
         case BrowserScope::entity:
-            // Civilizations now; monsters and sites get their own fields
-            // (section 9).
-            if (selection.entity_type != BROWSER_CIVILIZATION || selection.entity_id == 0) {
+            // Civilizations and (P5-06 11.3) figures; monsters and sites get
+            // their own fields later (section 9).
+            if (selection.entity_id == 0) {
                 return false;
             }
-            out.civilization = selection.entity_id;
+            if (selection.entity_type == BROWSER_CIVILIZATION) {
+                out.civilization = selection.entity_id;
+            } else if (selection.entity_type == BROWSER_FIGURE) {
+                out.figure = selection.entity_id;
+            } else {
+                return false;
+            }
             break;
         case BrowserScope::place:
             if (selection.place_type == BROWSER_SETTLEMENT && selection.place_id != 0) {
