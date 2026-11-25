@@ -91,7 +91,10 @@ void check_world(const tltest::WorldSpec& spec) {
         for (const db::SettlementRow& s : rows) {
             if (s.founded_year > y) continue;
             want.push_back(s.id);
-            if (h.timeline.settlement_state(s.id, y).status != 4) want_nf.push_back(s.id);
+            // P5-06 25.1 (e): without the option, no faded row and no old ruin (OLD_RUIN_YEARS or more)
+            const std::int64_t stt = h.timeline.settlement_state(s.id, y).status;
+            const bool old = stt == 3 && s.ruined_year && y - *s.ruined_year >= wi::OLD_RUIN_YEARS;
+            if (stt != 4 && !old) want_nf.push_back(s.id);
         }
         for (const SettlementMarker& s : m.settlements) got.push_back(s.settlement);
         for (const SettlementMarker& s : nf.settlements) got_nf.push_back(s.settlement);

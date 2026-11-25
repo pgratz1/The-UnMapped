@@ -75,7 +75,10 @@ TEST_CASE("P5-03 11.1: abandon_reach_hops 0 and the stress data: destinations in
     CHECK(without > 0);   // places with no destination in reach are abandoned without one (kind 16)
 }
 
-TEST_CASE("P5-03 11.2: fading by ending and open site (ghost_fade_years 0); ghost_fade_years 1 lets ghosts fade") {
+TEST_CASE("P5-03 11.2: fading by ending and open site (ghost_fade_years 0); ghost_fade_years 1 lets ghosts fade"
+          * doctest::skip()) {
+    // Superseded by P5-06 25.1 (b) (0.27.0): ghost_fade_years is removed and no ruin fades; P5-06 18.1 item 20 and
+    // invariant 14 test the rule that replaces this one. Kept, skipped, for the record.
     const wd::ContentSet fade_fast =
         p503api::with_history(conflict_test::stress_content(), "peoples", {{"ghost_fade_years", p503api::V(1)}});
     std::int64_t faded_ghosts = 0;

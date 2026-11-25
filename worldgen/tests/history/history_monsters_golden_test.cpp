@@ -314,6 +314,8 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
             }
             overruns += kd == k.at("settlement_overrun") ? 1 : 0;
             slain += kd == k.at("monster_slain") ? 1 : 0;
+            // P5-06 11.2: a slaying by a hero is a slaying
+            slain += k.count("monster_slain_by_hero") != 0U && kd == k.at("monster_slain_by_hero") ? 1 : 0;
             died += kd == k.at("monster_died") ? 1 : 0;
             if (at(*e, 0) < at(m, 5) || (m[6].type != db::ValueType::null && at(*e, 0) > at(m, 7))) {
                 out.push_back("4: monster " + std::to_string(id) + " has an event outside its life");
@@ -479,7 +481,8 @@ TEST_CASE("P5-02 19.3: the fixtures monsters-small and zero against the golden f
         check_against(g, t);
         if (g.data == "zero") {
             CHECK(t.monster.empty());
-            for (const Row& s : t.site) CHECK(at(s, 2) == 3);   // P5-04: only mines (kind 3) without monsters
+            // P5-04: only mines (kind 3) without monsters; P5-06: and towers (kind 4)
+            for (const Row& s : t.site) CHECK((at(s, 2) == 3 || at(s, 2) == 4));
         }
     }
 }

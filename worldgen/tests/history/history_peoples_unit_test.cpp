@@ -86,8 +86,8 @@ const wd::ContentSet& quiet_reach_content() {
                                                   {"famine_ppm", I64(0)},
                                                   {"plague_ppm", by_kind(0, 0, 0, 0, 0)},
                                                   {"crisis_per_generation_permille", I64(0)},
-                                                  {"abandon_reach_hops", I64(2)},
-                                                  {"ghost_fade_years", I64(1500)}});
+                                                  {"abandon_reach_hops", I64(2)}});   // P5-06 25.1:
+    // ghost_fade_years is gone (no ruin fades), so the pre-0.24.0 fading of this case no longer applies
     return c;
 }
 

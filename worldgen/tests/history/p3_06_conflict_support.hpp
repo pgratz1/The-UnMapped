@@ -10,6 +10,7 @@
 // p3_06_conflict_api.hpp.
 
 #include "worldgen/history/alliances.hpp"
+#include "worldgen/history/figures.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/renaming.hpp"
 #include "worldgen/history/relations.hpp"
@@ -57,7 +58,11 @@ inline constexpr std::int64_t k_monster_appeared = 44, k_settlement_overrun = 49
 // P5-04 8.1, 11.1 (generator 0.26.0): an ally's join (its war row is the ally's, not a war: 10.4) and the allied
 // battle, a battle kind wherever the statistics read battles (the reference's BATTLES()).
 inline constexpr std::int64_t k_ally_joined_war = 68, k_allied_battle = 71;
-inline bool is_battle_kind(std::int64_t k) { return k == k_battle || k == k_battle_at_pass || k == k_allied_battle; }
+// P5-06 11.1 (generator 0.27.0): battle_led, a battle kind with the same meaning.
+inline constexpr std::int64_t k_battle_led = 85;
+inline bool is_battle_kind(std::int64_t k) {
+    return k == k_battle || k == k_battle_at_pass || k == k_allied_battle || k == k_battle_led;
+}
 
 // --- Golden file ------------------------------------------------------------------------------------
 
@@ -591,6 +596,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     for (const Row& r : t.relation) {
         CAPTURE(str(r));
         const std::string& k = r[4].bytes;
+        if (at(r, 0) == 6) continue;   // P5-06 9.2: ruled, served, rival, parent (the figures' checks)
         CHECK(at(r, 0) == 3);
         CHECK(at(r, 2) == 3);
         // P5-04 9.1 (0.26.0): the alliance and trade rows are checked by P5-04's invariants
@@ -728,7 +734,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     for (const Row& c : t.civilization) {
         if (is_null(c[8])) continue;
         for (const Row& r : t.relation) {
-            CHECK_FALSE((is_null(r[6]) && (at(r, 1) == at(c, 0) || at(r, 3) == at(c, 0))));
+            // by entity type (P5-06: a figure's id may equal the civilization's)
+            CHECK_FALSE((is_null(r[6]) && ((at(r, 0) == 3 && at(r, 1) == at(c, 0)) ||
+                                           (at(r, 2) == 3 && at(r, 3) == at(c, 0)))));
         }
     }
     for (const Row& s : t.settlement) {
@@ -1848,6 +1856,9 @@ struct ConflictConfig {
     // P5-04 6.1, 6.10 item 3 (0.26.0): the alliances after the relations, in the full configuration only (the
     // configurations without relations or monsters build none, as their I0 statements read)
     std::unique_ptr<worldgen::history::AlliancesSubsystem> alliances;
+    // P5-06 6.13 item 3 (0.27.0): the figures after the alliances, with the alliances only (the configurations
+    // without them build none; their I0 runs with P5-06's zero tuning, p503api::figures_zero_of)
+    std::unique_ptr<worldgen::history::FiguresSubsystem> figures;
 
     // with_relations defaults to with_monsters: the full configuration of the history stage (0.24.0), or P5-02's
     // configuration without monsters, which has no relations either.
@@ -1870,6 +1881,13 @@ struct ConflictConfig {
                                                                                     *relations, c);
                 pair->sub->set_alliances(alliances.get());
                 alliances->set_sites(monsters.get());
+                figures = std::make_unique<worldgen::history::FiguresSubsystem>(*pair->peoples.sub, c);
+                pair->sub->set_figures(figures.get());
+                pair->peoples.sub->set_figures(figures.get());
+                monsters->set_figures(figures.get());
+                alliances->set_figures(figures.get());
+                figures->set_sites(monsters.get());
+                figures->set_conflict(pair->sub.get());
             }
         }
     }
@@ -1893,6 +1911,7 @@ struct ConflictConfig {
         if (monsters) c.subsystems.push_back(monsters.get());
         if (relations) c.subsystems.push_back(relations.get());
         if (alliances) c.subsystems.push_back(alliances.get());
+        if (figures) c.subsystems.push_back(figures.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
         if (monsters) c.tension.push_back(monsters.get());
@@ -1916,6 +1935,10 @@ struct ConflictConfig {
             relations->finish(in.params.span);
             r.race_relations = relations->race_relation_rows();
             r.settlement_races = relations->settlement_race_rows();
+        }
+        if (figures) {   // P5-06 9.1, 9.3
+            r.figures = figures->figure_rows();
+            r.books = figures->book_rows();
         }
         return eng::tables_of(r);
     }

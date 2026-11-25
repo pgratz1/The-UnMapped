@@ -56,7 +56,8 @@ void check_case(const GCase& g) {
     CHECK(report_lines_05(t, in) == g.report);
     CHECK(stats_lines(t) == g.stats);
     CHECK(t.event.size() == g.sentences.size());
-    check_invariants(t, in, g, peoples_int(c, "ruin_fade_years"), peoples_int(c, "abandon_min"));
+    // P5-06 25.1 (a): no ruin fades and ruin_fade_years is gone; the fade bound is never met (no ruin_faded)
+    check_invariants(t, in, g, std::int64_t{1} << 40, peoples_int(c, "abandon_min"));
 }
 
 }  // namespace

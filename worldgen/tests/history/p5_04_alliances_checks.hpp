@@ -169,7 +169,7 @@ public:
         std::vector<std::int64_t> out;
         for (const std::int64_t b : kids(d)) {
             const std::string k = kind(b);
-            if (k != "battle" && k != "battle_at_pass" && k != "allied_battle") continue;
+            if (k != "battle" && k != "battle_at_pass" && k != "allied_battle" && k != "battle_led") continue;   // P5-06 11.1
             out.push_back(b);
             for (const std::int64_t s : kids(b)) {
                 if (kind(s) != "siege") continue;
@@ -415,7 +415,7 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         bool fought = false;
         std::int64_t tribute = 0, plunder = 0;
         for (const std::int64_t b : r.war_events(dd)) {
-            if (r.kind(b) == "allied_battle") {
+            if (r.kind(b) == "allied_battle" || r.kind(b) == "battle_led") {   // P5-06 11.1: battle_led's allies
                 const auto wa = r.role(b, "winner_ally"), la = r.role(b, "loser_ally");
                 fought = fought || std::find(wa.begin(), wa.end(), z) != wa.end() ||
                          std::find(la.begin(), la.end(), z) != la.end();
@@ -447,6 +447,7 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         if (spoils_set.count(at(rc, 4)) != 0U) out.push_back("11: a region changes hands by a share");
     }
     for (const Row& rl : w.rows.t.relation) {
+        if (at(rl, 0) == 6) continue;   // P5-06 6.4 rule 3: a spoils event may open a ruler's ruled row
         if (spoils_set.count(at(rl, 7)) != 0U || (!is_null(rl, 6) && spoils_set.count(at(rl, 8)) != 0U)) {
             out.push_back("11: a relation row by a share");
         }
