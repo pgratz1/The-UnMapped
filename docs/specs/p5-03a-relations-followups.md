@@ -1,6 +1,6 @@
 # P5-03a Relations follow-ups
 
-Status: **r1 (draft, 2026-11-24), for the lead's approval.** Written by the spec writer on `p5/03a-spec`, cut from `main` at 1dd8f89 (generator 0.24.0, schema 10, history report format v5; P5-03 merged). Phase P5 History depth, stage 03a: the follow-ups of P5-03 (`docs/specs/p5-03-race-relations.md` r2), from the world critic's review (`docs/reviews/p5-03-race-relations-world-critic.md`, F1 to F10), the validation (`docs/reviews/p5-03-race-relations-validation.md`, section 6), the audit (`docs/reviews/p5-03-race-relations-audit.md`, A1, A2) and Paul's direction of 2026-11-24 (friendlier relations more often, "more alliances forged"; alliances themselves are P5-04's). Generator **0.25.0**; **schema stays 10**; history report format **v6**.
+Status: **r2 (as built, calibrated and ruled; 2026-11-24)**: correction round, text only, in line with the build on `p5/03a-impl`, the calibration, the lead's rulings and the audit (`docs/reviews/p5-03a-relations-followups-audit.md`, A1 to A4) on `p5/03a-int`; revision notes at the end. r1 (draft, 2026-11-24, approved with every recommendation of section 17) was written by the spec writer on `p5/03a-spec`, cut from `main` at 1dd8f89 (generator 0.24.0, schema 10, history report format v5; P5-03 merged). Phase P5 History depth, stage 03a: the follow-ups of P5-03 (`docs/specs/p5-03-race-relations.md` r2), from the world critic's review (`docs/reviews/p5-03-race-relations-world-critic.md`, F1 to F10), the validation (`docs/reviews/p5-03-race-relations-validation.md`, section 6), the audit (`docs/reviews/p5-03-race-relations-audit.md`, A1, A2) and Paul's direction of 2026-11-24 (friendlier relations more often, "more alliances forged"; alliances themselves are P5-04's). Generator **0.25.0**; **schema stays 10**; history report format **v6**.
 
 **No schema change.** No table, column or event kind is added. The change:
 - adds rules to `RelationsSubsystem` (three new memory sources, meetings by word, graded settlers, an expulsion gap, the ruling share kept) and one keyed stream (`hist.relations.settlers`);
@@ -17,7 +17,7 @@ The form is that of `docs/specs/p5-01-followups.md`, except that the normative t
 | # | Item (source) | In short | Section | Changes worlds |
 | --- | --- | --- | --- | --- |
 | 1 | Relations that move (F1; Paul) | Three sources of good memory that occur (long peace between neighbours, a common enemy, shelter worth more); a turn's causes by its direction; a public `credit` seam for P5-04 | 3 | yes |
-| 2 | Isolated races (F2, F10; RR1, RR3) | Peoples sealed apart by closed borders meet **by word** after 300 years within three borders; the summary names unmet pairs and a race that met no one | 4, 9.4 | yes |
+| 2 | Isolated races (F2, F10; RR1, RR3) | Peoples sealed apart by closed borders meet **by word** after 150 years within five borders (r1: 300 and three); the summary names unmet pairs and a race that met no one | 4, 9.4 | yes |
 | 3 | Mixed settlements and expulsions (F3, F4) | Settlers drawn in a range (shares no longer at 900); the mixed sentence by standing and majority; the expulsion sentence with its standing and years; one expulsion per realm in 60 years; at most three mixed lines in the summary | 5, 9.5 | yes |
 | 4 | Summary length (F6, F7; T18) | Summary milestones become a count (quiet stretches kept); no "without war" line; at most 15 ruins listed | 9.2, 9.3 | report |
 | 5 | Late undead (F5) | Threshold relative to the world's population | 6 | yes |
@@ -51,7 +51,7 @@ So peace lifts a grudge at `peace_memory_per_century` plus the decay (both act t
 
 ### 3.3 A common enemy (new; T6 and Q4, after the log)
 
-**In war.** The subsystem keeps, per civilization z, per race r ≠ race(z), the last year Y_zr at which an open `war` relation joined z and a civilization of race r, and that relation's opening `event` (the `war_declared`; `RelationState::event`). At every T6 and Q4, first update every entry from the open `war` relations (ascending key; a relation with two such civilizations updates both sides' entries), then for each z ascending, each pair of its entries r1 < r2 with Y − Y_zr1 < `foe_years` and Y − Y_zr2 < `foe_years`, at least one of them = Y, the pair (r1, r2) met, and (r1, r2, z) not yet credited: `credit(r1, r2, foe_war_memory, e)` with e the larger of the two opening events; (r1, r2, z) is credited (once per pair and enemy realm, ever).
+**In war.** The subsystem keeps, per civilization z, per race r ≠ race(z), the last year Y_zr at which an open `war` relation joined z and a civilization of race r, and that relation's opening `event` (the `war_declared`; `RelationState::event`). At every T6 and Q4, first update every entry from the open `war` relations (ascending key; a relation with two such civilizations updates both sides' entries), then for each z ascending, each pair of its entries r1 < r2 with Y − Y_zr1 < `foe_years` and Y − Y_zr2 < `foe_years`, at least one of them = Y, the pair (r1, r2) met, and (r1, r2, z) not yet credited: `credit(r1, r2, foe_war_memory, e)` with e the larger of the two opening events; (r1, r2, z) is credited (once per pair and enemy realm, ever). When z has several open wars against realms of one race r, the entry (z, r) is written once per relation in ascending `RelationKey` order, so the opening event of the last such relation by key stands (not necessarily the later war; audit A2, the rule as built).
 
 **A monster.** While reading the log (P5-03 6.2.2), for each `monster_raid` or `settlement_overrun` e (participants `monster` m, `civilization` c, r = race(c)): for each race r' ≠ r, ascending, with an entry (m, r') whose year y' satisfies Y − y' < `foe_years`, the pair met and (pair, m) not yet credited: `credit(r, r', foe_monster_memory, e)`, (pair, m) credited; then the entry (m, r) = (year(e), e).
 
@@ -63,9 +63,9 @@ Unchanged in rule; `shelter_memory` 45 → **90** (10.1). With 3.2 and 3.3 shelt
 
 ### 3.5 `credit`, contributions and a turn's causes (amends P5-03 6.2.2, 6.2.3)
 
-`void RelationsSubsystem::credit(std::int64_t race_a, std::int64_t race_b, std::int64_t units, std::int64_t event)`: when the pair has met: M += units × 1000 (units may be negative), clamped to [`memory_min`, `memory_max`] × 1000; the contribution (event, sign of units) is appended to the pair's list. Every memory change of P5-03 6.2.2's table and of 3.3 goes through it (war events with −Δ, shelter with +`shelter_memory`); 3.2's gain and the decay do not. **It is the seam for P5-04**: trade kept, an ally's help, a broken alliance call it with their own events and data values; nothing else is specified for P5-04 here (13).
+`void RelationsSubsystem::credit(std::int64_t race_a, std::int64_t race_b, std::int64_t units, std::int64_t event)`: when the pair has met: M += units × 1000 (units may be negative), clamped to [`memory_min`, `memory_max`] × 1000; the contribution (event, sign of units) is appended to the pair's list. Every memory change of P5-03 6.2.2's table and of 3.3 goes through it (war events with −Δ, shelter with +`shelter_memory`); 3.2's gain and the decay do not. **It is the seam for P5-04**: trade kept, an ally's help, a broken alliance call it with their own events and data values; nothing else is specified for P5-04 here (13). A later caller (audit A4) must call it at a fixed point of a step, inside a subsystem's `run` (never from code whose order depends on how many subsystems ran or on a container of pointers), with an `event` that is an existing event id.
 
-Contributions keep the last 8 of **each sign**. At a turn the causes are: a turn to a higher band (warmer), the positive contributions; to a lower band, the negative ones; both lists are cleared at the turn. When the turn's own list is empty: a warmer turn cites the pair's `peoples_met` event (peace did it); a colder turn cites the pair's last turn event, else its `peoples_met`. P5-03 r2's rule (the last turn, else the meeting, for every turn without contributions) is replaced.
+Contributions keep the last 8 of **each sign**, by insertion order (the oldest appended is dropped; audit A3): within a step that is the log's order, then 3.3's war foes, so a list is not always ascending by event id and the dropped entry is not always the smallest id; causes are sorted before use. A contribution of zero units (a memory field tuned to 0) changes nothing and is kept by neither list. At a turn the causes are: a turn to a higher band (warmer), the positive contributions; to a lower band, the negative ones; both lists are cleared at the turn. When the turn's own list is empty: a warmer turn cites the pair's `peoples_met` event (peace did it); a colder turn cites the pair's last turn event, else its `peoples_met`. P5-03 r2's rule (the last turn, else the meeting, for every turn without contributions) is replaced.
 
 `disposition_turned`'s template (10.2) gains the words `war_declared=wars against a common enemy`, `monster_raid=the raids of a common foe`, `settlement_overrun=the raids of a common foe`, `peoples_met=long years of peace`, `disposition_turned=long years apart`. Samples: `After long years of peace, the Elves and the Dwarves became friends.` · `After wars against a common enemy, the Humans and the Dwarves became friends.` · `After long years of peace, the Elves and the Goblins grew wary of one another.` · `After long years apart, the Goblins and the Orcs grew wary of one another.`
 
@@ -83,9 +83,9 @@ Measured on the 12 stored default worlds (*measured*): in seeds 4 and 6 the dwar
 
 ### 4.2 Meeting by word (amends P5-03 6.2.4)
 
-For each pair (a, b) ascending not met, both awakened, for which 6.2.4's open meeting does not happen this step: take the smallest key (h, R_x, R_y, x, y) of 6.2.4 with h the border-graph hops. If h ≤ `meet_sealed_hops`: when the pair's `word_since` is 0, it is set to Y; when Y − `word_since` ≥ `meet_sealed_years`, the pair meets as in 6.2.4 (the younger's region in the key, its founding event as cause), with the new value `sealed` = 1. If h > `meet_sealed_hops` (or no key), `word_since` = 0. Every meeting of 6.2.4 carries `sealed` = 0. `meet_sealed_hops` −1: never. In Q4 it needs `quiet_events_left(0)` > 0, else it waits.
+For each pair (a, b) ascending not met, both awakened, for which 6.2.4's open meeting does not happen this step: take the smallest key (h, R_x, R_y, x, y) of 6.2.4 with h the border-graph hops. If h ≤ `meet_sealed_hops`: when the pair's `word_since` is 0, it is set to Y; when Y − `word_since` ≥ `meet_sealed_years`, the pair meets as in 6.2.4 (the younger's region in the key, its founding event as cause), with the new value `sealed` = 1. If h > `meet_sealed_hops` (or no key), `word_since` = 0; no key includes a race of the pair with no alive, visible civilization (audit A1, fixed in this stage: the clock does not run on while a people has no realm). Every meeting of 6.2.4 carries `sealed` = 0. `meet_sealed_hops` −1: never. In Q4 a meeting (open or by word) needs `quiet_events_left(0)` > 0, else it waits; a meeting that waits leaves `word_since` untouched (neither set nor reset), and an open key within `meet_hops` whose meeting waits counts as an open meeting for this rule. `word_since` 0 doubles as "unset": a pair first in reach in a step of year 0 is set to 0, read as unset, and set again at its next step in reach. This stands as written (audit A1's weaker note; it needs two peoples with realms at year 0).
 
-A pair met by word has a disposition, bands, turns and a common enemy like any other; it meets no army (conflict's reach is the open graph, unchanged) and no refugees (`migrate_hops` is open hops, unchanged). With the shipped 3 and 300, both sealed dwarf realms of seeds 4 and 6 meet every other people (the farthest is three borders).
+A pair met by word has a disposition, bands, turns and a common enemy like any other; it meets no army (conflict's reach is the open graph, unchanged) and no refugees (`migrate_hops` is open hops, unchanged). Shipped **5 and 150** (calibrated; r1: 3 and 300, which left 15 of 100 worlds with a pair that never met although a chain of borders joined their lands). Both sealed dwarf realms of seeds 4 and 6 meet every other people (the farthest is three borders).
 
 **Kind 57** gains the value `sealed` (seq after `band`). Template: `The {race_a:plural} {sealed?first had word of|first met} the {race_b:plural} in {@region}{band?, and hated them from the first|, and were wary of them|, and were glad of them}.` Sample: `The Dwarves first had word of the Goblins in the Grey Fells, and were wary of them.`
 
@@ -111,6 +111,8 @@ Samples: `After the cession, in Fievos the Goblins ruled over the Elves, who out
 - **Kind 62** gains the values `standing` (the entry's standing, 0 or 1) and `years` (Y − the entry's `since_year`), seq after `people`. Template: `Hating the {race:plural}, {civilization} drove them out of {settlement}, where it had {standing?held them as subjects|tolerated them|tolerated them} for {years} {years?year|years}; {people} left.` Sample: `Hating the Elves, the Drunogg Horde drove them out of Thiefann, where it had held them as subjects for 2,002 years; 268 left.` The causes are unchanged (the subjection and the turn into hatred).
 
 `years` ≥ 0; a value of 0 reads "for 0 years" and needs an entry whose standing changed this year, which the standing rule (phase starts) and the expulsion (T6) never give together except at a phase start in T1 followed by T6 of the same year: then `years` is 0. Accepted (rare; reads as true).
+
+The expulsion's share test (`expel_share_max`) reads the share after 6.3.4's drift at a phase start in T1 of the same year: when T1 and T6 fall in one year, the drift is applied first, so a share above `expel_share_max` at the settlement's last `settlement_race` row may have drifted below it by T6 (`relations-small` seed 7).
 
 # Part 4. Monsters
 
@@ -155,6 +157,10 @@ Samples: `The Screamers of Nux-Nink, a brood of wyverns, made their lair in Kroz
 ### 7.3 Refugees' causes (F8.5; amends P5-03 6.4.3 item 4, 8.2)
 
 Measured causes of the 698 arrivals (*measured*): `people_expelled` 328, `sacked` 303, `settlement_overrun` 39, `settlement_abandoned` 27 (no word: the critic's plague case), `region_ceded` 1 (no word). Rule: an arrival's causes are the record's cause and, when that cause is an abandonment (kind 16 or 31), also that abandonment's own causes (ascending, without repeats). Template words added to `refugees_arrived`: `settlement_abandoned=the abandonment of their home`, `settlement_abandoned_to=the abandonment of their home`, `plague=the plague`, `plague_outbreak=the plague`, `plague_spread=the plague`, `famine=the famine`, `settlement_fled=their flight`, `region_ceded=the cession`, `settlements_ceded=the cession`. Sample: `After the plague and the abandonment of their home, 123 Elves from Thiordell found shelter in Leithiedell, welcomed by the House of Roelaele.` The engineer lists any cause kind of an arrival in the calibration sweep without a word (target W1, 11).
+
+### 7.4 Renaming for a host with no root (defect fixed; amends P5-12, P5-02's rule `ravage`)
+
+A host named for its place (P5-03 12.2, "the Host of the Hushed Sweep") has an empty stored root. Since 0.24.0 the renaming rule `ravage` filled `{name}` with the empty string, giving region names such as "'s Shadow" (16 of 100 default summaries at 0.24.0). Rule (lead's ruling): a monster with an empty root gives the rule no `{name}`, as a missing role does (P5-12), so only the rule's forms without `{name}` or `{stem}` can be chosen ("The Forsaken {noun}"); when none can be filled, the rule does not rename. `RenamingSubsystem::build_name` (`src/history/renaming.cpp`).
 
 # Part 5. Audit advisories
 
@@ -225,14 +231,20 @@ Changed values: `shelter_memory` 45 → **90**; `conquest_settlers_permille` 100
 | `foe_years` | int(1, 100000) | 100 | window of a common enemy (3.3) |
 | `foe_war_memory` | int(0, 1000) | 60 | gained per common enemy realm |
 | `foe_monster_memory` | int(0, 1000) | 60 | gained per common monster |
-| `meet_sealed_hops` | int(−1, 8) | 3 | meeting by word within this many borders of the border graph; −1 never (4.2) |
-| `meet_sealed_years` | int(0, 100000) | 300 | years in reach before a meeting by word |
+| `meet_sealed_hops` | int(−1, 8) | **5** (r1: 3) | meeting by word within this many borders of the border graph; −1 never (4.2) |
+| `meet_sealed_years` | int(0, 100000) | **150** (r1: 300) | years in reach before a meeting by word |
 | `conquest_settlers_span_permille` | int(0, 1000) | 400 | span of the settlers' draw (5.1) |
 | `expel_gap_years` | int(0, 100000) | 60 | least years between two expulsions by one realm (5.3) |
 
 Checks (with the history data checks): `relations_peace_cap`: `peace_memory_max` ≤ `memory_max` (`peace_memory_max <a> is above memory_max <b>`); `relations_settlers`: `conquest_settlers_permille` + `conquest_settlers_span_permille` ≤ 1000 (`conquest settlers <a> + <b> exceed 1000`).
 
-The **`zero`** fixture (P5-03 7.4): the new `*_memory` fields and `peace_memory_per_century` 0, `meet_sealed_hops` −1, `conquest_settlers_span_permille` 0; I0 holds as stated there (no meeting, so no credit, no peace, no event). The **`relations-small`** root: `meet_sealed_hops` 3, `meet_sealed_years` 0, the `*_memory` fields large as its others, `expel_gap_years` 0.
+The **`zero`** fixture (P5-03 7.4): the new `*_memory` fields and `peace_memory_per_century` 0, `meet_sealed_hops` −1, `conquest_settlers_span_permille` 0; I0 holds as stated there (no meeting, so no credit, no peace, no event). The **`relations-small`** root: `meet_sealed_hops` 3, `meet_sealed_years` 0, `foe_war_memory` and `foe_monster_memory` 300 (large as its others), `conquest_settlers_span_permille` 400 (its least share 600 + 400 passes `relations_settlers`), `expel_gap_years` 0.
+
+**Defaults in code.** The TOML fields are required. A tuning built in code (`RelationsTuning`, `MonstersTuning`; tests) has defaults that switch the new rules off, so a 0.24.0 test tuning keeps its meaning: `peace_memory_per_century` 0, `peace_memory_max` 0, `foe_war_memory` 0, `foe_monster_memory` 0, `meet_sealed_hops` −1, `conquest_settlers_span_permille` 0, `expel_gap_years` 0, `undead_dead_permille` 0 (the others: `peace_years` 100, `contact_hops` 1, `foe_years` 100, `meet_sealed_years` 300).
+
+### 10.1a `history.conflict` (`game/data/history/conflict.toml`; calibration)
+
+`border_friction` 200 → **300** (P3-06's field, unchanged in meaning). Reason: long peace between neighbours (3.2) lifted hostile pairs out of the dispositions that drive claims and removed about three wars a world (mean 25.7 → 22.5, most of them goblins against dwarves and elves); `peace_years` 200 or a slower peace (40 a century) gave the wars back only in part and moved most turns past 5500, and keeping peace from lifting a pair out of hatred gave back almost none. `border_friction` adds the same drive to every pair in contact, so it restores most where peace took (a pair at D = +50 has drive 250 instead of 150). Its second role, as the awakening quarrel's limit (P3-06 21.12: a people with disposition at or above it is not a quarrel target), widens with it; no pair of a newly awakened realm reaches 300 there, so the quarrel is unchanged in effect.
 
 ### 10.2 `history.monsters`
 
@@ -240,7 +252,7 @@ The **`zero`** fixture (P5-03 7.4): the new `*_memory` fields and `peace_memory_
 
 ### 10.3 `history.report`
 
-The templates of 3.5, 4.2, 5.2, 5.3, 7.2 and 7.3; saliences unchanged.
+The templates of 3.5, 4.2, 5.2, 5.3, 7.2 and 7.3; saliences unchanged. The cause words added to an existing `{@causes:…}` list are appended after the list's last entry, in the order this spec lists them. The `template` field's size limit is raised from 512 to **1024 bytes** (lead's ruling): the templates of `disposition_turned` and `refugees_arrived` with their cause words are longer than 512.
 
 ### 10.4 Catalogue (amends P5-03 8.1; no DDL change)
 
@@ -250,37 +262,43 @@ The templates of 3.5, 4.2, 5.2, 5.3, 7.2 and 7.3; saliences unchanged.
 | 60 `settlement_mixed` | `share`, **`standing`**, **`majority`** |
 | 62 `people_expelled` | `people`, **`standing`**, **`years`** |
 
-`event_kind_value` gains five rows; every event of these kinds carries the new values. `docs/specs/schema.md`'s catalogue listing is updated by the engineer. Reader checks (16.4) unchanged in form; the event checks of P5-03 16.4 add: `sealed` 0 or 1, `majority` 0 or 1, `standing` 0 to 2 (kind 60) and 0 to 1 (kind 62), `years` ≥ 0 (`value <k> <v> outside <a> to <b>`, the existing form).
+`event_kind_value` gains five rows; every event of these kinds carries the new values. `docs/specs/schema.md`'s catalogue listing is updated by the engineer. Reader checks (16.4) unchanged in form; the event checks of P5-03 16.4 add: `sealed` 0 or 1, `majority` 0 or 1, `standing` 0 to 2 (kind 60) and 0 to 1 (kind 62), `years` 0 to E − 1, with the message `corrupt table 'event': row <e>: value <k> <v> outside <a> to <b>`.
 
 ## 11. Targets (validation)
 
 At 1024 defaults, seeds 0–99 (and 100–199 as a second sample where named), unless stated.
 
-| Target | Definition | Bound | 0.24.0 |
-| --- | --- | --- | --- |
-| **RR2a** | `disposition_turned` per world | median 2 to 6; max ≤ 15; ≤ 15 worlds with none | median 1; 27 worlds with no pair changing band |
-| **RR2b** | turns into friendship | ≥ 20% of all turns | 3 of 149 |
-| **RR2c** | turns to a higher band (to wariness from hatred, to friendship) | ≥ 30% of all turns; hatred to wariness entered at least 5 times in the sweep | 3 into friendship; 30 into wariness, from either side (not separated) |
-| **RR2d** | turns before year 5500; before 4500 | ≥ 55%; ≥ 25% (the brief's 40% before 5500 is already met at 0.24.0) | 68 of 149 (46%); 29 (19%), by the critic's table |
-| **RR4** | pairs in friendship at E | median ≥ 3 of 15; pairs in hatred at E median ≥ 3 (the world stays dark) | friendship 2; hatred 4 to 6 |
-| **RR5** | end tallies | no (hatred, wariness, friendship) tally in more than 20 worlds | 35 worlds share one |
-| **RR1** | all present pairs met | in ≥ 95 worlds (seeds 0–99 and 100–199 each) | 84, 87 |
-| **RR3** | a present race that meets no other | ≤ 3 worlds, each named in its summary (9.4, by rule) | 10 |
-| **C1** | wars per world | median within ±10% of 0.24.0's 25.5 (23 to 28); T1 to T20 of P5-01 as bounded | 25.5 |
-| **T16** | repeated battles | ≤ 2 per thousand | 0.93 |
-| **G2** | standing settlements; population at E | medians ≥ 81 and 214,500 | 83; 217,827 |
-| **MX1** | mixed standing settlements at E | median 3 to 12; ≥ 80 worlds | 8 |
-| **MX3** | `people_expelled` per world | median ≤ 3; max ≤ 12 | 3; 22 |
-| **MX4** | `share` values of `settlement_mixed` | no value in more than 15% of the sweep's events | 900 in 75% |
-| **MX5** | summary `settlement_mixed` lines | ≤ 3 a world (by rule) | up to 26 |
-| **U1** | `undead_rose` after year 5500 | ≤ 55% of risings; risings in the sweep 150 to 290 | 142 of 191 (74%) |
-| **W1** | arrival lines with a cause clause | 100% (every cause kind has a word) | 670 of 698 |
-| **W2** | monster lines | no `its lair` for a grouped kind; no undead slaying, death or rising line that names its region twice (by rule; checked by grep) | — |
-| **T18** | summary lines | default median ≤ 580; every world ≤ L(C) (P5-02 12.9) and ≤ 800 when C ≤ 16; `civs4` median ≤ 1,000, max ≤ 1,200 | 620; 906 (C = 19); `civs4` 1,112 |
-| **M** | P5-02 and P5-03 part-B targets as bounded in P5-03 r2 21 | unchanged | — |
-| **timing** | `generate` seed 0 1024 release | at most 1 s over 0.24.0 (9.1 s) | — |
+Bounds as restated in r2 (lead's rulings; r1's bound in brackets where it moved). *Measured* at 0.25.0: the engineer's calibration sweep (1024 defaults, seeds 0–99; `civs4` seeds 0–29).
+
+| Target | Definition | Bound | 0.24.0 | 0.25.0 measured |
+| --- | --- | --- | --- | --- |
+| **RR2a** | `disposition_turned` per world | median 2 to 6; max ≤ 20 [15]; ≤ 15 worlds with none | median 1; 27 worlds with no pair changing band | median 3; max 16; 12 worlds with none |
+| **RR2b** | turns into friendship | ≥ 25% [20%] of all turns | 3 of 149 | 33% |
+| **RR2c** | turns to a higher band (to wariness from hatred, to friendship) | ≥ 30% of all turns; hatred to wariness entered at least 5 times in the sweep | 3 into friendship; 30 into wariness, from either side (not separated) | — |
+| **RR2d** | turns before year 5500; before 4500 | ≥ 55%; ≥ 20% [25%] | 68 of 149 (46%); 29 (19%), by the critic's table | 57%; 23% |
+| **RR4** | pairs in friendship at E | median ≥ 3 of 15; pairs in hatred at E median ≥ 3 (the world stays dark) | friendship 2; hatred 4 to 6 | friendship 3; hatred 4 |
+| **RR5** | end tallies | no (hatred, wariness, friendship) tally in more than 25 [20] worlds | 35 worlds share one | 20 |
+| **RR1** | every present pair whose lands are joined by any chain of borders meets [all present pairs met] | in ≥ 95 worlds; pairs with no land path (a race alone on its land mass) are reported, not counted | 84, 87 | 99 (the exception: humans and orcs seven borders apart, both late); no land path: 24 pairs in 4 worlds |
+| **RR3** | a present race that meets no other, a race alone on a land mass excluded | ≤ 3 worlds, each named in its summary (9.4, by rule) | 10 | 0 |
+| **C1** | wars per world | median within ±10% of 0.24.0's 25.5 (23 to 28); T1 to T20 of P5-01 as bounded | 25.5 (mean 25.7) | median 25; mean 27.0 |
+| **T16** | repeated battles | ≤ 2 per thousand | 0.93 | 1.65 |
+| **G2** | standing settlements; population at E | medians ≥ 81 and ≥ 205,000 [214,500] | 83; 217,827 | 85; 211,977 |
+| **MX1** | mixed standing settlements at E | median 3 to 12; ≥ 80 worlds | 8 | — |
+| **MX3** | `people_expelled` per world | median ≤ 3; max ≤ 15 [12] | 3; 22 | 2; 13 |
+| **MX4** | `share` values of `settlement_mixed` | no value in more than 15% of the sweep's events | 900 in 75% | — |
+| **MX5** | summary `settlement_mixed` lines | ≤ 3 a world (by rule) | up to 26 | by rule |
+| **U1** | `undead_rose` after year 5500 | ≤ 55% of risings; risings in the sweep 150 to 290 | 142 of 191 (74%) | 48% of 190 |
+| **W1** | arrival lines with a cause clause | 100% (every cause kind has a word) | 670 of 698 | — |
+| **W2** | monster lines | no `its lair` for a grouped kind; no undead slaying, death or rising line that names its region twice (by rule; checked by grep) | — | by rule |
+| **T18** | summary lines | default median ≤ 580; every world ≤ L(C) (P5-02 12.9) and ≤ 800 when C ≤ 16; `civs4` median ≤ 1,000, max ≤ 1,200 | 620; 906 (C = 19); `civs4` 1,112 | median 550, max 689; `civs4` median 867.5, max 1,086 |
+| **M** | P5-02 and P5-03 part-B targets as bounded in P5-03 r2 21 | unchanged | — | — |
+| **timing** | `generate` seed 0 1024 release | at most 1 s over 0.24.0 (9.1 s) | — | — |
+
+G2's population: 211,977 is below r1's 214,500, and the bound is restated (lead). The engineer found no defect behind the fall: expulsions (2.8 a world against 3.6, 1,350 people against 1,990) and flights do not explain it; the conquests are more often captures than sacks (9 against 6 a world), and the good peoples hold a little less; the sweep's variants ranged from 209,500 to 220,200 with no rule of this stage clearly behind the difference. A "—" in the last column: not reported by the calibration sweep (validation measures it).
 
 **Calibration** (data only, the engineer, in this order; values into r2): (1) RR2b, RR2c, RR4 by `peace_memory_per_century`, `peace_memory_max` and `peace_years`; (2) C1 by `war_memory` (back toward 0.24.0's wars if peace lowers strain) and, if needed, `peace_memory_max`; (3) RR2d by `foe_war_memory`, `foe_monster_memory` and `shelter_memory`; (4) RR1, RR3 by `meet_sealed_hops` and `meet_sealed_years`; (5) MX4 by the two settlers' fields; MX3 by `expel_gap_years`; (6) U1 by `undead_dead_permille` and `undead_min_dead`; G2 and M checked after each. `friend_min`, `hatred_max` and `band_margin` stay (P5-04 will read the bands; moving them moves every pair's base band).
+
+**Result (r2).** Every value of 10.1 and 10.2 is shipped as r1 proposed except `meet_sealed_hops` 5 and `meet_sealed_years` 150 (step 4), and C1 (step 2) was restored not by `war_memory` but by `history.conflict.border_friction` 300 (10.1a).
 
 ## 12. Test-side items (for the test writer)
 
@@ -327,21 +345,35 @@ One new keyed stream (5.1), drawn only on a change of ruling people, key of ids.
 | P5-02 | 6.3.2, 7.2's templates | undead threshold (6); templates (7.2) | r4 pointer |
 | P3-04 | 8.4, 8.5 | forms `its`, `aside`, `where` | r24 pointer |
 | P3-07 | new 29; 24.3 | v6 (9) | r24 pointer |
+| P5-12 | the renaming rule's `{name}` | a host with no root gives no `{name}` (7.4) | this spec |
+| P3-06 | shipped `border_friction` | 200 → 300 (10.1a); data only | this spec |
 | `schema.md` | catalogue | five value rows | the engineer |
 
-## 17. Open questions (for the lead and Paul)
+## 17. Decided (r1's open questions; lead, 2026-11-24)
 
-1. **How warm should peace make neighbours?** With the shipped cap (300), every good–neutral and neutral–neutral pair at peace in contact for about 850 years becomes friends, and only war keeps them from it. *Recommendation*: as shipped, tuned to RR4 (friendship median ≥ 3, hatred median ≥ 3): it is what Paul asked for, and wars still undo it. *Alternative*: cap 250, so that peace alone stops just short of friendship and a common enemy or shelter must finish it (fewer, better-caused friendships).
-2. **Meeting by word across closed borders.** *Recommendation*: yes (three borders, 300 years); it turns a hole in the record into a fact and gives the sealed dwarves a disposition P5-04 can use, without letting armies or refugees through. *Alternative*: report only (9.4's lines), the dwarves stay strangers; RR1 and RR3 then stay reported, not bounded.
-3. **The undead threshold by world population.** *Recommendation*: yes (6). *Alternative*: keep the absolute 4,000 and record that late risings follow late wars (design-true, and the present-day picture the critic calls "a gift").
-4. **Summary milestones as a count.** *Recommendation*: count plus quiet stretches (9.2). *Alternative*: list the milestones that are not in the summary set, which needs a second pass of the budget (the blocks would depend on the set).
-5. **One expulsion per realm in 60 years.** *Recommendation*: yes (5.3). *Alternative*: two in 100 years (a policy can still read as a series).
-6. **T18's maximum.** *Recommendation*: restate as L(C) of P5-02 12.9 (≤ 800 only for C ≤ 16), since 12.9 itself allows more for more realms. *Alternative*: lower `SUMMARY_LINES_PER_CIV` so that 800 holds for every default world.
+All six decided as r1 recommended:
+
+1. **Peace's warmth**: cap 300 as shipped (3.2), tuned to RR4 (friendship median 3, hatred median 4 measured).
+2. **Meeting by word across closed borders**: yes (4.2), calibrated to five borders and 150 years.
+3. **The undead threshold by world population**: yes (6).
+4. **Summary milestones as a count**: count plus quiet stretches (9.2).
+5. **One expulsion per realm in 60 years**: yes (5.3).
+6. **T18's maximum**: restated as L(C) of P5-02 12.9 (≤ 800 only for C ≤ 16).
+
+Rulings of the build and integration, recorded in the sections named: the template size limit 1024 bytes (10.3); the renaming rule with an empty monster root (7.4); a contribution of zero units kept by neither list (3.5); a waiting meeting leaves the by-word clock untouched, and the clock resets when a race of the pair has no alive, visible realm (4.2, audit A1); A2 and A3 as the rule (3.3, 3.5); A4 as a requirement on later callers of `credit` (3.5); the code defaults (10.1); the value-range message (10.4); expulsion drift before T6 (5.3); `border_friction` 300 (10.1a); the restated targets (11).
+
+### 17.1 Left for later
+
+- **Meeting across the sea**: a race alone on its land mass never meets (24 pairs in 4 of 100 worlds); reported in `[peoples]`, not counted by RR1 and RR3. Sea contact waits for a later stage.
+- **The year-0 clock**: `word_since` 0 doubles as "unset" (4.2); harmless while no two peoples have realms at year 0.
+- RR1's one remaining exception (humans and orcs seven borders apart, both late): within the bound, not tuned further.
+- P5-03 r2 28's question 8 (M4, lairs on former settlements) stays with Paul; its question 7 (relations that barely move) is what this stage answers, for Paul to judge after this stage's world critic review, still to come.
 
 ## 18. Proposals
 
-One entry in `docs/design/proposals.md`: "History: P5-03a relations follow-ups (readings)".
+Entries in `docs/design/proposals.md`: "History: P5-03a relations follow-ups (readings)" (r1, with the engineer's readings and the calibration) and "History: P5-03a r2, as built and calibrated" (r2).
 
 ## Revision notes
 
 - r1 (2026-11-24): first draft.
+- r2 (2026-11-24): as built, calibrated and ruled; text only, no change to code or output. Status line. 1: item 2's values. 3.3: A2's entry rule. 3.5: zero-unit contributions, A3's insertion order, A4's requirement on callers of `credit`. 4.2: shipped 5 and 150; A1's reset when a race has no alive, visible realm; a waiting meeting leaves the clock untouched; year 0 as "unset" stands. 5.3: the share test after T1's drift in the same year. 7.4 new: renaming with an empty monster root (`'s Shadow` defect). 10.1: shipped `meet_sealed_*`, the `relations-small` values, the code defaults; 10.1a new: `border_friction` 300; 10.3: template limit 1024, order of added cause words; 10.4: `years` to E − 1 and the message. 11: bounds restated (RR1, RR2a, RR2b, RR2d, RR3, RR5, G2, MX3) and a measured column; the calibration's result. 16: P5-12 and P3-06 rows. 17: decided list and 17.1 left for later (was open questions). 18: the r2 proposals entry.

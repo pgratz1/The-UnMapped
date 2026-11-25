@@ -1421,3 +1421,34 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: parts A and B only (no schema change); this entry waits for Paul's answer to P5-04 question 6.
 - Decision (Paul, 2026-11-24): option C now. Schema 10 → 11 with generator 0.26.0 in the P5-04 merge, as proposed (event kinds `mine_opened` and `arms_sold` are 77 and 78 in P5-04 r2, after the spoils kinds; provisional until the merge order is fixed). P5-07 Mountain depths deepens the same mines and needs no second mine kind (P5-04 r2 6.14).
 - Status: decided
+
+### History: P5-03a r2, as built and calibrated
+
+- Date: 2026-11-24
+- Raised by: spec writer (`docs/specs/p5-03a-relations-followups.md` r2), from the build, the calibration, the lead's rulings and the audit on `p5/03a-int` (generator 0.25.0)
+- Design doc section: 5 ("Race relations"; "Deep time"; "Waiting for phase P5"; "Monsters as actors")
+- Problem: the readings of the entry above were taken with r1's estimated values and targets; calibration moved some values and some targets were restated against what a default world can give.
+- Readings now in force: peace between neighbours as r1 proposed (goodwill after a hundred years without war, 60 a century, up to 300); peoples sealed in by closed borders meet by word within **five** borders after **150** years (r1: three and 300). `history.conflict`'s `border_friction` is **300** (was 200): warmer neighbours fought about three wars a world fewer, and friction, which adds the same drive to every pair in contact, gives them back most where peace took them; it is also the awakening quarrel's limit, which no newly awakened realm's pair reaches. A host named for its place gives a renaming no `{name}` (no more "'s Shadow"). Targets restated (1024 defaults, seeds 0 to 99, measured in brackets): every pair whose lands are joined by any chain of borders meets in at least 95 worlds (99); a race alone on its land mass is reported, not counted (24 pairs in 4 worlds), and no other race meets no one (0 worlds); turns a world at most 20 (16, median 3); at least 25% of turns into friendship (33%); at least 55% of turns before 5500 and 20% before 4500 (57%, 23%); friendship and hatred at E medians at least 3 (3 and 4); no end tally in more than 25 worlds (20); wars median 23 to 28 (25); repeated battles at most 2 per thousand (1.65); standing settlements median at least 81 (85) and population at E at least **205,000** (211,977; r1's 214,500 missed with no defect found: more captures than sacks); expulsions median at most 3, max at most 15 (2, 13); undead risings after 5500 at most 55% (48% of 190); summary lines median 550, max 689, `civs4` median 867.5, max 1,086, within the bounds.
+- Interim choice: as built. Left for later: meeting across the sea; `word_since` 0 doubling as "unset" in year 0.
+- Status: open.
+
+### Paul's review of P4 Viewer v1 (2026-11-24)
+
+- Section: 13 (phase P4); specs P4-04 section 16, P4-05 section 14, P4-06 section 14.
+- Problem: the three viewer specs left eighteen choices open for Paul to judge in the running viewer (marker size by kind, one ring per event place, no markers without history, hidden refuges shown, markers on by default; the browser in a right-hand pane, follow on the filtered list, one level for list and block, highlight by dimming, the glyph changes, a click selects; quiet years at ten times the speed, playback of the browser's list, scrubbing pauses, the ticker over the map, the defaults, the two-row year bar, AVI recording).
+- Decision (Paul, 2026-11-24, after using the viewer on seed 42 at generator 0.24.0): "the viewer works great, no concerns with it." The phase is approved and every interim choice stands as built. The lead's lean towards a ticker strip below the map is dropped. Recording on Windows remains untried.
+
+### Paul's answers of 2026-11-24 to the open questions
+
+- Section: 13 (phase P5); `docs/questions-for-paul.md`, where each row has his words.
+- Problem: 28 questions were open across the specs of P5-01, P5-02, P5-03, P5-03a, P5-04, P5-12 and P4-06, most of them rulings the lead had taken on a recommendation.
+- Decision (Paul, 2026-11-24):
+  - Scope of the rest of P5 (Q-P5-00-1): "take the recommendation except for mountain depths since we have the mines in this stage already." So: P5-06 figures with minimal casters, P5-07 mountain depths, P5-08 pantheon with cults, P5-11 artifacts; P5-05 roads to P6; P5-09 spell invention and P5-10 factions deferred.
+  - P5-04's kept readings (a realm with an open mine is itself stronger; a share of spoils is counted in people; one withheld share can end an already cool alliance): agreed.
+  - P5-03a: the three relaxed targets (population 205,000; 16 turns; 23% before 4500) accepted; peace alone can bring friendship, meeting by word, the undead threshold by population, milestones as a count, one expulsion per realm in 60 years, the summary bound by L(C): agreed. On peoples alone on a land mass: "down the road we need to deal with these situations. I think people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into." (open as Q-SEA-1.)
+  - P5-03: realms read disposition, expulsions, flight for fear, the `civs4` bound of 1,150, one stage: agreed. Abandoned ruins: "I'd like these ruins to stay through till the end of simulation since we want to explore those in the later game." (Whether sacked ruins should also stay is open as Q-RUINS-1.) Lairs on former settlements, 62 and 66 worlds against 65: "Sounds fine." Whether relations move enough: "lets see what the critic says" (P5-03a's review).
+  - P5-12: about one region in twelve renamed, the wider doubled-suffix rule, English forms only: agreed.
+  - Calamities in large-world summaries (P5-01): "We should record these if the impact is significant." The lead takes it into the next stage that changes the report.
+  - Weak names (`Thassie`, `fag` anywhere, dwarven `din`): "Leave them in."
+  - Movie recording on Windows: not a concern for now; "we can come back and fix it if its broken."
+  - Follow-ups (Paul, 2026-11-24, later the same day): "Agree with both proposals, roads and ships in P6." Contact by sea for peoples alone on a land mass is built with roads in one P6 stage; every ruin, sacked ones included, stays to the end of the history (scheduled with P5-06).
