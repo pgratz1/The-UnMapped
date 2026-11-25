@@ -1279,7 +1279,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.25.0"   # P5-03a: the histories of 0.25.0; --version 0.24.0 keeps P5-03's file, 0.23.0 P5-02's
+    version = "0.26.0"   # P5-04: the histories of 0.26.0 (0.25.0: P5-03a); --version 0.24.0 keeps P5-03's file, 0.23.0 P5-02's
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

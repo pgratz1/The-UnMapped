@@ -1026,8 +1026,10 @@ def invariant_violations(w, t, races):
         held = w.holder_at(R, y0) == c or (lost_same_year and w.holder_at(R, y0 - 1) == c)
         if (cen is not None and cen[2] != c) or not held:
             out.append("13: mine si%d: s%d or r%d not of c%d at %d" % (sid, s_, R, c, y0))
-        if pop < pop_min:
-            out.append("13: mine si%d: s%d of %d people below %d" % (sid, s_, pop, pop_min))
+        # reading (integration): the population at the opening is not in the rows (P3-04 6.7 writes a census row
+        # only at a change of owner, kind or status and at a phase's end; civs4-seed-7-1024 si35: s105's last row
+        # says 152 fifty years before its mine opened); mine_settlement_min is checked by the replay, not here
+        del pop, pop_min
         if w.region[R][27] < ore_min:
             out.append("13: mine si%d: r%d ore_reach_cells %d" % (sid, R, w.region[R][27]))
         if races.get(rkey(c), ([], 0, 0))[2] <= 0:

@@ -1961,7 +1961,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.25.0"   # P5-03a (6); --version 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
+    version = "0.26.0"   # P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

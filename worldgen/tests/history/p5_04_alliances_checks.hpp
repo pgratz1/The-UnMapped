@@ -499,12 +499,17 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
             out.push_back("13: mine si" + s(id) + ": its settlement not in its region");
             continue;
         }
+        // The rows show the end of year y0: a mine whose town or region was lost later in its opening year (its
+        // site ended in y0 by a later event) is read at y0 - 1. The town's population at the opening is not in the
+        // rows (P3-04 6.7 writes a census row only at a change of owner, kind or status and at a phase's end), so
+        // mine_settlement_min is checked by the reference's replay, not here.
+        const bool lost_same_year = !is_null(m, 11) && at(m, 11) == y0 && at(m, 12) > at(m, 10);
         const Row* cen = r.census_at(st, y0);
-        if ((cen != nullptr && at(*cen, 2) != c) || r.holder_at(R, y0) != c) {
+        if (lost_same_year && r.census_at(st, y0 - 1) != nullptr) cen = r.census_at(st, y0 - 1);
+        const bool held = r.holder_at(R, y0) == c || (lost_same_year && r.holder_at(R, y0 - 1) == c);
+        if ((cen != nullptr && at(*cen, 2) != c) || !held) {
             out.push_back("13: mine si" + s(id) + ": town or region not its founder's at " + s(y0));
         }
-        const std::int64_t pop = cen != nullptr ? at(*cen, 5) : at(*sit->second, 11);
-        if (pop < d.settlement_min) out.push_back("13: mine si" + s(id) + ": a town of " + s(pop));
         if (g.ore.count(R) == 0U || g.ore.at(R) < d.ore_min) out.push_back("13: mine si" + s(id) + ": no ore");
         if (d.mining.at(x.race_key.at(x.civ_race(c))) <= 0) out.push_back("13: mine si" + s(id) + " of a race that does not mine");
         if (at(m, 8) != 0) out.push_back("13: mine si" + s(id) + " with a monster");
