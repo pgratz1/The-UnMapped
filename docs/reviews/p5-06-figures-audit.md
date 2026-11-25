@@ -9,15 +9,15 @@ Scope: `git diff bbd760d..origin/p5/06-impl -- worldgen tools/worldgen-cli game/
 
 `linux-gcc-release` and `linux-clang-debug` built from 2750025; five worlds at `--map-size 1024` with the checkout's `game/data`. For each: `hash --db` (whole file), `hash --detail`, `report --history --level summary` and `--level full`, compared byte for byte. **All twenty comparisons are identical.**
 
-| Case | Whole-file SHA-256 (both compilers) | Kinds 79 to 92 present (count) |
+| Case | Whole-file SHA-256, first 8 digits (both compilers; full values below) | Kinds 79 to 92 present (count) |
 | --- | --- | --- |
-| seed 0 | `1a7ed88d...52d9fd61` | 79 (8), 80 (30), 81 (3), 82 (2), 83 (6), 84 (2), 85 (5), 87 (3), 88 (4), 90 (6), 91 (11) |
-| seed 5 | `2aefdb99...503eadf5` | 79 (8), 80 (75), 81 (4), 82 (1), 83 (7), 84 (25), 85 (59), 86 (4), 87 (1), 88 (1), 90 (7), 91 (7) |
-| seed 11, `--civs-per-race 4` | `31350674...71052d9fd61`[^h] | 79 (24), 80 (291), 81 (19), 82 (10), 83 (22), 84 (93), 85 (190), 86 (13), 87 (2), 88 (2), 90 (24), 91 (34), 92 (2) |
-| seed 7, `--monster-pressure high` | `5bab1793...503eadf5`[^h] | 79 (8), 80 (85), 81 (7), 82 (4), 83 (9), 84 (24), 85 (60), 86 (3), 87 (12), 88 (6), 90 (5), 91 (10) |
-| seed 3, `--monster-pressure low` | `c8a7c0bb...52d9fd61`[^h] | 79 (8), 80 (44), 81 (6), 82 (6), 83 (6), 84 (11), 85 (15), 86 (3), 90 (4), 91 (6) |
+| seed 0 | `1a7ed88d...` | 79 (8), 80 (30), 81 (3), 82 (2), 83 (6), 84 (2), 85 (5), 87 (3), 88 (4), 90 (6), 91 (11) |
+| seed 5 | `2aefdb99...` | 79 (8), 80 (75), 81 (4), 82 (1), 83 (7), 84 (25), 85 (59), 86 (4), 87 (1), 88 (1), 90 (7), 91 (7) |
+| seed 11, `--civs-per-race 4` | `31350674...` | 79 (24), 80 (291), 81 (19), 82 (10), 83 (22), 84 (93), 85 (190), 86 (13), 87 (2), 88 (2), 90 (24), 91 (34), 92 (2) |
+| seed 7, `--monster-pressure high` | `5bab1793...` | 79 (8), 80 (85), 81 (7), 82 (4), 83 (9), 84 (24), 85 (60), 86 (3), 87 (12), 88 (6), 90 (5), 91 (10) |
+| seed 3, `--monster-pressure low` | `c8a7c0bb...` | 79 (8), 80 (44), 81 (6), 82 (6), 83 (6), 84 (11), 85 (15), 86 (3), 90 (4), 91 (6) |
 
-[^h]: Full hashes: seed 11 c4 `31350674f5ad6498f7064d78d5573c98b47cf3bd5909599d3cf6f0b170ff0639`, seed 7 high `5bab17934fb0b0b306dc99fb95ce40d88e968ec0f7325fd1cfa1015382e0e383`, seed 3 low `c8a7c0bbe9feb330ad3cdc6de21705c5ab2da47767d3a8dabb19f685bb013189`; seed 0 `1a7ed88dc058e7e279644a4a1f96702a4ec635b9e03c9702cc2fa71052d9fd61`, seed 5 `2aefdb99e3f29eae640e36e86e318cdc279706c98b6c52d428049cf3503eadf5`.
+Full hashes: seed 11 c4 `31350674f5ad6498f7064d78d5573c98b47cf3bd5909599d3cf6f0b170ff0639`, seed 7 high `5bab17934fb0b0b306dc99fb95ce40d88e968ec0f7325fd1cfa1015382e0e383`, seed 3 low `c8a7c0bbe9feb330ad3cdc6de21705c5ab2da47767d3a8dabb19f685bb013189`; seed 0 `1a7ed88dc058e7e279644a4a1f96702a4ec635b9e03c9702cc2fa71052d9fd61`, seed 5 `2aefdb99e3f29eae640e36e86e318cdc279706c98b6c52d428049cf3503eadf5`.
 
 Coverage: every new kind except **89 `hero_slain`** occurred; **92 `blight`** only in the `civs4` world (2), **86 `fell_in_battle`** not at seed 0, 87 and 88 not at low pressure. So the hero-death path (`monsters.cpp` `HERO_FALL`, `heroes_slain_`, figures' `hero_slain` read) was not exercised cross-compiler by these five worlds; it was reviewed by reading only (item 6). MSVC was not built here; CI's `compare-hashes` covers it.
 
