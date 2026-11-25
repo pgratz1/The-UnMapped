@@ -1090,9 +1090,11 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
             got_groups.push_back(to_utf8(groups[i]));
         }
         godot::OptionButton* menu = screen.event_group();
-        const int32_t last = menu->get_item_count() - 1;
-        const bool listed = got_groups == want_groups && got_groups.size() == 8 && got_groups.back() == "alliances" &&
-                            menu->get_item_count() == groups.size() + 1 && menu->get_item_text(last) == "alliances";
+        // P5-06 11.3: nine groups, alliances (7) before figures, the last.
+        const int32_t last = 8;
+        const bool listed = got_groups == want_groups && got_groups.size() == 9 && got_groups[7] == "alliances" &&
+                            got_groups.back() == "figures" && menu->get_item_count() == groups.size() + 1 &&
+                            menu->get_item_text(last) == "alliances" && menu->get_item_text(9) == "figures";
         menu->select(last);
         menu->emit_signal("item_selected", last);  // as a pick in the menu
         std::vector<int64_t> want;
@@ -1114,7 +1116,7 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         const bool rows = screen.event_list()->get_item_count() == static_cast<int64_t>(want.size());
         expect(listed && d.empty() && rows && !want.empty() && war_kinds.empty() && settlement_kinds.empty(),
                "B13 the group menu lists " + num(static_cast<int64_t>(got_groups.size())) +
-                   " groups, alliances last; picking it lists the " + num(static_cast<int64_t>(want.size())) +
+                   " groups, alliances before figures (last); picking alliances lists the " + num(static_cast<int64_t>(want.size())) +
                    " chronicle lines of its kinds" + to_godot(d.empty() ? "" : ": " + d) +
                    (war_kinds.empty() && settlement_kinds.empty()
                         ? godot::String()
@@ -1148,6 +1150,168 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         }
         expect(problem.empty(), "B13 a realm's block shows its " + num(shown) + " allies lines as the report" +
                                     (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+    }
+
+    // B14 (P5-06 11.3): figures. The group figures, last in the menu, lists
+    // the chronicle lines of its kinds; the Figures tab lists the index's
+    // figures; an f link in an event's sentence is a link and following it
+    // selects the figure (tab, row, follow, its events, its block); search
+    // finds a figure by its display name.
+    {
+        model->clear_selection();
+        model->set_browser_level("full");
+        godot::OptionButton* menu = screen.event_group();
+        const int32_t last = menu->get_item_count() - 1;
+        menu->select(last);
+        menu->emit_signal("item_selected", last);
+        std::vector<int64_t> want;
+        for (const auto& e : full.chronicle) {
+            if (worldgen::inspect::event_group(e.kind) == worldgen::inspect::EventGroup::figures) {
+                want.push_back(e.id);
+            }
+        }
+        const std::string d = first_difference(ids_of(model->get_event_ids()), want);
+        const bool group_word = godot::String(model->get_selection()["group"]) == "figures";
+        expect(d.empty() && group_word && !want.empty() &&
+                   screen.event_list()->get_item_count() == static_cast<int64_t>(want.size()),
+               "B14 picking figures, the last group, lists the " + num(static_cast<int64_t>(want.size())) +
+                   " chronicle lines of its kinds" + to_godot(d.empty() ? "" : ": " + d));
+        menu->select(0);
+        menu->emit_signal("item_selected", 0);
+
+        // The Figures tab.
+        const auto figures = own.browser->figures();
+        std::string problem;
+        godot::TreeItem* root = screen.figure_list()->get_root();
+        int64_t rows = 0;
+        for (godot::TreeItem* row = root != nullptr ? root->get_first_child() : nullptr; row != nullptr;
+             row = row->get_next(), ++rows) {
+            const auto i = static_cast<std::size_t>(rows);
+            if (i >= figures.size() || int64_t(row->get_metadata(0)) != figures[i].id ||
+                to_utf8(row->get_text(0)) != figures[i].display_name) {
+                problem = problem.empty() ? "row " + std::to_string(rows) + " '" + to_utf8(row->get_text(0)) + "'" : problem;
+            }
+        }
+        const bool tabs = screen.entity_tabs()->get_tab_count() == 2 && screen.entity_tabs()->get_tab_title(1) == "Figures";
+        expect(problem.empty() && rows == static_cast<int64_t>(figures.size()) && rows > 0 && tabs,
+               "B14 the Figures tab lists the " + num(rows) + " figures of the index (" +
+                   num(static_cast<int64_t>(figures.size())) + "), ascending id, by display name" +
+                   (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+
+        // An f link: the first event of the chronicle whose sentence links a figure.
+        int64_t event = 0;
+        int64_t figure = 0;
+        for (const auto& e : full.chronicle) {
+            const auto detail = own.browser->event_detail(*own.history, e.id);
+            for (const auto& link : detail.sentence.links) {
+                if (link.type == 6 && figure == 0) {
+                    figure = link.id;
+                    event = e.id;
+                }
+            }
+            if (figure != 0) {
+                break;
+            }
+        }
+        const godot::String target = "f" + num(figure);
+        bool linked = false;
+        if (event != 0) {
+            model->select_event(event);
+            const godot::Array links = godot::Dictionary(model->get_event_detail(event)["sentence"])["links"];
+            for (int64_t i = 0; i < links.size(); ++i) {
+                linked = linked || godot::String(godot::Dictionary(links[i])["target"]) == target;
+            }
+            screen.browser_detail()->emit_signal("meta_clicked", target);  // as a click on the link
+        }
+        const godot::Dictionary sel = model->get_selection();
+        const bool selected = int64_t(sel["entity_type"]) == 6 && int64_t(sel["entity_id"]) == figure &&
+                              int64_t(sel["event"]) == 0 && godot::String(sel["scope"]) == "entity" &&
+                              bool(sel["follow"]) && model->can_follow_link(target);
+        godot::TreeItem* chosen = screen.figure_list()->get_selected();
+        const bool shown = screen.entity_tabs()->get_current_tab() == 1 && screen.figure_list()->is_visible() &&
+                           !screen.civ_list()->is_visible() && chosen != nullptr &&
+                           int64_t(chosen->get_metadata(0)) == figure;
+        worldgen::inspect::EventFilter filter;
+        filter.figure = figure;
+        filter.summary_only = false;
+        std::vector<int64_t> want_events;
+        if (figure != 0) {
+            own.browser->select(*own.history, filter, want_events);
+        }
+        const std::string de = first_difference(ids_of(model->get_event_ids()), want_events);
+        std::string block_problem;
+        if (figure != 0) {
+            const auto lines = own.browser->figure_block(*own.history, figure, worldgen::inspect::HistoryLevel::full);
+            const godot::Array block = model->get_figure_block(figure);
+            for (std::size_t i = 0; i < lines.size() || static_cast<int64_t>(i) < block.size(); ++i) {
+                const std::string got = static_cast<int64_t>(i) < block.size()
+                                            ? to_utf8(godot::Dictionary(block[static_cast<int64_t>(i)])["text"])
+                                            : std::string("none");
+                const std::string w = i < lines.size() ? lines[i].text : std::string("none");
+                if (got != w && block_problem.empty()) {
+                    block_problem = "line " + std::to_string(i) + ": '" + got + "', expected '" + w + "'";
+                }
+            }
+            const godot::String detail = screen.browser_detail()->get_parsed_text();
+            if (block_problem.empty() && (lines.empty() || !detail.begins_with(to_godot(lines.front().text)))) {
+                block_problem = "the detail does not start with the block: " + to_utf8(detail.substr(0, 80));
+            }
+        }
+        expect(event != 0 && linked && selected && shown && de.empty() && !want_events.empty() && block_problem.empty(),
+               "B14 e" + num(event) + "'s sentence links " + target + "; following it selects the figure (" +
+                   (selected ? "ok" : "no") + "), shows the Figures tab with its row (" + (shown ? "ok" : "no") +
+                   "), lists its " + num(static_cast<int64_t>(want_events.size())) + " events" +
+                   to_godot(de.empty() ? "" : ": " + de) + " and shows its block" +
+                   to_godot(block_problem.empty() ? "" : ": " + block_problem));
+
+        // Search by display name, and a click on a row of the list.
+        std::string search_problem = figure == 0 ? "no figure" : "";
+        if (figure != 0) {
+            model->clear_selection();
+            std::string name;
+            for (const auto& f : figures) {
+                name = f.id == figure ? f.display_name : name;
+            }
+            const godot::String query = to_godot(name);
+            screen.browser_search()->set_text(query);
+            screen.browser_search()->emit_signal("text_changed", query);
+            const godot::Array found = model->search_names(query);
+            int64_t at = -1;
+            for (int64_t i = 0; i < found.size() && at < 0; ++i) {
+                const godot::Dictionary r = found[i];
+                at = godot::String(r["target"]) == target && godot::String(r["kind"]) == "figure" ? i : -1;
+            }
+            if (at < 0 || !screen.search_results()->is_visible() || screen.figure_list()->is_visible()) {
+                search_problem = "'" + name + "' does not list " + to_utf8(target);
+            } else {
+                screen.search_results()->emit_signal("item_selected", at);
+                const godot::Dictionary s = model->get_selection();
+                if (int64_t(s["entity_type"]) != 6 || int64_t(s["entity_id"]) != figure) {
+                    search_problem = "selecting the result does not select " + to_utf8(target);
+                }
+            }
+            screen.browser_search()->set_text("");
+            screen.browser_search()->emit_signal("text_changed", godot::String());
+            // A click on the first row of the list selects that figure.
+            model->clear_selection();
+            godot::TreeItem* first = root != nullptr ? root->get_first_child() : nullptr;
+            if (first != nullptr) {
+                first->select(0);
+                screen.figure_list()->emit_signal("item_selected");  // as a click on the row
+                const godot::Dictionary s = model->get_selection();
+                if ((int64_t(s["entity_type"]) != 6 || int64_t(s["entity_id"]) != figures.front().id) &&
+                    search_problem.empty()) {
+                    search_problem = "a click on the first row does not select f" + std::to_string(figures.front().id);
+                }
+            }
+        }
+        expect(search_problem.empty() && screen.figure_list()->is_visible(),
+               "B14 searching a figure's display name lists it (kind figure) and selecting the result selects it; a "
+               "click on a row of the Figures tab selects that figure" +
+                   (search_problem.empty() ? godot::String() : ": " + to_godot(search_problem)));
+        model->clear_selection();
+        screen.entity_tabs()->set_current_tab(0);
+        model->set_browser_level("summary");
     }
 
     model->disconnect("year_changed", on_year);

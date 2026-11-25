@@ -56,6 +56,9 @@ struct TerritoryLayers {
 // nullopt for a key or name outside them.
 [[nodiscard]] std::string marker_glyph_name(worldgen::inspect::GlyphKey key);
 [[nodiscard]] std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name);
+// P5-06 6.10: the display name of figure `id` (worldgen's
+// figure_display_name of its row), "figure <id>" when the world lacks it.
+[[nodiscard]] std::string figure_display_name(const worldgen::history::LoadedHistory& history, std::int64_t id);
 
 class HistoryState {
 public:
@@ -98,6 +101,8 @@ public:
     [[nodiscard]] std::optional<worldgen::history::RegionHolding> holding(std::int64_t region) const;
     // The text P4-03 6.1 appends to a cell description for region v at Y
     // ("   |   held by <name> since <Y>", "   |   free since <Y>", "   |   free"),
+    // a held region followed by ", ruled by <figure>" or, for a reign the
+    // world does not record, ", ruler unrecorded" (P5-06 12, Timeline::ruler_at),
     // empty when nothing is appended.
     [[nodiscard]] std::string holding_text(std::int64_t region) const;
     // The name of region v at Y (Timeline::region_name, P4-01 r3 16.5,

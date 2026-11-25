@@ -36,6 +36,7 @@ class HistoryState;
 inline constexpr std::int64_t BROWSER_CIVILIZATION = 3;
 inline constexpr std::int64_t BROWSER_SETTLEMENT = 4;
 inline constexpr std::int64_t BROWSER_REGION = 5;
+inline constexpr std::int64_t BROWSER_FIGURE = 6;  // P5-06 11.3
 
 // 5.1: what is selected; 0 means none. The entity is a civilization (3) now;
 // monsters (8) and sites (9) attach later (section 9), so nothing here
@@ -98,6 +99,7 @@ public:
     // The entry of an event; null for an id the index lacks.
     [[nodiscard]] const worldgen::inspect::EventEntry* event(std::int64_t id) const noexcept;
     [[nodiscard]] const worldgen::inspect::CivilizationEntry* civilization(std::int64_t id) const noexcept;
+    [[nodiscard]] const worldgen::inspect::FigureEntry* figure(std::int64_t id) const noexcept;  // P5-06 11.3
     // The row text of an event (worldgen's row_text, built at load); empty
     // for an unknown id.
     [[nodiscard]] const std::string& row(std::int64_t id) const noexcept;

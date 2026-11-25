@@ -56,7 +56,7 @@ text = "Markers"
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
-tooltip_text = "Settlements, ruins, event places, passes and mines of the year (M)"
+tooltip_text = "Settlements, ruins, event places, passes, mines and towers of the year (M)"
 button_pressed = true
 text = "Show markers"
 
@@ -67,7 +67,8 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
-text = "Faded ruins"
+tooltip_text = "Ruins 1500 years old or more"
+text = "Old ruins"
 
 [node name="MarkEvents" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
 unique_name_in_owner = true
@@ -83,12 +84,13 @@ focus_mode = 0
 button_pressed = true
 text = "Passes"
 
-[node name="MarkMines" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+[node name="MarkSites" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 button_pressed = true
-text = "Mines"
+tooltip_text = "Mines and towers"
+text = "Sites"
 
 [node name="MarkerLegend" type="ItemList" parent="Split/Sidebar"]
 unique_name_in_owner = true
@@ -325,7 +327,7 @@ text = ">"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-tooltip_text = "Search civilizations, settlements and regions by name (Ctrl+F)"
+tooltip_text = "Search civilizations, settlements, regions and figures by name (Ctrl+F)"
 placeholder_text = "Search names"
 clear_button_enabled = true
 
@@ -334,11 +336,23 @@ unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 current_tab = 0
-tab_count = 1
+tab_count = 2
 tab_0/title = "Civilizations"
+tab_1/title = "Figures"
 
 [node name="CivList" type="Tree" parent="Split/RightPane/Browser"]
 unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+columns = 4
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="FigureList" type="Tree" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 0.3

@@ -48,6 +48,7 @@
 #include "world_file.hpp"
 #include "worldgen/db/reader.hpp"
 #include "worldgen/history/digest.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/markers.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
@@ -639,8 +640,22 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
             const int64_t since = h["since"];
             if (civ != 0) {
                 const ReportCiv* c = report.civ(civ);
+                // P5-06 12: the realm's recorded ruler at Y, named from the
+                // browser's figure list.
+                const int64_t ruler = model->history_state().history().timeline.ruler_at(civ, model->get_year());
+                godot::String ruled = ", ruler unrecorded";
+                if (ruler != 0) {
+                    ruled = ", ruled by ?";
+                    const godot::Array figures = model->get_figure_list();
+                    for (int64_t i = 0; i < figures.size(); ++i) {
+                        const godot::Dictionary f = figures[i];
+                        if (int64_t(f["id"]) == ruler) {
+                            ruled = ", ruled by " + godot::String(f["name"]);
+                        }
+                    }
+                }
                 return "   |   held by " + (c != nullptr ? to_godot(c->name) : godot::String("?")) + " since " +
-                       num(since);
+                       num(since) + ruled;
             }
             return since > 0 ? "   |   free since " + num(since) : godot::String("   |   free");
         };
@@ -653,7 +668,14 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
             screen.hover_cell(free_x, free_y);
             const godot::String free_text = screen.cell_label()->get_text();
             check.expect(free_text.ends_with(expected_suffix(free_x, free_y)), "H6 free cell: " + free_text);
+            // P5-06 12: a year before E names the realm's recorded ruler
+            // (Timeline::ruler_at counts a reign to E exclusive, so at E
+            // itself every reign reads unrecorded).
             screen.hover_cell(held_x, held_y);
+            model->set_year(model->get_end_year() - 1);
+            const godot::String ruled_text = screen.cell_label()->get_text();
+            check.expect(ruled_text.contains(", ruled by ") && ruled_text.ends_with(expected_suffix(held_x, held_y)),
+                         "H6 held cell at E - 1 names its ruler: " + ruled_text);
             model->set_year(0);  // the screen refreshes the description of the hovered cell
             const godot::String at_zero = screen.cell_label()->get_text();
             check.expect(at_zero.ends_with(expected_suffix(held_x, held_y)), "H6 held cell at year 0: " + at_zero);
@@ -831,7 +853,7 @@ void count_markers_changed() {
 std::vector<std::string> expected_marker_legend(bool faded, bool events, bool passes, bool mines = true) {
     std::vector<std::string> rows = {"hamlet", "village", "town", "city", "fortress", "capital", "declining", "ruin"};
     if (faded) {
-        rows.emplace_back("faded ruin");
+        rows.emplace_back("old ruin");  // P5-06 25.1 (e)
     }
     if (events) {
         for (const char* label : {"sack or capture", "siege", "battle", "plague", "any other event"}) {
@@ -842,7 +864,8 @@ std::vector<std::string> expected_marker_legend(bool faded, bool events, bool pa
         rows.emplace_back("pass");
     }
     if (mines) {
-        rows.emplace_back("mine");  // P5-04 11.3
+        rows.emplace_back("mine");   // P5-04 11.3
+        rows.emplace_back("tower");  // P5-06 11.4
     }
     return rows;
 }
@@ -880,8 +903,10 @@ bool same_marker_lists(const worldgen::inspect::YearMarkers& a, const worldgen::
     return a.sites == b.sites && a.settlements == b.settlements && a.places == b.places && a.passes == b.passes;
 }
 
+// P5-06 25.1 (e): an old ruin (status 3, OLD_RUIN_YEARS or more) is faded.
 godot::String type_word(const worldgen::inspect::SettlementMarker& s) {
-    return s.status == 4 ? "faded" : s.status == 3 ? "ruin" : "standing";
+    const bool faded = s.status == 4 || (s.status == 3 && s.old_ruin);
+    return faded ? "faded" : s.status == 3 ? "ruin" : "standing";
 }
 
 // The model's YearMarkers in the order of 6.1 as (type, id, x, y, glyph,
@@ -908,11 +933,14 @@ std::vector<std::string> expected_marker_rows(const ViewerModel& model) {
     for (int pass = 3; pass <= 6; ++pass) {
         if (pass == 5) {  // P5-04 11.3: mines between ruins and standing settlements
             for (const auto& site : m.sites) {
-                row("site", site.site, site.x, site.y, "mine", rgb(worldgen::inspect::MARKER_MINE), false, true);
+                const bool tower = site.kind == 4;  // P5-06 11.4
+                row("site", site.site, site.x, site.y, tower ? "tower" : "mine",
+                    rgb(tower ? worldgen::inspect::MARKER_TOWER : worldgen::inspect::MARKER_MINE), false, true);
             }
         }
         for (const auto& s : m.settlements) {
-            const int p = s.status == 4 ? 3 : s.status == 3 ? 4 : s.capital ? 6 : 5;
+            const godot::String t = type_word(s);
+            const int p = t == "faded" ? 3 : t == "ruin" ? 4 : s.capital ? 6 : 5;
             if (p != pass) {
                 continue;
             }
@@ -1022,7 +1050,7 @@ void check_markers_without_history(Checker& check, ViewerScreen& screen) {
                  "M0 no markers without history: available false, no entries, no key list");
     check.expect(screen.markers_toggle()->is_disabled() && screen.mark_faded()->is_disabled() &&
                      screen.mark_events()->is_disabled() && screen.mark_passes()->is_disabled() &&
-                     screen.mark_mines()->is_disabled(),
+                     screen.mark_sites()->is_disabled(),
                  "M0 every control of the Markers group is disabled");
     const bool enabled = model->get_markers_enabled();
     const bool set = model->set_markers_enabled(!enabled);
@@ -1042,17 +1070,20 @@ void check_markers_at_open(Checker& check, ViewerScreen& screen) {
                                                      : ": " + model->get_markers_error_code() + ": " +
                                                            model->get_markers_error_message()));
     const bool options = !model->get_marker_option("faded") && model->get_marker_option("events") &&
-                         model->get_marker_option("passes") && model->get_marker_option("mines") &&
+                         model->get_marker_option("passes") && model->get_marker_option("sites") &&
                          !model->get_marker_option("other");
     const bool boxes = screen.markers_toggle()->is_pressed() && !screen.mark_faded()->is_pressed() &&
                        screen.mark_events()->is_pressed() && screen.mark_passes()->is_pressed() &&
-                       screen.mark_mines()->is_pressed() && !screen.mark_mines()->is_disabled() &&
+                       screen.mark_sites()->is_pressed() && !screen.mark_sites()->is_disabled() &&
                        !screen.markers_toggle()->is_disabled() && !screen.mark_faded()->is_disabled();
-    check.expect(options && boxes, "M1 options faded off, events on, passes on, mines on, in the model and the boxes");
+    const bool words = screen.mark_faded()->get_text() == "Old ruins" && screen.mark_sites()->get_text() == "Sites";
+    check.expect(options && boxes && words,
+                 "M1 options old ruins off, events on, passes on, sites on, in the model and the boxes 'Old ruins' "
+                 "and 'Sites' (P5-06 11.4, 25.1 (e))");
     const auto labels = legend_labels(model->get_marker_legend());
     check.expect(labels == expected_marker_legend(false, true, true) &&
                      screen.marker_legend()->get_item_count() == static_cast<int64_t>(labels.size()),
-                 "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'faded ruin'");
+                 "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'old ruin', 'tower' after 'mine'");
     // P4-05 12.1 F7: each key icon shows its glyph at g = 2, the rings at
     // g = 1: the drawn extent is that of the glyph's non-zero cells times g.
     const godot::Array legend = model->get_marker_legend();
@@ -1133,7 +1164,9 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
     const auto model_ids = [&model]() {
         std::vector<int64_t> ids;
         for (const auto& site : model->history_state().markers().sites) {
-            ids.push_back(site.site);
+            if (site.kind == 3) {  // P5-06 11.4: towers are sites too
+                ids.push_back(site.site);
+            }
         }
         return ids;
     };
@@ -1187,6 +1220,8 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
     const godot::Array markers = model->get_markers();
     int64_t first_site = -1;
     int64_t last_site = -1;
+    int64_t first_mine = -1;
+    int64_t mine_entries = 0;
     int64_t last_ruin = -1;
     int64_t first_standing = -1;
     std::string wrong;
@@ -1196,6 +1231,11 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
         if (type == "site") {
             first_site = first_site < 0 ? i : first_site;
             last_site = i;
+            if (int64_t(m.get("site_kind", int64_t{0})) != 3) {
+                continue;  // a tower: M11
+            }
+            first_mine = first_mine < 0 ? i : first_mine;
+            ++mine_entries;
             if (godot::String(m["glyph"]) != "mine" || int64_t(m["fill"]) != 0x3C3C3C || int64_t(m["offset_x"]) != 7 ||
                 int64_t(m["offset_y"]) != -7 || !bool(m["small"])) {
                 wrong = "entry " + std::to_string(i) + " " + to_utf8(godot::Variant(m).stringify());
@@ -1206,16 +1246,19 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
             first_standing = i;
         }
     }
-    const bool order = first_site >= 0 && last_site - first_site + 1 == static_cast<int64_t>(best) &&
-                       last_ruin < first_site && (first_standing < 0 || first_standing > last_site);
+    const int64_t site_entries = static_cast<int64_t>(model->history_state().markers().sites.size());
+    const bool order = first_site >= 0 && last_site - first_site + 1 == site_entries &&
+                       mine_entries == static_cast<int64_t>(best) && last_ruin < first_site &&
+                       (first_standing < 0 || first_standing > last_site);
     check.expect(order && wrong.empty(),
                  "M10 in " + num(best_year) + " the " + num(static_cast<int64_t>(best)) +
                      " mine entries (glyph mine, fill 60,60,60, offset 7 right and 7 up, small) come after the ruins "
                      "and before the standing settlements" +
                      (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
     // Hover text and the glyph's place: the first mine entry.
-    {
-        const godot::Dictionary m = markers[first_site];
+    if (first_mine >= 0) {
+        const int64_t first_site_entry = first_mine;
+        const godot::Dictionary m = markers[first_site_entry];
         const int64_t id = m["id"];
         const worldgen::db::SiteRow* row = nullptr;
         for (const auto* r : mines) {
@@ -1227,11 +1270,11 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
         const std::string want = (name != nullptr ? *name : std::string("?")) + " (mine of " +
                                  (civ != nullptr ? *civ : std::string("?")) + "), since " +
                                  (row != nullptr ? std::to_string(row->origin_year) : std::string("?"));
-        const godot::String text = model->describe_marker(first_site);
+        const godot::String text = model->describe_marker(first_site_entry);
         check.expect(to_utf8(text) == want, "M10 describe_marker of the mine site " + num(id) + ": " + text +
                                                 (to_utf8(text) == want ? godot::String() : ", expected " + to_godot(want)));
         LayerMapView* view = screen.map_view();
-        const godot::Vector2i at = view->get_marker_screen_position(first_site);
+        const godot::Vector2i at = view->get_marker_screen_position(first_site_entry);
         const int64_t g = view->glyph_cell_size();
         // The centre of the mine's own cell, as marker_centre computes it.
         const godot::Rect2 shown = view->get_shown_rect();
@@ -1240,29 +1283,156 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
         const auto cy = static_cast<int64_t>(std::floor(static_cast<double>(shown.position.y) + (static_cast<double>(int64_t(m["y"])) + 0.5) * zoom));
         const bool placed = at.x >= 0 && std::abs(at.x - (cx + 7 * g)) <= 1 && std::abs(at.y - (cy - 7 * g)) <= 1;
         send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
-        check.expect(placed && view->get_hovered_marker() == first_site && screen.cell_label()->get_text() == text,
+        check.expect(placed && view->get_hovered_marker() == first_site_entry && screen.cell_label()->get_text() == text,
                      "M10 the mine's glyph is centred 7 glyph cells right and 7 up of its cell (" +
                          godot::String(godot::Variant(at)) + ", cell centre " + num(cx) + "," + num(cy) + ", g " + num(g) +
                          ") and the mouse over it shows its text: " + screen.cell_label()->get_text());
         screen.hover_cell(-1, -1);
     }
-    // The box and the key row.
+    // The box and the key rows (P5-06 11.4: the Sites box, mines and towers).
     {
         const int64_t before = markers.size();
-        screen.mark_mines()->set_pressed(false);  // through the box
-        bool none = !model->get_marker_option("mines");
+        screen.mark_sites()->set_pressed(false);  // through the box
+        bool none = !model->get_marker_option("sites");
         const godot::Array off = model->get_markers();
         for (int64_t i = 0; i < off.size(); ++i) {
             none = none && godot::String(godot::Dictionary(off[i])["type"]) != "site";
         }
-        const bool fewer = off.size() == before - static_cast<int64_t>(best) &&
+        const bool fewer = off.size() == before - site_entries &&
                            legend_labels(model->get_marker_legend()) == expected_marker_legend(false, true, true, false);
-        screen.mark_mines()->set_pressed(true);
-        const bool back = model->get_marker_option("mines") && model->get_markers().size() == before &&
+        screen.mark_sites()->set_pressed(true);
+        const bool back = model->get_marker_option("sites") && model->get_markers().size() == before &&
                           legend_labels(model->get_marker_legend()) == expected_marker_legend(false, true, true, true);
-        check.expect(none && fewer && back, "M10 the Mines box removes exactly the " + num(static_cast<int64_t>(best)) +
-                                                " mine entries and the key row 'mine', and puts them back");
+        check.expect(none && fewer && back, "M10 the Sites box removes exactly the " + num(site_entries) + " site entries (" +
+                                                num(static_cast<int64_t>(best)) +
+                                                " mines) and the key rows 'mine' and 'tower', and puts them back");
     }
+}
+
+// M11 (P5-06 11.4): towers and libraries. The sites of kind 4 of table site
+// against the model's entries at E and around the first tower's opening;
+// glyph, fill, offset (a library one glyph cell to the upper left of its
+// settlement, a tower in the wild on its own cell), hover text and the
+// glyph's place on screen.
+void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    const int64_t end = model->get_end_year();
+    std::vector<const worldgen::db::SiteRow*> towers;
+    for (const auto& row : lib.history->tables.sites) {
+        if (row.kind == 4) {
+            towers.push_back(&row);
+        }
+    }
+    int64_t libraries = 0;
+    for (const auto* t : towers) {
+        libraries += t->settlement != 0 ? 1 : 0;
+    }
+    check.expect(!towers.empty(), "M11 the world has " + num(static_cast<int64_t>(towers.size())) +
+                                      " towers (sites of kind 4), " + num(libraries) + " of them libraries");
+    if (towers.empty()) {
+        return;
+    }
+    const auto model_towers = [&model]() {
+        std::vector<int64_t> ids;
+        for (const auto& site : model->history_state().markers().sites) {
+            if (site.kind == 4) {
+                ids.push_back(site.site);
+            }
+        }
+        return ids;
+    };
+    std::string problem;
+    for (const int64_t y : {towers.front()->origin_year - 1, towers.front()->origin_year, end}) {
+        if (y < 0 || y > end) {
+            continue;
+        }
+        model->set_year(y);
+        std::vector<int64_t> want;
+        for (const auto* t : towers) {
+            if (t->origin_year <= y && (!t->ended_year || y < *t->ended_year)) {
+                want.push_back(t->id);
+            }
+        }
+        const auto lib_sites = lib.index->markers_at(*lib.history, y, worldgen::inspect::MarkerOptions{}).sites;
+        if ((model_towers() != want || model->history_state().markers().sites != lib_sites) && problem.empty()) {
+            problem = "year " + std::to_string(y) + ": model " + id_list(model_towers()) + ", table site " + id_list(want);
+        }
+    }
+    check.expect(problem.empty(), "M11 the tower entries are the towers open at the year (before and at the first "
+                                  "tower's year " + num(towers.front()->origin_year) + ", and at E)" +
+                                      (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+    // The entries at E.
+    model->set_year(end);
+    const godot::Array markers = model->get_markers();
+    LayerMapView* view = screen.map_view();
+    const int64_t g = view->glyph_cell_size();
+    const godot::Rect2 shown = view->get_shown_rect();
+    const double zoom = view->get_zoom();
+    std::string wrong;
+    int64_t entries = 0;
+    int64_t hovered = -1;
+    for (int64_t i = 0; i < markers.size(); ++i) {
+        const godot::Dictionary m = markers[i];
+        if (godot::String(m["type"]) != "site" || int64_t(m.get("site_kind", int64_t{0})) != 4) {
+            continue;
+        }
+        ++entries;
+        const int64_t id = m["id"];
+        const worldgen::db::SiteRow* row = nullptr;
+        for (const auto* t : towers) {
+            row = t->id == id ? t : row;
+        }
+        if (row == nullptr) {
+            wrong = wrong.empty() ? "entry " + std::to_string(i) + ": no tower " + std::to_string(id) : wrong;
+            continue;
+        }
+        const bool library = row->settlement != 0;
+        const int64_t ox = library ? -7 : 0;
+        const int64_t oy = library ? -7 : 0;
+        if (godot::String(m["glyph"]) != "tower" || int64_t(m["fill"]) != 0x783CB4 || int64_t(m["offset_x"]) != ox ||
+            int64_t(m["offset_y"]) != oy || !bool(m["small"])) {
+            wrong = wrong.empty() ? "entry " + std::to_string(i) + " " + to_utf8(godot::Variant(m).stringify()) : wrong;
+        }
+        // The hover text from the check's own read: the figure participant
+        // of the tower's founding event.
+        std::string figure = "?";
+        if (const auto* origin = lib.history->view.event(row->origin_event)) {
+            for (const auto& p : origin->participants) {
+                if (p.entity_type == 6) {
+                    for (const auto& f : lib.history->tables.figures) {
+                        figure = f.id == p.entity_id ? worldgen::history::figure_display_name(f) : figure;
+                    }
+                    break;
+                }
+            }
+        }
+        const std::string want = row->name + (library ? " (library of " : " (tower of ") + figure + "), since " +
+                                 std::to_string(row->origin_year);
+        const godot::String text = model->describe_marker(i);
+        if (to_utf8(text) != want && wrong.empty()) {
+            wrong = "describe_marker of site " + std::to_string(id) + ": '" + to_utf8(text) + "', expected '" + want + "'";
+        }
+        const godot::Vector2i at = view->get_marker_screen_position(i);
+        const auto cx = static_cast<int64_t>(std::floor(static_cast<double>(shown.position.x) + (static_cast<double>(int64_t(m["x"])) + 0.5) * zoom));
+        const auto cy = static_cast<int64_t>(std::floor(static_cast<double>(shown.position.y) + (static_cast<double>(int64_t(m["y"])) + 0.5) * zoom));
+        if ((at.x < 0 || std::abs(at.x - (cx + ox * g)) > 1 || std::abs(at.y - (cy + oy * g)) > 1) && wrong.empty()) {
+            wrong = "site " + std::to_string(id) + " drawn at " + to_utf8(godot::String(godot::Variant(at))) +
+                    ", cell centre " + std::to_string(cx) + "," + std::to_string(cy);
+        }
+        // The mouse over it: the first tower no later entry covers.
+        if (hovered < 0 && at.x >= 0) {
+            send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
+            if (view->get_hovered_marker() == i && screen.cell_label()->get_text() == text) {
+                hovered = id;
+            }
+        }
+    }
+    screen.hover_cell(-1, -1);
+    check.expect(wrong.empty() && entries == static_cast<int64_t>(model_towers().size()) && entries > 0 && hovered > 0,
+                 "M11 at " + num(end) + " the " + num(entries) +
+                     " tower entries: glyph tower, fill 120,60,180, a library 7 glyph cells left and up, a wild "
+                     "tower on its cell, hover '<name> (tower|library of <figure>), since <year>'; the mouse over site " +
+                     num(hovered) + " shows its text" + (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
 }
 
 void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
@@ -1293,15 +1463,29 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
             r0 = s.ruined;
         }
     }
-    int64_t d0 = -1;
-    for (const auto& e : report.events) {
-        if (e.kind == "ruin_faded" && (d0 < 0 || e.start < d0)) {
-            d0 = e.start;
+    // P5-06 25.1 (e): D0 = R1 + OLD_RUIN_YEARS, R1 the smallest ruined year
+    // of [present] with R1 + OLD_RUIN_YEARS <= E; no ruin fades.
+    constexpr int64_t old_years = worldgen::inspect::OLD_RUIN_YEARS;
+    int64_t r1 = -1;
+    int64_t r1_settlement = 0;
+    for (const auto& s : report.settlements) {
+        if (s.ruined >= 0 && s.ruined + old_years <= end && (r1 < 0 || s.ruined < r1)) {
+            r1 = s.ruined;
+            r1_settlement = s.id;
         }
     }
-    check.expect(r0 >= 0 && d0 >= 0 && !report.settlements.empty(),
+    const int64_t d0 = r1 >= 0 ? r1 + old_years : -1;
+    const auto is_old_at = [old_years](const ReportSettlement& s, int64_t year) {
+        return s.status == "ruined" && s.ruined >= 0 && year - s.ruined >= old_years;
+    };
+    int64_t faded_lines = 0;
+    for (const auto& e : report.events) {
+        faded_lines += e.kind == "ruin_faded" ? 1 : 0;
+    }
+    check.expect(r0 >= 0 && d0 >= 0 && faded_lines == 0 && !report.settlements.empty(),
                  "M the report has settlements (" + num(static_cast<int64_t>(report.settlements.size())) +
-                     "), a ruin R0 = " + num(r0) + " and a ruin_faded D0 = " + num(d0));
+                     "), a ruin R0 = " + num(r0) + ", an old ruin s" + num(r1_settlement) + " ruined in R1 = " + num(r1) +
+                     " (D0 = " + num(d0) + ") and no ruin_faded line (" + num(faded_lines) + ")");
 
     // M2: at E with faded on, the entries against [present].
     model->set_year(end);
@@ -1324,7 +1508,7 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         for (const auto& s : report.settlements) {
             want.push_back(std::to_string(s.id) + " " + s.kind + " " + s.status + " " + std::to_string(s.population) +
                            " " + std::to_string(s.owner) + " " + std::to_string(s.x) + " " + std::to_string(s.y));
-            if (s.status != "faded") {
+            if (s.status != "faded" && !is_old_at(s, end)) {
                 want_off.push_back(want.back());
             }
         }
@@ -1364,13 +1548,14 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         }
         std::vector<std::string> want_off_ids;
         for (const auto& s : report.settlements) {
-            if (s.status != "faded") {
+            if (s.status != "faded" && !is_old_at(s, end)) {
                 want_off_ids.push_back(std::to_string(s.id));
             }
         }
         check.expect(got_off == want_off_ids && model->history_state().markers().settlements.size() == want_off.size(),
-                     "M2 without faded ruins: the " + num(static_cast<int64_t>(want_off.size())) +
-                         " lines that are not faded");
+                     "M2 without old ruins: the " + num(static_cast<int64_t>(want_off.size())) +
+                         " lines less the old ruins at E (" +
+                         num(static_cast<int64_t>(report.settlements.size() - want_off.size())) + ")");
     }
 
     // M3: ruins and faded ruins.
@@ -1395,31 +1580,32 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         check.expect(problem.empty() && ruins > 0, "M3 " + num(ruins) +
                                                        " ruins: standing the year before, a ruin in their year" +
                                                        (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+        // P5-06 25.1 (e): the settlement of R1 is a ruin at D0 - 1, absent
+        // at D0 with the option off and an old ruin (type faded) with it on.
         problem.clear();
-        int64_t faded = 0;
-        for (const auto& e : report.events) {
-            if (e.kind != "ruin_faded" || e.settlement == 0) {
-                continue;
-            }
-            ++faded;
-            model->set_year(e.start - 1);
-            const auto* before = model_settlement(*model.ptr(), e.settlement);
-            const bool ruin = before != nullptr && before->status == 3;
-            model->set_year(e.start);
-            const bool absent = model_settlement(*model.ptr(), e.settlement) == nullptr;
+        if (r1_settlement != 0) {
+            const godot::String sid = num(r1_settlement);
+            model->set_year(d0 - 1);
+            const auto* before = model_settlement(*model.ptr(), r1_settlement);
+            const bool ruin = before != nullptr && type_word(*before) == "ruin" &&
+                              marker_index_of(model->get_markers(), "ruin", r1_settlement) >= 0;
+            model->set_year(d0);
+            const bool absent = model_settlement(*model.ptr(), r1_settlement) == nullptr;
             model->set_marker_option("faded", true);
-            const auto* shown = model_settlement(*model.ptr(), e.settlement);
-            const bool faded_entry = shown != nullptr && shown->status == 4;
+            const auto* shown = model_settlement(*model.ptr(), r1_settlement);
+            const int64_t index = marker_index_of(model->get_markers(), "faded", r1_settlement);
+            const bool old = shown != nullptr && shown->status == 3 && shown->old_ruin && index >= 0 &&
+                             godot::String(godot::Dictionary(model->get_markers()[index])["glyph"]) == "faded" &&
+                             model->describe_marker(index).contains(", old ruin of a ");
             model->set_marker_option("faded", false);
-            if (!ruin || !absent || !faded_entry) {
-                problem = "e" + std::to_string(e.id) + " s" + std::to_string(e.settlement) + " in " +
-                          std::to_string(e.start);
-                break;
+            if (!ruin || !absent || !old) {
+                problem = std::string("s") + std::to_string(r1_settlement) + ": " + (ruin ? "" : "not a ruin at D0 - 1 ") +
+                          (absent ? "" : "shown at D0 without the option ") + (old ? "" : "not an old ruin at D0 with it");
             }
         }
-        check.expect(problem.empty() && faded > 0,
-                     "M3 " + num(faded) +
-                         " ruin_faded events: a ruin the year before, then absent, or faded with the option" +
+        check.expect(problem.empty() && r1_settlement != 0,
+                     "M3 s" + num(r1_settlement) + " ruined in " + num(r1) + ": a ruin in " + num(d0 - 1) + ", in " +
+                         num(d0) + " absent, or an old ruin ('old ruin of a') with the option" +
                          (problem.empty() ? godot::String() : ": " + to_godot(problem)));
     }
 
@@ -1553,7 +1739,7 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
             if (s.capital && capital < 0) {
                 capital = s.settlement;
             }
-            if (s.status == 3 && ruin < 0) {
+            if (s.status == 3 && !s.old_ruin && ruin < 0) {
                 ruin = s.settlement;
             }
         }
@@ -1791,7 +1977,12 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         for (int64_t i = 0; i < with_faded.size(); ++i) {
             faded_entries += godot::String(godot::Dictionary(with_faded[i])["type"]) == "faded" ? 1 : 0;
         }
+        int64_t old_at_end = 0;
+        for (const auto& s : report.settlements) {
+            old_at_end += is_old_at(s, end) || s.status == "faded" ? 1 : 0;
+        }
         const bool adds = model->get_marker_option("faded") && g_markers_changed == 1 && faded_entries > 0 &&
+                          faded_entries == old_at_end &&
                           with_faded.size() == before.size() + faded_entries &&
                           legend_labels(model->get_marker_legend()) == expected_marker_legend(true, true, true);
         g_markers_changed = 0;
@@ -1805,8 +1996,8 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         const bool nothing = g_markers_changed == 0;
         model->set_marker_option("faded", false);
         check.expect(adds && again && back && nothing && g_markers_changed == 0,
-                     "M8 the faded box adds exactly the " + num(faded_entries) +
-                         " faded entries (one markers_changed); a change that alters nothing emits none");
+                     "M8 the Old ruins box adds exactly the " + num(faded_entries) + " old ruins of E (" +
+                         num(old_at_end) + " in [present]; one markers_changed); a change that alters nothing emits none");
     }
 
     // M9: rebuilds over 0 .. E.
@@ -1837,6 +2028,7 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
                                           (problem.empty() ? godot::String() : ": " + to_godot(problem)));
     }
     check_mines(check, screen, options, lib);
+    check_towers(check, screen, lib);
     model->set_year(end);
     model->disconnect("markers_changed", counter);
 }

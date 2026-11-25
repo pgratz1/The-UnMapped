@@ -1,6 +1,7 @@
 #include "viewer/viewer_model.hpp"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <exception>
 #include <new>
@@ -803,38 +804,56 @@ const char* marker_type_word(MarkerType type) {
     return "";
 }
 
-// The draw pass of a settlement entry (6.1: 3 faded, 4 ruin, 5 standing, 6
-// capital); 0 for a status outside 1 to 4.
+// The draw pass of a settlement entry (6.1: 3 faded or old ruin, 4 ruin, 5
+// standing, 6 capital), from settlement_marker_type (P5-06 25.1 (e)); 0 for
+// a status outside 1 to 4.
 int settlement_pass(const worldgen::inspect::SettlementMarker& m) {
-    if (m.status == 4) {
-        return 3;
+    if (m.status < 1 || m.status > 4) {
+        return 0;
     }
-    if (m.status == 3) {
-        return 4;
+    switch (worldgen::inspect::settlement_marker_type(m)) {
+        case MarkerType::faded: return 3;
+        case MarkerType::ruin: return 4;
+        case MarkerType::standing: return m.capital ? 6 : 5;
+        default: return 0;
     }
-    if (m.status == 1 || m.status == 2) {
-        return m.capital ? 6 : 5;
-    }
-    return 0;
 }
 
-// P5-04 11.3: "<site name> (mine of <civilization name>), since <year>".
+// P5-04 11.3: "<site name> (mine of <civilization name>), since <year>";
+// P5-06 11.4: "<site name> (tower of <figure display name>), since <year>",
+// "library of" for a tower in a settlement. A tower's figure is the
+// `figure` participant of its tower_founded event (the site's origin event).
 std::string site_marker_text(const HistoryState& history, const worldgen::inspect::SiteMarker& m) {
     using worldgen::history::EntityType;
-    const worldgen::history::HistoryView& view = history.history().view;
+    const worldgen::history::LoadedHistory& loaded = history.history();
+    const worldgen::history::HistoryView& view = loaded.view;
     const std::string* name = view.name(EntityType::site, m.site);
     std::string text = name != nullptr && !name->empty() ? *name : "site " + std::to_string(m.site);
-    text += " (mine";
-    if (m.founder != 0) {
-        const std::string* civ = view.name(EntityType::civilization, m.founder);
-        text += " of " + (civ != nullptr ? *civ : "civilization " + std::to_string(m.founder));
-    }
-    text += ")";
-    const auto& sites = history.history().tables.sites;
+    const auto& sites = loaded.tables.sites;
     const auto it = std::lower_bound(sites.begin(), sites.end(), m.site,
                                      [](const worldgen::db::SiteRow& row, int64_t key) { return row.id < key; });
-    if (it != sites.end() && it->id == m.site) {
-        text += ", since " + std::to_string(it->origin_year);
+    const worldgen::db::SiteRow* row = it != sites.end() && it->id == m.site ? &*it : nullptr;
+    if (m.kind == 4) {
+        text += m.settlement != 0 ? " (library" : " (tower";
+        const worldgen::history::HistoryView::Event* origin = row != nullptr ? view.event(row->origin_event) : nullptr;
+        if (origin != nullptr) {
+            for (const auto& p : origin->participants) {
+                if (p.entity_type == static_cast<std::int64_t>(EntityType::figure)) {
+                    text += " of " + figure_display_name(loaded, p.entity_id);
+                    break;
+                }
+            }
+        }
+    } else {
+        text += " (mine";
+        if (m.founder != 0) {
+            const std::string* civ = view.name(EntityType::civilization, m.founder);
+            text += " of " + (civ != nullptr ? *civ : "civilization " + std::to_string(m.founder));
+        }
+    }
+    text += ")";
+    if (row != nullptr) {
+        text += ", since " + std::to_string(row->origin_year);
     }
     return text;
 }
@@ -846,7 +865,7 @@ bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& 
         out = &options.events;
     } else if (name == "passes") {
         out = &options.passes;
-    } else if (name == "mines") {  // P5-04 11.3: the sites option, mines its one kind
+    } else if (name == "sites" || name == "mines") {  // P5-04 11.3, P5-06 11.4: mines and towers
         out = &options.sites;
     } else {
         return false;
@@ -987,13 +1006,18 @@ godot::Dictionary ViewerModel::marker_dictionary(const MarkerRef& ref) const {
         out["id"] = site.site;
         out["x"] = site.x;
         out["y"] = site.y;
-        out["glyph"] = to_godot(marker_glyph_name(worldgen::inspect::GlyphKey{worldgen::inspect::GLYPH_MINE, false, false}));
-        out["fill"] = rgb_of(worldgen::inspect::MARKER_MINE);
+        const std::uint8_t base = worldgen::inspect::site_glyph_base(site);
+        out["glyph"] = to_godot(marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false}));
+        out["fill"] = rgb_of(base == worldgen::inspect::GLYPH_TOWER ? worldgen::inspect::MARKER_TOWER
+                                                                    : worldgen::inspect::MARKER_MINE);
         out["capital"] = false;
         out["small"] = true;  // a minor mark, hidden with the hamlets when zoomed out (8.4)
-        // Drawn one glyph (7 glyph cells) to the upper right of its cell.
-        out["offset_x"] = worldgen::inspect::SITE_GLYPH_OFFSET;
-        out["offset_y"] = -worldgen::inspect::SITE_GLYPH_OFFSET;
+        out["site_kind"] = site.kind;
+        // P5-06 11.4: a mine one glyph to the upper right of its cell, a
+        // library to the upper left of its settlement, a wild tower on it.
+        const std::array<std::int64_t, 2> offset = worldgen::inspect::site_glyph_offset(site);
+        out["offset_x"] = offset[0];
+        out["offset_y"] = offset[1];
         return out;
     }
     if (ref.type == MarkerType::place) {
@@ -1114,7 +1138,11 @@ godot::String ViewerModel::describe_marker(int64_t index) const {
                     std::to_string(s.population) + " recorded in " + std::to_string(s.since) + ", founded in " +
                     std::to_string(s.founded);
         } else {
-            text += std::string(ref.type == MarkerType::faded ? ", faded ruin of a " : ", ruin of a ") + kind +
+            // P5-06 25.1 (e): a status 3 entry of type faded is an old ruin.
+            const char* word = ref.type != MarkerType::faded ? ", ruin of a "
+                               : s.status == 4               ? ", faded ruin of a "
+                                                             : ", old ruin of a ";
+            text += std::string(word) + kind +
                     ", ruined in " + std::to_string(s.ruined_year);
             // P4-05 12.1 F6: a ruin with no ruin event says so.
             text += ": " + (s.ruin_event != 0 ? sentence(s.ruin_event) : std::string("cause not recorded"));
@@ -1148,7 +1176,7 @@ godot::Array ViewerModel::get_marker_legend() const {
     row("ruin", "ruin", -1);
     const worldgen::inspect::MarkerOptions& options = history_.marker_options();
     if (options.faded) {
-        row("faded ruin", "faded", -1);
+        row("old ruin", "faded", -1);
     }
     if (options.events) {
         using worldgen::inspect::EventSymbol;
@@ -1164,6 +1192,7 @@ godot::Array ViewerModel::get_marker_legend() const {
     }
     if (options.sites) {
         row("mine", "mine", rgb_of(worldgen::inspect::MARKER_MINE));
+        row("tower", "tower", rgb_of(worldgen::inspect::MARKER_TOWER));  // P5-06 11.4
     }
     return out;
 }
