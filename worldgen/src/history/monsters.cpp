@@ -1359,7 +1359,11 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
             r_c += ctx.year() - year <= tuning_.hunt_memory_years ? 1 : 0;
         }
         // P5-06 7.7: the realm's hero, if any, raises the chance and the strength.
-        const FigureView::Hero hero = figures_ != nullptr ? figures_->hero_of(c) : FigureView::Hero{};
+        FigureView::Hero hero = figures_ != nullptr ? figures_->hero_of(c) : FigureView::Hero{};
+        if (hero.figure != 0 && heroes_slain_year_ == ctx.year() &&
+            std::find(heroes_slain_.begin(), heroes_slain_.end(), hero.figure) != heroes_slain_.end()) {
+            hero = FigureView::Hero{};  // lead ruling G1: slain in this step, no hero for the rest of it
+        }
         const std::int64_t p_hunt = std::min(
             checked_add(tuning_.hunt_max_permille, hero.hunt_permille),
             checked_add(checked_add(tuning_.hunt_permille,
@@ -1431,6 +1435,11 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
                               Participant{"monster", EntityType::monster, id}};
             e.causes = {r.event};
             (void)ctx.append(e);
+            if (heroes_slain_year_ != ctx.year()) {
+                heroes_slain_.clear();
+                heroes_slain_year_ = ctx.year();
+            }
+            heroes_slain_.push_back(hero.figure);
             return;
         }
     }

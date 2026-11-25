@@ -156,6 +156,7 @@ private:
         bool exiled = false, realm_fell = false, regnal_fallback = false;
         // Places and offices.
         std::int64_t host = 0;           // an exile's host (0 the wilds)
+        std::int64_t host_region = 0;    // the host's capital region at the exile
         std::int64_t tower = 0;          // a caster's site
         std::int64_t tower_event = 0;    // its tower_founded
         std::int64_t last_book = 0;      // its last book_written

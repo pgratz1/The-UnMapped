@@ -368,6 +368,8 @@ private:
     MonstersStats stats_;
     const RenamingSubsystem* renaming_ = nullptr;  // P5-03 12.2
     const FigureView* figures_ = nullptr;          // P5-06 7.1
+    std::vector<std::int64_t> heroes_slain_;       // ruling G1: heroes slain in the T4 of heroes_slain_year_
+    std::int64_t heroes_slain_year_ = -1;
     std::uint64_t name_key_ = 0;                   // P5-03 12.2: hist.names.monster
     std::vector<std::string> epithets_;            // P5-03 12.1: of the wild monsters' names, creation order
 };

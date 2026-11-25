@@ -429,7 +429,7 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             on_war_declared(ctx, e);
         } else if (k == "alliance_betrayed") {
             const std::int64_t c = ctx.event_participant(e, "betrayer");
-            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers) {
+            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
@@ -438,7 +438,7 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             }
         } else if (k == "spoils_shared" || k == "spoils_withheld") {
             const std::int64_t c = ctx.event_participant(e, "principal");
-            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers) {
+            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
@@ -494,8 +494,8 @@ void FiguresSubsystem::on_founded(StepContext& ctx, std::int64_t c, std::int64_t
         return;
     }
     start_reign(ctx, c, 1, ctx.year());
-    if (!tuning_.name_rulers) {
-        return;
+    if (!tuning_.name_rulers || ctx.step() == Step::q4) {
+        return;  // reading R21: a founding read in a quiet step names no founder there
     }
     const std::int64_t f = name_reign(ctx, c, 0);
     EventSpec e = point_event(ctx, "came_to_rule", ctx.state().civ(c).home_region, 0);
@@ -512,7 +512,7 @@ void FiguresSubsystem::on_war_declared(StepContext& ctx, std::int64_t w) {
     if (!line(a).has) {
         start_reign(ctx, a, 1, ctx.year());  // a guard: every realm has a line from its founding
     }
-    if (line(a).reign.figure == 0 && tuning_.name_rulers) {
+    if (line(a).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(a).ended_year) {
         const std::int64_t f = name_reign(ctx, a, w);
         ctx.state().open_relation(figure_civ_key(f, a, "ruled"), w);
     }
@@ -663,7 +663,14 @@ void FiguresSubsystem::draw_person_name(StepContext& ctx, std::int64_t id) {
                                           ctx.inputs().seed, word(cu.id), word(id), peoples_.mutable_name_registry());
     Figure& f = figure(id);
     f.name = choice.name;
-    f.root = realm_root(choice.name, cu.naming.person_forms);
+    std::string base = choice.name;
+    if (choice.fallback) {  // reading R16: a fallback's root drops the numeral
+        const std::size_t sp = base.rfind(' ');
+        if (sp != std::string::npos) {
+            base.resize(sp);
+        }
+    }
+    f.root = realm_root(base, cu.naming.person_forms);
     f.regnal_fallback = choice.fallback;
 }
 
@@ -910,6 +917,7 @@ void FiguresSubsystem::on_crisis(StepContext& ctx, std::int64_t e, std::int64_t 
     f.status = IN_EXILE;
     f.exiled = true;
     f.host = host;
+    f.host_region = host != 0 ? region : 0;
     stats_.exiles += 1;
 }
 
@@ -940,6 +948,8 @@ void FiguresSubsystem::die(StepContext& ctx, std::int64_t id, std::int64_t how) 
     if (f0.status == IN_EXILE) {
         if (f0.host != 0 && !state.civ(f0.host).ended_year && state.civ(f0.host).capital != 0) {
             region = state.settlement(state.civ(f0.host).capital).region;
+        } else if (f0.host_region != 0) {
+            region = f0.host_region;  // reading R6: the host's capital at the exile
         }
     } else if (f0.role == CASTER_ROLE && f0.tower != 0 && sites_ != nullptr) {
         region = ctx.event_region(f0.tower_event);
@@ -1026,9 +1036,11 @@ void FiguresSubsystem::appoint(StepContext& ctx, std::int64_t w, std::size_t sid
         life_draws(ctx, g, tuning_.general_age_permille, tuning_.general_age_span_permille);
         draw_person_name(ctx, g);
         Figure& f = figure(g);
-        f.skill = tuning_.skill_min + static_cast<std::int64_t>(pick(
-                                          ctx.draw(keys_[SKILL], word(g), 0, 0),
-                                          static_cast<std::uint64_t>(tuning_.skill_max - tuning_.skill_min + 1)));
+        // Lead ruling G7: a skill is at least 1.
+        f.skill = std::max<std::int64_t>(
+            1, tuning_.skill_min + static_cast<std::int64_t>(pick(ctx.draw(keys_[SKILL], word(g), 0, 0),
+                                                                  static_cast<std::uint64_t>(tuning_.skill_max -
+                                                                                             tuning_.skill_min + 1))));
         f.first_command = y;
     }
     EventSpec e = point_event(ctx, "general_appointed", kw0.goal, 0);
@@ -1132,7 +1144,19 @@ void FiguresSubsystem::stand_down(StepContext& ctx) {
         if (conflict_->war_open(w)) {
             continue;
         }
-        const std::int64_t end = conflict_->war_end_event(w);
+        // Lead ruling G6 (R45): a war closed by a principal's end stands its
+        // generals down with that realm's ending event.
+        std::int64_t end = conflict_->war_end_event(w);
+        {
+            const KnownWar& k0 = wars_.at(w);
+            const Civilization& ca = ctx.state().civ(k0.attacker);
+            const Civilization& cd = ctx.state().civ(k0.defender);
+            if (ca.ended_year && ca.ending_event != 0) {
+                end = ca.ending_event;
+            } else if (cd.ended_year && cd.ending_event != 0) {
+                end = cd.ending_event;
+            }
+        }
         for (std::size_t s = 0; s < 2; ++s) {
             KnownWar& kw = wars_.at(w);
             const std::int64_t g = kw.general[s];
