@@ -405,8 +405,13 @@ class Browser:
         if not short:
             o.append([lit("  peak regions: %d, %d-%d" % (m, y0, y1) if m else "  peak regions: 0")])
             o.append([lit("  peak population: %d in %d" % pp if pp else "  peak population: 0")])
-        o.append([lit("  settlements: %d founded, %d held at the end, %d ruined, %d faded" % (
-            d.founded[cid], d.held_settlements[cid], d.ruined_only[cid], d.faded[cid]))])
+        if prr.V8:   # P5-06 25.1 (d): ", <d> faded" only when d > 0
+            o.append([lit("  settlements: %d founded, %d held at the end, %d ruined%s" % (
+                d.founded[cid], d.held_settlements[cid], d.ruined_only[cid],
+                ", %d faded" % d.faded[cid] if d.faded[cid] > 0 else ""))])
+        else:
+            o.append([lit("  settlements: %d founded, %d held at the end, %d ruined, %d faded" % (
+                d.founded[cid], d.held_settlements[cid], d.ruined_only[cid], d.faded[cid]))])
         rel = [x for x in w.t["relation"] if (x[0] == CIV and x[1] == cid) or (x[2] == CIV and x[3] == cid)]
         joined = getattr(w, "joined", set())   # P5-04 10.4: an ally's war rows are not wars (prr.civ_block)
         wars = [x for x in rel if x[4] == "war" and x[7] not in joined]
@@ -469,6 +474,26 @@ class Browser:
                     o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
                 else:
                     o.append([lit(t_)])
+        if prr.V8 and (level == "full" or len(w.t["civilization"]) <= prr.SUMMARY_LINES_CIVS):
+            # P5-06 10.3: the rulers lines (as the C++ BlockLines: the figure references are entity segments)
+            rulers = sorted((x for x in w.t["figure"] if x[3] == 1 and x[6] == cid), key=lambda x: x[15])
+            n = max([x[15] for x in rulers] or [0])
+            head = [lit("  rulers: %s, %d recorded" % (prr.pl(n, "reign"), len(rulers)))]
+            if rulers:
+                head += [lit("; first "), ent(FIGURE, rulers[0][0])]
+                last = None
+                if c[8] is None:
+                    for x in rulers:
+                        r = prr.ruled_row(w, x[0])
+                        if r is not None and r[6] is None:
+                            last = x
+                if last is not None:
+                    head += [lit("; at the end "), ent(FIGURE, last[0])]
+            o.append(head)
+            if level == "full":
+                for x in rulers:
+                    o.append([lit("    "), ent(FIGURE, x[0]), lit(": %d-%s, reign %d, %s" % (
+                        x[8], prr.reign_end(w, x[0]), x[15], prr.TEMPER_WORD.get(x[17], "?")))])
         return o
 
     def adversary_lines(self, cid, rel):
@@ -1074,7 +1099,7 @@ def cmd_check(argv):
          [])
     if len(pe.COMPILED) > 56:   # reading B13
         c.eq("4.4 P5-03 kinds 57 to 62 are peoples (reading B13)",
-             [k["key"] for k in pe.COMPILED[56:] if event_group(k["key"]) != 6], [])
+             [k["key"] for k in pe.COMPILED[56:62] if event_group(k["key"]) != 6], [])
     c.eq("4.4 no compiled kind falls to other", [k["key"] for k in pe.COMPILED if event_group(k["key"]) == 4], [])
     c.eq("4.4 near misses", [event_group(k) for k in ("", "warx", "Battle", "battle ", "unknown_key")], [4] * 5)
     check_t3(c)

@@ -1991,6 +1991,46 @@ values, flip the references' defaults to 0.27.0, rebuild the report inputs (`p3_
 and record P5-04's phase 2 command list with `p5_06_figures_reference.py golden --inputs <the reference's worlds>`;
 the report reference's v8 (10, 25.1 (d), 25.2) is still to be written then.
 
+### 0.27.0, phase 2 (integration with the engineer's branch)
+
+Merged with `origin/p5/06-impl` (2750025), `origin/p5/06-tests` (a06a70b), `origin/p5/06-int-p4` (timeline and
+markers at 0.27.0, their own README subsections), `origin/p5/06-audit` and `origin/p5/06-viewer`. Every reference
+serves 0.27.0 by default (`--version 0.26.0` / `--rules p5-04` the P5-04 files). The calibrated values (the
+engineer's df29146) are in the one place of each listing (`FIGURES_RANGES_027`, `MONSTER_CALIBRATED_027`,
+`MONSTERS_CALIBRATED_027`, the four two-word choices of `REPORT_ENTRIES_027` as shipped); the listings reproduce
+the content hashes of `game/data` and both fixture roots; `history/p5_06_figures_data.hpp` is written by
+`p5_06_figures_data_writer.py` (it reproduces the phase 1 header from the phase 1 listings byte for byte).
+
+- Lead rulings: G7 (a skill is at least 1) in the replay; G1 to G6 were phase 1's readings. Ruler/life at E (lead,
+  2026-11-25): `p4_timeline_reference.py` holds an open reign at Y = E (READINGS F3); the engine of 2750025 does
+  not yet (a library fix follows).
+- `p3_engine_reference.py`: the view of rows renders type 6 display names, `{r:under}` (`ruler_at_fn`, rows by
+  (civ, since_event)) and `{@book}` (a title is a name for 8.5 r10's mid-sentence "the", the engine's form).
+- `p3_report_reference.py`: report v8 (`V8`): `[figures]` (`figure_deeds`, `figure_line`; the engineer's reading 15
+  for the deeds, renown and the lower median), the `rulers:` lines, companions (dispute, exile, a fall with the
+  war's last battle; dispute and exile are no candidates), `battle_led` in every battle set, `slain by <figure> of
+  <civ>`, towers and libraries in `[sites]`, the 26 `[stats]` keys, `, faded` only when non-zero, 25.2's G
+  (`major_calamities`, before the per-phase cap; members take a phase's slots first; their units in the floor) and
+  invariant 15 (`check_major_calamities`); fixture H17 (`h17-figures.toml`, `p5_06_h17_fixture.py`); `build_input`
+  writes `figure` and `book` from the replay.
+- Stale checks made current: conflict invariant 1 skips figure relations, 8 allows kinds 79 to 92 in quiet steps,
+  4 reads relation sides by type; P5-02 invariant 4 counts `monster_slain_by_hero`; P5-04 invariant 11 skips
+  `ruled` rows opened by a spoils event; the report check's calamity cap and summary/full block comparisons; the
+  browser's block lines (rulers, faded) and groups (figures = 8, ALL_GROUPS 0x1FF).
+- `p5_06_figures_reference.py golden` takes G from the report reference (reading R28's candidates are the report's).
+
+C++ worlds of 0.27.0 (the engine's CLI) equal the references table for table (every history table, `figure` and
+`book` included) on 24 worlds: the four 512 world-hash cases, seeds 1 to 8 at 512, and at 1024 seed 0, seed 42,
+seed 5 high, seed 0 low, geo-seed-1, hist-dense, hist-races-elf-orc, p5-monsters-high and the four civs4 cases;
+conflict's invariants, `p5_06_figures_reference.py check-world` and the other references' check-world pass on them;
+`report --history` equals the reference at both levels on the thirteen report cases and four more.
+
+Report inputs: `~/.cache/the-unmapped/out/p5-06-int/report-inputs` (`build-inputs` of the C++ worlds in
+`p5-06-int/src`, C++ history reports beside them). Goldens recorded with P5-03's phase 2 command list
+(`I=~/.cache/the-unmapped/out/p5-02-tests/inputs`) plus `p4_*` and `p5_04_alliances_reference.py`,
+`p5_06_figures_reference.py golden --inputs report-inputs`. `p3-02-names.txt` is kept as committed (spec 17: must not
+move; the names reference at 0.27.0 would add three `hist.names.person` stream lines).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

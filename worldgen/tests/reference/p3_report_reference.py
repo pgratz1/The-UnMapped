@@ -2583,6 +2583,8 @@ def check_invariants(c, name, w):
     if V7:   # P5-04 10.3: "  allies: <n>" at both levels; the summary's "; at the end: ..." suffix
         for k, v in sb.items():
             sb[k] = [x.split("; at the end: ")[0] if x.startswith("  allies: ") else x for x in v]
+    if V8 and len(w.t["civilization"]) > SUMMARY_LINES_CIVS:   # P5-06 10.3: no rulers lines at summary then
+        fb = {k: [x for x in v if not x.startswith("  rulers: ")] for k, v in fb.items()}
     ended = {"c%d" % x[0] for x in w.t["civilization"] if x[8] is not None}
     c.eq("%s: 24.10 item 3 [civilizations] (alive blocks)" % name, {k: v for k, v in sb.items() if not V2 or
                                                                     k not in ended},
@@ -2632,11 +2634,15 @@ def check_invariants(c, name, w):
         # r21 26.5 item 1 (part 4) against 25.2's "no companions of anything": a shown renaming brings its cause, also
         # a calamity beyond the cap (reading R26.5a, a spec question); such causes are not counted
         rcause = {y for x in shown if V3 and w.ev[x][3] == w.K.get("region_renamed") for y in w.causes.get(x, [])}
+        G = set(d.frames.major) if V8 else set()   # P5-06 25.2 rule 2: G's members take a phase's slots first
+        gp = {}
+        for x in G:
+            gp[w.ev[x][4]] = gp.get(w.ev[x][4], 0) + 1
         for x in shown:
-            if w.ev[x][3] in cal and x not in rcause:
+            if w.ev[x][3] in cal and x not in rcause and x not in G:
                 per[w.ev[x][4]] = per.get(w.ev[x][4], 0) + 1
         c.eq("%s: 25.12 item 1 at most %d calamities per phase" % (name, SUMMARY_CALAMITY_PER_PHASE),
-             [p for p, n in per.items() if n > SUMMARY_CALAMITY_PER_PHASE], [])
+             [p for p, n in per.items() if n > max(0, SUMMARY_CALAMITY_PER_PHASE - gp.get(p, 0))], [])
         c.eq("%s: 25.12 item 1 every flare_up with a war in its phase shown" % name,
              sorted(flare_ups_with_war(w) - shown), [])
         if w.meta.get("generator_version") == "0.21.0" and name not in FIXTURE_NAMES_V2:   # 25.12 item 5 (R22)
@@ -2930,7 +2936,7 @@ def check_fixture_facts_v6(c):
     c.eq("H15 9.2 the milestones count and the one quiet stretch at summary", c3[c3.index("  milestones: 8"):], [
         "  milestones: 8", "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was quiet; "
                            "one realm held it. (The Krurz Horde: 15 new generations of rulers.)"] + (
-        ["  allies: 0"] if V7 else []))   # P5-04 10.3
+        ["  allies: 0"] if V7 else []) + (["  rulers: 0 reigns, 0 recorded"] if V8 else []))   # P5-04, P5-06 10.3
     c.eq("H15 9.2 full keeps the list", [x for x in f if x.startswith("  milestones")],
          ["  milestones:"] * 4)
     c1 = block(s, "c1 The House of Aelin", "c2 ")
