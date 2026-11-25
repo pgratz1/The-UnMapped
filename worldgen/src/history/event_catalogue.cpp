@@ -4,6 +4,7 @@
 #include "worldgen/history/event_catalogue.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <tuple>
 #include <cstddef>
 #include <new>
@@ -953,9 +954,11 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::GodRow& r : read(db::read_god_rows(world), db::GOD_TABLE)) {
             v.gods_.emplace_back(r.id, r.name);
         }
+        std::vector<std::pair<std::int64_t, std::int64_t>> civ_endings;  // P5-04 9.1: (id, ending_event)
         for (const db::CivilizationRow& r : read(db::read_civilization_rows(world), db::CIVILIZATION_TABLE)) {
             v.civilizations_.emplace_back(r.id, r.name);
             v.civilization_info_.emplace_back(r.id, CivilizationInfo{r.race, r.founded_year});
+            civ_endings.emplace_back(r.id, r.ending_event);  // P5-04 9.1
         }
         const std::vector<db::SettlementRow> settlement_rows = read(db::read_settlement_rows(world), db::SETTLEMENT_TABLE);
         for (const db::SettlementRow& r : settlement_rows) {
@@ -1179,6 +1182,16 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             mt.race_relations = race_relations;
             mt.settlement_races = settlement_races;
             mt.race_ids = race_ids;
+            // P5-04 9.1 (schema 11).
+            const std::vector<db::RelationRow> relation_rows = read(db::read_relation_rows(world), db::RELATION_TABLE);
+            std::stable_sort(civ_endings.begin(), civ_endings.end());
+            std::vector<std::int64_t> ending_of;
+            for (const auto& [id, ending] : civ_endings) {
+                (void)id;
+                ending_of.push_back(ending);
+            }
+            mt.relations = relation_rows;
+            mt.civ_endings = ending_of;
             if (std::optional<std::string> why = monster_tables_problem(mt)) {
                 view_fail(*why);
             }
@@ -1716,6 +1729,130 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
     return std::nullopt;
 }
 
+// P5-04 9.1 (schema 11): the relation rows of alliances, trade and joined
+// wars, then the values and citations of kinds 63 to 78, after the checks of
+// P5-03 16.4.
+template <class KindKey, class ParticipantOf>
+std::optional<std::string> alliance_tables_problem(const MonsterTables& t, const KindKey& kind_key,
+                                                   const ParticipantOf& participant,
+                                                   std::span<const std::pair<std::size_t, std::size_t>> causes) {
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const auto ending_of = [&t](std::int64_t civ) -> std::int64_t {
+        const auto it = std::lower_bound(t.civ_ids.begin(), t.civ_ids.end(), civ);
+        if (it == t.civ_ids.end() || *it != civ || t.civ_endings.size() != t.civ_ids.size()) {
+            return 0;
+        }
+        return t.civ_endings[static_cast<std::size_t>(it - t.civ_ids.begin())];
+    };
+    const auto names_pair = [&](std::int64_t e, std::string_view r1, std::string_view r2, std::int64_t a,
+                                std::int64_t b, bool either) {
+        const std::int64_t x = participant(e, r1);
+        const std::int64_t y = participant(e, r2);
+        return (x == a && y == b) || (either && x == b && y == a);
+    };
+    for (const db::RelationRow& r : t.relations) {
+        const bool civs = r.a_type == 3 && r.b_type == 3;
+        if (!civs || (r.kind != "alliance" && r.kind != "trade" && r.kind != "war")) {
+            continue;
+        }
+        const std::string at = "corrupt table 'relation': row (" + int_text(r.a_type) + ", " + int_text(r.a_id) + ", " +
+                               int_text(r.b_type) + ", " + int_text(r.b_id) + ", " + r.kind + ", " +
+                               int_text(r.since) + "): ";
+        const std::string_view sk = kind_key(r.since_event);
+        if (r.kind == "alliance" &&
+            !(sk == "alliance_formed" && names_pair(r.since_event, "ally_a", "ally_b", r.a_id, r.b_id, false))) {
+            return at + "alliance since_event " + int_text(r.since_event) + " is not an alliance_formed of the pair";
+        }
+        if (r.kind == "trade" &&
+            !(sk == "trade_opened" && names_pair(r.since_event, "partner_a", "partner_b", r.a_id, r.b_id, false))) {
+            return at + "trade since_event " + int_text(r.since_event) + " is not a trade_opened of the pair";
+        }
+        if (r.kind == "war" &&
+            !((sk == "war_declared" && names_pair(r.since_event, "attacker", "defender", r.a_id, r.b_id, false)) ||
+              (sk == "ally_joined_war" && names_pair(r.since_event, "ally", "enemy", r.a_id, r.b_id, false)))) {
+            return at + "war since_event " + int_text(r.since_event) +
+                   " is not a war_declared or an ally_joined_war of the pair";
+        }
+        if (r.kind == "alliance" && r.until) {
+            const std::string_view uk = kind_key(r.until_event);
+            const bool ends = ((uk == "alliance_lapsed" || uk == "alliance_broken") &&
+                               names_pair(r.until_event, "ally_a", "ally_b", r.a_id, r.b_id, false)) ||
+                              (uk == "alliance_betrayed" &&
+                               names_pair(r.until_event, "betrayer", "betrayed", r.a_id, r.b_id, true)) ||
+                              (uk == "alliance_spurned" &&
+                               names_pair(r.until_event, "ally", "principal", r.a_id, r.b_id, true)) ||
+                              (r.until_event != 0 &&
+                               (r.until_event == ending_of(r.a_id) || r.until_event == ending_of(r.b_id)));
+            if (!ends) {
+                return at + "until_event " + int_text(r.until_event) + " does not end the alliance";
+            }
+        }
+    }
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const std::string_view k = kind_key(v.event);
+        const KindDef* kind = t.catalogue->find(k);
+        if (kind == nullptr) {
+            continue;
+        }
+        std::string_view key;
+        std::int64_t lo = 0;
+        std::int64_t hi = 0;
+        if ((k == "alliance_formed" || k == "alliance_renewed") && v.seq == kind->value_seq("basis")) {
+            key = "basis";
+            hi = 4;
+        } else if ((k == "alliance_lapsed" || k == "alliance_broken" || k == "alliance_spurned") &&
+                   v.seq == kind->value_seq("reason")) {
+            key = "reason";
+            hi = 1;
+        } else if (k == "trade_broken" && v.seq == kind->value_seq("reason")) {
+            key = "reason";
+            hi = 2;
+        } else if (k == "ally_joined_war" && v.seq == kind->value_seq("side")) {
+            key = "side";
+            hi = 1;
+        } else if (k == "allied_battle" && v.seq == kind->value_seq("pass")) {
+            key = "pass";
+            hi = std::numeric_limits<std::int64_t>::max();  // reading: the pass rows are not read here
+        } else if ((k == "spoils_shared" || k == "spoils_withheld") && v.seq == kind->value_seq("share")) {
+            key = "share";
+            lo = 1;
+            hi = std::numeric_limits<std::int64_t>::max();
+        } else {
+            continue;
+        }
+        if (v.value < lo || v.value > hi) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value " + std::string(key) + " " +
+                   int_text(v.value) + " outside " + int_text(lo) + " to " +
+                   (hi == std::numeric_limits<std::int64_t>::max() ? std::string("its maximum") : int_text(hi));
+        }
+    }
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        if (k == "allied_battle" && participant(e.id, "winner_ally") == 0 && participant(e.id, "loser_ally") == 0) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": allied_battle without an ally";
+        }
+        if (k != "spoils_shared" && k != "spoils_withheld") {
+            continue;
+        }
+        bool ending = false;
+        bool join = false;
+        const auto [c0, c1] = causes[static_cast<std::size_t>(e.id - 1)];
+        for (std::size_t i = c0; i < c1; ++i) {
+            const std::int64_t c = t.causes[i].cause;
+            const std::string_view ck = kind_key(c);
+            ending = ending || ck == "peace" || ck == "war_won" || ck == "civ_conquered";
+            join = join || (ck == "ally_joined_war" && participant(c, "ally") == participant(e.id, "ally"));
+        }
+        if (!ending || !join) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": spoils without its war";
+        }
+    }
+    return std::nullopt;
+}
+
 // P5-03 16.4: every participant of entity type 1 names a race row. 16.4
 // gives no text; the message and the place in the order are those of
 // HistoryView::load, which checks every participant's entity as it reads
@@ -2012,7 +2149,10 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
                    " is not a beast";
         }
     }
-    return relation_tables_problem(t, kind_key, participant);
+    if (std::optional<std::string> why = relation_tables_problem(t, kind_key, participant)) {
+        return why;
+    }
+    return alliance_tables_problem(t, kind_key, participant, causes);
 }
 
 // --- render_event (8.5) ------------------------------------------------------------------

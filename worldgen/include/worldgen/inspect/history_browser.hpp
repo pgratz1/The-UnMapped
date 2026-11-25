@@ -26,8 +26,8 @@ namespace worldgen::inspect {
 // --- Kind groups (4.4) ------------------------------------------------------
 
 // Codes are never reused; a later group is appended (section 9).
-enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5, peoples = 6 };  // peoples: P5-03 (lead ruling)
-inline constexpr std::uint32_t ALL_GROUPS = 0x7F;
+enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5, peoples = 6, alliances = 7 };  // peoples: P5-03, alliances: P5-04 11.2 (lead rulings)
+inline constexpr std::uint32_t ALL_GROUPS = 0xFF;
 
 // The group of a kind key, compared as bytes; other for a key 4.4 does not
 // name. P5-02's kinds 44 to 55 are in monsters (section 9).

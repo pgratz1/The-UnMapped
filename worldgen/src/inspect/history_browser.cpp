@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 62> GROUPS = {{
+constexpr std::array<GroupRow, 78> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -104,6 +104,24 @@ constexpr std::array<GroupRow, 62> GROUPS = {{
     {"settlement_mixed", EventGroup::peoples},
     {"standing_changed", EventGroup::peoples},
     {"people_expelled", EventGroup::peoples},
+    // P5-04 11.2: kinds 63 to 70, 72 to 76 and 78 in the new group alliances
+    // (code 7); the allied battle with the war, the mine with the settlements.
+    {"alliance_formed", EventGroup::alliances},
+    {"alliance_renewed", EventGroup::alliances},
+    {"alliance_lapsed", EventGroup::alliances},
+    {"alliance_broken", EventGroup::alliances},
+    {"alliance_betrayed", EventGroup::alliances},
+    {"ally_joined_war", EventGroup::alliances},
+    {"ally_refused", EventGroup::alliances},
+    {"ally_withdrew", EventGroup::alliances},
+    {"allied_battle", EventGroup::war},
+    {"trade_opened", EventGroup::alliances},
+    {"trade_broken", EventGroup::alliances},
+    {"spoils_shared", EventGroup::alliances},
+    {"spoils_withheld", EventGroup::alliances},
+    {"alliance_spurned", EventGroup::alliances},
+    {"mine_opened", EventGroup::settlements},
+    {"arms_sold", EventGroup::alliances},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -158,6 +176,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::other: return "other";
         case EventGroup::monsters: return "monsters";
         case EventGroup::peoples: return "peoples";
+        case EventGroup::alliances: return "alliances";
     }
     return "other";
 }

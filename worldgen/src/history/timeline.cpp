@@ -6,6 +6,7 @@
 #include <tuple>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <new>
 #include <optional>
 #include <span>
@@ -736,6 +737,87 @@ void Timeline::year_state(std::int64_t year, YearState& out) const {
         }
     }
     events_at(year, out.events, out.events_starting);
+}
+
+std::vector<AllianceState> Timeline::alliances_at(std::int64_t year) const {
+    require_year(year);
+    std::vector<AllianceState> out;
+    for (const db::RelationRow& r : relations_) {
+        if (r.kind == "alliance" && r.since <= year && (!r.until || year < *r.until)) {
+            out.push_back(AllianceState{r.a_id, r.b_id, r.since, r.since_event});
+        }
+    }
+    std::stable_sort(out.begin(), out.end(), [](const AllianceState& x, const AllianceState& y) {
+        return x.a != y.a ? x.a < y.a : x.b < y.b;
+    });
+    return out;
+}
+
+std::vector<std::int64_t> Timeline::allies_of(std::int64_t civ, std::int64_t year) const {
+    if (civ < 1 || static_cast<std::size_t>(civ) > civ_founded_.size()) {
+        throw FatalError("timeline: no civilization " + db::format_i64(civ));
+    }
+    std::vector<std::int64_t> out;
+    for (const AllianceState& a : alliances_at(year)) {
+        if (a.a == civ) {
+            out.push_back(a.b);
+        } else if (a.b == civ) {
+            out.push_back(a.a);
+        }
+    }
+    std::stable_sort(out.begin(), out.end());
+    return out;
+}
+
+std::vector<std::vector<std::int64_t>> Timeline::alliance_groups_at(std::int64_t year) const {
+    const std::vector<AllianceState> rows = alliances_at(year);
+    const auto alive = [&](std::int64_t c) {
+        const auto i = static_cast<std::size_t>(c - 1);
+        return c >= 1 && i < civ_founded_.size() && civ_founded_[i] <= year && (!civ_ended_[i] || year < *civ_ended_[i]);
+    };
+    // Union-find over the civilization ids (the smaller id is the root).
+    std::map<std::int64_t, std::int64_t> parent;
+    const auto find = [&parent](std::int64_t x) {
+        while (parent.at(x) != x) {
+            x = parent.at(x);
+        }
+        return x;
+    };
+    for (const AllianceState& a : rows) {
+        if (!alive(a.a) || !alive(a.b)) {
+            continue;
+        }
+        parent.try_emplace(a.a, a.a);
+        parent.try_emplace(a.b, a.b);
+        const std::int64_t ra = find(a.a);
+        const std::int64_t rb = find(a.b);
+        if (ra != rb) {
+            parent[std::max(ra, rb)] = std::min(ra, rb);
+        }
+    }
+    std::map<std::int64_t, std::vector<std::int64_t>> groups;  // by root, the smallest id
+    for (const auto& [c, p] : parent) {
+        (void)p;
+        groups[find(c)].push_back(c);  // ascending, since the map is
+    }
+    std::vector<std::vector<std::int64_t>> out;
+    for (auto& [root, list] : groups) {
+        (void)root;
+        out.push_back(std::move(list));
+    }
+    return out;
+}
+
+std::vector<std::pair<std::int64_t, std::int64_t>> Timeline::trades_at(std::int64_t year) const {
+    require_year(year);
+    std::vector<std::pair<std::int64_t, std::int64_t>> out;
+    for (const db::RelationRow& r : relations_) {
+        if (r.kind == "trade" && r.since <= year && (!r.until || year < *r.until)) {
+            out.emplace_back(r.a_id, r.b_id);
+        }
+    }
+    std::stable_sort(out.begin(), out.end());
+    return out;
 }
 
 YearState Timeline::year_state(std::int64_t year) const {

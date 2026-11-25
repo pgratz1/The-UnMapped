@@ -800,7 +800,7 @@ void MonstersSubsystem::read_log(const StepContext& ctx) {
             continue;
         }
         std::int64_t dead = -1;
-        if (kind == "battle" || kind == "battle_at_pass") {
+        if (kind == "battle" || kind == "battle_at_pass" || kind == "allied_battle") {  // P5-04 11.1
             dead = checked_add(ctx.event_value(e, "winner_dead"), ctx.event_value(e, "loser_dead"));
         } else if (kind == "sacked") {
             dead = ctx.event_value(e, "dead");

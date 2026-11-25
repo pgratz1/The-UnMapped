@@ -29,7 +29,7 @@ enum class MarkerType : std::uint8_t {
     faded = 3,
     ruin = 4,
     standing = 5,
-    site = 6 /*reserved*/,
+    site = 6 /*P5-04 11.3: mines (kind 3) only*/,
     figure = 7 /*reserved*/
 };
 // The symbol of an event place (3.4); the enumerator order is the priority.
@@ -39,6 +39,7 @@ struct MarkerOptions {
     bool faded = false;
     bool events = true;
     bool passes = true;
+    bool sites = true;  // P5-04 11.3
 };
 
 struct SettlementMarker {
@@ -58,8 +59,20 @@ struct PassMarker {
     std::int64_t pass = 0, x = 0, y = 0, kind = 0;
     friend bool operator==(const PassMarker&, const PassMarker&) = default;
 };
+// P5-04 11.3: a site of kind 3 (a mine) existing at Y, at its cell.
+struct SiteMarker {
+    std::int64_t site = 0, x = 0, y = 0, kind = 0, founder = 0;
+    friend bool operator==(const SiteMarker&, const SiteMarker&) = default;
+};
+inline constexpr std::uint8_t GLYPH_MINE = 19;  // 16 + kind 3
+inline constexpr Rgb MARKER_MINE{60, 60, 60};
+// The site glyph is drawn one glyph cell (7 cells) to the upper right of
+// the site's cell, so that a town does not hide its own mine.
+inline constexpr std::int64_t SITE_GLYPH_OFFSET = 7;
+
 struct YearMarkers {
     std::int64_t year = 0;
+    std::vector<SiteMarker> sites;              // ascending site id (P5-04 11.3)
     std::vector<SettlementMarker> settlements;  // ascending settlement id (3.1)
     std::vector<PlaceMarker> places;            // ascending smallest event id (3.4)
     std::vector<PassMarker> passes;             // ascending pass id (3.5)
