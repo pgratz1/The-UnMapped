@@ -14,6 +14,7 @@
 
 #include "conflict_internal.hpp"
 #include "worldgen/core/checked.hpp"
+#include "worldgen/core/wide.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/draw.hpp"
 
@@ -177,7 +178,19 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         std::int64_t given = 0;
         std::int64_t taken = 0;
         for (const Member& m : members) {
-            const std::int64_t share = floor_div(checked_mul(total, m.force), std::max<std::int64_t>(1, force_total));
+            // Audit A1: dead x force can pass 2^63 (both of the order of a force, < 2^40); the exact 128-bit
+            // product and floor division, whose quotient is at most `total` (m.force <= force_total).
+            if (total < 0 || m.force < 0) {
+                fail("history: conflict: battle split: negative dead " + int_text(total) + " or force " +
+                     int_text(m.force));
+            }
+            const U128DivMod q = divmod_u128_u64(
+                mul_u64_wide(static_cast<std::uint64_t>(total), static_cast<std::uint64_t>(m.force)),
+                static_cast<std::uint64_t>(std::max<std::int64_t>(1, force_total)));
+            if (q.quotient.hi != 0 || q.quotient.lo > static_cast<std::uint64_t>(total)) {
+                fail("history: conflict: battle split: share above the side's dead");
+            }
+            const std::int64_t share = static_cast<std::int64_t>(q.quotient.lo);
             given = checked_add(given, share);
             const std::int64_t d = casualties(ctx, m.civ, share, ev);
             ConflictAlly& rec = wars_[i].allies[m.ally];
@@ -749,8 +762,14 @@ void ConflictSubsystem::close_allies(StepContext& ctx, std::size_t i, std::int64
             continue;
         }
         const std::int64_t enemy = m.side == 0 ? wars_[i].attacker : wars_[i].defender;
-        state.close_relation(civ_relation(m.civ, enemy, "war"), ev);
-        state.open_relation(symmetric_relation(m.civ, enemy, "peace"), ev);
+        // Audit A2: the row only while still open (as close_allies_at_side_end); no peace with an ended enemy.
+        const RelationKey key = civ_relation(m.civ, enemy, "war");
+        if (state.relations().count(key) != 0) {
+            state.close_relation(key, ev);
+        }
+        if (!state.civ(enemy).ended_year) {
+            state.open_relation(symmetric_relation(m.civ, enemy, "peace"), ev);
+        }
         last_peace_[ordered(m.civ, enemy)] = Peace{ctx.year(), ev};
         add_grudge(m.civ, enemy, tuning_.war_grudge);
         drop_pair(m.civ, enemy);

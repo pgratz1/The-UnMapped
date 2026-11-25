@@ -561,7 +561,12 @@ void AlliancesSubsystem::drop_closed(const StepContext& ctx) {
 
 void AlliancesSubsystem::run(StepContext& ctx) {
     prepare(ctx);
-    closed_now_.clear();  // ruling A9: per step
+    // Ruling A9, keyed by year (audit A3: the relation table's key holds the year, so no pair reopens a row in
+    // the year it closed, whatever the step).
+    if (ctx.year() != closed_year_) {
+        closed_now_.clear();
+        closed_year_ = ctx.year();
+    }
     drop_closed(ctx);
     switch (ctx.step()) {
         case Step::t2:

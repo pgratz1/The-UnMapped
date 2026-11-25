@@ -211,7 +211,8 @@ private:
     std::map<Pair, Mine> mines_;                         // (civilization, region)
     std::set<std::int64_t> mined_;                       // settlements that ever had a mine
     std::set<Pair> arms_sold_;                           // (seller, buyer)
-    std::set<std::pair<Pair, bool>> closed_now_;         // ruling A9: (pair, alliance) closed in this step
+    std::set<std::pair<Pair, bool>> closed_now_;         // ruling A9: (pair, alliance) closed in this year
+    std::int64_t closed_year_ = -1;                      // the year closed_now_ holds (audit A3)
     std::vector<Declaration> declarations_;              // every war_declared read, ascending id
     std::int64_t cursor_ = 1;
     std::map<std::int64_t, std::vector<std::int64_t>> allies_of_;  // ascending, rebuilt at each change
