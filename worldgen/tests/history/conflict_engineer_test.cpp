@@ -504,13 +504,16 @@ TEST_SUITE("history-slow" * doctest::skip()) {
 // history tables confirmed by the conflict reference's check-world).
 // P5-03a (generator 0.25.0, validation): seed 34 has none any more; of the 1024 turbulent seeds 0 to 39, seeds 4, 5,
 // 15 and 29 have one each; seed 4's is region_ceded e173 of region 24 in 3030, colony e171 (s50).
-TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 turbulent seed 4 and a same-step colony cession (20.27 item 7)") {
-    static dbtest::TempDir dir("conflict-engineer-1024-turbulent-4");
+// P5-04 (generator 0.26.0, test writer at integration): seed 4 has none any more; of the 1024 turbulent seeds 0 to
+// 16, only seed 1 has one: region_ceded e648 of region 28 in 3816, colony e643 (s70) (the conflict reference's
+// check-world reproduces that world's history tables).
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 turbulent seed 1 and a same-step colony cession (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-1024-turbulent-1");
     std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const worldgen::WorldParams wp = chrono_test::world_params(4, 1024, hp, ct::shipped());
-    const std::string path = dir.file("turbulent-4-1024.db");
+    const worldgen::WorldParams wp = chrono_test::world_params(1, 1024, hp, ct::shipped());
+    const std::string path = dir.file("turbulent-1-1024.db");
     REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
     const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
     const Watched w = watched_run(ct::shipped(), in);
