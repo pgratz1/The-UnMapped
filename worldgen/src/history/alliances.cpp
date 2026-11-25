@@ -1067,7 +1067,10 @@ void AlliancesSubsystem::spoils(StepContext& ctx, Joined& j) {
     const std::int64_t v = checked_add(s.tribute_people,
                                        floor_div(checked_mul(s.plunder, tuning_.spoils_plunder_permille), 1000));
     const std::string_view end_kind = s.end_event != 0 ? ctx.event_kind(s.end_event) : std::string_view{};
-    const bool cited = end_kind == "peace" || end_kind == "war_won" || end_kind == "civ_conquered";
+    // Spec 13 item 11: the end event's own winner is the principal; a
+    // conquest of the enemy by a third realm owes nothing.
+    const bool cited = end_kind == "peace" || end_kind == "war_won" ||
+                       (end_kind == "civ_conquered" && ctx.event_participant(s.end_event, "conqueror") == s.winner);
     if (s.winner == 0 || s.winner != j.partner || (rec.closed_by != 1 && rec.closed_by != 3) || state.civ(j.ally).ended_year ||
         state.civ(s.winner).ended_year || rec.dead <= 0 || v <= 0 || !cited) {
         j.settled = true;
