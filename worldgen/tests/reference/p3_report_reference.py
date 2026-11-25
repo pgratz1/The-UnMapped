@@ -2622,7 +2622,8 @@ def build_input(src, dst):
     sc = sqlite3.connect("file:%s?mode=ro" % src, uri=True)
     src_version = dict(sc.execute("SELECT key, value FROM meta").fetchall()).get("generator_version")
     sc.close()
-    if src_version != GENERATOR_VERSION:
+    if src_version != GENERATOR_VERSION and not (V7 and src_version == "0.25.0"):
+        # (P5-04 phase 1: a 0.25.0 source of the C++ stores the region names of 0.26.0)
         # P5-03 integration: a source written by the C++ of this version already stores the current region names
         p1r.rename_db(src, tmp)
     use_version(GENERATOR_VERSION)   # rename_db serves p1_regions_reference's version of the data (0.22.0)
@@ -2658,6 +2659,9 @@ def build_input(src, dst):
                 c.execute(ddl)
             c.execute("UPDATE meta SET value = '10' WHERE key = 'schema_version'")
             c.execute("PRAGMA user_version = 10")
+        if V7:   # schema 11 (P5-04 9.2): site kind 3, no DDL change
+            c.execute("UPDATE meta SET value = '11' WHERE key = 'schema_version'")
+            c.execute("PRAGMA user_version = 11")
         for t in pchr.TABLES:
             c.execute('DELETE FROM "%s"' % t)
             n = pchr.COLUMNS[t]

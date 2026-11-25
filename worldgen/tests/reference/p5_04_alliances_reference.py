@@ -15,8 +15,9 @@ What this module holds (phase 1):
   - the golden file worldgen/tests/golden/p5-04-alliances.txt (17): `golden` (integration only, from the world
     cases' files built by this reference chain; never from the C++ implementation's output alone).
 
-Not in phase 1 (reported): the replay of the subsystem inside p3_conflict_reference.py (sections 6 and 7 as a
-simulation, I0 by replay, the alliances-small fixture histories). The replay entry points are named in REPLAY_TODO.
+  - the replay of sections 6 and 7 (Alliances, installed in p3_conflict_reference.World, whose seams of 7 it uses),
+    the fixtures alliances-small and zero, I0 by replay (`fixtures`, `i0-world`), check-world's invariants on the
+    replayed histories (`aw_of_res`, `res_problems`). REPLAY_TODO names the entry points.
 
 Commands (from the repository root):
   python3 -B worldgen/tests/reference/p5_04_alliances_reference.py units
@@ -25,6 +26,8 @@ Commands (from the repository root):
   python3 -B worldgen/tests/reference/p5_04_alliances_reference.py block DB [--level summary|full]
   python3 -B worldgen/tests/reference/p5_04_alliances_reference.py timeline DB YEAR
   python3 -B worldgen/tests/reference/p5_04_alliances_reference.py golden [PATH|-] --inputs DIR
+  python3 -B worldgen/tests/reference/p5_04_alliances_reference.py fixtures [--quick]
+  python3 -B worldgen/tests/reference/p5_04_alliances_reference.py i0-world --inputs DIR CASE... [--with-off]
   python3 -B worldgen/tests/reference/p5_04_alliances_reference.py readings
 
 Python 3.11 or newer, standard library only, integers only.
@@ -75,17 +78,23 @@ THRIVING, DECLINING, RUINED, FADED = 1, 2, 3, 4
 OPENING, QUIET, FLARE, FINAL = 1, 2, 3, 4   # P3-04 6.1 (phase.kind)
 
 REPLAY_TODO = """\
-The replay of P5-04 inside p3_conflict_reference.py's World (not written in phase 1):
-  - World.alliances (an Alliances class after World.relations in T2, T6, Q4; 6.1's order), the log cursor and
-    the calls of 6.5 at each war_declared, betrayal (6.6), keeping (6.7), trade (6.8), credits through
-    World.relations.credit (6.9), spoils (6.11), mines through the monsters reference's site list (6.12, 7.16),
-    arms (6.13);
-  - conflict's seams of 7: allied strain in strain_update (7.2), bloc fear in fear (7.3), deterrence in odds
-    (7.4), the three factors in force/local_force (7.5), join_war and the ally records (7.6), allied battles in
-    fight and casualties (7.7), the score's side dead (7.8), withdrawal (7.9), ends with allies in end_war and
-    housekeeping (7.10, 7.11), plunder and tribute recorded for war_spoils, add_grudge (7.15);
-  - I0 (7.14) by replay on the fixtures and the alliances-small fixture histories (18.3).
-The formulas these need are the functions of this module (each named for its section)."""
+The replay of P5-04 inside p3_conflict_reference.py's World (written in phase 1's second part):
+  - Alliances (this module): installed after World.race_relations in T2, T6 and Q4 (6.1's order), the cache of
+    6.2, the log cursor and, at each war_declared, betrayal (6.6), trade broken by war (6.8) and the calls of 6.5;
+    keeping (6.7: cooling, blocs too great, renewal), origin alliances (6.4), formations (6.3), trade breaks,
+    openings and credits (6.8, 6.9), the ends of joined wars (spoils of 6.11, the ally-enemy credits of 6.9),
+    mines through the monsters' site list (6.12, 7.16) and arms (6.13); every credit through
+    World.race_relations.credit at its fixed point;
+  - conflict's seams of 7 in World: allied strain (strain_update, 7.2), bloc fear (fear, 7.3), deterrence (deterred,
+    in odds and strength, 7.4), the three factors in force and local_force (strengthened, 7.5), join_war and the
+    ally records, open_wars_of, at_war (7.6), allied battles in fight (side_forces, allied_casualties, 7.7), the
+    score's side dead (7.8), withdrawal (withdrawals, 7.9), ends with allies in end_war and give_up (allies_at_end,
+    7.10) and at a side's end in housekeeping and conquer (allies_ended, allies_at_side_end, 7.11), plunder and
+    tribute recorded for war_spoils, add_grudge (7.15);
+  - I0 (7.14): `fixtures` (stress seeds, against no subsystem and against 0.25.0) and `i0-world` (world cases);
+    alliances-small (18.3): `fixtures` (every kind of 63 to 78; check-world's invariants on its histories).
+Not replayed: the mine glyph's drawing (11.3, the lead's ruling 13: refused until the engineer's bitmap is in the
+spec)."""
 
 READINGS = """\
 P1 (10.2) "largest bloc: <bs>X" prints the share as `<bs> permille`: the spec's per-mille sign is not ASCII, and
@@ -108,7 +117,40 @@ P10 (10.3) `  allies: <n>` is printed in every civilization block, 0 included; a
    when the realm has allies at E (rows still open).
 P12 (10.5) alliances_years_median: the lower middle of the sorted lengths (until - since) of the ended alliances.
 P11 (4.1) race_origin_allies' last message names the listed race twice: `origin_allies '<r>' is not returned by race
-   '<r>'` with r the race listed (the one that does not list back)."""
+   '<r>'` with r the race listed (the one that does not list back).
+The replay's readings (sections 6 and 7 where they leave an order, a tie or a key open; integration compares these):
+A1 (7.4) deterrence also enters P3-06 24.2's strength (the quarrel hold), which is defined as 20.6 item 3's odds.
+A2 (6.2, 5) the per-step cache holds the presences and shares (so reach, hops and the bloc shares built from them)
+   and the sellers of 6.13; dispositions, warmth, "at war", the alliances and trades are read live.
+A3 (7.10) a war ended by search_abandoned (P3-06 20.17, "the truce bookkeeping") ends its allies as a truce does.
+A4 (7.9) withdrawal is tested in T6 right after the war's battle step and before 7.7's checks (21.6's goal ending
+   included), for the wars that step fights (not in a war's declaration year).
+A5 (7.15) the sack of a fleeing last refuge (P3-06 20.1) is plunder: its population before the toll.
+A6 (7.7) an ally's dead in the war += its share d_S x F_m div F_S as computed (not the casualties taken under
+   20.20's floor); casualties: the winners' allies ascending, the winner, then the losers' allies, the loser.
+A7 (7.1) the AllianceView answers from the subsystem's records until it drops them at its next step (6.7's last
+   paragraph): a trade with a realm that ended earlier in the step still counts for conflict until then.
+A8 (6.7, 6.8, 6.9, 6.13) an alliance or trade with an ended side whose row conflict has not yet closed (a realm
+   ended in the same step after conflict's housekeeping) is left alone until then.
+A9 (6.3, 6.4, 6.8 with P3-04 6.7's "opened twice before one bookkeeping"; a spec gap) a pair whose alliance (or
+   trade) row closed earlier in the same step forms (opens) none again in that step: else a refusal that breaks
+   at the declaration and the formation that follows in the same T2 would open the row twice.
+A10 (6.2 fear) the cause of a feared bloc whose head holds no region is that realm's founding event.
+A11 (18.3) alliances-small: the stress cases with every race (`all`), seeds SMALL_SEEDS; its first three seeds
+   hold every kind of 63 to 78.
+A12 (6.12) "c's standing settlement in R": every standing settlement of c in R (hidden ones included), those that
+   never had a mine first, then the largest population, then the smaller id.
+A13 (6.11) the enemy's end closes the ally's record as the war's end (owed); the partner's end leaves the enemy
+   the survivor (owed nothing); two ended principals: winner 0, end_event the smaller id's ending event.
+A14 (6.9) the ally-enemy credit of a joined record is made once the war or the record is closed, even while its
+   spoils wait for the principal's quiet budget; its event is the record's closing event.
+A15 (6.2 common enemy) "its year" is the war's declaration year; "open" the war's state in conflict.
+A16 (7.11) at a side's end: the records of ended allies close first, then the wars of the ended sides.
+A17 (6.8) a trade broken by a betrayal's war cites the declaration (6.8's rule), not the alliance_betrayed.
+A18 (6.7 item 2) blocs too great: the civilizations in an open alliance, ascending; in Q4 a shedding whose pair has
+   no budget stops c's pass (it waits).
+A19 (6.5) the chance of a call and its draw are evaluated only when every condition holds; the draw's key is
+   (w, z, 0) for both sides."""
 
 
 def floor_div(a, b):
@@ -2128,6 +2170,153 @@ class Alliances:
 
 
 # ---------------------------------------------------------------------------
+# The replay's fixtures (18.3): alliances-small, the zero tuning of I0 (7.14), and the row model of a replayed
+# history (check-world's invariants on the reference's own histories without a world file)
+# ---------------------------------------------------------------------------
+
+# 18.3: alliances-small = the conflict stress data with ALLIANCES_SMALL_026 and CONFLICT_SMALL_026 (p3_data_reference),
+# every race present (reading A11: the stress cases' race lists replaced by `all`, so that dwarves mine and the elves
+# and faeries ally by origin), on these stress seeds.
+SMALL_SEEDS = (3, 6, 10, 0, 1, 2, 5, 9, 11, 12)   # the first three hold every kind of 63 to 78
+I0_SEEDS = (0, 1, 2, 5)
+
+
+def small_data(dat=None):
+    import p3_data_reference as pdr
+    pcr = _pcr()
+    d = pcr.edited(pcr.stress_data(dat), conflict=pdr.CONFLICT_SMALL_026)
+    d.alliances = dict(d.alliances, **pdr.ALLIANCES_SMALL_026)
+    return d
+
+
+def zero_data(dat=None):
+    """4.2: the zero fixture tuning (ally_hops -1, trade_hops -1, mine_permille 0, every origin_allies empty)."""
+    import copy
+    import p3_data_reference as pdr
+    d = _pcr().edited(dat or _pcr().data())
+    d.alliances = dict(pdr.ALLIANCES_ZERO_026)
+    d.race = copy.deepcopy(d.race)
+    for r in d.race:
+        d.race[r]["origin_allies"] = []
+    return d
+
+
+def small_case(seed):
+    pcr = _pcr()
+    span, _races, civs, intensity = pcr.STRESS_CASES.get(seed, pcr.synthetic_case(seed))
+    return span, "all", civs, intensity
+
+
+def fixture_run(seed, dat, case=None):
+    pcr = _pcr()
+    case = case or pcr.STRESS_CASES.get(seed, pcr.synthetic_case(seed))
+    inp, _g = pcr.synthetic_inputs(seed, dat, case)
+    return pcr.history_stage(dat, inp)
+
+
+REGION_COLUMNS = 28
+
+
+def aw_of_res(res):
+    """The row model AW of a replayed history (res of p3_conflict_reference.history_stage): its tables as a world
+    file would store them, the region rows filled at the columns the checks read (id, name, cells, lake_cells,
+    ore_reach_cells)."""
+    inp = res["_inputs"]
+    regions = []
+    for r in inp.regions:
+        row = [0] * REGION_COLUMNS
+        row[0], row[1], row[10], row[11], row[27] = r["id"], r.get("name", ""), r["cells"], r["lake_cells"], \
+            r["ore_reach_cells"]
+        regions.append(tuple(row))
+    t = {n: list(res.get(n, [])) for n in READ_TABLES}
+    t["region"] = regions
+    t["region_border"] = [tuple(b.get(k, 0) for k in ("a", "b", "length_m")) for b in inp.borders]
+    t["race"] = [tuple(r) for r in inp.races]
+    meta = {"history_end_year": str(inp.params["span"]), "schema_version": str(SCHEMA_VERSION),
+            "generator_version": GENERATOR_VERSION}
+    return AW(meta, t)
+
+
+def res_problems(res, dat):
+    """Invariants 1 to 8, 10's shelter rule and 11 to 14 and the reader checks of 9 on a replayed history."""
+    w = aw_of_res(res)
+    races = {dat.race[r]["key"]: (dat.race[r]["origin_allies"], dat.race[r]["ally_join"], dat.race[r]["mining"])
+             for r in dat.race}
+    return (invariant_violations(w, dat.alliances, races) + shelter_violations(w, dat.conflict["shelter_years"]) +
+            reader_problems(w))
+
+
+I0_TABLES = ("event", "event_participant", "event_cause", "event_value", "phase", "civilization", "settlement",
+             "settlement_census", "region_control", "relation", "region_name", "beast_population", "monster", "site",
+             "race_relation", "settlement_race")
+
+
+def without_alliances(fn):
+    pcr = _pcr()
+    saved = pcr.FLAGS["alliances"]
+    pcr.FLAGS["alliances"] = False
+    try:
+        return fn()
+    finally:
+        pcr.FLAGS["alliances"] = saved
+
+
+def i0_differences(run, base):
+    """7.14: the history tables that differ between the zero tuning with the subsystem and the same data without
+    it (no AllianceView)."""
+    zero = run(zero_data(base))
+    off = without_alliances(lambda: run(zero_data(base)))
+    return [t for t in I0_TABLES if zero.get(t, []) != off.get(t, [])], zero, off
+
+
+def i0_025_differences(run, base_root=None):
+    """I0 against generator 0.25.0 itself: the zero tuning at 0.26.0 against the 0.25.0 rules and data (the
+    catalogue rows, kinds 63 to 78, aside)."""
+    pcr = _pcr()
+    pcr.use_version("0.25.0")
+    try:
+        old = run(pcr.data(base_root) if base_root else None)
+    finally:
+        pcr.use_version("0.26.0")
+    new = run(zero_data(pcr.data(base_root) if base_root else None))
+    return [t for t in I0_TABLES if old.get(t, []) != new.get(t, [])], old, new
+
+
+def check_fixtures(c, seeds=SMALL_SEEDS, i0_seeds=I0_SEEDS, verbose=False):
+    """18.3: alliances-small makes every kind of 63 to 78 happen; check-world's invariants and the reader checks
+    hold on its histories, on the shipped tuning's stress histories and on the zero tuning's; I0 on stress seeds."""
+    import time
+    pcr = _pcr()
+    seen = set()
+    small = small_data()
+    for seed in seeds:
+        t0 = time.time()
+        res = fixture_run(seed, small, small_case(seed))
+        key = {k[0]: k[1] for k in res["event_kind"]}
+        kinds = {key[e[3]] for e in res["event"] if e[3] >= 63}
+        seen |= kinds
+        for v in res_problems(res, small):
+            c.ok("alliances-small-%d: %s" % (seed, v), False)
+        if verbose:
+            print("alliances-small-%d: %d events, kinds %s (%.0fs)" % (seed, len(res["event"]), sorted(kinds),
+                                                                         time.time() - t0))
+            sys.stdout.flush()
+    c.eq("18.3: every kind of 63 to 78 happens on alliances-small", sorted(set(k for _i, k in KINDS) - seen), [])
+    shipped = pcr.stress_data()
+    for seed in i0_seeds:
+        res = fixture_run(seed, shipped)
+        for v in res_problems(res, shipped):
+            c.ok("stress-%d: %s" % (seed, v), False)
+        diff, _z, _o = i0_differences(lambda d: fixture_run(seed, d), pcr.stress_data())
+        c.eq("7.14 I0 stress-%d: the history tables equal" % seed, diff, [])
+        diff, _a, _b = i0_025_differences(lambda d: fixture_run(seed, pcr.stress_data(d)))
+        c.eq("7.14 I0 stress-%d against 0.25.0: the history tables equal" % seed, diff, [])
+        if verbose:
+            print("stress-%d: invariants and I0 done" % seed)
+            sys.stdout.flush()
+
+
+# ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
 
@@ -2197,6 +2386,36 @@ def main(argv):
             with open(rest[0] if rest else GOLDEN, "w", newline="\n") as f:
                 f.write(text)
         return 0
+    if cmd == "fixtures":
+        _pcr().use_version("0.26.0")
+        c = Checker()
+        quick = "--quick" in argv
+        check_fixtures(c, SMALL_SEEDS[:4] if quick else SMALL_SEEDS, I0_SEEDS[:2] if quick else I0_SEEDS, verbose=True)
+        print("%d checks, %d failures" % (c.count, c.failures))
+        return 1 if c.failures else 0
+    if cmd == "i0-world":
+        # 7.14 on world cases of p3_conflict_reference.world_cases() read from --inputs DIR (their geography):
+        # the zero tuning against no subsystem, and against 0.25.0
+        import time
+        pcr = _pcr()
+        pcr.use_version("0.26.0")
+        inputs = argv[argv.index("--inputs") + 1]
+        names = [a for a in argv[1:] if not a.startswith("--") and a != inputs]
+        c = Checker()
+        for name, seed, size, span, races, detail, civs, intensity in pcr.world_cases():
+            if name not in names:
+                continue
+            t0 = time.time()
+            run = lambda d: pcr.world_case(name, seed, size, span, races, detail, inputs, d, civs, intensity)  # noqa
+            diff, a, b = i0_025_differences(lambda d: run(d))
+            c.eq("7.14 I0 %s against 0.25.0 (%d events)" % (name, len(a["event"])), diff, [])
+            if "--with-off" in argv:
+                diff, _z, _o = i0_differences(run, pcr.data())
+                c.eq("7.14 I0 %s: zero tuning against no subsystem" % name, diff, [])
+            print("%s: %.0fs" % (name, time.time() - t0))
+            sys.stdout.flush()
+        print("%d checks, %d failures" % (c.count, c.failures))
+        return 1 if c.failures else 0
     if cmd == "readings":
         print(READINGS)
         print(REPLAY_TODO)

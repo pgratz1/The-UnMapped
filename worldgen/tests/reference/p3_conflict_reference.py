@@ -154,8 +154,8 @@ FLAGS = dict(
     p503a=True,         # P5-03a 3 to 8: long peace, common enemies, credit and contributions by sign, meetings by
                         # word, graded settlers, the expulsion gap, A1; the undead threshold by world population (6)
     # P5-04 (generator 0.26.0)
-    alliances=False,    # P5-04 6, 7: alliances, trade, mines and arms; the replay is not written (phase 1): a history
-                        # replayed at 0.26.0 refuses (history_stage), rows of 0.26.0 worlds are read as they are
+    alliances=False,    # P5-04 6, 7: alliances, trade, mines and arms (p5_04_alliances_reference.Alliances after the
+                        # relations; the seams of 7 in World), the AllianceView read by conflict
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -167,7 +167,7 @@ FLAGS_022 = ("rename",)
 FLAGS_023 = ("monsters", "flare_claim")
 FLAGS_024 = ("relations",)
 FLAGS_025 = ("p503a",)
-FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7 (not written in phase 1)
+FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
             "0.26.0")
 
@@ -488,6 +488,9 @@ CONFLICT_KINDS_021 = (
 assert list(COMPILED[40:42]) == list(CONFLICT_KINDS_021)
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 KEY_OF = {k["id"]: k["key"] for k in COMPILED}
+# P5-04 8.1 (0.26.0): kinds 63 to 78 named for the row checks (no 0.25.0 world holds them)
+KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_026})
+KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_026})
 K = KIND_ID
 # r19 23.2 / P3-07 r14 23 item 1: wherever a rule, invariant, statistic or report reads a claim, kinds 20 and 39
 # are read alike; a cession of invariants (13), (17), the units and the companions is kind 29 or 40. Kinds 39 and
@@ -3268,6 +3271,8 @@ def check_peoples_invariants(c, res, inp, w, label):
         red += ("monster_raid", "beasts_bold")
     if FLAGS["relations"]:   # P5-03 9.4: an abandonment for fear cites the flight; 6.5: an expulsion is a reduction
         red += ("settlement_fled", "people_expelled")
+    if FLAGS["alliances"]:   # P5-04 11.1: the battle kinds set
+        red += ("allied_battle",)
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
@@ -3306,7 +3311,10 @@ def check_peoples_invariants(c, res, inp, w, label):
             quiet_ok = e[3] in QUIET_KINDS or (FLAGS["rename"] and key == "region_renamed") or (
                 FLAGS["monsters"] and key in ("monster_appeared", "monster_died", "outpost_abandoned")) or (   # P5-02 6.1 Q4
                 FLAGS["relations"] and key in ("peoples_met", "disposition_turned", "refugees_arrived",
-                                               "settlement_mixed", "standing_changed"))   # P5-03 6.1 Q1, Q4
+                                               "settlement_mixed", "standing_changed")) or (   # P5-03 6.1 Q1, Q4
+                FLAGS["alliances"] and key in ("alliance_renewed", "alliance_lapsed", "alliance_broken",
+                                               "trade_opened", "trade_broken", "spoils_shared", "spoils_withheld",
+                                               "alliance_spurned", "mine_opened", "arms_sold"))   # P5-04 6.1 Q4
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
@@ -3339,12 +3347,32 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for r in rel:
         lab = "%s inv 1 relation %s" % (label, r)
         c.true(lab + " types", r[0] == CIV and r[2] == CIV)
-        c.true(lab + " kind", r[4] in ("enmity", "war", "peace"))
-        if r[4] in ("enmity", "peace"):
+        al = FLAGS["alliances"]
+        c.true(lab + " kind", r[4] in ("enmity", "war", "peace") + (("alliance", "trade") if al else ()))
+        if r[4] in ("enmity", "peace", "alliance", "trade"):
             c.true(lab + " a < b", r[1] < r[3])
         sk = KEY_OF[kind[r[7]]]
         uk = KEY_OF[kind[r[8]]] if r[6] is not None else None
-        if r[4] == "enmity":
+        ends = ("civ_ended", "civ_conquered")
+        if r[4] in ("alliance", "trade"):
+            # P5-04 9.1: opened by alliance_formed / trade_opened of the pair; closed by its kinds or a side's end
+            opener = "alliance_formed" if r[4] == "alliance" else "trade_opened"
+            c.true(lab + " since_event", sk == opener and sorted(role(r[7], 1) + role(r[7], 2)) == [r[1], r[3]] and
+                   ev[r[7]][1] == r[5])
+            if uk is not None:
+                closers = (("alliance_lapsed", "alliance_broken", "alliance_spurned", "alliance_betrayed")
+                           if r[4] == "alliance" else ("trade_broken",))
+                c.true(lab + " until_event", (uk in closers and sorted(role(r[8], 1) + role(r[8], 2)) ==
+                                              [r[1], r[3]]) or (uk in ends and civs[role(r[8], 1)[0]][9] == r[8]
+                                                                and role(r[8], 1)[0] in (r[1], r[3])))
+        elif r[4] == "war" and al and sk == "ally_joined_war":
+            # P5-04 7.6, 9.1: a joined row: the ally as a, the enemy as b; closed by the ally's withdrawal, the war's
+            # end or a side's end
+            c.true(lab + " since_event", role(r[7], 1) == [r[1]] and role(r[7], 3) == [r[3]] and ev[r[7]][1] == r[5])
+            if uk is not None:
+                c.true(lab + " until_event", uk in ("ally_withdrew", "peace", "war_won", "truce", "search_abandoned")
+                       + ends)
+        elif r[4] == "enmity":
             c.true(lab + " one enmity per pair", (r[1], r[3]) not in seen_enmity)
             seen_enmity.add((r[1], r[3]))
             if FLAGS["relations"]:
@@ -3367,9 +3395,11 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
                 c.true(lab + " until_event", uk in ("peace", "war_won", "truce", "search_abandoned", "civ_ended",
                                                     "civ_conquered"))
         else:
-            c.true(lab + " since_event", sk in ("peace", "war_won", "truce", "search_abandoned"))
+            c.true(lab + " since_event", sk in ("peace", "war_won", "truce", "search_abandoned") +
+                   (("ally_withdrew",) if al else ()))
             if uk is not None:
-                c.true(lab + " until_event", uk in ("war_declared", "civ_ended", "civ_conquered"))
+                c.true(lab + " until_event", uk in ("war_declared", "civ_ended", "civ_conquered") +
+                       (("ally_joined_war",) if al else ()))
     pairs = {}
     for r in rel:
         if r[4] in ("war", "peace"):
@@ -3379,7 +3409,7 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
         for x, y in zip(iv, iv[1:]):
             c.true("%s inv 1 pair %s rows overlap %s %s" % (label, pr, x, y), x[1] <= y[0])
     # N5: every war_declared leaves exactly one war row; ends of a war
-    war_rows = {r[7]: r for r in rel if r[4] == "war"}
+    war_rows = {r[7]: r for r in rel if r[4] == "war" and KEY_OF[kind[r[7]]] == "war_declared"}
     for e in res["event"]:
         if e[3] != K["war_declared"]:
             continue
@@ -3407,23 +3437,23 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for e in res["event"]:
         key = KEY_OF[e[3]]
         if key in ("battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held",
-                   "search_abandoned"):
+                   "search_abandoned", "allied_battle", "ally_withdrew"):
             c.true("%s inv 2 e%d %s not in a quiet phase" % (label, e[0], key), ph[e[4]][2] != QUIET)
         if key in ("peace", "war_won", "truce", "region_ceded", "settlements_ceded", "tribute") and ph[e[4]][2] == QUIET:
             row = ph[e[4]]
             c.true("%s inv 2 e%d %s at a quiet step start" % (label, e[0], key),
                    (e[1] - row[3]) % w.eng["quiet_step_years"] == 0)
-        if key in ("peace", "war_won", "truce", "search_abandoned"):
+        if key in ("peace", "war_won", "truce", "search_abandoned", "ally_withdrew"):
             cs = causes.get(e[0], [])
             c.true("%s inv 2 e%d caused by the war's last event" % (label, e[0]),
                    len(cs) == 1 and KEY_OF[kind[cs[0]]] in ("war_declared", "battle", "battle_at_pass", "siege",
                                                            "sacked", "settlement_captured", "refugees_settled",
-                                                           "refuge_held"))
+                                                           "refuge_held", "allied_battle"))
         if key == "region_ceded":
             cs = causes.get(e[0], [])
             c.true("%s 11 e%d cession caused by a peace" % (label, e[0]), len(cs) == 1 and
                    kind[cs[0]] in (K["peace"], K["war_won"]))
-        if key in ("battle", "battle_at_pass"):
+        if key in ("battle", "battle_at_pass", "allied_battle"):
             cs = causes.get(e[0], [])
             c.true("%s 11 e%d caused by its declaration" % (label, e[0]), len(cs) == 1 and
                    kind[cs[0]] == K["war_declared"])
@@ -4042,8 +4072,21 @@ def open_claims_from_rows(res):
     alive = {c_[0] for c_ in res["civilization"] if c_[8] is None}
     last = {}
     ends = {}
+    # P5-04 7.6, 7.9, 7.10: a join, a withdrawal and a war's end drop the claims of the ally and its enemy
+    joined_by_end = {}
+    for r in res.get("relation", ()):
+        if r[4] == "war" and r[6] is not None and kind.get(r[7]) == K.get("ally_joined_war"):
+            joined_by_end.setdefault(r[8], []).append((r[1], r[3]))
     for e in res["event"]:
         k = kind[e[0]]
+        if k in (K.get("ally_joined_war"), K.get("ally_withdrew")):
+            a, b = role(e[0], 1)[0], role(e[0], 3)[0]
+            for pr in ((a, b), (b, a)):
+                last.pop(pr, None)
+        for (a, b) in joined_by_end.get(e[0], ()) if k in (K["peace"], K["truce"], K["war_won"],
+                                                            K["search_abandoned"]) else ():
+            for pr in ((a, b), (b, a)):
+                last.pop(pr, None)
         if k in CLAIMS:
             last[(role(e[0], 1)[0], role(e[0], 2)[0])] = e[0]
         elif k == K["war_declared"]:
@@ -7348,7 +7391,7 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    want_schema = "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))

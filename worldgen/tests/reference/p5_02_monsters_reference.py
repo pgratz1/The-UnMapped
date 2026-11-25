@@ -1224,7 +1224,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if m[9] in (SLAIN, DIED) and (lair[13] == OPEN or lair[11] != m[6]):
             out.append("6: ended monster %d lair ended %s, died %s" % (m[0], lair[11], m[6]))
     for s in x.sites:
-        if s[6]:
+        if s[6] and s[2] != MINE:   # P5-04 9.2: a mine's settlement is its town (the alliances' check-world)
             k = x.kind_of(s[10])
             st = x.stl.get(s[6])
             if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose"):
@@ -1268,11 +1268,11 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
             out.append("10: settlement %d ending %s, derived %d" % (st[0], st[14] if len(st) > 14 else None,
                                                                   want[st[0]]))
     # 11: causes (10.2) and W9
-    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked"), "monster_woke": ("monster_slept",
+    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked", "allied_battle"), "monster_woke": ("monster_slept",
                    "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke"),
                    "settlement_overrun": ("monster_raid",), "monster_slain": ("monster_raid",),
                    "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose"),
-                   "outpost_built": ("war_declared",)}
+                   "outpost_built": ("war_declared", "ally_joined_war")}   # P5-04 7.6: a joined war row's event
     for k, allowed in cause_kinds.items():
         for e in x.events_of(k):
             cs = x.causes.get(e[0], [])

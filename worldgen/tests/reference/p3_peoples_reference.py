@@ -2428,7 +2428,7 @@ def check_invariants(c, res, inp, w, label):
         "capital_moved": ab, "civ_ended": ab, "ruin_faded": ab,
         "settlement_dwindled": blows + (("colony_founded",) if FLAGS["memory"] else ()),   # r12 22.2 item 3
     }
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     for e in res["event"]:
         key = keys[e[3]]
         cs = causes.get(e[0], [])
@@ -2577,8 +2577,8 @@ def check_r12_invariants(c, res, w, label, kind, ev, vals, causes, base):
                    vals[e[0]][3] == total and vals[e[0]][4] == n.get(e[0], 0) and e[7] == want)
     mem = t["cause_memory_years"]
     reds = {"famine", "plague", "plague_outbreak", "plague_spread", "succession_crisis", "battle", "battle_at_pass",
-            "tribute", "colony_founded"}
-    keys = {k["id"]: k["key"] for k in COMPILED}
+            "tribute", "colony_founded", "allied_battle"}   # allied_battle: P5-04 11.1 (no older world has it)
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     for e in res["event"]:
         if keys[e[3]] in ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to"):
             for x in causes.get(e[0], []):
@@ -2874,7 +2874,7 @@ settlements standing 90 ruined 1 faded 0
 
 def chronicle_lines(res, inp):
     """15.2's line form: <span> e<id> <kind>/<salience>: <sentence> [causes ...]."""
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     causes = {}
     for (e, c) in res["event_cause"]:
         causes.setdefault(e, []).append(c)
@@ -2889,7 +2889,7 @@ def chronicle_lines(res, inp):
 
 
 def kind_counts(res):
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     out = {}
     for e in res["event"]:
         out[keys[e[3]]] = out.get(keys[e[3]], 0) + 1
