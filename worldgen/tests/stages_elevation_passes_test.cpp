@@ -1150,7 +1150,7 @@ TEST_CASE("P1-00 10.3: report pass keys from the rows of table pass, against the
         block += l + "\n";
     }
     const std::string& text = rep.value();
-    CHECK(text.find("\npass = 3\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n") != std::string::npos);
+    CHECK(text.find("\npass = 3\nphase = 0\nrace = 0\nrace_biome = 0\nbook = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nbook = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n") != std::string::npos);
     const std::size_t at = text.find("\nedge_parallel_run_m = ");
     REQUIRE(at != std::string::npos);
     const std::size_t next = text.find('\n', at + 1);

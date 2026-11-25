@@ -228,11 +228,11 @@ TEST_CASE("P5-04 4.1: the race fields after stances, shipped values, ranges and 
     for (const p504data::RaceFields& rf : p504data::race_fields()) {
         CAPTURE(std::string(rf.race));
         const wd::Record& r = record_of(*l.content, "race", std::string(rf.race).c_str());
-        REQUIRE(r.size() >= 4U);
-        CHECK(r.name_at(r.size() - 4U) == "stances");
-        CHECK(r.name_at(r.size() - 3U) == "origin_allies");
-        CHECK(r.name_at(r.size() - 2U) == "ally_join_permille");
-        CHECK(r.name_at(r.size() - 1U) == "mining_permille");
+        REQUIRE(r.size() >= 8U);
+        CHECK(r.name_at(r.size() - 8U) == "stances");
+        CHECK(r.name_at(r.size() - 7U) == "origin_allies");
+        CHECK(r.name_at(r.size() - 6U) == "ally_join_permille");
+        CHECK(r.name_at(r.size() - 5U) == "mining_permille");
         CHECK(r.get_int("ally_join_permille") == rf.join);
         CHECK(r.get_int("mining_permille") == rf.mining);
         const std::string path = "races/" + std::string(rf.race) + ".toml";
@@ -325,7 +325,7 @@ TEST_CASE("P5-04 8.3, 11.1: the report entries of kinds 63 to 78; allied_battle 
         CHECK(d->templ.find("allied_battle=" + word) != std::string::npos);
     }
     const Files f = p504data::files_026();
-    CHECK(f.at("history/renaming.toml").find(R"(kinds = ["battle", "battle_at_pass", "allied_battle"])") !=
+    CHECK(f.at("history/renaming.toml").find(R"(kinds = ["battle", "battle_at_pass", "allied_battle", "battle_led"])") !=
           std::string::npos);
 }
 
@@ -337,7 +337,7 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
           "48f6ad624a8b3fd76af51c8162872dc926ca75997000c3fcc42be9b0be6a9d4e");   // p3-01-data.txt game/data at the calibrated values
     CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");
-    CHECK(worldgen::db::SCHEMA_VERSION == 11);
+    CHECK(worldgen::db::SCHEMA_VERSION == 12);
 }
 
 TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold the 0.26.0 data") {

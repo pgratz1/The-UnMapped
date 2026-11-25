@@ -346,9 +346,9 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     const auto tables = w.tables();
     REQUIRE(tables.ok());
     // Schema 9 (P3-04 9.1, P5-12 7.2, P5-02 11.1): thirty-two tables, all empty but meta (17 rows).
-    const std::vector<std::string> names = {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    const std::vector<std::string> names = {"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                             "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                            "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
+                                            "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                             "race_biome", "race_relation", "region", "region_biome", "region_border",
                                             "region_control", "region_name", "relation", "settlement",
                                             "settlement_census", "settlement_race", "site"};
@@ -369,7 +369,7 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // and two key indexes, 18 pages (P3-03 5.1); schema version 7 the
     // thirteen history tables, 34 pages (P3-04 9.6); schema version 8 the
     // root of region_name, 35 pages (P5-12 12).
-    CHECK(fs::file_size(out) == 184320U);   // 45 pages at schema 10 (P5-03a 12 item 5)
+    CHECK(fs::file_size(out) == 192512U);   // 47 pages at schema 12 (P5-06; 45 pages at schema 10) at schema 10 (P5-03a 12 item 5)
 }
 
 TEST_CASE("cli 12.2: test pattern") {

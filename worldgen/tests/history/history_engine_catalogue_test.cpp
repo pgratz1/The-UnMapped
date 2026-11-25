@@ -241,7 +241,7 @@ TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4, P3-06 12.1): an unknown history id lists
     const std::string text = chrono_test::errors_text(r.errors);
     CAPTURE(text);
     // P5-12 4: renaming registered from 0.22.0
-    CHECK(text.find("expected one of 'alliances', 'chronology', 'conflict', 'engine', 'monsters', 'peoples', 'relations', 'renaming', 'report'") !=
+    CHECK(text.find("expected one of 'alliances', 'chronology', 'conflict', 'engine', 'figures', 'monsters', 'peoples', 'relations', 'renaming', 'report'") !=
           std::string::npos);
 }
 

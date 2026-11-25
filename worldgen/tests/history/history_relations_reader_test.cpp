@@ -307,7 +307,7 @@ TEST_CASE("P5-03 16.1, 16.3: a schema 9 file is refused; hash --detail lists the
                                                 "'schema_version';");
     auto r = db::WorldReader::open(path);
     REQUIRE_FALSE(r.ok());
-    CHECK(r.error().message.find("world schema version 9, this build reads 11") != std::string::npos);
+    CHECK(r.error().message.find("world schema version 9, this build reads 12") != std::string::npos);
     const db::WorldReader w = chrono_test::open_world(base_path());
     auto d = worldgen::inspect::detail_hashes(w);
     REQUIRE(d.ok());

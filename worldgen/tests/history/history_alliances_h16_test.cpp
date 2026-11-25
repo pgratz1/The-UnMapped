@@ -299,7 +299,7 @@ TEST_CASE("P5-04 9.2: a schema 10 file is refused (readers refuse version 10 wor
                                                  "'schema_version';");
     auto r = db::WorldReader::open(path);
     REQUIRE_FALSE(r.ok());
-    CHECK(r.error().message.find("world schema version 10, this build reads 11") != std::string::npos);
+    CHECK(r.error().message.find("world schema version 10, this build reads 12") != std::string::npos);
     CHECK(db::SCHEMA_VERSION == p504api::SCHEMA_SPEC);
 }
 
@@ -313,8 +313,8 @@ TEST_CASE("P5-04 10.1, 10.2: H16's header and [alliances] at both levels") {
     const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary));
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full));
     REQUIRE_FALSE(s.empty());
-    CHECK(s.front() == "# worldgen history v7");
-    CHECK(f.front() == "# worldgen history v7");
+    CHECK(s.front() == "# worldgen history v8");
+    CHECK(f.front() == "# worldgen history v8");
     const std::string count = "alliances: 6 formed, 1 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 1 betrayed, "
                               "0 with a realm";
     const std::string l7 = "  c1 The House of Aelin and c2 The Court of Onsae: 50-E, by origin, e7; joined 1, refused 0; "
@@ -542,7 +542,7 @@ TEST_CASE("P5-04 11.2: browser groups of kinds 63 to 78; alliances = 7; ALL_GROU
     }
     // every kind of the compiled catalogue is in a group other than `other` (P4-05 10.2 item 2), 78 of them
     const h::EventCatalogue& cat = h::compiled_event_catalogue();
-    CHECK(cat.kinds.size() == 78U);
+    CHECK(cat.kinds.size() == 92U);
     for (const h::KindDef& k : cat.kinds) {
         CAPTURE(k.key);
         CHECK(ins::event_group(k.key) != ins::EventGroup::other);

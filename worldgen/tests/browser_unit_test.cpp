@@ -191,7 +191,7 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(n == 78U);   // P5-04 8.1
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() == 78U);
+    REQUIRE(kinds.size() == 92U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
         CHECK(brapi::event_group(k.key) != EventGroup::other);
@@ -209,7 +209,7 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(static_cast<int>(EventGroup::other) == 4);
     CHECK(static_cast<int>(EventGroup::monsters) == 5);
     CHECK(static_cast<int>(EventGroup::peoples) == 6);   // P5-03 lead ruling 4: kinds 57 to 62
-    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0xFF);   // P5-04 11.2
+    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0x1FF);   // P5-06 (figures = 8)
     CHECK(brapi::event_group_word(static_cast<EventGroup>(7)) == "alliances");
     CHECK(brapi::event_group_word(EventGroup::peoples) == "peoples");
     CHECK(brapi::event_group_word(EventGroup::realms) == "realms");
