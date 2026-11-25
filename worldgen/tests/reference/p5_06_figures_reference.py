@@ -964,8 +964,9 @@ class Figures:
             again = 1
         else:
             f = self.non_ruler(GENERAL, c, t["general_age_permille"], t["general_age_span_permille"])
-            f["skill"] = t["skill_min"] + pick(self.D("hist.figures.skill", f["id"], 0, 0),
-                                               t["skill_max"] - t["skill_min"] + 1)
+            # the lead's ruling G7: a skill is at least 1
+            f["skill"] = max(1, t["skill_min"] + pick(self.D("hist.figures.skill", f["id"], 0, 0),
+                                                      t["skill_max"] - t["skill_min"] + 1))
             again = 0
         e = w.append("general_appointed", region=w.war_of(war)["goal"],
                      participants=(("figure", FIGURE, f["id"]), ("civilization", CIV, c), ("enemy", CIV, enemy)),
