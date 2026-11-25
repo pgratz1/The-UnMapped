@@ -461,6 +461,10 @@ Schema versions so far:
 | 5 | 0.11.0 | `region`, with bounds as four integer columns, and `region_border` |
 | 6 | 0.13.0 | Chronology: race, race\_biome, culture, god and age tables, and the world-creation settings stored in meta |
 | 7 | 0.14.0 | History engine: the event catalogue tables, phase, event with its participants, causes and values, civilization, settlement, settlement census by year, region control by year, and relation |
+| 8 | 0.22.0 | Regions renamed by history: region\_name, one row per later name of a region with its year, culture and event; the geographic name in region is never rewritten |
+| 9 | 0.23.0 | Beasts and monsters: beast, monster\_kind, beast\_population by year, monster and site tables, and how each settlement ended |
+| 10 | 0.24.0 | Race relations and mixed settlements: race\_relation and settlement\_race, both by year |
+| 11 | 0.26.0 | Alliances, trade, mines and arms: mines as a kind of site, and alliance and trade as kinds of relation; no new tables |
 
 The layer catalogue (each layer's name, type, units and meaning) is part of the contract and is kept in `docs/specs/schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
 
@@ -933,7 +937,7 @@ Still open:
 
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 23, 2026: P0 through P3 are complete. Paul approved P1 on November 19 and P3 on November 22. P4 (viewer v1) and P5 (history depth) are running in parallel.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 25, 2026: P0 through P4 are complete. Paul approved P1 on November 19, P3 on November 22 and P4 on November 24. P5 (history depth) is in progress at generator 0.26.0 and schema 11: the carried-over follow-ups, regions renamed by history, beasts and monsters, race relations with mixed settlements and migrations, and alliances, trade, mines and arms are merged. Figures are next.
 
 ### Phases
 
