@@ -21,7 +21,7 @@
 // present. Without history the year bar is disabled.
 //
 // Markers (spec P4-04 8.2): %MarkersToggle, %MarkFaded, %MarkEvents,
-// %MarkPasses call the model; %MarkerLegend is the key list. On
+// %MarkPasses, %MarkMines call the model; %MarkerLegend is the key list. On
 // markers_changed and view_selected the screen hands the model's markers and
 // their glyphs to %MapView. Key M toggles the markers. While the mouse is on
 // a marker, %CellLabel shows its description instead of the cell's.
@@ -159,6 +159,7 @@ public:
     [[nodiscard]] godot::CheckBox* mark_faded() const noexcept { return mark_faded_; }
     [[nodiscard]] godot::CheckBox* mark_events() const noexcept { return mark_events_; }
     [[nodiscard]] godot::CheckBox* mark_passes() const noexcept { return mark_passes_; }
+    [[nodiscard]] godot::CheckBox* mark_mines() const noexcept { return mark_mines_; }
     [[nodiscard]] godot::ItemList* marker_legend() const noexcept { return marker_legend_; }
     [[nodiscard]] godot::TabContainer* right_pane() const noexcept { return right_pane_; }
     [[nodiscard]] godot::Button* browser_back_button() const noexcept { return browser_back_; }
@@ -330,6 +331,7 @@ private:
     godot::CheckBox* mark_faded_ = nullptr;
     godot::CheckBox* mark_events_ = nullptr;
     godot::CheckBox* mark_passes_ = nullptr;
+    godot::CheckBox* mark_mines_ = nullptr;  // P5-04 11.3
     godot::ItemList* marker_legend_ = nullptr;
     godot::TabContainer* right_pane_ = nullptr;
     godot::Button* browser_back_ = nullptr;
@@ -409,6 +411,7 @@ private:
     godot::String check_expect_marker_years_;
     godot::String check_history_summary_;
     int64_t check_expect_passes_ = -1;
+    int64_t check_expect_mines_ = -1;
     double start_zoom_ = 0.0;
     int64_t start_centre_x_ = -1;
     int64_t start_centre_y_ = -1;

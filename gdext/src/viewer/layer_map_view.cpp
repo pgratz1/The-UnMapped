@@ -474,6 +474,10 @@ void LayerMapView::set_markers(const godot::Array& markers, const godot::Diction
         // P4-05 12.1 F6: small entries and passes are hit one glyph cell
         // beyond their glyph too.
         marker.margin = marker.small || marker.glyph == "pass";
+        const int64_t ox = entry.get("offset_x", int64_t{0});
+        const int64_t oy = entry.get("offset_y", int64_t{0});
+        marker.offset_x = static_cast<int32_t>(std::clamp<int64_t>(ox, -64, 64));
+        marker.offset_y = static_cast<int32_t>(std::clamp<int64_t>(oy, -64, 64));
         const auto it = glyphs_.find(marker.glyph);
         marker.cells = it != glyphs_.end() ? &it->second : nullptr;
         markers_.push_back(std::move(marker));
@@ -505,7 +509,8 @@ bool LayerMapView::marker_drawn(const Marker& marker) const {
 godot::Vector2i LayerMapView::marker_centre(const Marker& marker) const {
     const double cx = std::floor(static_cast<double>(offset_.x) + (static_cast<double>(marker.x) + 0.5) * zoom_);
     const double cy = std::floor(static_cast<double>(offset_.y) + (static_cast<double>(marker.y) + 0.5) * zoom_);
-    return {static_cast<int32_t>(cx), static_cast<int32_t>(cy)};
+    const int32_t g = glyph_cell_size();
+    return {static_cast<int32_t>(cx) + marker.offset_x * g, static_cast<int32_t>(cy) + marker.offset_y * g};
 }
 
 godot::Ref<godot::ImageTexture> LayerMapView::glyph_texture(const Marker& marker, int32_t g) {

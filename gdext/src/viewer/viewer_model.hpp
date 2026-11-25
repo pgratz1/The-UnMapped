@@ -177,12 +177,14 @@ public:
     [[nodiscard]] bool get_markers_enabled() const;
     // False and nothing changed when the markers are not available.
     bool set_markers_enabled(bool on);
-    // "faded", "events", "passes"; false for any other name or when not
+    // "faded", "events", "passes", "mines" (MarkerOptions::sites, P5-04
+    // 11.3); false for any other name or when not
     // available.
     [[nodiscard]] bool get_marker_option(const godot::String& name) const;
     bool set_marker_option(const godot::String& name, bool on);
     // Array of Dictionary in draw order (P4-04 6.1): {type, id, x, y, glyph,
-    // fill, capital, small, events (places only)}. Empty when disabled or not
+    // fill, capital, small, events (places only), offset_x and offset_y
+    // (sites only: the glyph's offset in glyph cells)}. Empty when disabled or not
     // available.
     [[nodiscard]] godot::Array get_markers() const;
     // {radius, cells (PackedByteArray of P4-04 5)}; empty for an unknown name.

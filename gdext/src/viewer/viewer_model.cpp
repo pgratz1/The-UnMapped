@@ -818,6 +818,27 @@ int settlement_pass(const worldgen::inspect::SettlementMarker& m) {
     return 0;
 }
 
+// P5-04 11.3: "<site name> (mine of <civilization name>), since <year>".
+std::string site_marker_text(const HistoryState& history, const worldgen::inspect::SiteMarker& m) {
+    using worldgen::history::EntityType;
+    const worldgen::history::HistoryView& view = history.history().view;
+    const std::string* name = view.name(EntityType::site, m.site);
+    std::string text = name != nullptr && !name->empty() ? *name : "site " + std::to_string(m.site);
+    text += " (mine";
+    if (m.founder != 0) {
+        const std::string* civ = view.name(EntityType::civilization, m.founder);
+        text += " of " + (civ != nullptr ? *civ : "civilization " + std::to_string(m.founder));
+    }
+    text += ")";
+    const auto& sites = history.history().tables.sites;
+    const auto it = std::lower_bound(sites.begin(), sites.end(), m.site,
+                                     [](const worldgen::db::SiteRow& row, int64_t key) { return row.id < key; });
+    if (it != sites.end() && it->id == m.site) {
+        text += ", since " + std::to_string(it->origin_year);
+    }
+    return text;
+}
+
 bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& name, bool*& out) {
     if (name == "faded") {
         out = &options.faded;
@@ -825,6 +846,8 @@ bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& 
         out = &options.events;
     } else if (name == "passes") {
         out = &options.passes;
+    } else if (name == "mines") {  // P5-04 11.3: the sites option, mines its one kind
+        out = &options.sites;
     } else {
         return false;
     }
@@ -925,6 +948,11 @@ void ViewerModel::rebuild_marker_order() {
         marker_order_.push_back(MarkerRef{MarkerType::place, i});
     }
     for (int pass = 3; pass <= 6; ++pass) {
+        if (pass == 5) {  // P5-04 11.3: sites, between ruins and standing settlements
+            for (std::size_t i = 0; i < m.sites.size(); ++i) {
+                marker_order_.push_back(MarkerRef{MarkerType::site, i});
+            }
+        }
         for (std::size_t i = 0; i < m.settlements.size(); ++i) {
             if (settlement_pass(m.settlements[i]) != pass) {
                 continue;
@@ -952,6 +980,20 @@ godot::Dictionary ViewerModel::marker_dictionary(const MarkerRef& ref) const {
         out["fill"] = int64_t{-1};
         out["capital"] = false;
         out["small"] = false;
+        return out;
+    }
+    if (ref.type == MarkerType::site) {
+        const auto& site = m.sites[ref.index];
+        out["id"] = site.site;
+        out["x"] = site.x;
+        out["y"] = site.y;
+        out["glyph"] = to_godot(marker_glyph_name(worldgen::inspect::GlyphKey{worldgen::inspect::GLYPH_MINE, false, false}));
+        out["fill"] = rgb_of(worldgen::inspect::MARKER_MINE);
+        out["capital"] = false;
+        out["small"] = true;  // a minor mark, hidden with the hamlets when zoomed out (8.4)
+        // Drawn one glyph (7 glyph cells) to the upper right of its cell.
+        out["offset_x"] = worldgen::inspect::SITE_GLYPH_OFFSET;
+        out["offset_y"] = -worldgen::inspect::SITE_GLYPH_OFFSET;
         return out;
     }
     if (ref.type == MarkerType::place) {
@@ -1049,6 +1091,8 @@ godot::String ViewerModel::describe_marker(int64_t index) const {
         const int64_t magnitude = col_dm < 0 ? -col_dm : col_dm;
         text = "pass " + std::to_string(p.pass) + ": " + (kind == 1 ? "lowered pass" : "natural gap") + ", col " +
                (col_dm < 0 ? "-" : "") + std::to_string(magnitude / 10) + "." + std::to_string(magnitude % 10) + " m";
+    } else if (ref.type == MarkerType::site) {
+        text = site_marker_text(history_, m.sites[ref.index]);
     } else if (ref.type == MarkerType::place) {
         const auto& p = m.places[ref.index];
         text = "In " + std::to_string(history_.year()) + ":";
@@ -1117,6 +1161,9 @@ godot::Array ViewerModel::get_marker_legend() const {
     }
     if (options.passes) {
         row("pass", "pass", -1);
+    }
+    if (options.sites) {
+        row("mine", "mine", rgb_of(worldgen::inspect::MARKER_MINE));
     }
     return out;
 }

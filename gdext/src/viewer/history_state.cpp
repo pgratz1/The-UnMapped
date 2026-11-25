@@ -184,7 +184,7 @@ namespace {
 // The marker sets of two years are the same when their lists are (the
 // year itself is no difference, P4-04 8.1).
 bool same_markers(const worldgen::inspect::YearMarkers& a, const worldgen::inspect::YearMarkers& b) {
-    return a.settlements == b.settlements && a.places == b.places && a.passes == b.passes;
+    return a.sites == b.sites && a.settlements == b.settlements && a.places == b.places && a.passes == b.passes;
 }
 
 }  // namespace
@@ -195,6 +195,7 @@ bool HistoryState::update_markers() {
         markers_->markers_at(*history_, state_, marker_options_, markers_scratch_);
     } else {
         markers_scratch_.year = loaded() ? year_ : 0;
+        markers_scratch_.sites.clear();
         markers_scratch_.settlements.clear();
         markers_scratch_.places.clear();
         markers_scratch_.passes.clear();
