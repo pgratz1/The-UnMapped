@@ -193,6 +193,7 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
                 in = true;
                 continue;
             }
+            if (l.rfind("  allies:", 0) == 0) break;   // P5-04 10.3 (v7): the allies lines follow the milestones
             if (in) out.push_back(l.substr(0, l.find(':')));  // span, id and kind
         }
         return out;
@@ -216,7 +217,11 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
     // its sacks of the House of Nife's towns (e104 of 2998, e149 of 3321), and the House of Nife (c1) with its won
     // war, the war_won e337 of 5548 (with the cession e338); text confirmed with p3_report_reference.py compare on
     // the 0.25.0 inputs.
-    CHECK(std::find(a.begin(), a.end(), "    5548 e337 war_won") != a.end());
+    // P5-04 (generator 0.26.0, test writer at integration): the House of Nife (c1) holds both its sacks (e154 of 3279,
+    // e162 of 3286) and its won war, the war_won e163 of 3286 (with the cession e164); the Baskeeb Mob (c2) its sacks
+    // e102 of 2831 and e290 of 4833 and its war_won e103; text confirmed with p3_report_reference.py compare on the
+    // 0.26.0 inputs.
+    CHECK(std::find(a.begin(), a.end(), "    3286 e163 war_won") != a.end());
     std::int64_t sacks = 0;
     for (const std::string& x : b) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
     CHECK(sacks == 2);
