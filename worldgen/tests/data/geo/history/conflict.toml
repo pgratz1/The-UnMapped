@@ -2,7 +2,7 @@
 camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
 enmity_max = -500
 # P5-03a calibration (generator 0.25.0): 200 -> 300, restoring the wars that peace between neighbours removed.
-border_friction = 300
+border_friction = 520
 want_weight = 500
 hunger_full = 300
 fear_share = 400
@@ -61,8 +61,8 @@ quarrel_strength_permille = 1000
 toll_spread_permille = 200
 capital_sacked_salience = 90
 capital_captured_salience = 80
-allied_strain_permille = 250
-ally_deterrence_permille = 300
+allied_strain_permille = 160
+ally_deterrence_permille = 50
 ally_effort_permille = 1000
 trade_strength_permille = 50
 trade_strength_max = 3
