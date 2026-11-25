@@ -98,11 +98,16 @@ inline std::string type_word(std::int64_t status) {
     }
 }
 
+// The dump's type word of an entry: P5-06 25.1 (e) makes a status 3 entry an old ruin, of type faded.
+inline std::string type_word(const wi::SettlementMarker& s) {
+    return s.status == 3 && s.old_ruin ? std::string("faded") : type_word(s.status);
+}
+
 // M(Y) of a YearMarkers.
 inline std::string marker_dump(const wi::YearMarkers& m) {
     std::string out = "year " + num(m.year) + "\n";
     for (const wi::SettlementMarker& s : m.settlements) {
-        out += "settlement " + num(s.settlement) + " " + num(s.x) + " " + num(s.y) + " " + type_word(s.status) + " " +
+        out += "settlement " + num(s.settlement) + " " + num(s.x) + " " + num(s.y) + " " + type_word(s) + " " +
                num(s.kind) + " " + num(s.status) + " " + num(s.owner) + " " + num(s.population) + " " + num(s.since) +
                " " + num(s.founded) + " " + (s.capital ? "1" : "0") + " " + num(s.ruined_year) + " " +
                num(s.ruin_event) + "\n";
@@ -185,6 +190,7 @@ inline std::string glyph_name(const wi::GlyphKey& k) {
         case 9: return "faded";
         case 10: return "pass";
         case 11: return "ring";
+        case wi::GLYPH_TOWER: return "tower";  // P5-06 11.4
         default: break;
     }
     std::string s(WORDS_NS::settlement_kind_word(k.base));
@@ -193,7 +199,8 @@ inline std::string glyph_name(const wi::GlyphKey& k) {
     return s;
 }
 
-// The 24 keys of the glyph dump, in its order (reading M3 of the reference).
+// The 25 keys of the glyph dump, in its order (reading M3 of the reference; P5-06 11.4: the tower at the end,
+// reading K5: the mine was never in the dump).
 inline std::vector<wi::GlyphKey> glyph_keys() {
     std::vector<wi::GlyphKey> v;
     for (std::uint8_t b = 1; b <= 5; ++b) {
@@ -204,6 +211,7 @@ inline std::vector<wi::GlyphKey> glyph_keys() {
     for (const std::uint8_t b : {std::uint8_t{8}, std::uint8_t{9}, std::uint8_t{10}, std::uint8_t{11}}) {
         v.push_back({b, false, false});
     }
+    v.push_back({wi::GLYPH_TOWER, false, false});
     return v;
 }
 
@@ -234,6 +242,8 @@ inline std::vector<std::int64_t> golden_years(const wh::LoadedHistory& h, const 
     for (const db::AgeRow& a : h.tables.ages) v.push_back(a.start_year);
     for (const db::SettlementRow& s : h.tables.settlements) {
         if (ix.ruined_year(s.id) != -1) v.push_back(ix.ruined_year(s.id));
+        // P5-06 25.1 (e): the year an old ruin first shows as one (those past E are dropped below)
+        if (ix.ruined_year(s.id) != -1) v.push_back(ix.ruined_year(s.id) + wi::OLD_RUIN_YEARS);
     }
     for (const wh::HistoryView::Event& e : h.view.events()) {
         if (kind_key(h, e.row.id) == "ruin_faded") v.push_back(e.row.year);

@@ -406,6 +406,12 @@ inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nu
         for (const auto& [ab, since] : trades) {
             out += "trade " + num(ab.first) + " " + num(ab.second) + " " + num(since) + "\n";
         }
+        // P5-06 12 (P4-01 r7; reading F1 of the reference: after every earlier line of D(Y)): `ruler <civ> <figure>`
+        // per alive civilization (ascending) with a recorded ruler at Y
+        for (const std::int64_t c : st.civilizations) {
+            const std::int64_t f = t->ruler_at(c, st.year);
+            if (f != 0) out += "ruler " + num(c) + " " + num(f) + "\n";
+        }
     }
     return out;
 }
