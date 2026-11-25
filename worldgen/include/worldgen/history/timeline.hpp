@@ -81,6 +81,14 @@ struct AllianceState {
     friend bool operator==(const AllianceState&, const AllianceState&) = default;
 };
 
+// P5-06 12: a figure at a year. status at Y: 0 not yet born; while alive 1,
+// or 2 from the year of its exiled event; once dead the stored status.
+struct FigureState {
+    std::int64_t id, role, civ, status;
+    bool alive;
+    friend bool operator==(const FigureState&, const FigureState&) = default;
+};
+
 // Everything that depends on the year (section 4).
 struct YearState {
     std::int64_t year = 0, phase = 0, age = 0;
@@ -145,6 +153,17 @@ public:
     [[nodiscard]] std::vector<std::int64_t> allies_of(std::int64_t civ, std::int64_t year) const;
     [[nodiscard]] std::vector<std::vector<std::int64_t>> alliance_groups_at(std::int64_t year) const;
     [[nodiscard]] std::vector<std::pair<std::int64_t, std::int64_t>> trades_at(std::int64_t year) const;
+    // P5-06 12: the recorded ruler of civ at Y (office_from <= Y < the
+    // reign's end: its ruled row's until, else E), 0 none; the figures with
+    // born <= Y < died (or E), ascending id; the generals of civ at Y (its
+    // served rows with since <= Y < until, else E), ascending id; a figure
+    // at Y. FatalError "timeline: no figure <f>", "timeline: no civilization
+    // <c>" for an id the world does not have.
+    [[nodiscard]] std::int64_t ruler_at(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> figures_alive(std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> generals_of(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] FigureState figure_at(std::int64_t figure, std::int64_t year) const;
+    [[nodiscard]] std::size_t figure_count() const noexcept { return figures_.size(); }
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 
@@ -156,6 +175,9 @@ public:
     [[nodiscard]] std::span<const std::int64_t> events_of_region(std::int64_t region) const;
     [[nodiscard]] std::span<const std::int64_t> events_of_settlement(std::int64_t settlement) const;
     [[nodiscard]] std::span<const std::int64_t> effects(std::int64_t event) const;
+    // P5-06 12: the events naming figure `figure`, ascending: as a
+    // participant, and through {r:under} (figure_event_lists).
+    [[nodiscard]] std::span<const std::int64_t> events_of_figure(std::int64_t figure) const;
 
     // The region ids, ascending (one per HistoryTables::regions row).
     [[nodiscard]] std::span<const std::int64_t> region_ids() const noexcept { return region_ids_; }
@@ -234,6 +256,18 @@ private:
     std::vector<db::RaceRelationRow> race_relations_;
     std::vector<db::SettlementRaceRow> settlement_races_;
     std::vector<std::size_t> share_offsets_;
+    // P5-06 12: the figure rows (index id - 1), per figure the year of its
+    // first exiled event (-1 none) and its events; per civilization (index
+    // id - 1) its rulers as (office_from, end, figure) ascending office_from,
+    // and its served rows as (since, end, figure) in row order.
+    struct Term {
+        std::int64_t from = 0, to = 0, figure = 0;
+    };
+    std::vector<db::FigureRow> figures_;
+    std::vector<std::int64_t> figure_exiled_;
+    std::vector<std::vector<std::int64_t>> figure_events_;
+    std::vector<std::vector<Term>> civ_rulers_;
+    std::vector<std::vector<Term>> civ_generals_;
 };
 
 // Everything a reader of history needs, read once (P4-00 V3). Movable: the

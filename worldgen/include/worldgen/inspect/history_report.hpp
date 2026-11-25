@@ -38,8 +38,11 @@ inline constexpr std::string_view HISTORY_REPORT_HEADER_V5 = "# worldgen history
 // First line of format v6 (P5-03a 9.1); no longer written from generator
 // 0.26.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V6 = "# worldgen history v6";
-// First line of format v7 (P5-04 10.1), the one written.
+// First line of format v7 (P5-04 10.1); no longer written from generator
+// 0.27.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V7 = "# worldgen history v7";
+// First line of format v8 (P5-06 10.1), the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V8 = "# worldgen history v8";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 
@@ -87,6 +90,17 @@ using BlockLine = std::vector<Segment>;
                                                         const history::HistoryTables& tables,
                                                         const history::HistoryDigest& digest, std::int64_t civ,
                                                         HistoryLevel level);
+
+// P5-06 11.3: the lines of figure `figure` for the browser, in the form of
+// civilization_block: its [figures] line of the report (without the two
+// leading spaces), and for a ruler its realm's "rulers:" line of
+// [civilizations] at `level` (that line alone at summary, with the reign
+// lines at full). FatalError "figure_block: no figure <f>", "figure_block:
+// bad level".
+[[nodiscard]] std::vector<BlockLine> figure_block(const history::HistoryView& view,
+                                                  const history::HistoryTables& tables,
+                                                  const history::HistoryDigest& digest, std::int64_t figure,
+                                                  HistoryLevel level);
 
 // The report form of a line (before the report's trailing-space rule):
 // literal as is; text escape_history_text(text); entity

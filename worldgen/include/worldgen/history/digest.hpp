@@ -60,6 +60,13 @@ inline constexpr std::size_t SUMMARY_MONSTER_ENDED_LINES = 2;
 inline constexpr std::size_t SUMMARY_MIXED_MAX = 3;
 // P5-04 10.2: the alliance lines of [alliances] at summary.
 inline constexpr std::int64_t SUMMARY_ALLIANCES_MAX = 10;
+// P5-06 10.2 (format v8): the figures of note listed in [figures] at summary.
+inline constexpr std::size_t SUMMARY_FIGURES_MAX = 6;
+// P5-06 25.2: a calamity is major when it ended a settlement or took at
+// least this share (per mille) of its realm's people; at most this many
+// major calamities are in the summary set always.
+inline constexpr std::int64_t SUMMARY_CALAMITY_MAJOR_PERMILLE = 100;
+inline constexpr std::size_t SUMMARY_CALAMITY_MAJOR_MAX = 8;
 // P5-03 17.2 (a reading): a settlement is mixed at E when a race other than
 // the ruling one has at least this share (the shipped mixed_min_permille;
 // the report reads the world only).
@@ -185,6 +192,34 @@ struct CivilizationDigest {
     };
     std::vector<Adversary> adversaries;
 };
+// P5-06 10.2: one figure's renown (its events of salience >=
+// SUMMARY_MIN_SALIENCE, figure_event_lists) and its deeds.
+struct FigureDigest {
+    std::int64_t id = 0;
+    std::int64_t renown = 0;
+    // A ruler's war_declared events naming it ({attacker:under}); the wars
+    // its realm won and the realms it conquered at an ending event where it
+    // was the recorded ruler of its realm (reading: P5-06 10.2 names no
+    // measure for "won" and "realms conquered").
+    std::int64_t wars_declared = 0, wars_won = 0, realms_conquered = 0;
+    // A general's battle_led events (winner_general or loser_general) and
+    // those it won (winner_general).
+    std::int64_t battles_led = 0, battles_won = 0;
+    std::vector<std::int64_t> slew;  // monsters of its monster_slain_by_hero events (hero), event order
+    std::int64_t books = 0;          // book rows with it as author
+    bool blight = false;             // a blight event with it as figure
+    std::int64_t host = 0;           // the host of its exiled event (status 2), 0 none
+    std::int64_t slain_by = 0;       // the monster of its hero_slain event, 0 none
+};
+
+// P5-06 12 (7.9's lookup): per figure (index id - 1) the ids of the events
+// that name it, ascending: the events with it as a participant (entity type
+// 6) and those whose template names it through {r:under} of a civilization
+// role r (the recorded ruler of r's first participant at the event,
+// HistoryView::ruler_at_event). Figures are those of view.figure_rows();
+// a figure id outside them is skipped.
+[[nodiscard]] std::vector<std::vector<std::int64_t>> figure_event_lists(const HistoryView& view);
+
 struct HistoryDigest {
     std::vector<CivilizationDigest> civilizations;  // id order
     std::int64_t summary_threshold = 0;             // T of 21.3 item 3
@@ -219,6 +254,11 @@ struct HistoryDigest {
     bool bloc_any = false;
     std::int64_t bloc_max = 0, bloc_max_year = 0, bloc_max_civ = 0;
     std::vector<std::int64_t> bloc_max_allies;
+    // P5-06 25.2: G, the major calamities in the summary set always, in rank
+    // order (ended descending, impact descending, id ascending).
+    std::vector<std::int64_t> summary_major;
+    // P5-06 10.2: per figure (index id - 1) its renown and deeds.
+    std::vector<FigureDigest> figures;
 };
 
 // P5-03 17.2: a mixed standing settlement at E with its shares in force at

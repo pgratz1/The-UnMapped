@@ -26,13 +26,25 @@ namespace worldgen::inspect {
 // --- Kind groups (4.4) ------------------------------------------------------
 
 // Codes are never reused; a later group is appended (section 9).
-enum class EventGroup : std::uint8_t { realms = 0, settlements = 1, war = 2, calamity = 3, other = 4, monsters = 5, peoples = 6, alliances = 7 };  // peoples: P5-03, alliances: P5-04 11.2 (lead rulings)
-inline constexpr std::uint32_t ALL_GROUPS = 0xFF;
+// peoples: P5-03, alliances: P5-04 11.2 (lead rulings), figures: P5-06 11.3.
+enum class EventGroup : std::uint8_t {
+    realms = 0,
+    settlements = 1,
+    war = 2,
+    calamity = 3,
+    other = 4,
+    monsters = 5,
+    peoples = 6,
+    alliances = 7,
+    figures = 8
+};
+inline constexpr std::uint32_t ALL_GROUPS = 0x1FF;
 
 // The group of a kind key, compared as bytes; other for a key 4.4 does not
 // name. P5-02's kinds 44 to 55 are in monsters (section 9).
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;
-// "realms", "settlements", "war", "calamity", "other", "monsters".
+// "realms", "settlements", "war", "calamity", "other", "monsters",
+// "peoples", "alliances", "figures".
 [[nodiscard]] std::string_view event_group_word(EventGroup group) noexcept;
 
 // --- The browser index (4.5) ------------------------------------------------
@@ -45,11 +57,20 @@ struct CivilizationEntry {
     friend bool operator==(const CivilizationEntry&, const CivilizationEntry&) = default;
 };
 
+// P5-06 11.3: a figure, a selectable entity of type 6.
+struct FigureEntry {
+    std::int64_t id = 0, role = 0, civ = 0, born = 0;
+    std::int64_t died = -1;  // -1 while alive
+    std::string name, display_name;
+    friend bool operator==(const FigureEntry&, const FigureEntry&) = default;
+};
+
 struct EventFilter {
     std::int64_t civilization = 0, settlement = 0, region = 0;  // 0: any; several: all must hold
     std::int64_t from_year = -1, to_year = -1;  // -1: open; kept when year <= to and end_year >= from
     std::uint32_t groups = ALL_GROUPS;          // bit (1 << group)
     bool summary_only = true;                   // the summary set of the report's digest
+    std::int64_t figure = 0;                    // P5-06 11.3: 0 any (Timeline::events_of_figure)
 };
 
 struct EventEntry {
@@ -93,16 +114,17 @@ public:
     [[nodiscard]] static db::Result<BrowserIndex> build(const history::LoadedHistory& history);
 
     [[nodiscard]] std::span<const CivilizationEntry> civilizations() const noexcept { return civilizations_; }
+    [[nodiscard]] std::span<const FigureEntry> figures() const noexcept { return figures_; }  // ascending id
     [[nodiscard]] std::span<const EventEntry> events() const noexcept { return events_; }
     [[nodiscard]] const history::HistoryDigest& digest() const noexcept { return digest_; }
 
     // The ids of the events the filter keeps, ascending; reuses out. The
     // candidates are the timeline's list of the first non-zero entity field
-    // (civilization, settlement, region), else every event; each is kept when
-    // it is in every other non-zero entity's list, in the year span, in
+    // (civilization, settlement, region, figure), else every event; each is
+    // kept when it is in every other non-zero entity's list, in the year span, in
     // `groups` and, with summary_only, in the summary set. FatalError
     // "browser: no civilization <c>" / "no settlement <s>" / "no region <r>"
-    // for an id the world lacks.
+    // / "no figure <f>" for an id the world lacks.
     void select(const history::LoadedHistory& history, const EventFilter& filter,
                 std::vector<std::int64_t>& out) const;
     // FatalError "browser: no event <e>".
@@ -111,13 +133,18 @@ public:
     // FatalError "browser: no civilization <c>", "browser: bad level".
     [[nodiscard]] std::vector<history::LinkedText> block(const history::LoadedHistory& history, std::int64_t civ,
                                                          HistoryLevel level) const;
+    // P5-06 11.3: block_line_display of each line of figure_block at
+    // `level`. FatalError "browser: no figure <f>", "browser: bad level".
+    [[nodiscard]] std::vector<history::LinkedText> figure_block(const history::LoadedHistory& history,
+                                                                std::int64_t figure, HistoryLevel level) const;
     // "<span>  <sentence>[ (<note>)]", unescaped; span "<year>" or
     // "<year>-<end_year>". FatalError "browser: no event <e>".
     [[nodiscard]] std::string row_text(const history::LoadedHistory& history, std::int64_t event) const;
     // Names containing `query` as a substring, ASCII case-insensitive (A-Z
     // folded only): civilizations by id, settlements by id, then regions by
     // id (name at E, geographic name, then its region_name rows by ascending
-    // from_year; the first that matches). One match per (type, id), at most
+    // from_year; the first that matches), then (P5-06 11.3) figures by id
+    // (display name). One match per (type, id), at most
     // `limit`; none for an empty query.
     [[nodiscard]] std::vector<NameMatch> search(const history::LoadedHistory& history, std::string_view query,
                                                 std::size_t limit) const;
@@ -128,6 +155,7 @@ private:
 
     history::HistoryDigest digest_;
     std::vector<CivilizationEntry> civilizations_;
+    std::vector<FigureEntry> figures_;
     std::vector<EventEntry> events_;
 };
 
