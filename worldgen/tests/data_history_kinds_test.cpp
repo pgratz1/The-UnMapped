@@ -308,11 +308,12 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
         CHECK(race.schema.fields()[i].is_required());  // "all required" (P3-01 3)
     }
     // Per-definition checks and kind-level checks, in the order of P3-01 3.
-    REQUIRE(race.schema.checks().size() == 4U);
+    REQUIRE(race.schema.checks().size() == 5U);
     CHECK(race.schema.checks()[0].name == "race_generation_below_lifespan");
     CHECK(race.schema.checks()[1].name == "race_site_weights_positive");
     CHECK(race.schema.checks()[2].name == "race_biomes_unique");
     CHECK(race.schema.checks()[3].name == "race_settlement_kinds_unique");
+    CHECK(race.schema.checks()[4].name == "race_temper_weights");   // P5-06 4.1
     REQUIRE(race.kind_checks.size() == 3U);
     CHECK(race.kind_checks[0].name == "race_order_unique");
     CHECK(race.kind_checks[1].name == "race_order_dense");
@@ -587,6 +588,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
         f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
+        f["history/figures.toml"] = std::string(history_data::FIGURES_TOML);   // P5-06: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
@@ -614,6 +616,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
         f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
+        f["history/figures.toml"] = std::string(history_data::FIGURES_TOML);   // P5-06: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         const Load l = load(f);
         INFO(dump(l));

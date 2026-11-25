@@ -158,25 +158,25 @@ const std::vector<Monster>& monsters() {
          {"{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing", "{root} the Gold-Eyed",
           "{root}"},
          {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 60, 50,
-         200, 600, {"hamlet", "village", "town"}, 600, 40, 2000, 0, 1, true, 40},
+         200, 600, {"hamlet", "village", "town"}, 600, 40, 700, 0, 1, true, 40},
         {"giant", "Giant", "a giant of the mountains", false, "wild", {{"alpine", 900}, {"highland_moor", 500}}, 25,
          "dwarven", {"{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 100, 30, 100,
-         150, {"hamlet", "village"}, 900, 150, 3000, 2500, 2, true, 8},
+         150, {"hamlet", "village"}, 1000, 150, 1000, 4000, 2, true, 8},
         {"ogre", "Ogre", "an ogre", false, "wild",
          {{"grassland", 400}, {"heath", 600}, {"steppe", 700}, {"highland_moor", 300}}, 40, "orcish",
          {"{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat", "{root}"}, {"{root}'s Larder", "The Pit of {root}"}, 200, 1, 150, 20, 60, 40,
-         {"hamlet"}, 900, 80, 8000, 1000, 3, false, 3},
+         {"hamlet"}, 1000, 80, 2000, 2000, 3, false, 3},
         {"troll", "Troll", "a troll of the hills", false, "wild",
          {{"highland_moor", 800}, {"alpine", 600}, {"temperate_forest", 400}, {"heath", 300}}, 50, "goblin",
          {"Old {root}", "{root} the Grey", "{root} Stonehide", "{root} of the Fells", "Mossback {root}", "{root}"}, {"{root}'s Hollow", "The Den of {root}"}, 300, 1, 150, 20, 80, 60,
-         {"hamlet", "village"}, 900, 120, 5000, 2000, 3, false, 5},
-        {"undead", "Undead", "a host of the restless dead", true, "dead", {}, 15000, "human",
+         {"hamlet", "village"}, 1000, 120, 1500, 4000, 3, false, 5},
+        {"undead", "Undead", "a host of the restless dead", true, "dead", {}, 25000, "human",
          {"The Host of {place}", "The Restless of {place}", "The Dead of {place}"},
          {"The Barrows of {root}", "The Howes of {root}"}, 1500, 1, 80, 30,
-         120, 200, {"hamlet", "village"}, 900, 200, 3000, 1000, 2, false, 0},
+         120, 200, {"hamlet", "village"}, 1000, 200, 3000, 5000, 5, false, 0},
         {"wyvern", "Wyvern", "a brood of wyverns", true, "wild", {{"alpine", 700}, {"heath", 500}, {"highland_moor", 600}},
          50, "goblin", {"The {root} Brood", "The Brood of {root}", "The Screamers of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
-         120, 20, 80, 50, {"hamlet"}, 900, 60, 10000, 1000, 2, false, 0},
+         120, 20, 80, 50, {"hamlet"}, 1000, 60, 2500, 2000, 2, false, 0},
     };
     return v;
 }
@@ -186,7 +186,7 @@ const std::vector<std::string_view>& monster_fields() {
         "name", "noun", "grouped", "wake", "biomes", "wake_rate", "naming_culture", "name_forms", "lair_forms",
         "might", "range_hops", "raid_permille", "toll_min_permille", "toll_max_permille", "kill_max", "overruns",
         "overrun_permille", "active_years", "rewake_ppm", "lifespan_years", "max_alive", "flare", "hoard_permille",
-        "raid_phrases"};   // P5-03 9.5
+        "raid_phrases", "slayer_epithet"};   // P5-03 9.5; P5-06 (0.27.0)
     return v;
 }
 
@@ -200,7 +200,7 @@ struct Field {
 const std::vector<Field>& tuning_fields() {
     static const std::vector<Field> v = {
         // P5-03a 10.2: undead_min_dead 1000 (the floor of the threshold; was 4000)
-        {"living_permille", 0, 1000, 100},       {"undead_min_dead", 1, 1000000000, 1000},
+        {"living_permille", 0, 1000, 200},       {"undead_min_dead", 1, 1000000000, 1000},
         {"undead_window_years", 1, 100000, 100}, {"hunt_hops", 0, 8, 2},
         {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 20},
         {"hunt_memory_years", 1, 100000, 30},    {"slay_max_permille", 0, 1000, 900},
@@ -318,9 +318,9 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
     // pressure first; r1 4.3: prey_*; P5-03 9.4: 8; P5-03a 10.2: undead_dead_permille last
-    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U);
-    CHECK(t.name_at(t.size() - 1U) == "undead_dead_permille");
-    CHECK(t.get_int("undead_dead_permille") == 25);
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U + 1U);
+    CHECK(t.name_at(t.size() - 1U) == "undead_regions_ref");
+    CHECK(t.get_int("undead_dead_permille") == 28);
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();
     REQUIRE(p.size() == 3U);
