@@ -124,14 +124,17 @@ FLAGS = dict(
     p503=True,          # P5-03 11.1: a destination within abandon_reach_hops, the losses on the road; 11.2: ruins left
                         # standing do not fade; 7.2: the ledger calls of the ruin procedure; 7.3 owner_event; 9.4
                         # abandon public (with causes)
+    # P5-06 (generator 0.27.0)
+    nofade=False,       # P5-06 25.1 (a): no ruin fades (Q3 does nothing); ruin_fade_years and ghost_fade_years gone
 )
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
 FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
+FLAGS_027 = ("nofade",)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0")   # 0.21.0, 0.22.0: no peoples rule
+            "0.26.0", "0.27.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -146,7 +149,7 @@ def flags_for(v):
     if v not in VERSIONS:
         raise ValueError(v)
     i = VERSIONS.index(v)
-    return {k: (i >= 8 if k in FLAGS_024 else i >= 7 if k in FLAGS_023 else i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
+    return {k: (i >= 11 if k in FLAGS_027 else i >= 8 if k in FLAGS_024 else i >= 7 if k in FLAGS_023 else i >= 4 if k in FLAGS_020 else i >= 3 if k in FLAGS_019 else i >= 2 if k in FLAGS_018 else i >= 1)
             for k in FLAGS}
 
 
@@ -344,6 +347,8 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 92:   # P5-06 8.1 (0.27.0): kinds 79 to 92
+        return pe.COMPILED_027
     if len(pe.COMPILED) == 78:   # P5-04 8.1 (0.26.0): kinds 63 to 78
         return pe.COMPILED_026
     if len(pe.COMPILED) == 62 and pe.RENDER_R25:   # P5-03a 10.4: the five value rows
@@ -1807,7 +1812,10 @@ class World(pe.World):
         held = self.held(cid)
         if len(mine) < t["split_min_settlements"] or len(held) < t["split_min_regions"]:
             return None
-        if not chance_pm(self.draw("hist.peoples.split", cid, 0, 0), t["split_permille"]):
+        # P5-06 7.4: the split bonus of a short reign (FigureView::split_bonus_permille; none without the view)
+        fv = getattr(self, "figures", None)
+        bonus = fv.split_bonus_permille(cid) if fv is not None else 0
+        if not chance_pm(self.draw("hist.peoples.split", cid, 0, 0), min(1000, t["split_permille"] + bonus)):
             return None
         hs = set(held)
         INF = 1 << 62
@@ -1858,6 +1866,8 @@ class World(pe.World):
     # --- 8.6 Q3
     def q3(self):
         self.begin()
+        if FLAGS.get("nofade"):   # P5-06 25.1 (a): 8.6 removed; Q3 does nothing
+            return
         for s in self.settlements:
             if s["status"] != RUINED or self.year - s["ruined_year"] < self.t["ruin_fade_years"]:
                 continue
@@ -2577,8 +2587,9 @@ def check_r12_invariants(c, res, w, label, kind, ev, vals, causes, base):
                    vals[e[0]][3] == total and vals[e[0]][4] == n.get(e[0], 0) and e[7] == want)
     mem = t["cause_memory_years"]
     reds = {"famine", "plague", "plague_outbreak", "plague_spread", "succession_crisis", "battle", "battle_at_pass",
-            "tribute", "colony_founded", "allied_battle"}   # allied_battle: P5-04 11.1 (no older world has it)
-    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
+            "tribute", "colony_founded", "allied_battle",   # allied_battle: P5-04 11.1 (no older world has it)
+            "battle_led", "blight"}   # P5-06 11.1, 6.8 (no older world has them)
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027)}   # P5-04, P5-06
     for e in res["event"]:
         if keys[e[3]] in ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to"):
             for x in causes.get(e[0], []):

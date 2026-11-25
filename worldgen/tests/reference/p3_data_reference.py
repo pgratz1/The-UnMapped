@@ -3225,12 +3225,399 @@ def pre_026(path, kind):
     return False
 
 
+# ---------------------------------------------------------------------------
+# The 0.27.0 listings (P5-06 figures, docs/specs/p5-06-figures.md r3: 4.1 to 4.4, 8.2, 11.1, 25.1 (a), (b), 25.3),
+# derived from the 0.26.0 ones by the edits the spec states, at the spec's starting values. These are the one place
+# to edit after calibration (15.2): RACE_FIELDS_027, CULTURE_FIELDS_027, SLAYER_EPITHET_027, FIGURES_RANGES_027,
+# FIGURES_RECORDS_027, EPITHETS_027, REPORT_ENTRIES_027, UNDEAD_REGIONS_REF_027; then `golden`.
+# ---------------------------------------------------------------------------
+TEMPERS_027 = ("steady", "warlike", "peaceable", "grasping", "just")   # codes 0 to 4 (9.1)
+TEMPER_REC_027 = REC(tuple((t, INT) for t in TEMPERS_027))
+# 4.1: four race fields appended after mining_permille, all required.
+RACE_027 = RACE_026 + (("temper_weights", TEMPER_REC_027), ("general_permille", INT), ("hero_permille", INT),
+                       ("magic_permille", INT))
+assert RACE_026[-1][0] == "mining_permille"
+# race -> ((steady, warlike, peaceable, grasping, just), general_permille, hero_permille, magic_permille)
+RACE_FIELDS_027 = {"elf": ((450, 100, 250, 50, 150), 500, 100, 1000),
+                   "goblin": ((300, 300, 50, 300, 50), 250, 40, 150),
+                   "dwarf": ((450, 150, 100, 200, 100), 500, 120, 300),
+                   "faerie": ((400, 50, 350, 50, 150), 150, 60, 900),
+                   "human": ((400, 175, 175, 125, 125), 450, 150, 500),
+                   "orc": ((250, 500, 50, 150, 50), 400, 80, 150)}
+
+
+def _race_027(n, text):
+    lines = text.rstrip("\n").split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("mining_permille = ")]
+    assert len(i) == 1
+    tw, g, h, m = RACE_FIELDS_027[n[:-5]]
+    lines[i[0] + 1:i[0] + 1] = ["temper_weights = %s" % _toml_value(dict(zip(TEMPERS_027, tw))),
+                                "general_permille = %d" % g, "hero_permille = %d" % h, "magic_permille = %d" % m]
+    return "\n".join(lines) + "\n"
+
+
+RACE_FILES_027 = {n: _race_027(n, t) for n, t in RACE_FILES_026.items()}
+# 4.2: five culture fields appended after site_forms (reading F-D2: in the naming record, where site_forms is).
+CULTURE_NAMING_027 = REC(CULTURE_NAMING_023[1] + (("person_forms", ARR(STR)), ("tower_forms", ARR(STR)),
+                                                  ("library_forms", ARR(STR)), ("book_titles", ARR(STR)),
+                                                  ("regnal_permille", INT)))
+# culture -> (tower_forms, library_forms, book_titles, regnal_permille); person_forms ["{root}"] in every culture
+CULTURE_FIELDS_027 = {
+    "dwarven": (["The Rune-Tower of {root}", "{root}'s Delving-Spire"], ["The Rune-Halls of {root}"],
+                ["The Deep Reckoning", "On the Hearts of Stones", "The Rune-Book of the Forge", "The Iron Annals",
+                 "On the Binding of Runes", "The Book of Seams", "The Hammer-Canon", "The Grey Ledger"], 200),
+    "elven": (["The Star-Tower of {root}", "{root}'s White Tower"], ["The Leaf-House of {root}"],
+              ["The Lay of the First Stars", "On the Speech of Trees", "The Book of Falling Leaves",
+               "The Silver Canticle", "On Starlight and Shadow", "The Long Remembering", "The Song of the Waking",
+               "The Mirror of Waters"], 0),
+    "faerie": (["The Thorn-Tower of {root}", "{root}'s Moonspire"], ["The Dream-Hollow of {root}"],
+               ["The Book of Glimmers", "On the Dreams of Moths", "The Dew-Book", "The Little Mysteries",
+                "On Hidden Ways", "The Thistle Pages", "The Riddle of Hollows", "The Book of Moonmilk"], 0),
+    "goblin": (["The Smoke-Tower of {root}", "{root}'s Bone-Tower"], ["The Scratching-House of {root}"],
+               ["The Black Scratchings", "On Biting Things", "The Book of Smokes", "The Gnawed Pages",
+                "On the Fears of Elves", "The Rot-Book", "The Twelve Curses", "The Book of Spite"], 0),
+    "human": (["The Tower of {root}", "{root}'s Tower"], ["The Library of {root}"],
+              ["The Codex of Hours", "On the Nature of Fire", "The Grey Grimoire", "The Book of Wards",
+               "On the Turning of the Stars", "The Treatise of Bindings", "The Book of Keys", "The Ember Codex"], 250),
+    "orcish": (["The Skull-Tower of {root}", "{root}'s War-Spire"], ["The Bone-Hall of {root}"],
+               ["The Skull-Songs", "On Blood and Iron", "The Book of the Storm", "The Bone-Tally", "The Red Chants",
+                "The War-Runes", "The Ash-Book", "The Chant of Ruin"], 0)}
+PERSON_FORMS_027 = ["{root}"]
+
+
+def _culture_027(cid, text):
+    lines = text.split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("site_forms")]
+    assert len(i) == 1
+    tf, lf, bt, rp = CULTURE_FIELDS_027[cid]
+    lines[i[0] + 1:i[0] + 1] = ["person_forms = %s" % _toml_value(PERSON_FORMS_027),
+                                "tower_forms = %s" % _toml_value(tf), "library_forms = %s" % _toml_value(lf),
+                                "book_titles = %s" % _toml_value(bt), "regnal_permille = %d" % rp]
+    return "\n".join(lines)
+
+
+CULTURE_FILES_027 = {n: _culture_027(n[:-5], t) for n, t in CULTURE_FILES_023.items()}
+# 4.3: the monster field slayer_epithet after raid_phrases.
+MONSTER_027 = MONSTER_024 + (("slayer_epithet", STR),)
+SLAYER_EPITHET_027 = {"dragon": "Dragonslayer", "giant": "Giantsbane", "ogre": "Ogrebane", "troll": "Trollbane",
+                      "undead": "the Gravewarden", "wyvern": "Wyrmbane"}
+MONSTER_FILES_027 = {n: t + 'slayer_epithet = "%s"\n' % SLAYER_EPITHET_027[n[:-5]]
+                     for n, t in MONSTER_FILES_024.items()}
+assert all(t.rstrip("\n").split("\n")[-1].startswith("raid_phrases = ") for t in MONSTER_FILES_024.values())
+# 4.4: history.figures, every field required, in this order: (name, lo, hi, start) of the integers and booleans
+# (bool: lo = hi = None), the three temper records and the epithets list apart (FIGURES_027 is the schema order).
+FIGURES_RANGES_027 = (
+    ("name_rulers", None, None, True), ("reign_min_permille", 1, 4000, 500), ("reign_span_permille", 0, 4000, 1000),
+    ("accession_age_permille", 0, 1000, 250), ("accession_span_permille", 0, 1000, 250),
+    ("temper_strain_permille", 0, 4000, (1000, 1300, 700, 1000, 1000)),
+    ("temper_allied_permille", 0, 4000, (1000, 1000, 1000, 2000, 500)),
+    ("temper_spoils_permille", -1000, 1000, (0, 0, 0, -200, 200)),
+    ("short_reign_permille", 0, 4000, 500), ("short_reign_split_permille", 0, 1000, 100),
+    ("exile_permille", 0, 1000, 250), ("exile_hops", 0, 8, 3), ("general_scale_permille", 0, 1000, 1000),
+    ("skill_min", 0, 1000, 100), ("skill_max", 0, 1000, 300), ("career_permille", 0, 1000, 300),
+    ("fall_loser_permille", 0, 1000, 150), ("fall_winner_permille", 0, 1000, 30),
+    ("general_age_permille", 0, 1000, 300), ("general_age_span_permille", 0, 1000, 300),
+    ("hero_age_permille", 0, 1000, 150), ("hero_age_span_permille", 0, 1000, 200),
+    ("life_min_permille", 0, 4000, 700), ("life_span_permille", 0, 4000, 500),
+    ("hero_scale_permille", 0, 1000, 1000), ("hero_hunt_permille", 0, 1000, 30),
+    ("hero_might_permille", 0, 4000, 500), ("hero_fall_permille", 0, 1000, 300),
+    ("caster_ppm", 0, 1000000, 1500), ("caster_age_permille", 0, 1000, 400),
+    ("caster_age_span_permille", 0, 1000, 300), ("book_permille", 0, 1000, 10), ("books_max", 0, 16, 3),
+    ("blight_ppm", 0, 1000000, 500), ("blight_toll_permille", 0, 1000, 80), ("regnal_max", 2, 39, 9),
+    ("epithets", 0, 32, None), ("epithet_repeat_max", 1, 100, 2))
+FIGURES_TEMPER_RECORDS_027 = ("temper_strain_permille", "temper_allied_permille", "temper_spoils_permille")
+EPITHET_ROLES_027 = ("ruler", "claimant", "general", "hero", "caster")   # role codes 1 to 5 (9.1)
+DEEDS_027 = ("founded_years", "wars_won", "conquests", "betrayals", "realm_fell", "reign_permille", "battles_won",
+             "battles_unbeaten", "slew_might", "exiled", "books", "blights")   # 6.10's table order
+EPITHET_REC_027 = REC((("role", STR), ("deed", STR), ("min", INT), ("substantial", INT), ("text", STR)))
+# 6.10: the shipped epithets, in order (role, deed, min, substantial, text).
+EPITHETS_027 = (
+    ("ruler", "conquests", 1, 2, "the Conqueror"), ("ruler", "betrayals", 1, 1, "the Faithless"),
+    ("ruler", "realm_fell", 1, 0, "the Last"), ("ruler", "wars_won", 2, 4, "the Victorious"),
+    ("ruler", "reign_permille", 1300, 1450, "the Old"), ("ruler", "founded_years", 1, 3000, "the Founder"),
+    ("general", "battles_unbeaten", 3, 6, "the Unbeaten"), ("general", "battles_won", 5, 10, "the Hammer"),
+    ("hero", "slew_might", 1, 1200, "{slayer}"), ("claimant", "exiled", 1, 0, "the Exile"),
+    ("caster", "blights", 1, 1, "the Accursed"), ("caster", "books", 3, 0, "the Learned"))
+FIGURES_027 = tuple((n, BOOL if lo is None and n == "name_rulers" else TEMPER_REC_027 if n in FIGURES_TEMPER_RECORDS_027
+                     else ARR(EPITHET_REC_027) if n == "epithets" else INT) for n, lo, _hi, _v in FIGURES_RANGES_027)
+
+
+def _epithet_dicts(rows):
+    return [dict(role=r, deed=d, min=m, substantial=s, text=t) for r, d, m, s, t in rows]
+
+
+FIGURES_TUNING_027 = {}
+for _n, _lo, _hi, _v in FIGURES_RANGES_027:
+    FIGURES_TUNING_027[_n] = (_epithet_dicts(EPITHETS_027) if _n == "epithets" else
+                              dict(zip(TEMPERS_027, _v)) if _n in FIGURES_TEMPER_RECORDS_027 else _v)
+assert len(FIGURES_027) == 38 and list(FIGURES_TUNING_027)[-1] == "epithet_repeat_max"
+# 4.4: the zero fixture tuning of I0 (7.11).
+FIGURES_ZERO_027 = dict(FIGURES_TUNING_027, name_rulers=False, general_scale_permille=0, hero_scale_permille=0,
+                        caster_ppm=0, exile_permille=0, short_reign_split_permille=0,
+                        temper_strain_permille=dict.fromkeys(TEMPERS_027, 1000),
+                        temper_allied_permille=dict.fromkeys(TEMPERS_027, 1000),
+                        temper_spoils_permille=dict.fromkeys(TEMPERS_027, 0))
+# 18.3: figures-small (on the alliances stress data): the tuning edits; every race's general_permille and
+# hero_permille 1000; every culture's regnal_permille 1000.
+FIGURES_SMALL_027 = dict(general_scale_permille=1000, hero_scale_permille=1000, exile_permille=1000,
+                         caster_ppm=1000000, book_permille=1000, blight_ppm=100000, fall_loser_permille=500,
+                         regnal_max=3)
+# 25.3: history.monsters gains undead_regions_ref after undead_dead_permille (shipped 64).
+UNDEAD_REGIONS_REF_027 = 64
+MONSTERS_027 = MONSTERS_025 + (("undead_regions_ref", INT),)
+assert MONSTERS_025[-1][0] == "undead_dead_permille"
+# 25.1 (a), (b): ruin_fade_years and ghost_fade_years leave history.peoples.
+PEOPLES_REMOVED_027 = ("ruin_fade_years", "ghost_fade_years")
+PEOPLES_027 = tuple(f for f in PEOPLES_024 if f[0] not in PEOPLES_REMOVED_027)
+# 8.2: the report entries of kinds 79 to 92 after arms_sold, in kind order (key, salience, template).
+REPORT_ENTRIES_027 = (
+    ("came_to_rule", 15, "{figure} became the first ruler of {civilization}."),
+    ("figure_died", 15, "{figure} of {civilization} died at the age of {age}{how?.|, and the succession was disputed."
+                        "|, in exile.}"),
+    ("succession_disputed", 30, "{ruler} took the throne of {civilization} against the claim of {claimant}{outcome?, "
+                                "who was driven out|, who broke away with the far lands}."),
+    ("exiled", 25, "{figure}, who had claimed the throne of {civilization}, {hosted?fled into the wilds|went into exile "
+                   "with }{host:all}."),
+    ("reigned_at_end", 10, "At the end of the age {civilization} was ruled by {figure}."),
+    ("general_appointed", 15, "{figure} {again?took|again took} command of the armies of {civilization} against "
+                              "{enemy}."),
+    ("battle_led", 35, "{winner}{winner_general:under}{winner_ally:with} defeated {loser}{loser_general:under}"
+                       "{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} "
+                       "of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # "
+                       "of the victors fell}."),
+    ("fell_in_battle", 30, "{figure} of {civilization} fell in battle against {enemy} in {@region}."),
+    ("hero_rose", 25, "After the raids of {monster}, {figure} of {civilization} took up the hunt."),
+    ("monster_slain_by_hero", 55, "{hero} of {slayer} hunted down and slew {monster}{monster:aside}{monster:where}."),
+    ("hero_slain", 45, "{figure} of {civilization} was slain hunting {monster}{monster:where}."),
+    ("tower_founded", 40, "{figure} of {civilization} {library?raised|founded} {site} in {@region}."),
+    ("book_written", 30, "{figure} wrote {@book} at {site}."),
+    ("blight", 50, "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} "
+                   "died."))
+assert len(REPORT_ENTRIES_027) == 14
+# 8.2: the six changed templates (kinds unchanged).
+UNDER_TEMPLATES_027 = {
+    "war_declared": "{attacker}{attacker:under} declared war on {defender} over {@region}.",
+    "alliance_betrayed": "{betrayer}{betrayer:under} broke faith and made war on {betrayed}, an ally.",
+    "spoils_shared": "{principal}{principal:under} gave {ally} its share of the spoils of {@region}.",
+    "spoils_withheld": "{principal}{principal:under} kept the spoils of {@region} from {ally}, its ally.",
+    "civ_conquered": "{civilization}{civilization:under} fell to {conqueror}.",
+    "civ_ended": "{civilization}{civilization:under} came to an end."}
+# 8.2, 11.1: the cause words of kinds 10, 16, 31, 43 and 45 gain battle_led= with battle='s word (reading F-D1: right
+# after the allied_battle= entry); kinds 10, 16 and 31 gain blight=blight after it (after the battle words).
+CAUSE_KINDS_027 = CAUSE_KINDS_026
+BLIGHT_CAUSE_KINDS_027 = ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to")
+
+
+def _cause_027(key, template):
+    import re
+    m = re.search(r"battle=([^,|]*),battle_at_pass=([^,|]*),allied_battle=([^,|]*)([,|])", template)
+    assert m and m.group(1) == m.group(3), template
+    add = ",battle_led=" + m.group(1) + (",blight=blight" if key in BLIGHT_CAUSE_KINDS_027 else "")
+    return template[:m.end(3)] + add + template[m.end(3):]
+
+
+def _report_027(text):
+    import re
+    for k in CAUSE_KINDS_027:
+        m = re.search(r'\{ kind = "%s", salience = \d+, template = "([^"]*)" \}' % k, text)
+        assert m, k
+        text = text[:m.start(1)] + _cause_027(k, m.group(1)) + text[m.end(1):]
+    for k, t in UNDER_TEMPLATES_027.items():
+        m = re.search(r'\{ kind = "%s", salience = \d+, template = "([^"]*)" \}' % k, text)
+        assert m, k
+        text = text[:m.start(1)] + t + text[m.end(1):]
+    assert text.endswith("]\n")
+    return text[:-2] + "".join('  { kind = "%s", salience = %d, template = "%s" },\n' % e
+                               for e in REPORT_ENTRIES_027) + "]\n"
+
+
+def _renaming_027(text):
+    return _edit(text, 'kinds = ["battle", "battle_at_pass", "allied_battle"]\n',
+                 'kinds = ["battle", "battle_at_pass", "allied_battle", "battle_led"]\n')
+
+
+def _peoples_027(text):
+    for n in PEOPLES_REMOVED_027:
+        old = [l for l in text.split("\n") if l.startswith(n + " = ")]
+        assert len(old) == 1, n
+        text = _edit(text, "\n" + old[0] + "\n", "\n")
+    return text
+
+
+def _monsters_027(text):
+    assert text.rstrip("\n").split("\n")[-1].startswith("undead_dead_permille = ")
+    return text + "undead_regions_ref = %d\n" % UNDEAD_REGIONS_REF_027
+
+
+def figures_file_027(t=None):
+    t = FIGURES_TUNING_027 if t is None else t
+    out = ["# Figures: rulers, generals, heroes and casters (spec P5-06 4.4). Generator 0.27.0.\n",
+           "[history.figures]\n"]
+    for n, _ in FIGURES_027:
+        if n == "epithets":
+            out.append("epithets = [\n" + "".join(
+                '  { role = "%s", deed = "%s", min = %d, substantial = %d, text = "%s" },\n'
+                % (e["role"], e["deed"], e["min"], e["substantial"], e["text"]) for e in t[n]) + "]\n")
+        else:
+            out.append("%s = %s\n" % (n, _toml_value(t[n])))
+    return "".join(out)
+
+
+HISTORY_FILES_027 = dict(HISTORY_FILES_026, **{
+    "report.toml": _report_027(HISTORY_FILES_026["report.toml"]),
+    "renaming.toml": _renaming_027(HISTORY_FILES_026["renaming.toml"]),
+    "peoples.toml": _peoples_027(HISTORY_FILES_026["peoples.toml"]),
+    "monsters.toml": _monsters_027(HISTORY_FILES_026["monsters.toml"]),
+    "figures.toml": figures_file_027()})
+SPEC_FILES_027 = dict(SPEC_FILES_026, race=RACE_FILES_027, culture=CULTURE_FILES_027, monster=MONSTER_FILES_027,
+                      history=HISTORY_FILES_027)
+KINDS_027 = dict(KINDS_026)
+KINDS_027["race"] = ("races", RACE_027)
+KINDS_027["culture"] = ("cultures", (("race", STR), ("name", STR), ("naming", CULTURE_NAMING_027)))
+KINDS_027["monster"] = ("monsters", MONSTER_027)
+KINDS_027["history"] = ("history", dict(KINDS_026["history"][1], peoples=PEOPLES_027, monsters=MONSTERS_027,
+                                        figures=FIGURES_027))
+
+
+def book_title_ok(s):
+    """4.2 grammar book_title: ASCII letters, single spaces, ' and -, starting with an upper-case letter; at most
+    48 bytes (string(48, book_title))."""
+    ok = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '-")
+    return (1 <= len(s) <= 48 and "A" <= s[0] <= "Z" and all(c in ok for c in s) and "  " not in s
+            and not s.endswith(" "))
+
+
+def epithet_ok(s):
+    """4.3 grammar epithet: ASCII letters, single spaces and -, not starting or ending with a space; at most 24
+    bytes. Reading F-D3: the empty string is not an epithet (the field is required; 9.1's F3 allows an empty
+    column apart)."""
+    ok = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -")
+    return (1 <= len(s) <= 24 and all(c in ok for c in s) and "  " not in s and s[0] != " " and s[-1] != " ")
+
+
+def race_temper_messages(r):
+    """4.1 check race_temper_weights."""
+    if sum(r["temper_weights"][t] for t in TEMPERS_027) <= 0:
+        return ["temper_weights must not all be 0"]
+    return []
+
+
+def figures_check_messages(t):
+    """The named checks of 4.4 in the order the spec lists them: [(check, message)]; within a check the first
+    failing entry only (reading F-D4)."""
+    out = []
+    if t["skill_min"] > t["skill_max"]:
+        out.append(("figures_skill_ordered", "skill_min %d is above skill_max %d" % (t["skill_min"], t["skill_max"])))
+    for i, e in enumerate(t["epithets"]):
+        if e["text"] == "{slayer}" and e["deed"] != "slew_might":
+            out.append(("figures_epithet_slayer", "epithets[%d]: {slayer} needs the deed slew_might" % i))
+            break
+    for i, e in enumerate(t["epithets"]):
+        if e["substantial"] != 0 and e["substantial"] < e["min"]:
+            out.append(("figures_epithet_thresholds", "epithets[%d]: substantial %d is below min %d"
+                        % (i, e["substantial"], e["min"])))
+            break
+    return out
+
+
+def check_spec_027(c):
+    """The 0.27.0 listings say what P5-06 4.1 to 4.4, 8.2, 11.1, 25.1 and 25.3 state."""
+    h = parsed_spec("history")
+    fg = h["figures"]
+    c.eq("history.figures fields in order (4.4)", list(fg), [n for n, _ in FIGURES_027])
+    c.eq("history.figures start values (4.4)", fg, FIGURES_TUNING_027)
+    for n, lo, hi, _ in FIGURES_RANGES_027:
+        v = fg[n]
+        if n == "name_rulers":
+            c.ok("name_rulers is a bool", isinstance(v, bool))
+        elif n == "epithets":
+            c.ok("epithets 0 to 32 entries", lo <= len(v) <= hi)
+            for e in v:
+                c.ok("epithet %r role and deed" % e, e["role"] in EPITHET_ROLES_027 and e["deed"] in DEEDS_027)
+                c.ok("epithet %r thresholds in range" % e, 1 <= e["min"] <= 100000 and 0 <= e["substantial"] <= 100000)
+                c.ok("epithet %r text" % e, e["text"] == "{slayer}" or epithet_ok(e["text"]))
+        elif n in FIGURES_TEMPER_RECORDS_027:
+            c.eq("%s temper keys" % n, list(v), list(TEMPERS_027))
+            c.ok("%s inside int(%d, %d)" % (n, lo, hi), all(lo <= x <= hi for x in v.values()))
+        else:
+            c.ok("history.figures.%s inside int(%d, %d)" % (n, lo, hi), lo <= v <= hi)
+    for name, tt in (("shipped", fg), ("zero", FIGURES_ZERO_027), ("figures-small", dict(fg, **FIGURES_SMALL_027))):
+        c.eq("the %s figures tuning passes its checks" % name, figures_check_messages(tt), [])
+    for edit, want in (
+            (dict(skill_min=301), [("figures_skill_ordered", "skill_min 301 is above skill_max 300")]),
+            (dict(skill_min=300), []),
+            (dict(epithets=[dict(role="hero", deed="books", min=1, substantial=0, text="{slayer}")]),
+             [("figures_epithet_slayer", "epithets[0]: {slayer} needs the deed slew_might")]),
+            (dict(epithets=[dict(role="ruler", deed="conquests", min=3, substantial=2, text="the Conqueror")]),
+             [("figures_epithet_thresholds", "epithets[0]: substantial 2 is below min 3")]),
+            (dict(epithets=[dict(role="ruler", deed="conquests", min=3, substantial=3, text="the Conqueror")]), [])):
+        c.eq("figures checks on %r" % edit, figures_check_messages(dict(fg, **edit)), want)
+    races = parsed_spec("race")
+    for k, (tw, g, hp, m) in RACE_FIELDS_027.items():
+        r = races[k]
+        c.eq("race %s fields (4.1)" % k, (tuple(r["temper_weights"][t] for t in TEMPERS_027), r["general_permille"],
+                                          r["hero_permille"], r["magic_permille"]), (tw, g, hp, m))
+        c.eq("race %s: the four fields after mining_permille" % k, list(r)[-5:],
+             ["mining_permille", "temper_weights", "general_permille", "hero_permille", "magic_permille"])
+        c.eq("race_temper_weights passes on %s" % k, race_temper_messages(r), [])
+    c.eq("race_temper_weights all 0", race_temper_messages(dict(temper_weights=dict.fromkeys(TEMPERS_027, 0))),
+         ["temper_weights must not all be 0"])
+    cul = parsed_spec("culture")
+    for k, (tf, lf, bt, rp) in CULTURE_FIELDS_027.items():
+        nm = cul[k]["naming"]
+        c.eq("culture %s fields (4.2)" % k, (nm["person_forms"], nm["tower_forms"], nm["library_forms"],
+                                             nm["book_titles"], nm["regnal_permille"]), (PERSON_FORMS_027, tf, lf, bt, rp))
+        c.ok("culture %s book titles 4 to 32, each a book_title" % k,
+             4 <= len(bt) <= 32 and all(book_title_ok(x) for x in bt))
+        c.ok("culture %s tower and library forms hold {root}" % k, all("{root}" in f for f in tf + lf))
+    mons = parsed_spec("monster")
+    for k, ep in SLAYER_EPITHET_027.items():
+        c.eq("monster %s slayer_epithet (4.3)" % k, mons[k]["slayer_epithet"], ep)
+        c.ok("monster %s slayer_epithet is an epithet" % k, epithet_ok(ep))
+        c.eq("monster %s: slayer_epithet after raid_phrases" % k, list(mons[k])[-2:], ["raid_phrases", "slayer_epithet"])
+    evl = h["report"]["events"]
+    c.eq("report lists 92 kinds (0.27.0)", len(evl), 92)
+    c.eq("entries 79 to 92 (8.2)", [(e["kind"], e["salience"], e["template"]) for e in evl[78:]],
+         [tuple(e) for e in REPORT_ENTRIES_027])
+    for k, t in UNDER_TEMPLATES_027.items():
+        c.eq("changed template %s (8.2)" % k, [e for e in evl if e["kind"] == k][0]["template"], t)
+    for k in CAUSE_KINDS_027:
+        t = [e for e in evl if e["kind"] == k][0]["template"]
+        c.ok("%s names battle_led (8.2, 11.1)" % k, "battle_led=" in t)
+        c.eq("%s names blight (8.2)" % k, "blight=blight" in t, k in BLIGHT_CAUSE_KINDS_027)
+    sl = [r for r in h["renaming"]["rules"] if r["key"] == "slaughter"][0]
+    c.eq("renaming slaughter kinds (11.1)", sl["kinds"], ["battle", "battle_at_pass", "allied_battle", "battle_led"])
+    for n in PEOPLES_REMOVED_027:
+        c.ok("history.peoples has no %s (25.1)" % n, n not in h["peoples"])
+    c.eq("history.monsters.undead_regions_ref (25.3)", h["monsters"]["undead_regions_ref"], UNDEAD_REGIONS_REF_027)
+    c.eq("undead_regions_ref right after undead_dead_permille", list(h["monsters"])[-2:],
+         ["undead_dead_permille", "undead_regions_ref"])
+    c.eq("history ids (0.27.0)", sorted(h), ["alliances", "chronology", "conflict", "engine", "figures", "monsters",
+                                             "peoples", "relations", "renaming", "report"])
+
+
+def pre_027(path, kind):
+    """A race, culture, monster or history directory older than 0.27.0 (P5-06): no temper_weights in a race file;
+    no regnal_permille in a culture file; no slayer_epithet in a monster file; no figures.toml."""
+    if kind == "history":
+        return not os.path.exists(os.path.join(path, "figures.toml"))
+    word = {"race": "temper_weights", "culture": "regnal_permille", "monster": "slayer_epithet"}.get(kind)
+    if word is None:
+        return False
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                if word not in f.read():
+                    return True
+    return False
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0")
+            "0.26.0", "0.27.0")
 
 
 def at_least(v):
@@ -3240,8 +3627,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0") else ("culture", "history", "race")
-    if v == "0.26.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0") else ("culture", "history", "race")
+    if v == "0.27.0":
+        KINDS, SPEC_FILES = KINDS_027, SPEC_FILES_027
+    elif v == "0.26.0":
         KINDS, SPEC_FILES = KINDS_026, SPEC_FILES_026
     elif v == "0.25.0":
         KINDS, SPEC_FILES = KINDS_025, SPEC_FILES_025
@@ -3353,6 +3742,9 @@ def read_dir_files(path, directory):
 
 def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
+    if kind in ("race", "culture", "monster", "history") and not pre_027(path, kind) and (
+            kind == "culture" or not pre_024(path, kind)):
+        return "0.27.0"   # P5-06
     if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2); phrases at 0.24.0 (P5-03 9.5, 13)
         return "0.23.0" if pre_024(path, kind) else "0.24.0"
     if kind in ("race", "history") and not pre_024(path, kind) and not pre_026(path, kind):
@@ -3390,6 +3782,8 @@ def same_version(kind, a, b):
         a, b = ("0.20.0" if x in ("0.21.0", "0.22.0", "0.23.0") else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.24.0
         a, b = ("0.23.0" if x == "0.24.0" else x for x in (a, b))
+    if kind == "beast":   # P5-06 changes the race, culture, monster and history files
+        a, b = ("0.26.0" if x == "0.27.0" else x for x in (a, b))
     if kind in ("culture", "beast", "monster"):   # P5-04 changes the race and history files only
         a, b = ("0.25.0" if x == "0.26.0" else x for x in (a, b))
     if kind in ("race", "culture", "beast", "monster"):   # P5-03a changes the history files only
@@ -3669,6 +4063,14 @@ def fx_raw(v):
 
 def check_spec_invariants(c):
     """At 0.24.0: every check of the 0.23.0 listings on them, then check_spec_024 on the 0.24.0 listings."""
+    if at_least("0.27.0"):
+        use_version("0.26.0")
+        try:
+            check_spec_invariants(c)
+        finally:
+            use_version("0.27.0")
+        check_spec_027(c)
+        return None
     if at_least("0.26.0"):
         use_version("0.25.0")
         try:
