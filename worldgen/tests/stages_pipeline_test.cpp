@@ -490,10 +490,10 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     REQUIRE_FALSE(bytes.empty());
     CHECK(dbtest::read_file(dir.file("content.db")) == bytes);
     // The empty world of seed 0 with the content hash of no data, generator
-    // 0.24.0 (schema version 10). The CLI case empty-seed-0 of P0-04 section 9 carries the content
+    // 0.25.0 (schema version 10). The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
-    CHECK(worldgen::sha256_hex(bytes) == "4c607319bcccc2d4bf23534af23fdad07f6b6990566bcf94a66576ed9c90a89d");
+    CHECK(worldgen::sha256_hex(bytes) == "f269a85e7ead85e378438cb696487d7aa0bef31d8460e0d7d1d77edb39639aea");
     // The test pattern at several thread counts: identical bytes.
     worldgen::WorldParams t;
     t.seed = 0;
@@ -506,7 +506,7 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     const auto tp = dbtest::read_file(dir.file("tp1.db"));
     CHECK(dbtest::read_file(dir.file("tp2.db")) == tp);
     CHECK(dbtest::read_file(dir.file("tp5.db")) == tp);
-    CHECK(worldgen::sha256_hex(tp) == "947027056feb7247ca715ebc0be0ab3a1cf083ad7e5fda5c9277f4694fa91529");  // content hash of no data, generator 0.24.0
+    CHECK(worldgen::sha256_hex(tp) == "2b7177fdf69e3d526f5e5ff4c6d1161dbcdf0dbf7ba559938a58253165bc668f");  // content hash of no data, generator 0.25.0
 }
 
 TEST_CASE("generate: an unusable stage limit, or a content hash that does not match, is fatal and leaves nothing") {
