@@ -272,10 +272,6 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
     std::vector<std::string> out;
     const Rows r(w);
     const Index& x = r.x();
-    const auto alive = [&](std::int64_t c, std::int64_t y) {
-        const Row& cv = *x.civ.at(c);
-        return at(cv, 6) <= y && (is_null(cv, 8) || y < at(cv, 8));
-    };
     // 1
     for (const auto& [kind, cap] : std::vector<std::pair<std::string, std::int64_t>>{{"alliance", d.allies_max},
                                                                                   {"trade", d.trade_max}}) {
