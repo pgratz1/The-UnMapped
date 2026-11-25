@@ -475,7 +475,8 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             timeline_fatal(r.kind + " row of figure " + num(r.a_id) + " and civilization " + num(r.b_id) +
                            " names no such entity");
         }
-        const std::int64_t to = r.until.value_or(t.end_year_);
+        // An open row (no until) holds through E inclusive (lead ruling 2026-11-25).
+        const std::int64_t to = r.until.value_or(t.end_year_ + 1);
         if (ruled) {
             t.civ_rulers_[*c].push_back(Term{t.figures_[*f].office_from, to, r.a_id});
         } else {
@@ -954,7 +955,7 @@ std::vector<std::int64_t> Timeline::figures_alive(std::int64_t year) const {
     require_year(year);
     std::vector<std::int64_t> out;
     for (const db::FigureRow& f : figures_) {
-        if (f.born <= year && year < f.died.value_or(end_year_)) {
+        if (f.born <= year && year < f.died.value_or(end_year_ + 1)) {
             out.push_back(f.id);
         }
     }
@@ -985,7 +986,7 @@ FigureState Timeline::figure_at(std::int64_t figure, std::int64_t year) const {
         timeline_fatal("no figure " + num(figure));
     }
     const db::FigureRow& f = figures_[*i];
-    const bool alive = f.born <= year && year < f.died.value_or(end_year_);
+    const bool alive = f.born <= year && year < f.died.value_or(end_year_ + 1);
     std::int64_t status = f.status;
     if (year < f.born) {
         status = 0;

@@ -401,6 +401,11 @@ public:
     [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> last_peace(std::int64_t a, std::int64_t b) const;
     // 5.1's front(x, y) with front_hops(x, y) is not empty.
     [[nodiscard]] bool reaches(const StepContext& context, std::int64_t x, std::int64_t y) const;
+    // 5.1's presence of civ as amended by r9 20.1 (hidden refuges), ascending
+    // region ids; the one definition, read by the figures' exile reach (P5-06 6.5).
+    [[nodiscard]] std::vector<std::int64_t> presence_of(const StepContext& context, std::int64_t civ) const {
+        return presence(context, civ);
+    }
     // The war of declaration event `war`; FatalError when there is none.
     [[nodiscard]] bool war_open(std::int64_t war) const;
     [[nodiscard]] std::int64_t war_end_event(std::int64_t war) const;
