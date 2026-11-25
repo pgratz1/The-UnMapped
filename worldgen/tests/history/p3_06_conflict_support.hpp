@@ -9,6 +9,7 @@
 // with probe subsystems. Library API of P3-06 only through
 // p3_06_conflict_api.hpp.
 
+#include "worldgen/history/alliances.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/renaming.hpp"
 #include "worldgen/history/relations.hpp"
@@ -53,6 +54,10 @@ inline bool is_cede(std::int64_t k) { return k == k_region_ceded || k == k_settl
 inline constexpr std::int64_t k_claim_dropped = 41, k_refuge_hidden = 42;
 // P5-02 10.1 (generator 0.23.0): the monsters' appearance (a flare-up's trigger, 7.4) and the overrun (a ruin, 6.4.3).
 inline constexpr std::int64_t k_monster_appeared = 44, k_settlement_overrun = 49;
+// P5-04 8.1, 11.1 (generator 0.26.0): an ally's join (its war row is the ally's, not a war: 10.4) and the allied
+// battle, a battle kind wherever the statistics read battles (the reference's BATTLES()).
+inline constexpr std::int64_t k_ally_joined_war = 68, k_allied_battle = 71;
+inline bool is_battle_kind(std::int64_t k) { return k == k_battle || k == k_battle_at_pass || k == k_allied_battle; }
 
 // --- Golden file ------------------------------------------------------------------------------------
 
@@ -360,7 +365,7 @@ inline std::vector<std::string> stats_lines_21(const Tables& t, const eng::Histo
         groups[{x.role1(d, 2), at(e, 5)}].push_back(d);
         bool changed = false;
         for (const std::int64_t b : x.kids(d)) {
-            if (x.kind(b) != k_battle && x.kind(b) != k_battle_at_pass) continue;
+            if (!is_battle_kind(x.kind(b))) continue;   // P5-04 11.1
             for (const std::int64_t sg : x.kids(b)) {
                 if (x.kind(sg) != k_siege) continue;
                 for (const std::int64_t f : x.kids(sg)) {
@@ -453,10 +458,12 @@ inline std::vector<std::string> stats_lines_06(const Tables& t, const eng::Histo
     const Index x(t);
     auto rel_kind = [](const Row& r) { return r[4].bytes; };
     std::int64_t enmity = 0, peace = 0, total = 0, mx = 0;
+    // P5-04 10.4: a war row opened by an ally_joined_war is an ally's, not a war
+    const auto joined = [&](const Row& r) { return rel_kind(r) == "war" && x.kind(at(r, 7)) == k_ally_joined_war; };
     for (const Row& r : t.relation) {
         enmity += rel_kind(r) == "enmity" ? 1 : 0;
         peace += rel_kind(r) == "peace" ? 1 : 0;
-        if (rel_kind(r) == "war") {
+        if (rel_kind(r) == "war" && !joined(r)) {
             const std::int64_t y = (is_null(r[6]) ? in.params.span : at(r, 6)) - at(r, 5);
             total += y;
             mx = std::max(mx, y);
@@ -490,7 +497,7 @@ inline std::vector<std::string> stats_lines_06(const Tables& t, const eng::Histo
     for (const db::RaceRow& r : in.races) {
         std::int64_t n = 0;
         for (const Row& rel : t.relation) {
-            n += (rel_kind(rel) == "war" && at(*x.cv.at(at(rel, 1)), 2) == r.id) ? 1 : 0;
+            n += (rel_kind(rel) == "war" && !joined(rel) && at(*x.cv.at(at(rel, 1)), 2) == r.id) ? 1 : 0;
         }
         o.push_back("wars_attacker_" + r.key + " = " + std::to_string(n));
     }
@@ -527,7 +534,7 @@ inline std::vector<std::string> war_lines_from_rows(const Tables& t) {
         }
         std::int64_t battles = 0, sacked = 0, taken = 0;
         for (const std::int64_t b : x.kids(w)) {
-            if (x.kind(b) != k_battle && x.kind(b) != k_battle_at_pass) continue;
+            if (!is_battle_kind(x.kind(b))) continue;   // P5-04 11.1
             ++battles;
             for (const std::int64_t s : x.kids(b)) {
                 if (x.kind(s) != k_siege) continue;
@@ -1087,7 +1094,7 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
             if (k == k_peace) {
                 std::int64_t bled = 0;
                 for (const std::int64_t b : x.kids(d)) {
-                    if (x.kind(b) != k_battle && x.kind(b) != k_battle_at_pass) continue;
+                    if (!is_battle_kind(x.kind(b))) continue;   // P5-04 11.1
                     bled += x.role1(b, 2) == loser ? x.values.at(b).at(2) : x.values.at(b).at(1);
                 }
                 CHECK_MESSAGE(bled > 0, "peace e" << id << ": its loser lost no one in the war (20.19 item 7)");
@@ -1795,6 +1802,9 @@ struct ConflictConfig {
     std::unique_ptr<worldgen::history::MonstersSubsystem> monsters;
     // P5-03 6.6 item 3: the relations subsystem after monsters, the people ledger and the disposition view
     std::unique_ptr<worldgen::history::RelationsSubsystem> relations;
+    // P5-04 6.1, 6.10 item 3 (0.26.0): the alliances after the relations, in the full configuration only (the
+    // configurations without relations or monsters build none, as their I0 statements read)
+    std::unique_ptr<worldgen::history::AlliancesSubsystem> alliances;
 
     // with_relations defaults to with_monsters: the full configuration of the history stage (0.24.0), or P5-02's
     // configuration without monsters, which has no relations either.
@@ -1812,6 +1822,12 @@ struct ConflictConfig {
             relations = std::make_unique<worldgen::history::RelationsSubsystem>(*pair->peoples.sub, *pair->sub, c);
             pair->peoples.sub->set_ledger(relations.get());
             pair->sub->set_dispositions(relations.get());
+            if (monsters) {
+                alliances = std::make_unique<worldgen::history::AlliancesSubsystem>(*pair->peoples.sub, *pair->sub,
+                                                                                    *relations, c);
+                pair->sub->set_alliances(alliances.get());
+                alliances->set_sites(monsters.get());
+            }
         }
     }
     void add_before(std::vector<eng::Step> steps, FnSubsystem::Fn fn) {
@@ -1833,6 +1849,7 @@ struct ConflictConfig {
         c.subsystems.push_back(renaming.get());
         if (monsters) c.subsystems.push_back(monsters.get());
         if (relations) c.subsystems.push_back(relations.get());
+        if (alliances) c.subsystems.push_back(alliances.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
         if (monsters) c.tension.push_back(monsters.get());

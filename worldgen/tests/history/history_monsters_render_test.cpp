@@ -426,8 +426,9 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
             bp + R + ", 1, 4): count equals the previous row of this region and beast");
     // settlement 4 of geo-seed-42-512 is faded after its sacking (ending 1, derived through its ruin_faded's cause,
     // r1 25 item 3); at 0.24.0 settlement 1 (the witness at 0.23.0) stands to the end
-    refused("ending", "UPDATE settlement SET ending = 4 WHERE id = 4;",
-            "corrupt table 'settlement': row 4: ending 4 is not its ruin's ending 1");
+    // 0.26.0: s4 of the 512 world is a ruin left by famine (ending 4), so the corruption is a sack's code
+    refused("ending", "UPDATE settlement SET ending = 1 WHERE id = 4;",
+            "corrupt table 'settlement': row 4: ending 1 is not its ruin's ending 4");
     // events: a participant of type 8 with no row; a kind 44 without its site; a value beast with no row (R4)
     {
         const auto e = eng::view_error(open_world(corrupt(

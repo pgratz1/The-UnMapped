@@ -10,6 +10,8 @@
 
 #include <doctest/doctest.h>
 
+#include <limits>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -662,7 +664,11 @@ TEST_CASE("P3-07 5.1: digest_history on H1 (peaks, counts, milestones, relations
     CHECK(d.summary_threshold == 20);
     // the stats of the digest are the [stats] block, in order
     std::vector<std::pair<std::string, std::int64_t>> stats;
-    for (const auto& kv : d.stats) stats.emplace_back(kv.first, kv.second);
+    // P5-04 10.5: a value printed `-` (no ended alliance, no spoils owed) is the digest's INT64_MIN; stats_list
+    // reads `-` as -1
+    for (const auto& kv : d.stats) {
+        stats.emplace_back(kv.first, kv.second == std::numeric_limits<std::int64_t>::min() ? -1 : kv.second);
+    }
     CHECK(stats == hrtest::stats_list(full("h1-war-and-ruin")));   // r19 25.7 item 4: full's block
     // H2: fewer than six events of the civilization, and none of the peaks
     const auto r2 = hrtest::open_world(hrtest::fixture_world("h2-minimal"));

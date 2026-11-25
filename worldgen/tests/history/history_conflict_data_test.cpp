@@ -148,7 +148,7 @@ TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 59 fie
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
-    CHECK(r.size() == 61U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1; r22 +2
+    CHECK(r.size() == 68U);  // P5-04 4.3 (0.26.0): seven more; 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1; r22 +2
     CHECK(r.get_int("quarrel_strain") == 600);
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
@@ -325,9 +325,13 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
     const std::vector<std::string_view> p503 = {"hist.beasts.bold_kind", "hist.monsters.fear",
                                                 "hist.peoples.abandon_loss", "hist.relations.expel",
                                                 "hist.relations.settlers"};
-    REQUIRE(at + 9 + p502.size() + p503.size() == names.size() - 1);
+    // P5-04 3 (generator 0.26.0): the five hist.alliances streams after hist.relations.settlers, in this order
+    const std::vector<std::string_view> p504 = {"hist.alliances.form", "hist.alliances.join", "hist.alliances.trade",
+                                                "hist.alliances.spoils", "hist.alliances.mine"};
+    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() == names.size() - 1);
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
     for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
+    for (std::size_t i = 0; i < p504.size(); ++i) CHECK(names[at + 10 + p502.size() + p503.size() + i] == p504[i]);
 }
 
 }  // TEST_SUITE

@@ -343,7 +343,7 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
         CHECK(last.get_int("salience") == 60);
         CHECK(last.get_string("template") ==   // P5-02 21.2: a realm's seat, the ravage
               "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
-              "slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
+              "slaughter,allied_battle=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
               "ravage|After |, }{@region_former} became known as {@region}.");
     }
 }

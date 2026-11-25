@@ -104,7 +104,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
         {"param.map_size", "1024"},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "10"},   // P5-03 16.1
+        {"schema_version", "11"},   // P5-03 16.1; P5-04 9.2
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -136,7 +136,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 10);  // schema 9 (P5-02 11.1)
+    CHECK(dbtest::be32(b, 60) == 11);  // schema 11 (P5-04 9.2)
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -848,8 +848,8 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         CHECK(r.error().message == "world schema version 4, this build reads 11");
     }
-    SUBCASE("meta.schema_version 11, 7 and 4") {   // 11: above this build's 10 (P5-03 16.1)
-        CHECK(open_code(variant("msv11.db", "UPDATE meta SET value = '11' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 12, 7 and 4") {   // 12: above this build's 11 (P5-04 9.2)
+        CHECK(open_code(variant("msv12.db", "UPDATE meta SET value = '12' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("msv7.db", "UPDATE meta SET value = '7' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
@@ -946,7 +946,7 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
     SUBCASE("validation order: the earlier check wins") {
         CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 10")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 11; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 12; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

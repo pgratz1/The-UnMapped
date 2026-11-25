@@ -10,6 +10,7 @@
 // subsystems that act through State as P3-06 will (13). Empty until the
 // implementation's header exists (p3_05_peoples_api.hpp).
 
+#include "p5_04_alliances_data.hpp"
 #include "p3_05_peoples_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -179,8 +180,8 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
             }
         }
         CHECK(cat.kinds[i + 5].salience == w.salience);
-        CHECK(cat.kinds[i + 5].templ == w.templ);
-        CHECK(eng::template_problem(cat.kinds[i + 5], w.templ) == std::nullopt);
+        CHECK(cat.kinds[i + 5].templ == p504data::with_allied_cause(w.templ));   // P5-04 11.1
+        CHECK(eng::template_problem(cat.kinds[i + 5], cat.kinds[i + 5].templ) == std::nullopt);
     }
     // 17i: kind 31 settlement_abandoned_to (r6 11): caused, region and settlement use 1, three 1-1 roles
     for (const eng::KindDef* k : {&compiled.kinds[30], &cat.kinds[30]}) {
@@ -201,7 +202,7 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
         CHECK(k->values == std::vector<std::string>{"settled", "lost"});
     }
     const char* t31 = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"
-                      "battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to "
+                      "battle_at_pass=war,allied_battle=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to "
                       "{destination}{lost?|, and one was lost|, and # were lost}.";
     CHECK(cat.kinds[30].salience == 55);
     CHECK(cat.kinds[30].templ == t31);  // history.report lists it (data)

@@ -30,7 +30,7 @@ std::string roles_text(const eng::KindDef& k) {
 
 const char* const KIND43_TEMPLATE =
     "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
-    "slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, "
+    "slaughter,allied_battle=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, "
     "}{@region_former} became known as "
     "{@region}.";
 

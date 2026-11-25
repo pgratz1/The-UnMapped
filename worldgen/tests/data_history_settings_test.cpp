@@ -180,6 +180,7 @@ TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race o
     f["history/report.toml"] = std::string(history_data::REPORT_TOML);
     f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4: a required fixed id
     f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2: a required fixed id
+    f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
     history_data::add_monster_files(f);   // P5-02 4.1 to 4.3: required kinds and fixed id (dragon and ogre load)
     const Load l = load(f);
     INFO(dump(l));

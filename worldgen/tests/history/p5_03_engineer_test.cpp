@@ -65,7 +65,11 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
                                           {"foe_monster_memory", wd::Value::integer(0)},
                                           {"meet_sealed_hops", wd::Value::integer(-1)},
                                           {"conquest_settlers_span_permille", wd::Value::integer(0)}});
-    return with_fields(c, "race", "", {{"stances", wd::Value::array({})}});
+    // P5-04 7.14 (0.26.0): the alliances at their zero too (the stage without relations builds none)
+    const wd::ContentSet a = with_fields(c, "history", "alliances",
+                                         {{"ally_hops", wd::Value::integer(-1)}, {"trade_hops", wd::Value::integer(-1)},
+                                          {"mine_permille", wd::Value::integer(0)}});
+    return with_fields(a, "race", "", {{"stances", wd::Value::array({})}, {"origin_allies", wd::Value::array({})}});
 }
 
 // The shipped configuration without RelationsSubsystem, no ledger and no

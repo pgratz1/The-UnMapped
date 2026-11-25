@@ -261,6 +261,31 @@ inline wd::ContentSet without_stances(const wd::ContentSet& base) {
 
 inline wd::Value V(std::int64_t v) { return wd::Value::integer(v); }
 
+// Every race's `origin_allies` replaced by the empty array (P5-04 4.2's zero fixture).
+inline wd::ContentSet without_origin_allies(const wd::ContentSet& base) {
+    wd::ContentSet c = base;
+    for (wd::KindContent& k : c.kinds) {
+        if (k.kind != "race") continue;
+        for (wd::Definition& d : k.definitions) {
+            wd::Record r;
+            for (std::size_t i = 0; i < d.record.size(); ++i) {
+                const bool o = d.record.name_at(i) == "origin_allies";
+                r.add(d.record.name_at(i), o ? wd::Value::array({}) : d.record.value_at(i));
+            }
+            d.record = std::move(r);
+        }
+    }
+    return c;
+}
+
+// P5-04 4.2: the zero tuning of P5-04's I0 (7.14): no reach, no trade reach, no mine, no origin ally. The
+// configurations "without" a subsystem of P5-02 and P5-03 build no alliances either, so their I0 runs the stage with
+// this tuning (by P5-04's I0, the same as without the subsystem).
+inline wd::ContentSet alliances_zero_of(const wd::ContentSet& base) {
+    return without_origin_allies(
+        with_history(base, "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}}));
+}
+
 // 4.2 the zero tuning of I0 (7.4), with every race's stances empty.
 inline wd::ContentSet zero_of(const wd::ContentSet& base) {
     return without_stances(with_history(

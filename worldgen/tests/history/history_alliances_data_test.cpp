@@ -73,7 +73,7 @@ void one_failure(const Files& f, const std::string& path, const std::string& che
 // The race checks run after loading (history::check_history_data, as P5-03's race_stances tests). An edit of one
 // race's list can fail the other race's check too (the faeries list the elves, who list them no longer), so the
 // error of `def` is looked for among the errors.
-void race_failure(const Files& f, const std::string& path, const std::string& def, const std::string& message) {
+void race_failure(const Files& f, const std::string& /*path*/, const std::string& def, const std::string& message) {
     const Load l = load(f);
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -81,7 +81,8 @@ void race_failure(const Files& f, const std::string& path, const std::string& de
     REQUIRE_FALSE(e.empty());
     bool found = false;
     for (const wd::LoadError& x : e) {
-        found = found || (x.path == path && x.message == "check 'race_origin_allies' failed for '" + def + "': " + message);
+        // the error's path is the races directory (as race_stances'); `path` names the file edited
+        found = found || x.message == "check 'race_origin_allies' failed for '" + def + "': " + message;
     }
     CHECK_MESSAGE(found, (e.front().path + ": " + e.front().message));
 }
