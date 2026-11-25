@@ -758,21 +758,19 @@ std::int64_t FiguresSubsystem::name_reign(StepContext& ctx, std::int64_t c, std:
 // --- Disputed successions and exiles (6.5) ---------------------------------------------------------------
 
 std::int64_t FiguresSubsystem::reach(const StepContext& ctx, std::int64_t from, std::int64_t to) const {
-    const State& state = ctx.state();
     const PeoplesGeo& g = peoples_.geo();
     const std::int64_t nr = g.region_count();
+    if (conflict_ == nullptr) {
+        fail("history: figures: exile reach without the conflict subsystem");
+    }
+    // Spec 6.5 r3: the presence of P3-06 5.1 as amended by r9 20.1 (a hidden
+    // fled refuge does not count, and a held region with one drops out), read
+    // from the conflict subsystem's one definition.
     const auto presence = [&](std::int64_t civ) {
         std::vector<std::uint8_t> in(static_cast<std::size_t>(nr) + 1, 0);
-        for (std::int64_t r = 1; r <= nr; ++r) {
-            if (state.region(r).owner == civ) {
+        for (const std::int64_t r : conflict_->presence_of(ctx, civ)) {
+            if (r >= 1 && r <= nr) {
                 in[static_cast<std::size_t>(r)] = 1;
-            }
-        }
-        const std::int64_t ns = settlement_count(state);
-        for (std::int64_t id = 1; id <= ns; ++id) {
-            const Settlement& s = state.settlement(id);
-            if (s.owner_civ == civ && standing(s) && ctx.visible(s) && s.region >= 1 && s.region <= nr) {
-                in[static_cast<std::size_t>(s.region)] = 1;
             }
         }
         return in;
@@ -1145,9 +1143,13 @@ void FiguresSubsystem::stand_down(StepContext& ctx) {
             continue;
         }
         // Lead ruling G6 (R45): a war closed by a principal's end stands its
-        // generals down with that realm's ending event.
+        // generals down with that realm's ending event. Only a war closed
+        // without an end event of its own takes it: a war that ended by its
+        // own peace, war_won or truce keeps that event even when a side ends
+        // later in the same step (an end event that is the realm's end is
+        // already that event).
         std::int64_t end = conflict_->war_end_event(w);
-        {
+        if (end == 0) {
             const KnownWar& k0 = wars_.at(w);
             const Civilization& ca = ctx.state().civ(k0.attacker);
             const Civilization& cd = ctx.state().civ(k0.defender);
