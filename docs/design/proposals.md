@@ -1463,3 +1463,11 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - The spoils target under that rule (Q-P5-04a-1, later the same day): "I'm good with the way that rule plays out, you can continue." SP2 is restated to a spurning in 10% to 35% of worlds; the P5-04a spec (r1, branch `p5/04a-spec`) is approved.
 - Status: decided
 
+
+### The balance between the races at the end of history (Paul, 2026-11-25)
+
+- Section: 5 (races), 13 (phases P5 and P6).
+- Observation (Paul, in the viewer at 0.26.0 and the 0.27.0 preview): the elves are usually beaten down by the end, often to one region, and leave many ruins. Measured on 100 default worlds at 0.26.0, regions held at the end: goblins median 12 (mean 12.4), humans 3 (5.1), elves 2 (3.3), orcs 2 (3.4), faeries 2 (2.6), dwarves 2 (2.1); no race is ever wiped out.
+- Decision (Paul, 2026-11-25): keep it as it is. "It will be interesting to see if dwarven weapons and the roads will make any difference in that."
+- For later stages: no target on the spread between races. Validation of the stage that adds roads (P6) and of any change to arms reports this table again, against these figures, so the effect can be seen.
+- Status: decided
