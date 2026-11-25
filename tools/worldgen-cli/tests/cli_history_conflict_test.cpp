@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "history/p5_06_history_section.hpp"
 #include "worldgen/db/reader.hpp"
 
 #ifndef UNMAPPED_P3_06_GOLDEN_PATH
@@ -98,7 +99,7 @@ std::string check_golden_db(const Sandbox& sb, const std::string& name, const fs
     }
     CHECK(tables == 21U);   // P5-03 16.1: race_relation, settlement_race;  // the thirteen history tables of P3-04 9.1, region_name (P5-12 7.2) and the five of P5-02 11.1
     const std::string report = run_ok(sb, {"report", "--db", u8(db)});
-    CHECK(section(report, "[history]") == rep);
+    CHECK(p506section::strip_figure_counts(section(report, "[history]")) == rep);   // P5-06 9.4
     const std::size_t c = report.find("[chronology]\n");
     const std::size_t h = report.find("[history]\n");
     REQUIRE(c != std::string::npos);

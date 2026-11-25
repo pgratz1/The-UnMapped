@@ -1396,8 +1396,8 @@ TEST_CASE("P3-01 4, P3-02 3: the culture_naming record's grammars, lengths and n
         CHECK(e.line == 5U);  // [culture.elven.naming]
         CHECK(e.message == "missing required field 'culture.elven.naming." + std::string(field) + "'");
     }
-    CHECK(contains(only_error(load(shipped_edited(path, "min_letters = 4\n", "min_letters = 4\nperson_forms = [\"{root}\"]\n"))).message,
-                   "culture.elven.naming.person_forms"));
+    CHECK(contains(only_error(load(shipped_edited(path, "min_letters = 4\n", "min_letters = 4\nbogus_field = 1\n"))).message,
+                   "culture.elven.naming.bogus_field"));
     // The naming table is required too.
     {
         std::string text = history_data::culture_toml(history_data::culture_listings()[1]);
