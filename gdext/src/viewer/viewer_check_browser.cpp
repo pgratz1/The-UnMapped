@@ -1071,6 +1071,85 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
                    "), B hides and shows the right pane (" + (hidden && shown ? "ok" : "no") + ")");
     }
 
+    // B13 (P5-04 11.2): the kind group alliances, last in the group menu,
+    // filters the list to its kinds; allied_battle stays in war and
+    // mine_opened in settlements; a realm's block shows its allies lines.
+    {
+        model->clear_selection();
+        model->set_browser_level("full");
+        const godot::PackedStringArray groups = model->get_event_groups();
+        std::vector<std::string> want_groups;
+        for (std::uint32_t code = 0; code < 32U; ++code) {
+            if ((worldgen::inspect::ALL_GROUPS & (std::uint32_t{1} << code)) != 0U) {
+                want_groups.emplace_back(
+                    worldgen::inspect::event_group_word(static_cast<worldgen::inspect::EventGroup>(code)));
+            }
+        }
+        std::vector<std::string> got_groups;
+        for (int64_t i = 0; i < groups.size(); ++i) {
+            got_groups.push_back(to_utf8(groups[i]));
+        }
+        godot::OptionButton* menu = screen.event_group();
+        const int32_t last = menu->get_item_count() - 1;
+        const bool listed = got_groups == want_groups && got_groups.size() == 8 && got_groups.back() == "alliances" &&
+                            menu->get_item_count() == groups.size() + 1 && menu->get_item_text(last) == "alliances";
+        menu->select(last);
+        menu->emit_signal("item_selected", last);  // as a pick in the menu
+        std::vector<int64_t> want;
+        std::vector<int64_t> war_kinds;
+        std::vector<int64_t> settlement_kinds;
+        for (const auto& e : full.chronicle) {
+            const auto group = worldgen::inspect::event_group(e.kind);
+            if (group == worldgen::inspect::EventGroup::alliances) {
+                want.push_back(e.id);
+            }
+            if (e.kind == "allied_battle" && group != worldgen::inspect::EventGroup::war) {
+                war_kinds.push_back(e.id);
+            }
+            if (e.kind == "mine_opened" && group != worldgen::inspect::EventGroup::settlements) {
+                settlement_kinds.push_back(e.id);
+            }
+        }
+        const std::string d = first_difference(ids_of(model->get_event_ids()), want);
+        const bool rows = screen.event_list()->get_item_count() == static_cast<int64_t>(want.size());
+        expect(listed && d.empty() && rows && !want.empty() && war_kinds.empty() && settlement_kinds.empty(),
+               "B13 the group menu lists " + num(static_cast<int64_t>(got_groups.size())) +
+                   " groups, alliances last; picking it lists the " + num(static_cast<int64_t>(want.size())) +
+                   " chronicle lines of its kinds" + to_godot(d.empty() ? "" : ": " + d) +
+                   (war_kinds.empty() && settlement_kinds.empty()
+                        ? godot::String()
+                        : godot::String(": allied_battle outside war or mine_opened outside settlements")));
+        menu->select(0);
+        menu->emit_signal("item_selected", 0);
+        // The allies lines of the first block that has an ally, at full.
+        std::string problem = "no block with 'allies: <n>' above 0";
+        int64_t shown = 0;
+        for (const auto& b : full.blocks) {
+            std::size_t at = b.lines.size();
+            for (std::size_t i = 0; i < b.lines.size() && at == b.lines.size(); ++i) {
+                if (b.lines[i].rfind("  allies: ", 0) == 0 && b.lines[i] != "  allies: 0") {
+                    at = i;
+                }
+            }
+            if (at == b.lines.size()) {
+                continue;
+            }
+            const godot::Array block = model->get_civilization_block(b.id);
+            problem.clear();
+            for (std::size_t i = at; i < b.lines.size() && (i == at || b.lines[i].rfind("    c", 0) == 0); ++i) {
+                const std::string got = static_cast<int64_t>(i) < block.size() ? report_form(block[static_cast<int64_t>(i)]) : std::string();
+                if (got != b.lines[i] && problem.empty()) {
+                    problem = "c" + std::to_string(b.id) + " line " + std::to_string(i) + ": '" + got + "', the report '" +
+                              b.lines[i] + "'";
+                }
+                ++shown;
+            }
+            break;
+        }
+        expect(problem.empty(), "B13 a realm's block shows its " + num(shown) + " allies lines as the report" +
+                                    (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+    }
+
     model->disconnect("year_changed", on_year);
     model->disconnect("event_list_changed", on_list);
     model->disconnect("highlight_changed", on_highlight);

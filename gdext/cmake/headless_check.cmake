@@ -31,7 +31,8 @@
 #    and composite and compares its pixels with the PNGs, and checks the
 #    year bar and the territory view (gdext/src/viewer/viewer_check.hpp),
 #    and the markers (P4-04 9: markers-<Y>.png, markers-faded-<Y>.png and
-#    elevation-markers-<R0>.png rendered by worldgen-cli render --markers),
+#    elevation-markers-<R0>.png rendered by worldgen-cli render --markers;
+#    P5-04 11.3: the world must have a mine_opened event, check M10),
 #    and the browser (P4-05 8: history-summary.txt from report --history
 #    --level summary; checks B0 to B12).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
@@ -147,6 +148,7 @@ set(_age_starts "")
 set(_first_ceded "")
 set(_first_ruin "")     # R0: the smallest `ruined <year>` of the [present] settlement lines (P4-04 9.1)
 set(_first_faded "")    # D0: the year of the first ruin_faded chronicle line
+set(_mines_opened 0)    # P5-04 11.3: the mine_opened chronicle lines
 foreach(_line IN LISTS _history_lines)
     if(_line MATCHES "^\\[([a-z]+)\\]$")
         set(_section "${CMAKE_MATCH_1}")
@@ -162,6 +164,8 @@ foreach(_line IN LISTS _history_lines)
     elseif(_section STREQUAL "chronicle" AND _first_faded STREQUAL "" AND
            _line MATCHES "^([0-9]+)(-[0-9]+)? e[0-9]+ ruin_faded/")
         set(_first_faded "${CMAKE_MATCH_1}")
+    elseif(_section STREQUAL "chronicle" AND _line MATCHES "^[0-9]+(-[0-9]+)? e[0-9]+ mine_opened/")
+        math(EXPR _mines_opened "${_mines_opened} + 1")
     elseif(_section STREQUAL "present" AND _line MATCHES "^  s[0-9]+ .*, ruined ([0-9]+)")
         if(_first_ruin STREQUAL "" OR CMAKE_MATCH_1 LESS _first_ruin)
             set(_first_ruin "${CMAKE_MATCH_1}")
@@ -206,6 +210,10 @@ if(_first_ruin STREQUAL "" OR _first_faded STREQUAL "" OR _passes STREQUAL "" OR
         "and a pass (R0 '${_first_ruin}', D0 '${_first_faded}', passes '${_passes}'); choose another seed and record "
         "it in gdext/README.md")
 endif()
+if(_mines_opened LESS 1)
+    message(FATAL_ERROR "headless check: the 512 world has no mine_opened event (P5-04 11.3, check M10); choose "
+        "another seed and record it in gdext/README.md")
+endif()
 math(EXPR _faded_before "${_first_faded} - 1")
 math(EXPR _ruin_before "${_first_ruin} - 1")
 set(_marker_years 0 ${_faded_before} ${_first_faded} ${_ruin_before} ${_first_ruin} ${_first_ceded} ${_half}
@@ -213,7 +221,8 @@ set(_marker_years 0 ${_faded_before} ${_first_faded} ${_ruin_before} ${_first_ru
 list(REMOVE_DUPLICATES _marker_years)
 list(SORT _marker_years COMPARE NATURAL)
 list(JOIN _marker_years "," _marker_years_arg)
-message("markers: R0 = ${_first_ruin}, D0 = ${_first_faded}, passes ${_passes}, years ${_marker_years_arg}")
+message("markers: R0 = ${_first_ruin}, D0 = ${_first_faded}, passes ${_passes}, mines opened ${_mines_opened}, "
+    "years ${_marker_years_arg}")
 foreach(_year IN LISTS _marker_years)
     run_step("render markers ${_year}" "${WORLDGEN_CLI}" render --db "${_real_world}" --composite territory
         --year ${_year} --markers --out "${_real_dir}/markers-${_year}.png")
@@ -247,7 +256,7 @@ viewer_check("geography-only world" "${_geo_world}" "${_geo_dir}" ${_geo_count} 
 viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_composite_count}
     --expect-history loaded --expect-end-year ${_end_year} --expect-years ${_years_arg}
     --history-report "${_history_report}" --history-summary "${_history_summary}"
-    --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes})
+    --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes} --expect-mines ${_mines_opened})
 
 # --- 5. Playback runs (P4-06 11.1) ---------------------------------------------
 # R1: a short movie with --play-log at a fixed frame step: the year lines

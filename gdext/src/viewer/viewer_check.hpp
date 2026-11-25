@@ -57,6 +57,7 @@ struct ViewerCheckOptions {
     godot::String history_report;       // `report --history --level full` of the world
     std::vector<int64_t> marker_years;  // P4-04 9: compared with <reference dir>/markers-<Y>.png
     int64_t expect_passes = -1;         // the world report's passes; -1: not checked
+    int64_t expect_mines = -1;          // the history report's mine_opened lines (P5-04 11.3); -1: not checked
     godot::String history_summary;      // P4-05 8.1: `report --history --level summary`
     bool wired = false;
 };
