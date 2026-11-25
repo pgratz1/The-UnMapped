@@ -231,7 +231,7 @@ TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until chronology ends meta.stages in c
         sb.generate({"--seed", "42", "--map-size", "512", "--until", "regions", "--out", u8(sb.file("geo.db"))});
     CHECK(meta_of(g, "stages") == "elevation,hydrology,climate,biomes,resources,regions");
     const std::string tables = section(report(sb, g), "[tables]");
-    for (const char* t : {"age = 0\n", "culture = 0\n", "god = 0\n", "race = 0\n", "race_biome = 0\nbook = 0\n"}) {
+    for (const char* t : {"age = 0\n", "culture = 0\n", "god = 0\n", "race = 0\n", "race_biome = 0\n"}) {
         CHECK(contains(tables, std::string("\n") + t));
     }
     CHECK(meta_of(g, "param.races") == ALL_RACES);

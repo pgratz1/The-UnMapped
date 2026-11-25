@@ -125,7 +125,7 @@ TEST_CASE("P3-07 r19 25.13 item 3: ruins in words; faded settlements apart (25.3
     // Esk (c5) founded Eskby (ruined) and Eskmere (faded); Dun (c4) three, two ruined
     CHECK(contains_line(civ_block(summary(), 5), "  settlements: 2 founded, 0 held at the end, 1 ruined, 1 faded"));
     CHECK(contains_line(civ_block(full(), 5), "  settlements: 2 founded, 0 held at the end, 1 ruined, 1 faded"));
-    CHECK(contains_line(civ_block(summary(), 4), "  settlements: 3 founded, 1 held at the end, 2 ruined, 0 faded"));
+    CHECK(contains_line(civ_block(summary(), 4), "  settlements: 3 founded, 1 held at the end, 2 ruined"));
     // the full settlement line keeps e<ruin_event> and adds nothing (25.3 item 2)
     CHECK(contains_line(block(full(), "[present]"),
                         "  s10 Dunsike: hamlet, ruined, population 0, no owner, at 100 100 in Dun Sike (rg9), founded "
@@ -158,7 +158,7 @@ TEST_CASE("P3-07 r19 25.13 item 5: an ended realm in short at summary, unchanged
               "  milestones: 6",
               "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
               "kept the peace. (Esk: 54 new generations of rulers.)",
-               "  allies: 0"});   // P5-04 10.3 (v7): in every block
+               "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7): in every block
     const std::vector<std::string> f5 = civ_block(full(), 5);
     CHECK(contains_line(f5, "  home: Esk Heath (rg7), grassland"));
     CHECK(contains_line(f5, "  peak regions: 1, 0-1199"));

@@ -178,9 +178,9 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     const auto d = detail_hashes(open_world(out));
     REQUIRE(d.ok());
     REQUIRE(d.value().tables.size() == 36);  // schema 10 (P5-03 16.1)
-    CHECK(d.value().tables[16].digest ==
+    CHECK(d.value().tables[18].digest ==
           p004::meta_table_hash(p004::meta_rows(ps.seed, ps.phrase, "test_pattern", "512")));
-    CHECK(d.value().tables[19].digest == p004::pass_table_hash({}));
+    CHECK(d.value().tables[21].digest == p004::pass_table_hash({}));
 }
 
 TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
@@ -199,10 +199,10 @@ TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
         {3, "test.noise", 256, 256, "i16", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, noise))},
     };
     REQUIRE(d.value().tables.size() == 36);  // schema 10 (P5-03 16.1)
-    CHECK(d.value().tables[15].digest == p004::layer_table_hash(rows));
-    CHECK(d.value().tables[19].name == "pass");
-    CHECK(d.value().tables[19].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
-    CHECK(d.value().tables[16].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
+    CHECK(d.value().tables[17].digest == p004::layer_table_hash(rows));
+    CHECK(d.value().tables[21].name == "pass");
+    CHECK(d.value().tables[21].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
+    CHECK(d.value().tables[18].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
     REQUIRE(d.value().layers.size() == 3);
     CHECK(d.value().layers[0].name == "test.ramp");
     CHECK(d.value().layers[0].digest == p004::layer_hash_u8(256, 256, ramp));
@@ -334,14 +334,14 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
     CHECK(tables.value()[0].row_count == 0U);
     CHECK(tables.value()[3].name == "biome");
     CHECK(tables.value()[3].row_count == 0U);
-    CHECK(tables.value()[5].name == "climate");
-    CHECK(tables.value()[5].row_count == 0U);
-    CHECK(tables.value()[15].name == "layer");
-    CHECK(tables.value()[15].row_count == 3U);
-    CHECK(tables.value()[16].name == "meta");
-    CHECK(tables.value()[16].row_count == 17U);
-    CHECK(tables.value()[19].name == "pass");
-    CHECK(tables.value()[19].row_count == 0U);
+    CHECK(tables.value()[6].name == "climate");
+    CHECK(tables.value()[6].row_count == 0U);
+    CHECK(tables.value()[17].name == "layer");
+    CHECK(tables.value()[17].row_count == 3U);
+    CHECK(tables.value()[18].name == "meta");
+    CHECK(tables.value()[18].row_count == 17U);
+    CHECK(tables.value()[21].name == "pass");
+    CHECK(tables.value()[21].row_count == 0U);
 
     CHECK(w.table_columns("meta").value() == std::vector<std::string>{"key", "value"});
     CHECK(w.table_columns("layer").value() ==
@@ -478,8 +478,8 @@ TEST_CASE("reader raw rows: primary-key order with BINARY collation, composite k
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
     REQUIRE(d.value().tables.size() == 37);  // schema 12's 34 and pair
-    CHECK(d.value().tables[19].name == "pair");
-    CHECK(d.value().tables[19].digest == e.digest());
+    CHECK(d.value().tables[21].name == "pair");
+    CHECK(d.value().tables[21].digest == e.digest());
     // The schema hash now covers the new table too (and is no longer the P0 one).
     CHECK(d.value().schema != p004::p0_schema_hash());
 }

@@ -181,7 +181,7 @@ TEST_CASE("P1-06 9, 10.1 test 7: the eight keys on a hand-made 8 x 8 world, last
           "region_borders_river = 2\nregion_borders_pass = 1\nregions_isolated = 1\nregions_upland = 1\n");
     CHECK(ends_with(text, keys_text(want)));
     // [tables] lists the three tables in byte order (P0-04 amendment 18 (a)).
-    CHECK(text.find("\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nbook = 0\nrace_relation = 0\nregion = 4\nregion_biome = 0\nbook = 0\nregion_border = 3\n") != std::string::npos);   // race_relation: schema 10 (P5-03)
+    CHECK(text.find("\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 4\nregion_biome = 0\nregion_border = 3\n") != std::string::npos);   // race_relation: schema 10 (P5-03)
 }
 
 TEST_CASE("P1-06 9: the area percentiles use the rank rule; km^2 with two decimals, rounded half away") {

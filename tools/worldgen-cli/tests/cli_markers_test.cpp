@@ -114,10 +114,11 @@ std::int64_t uncovered_faded(const fs::path& path, std::int64_t y) {
     const wi::YearMarkers m = ix.value().markers_at(o.h, y, wi::MarkerOptions{true, true, true});
     std::int64_t n = 0;
     for (const wi::SettlementMarker& f : m.settlements) {
-        if (f.status != 4) continue;
+        if (!(f.status == 4 || (f.status == 3 && f.old_ruin))) continue;   // P5-06 25.1 (e): old ruins draw as faded
         bool covered = false;
         for (const wi::SettlementMarker& s : m.settlements) {
-            covered = covered || (s.status != 4 && s.x == f.x && s.y == f.y);
+            const bool is_faded = s.status == 4 || (s.status == 3 && s.old_ruin);
+            covered = covered || (!is_faded && s.x == f.x && s.y == f.y);
         }
         n += covered ? 0 : 1;
     }
@@ -188,9 +189,8 @@ TEST_CASE("cli P4-04 10.5 item 1: --markers over every image, default names, the
             run_ok(sb, {"render", "--db", path, "--composite", "territory", "--markers", "--faded"},
                    out / "world.territory-6000.markers-faded.png");
         CHECK(faded.rgb == with_markers(db, library_territory(db, 6000, 1), N, N, 1, 6000, true));
-        // --faded changes the image exactly when some faded ruin at E is not under a later settlement's marker at
-        // its cell. At 0.26.0 the seed 42 world's three faded ruins (s2, s10, s11) all lie under one (s42 standing,
-        // s38 and s36 ruined, each founded on the old site), so the two images are equal there.
+        // --faded changes the image exactly when some faded or old ruin (P5-06 25.1 (e): 1500 years or more) at E is
+        // not under a later settlement's marker at its cell.
         const bool differ = faded.rgb != png_of(out / "world.territory-6000.markers.png").rgb;
         CHECK(differ == (uncovered_faded(db, 6000) > 0));
     }
@@ -309,7 +309,7 @@ TEST_CASE("cli P4-04 10.5 item 2: usage errors and the help text") {
     CHECK(h.exit_code == EXIT_OK);
     CHECK(contains(h.out, "\n  --markers           draw the settlements, ruins, event places and passes of the year over the\n"
                           "                      image (needs the history)\n"
-                          "  --faded             with --markers: also the faded ruins\n"));
+                          "  --faded             with --markers: also old ruins (1500 years or more) and faded ruins\n"));
     const std::string f = fold(h.out);
     CHECK(contains(f, "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--year Y] "
                       "[--markers [--faded]] [--out PATH] [--scale N] [--force] [--verbose]"));
