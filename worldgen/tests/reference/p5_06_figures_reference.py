@@ -2286,12 +2286,21 @@ def check_units(c):
     t = shipped_tuning()
     tsp = tuple(t["temper_strain_permille"][x] for x in TEMPERS)
     W = {k: v[0] for k, v in pdr.RACE_FIELDS_027.items()}
-    # 7.2: the shipped means and factors the spec states
-    c.eq("7.2 goblin mean_r", temper_mean(W["goblin"], tsp), 1075)
-    c.eq("7.2 goblin warlike", strain_factor(1, W["goblin"], tsp), 1209)
-    c.eq("7.2 goblin peaceable", strain_factor(2, W["goblin"], tsp), 651)
-    c.eq("7.2 elf mean_r", temper_mean(W["elf"], tsp), 955)
-    c.eq("7.2 orc mean_r", temper_mean(W["orc"], tsp), 1135)
+    # 7.2: the means and factors the spec states, at its starting values (1000, 1300, 700, 1000, 1000)
+    start = (1000, 1300, 700, 1000, 1000)
+    c.eq("7.2 goblin mean_r (start)", temper_mean(W["goblin"], start), 1075)
+    c.eq("7.2 goblin warlike (start)", strain_factor(1, W["goblin"], start), 1209)
+    c.eq("7.2 goblin peaceable (start)", strain_factor(2, W["goblin"], start), 651)
+    c.eq("7.2 elf mean_r (start)", temper_mean(W["elf"], start), 955)
+    c.eq("7.2 orc mean_r (start)", temper_mean(W["orc"], start), 1135)
+    # at the calibrated values (1000, 2000, 0, 1000, 1000), by hand: goblin (300 + 600 + 0 + 300 + 50) = 1250,
+    # warlike 2000000 div 1250 = 1600, peaceable 0; elf 450 + 200 + 0 + 50 + 150 = 850; orc 250 + 1000 + 0 + 150 + 50
+    c.eq("7.2 shipped temper_strain_permille", tsp, (1000, 2000, 0, 1000, 1000))
+    c.eq("7.2 goblin mean_r", temper_mean(W["goblin"], tsp), 1250)
+    c.eq("7.2 goblin warlike", strain_factor(1, W["goblin"], tsp), 1600)
+    c.eq("7.2 goblin peaceable", strain_factor(2, W["goblin"], tsp), 0)
+    c.eq("7.2 elf mean_r", temper_mean(W["elf"], tsp), 850)
+    c.eq("7.2 orc mean_r", temper_mean(W["orc"], tsp), 1450)
     for r, ws in sorted(W.items()):   # 18.1 item 11: a race's mean factor is 1000 +- 1 (weighted by its leanings)
         m = sum(wt * strain_factor(i, ws, tsp) for i, wt in enumerate(ws)) // sum(ws)
         c.ok("7.2 %s mean factor %d within 1000 +- 2" % (r, m), abs(m - 1000) <= 2)

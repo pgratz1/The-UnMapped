@@ -3229,7 +3229,8 @@ def pre_026(path, kind):
 # The 0.27.0 listings (P5-06 figures, docs/specs/p5-06-figures.md r3: 4.1 to 4.4, 8.2, 11.1, 25.1 (a), (b), 25.3),
 # derived from the 0.26.0 ones by the edits the spec states, at the spec's starting values. These are the one place
 # to edit after calibration (15.2): RACE_FIELDS_027, CULTURE_FIELDS_027, SLAYER_EPITHET_027, FIGURES_RANGES_027,
-# FIGURES_RECORDS_027, EPITHETS_027, REPORT_ENTRIES_027, UNDEAD_REGIONS_REF_027; then `golden`.
+# FIGURES_RECORDS_027, EPITHETS_027, REPORT_ENTRIES_027, UNDEAD_REGIONS_REF_027, MONSTER_CALIBRATED_027,
+# MONSTERS_CALIBRATED_027; then `golden`. Phase 2: set to the calibrated values of the engineer's df29146.
 # ---------------------------------------------------------------------------
 TEMPERS_027 = ("steady", "warlike", "peaceable", "grasping", "just")   # codes 0 to 4 (9.1)
 TEMPER_REC_027 = REC(tuple((t, INT) for t in TEMPERS_027))
@@ -3301,26 +3302,46 @@ CULTURE_FILES_027 = {n: _culture_027(n[:-5], t) for n, t in CULTURE_FILES_023.it
 MONSTER_027 = MONSTER_024 + (("slayer_epithet", STR),)
 SLAYER_EPITHET_027 = {"dragon": "Dragonslayer", "giant": "Giantsbane", "ogre": "Ogrebane", "troll": "Trollbane",
                       "undead": "the Gravewarden", "wyvern": "Wyrmbane"}
-MONSTER_FILES_027 = {n: t + 'slayer_epithet = "%s"\n' % SLAYER_EPITHET_027[n[:-5]]
-                     for n, t in MONSTER_FILES_024.items()}
+# 15.2 steps 5a and 5b: the calibrated monster kind values (the engineer's, df29146), kind -> {field: value}.
+MONSTER_CALIBRATED_027 = {
+    "dragon": dict(rewake_ppm=700),
+    "giant": dict(overrun_permille=1000, rewake_ppm=1000, lifespan_years=4000),
+    "ogre": dict(overrun_permille=1000, rewake_ppm=2000, lifespan_years=2000),
+    "troll": dict(overrun_permille=1000, rewake_ppm=1500, lifespan_years=4000),
+    "undead": dict(wake_rate=25000, overrun_permille=1000, lifespan_years=5000, max_alive=5),
+    "wyvern": dict(overrun_permille=1000, rewake_ppm=2500, lifespan_years=2000)}
+
+
+def _set_fields(text, fields):
+    """Sets each `name = <int>` line of text to its value (each name on exactly one line)."""
+    import re
+    for k, v in fields.items():
+        pat = re.compile(r"^%s = -?\d+$" % k, re.M)
+        assert len(pat.findall(text)) == 1, k
+        text = pat.sub("%s = %d" % (k, v), text)
+    return text
+
+
+MONSTER_FILES_027 = {n: _set_fields(t, MONSTER_CALIBRATED_027.get(n[:-5], {}))
+                     + 'slayer_epithet = "%s"\n' % SLAYER_EPITHET_027[n[:-5]] for n, t in MONSTER_FILES_024.items()}
 assert all(t.rstrip("\n").split("\n")[-1].startswith("raid_phrases = ") for t in MONSTER_FILES_024.values())
 # 4.4: history.figures, every field required, in this order: (name, lo, hi, start) of the integers and booleans
 # (bool: lo = hi = None), the three temper records and the epithets list apart (FIGURES_027 is the schema order).
 FIGURES_RANGES_027 = (
     ("name_rulers", None, None, True), ("reign_min_permille", 1, 4000, 500), ("reign_span_permille", 0, 4000, 1000),
     ("accession_age_permille", 0, 1000, 250), ("accession_span_permille", 0, 1000, 250),
-    ("temper_strain_permille", 0, 4000, (1000, 1300, 700, 1000, 1000)),
+    ("temper_strain_permille", 0, 4000, (1000, 2000, 0, 1000, 1000)),
     ("temper_allied_permille", 0, 4000, (1000, 1000, 1000, 2000, 500)),
-    ("temper_spoils_permille", -1000, 1000, (0, 0, 0, -200, 200)),
+    ("temper_spoils_permille", -1000, 1000, (0, 0, 0, -400, 400)),
     ("short_reign_permille", 0, 4000, 500), ("short_reign_split_permille", 0, 1000, 100),
-    ("exile_permille", 0, 1000, 250), ("exile_hops", 0, 8, 3), ("general_scale_permille", 0, 1000, 1000),
-    ("skill_min", 0, 1000, 100), ("skill_max", 0, 1000, 300), ("career_permille", 0, 1000, 300),
-    ("fall_loser_permille", 0, 1000, 150), ("fall_winner_permille", 0, 1000, 30),
+    ("exile_permille", 0, 1000, 250), ("exile_hops", 0, 8, 3), ("general_scale_permille", 0, 1000, 850),
+    ("skill_min", 0, 1000, 500), ("skill_max", 0, 1000, 800), ("career_permille", 0, 1000, 300),
+    ("fall_loser_permille", 0, 1000, 120), ("fall_winner_permille", 0, 1000, 25),
     ("general_age_permille", 0, 1000, 300), ("general_age_span_permille", 0, 1000, 300),
     ("hero_age_permille", 0, 1000, 150), ("hero_age_span_permille", 0, 1000, 200),
     ("life_min_permille", 0, 4000, 700), ("life_span_permille", 0, 4000, 500),
-    ("hero_scale_permille", 0, 1000, 1000), ("hero_hunt_permille", 0, 1000, 30),
-    ("hero_might_permille", 0, 4000, 500), ("hero_fall_permille", 0, 1000, 300),
+    ("hero_scale_permille", 0, 1000, 1000), ("hero_hunt_permille", 0, 1000, 20),
+    ("hero_might_permille", 0, 4000, 1000), ("hero_fall_permille", 0, 1000, 300),
     ("caster_ppm", 0, 1000000, 1500), ("caster_age_permille", 0, 1000, 400),
     ("caster_age_span_permille", 0, 1000, 300), ("book_permille", 0, 1000, 10), ("books_max", 0, 16, 3),
     ("blight_ppm", 0, 1000000, 500), ("blight_toll_permille", 0, 1000, 80), ("regnal_max", 2, 39, 9),
@@ -3364,22 +3385,26 @@ FIGURES_SMALL_027 = dict(general_scale_permille=1000, hero_scale_permille=1000, 
                          regnal_max=3)
 # 25.3: history.monsters gains undead_regions_ref after undead_dead_permille (shipped 64).
 UNDEAD_REGIONS_REF_027 = 64
+# 15.2 steps 5a and 5b: the calibrated history.monsters values (the engineer's, df29146).
+MONSTERS_CALIBRATED_027 = dict(living_permille=200, overrun_people_ref=3000, undead_dead_permille=28)
 MONSTERS_027 = MONSTERS_025 + (("undead_regions_ref", INT),)
 assert MONSTERS_025[-1][0] == "undead_dead_permille"
 # 25.1 (a), (b): ruin_fade_years and ghost_fade_years leave history.peoples.
 PEOPLES_REMOVED_027 = ("ruin_fade_years", "ghost_fade_years")
 PEOPLES_027 = tuple(f for f in PEOPLES_024 if f[0] not in PEOPLES_REMOVED_027)
-# 8.2: the report entries of kinds 79 to 92 after arms_sold, in kind order (key, salience, template).
+# 8.2: the report entries of kinds 79 to 92 after arms_sold, in kind order (key, salience, template). Phase 2: the
+# two-word choices of kinds 81, 82, 84 and 90 as shipped (the engineer's reading, accepted by the lead: the two-word
+# form gives its first word for 1, P3-04 r10, so the spec text's order was reversed).
 REPORT_ENTRIES_027 = (
     ("came_to_rule", 15, "{figure} became the first ruler of {civilization}."),
     ("figure_died", 15, "{figure} of {civilization} died at the age of {age}{how?.|, and the succession was disputed."
                         "|, in exile.}"),
     ("succession_disputed", 30, "{ruler} took the throne of {civilization} against the claim of {claimant}{outcome?, "
-                                "who was driven out|, who broke away with the far lands}."),
-    ("exiled", 25, "{figure}, who had claimed the throne of {civilization}, {hosted?fled into the wilds|went into exile "
-                   "with }{host:all}."),
+                                "who broke away with the far lands|, who was driven out}."),
+    ("exiled", 25, "{figure}, who had claimed the throne of {civilization}, {hosted?went into exile with |fled "
+                   "into the wilds}{host:all}."),
     ("reigned_at_end", 10, "At the end of the age {civilization} was ruled by {figure}."),
-    ("general_appointed", 15, "{figure} {again?took|again took} command of the armies of {civilization} against "
+    ("general_appointed", 15, "{figure} {again?again took|took} command of the armies of {civilization} against "
                               "{enemy}."),
     ("battle_led", 35, "{winner}{winner_general:under}{winner_ally:with} defeated {loser}{loser_general:under}"
                        "{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} "
@@ -3389,7 +3414,7 @@ REPORT_ENTRIES_027 = (
     ("hero_rose", 25, "After the raids of {monster}, {figure} of {civilization} took up the hunt."),
     ("monster_slain_by_hero", 55, "{hero} of {slayer} hunted down and slew {monster}{monster:aside}{monster:where}."),
     ("hero_slain", 45, "{figure} of {civilization} was slain hunting {monster}{monster:where}."),
-    ("tower_founded", 40, "{figure} of {civilization} {library?raised|founded} {site} in {@region}."),
+    ("tower_founded", 40, "{figure} of {civilization} {library?founded|raised} {site} in {@region}."),
     ("book_written", 30, "{figure} wrote {@book} at {site}."),
     ("blight", 50, "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} "
                    "died."))
@@ -3446,6 +3471,7 @@ def _peoples_027(text):
 
 def _monsters_027(text):
     assert text.rstrip("\n").split("\n")[-1].startswith("undead_dead_permille = ")
+    text = _set_fields(text, MONSTERS_CALIBRATED_027)
     return text + "undead_regions_ref = %d\n" % UNDEAD_REGIONS_REF_027
 
 
@@ -3544,8 +3570,8 @@ def check_spec_027(c):
     for name, tt in (("shipped", fg), ("zero", FIGURES_ZERO_027), ("figures-small", dict(fg, **FIGURES_SMALL_027))):
         c.eq("the %s figures tuning passes its checks" % name, figures_check_messages(tt), [])
     for edit, want in (
-            (dict(skill_min=301), [("figures_skill_ordered", "skill_min 301 is above skill_max 300")]),
-            (dict(skill_min=300), []),
+            (dict(skill_min=801), [("figures_skill_ordered", "skill_min 801 is above skill_max 800")]),
+            (dict(skill_min=800), []),
             (dict(epithets=[dict(role="hero", deed="books", min=1, substantial=0, text="{slayer}")]),
              [("figures_epithet_slayer", "epithets[0]: {slayer} needs the deed slew_might")]),
             (dict(epithets=[dict(role="ruler", deed="conquests", min=3, substantial=2, text="the Conqueror")]),

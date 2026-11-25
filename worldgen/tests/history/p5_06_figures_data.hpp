@@ -1,10 +1,10 @@
 #pragma once
 
-// The 0.27.0 data of spec P5-06 r3 (4.1 to 4.4, 25.1, 25.3) at the spec's starting values, generated from the one
-// listing of worldgen/tests/reference/p3_data_reference.py (FIGURES_RANGES_027, EPITHETS_027, RACE_FIELDS_027,
-// CULTURE_FIELDS_027, SLAYER_EPITHET_027, UNDEAD_REGIONS_REF_027): regenerate it from there after calibration (15.2),
-// never by hand. The engineer writes the data files (game/data and both fixture roots); the tests compare them with
-// these values at integration.
+// The 0.27.0 data of spec P5-06 r3 (4.1 to 4.4, 25.1, 25.3) at the calibrated values (15.2, the engineer's df29146),
+// generated from the one listing of worldgen/tests/reference/p3_data_reference.py (FIGURES_RANGES_027, EPITHETS_027,
+// RACE_FIELDS_027, CULTURE_FIELDS_027, SLAYER_EPITHET_027, UNDEAD_REGIONS_REF_027, MONSTER_CALIBRATED_027,
+// MONSTERS_CALIBRATED_027) by worldgen/tests/reference/p5_06_figures_data_writer.py, never by hand. The tests compare
+// the data files (game/data and both fixture roots) with these values.
 
 #include <array>
 #include <cstdint>
@@ -22,19 +22,19 @@ reign_min_permille = 500
 reign_span_permille = 1000
 accession_age_permille = 250
 accession_span_permille = 250
-temper_strain_permille = { steady = 1000, warlike = 1300, peaceable = 700, grasping = 1000, just = 1000 }
+temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
 temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
-temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -200, just = 200 }
+temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
 short_reign_permille = 500
 short_reign_split_permille = 100
 exile_permille = 250
 exile_hops = 3
-general_scale_permille = 1000
-skill_min = 100
-skill_max = 300
+general_scale_permille = 850
+skill_min = 500
+skill_max = 800
 career_permille = 300
-fall_loser_permille = 150
-fall_winner_permille = 30
+fall_loser_permille = 120
+fall_winner_permille = 25
 general_age_permille = 300
 general_age_span_permille = 300
 hero_age_permille = 150
@@ -42,8 +42,8 @@ hero_age_span_permille = 200
 life_min_permille = 700
 life_span_permille = 500
 hero_scale_permille = 1000
-hero_hunt_permille = 30
-hero_might_permille = 500
+hero_hunt_permille = 20
+hero_might_permille = 1000
 hero_fall_permille = 300
 caster_ppm = 1500
 caster_age_permille = 400
@@ -559,7 +559,7 @@ kill_max = 600
 overruns = ["hamlet", "village", "town"]
 overrun_permille = 600
 active_years = 40
-rewake_ppm = 2000
+rewake_ppm = 700
 lifespan_years = 0
 max_alive = 1
 flare = true
@@ -587,10 +587,10 @@ toll_min_permille = 30
 toll_max_permille = 100
 kill_max = 150
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 150
-rewake_ppm = 3000
-lifespan_years = 2500
+rewake_ppm = 1000
+lifespan_years = 4000
 max_alive = 2
 flare = true
 hoard_permille = 8
@@ -619,10 +619,10 @@ toll_min_permille = 20
 toll_max_permille = 60
 kill_max = 40
 overruns = ["hamlet"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 80
-rewake_ppm = 8000
-lifespan_years = 1000
+rewake_ppm = 2000
+lifespan_years = 2000
 max_alive = 3
 flare = false
 hoard_permille = 3
@@ -651,10 +651,10 @@ toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 60
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 120
-rewake_ppm = 5000
-lifespan_years = 2000
+rewake_ppm = 1500
+lifespan_years = 4000
 max_alive = 3
 flare = false
 hoard_permille = 5
@@ -667,7 +667,7 @@ noun = "a host of the restless dead"
 grouped = true
 wake = "dead"
 biomes = []
-wake_rate = 15000
+wake_rate = 25000
 naming_culture = "human"
 name_forms = ["The Host of {place}", "The Restless of {place}", "The Dead of {place}"]
 lair_forms = ["The Barrows of {root}", "The Howes of {root}"]
@@ -678,11 +678,11 @@ toll_min_permille = 30
 toll_max_permille = 120
 kill_max = 200
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 200
 rewake_ppm = 3000
-lifespan_years = 1000
-max_alive = 2
+lifespan_years = 5000
+max_alive = 5
 flare = false
 hoard_permille = 0
 raid_phrases = ["came out of the barrows against", "walked by night in", "crept into"]
@@ -709,10 +709,10 @@ toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 50
 overruns = ["hamlet"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 60
-rewake_ppm = 10000
-lifespan_years = 1000
+rewake_ppm = 2500
+lifespan_years = 2000
 max_alive = 2
 flare = false
 hoard_permille = 0
@@ -871,19 +871,19 @@ reign_min_permille = 500
 reign_span_permille = 1000
 accession_age_permille = 250
 accession_span_permille = 250
-temper_strain_permille = { steady = 1000, warlike = 1300, peaceable = 700, grasping = 1000, just = 1000 }
+temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
 temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
-temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -200, just = 200 }
+temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
 short_reign_permille = 500
 short_reign_split_permille = 100
 exile_permille = 250
 exile_hops = 3
-general_scale_permille = 1000
-skill_min = 100
-skill_max = 300
+general_scale_permille = 850
+skill_min = 500
+skill_max = 800
 career_permille = 300
-fall_loser_permille = 150
-fall_winner_permille = 30
+fall_loser_permille = 120
+fall_winner_permille = 25
 general_age_permille = 300
 general_age_span_permille = 300
 hero_age_permille = 150
@@ -891,8 +891,8 @@ hero_age_span_permille = 200
 life_min_permille = 700
 life_span_permille = 500
 hero_scale_permille = 1000
-hero_hunt_permille = 30
-hero_might_permille = 500
+hero_hunt_permille = 20
+hero_might_permille = 1000
 hero_fall_permille = 300
 caster_ppm = 1500
 caster_age_permille = 400
@@ -921,7 +921,7 @@ epithet_repeat_max = 2
     f["history/monsters.toml"] = std::string(R"p506(# Beasts and monsters (spec P5-02 4.3; P5-03 9.4; P5-03a 10.2). Generator 0.25.0.
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
-living_permille = 100
+living_permille = 200
 undead_min_dead = 1000
 undead_window_years = 100
 hunt_hops = 2
@@ -958,8 +958,8 @@ hunt_max_permille = 200
 fear_raids = 2
 fear_years = 50
 fear_permille = 400
-overrun_people_ref = 800
-undead_dead_permille = 25
+overrun_people_ref = 3000
+undead_dead_permille = 28
 undead_regions_ref = 64
 )p506");
     f["history/peoples.toml"] = std::string(R"p506([history.peoples]
@@ -1268,17 +1268,17 @@ R"p506(t}." },
   { kind = "arms_sold", salience = 30, template = "{seller} sold arms forged in {site} to {buyer}." },
   { kind = "came_to_rule", salience = 15, template = "{figure} became the first ruler of {civilization}." },
   { kind = "figure_died", salience = 15, template = "{figure} of {civilization} died at the age of {age}{how?.|, and the succession was disputed.|, in exile.}" },
-  { kind = "succession_disputed", salience = 30, template = "{ruler} took the throne of {civilization} against the claim of {claimant}{outcome?, who was driven out|, who broke away with the far lands}." },
-  { kind = "exiled", salience = 25, template = "{figure}, who had claimed the throne of {civilization}, {hosted?fled into the wilds|went into exile with }{host:all}." },
+  { kind = "succession_disputed", salience = 30, template = "{ruler} took the throne of {civilization} against the claim of {claimant}{outcome?, who broke away with the far lands|, who was driven out}." },
+  { kind = "exiled", salience = 25, template = "{figure}, who had claimed the throne of {civilization}, {hosted?went into exile with |fled into the wilds}{host:all}." },
   { kind = "reigned_at_end", salience = 10, template = "At the end of the age {civilization} was ruled by {figure}." },
-  { kind = "general_appointed", salience = 15, template = "{figure} {again?took|again took} command of the armies of {civilization} against {enemy}." },
+  { kind = "general_appointed", salience = 15, template = "{figure} {again?again took|took} command of the armies of {civilization} against {enemy}." },
   { kind = "battle_led", salience = 35, template = "{winner}{winner_general:under}{winner_ally:with} defeated {loser}{loser_general:under}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "fell_in_battle", salience = 30, template = "{figure} of {civilization} fell in battle against {enemy} in {@region}." },
   { kind = "hero_rose", salience = 25, template = "After the raids of {monster}, {figure} of {civilization} took up the hunt." },
   { kind = "monster_slain_by_hero", salience = 55, template = "{hero} of {slayer} hunted down and slew {monster}{monster:aside}{monster:where}." },
   { kind = "hero_slain", salience = 45, template = "{figure} of {civilization} was slain hunting {monster}{monster:where}." },
   { kind = "tower_fo)p506"
-R"p506(unded", salience = 40, template = "{figure} of {civilization} {library?raised|founded} {site} in {@region}." },
+R"p506(unded", salience = 40, template = "{figure} of {civilization} {library?founded|raised} {site} in {@region}." },
   { kind = "book_written", salience = 30, template = "{figure} wrote {@book} at {site}." },
   { kind = "blight", salience = 50, template = "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} died." },
 ]
