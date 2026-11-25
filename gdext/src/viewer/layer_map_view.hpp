@@ -151,6 +151,9 @@ private:
         int64_t fill = -1;
         bool small = false;
         bool margin = false;  // hit one glyph cell beyond the glyph (F6)
+        // P5-04 11.3: the glyph's centre is this many glyph cells from the
+        // cell's (a mine: 7 right, 7 up, so its town does not hide it).
+        int32_t offset_x = 0, offset_y = 0;
         const GlyphCells* cells = nullptr;  // into glyphs_; null: glyph unknown
     };
     [[nodiscard]] bool marker_drawn(const Marker& marker) const;

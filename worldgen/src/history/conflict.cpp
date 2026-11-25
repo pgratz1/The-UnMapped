@@ -230,6 +230,13 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.toll_spread_permille = r.get_int("toll_spread_permille");  // r22 24.5
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
+    t.allied_strain_permille = r.get_int("allied_strain_permille");  // P5-04 4.3
+    t.ally_deterrence_permille = r.get_int("ally_deterrence_permille");
+    t.ally_effort_permille = r.get_int("ally_effort_permille");
+    t.trade_strength_permille = r.get_int("trade_strength_permille");
+    t.trade_strength_max = r.get_int("trade_strength_max");
+    t.forge_strength_permille = r.get_int("forge_strength_permille");
+    t.arms_strength_permille = r.get_int("arms_strength_permille");
     return t;
 }
 
@@ -309,6 +316,13 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.toll_spread_permille, 0, 500), "toll_spread_permille");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
+    field_in(in(t.allied_strain_permille, 0, 1000), "allied_strain_permille");  // P5-04 4.3
+    field_in(in(t.ally_deterrence_permille, 0, 1000), "ally_deterrence_permille");
+    field_in(in(t.ally_effort_permille, 0, 1000), "ally_effort_permille");
+    field_in(in(t.trade_strength_permille, 0, 1000), "trade_strength_permille");
+    field_in(in(t.trade_strength_max, 0, 16), "trade_strength_max");
+    field_in(in(t.forge_strength_permille, 0, 1000), "forge_strength_permille");
+    field_in(in(t.arms_strength_permille, 0, 1000), "arms_strength_permille");
     if (t.claim_strain > t.declare_min) {
         fail("history: tuning: claim_strain must not be above declare_min");
     }
@@ -757,11 +771,126 @@ std::int64_t ConflictSubsystem::force(const StepContext& ctx, std::int64_t civ) 
         list.emplace_back(s.population, s.kind);
     }
     const ConflictRace& r = race_of_civ(ctx, civ);
-    const std::int64_t f = force_of(tuning_, list, r.prowess, r.muster);
+    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster));
     if (f > BOUND_2_40) {
         fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
     }
     return f;
+}
+
+// P5-04 7.5: trade, forge and arms, in this order, each with floor division.
+std::int64_t ConflictSubsystem::strengthened(std::int64_t civ, std::int64_t f) const {
+    if (alliances_ == nullptr) {
+        return f;
+    }
+    const std::int64_t partners = std::min(alliances_->trade_partners(civ), tuning_.trade_strength_max);
+    f = floor_div(checked_mul(f, checked_add(1000, checked_mul(tuning_.trade_strength_permille, partners))), 1000);
+    f = floor_div(checked_mul(f, 1000 + (alliances_->forged(civ) ? tuning_.forge_strength_permille : 0)), 1000);
+    f = floor_div(checked_mul(f, 1000 + (alliances_->arms(civ) ? tuning_.arms_strength_permille : 0)), 1000);
+    return f;
+}
+
+bool ConflictSubsystem::allied(std::int64_t a, std::int64_t b) const {
+    return alliances_ != nullptr && alliances_->allied(a, b);
+}
+
+std::int64_t ConflictSubsystem::share(const StepContext& ctx, std::int64_t civ) const {
+    const PeoplesGeo& g = peoples_.geo();
+    const std::int64_t nr = g.region_count();
+    std::int64_t held = 0;
+    for (std::int64_t r = 1; r <= nr; ++r) {
+        held += (ctx.state().region(r).owner == civ && !g.region(r).islet) ? 1 : 0;
+    }
+    return share_of(held, non_islet_);
+}
+
+std::optional<std::pair<std::int64_t, std::int64_t>> ConflictSubsystem::last_peace(std::int64_t a, std::int64_t b) const {
+    const auto it = last_peace_.find(ordered(a, b));
+    if (it == last_peace_.end()) {
+        return std::nullopt;
+    }
+    return std::pair(it->second.year, it->second.event);
+}
+
+bool ConflictSubsystem::reaches(const StepContext& ctx, std::int64_t x, std::int64_t y) const {
+    return !live_front(ctx, x, y).empty();
+}
+
+std::size_t ConflictSubsystem::war_index(std::int64_t war) const {
+    // Wars are kept in declaration order, so their keys ascend.
+    const auto it = std::lower_bound(wars_.begin(), wars_.end(), war,
+                                     [](const ConflictWar& w, std::int64_t key) { return w.declared < key; });
+    if (it == wars_.end() || it->declared != war) {
+        fail("history: conflict: no war declared by event " + int_text(war));
+    }
+    return static_cast<std::size_t>(it - wars_.begin());
+}
+
+bool ConflictSubsystem::war_open(std::int64_t war) const {
+    return wars_[war_index(war)].open;
+}
+
+std::int64_t ConflictSubsystem::war_end_event(std::int64_t war) const {
+    return wars_[war_index(war)].end_event;
+}
+
+const ConflictAlly& ConflictSubsystem::ally_record(std::int64_t war, std::int64_t ally) const {
+    for (const ConflictAlly& m : wars_[war_index(war)].allies) {
+        if (m.civ == ally) {
+            return m;
+        }
+    }
+    fail("history: conflict: civilization " + int_text(ally) + " did not join the war of event " + int_text(war));
+}
+
+bool ConflictSubsystem::ally_left(std::int64_t war, std::int64_t ally) const {
+    return !ally_record(war, ally).open;
+}
+
+std::int64_t ConflictSubsystem::ally_dead(std::int64_t war, std::int64_t ally) const {
+    return ally_record(war, ally).dead;
+}
+
+WarSpoils ConflictSubsystem::war_spoils(std::int64_t war) const {
+    const ConflictWar& w = wars_[war_index(war)];
+    if (w.open) {
+        fail("history: conflict: war_spoils of the open war of event " + int_text(war));
+    }
+    WarSpoils s;
+    s.end_event = w.end_event;
+    s.goal_region = w.goal;
+    s.tribute_people = w.tribute_people;
+    s.tribute_event = w.tribute_event;
+    if (w.winner != 0) {
+        const std::size_t ws = w.winner == w.attacker ? 0 : 1;
+        s.winner = w.winner;
+        s.loser = ws == 0 ? w.defender : w.attacker;
+        s.plunder = w.plunder[ws];
+        s.winner_dead = w.dead[ws];
+        s.winner_pop0 = w.pop0[ws];
+        s.side_dead = w.dead[ws];
+        const std::int64_t ally_side = ws == 0 ? 1 : 0;
+        for (const ConflictAlly& m : w.allies) {
+            if (m.side == ally_side) {
+                s.side_dead = checked_add(s.side_dead, m.dead);
+            }
+        }
+    }
+    return s;
+}
+
+void ConflictSubsystem::forgive(std::int64_t a, std::int64_t b) {
+    if (a == b) {
+        fail("history: conflict: forgive(" + int_text(a) + ", " + int_text(b) + ")");
+    }
+    drop_pair(a, b);
+}
+
+void ConflictSubsystem::add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units) {
+    if (a == b || units < 0) {
+        fail("history: conflict: add_grudge(" + int_text(a) + ", " + int_text(b) + ", " + int_text(units) + ")");
+    }
+    add_grudge(a, b, units);
 }
 
 std::int64_t ConflictSubsystem::local_force(const StepContext& ctx, std::int64_t civ, std::int64_t region) const {
@@ -775,7 +904,7 @@ std::int64_t ConflictSubsystem::local_force(const StepContext& ctx, std::int64_t
         }
     }
     const ConflictRace& r = race_of_civ(ctx, civ);
-    const std::int64_t f = force_of(tuning_, list, r.prowess, r.muster);
+    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster));
     if (f > BOUND_2_40) {
         fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
     }
@@ -799,14 +928,31 @@ std::int64_t ConflictSubsystem::effective_aggression(std::int64_t a, std::int64_
 std::int64_t ConflictSubsystem::open_wars_of(std::int64_t civ) const {
     std::int64_t n = 0;
     for (const ConflictWar& w : wars_) {
-        n += (w.open && (w.attacker == civ || w.defender == civ)) ? 1 : 0;
+        if (!w.open) {
+            continue;
+        }
+        n += (w.attacker == civ || w.defender == civ) ? 1 : 0;
+        for (const ConflictAlly& m : w.allies) {  // P5-04 7.6
+            n += (m.open && m.civ == civ) ? 1 : 0;
+        }
     }
     return n;
 }
 
+// P5-04 7.13: a principal war or a joined one (the ally against the enemy
+// of its side), either way.
 bool ConflictSubsystem::at_war(std::int64_t a, std::int64_t b) const {
     return std::any_of(wars_.begin(), wars_.end(), [a, b](const ConflictWar& w) {
-        return w.open && ((w.attacker == a && w.defender == b) || (w.attacker == b && w.defender == a));
+        if (!w.open) {
+            return false;
+        }
+        if ((w.attacker == a && w.defender == b) || (w.attacker == b && w.defender == a)) {
+            return true;
+        }
+        return std::any_of(w.allies.begin(), w.allies.end(), [&w, a, b](const ConflictAlly& m) {
+            const std::int64_t enemy = m.side == 0 ? w.attacker : w.defender;
+            return m.open && ((m.civ == a && enemy == b) || (m.civ == b && enemy == a));
+        });
     });
 }
 
@@ -989,7 +1135,18 @@ std::int64_t ConflictSubsystem::claim_defence_force(const StepContext& ctx, std:
             def = defence_at(ctx, b, e).first;
         }
     }
-    return floor_div(checked_mul(force(ctx, b), def), 1000);
+    // P5-04 7.4: the defender's allies that can reach a deter it.
+    std::int64_t fb = force(ctx, b);
+    if (alliances_ != nullptr && tuning_.ally_deterrence_permille > 0) {
+        std::int64_t sum = 0;
+        for (const std::int64_t z : alliances_->allies(b)) {
+            if (z != a && !allied(z, a) && reaches(ctx, z, a)) {
+                sum = checked_add(sum, force(ctx, z));
+            }
+        }
+        fb = checked_add(fb, floor_div(checked_mul(tuning_.ally_deterrence_permille, sum), 1000));
+    }
+    return floor_div(checked_mul(fb, def), 1000);
 }
 
 EventSpec ConflictSubsystem::claim_event(const StepContext& ctx, std::int64_t a, std::int64_t b, std::int64_t region,
@@ -1118,9 +1275,27 @@ void ConflictSubsystem::housekeeping(StepContext& ctx) {
     for (const auto& [key, event] : to_close) {
         state.close_relation(key, event);
     }
-    for (ConflictWar& w : wars_) {
-        if (w.open && (state.civ(w.attacker).ended_year || state.civ(w.defender).ended_year)) {
-            w.open = false;
+    const std::size_t nw = wars_.size();
+    for (std::size_t i = 0; i < nw; ++i) {
+        ConflictWar& w = wars_[i];
+        if (!w.open) {
+            continue;
+        }
+        // P5-04 7.11: an ally that ended leaves with its ending event (its
+        // relations were closed above).
+        for (ConflictAlly& m : w.allies) {
+            if (m.open && state.civ(m.civ).ended_year) {
+                m.open = false;
+                m.closed_by = 4;
+                m.close_event = state.civ(m.civ).ending_event;
+            }
+        }
+        const bool a_ended = state.civ(w.attacker).ended_year.has_value();
+        const bool d_ended = state.civ(w.defender).ended_year.has_value();
+        if (a_ended || d_ended) {
+            const std::int64_t ended = a_ended ? w.attacker : w.defender;
+            close_allies_at_side_end(ctx, i, ended, state.civ(ended).ending_event);
+            wars_[i].open = false;
         }
     }
     for (auto it = claims_.begin(); it != claims_.end();) {
@@ -1225,6 +1400,18 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
         }
         snap.emplace(c, std::move(s));
     }
+    // P5-04 7.3: the bloc shares at the snapshot (own share, then each ally's).
+    std::map<std::int64_t, std::int64_t> bloc;
+    for (const std::int64_t c : alive) {
+        std::int64_t sum = snap.at(c).share;
+        if (alliances_ != nullptr) {
+            for (const std::int64_t z : alliances_->allies(c)) {
+                const auto sz = snap.find(z);
+                sum = checked_add(sum, sz != snap.end() ? sz->second.share : share(ctx, z));
+            }
+        }
+        bloc.emplace(c, std::min<std::int64_t>(1000, sum));
+    }
     contact_.clear();
     std::map<Pair, std::vector<FrontEntry>> fronts;
     for (const std::int64_t a : alive) {
@@ -1253,10 +1440,13 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
                 wants = wants || std::binary_search(sb.held.begin(), sb.held.end(), r);
             }
             const std::int64_t want = want_of(tuning_, wants, view.hunger(a));
-            const std::int64_t fear = fear_of(tuning_, sb.share);
+            const std::int64_t fear = fear_of(tuning_, bloc.at(b));  // P5-04 7.3
             const std::int64_t drive = drive_of(tuning_, disposition_of(ctx, a, b), want, fear);
             const std::int64_t ga = effective_aggression(a, b, race_of_civ(ctx, a).aggression);  // r9 20.5
-            const std::int64_t rate = strain_rate(ga, drive, k);
+            std::int64_t rate = strain_rate(ga, drive, k);
+            if (allied(a, b)) {  // P5-04 7.2
+                rate = floor_div(checked_mul(rate, tuning_.allied_strain_permille), 1000);
+            }
             const std::int64_t next = strain_after(tuning_, strain(a, b), rate, years, permille, intensity_);
             if (next > BOUND_2_40) {
                 fail("history: bound: conflict strain of civilization " + int_text(a) + " against " + int_text(b) +
@@ -1467,6 +1657,47 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     wars_.push_back(w);
 }
 
+// --- Joined allies (P5-04 7.6) ---------------------------------------------------------------------
+
+void ConflictSubsystem::join_war(StepContext& ctx, std::int64_t war, std::int64_t ally, std::int64_t side,
+                                 std::int64_t event) {
+    const std::size_t i = war_index(war);
+    const ConflictWar& w0 = wars_[i];
+    const std::string at = "history: conflict: join_war: ";
+    if (!w0.open) {
+        fail(at + "the war of event " + int_text(war) + " is not open");
+    }
+    if (side != 0 && side != 1) {
+        fail(at + "side " + int_text(side) + " is not 0 or 1");
+    }
+    if (ally == w0.attacker || ally == w0.defender) {
+        fail(at + "civilization " + int_text(ally) + " is a side of the war");
+    }
+    for (const ConflictAlly& m : w0.allies) {
+        if (m.civ == ally) {
+            fail(at + "civilization " + int_text(ally) + " is already an ally in the war");
+        }
+    }
+    const std::int64_t enemy = side == 0 ? w0.attacker : w0.defender;
+    State& state = ctx.state();
+    if (state.relations().count(civ_relation(ally, enemy, "war")) != 0 ||
+        state.relations().count(civ_relation(enemy, ally, "war")) != 0) {
+        fail(at + "civilization " + int_text(ally) + " is at war with " + int_text(enemy) + " already");
+    }
+    ConflictAlly m;
+    m.civ = ally;
+    m.side = side;
+    m.join_event = event;
+    m.pop0 = peoples_.view().population(ctx, ally);
+    wars_[i].allies.push_back(m);
+    const RelationKey peace = symmetric_relation(ally, enemy, "peace");
+    if (state.relations().count(peace) != 0) {
+        state.close_relation(peace, event);
+    }
+    state.open_relation(civ_relation(ally, enemy, "war"), event);
+    drop_pair(ally, enemy);
+}
+
 // --- Quiet steps (7.8) ------------------------------------------------------------------------------
 
 void ConflictSubsystem::quiet_ends(StepContext& ctx) {
@@ -1563,7 +1794,13 @@ void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
 
 // r10 20.15 item 1: the dead inflicted and the people taken.
 std::int64_t ConflictSubsystem::score_winner(const ConflictWar& w) const {
-    const std::int64_t s = war_score_people(w.dead[0], w.dead[1], w.taken_people[0], w.taken_people[1]);
+    // P5-04 7.8: the dead of each side, its allies' (open or withdrawn) included.
+    std::array<std::int64_t, 2> dead = w.dead;
+    for (const ConflictAlly& m : w.allies) {
+        const std::size_t k = m.side == 0 ? 1 : 0;  // the defender's allies are side 1
+        dead[k] = checked_add(dead[k], m.dead);
+    }
+    const std::int64_t s = war_score_people(dead[0], dead[1], w.taken_people[0], w.taken_people[1]);
     return s > 0 ? w.attacker : (s < 0 ? w.defender : 0);
 }
 

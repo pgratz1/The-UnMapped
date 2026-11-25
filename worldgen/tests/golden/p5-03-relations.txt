@@ -1,5 +1,5 @@
-# P5-03 golden values (docs/specs/p5-03-race-relations.md r1 sections 6, 7, 9 to 14, 16, 21, 23), generator 0.24.0
-# (schema 10), written by worldgen/tests/reference/p5_03_relations_reference.py golden, an independent reference
+# P5-03 golden values (docs/specs/p5-03-race-relations.md r1 sections 6, 7, 9 to 14, 16, 21, 23; P5-03a r1 3 to 8,
+# 9.6, 12), generator 0.26.0 (schema 10), written by worldgen/tests/reference/p5_03_relations_reference.py golden, an independent reference
 # written from the spec (the relations subsystem runs inside p3_conflict_reference.py's replay, the part-B rules in
 # p5_02_monsters_reference.py and p3_peoples_reference.py). Do not edit by hand; never regenerate to make a C++
 # test pass.
@@ -13,50 +13,52 @@
 #   <case> events_<key> <n>                  kinds 56 to 62
 #   <case> stat <key> <value>                the [stats] keys of 17.4 (report --history --level full), in order
 case relations-small-0 0 0 2000 all --civs-per-race auto --event-intensity normal relations-small
-relations-small-0 table race_relation d2bbe93dfbf2ee513b4ddd301b40ae2a4ab8e65eb31bfb2737df418c3e5199a1
-relations-small-0 table settlement_race c8b41cf1b3c6a32152f65d5eeb3c033b8a7665b83cb4ae71e5c5441244939903
+relations-small-0 table race_relation c3e4bdfb1baf5e5d53bfa62fe937cdeb39b9d992e794c397d07b55770f6bc635
+relations-small-0 table settlement_race 2218a05474e176d496840d33cbac3eee34da4f5b27d4f209f5c26a528f1d3ab2
 relations-small-0 events_settlement_fled 0
 relations-small-0 events_peoples_met 15
-relations-small-0 events_disposition_turned 5
+relations-small-0 events_disposition_turned 6
 relations-small-0 events_refugees_arrived 4
-relations-small-0 events_settlement_mixed 2
-relations-small-0 events_standing_changed 0
-relations-small-0 events_people_expelled 0
-relations-small-0 stat race_relations 55
-relations-small-0 stat settlement_races 26
+relations-small-0 events_settlement_mixed 3
+relations-small-0 events_standing_changed 1
+relations-small-0 events_people_expelled 1
+relations-small-0 stat race_relations 71
+relations-small-0 stat settlement_races 32
 relations-small-0 stat race_pairs 15
 relations-small-0 stat race_pairs_met 15
-relations-small-0 stat dispositions_turned 5
-relations-small-0 stat pairs_hatred 7
-relations-small-0 stat pairs_friendship 2
+relations-small-0 stat dispositions_turned 6
+relations-small-0 stat pairs_hatred 5
+relations-small-0 stat pairs_friendship 3
 relations-small-0 stat refugees_arrived 4
-relations-small-0 stat refugees_people 477
-relations-small-0 stat people_expelled 0
-relations-small-0 stat expelled_people 0
-relations-small-0 stat settlements_mixed 1
-relations-small-0 stat settlements_mixed_ever 2
+relations-small-0 stat refugees_people 720
+relations-small-0 stat people_expelled 1
+relations-small-0 stat expelled_people 116
+relations-small-0 stat settlements_mixed 2
+relations-small-0 stat settlements_mixed_ever 3
 relations-small-0 stat settlements_fled 0
 relations-small-0 stat abandoned_without_destination 0
 relations-small-0 stat abandonment_lost 0
 relations-small-0 stat monster_stories 0
 relations-small-0 stat ruins_oldest_year 933
+relations-small-0 stat peoples_met_by_word 0
+relations-small-0 stat dispositions_warmed 3
 case relations-small-1 1 0 6000 all --civs-per-race auto --event-intensity turbulent relations-small
-relations-small-1 table race_relation 00d529bba20f273f0ee81e881bec962fe286b182d92eacbdf7fa4337a2b6415a
+relations-small-1 table race_relation c87d2de972f33f7d75328840043100d167d9a02f9cfd74d220bdd5e504227802
 relations-small-1 table settlement_race 5531cb068a9a1feb4a98dbb3d24eb0e185af368f60cd21da76f8b38f968241dc
 relations-small-1 events_settlement_fled 0
 relations-small-1 events_peoples_met 15
-relations-small-1 events_disposition_turned 12
+relations-small-1 events_disposition_turned 22
 relations-small-1 events_refugees_arrived 0
 relations-small-1 events_settlement_mixed 0
 relations-small-1 events_standing_changed 0
 relations-small-1 events_people_expelled 0
-relations-small-1 stat race_relations 87
+relations-small-1 stat race_relations 111
 relations-small-1 stat settlement_races 9
 relations-small-1 stat race_pairs 15
 relations-small-1 stat race_pairs_met 15
-relations-small-1 stat dispositions_turned 12
-relations-small-1 stat pairs_hatred 7
-relations-small-1 stat pairs_friendship 1
+relations-small-1 stat dispositions_turned 22
+relations-small-1 stat pairs_hatred 2
+relations-small-1 stat pairs_friendship 6
 relations-small-1 stat refugees_arrived 0
 relations-small-1 stat refugees_people 0
 relations-small-1 stat people_expelled 0
@@ -65,37 +67,41 @@ relations-small-1 stat settlements_mixed 0
 relations-small-1 stat settlements_mixed_ever 0
 relations-small-1 stat settlements_fled 0
 relations-small-1 stat abandoned_without_destination 0
-relations-small-1 stat abandonment_lost 0
-relations-small-1 stat monster_stories 0
-relations-small-1 stat ruins_oldest_year -
+relations-small-1 stat abandonment_lost 29
+relations-small-1 stat monster_stories 1
+relations-small-1 stat ruins_oldest_year 2412
+relations-small-1 stat peoples_met_by_word 0
+relations-small-1 stat dispositions_warmed 14
 case relations-small-2 2 0 2000 elf,goblin --civs-per-race auto --event-intensity calm relations-small
-relations-small-2 table race_relation 9ee3e1073ff5e486fe6d0a13e02f36168ad2f5f6d0675d1456a554f5f1439ded
-relations-small-2 table settlement_race b6e164c1f17f1d2c4a25ffb03c066b155b548971fc3c504457df02b3ade2527a
+relations-small-2 table race_relation 58bcaa80de1f29f687310718d5c507e66e77cd65540014d81e31716f1c5ba6f6
+relations-small-2 table settlement_race 5cf16f31a4decbedd2fabb2d5d665275f415e7e629599289bf54c83b35ad9990
 relations-small-2 events_settlement_fled 0
 relations-small-2 events_peoples_met 1
 relations-small-2 events_disposition_turned 0
-relations-small-2 events_refugees_arrived 3
+relations-small-2 events_refugees_arrived 0
 relations-small-2 events_settlement_mixed 0
 relations-small-2 events_standing_changed 0
-relations-small-2 events_people_expelled 1
-relations-small-2 stat race_relations 16
-relations-small-2 stat settlement_races 20
+relations-small-2 events_people_expelled 0
+relations-small-2 stat race_relations 19
+relations-small-2 stat settlement_races 18
 relations-small-2 stat race_pairs 1
 relations-small-2 stat race_pairs_met 1
 relations-small-2 stat dispositions_turned 0
 relations-small-2 stat pairs_hatred 1
 relations-small-2 stat pairs_friendship 0
-relations-small-2 stat refugees_arrived 3
-relations-small-2 stat refugees_people 577
-relations-small-2 stat people_expelled 1
-relations-small-2 stat expelled_people 155
+relations-small-2 stat refugees_arrived 0
+relations-small-2 stat refugees_people 0
+relations-small-2 stat people_expelled 0
+relations-small-2 stat expelled_people 0
 relations-small-2 stat settlements_mixed 0
 relations-small-2 stat settlements_mixed_ever 0
 relations-small-2 stat settlements_fled 0
 relations-small-2 stat abandoned_without_destination 0
 relations-small-2 stat abandonment_lost 0
 relations-small-2 stat monster_stories 0
-relations-small-2 stat ruins_oldest_year 811
+relations-small-2 stat ruins_oldest_year 929
+relations-small-2 stat peoples_met_by_word 0
+relations-small-2 stat dispositions_warmed 0
 case relations-small-3 3 0 6000 elf,goblin --civs-per-race auto --event-intensity normal relations-small
 relations-small-3 table race_relation bac1204cad38efc03cfabb9e9af97ef567a2145a915de919332ebc62cbfb3c90
 relations-small-3 table settlement_race 0307cc5dd6c1b91a465221c7f69b54df056f81f1ed59a0b4b31c9fd19be6d9b6
@@ -124,92 +130,100 @@ relations-small-3 stat abandoned_without_destination 0
 relations-small-3 stat abandonment_lost 10
 relations-small-3 stat monster_stories 0
 relations-small-3 stat ruins_oldest_year 5713
+relations-small-3 stat peoples_met_by_word 0
+relations-small-3 stat dispositions_warmed 0
 case relations-small-5 5 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity calm relations-small
-relations-small-5 table race_relation 6062c39667e5481d3b03af221b1ebecbaf02425034b9566b6cd448ce48ffba19
-relations-small-5 table settlement_race f7264b8ef05894ee5401cf2b495f8b833b0e52138bcfcfcd03715ff7a68c6508
+relations-small-5 table race_relation 35b1c52e4d29b1b4c61731dbcd2dfacfa404f393e560f8064dd4e19ffe378b0d
+relations-small-5 table settlement_race 61cd6cfd0efbe158cf3163d2d2bc798605db1c93f0f6921fa72cb91e10656652
 relations-small-5 events_settlement_fled 0
 relations-small-5 events_peoples_met 3
 relations-small-5 events_disposition_turned 4
 relations-small-5 events_refugees_arrived 6
-relations-small-5 events_settlement_mixed 3
+relations-small-5 events_settlement_mixed 2
 relations-small-5 events_standing_changed 0
-relations-small-5 events_people_expelled 4
-relations-small-5 stat race_relations 19
-relations-small-5 stat settlement_races 36
+relations-small-5 events_people_expelled 1
+relations-small-5 stat race_relations 16
+relations-small-5 stat settlement_races 37
 relations-small-5 stat race_pairs 3
 relations-small-5 stat race_pairs_met 3
 relations-small-5 stat dispositions_turned 4
 relations-small-5 stat pairs_hatred 3
 relations-small-5 stat pairs_friendship 0
 relations-small-5 stat refugees_arrived 6
-relations-small-5 stat refugees_people 1593
-relations-small-5 stat people_expelled 4
-relations-small-5 stat expelled_people 906
-relations-small-5 stat settlements_mixed 0
-relations-small-5 stat settlements_mixed_ever 3
+relations-small-5 stat refugees_people 3249
+relations-small-5 stat people_expelled 1
+relations-small-5 stat expelled_people 238
+relations-small-5 stat settlements_mixed 1
+relations-small-5 stat settlements_mixed_ever 1
 relations-small-5 stat settlements_fled 0
 relations-small-5 stat abandoned_without_destination 0
-relations-small-5 stat abandonment_lost 0
-relations-small-5 stat monster_stories 0
-relations-small-5 stat ruins_oldest_year 5043
+relations-small-5 stat abandonment_lost 54
+relations-small-5 stat monster_stories 1
+relations-small-5 stat ruins_oldest_year 1527
+relations-small-5 stat peoples_met_by_word 0
+relations-small-5 stat dispositions_warmed 0
 case relations-small-6 6 0 2000 all --civs-per-race 4 --event-intensity normal relations-small
-relations-small-6 table race_relation b42691dac551024040a80811f4322a814f002d1842d3d943f0d24747eee301b4
-relations-small-6 table settlement_race c9a81338027c2e4c5299bd69b35abf5e30614e3d571aa412fe91ea21a8067f5e
+relations-small-6 table race_relation 6aa83f7623b80e4061da60d49dae351601c9635413661bd0204b42bac2ae6969
+relations-small-6 table settlement_race a832f83d9bf67fe1a782e5dbe236d685095ee279a037e79ed35cb2e09161cfde
 relations-small-6 events_settlement_fled 0
 relations-small-6 events_peoples_met 15
-relations-small-6 events_disposition_turned 2
-relations-small-6 events_refugees_arrived 3
-relations-small-6 events_settlement_mixed 1
-relations-small-6 events_standing_changed 0
-relations-small-6 events_people_expelled 0
-relations-small-6 stat race_relations 90
-relations-small-6 stat settlement_races 30
+relations-small-6 events_disposition_turned 6
+relations-small-6 events_refugees_arrived 6
+relations-small-6 events_settlement_mixed 3
+relations-small-6 events_standing_changed 1
+relations-small-6 events_people_expelled 1
+relations-small-6 stat race_relations 119
+relations-small-6 stat settlement_races 74
 relations-small-6 stat race_pairs 15
 relations-small-6 stat race_pairs_met 15
-relations-small-6 stat dispositions_turned 2
-relations-small-6 stat pairs_hatred 6
-relations-small-6 stat pairs_friendship 2
-relations-small-6 stat refugees_arrived 3
-relations-small-6 stat refugees_people 1298
-relations-small-6 stat people_expelled 0
-relations-small-6 stat expelled_people 0
+relations-small-6 stat dispositions_turned 6
+relations-small-6 stat pairs_hatred 7
+relations-small-6 stat pairs_friendship 3
+relations-small-6 stat refugees_arrived 6
+relations-small-6 stat refugees_people 3881
+relations-small-6 stat people_expelled 1
+relations-small-6 stat expelled_people 103
 relations-small-6 stat settlements_mixed 1
-relations-small-6 stat settlements_mixed_ever 1
+relations-small-6 stat settlements_mixed_ever 2
 relations-small-6 stat settlements_fled 0
 relations-small-6 stat abandoned_without_destination 0
-relations-small-6 stat abandonment_lost 56
-relations-small-6 stat monster_stories 1
+relations-small-6 stat abandonment_lost 106
+relations-small-6 stat monster_stories 0
 relations-small-6 stat ruins_oldest_year 815
+relations-small-6 stat peoples_met_by_word 0
+relations-small-6 stat dispositions_warmed 2
 case relations-small-7 7 0 6000 all --civs-per-race 4 --event-intensity turbulent relations-small
-relations-small-7 table race_relation c6fc748b7508ce538053ab7187bdbb8ab4e5d02ff59295585ca69b34a89e745e
-relations-small-7 table settlement_race 49785899e3ed5c5d1cd778a8adc85619c01fa0238a297c556a99d72e23a8e7dd
+relations-small-7 table race_relation f0c0c5550b06e14163a9d7b419e50ddf30e9822c5f9fbae9b9d0ccfd47bfc61c
+relations-small-7 table settlement_race afeb69324f305b86e8b5b5eba464f1e9ffa8676165adf9591fd821b452386538
 relations-small-7 events_settlement_fled 0
 relations-small-7 events_peoples_met 15
-relations-small-7 events_disposition_turned 7
-relations-small-7 events_refugees_arrived 25
-relations-small-7 events_settlement_mixed 11
+relations-small-7 events_disposition_turned 13
+relations-small-7 events_refugees_arrived 18
+relations-small-7 events_settlement_mixed 7
 relations-small-7 events_standing_changed 2
-relations-small-7 events_people_expelled 4
-relations-small-7 stat race_relations 252
-relations-small-7 stat settlement_races 227
+relations-small-7 events_people_expelled 6
+relations-small-7 stat race_relations 233
+relations-small-7 stat settlement_races 158
 relations-small-7 stat race_pairs 15
 relations-small-7 stat race_pairs_met 15
-relations-small-7 stat dispositions_turned 7
-relations-small-7 stat pairs_hatred 8
-relations-small-7 stat pairs_friendship 1
-relations-small-7 stat refugees_arrived 25
-relations-small-7 stat refugees_people 14059
-relations-small-7 stat people_expelled 4
-relations-small-7 stat expelled_people 1042
-relations-small-7 stat settlements_mixed 3
-relations-small-7 stat settlements_mixed_ever 8
+relations-small-7 stat dispositions_turned 13
+relations-small-7 stat pairs_hatred 7
+relations-small-7 stat pairs_friendship 4
+relations-small-7 stat refugees_arrived 18
+relations-small-7 stat refugees_people 6188
+relations-small-7 stat people_expelled 6
+relations-small-7 stat expelled_people 1667
+relations-small-7 stat settlements_mixed 2
+relations-small-7 stat settlements_mixed_ever 6
 relations-small-7 stat settlements_fled 0
 relations-small-7 stat abandoned_without_destination 0
-relations-small-7 stat abandonment_lost 165
+relations-small-7 stat abandonment_lost 68
 relations-small-7 stat monster_stories 0
 relations-small-7 stat ruins_oldest_year 3402
+relations-small-7 stat peoples_met_by_word 0
+relations-small-7 stat dispositions_warmed 6
 case relations-small-9 9 0 6000 all --civs-per-race auto --event-intensity normal relations-small
-relations-small-9 table race_relation 7d84ae67cc181766776308c9844e4da68dc9c262753b125b4724a192ade587c1
+relations-small-9 table race_relation 9fea088ac8bcf8163a169db7f970c43988700c2b4a2e44122750f5f69933b071
 relations-small-9 table settlement_race b1dd7a17a23eb4fea2ddd7e3bab75d07794ea3141b0be4dccd39b0bc55e43f37
 relations-small-9 events_settlement_fled 0
 relations-small-9 events_peoples_met 15
@@ -218,7 +232,7 @@ relations-small-9 events_refugees_arrived 0
 relations-small-9 events_settlement_mixed 0
 relations-small-9 events_standing_changed 0
 relations-small-9 events_people_expelled 0
-relations-small-9 stat race_relations 42
+relations-small-9 stat race_relations 50
 relations-small-9 stat settlement_races 9
 relations-small-9 stat race_pairs 15
 relations-small-9 stat race_pairs_met 15
@@ -233,110 +247,118 @@ relations-small-9 stat settlements_mixed 0
 relations-small-9 stat settlements_mixed_ever 0
 relations-small-9 stat settlements_fled 0
 relations-small-9 stat abandoned_without_destination 0
-relations-small-9 stat abandonment_lost 0
+relations-small-9 stat abandonment_lost 65
 relations-small-9 stat monster_stories 0
-relations-small-9 stat ruins_oldest_year 5290
+relations-small-9 stat ruins_oldest_year 4249
+relations-small-9 stat peoples_met_by_word 0
+relations-small-9 stat dispositions_warmed 0
 case relations-small-12 12 0 2000 goblin,human,orc --civs-per-race 4 --event-intensity normal relations-small
-relations-small-12 table race_relation bde239071d823c2b9b44ec57ae9794294e241ddf60b9f2eff261a1c7e4f4af63
-relations-small-12 table settlement_race 8cb2a9c27b604196e8ba992d17d4b6d5c5455260e6fdf1ad8c58dc2045cbc85d
+relations-small-12 table race_relation 08cc43347f051d59a143368452d419887d23e14fa03f466e35d5056cad73fea9
+relations-small-12 table settlement_race 6b0fcdd2eb316e351c8aa01cb3b0a5a449f4f55148bbb111a7d874c6ea8118db
 relations-small-12 events_settlement_fled 0
 relations-small-12 events_peoples_met 3
-relations-small-12 events_disposition_turned 4
-relations-small-12 events_refugees_arrived 6
-relations-small-12 events_settlement_mixed 2
-relations-small-12 events_standing_changed 0
-relations-small-12 events_people_expelled 4
-relations-small-12 stat race_relations 15
-relations-small-12 stat settlement_races 41
+relations-small-12 events_disposition_turned 2
+relations-small-12 events_refugees_arrived 3
+relations-small-12 events_settlement_mixed 1
+relations-small-12 events_standing_changed 1
+relations-small-12 events_people_expelled 0
+relations-small-12 stat race_relations 18
+relations-small-12 stat settlement_races 46
 relations-small-12 stat race_pairs 3
 relations-small-12 stat race_pairs_met 3
-relations-small-12 stat dispositions_turned 4
-relations-small-12 stat pairs_hatred 3
-relations-small-12 stat pairs_friendship 0
-relations-small-12 stat refugees_arrived 6
-relations-small-12 stat refugees_people 3621
-relations-small-12 stat people_expelled 4
-relations-small-12 stat expelled_people 2410
+relations-small-12 stat dispositions_turned 2
+relations-small-12 stat pairs_hatred 2
+relations-small-12 stat pairs_friendship 1
+relations-small-12 stat refugees_arrived 3
+relations-small-12 stat refugees_people 3511
+relations-small-12 stat people_expelled 0
+relations-small-12 stat expelled_people 0
 relations-small-12 stat settlements_mixed 1
-relations-small-12 stat settlements_mixed_ever 2
+relations-small-12 stat settlements_mixed_ever 1
 relations-small-12 stat settlements_fled 0
 relations-small-12 stat abandoned_without_destination 0
 relations-small-12 stat abandonment_lost 0
 relations-small-12 stat monster_stories 1
-relations-small-12 stat ruins_oldest_year 502
+relations-small-12 stat ruins_oldest_year 329
+relations-small-12 stat peoples_met_by_word 0
+relations-small-12 stat dispositions_warmed 0
 case relations-small-13 13 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity turbulent relations-small
-relations-small-13 table race_relation f07f8d8033f7fdd4230ad437a2725a4d611b3eb8eb7e6d58b2482cd1eff0f82a
-relations-small-13 table settlement_race 8d9a918b6d39da3e0c022f75fde42c80d7cb1ef2111dff0bc0e01ac6ed7a3224
+relations-small-13 table race_relation db7d5d2d0f53bd774a575b88caf3e900c3cdf9cf9f457a07b344b9be6583dada
+relations-small-13 table settlement_race ff0e5eb44dd5b6dda5e3495fb34bf0dace2ef50c0203fc9db20f203691beff14
 relations-small-13 events_settlement_fled 0
 relations-small-13 events_peoples_met 3
 relations-small-13 events_disposition_turned 1
-relations-small-13 events_refugees_arrived 12
-relations-small-13 events_settlement_mixed 0
+relations-small-13 events_refugees_arrived 11
+relations-small-13 events_settlement_mixed 1
 relations-small-13 events_standing_changed 0
 relations-small-13 events_people_expelled 0
-relations-small-13 stat race_relations 18
-relations-small-13 stat settlement_races 37
+relations-small-13 stat race_relations 20
+relations-small-13 stat settlement_races 38
 relations-small-13 stat race_pairs 3
 relations-small-13 stat race_pairs_met 3
 relations-small-13 stat dispositions_turned 1
 relations-small-13 stat pairs_hatred 1
 relations-small-13 stat pairs_friendship 1
-relations-small-13 stat refugees_arrived 12
-relations-small-13 stat refugees_people 7495
+relations-small-13 stat refugees_arrived 11
+relations-small-13 stat refugees_people 5866
 relations-small-13 stat people_expelled 0
 relations-small-13 stat expelled_people 0
-relations-small-13 stat settlements_mixed 0
-relations-small-13 stat settlements_mixed_ever 0
+relations-small-13 stat settlements_mixed 1
+relations-small-13 stat settlements_mixed_ever 1
 relations-small-13 stat settlements_fled 0
-relations-small-13 stat abandoned_without_destination 0
-relations-small-13 stat abandonment_lost 270
+relations-small-13 stat abandoned_without_destination 1
+relations-small-13 stat abandonment_lost 192
 relations-small-13 stat monster_stories 0
-relations-small-13 stat ruins_oldest_year 772
+relations-small-13 stat ruins_oldest_year 723
+relations-small-13 stat peoples_met_by_word 0
+relations-small-13 stat dispositions_warmed 0
 case monsters-small-fear-0 0 0 2000 all --civs-per-race auto --event-intensity normal monsters-small-fear
-monsters-small-fear-0 table race_relation dd8abd9f88055352e3319d3fb3e59cad3ea2ad35742500ddf943b762e3423641
-monsters-small-fear-0 table settlement_race 155e1ee356048d87d5cf19ee7797f3b5011c6a62508b44262b672eaea79bef12
+monsters-small-fear-0 table race_relation 86a6639518436d13b7cd045ce560bbb6738c33a32453b3ebb25f30b4d2a4b3b2
+monsters-small-fear-0 table settlement_race 2ffb23d9804af4073c8abd301c7dcbbea2cf20c787473674b86f73a1921fdeb4
 monsters-small-fear-0 events_settlement_fled 2
 monsters-small-fear-0 events_peoples_met 15
-monsters-small-fear-0 events_disposition_turned 1
+monsters-small-fear-0 events_disposition_turned 3
 monsters-small-fear-0 events_refugees_arrived 1
-monsters-small-fear-0 events_settlement_mixed 1
+monsters-small-fear-0 events_settlement_mixed 3
 monsters-small-fear-0 events_standing_changed 0
 monsters-small-fear-0 events_people_expelled 0
-monsters-small-fear-0 stat race_relations 40
-monsters-small-fear-0 stat settlement_races 20
+monsters-small-fear-0 stat race_relations 70
+monsters-small-fear-0 stat settlement_races 32
 monsters-small-fear-0 stat race_pairs 15
 monsters-small-fear-0 stat race_pairs_met 15
-monsters-small-fear-0 stat dispositions_turned 1
+monsters-small-fear-0 stat dispositions_turned 3
 monsters-small-fear-0 stat pairs_hatred 5
 monsters-small-fear-0 stat pairs_friendship 2
 monsters-small-fear-0 stat refugees_arrived 1
-monsters-small-fear-0 stat refugees_people 386
+monsters-small-fear-0 stat refugees_people 120
 monsters-small-fear-0 stat people_expelled 0
 monsters-small-fear-0 stat expelled_people 0
 monsters-small-fear-0 stat settlements_mixed 0
-monsters-small-fear-0 stat settlements_mixed_ever 1
+monsters-small-fear-0 stat settlements_mixed_ever 2
 monsters-small-fear-0 stat settlements_fled 2
 monsters-small-fear-0 stat abandoned_without_destination 0
 monsters-small-fear-0 stat abandonment_lost 124
 monsters-small-fear-0 stat monster_stories 3
 monsters-small-fear-0 stat ruins_oldest_year 822
+monsters-small-fear-0 stat peoples_met_by_word 0
+monsters-small-fear-0 stat dispositions_warmed 1
 case monsters-small-fear-1 1 0 6000 all --civs-per-race auto --event-intensity turbulent monsters-small-fear
-monsters-small-fear-1 table race_relation fef15ab748e022b5d3d72ecc0d9f16640885bccfa37d05dd9bdf1e5a8f493f74
+monsters-small-fear-1 table race_relation 36c16d0dbceb9a129b189f284eb690bf3785a7d843692dfd4158621856abb2ad
 monsters-small-fear-1 table settlement_race 22a91680378fef673e80fff2c4cb460bf31edd5d1080aefe263cd6185cf46a0b
 monsters-small-fear-1 events_settlement_fled 3
 monsters-small-fear-1 events_peoples_met 15
-monsters-small-fear-1 events_disposition_turned 0
+monsters-small-fear-1 events_disposition_turned 7
 monsters-small-fear-1 events_refugees_arrived 0
 monsters-small-fear-1 events_settlement_mixed 0
 monsters-small-fear-1 events_standing_changed 0
 monsters-small-fear-1 events_people_expelled 0
-monsters-small-fear-1 stat race_relations 42
+monsters-small-fear-1 stat race_relations 91
 monsters-small-fear-1 stat settlement_races 10
 monsters-small-fear-1 stat race_pairs 15
 monsters-small-fear-1 stat race_pairs_met 15
-monsters-small-fear-1 stat dispositions_turned 0
-monsters-small-fear-1 stat pairs_hatred 4
-monsters-small-fear-1 stat pairs_friendship 2
+monsters-small-fear-1 stat dispositions_turned 7
+monsters-small-fear-1 stat pairs_hatred 2
+monsters-small-fear-1 stat pairs_friendship 7
 monsters-small-fear-1 stat refugees_arrived 0
 monsters-small-fear-1 stat refugees_people 0
 monsters-small-fear-1 stat people_expelled 0
@@ -348,34 +370,38 @@ monsters-small-fear-1 stat abandoned_without_destination 0
 monsters-small-fear-1 stat abandonment_lost 293
 monsters-small-fear-1 stat monster_stories 3
 monsters-small-fear-1 stat ruins_oldest_year 3357
+monsters-small-fear-1 stat peoples_met_by_word 0
+monsters-small-fear-1 stat dispositions_warmed 7
 case monsters-small-fear-2 2 0 2000 elf,goblin --civs-per-race auto --event-intensity calm monsters-small-fear
-monsters-small-fear-2 table race_relation 250fb73ffcd3b54adb94ad7f29016e586a1c70907b73ab6dc92edc3e9186fa18
-monsters-small-fear-2 table settlement_race 8bacb1d4f8d11036343c4c3ebc1325fc3b510b0ff3fabc98d21ed5df2d96e6ee
-monsters-small-fear-2 events_settlement_fled 2
+monsters-small-fear-2 table race_relation 4105b07e62300049ae3d9613bfbb1d18d913a6a2bff2843ea3277cad70062ee6
+monsters-small-fear-2 table settlement_race b274fc046eb07ac91cdf69c268ec59a8a2301a6abaeaed66925900b97843fbe6
+monsters-small-fear-2 events_settlement_fled 4
 monsters-small-fear-2 events_peoples_met 1
 monsters-small-fear-2 events_disposition_turned 0
-monsters-small-fear-2 events_refugees_arrived 0
+monsters-small-fear-2 events_refugees_arrived 1
 monsters-small-fear-2 events_settlement_mixed 0
 monsters-small-fear-2 events_standing_changed 0
 monsters-small-fear-2 events_people_expelled 0
-monsters-small-fear-2 stat race_relations 16
-monsters-small-fear-2 stat settlement_races 19
+monsters-small-fear-2 stat race_relations 13
+monsters-small-fear-2 stat settlement_races 20
 monsters-small-fear-2 stat race_pairs 1
 monsters-small-fear-2 stat race_pairs_met 1
 monsters-small-fear-2 stat dispositions_turned 0
 monsters-small-fear-2 stat pairs_hatred 1
 monsters-small-fear-2 stat pairs_friendship 0
-monsters-small-fear-2 stat refugees_arrived 0
-monsters-small-fear-2 stat refugees_people 0
+monsters-small-fear-2 stat refugees_arrived 1
+monsters-small-fear-2 stat refugees_people 960
 monsters-small-fear-2 stat people_expelled 0
 monsters-small-fear-2 stat expelled_people 0
 monsters-small-fear-2 stat settlements_mixed 0
 monsters-small-fear-2 stat settlements_mixed_ever 0
-monsters-small-fear-2 stat settlements_fled 2
+monsters-small-fear-2 stat settlements_fled 4
 monsters-small-fear-2 stat abandoned_without_destination 0
-monsters-small-fear-2 stat abandonment_lost 263
+monsters-small-fear-2 stat abandonment_lost 543
 monsters-small-fear-2 stat monster_stories 3
-monsters-small-fear-2 stat ruins_oldest_year 800
+monsters-small-fear-2 stat ruins_oldest_year 928
+monsters-small-fear-2 stat peoples_met_by_word 0
+monsters-small-fear-2 stat dispositions_warmed 0
 case monsters-small-fear-3 3 0 6000 elf,goblin --civs-per-race auto --event-intensity normal monsters-small-fear
 monsters-small-fear-3 table race_relation bac1204cad38efc03cfabb9e9af97ef567a2145a915de919332ebc62cbfb3c90
 monsters-small-fear-3 table settlement_race 54533a3a892b2cb6b3c863b97e3252a3edd6160d3e4ed0adfd333d748e2d92f6
@@ -404,177 +430,191 @@ monsters-small-fear-3 stat abandoned_without_destination 0
 monsters-small-fear-3 stat abandonment_lost 90
 monsters-small-fear-3 stat monster_stories 3
 monsters-small-fear-3 stat ruins_oldest_year 2105
+monsters-small-fear-3 stat peoples_met_by_word 0
+monsters-small-fear-3 stat dispositions_warmed 0
 case monsters-small-fear-5 5 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity calm monsters-small-fear
-monsters-small-fear-5 table race_relation 7f5ebf1e33f4d7a50196135845a18434e43512388be74195fbd25a203f7d1849
-monsters-small-fear-5 table settlement_race 5e439de28b8d1c19a143bddd653cfa899d4a23bf3e224705b44f3675cb53211c
-monsters-small-fear-5 events_settlement_fled 4
+monsters-small-fear-5 table race_relation 83ea60d84950efdcadc1a641658964dd847c0f4c7e10b8c3c33c2db5c830ee89
+monsters-small-fear-5 table settlement_race bd08e7724496276dde22abe2ea43e46f11f7dd0eb313be8ab5df5f3e59632d9c
+monsters-small-fear-5 events_settlement_fled 6
 monsters-small-fear-5 events_peoples_met 3
-monsters-small-fear-5 events_disposition_turned 2
-monsters-small-fear-5 events_refugees_arrived 4
-monsters-small-fear-5 events_settlement_mixed 5
-monsters-small-fear-5 events_standing_changed 0
+monsters-small-fear-5 events_disposition_turned 3
+monsters-small-fear-5 events_refugees_arrived 5
+monsters-small-fear-5 events_settlement_mixed 3
+monsters-small-fear-5 events_standing_changed 1
 monsters-small-fear-5 events_people_expelled 0
-monsters-small-fear-5 stat race_relations 12
-monsters-small-fear-5 stat settlement_races 48
+monsters-small-fear-5 stat race_relations 18
+monsters-small-fear-5 stat settlement_races 41
 monsters-small-fear-5 stat race_pairs 3
 monsters-small-fear-5 stat race_pairs_met 3
-monsters-small-fear-5 stat dispositions_turned 2
+monsters-small-fear-5 stat dispositions_turned 3
 monsters-small-fear-5 stat pairs_hatred 1
-monsters-small-fear-5 stat pairs_friendship 0
-monsters-small-fear-5 stat refugees_arrived 4
-monsters-small-fear-5 stat refugees_people 3159
+monsters-small-fear-5 stat pairs_friendship 1
+monsters-small-fear-5 stat refugees_arrived 5
+monsters-small-fear-5 stat refugees_people 2184
 monsters-small-fear-5 stat people_expelled 0
 monsters-small-fear-5 stat expelled_people 0
-monsters-small-fear-5 stat settlements_mixed 3
-monsters-small-fear-5 stat settlements_mixed_ever 3
-monsters-small-fear-5 stat settlements_fled 4
+monsters-small-fear-5 stat settlements_mixed 1
+monsters-small-fear-5 stat settlements_mixed_ever 2
+monsters-small-fear-5 stat settlements_fled 6
 monsters-small-fear-5 stat abandoned_without_destination 1
-monsters-small-fear-5 stat abandonment_lost 158
+monsters-small-fear-5 stat abandonment_lost 326
 monsters-small-fear-5 stat monster_stories 3
 monsters-small-fear-5 stat ruins_oldest_year 557
+monsters-small-fear-5 stat peoples_met_by_word 0
+monsters-small-fear-5 stat dispositions_warmed 1
 case monsters-small-fear-6 6 0 2000 all --civs-per-race 4 --event-intensity normal monsters-small-fear
-monsters-small-fear-6 table race_relation 8779ffa03f9a85c90795a421f012a21576ca04382010b9964a2b68f9275dbd2d
-monsters-small-fear-6 table settlement_race 1eb1580646c415c007641157509cd6ad5f7d38fd8028f2b1271a789468bcc6d6
+monsters-small-fear-6 table race_relation 84a8fbf315860e6de07ba4761668dd4cdca6257c7be83e8db889d795a262b3e9
+monsters-small-fear-6 table settlement_race 3599cc8cc7a900cfae0ac8d2bd58c73f8f2fa903681dce630609fb1004d679f8
 monsters-small-fear-6 events_settlement_fled 3
-monsters-small-fear-6 events_peoples_met 14
-monsters-small-fear-6 events_disposition_turned 1
-monsters-small-fear-6 events_refugees_arrived 2
-monsters-small-fear-6 events_settlement_mixed 2
+monsters-small-fear-6 events_peoples_met 15
+monsters-small-fear-6 events_disposition_turned 3
+monsters-small-fear-6 events_refugees_arrived 3
+monsters-small-fear-6 events_settlement_mixed 1
 monsters-small-fear-6 events_standing_changed 0
 monsters-small-fear-6 events_people_expelled 0
-monsters-small-fear-6 stat race_relations 64
-monsters-small-fear-6 stat settlement_races 35
+monsters-small-fear-6 stat race_relations 131
+monsters-small-fear-6 stat settlement_races 39
 monsters-small-fear-6 stat race_pairs 15
-monsters-small-fear-6 stat race_pairs_met 14
-monsters-small-fear-6 stat dispositions_turned 1
-monsters-small-fear-6 stat pairs_hatred 4
-monsters-small-fear-6 stat pairs_friendship 2
-monsters-small-fear-6 stat refugees_arrived 2
-monsters-small-fear-6 stat refugees_people 374
+monsters-small-fear-6 stat race_pairs_met 15
+monsters-small-fear-6 stat dispositions_turned 3
+monsters-small-fear-6 stat pairs_hatred 5
+monsters-small-fear-6 stat pairs_friendship 4
+monsters-small-fear-6 stat refugees_arrived 3
+monsters-small-fear-6 stat refugees_people 2959
 monsters-small-fear-6 stat people_expelled 0
 monsters-small-fear-6 stat expelled_people 0
-monsters-small-fear-6 stat settlements_mixed 0
-monsters-small-fear-6 stat settlements_mixed_ever 2
+monsters-small-fear-6 stat settlements_mixed 1
+monsters-small-fear-6 stat settlements_mixed_ever 1
 monsters-small-fear-6 stat settlements_fled 3
 monsters-small-fear-6 stat abandoned_without_destination 0
-monsters-small-fear-6 stat abandonment_lost 209
+monsters-small-fear-6 stat abandonment_lost 239
 monsters-small-fear-6 stat monster_stories 3
 monsters-small-fear-6 stat ruins_oldest_year 689
+monsters-small-fear-6 stat peoples_met_by_word 0
+monsters-small-fear-6 stat dispositions_warmed 2
 case monsters-small-fear-7 7 0 6000 all --civs-per-race 4 --event-intensity turbulent monsters-small-fear
-monsters-small-fear-7 table race_relation 4d6a8eccec2a125cfef16aed81b7bce4127d1db1ef6fc083c6a5355bc4929d5e
-monsters-small-fear-7 table settlement_race b83052bdd250186e9bc0e5c2f3082af952c3c28c67eaebd12e8a82c9fbdf7835
-monsters-small-fear-7 events_settlement_fled 12
+monsters-small-fear-7 table race_relation edc57d95c78745af7b151765c9f43fa294a9a7195c54b92d3195801daeb5dfdd
+monsters-small-fear-7 table settlement_race 4f3c885673a2a77e9475f31ecbf3d784c6d8fbbafda91cf5b226248a3cca373c
+monsters-small-fear-7 events_settlement_fled 11
 monsters-small-fear-7 events_peoples_met 15
-monsters-small-fear-7 events_disposition_turned 1
-monsters-small-fear-7 events_refugees_arrived 10
-monsters-small-fear-7 events_settlement_mixed 7
+monsters-small-fear-7 events_disposition_turned 9
+monsters-small-fear-7 events_refugees_arrived 7
+monsters-small-fear-7 events_settlement_mixed 6
 monsters-small-fear-7 events_standing_changed 0
 monsters-small-fear-7 events_people_expelled 0
-monsters-small-fear-7 stat race_relations 85
-monsters-small-fear-7 stat settlement_races 122
+monsters-small-fear-7 stat race_relations 215
+monsters-small-fear-7 stat settlement_races 132
 monsters-small-fear-7 stat race_pairs 15
 monsters-small-fear-7 stat race_pairs_met 15
-monsters-small-fear-7 stat dispositions_turned 1
-monsters-small-fear-7 stat pairs_hatred 5
-monsters-small-fear-7 stat pairs_friendship 2
-monsters-small-fear-7 stat refugees_arrived 10
-monsters-small-fear-7 stat refugees_people 5002
+monsters-small-fear-7 stat dispositions_turned 9
+monsters-small-fear-7 stat pairs_hatred 4
+monsters-small-fear-7 stat pairs_friendship 5
+monsters-small-fear-7 stat refugees_arrived 7
+monsters-small-fear-7 stat refugees_people 4315
 monsters-small-fear-7 stat people_expelled 0
 monsters-small-fear-7 stat expelled_people 0
-monsters-small-fear-7 stat settlements_mixed 2
-monsters-small-fear-7 stat settlements_mixed_ever 6
-monsters-small-fear-7 stat settlements_fled 12
-monsters-small-fear-7 stat abandoned_without_destination 5
-monsters-small-fear-7 stat abandonment_lost 411
+monsters-small-fear-7 stat settlements_mixed 0
+monsters-small-fear-7 stat settlements_mixed_ever 5
+monsters-small-fear-7 stat settlements_fled 11
+monsters-small-fear-7 stat abandoned_without_destination 4
+monsters-small-fear-7 stat abandonment_lost 461
 monsters-small-fear-7 stat monster_stories 3
 monsters-small-fear-7 stat ruins_oldest_year 927
+monsters-small-fear-7 stat peoples_met_by_word 0
+monsters-small-fear-7 stat dispositions_warmed 6
 case monsters-small-fear-9 9 0 6000 all --civs-per-race auto --event-intensity normal monsters-small-fear
-monsters-small-fear-9 table race_relation ab44a4962e56c6ce37b93c5e3249a7fd5a005e087c355ef7cd51283cf0133b66
-monsters-small-fear-9 table settlement_race 531a05d73eb6bce4bd0cc1390bbdcf97f8cef80c2c7d48e19e14f556249ea491
+monsters-small-fear-9 table race_relation 327658bad10084873428d84b5fa4339f3b1d8d170f5b7a09b9c4e40a18ac134a
+monsters-small-fear-9 table settlement_race ec0fd831734ace505f5911a63038e1be6a2bdd78b726687f095dcc4d77ecad9c
 monsters-small-fear-9 events_settlement_fled 0
 monsters-small-fear-9 events_peoples_met 15
-monsters-small-fear-9 events_disposition_turned 0
+monsters-small-fear-9 events_disposition_turned 1
 monsters-small-fear-9 events_refugees_arrived 0
-monsters-small-fear-9 events_settlement_mixed 1
+monsters-small-fear-9 events_settlement_mixed 0
 monsters-small-fear-9 events_standing_changed 0
 monsters-small-fear-9 events_people_expelled 0
-monsters-small-fear-9 stat race_relations 32
-monsters-small-fear-9 stat settlement_races 13
+monsters-small-fear-9 stat race_relations 52
+monsters-small-fear-9 stat settlement_races 9
 monsters-small-fear-9 stat race_pairs 15
 monsters-small-fear-9 stat race_pairs_met 15
-monsters-small-fear-9 stat dispositions_turned 0
+monsters-small-fear-9 stat dispositions_turned 1
 monsters-small-fear-9 stat pairs_hatred 4
-monsters-small-fear-9 stat pairs_friendship 2
+monsters-small-fear-9 stat pairs_friendship 3
 monsters-small-fear-9 stat refugees_arrived 0
 monsters-small-fear-9 stat refugees_people 0
 monsters-small-fear-9 stat people_expelled 0
 monsters-small-fear-9 stat expelled_people 0
-monsters-small-fear-9 stat settlements_mixed 1
-monsters-small-fear-9 stat settlements_mixed_ever 1
+monsters-small-fear-9 stat settlements_mixed 0
+monsters-small-fear-9 stat settlements_mixed_ever 0
 monsters-small-fear-9 stat settlements_fled 0
 monsters-small-fear-9 stat abandoned_without_destination 0
 monsters-small-fear-9 stat abandonment_lost 0
 monsters-small-fear-9 stat monster_stories 0
-monsters-small-fear-9 stat ruins_oldest_year 4144
+monsters-small-fear-9 stat ruins_oldest_year 5288
+monsters-small-fear-9 stat peoples_met_by_word 0
+monsters-small-fear-9 stat dispositions_warmed 1
 case monsters-small-fear-12 12 0 2000 goblin,human,orc --civs-per-race 4 --event-intensity normal monsters-small-fear
-monsters-small-fear-12 table race_relation 98492bc6c5c196db1598ec340c99148a8304d94ffbfcf306a51592db5a41ae49
-monsters-small-fear-12 table settlement_race 6a787379d93c36b04f464c2c06e08c53b1c0917f8a2f2def0c104a921e68b130
-monsters-small-fear-12 events_settlement_fled 10
+monsters-small-fear-12 table race_relation 6f613f110dc8ea9d7b3f5e0ed90a59c7a4f389f73acdaf7893ee3a2ca66ba3da
+monsters-small-fear-12 table settlement_race ff179ed46bd000f28144b92460d468214443ba073a2dd6ee320cfe4e75d042c2
+monsters-small-fear-12 events_settlement_fled 8
 monsters-small-fear-12 events_peoples_met 3
-monsters-small-fear-12 events_disposition_turned 1
+monsters-small-fear-12 events_disposition_turned 0
 monsters-small-fear-12 events_refugees_arrived 3
 monsters-small-fear-12 events_settlement_mixed 0
 monsters-small-fear-12 events_standing_changed 0
 monsters-small-fear-12 events_people_expelled 0
-monsters-small-fear-12 stat race_relations 11
-monsters-small-fear-12 stat settlement_races 29
+monsters-small-fear-12 stat race_relations 8
+monsters-small-fear-12 stat settlement_races 27
 monsters-small-fear-12 stat race_pairs 3
 monsters-small-fear-12 stat race_pairs_met 3
-monsters-small-fear-12 stat dispositions_turned 1
-monsters-small-fear-12 stat pairs_hatred 1
+monsters-small-fear-12 stat dispositions_turned 0
+monsters-small-fear-12 stat pairs_hatred 0
 monsters-small-fear-12 stat pairs_friendship 1
 monsters-small-fear-12 stat refugees_arrived 3
-monsters-small-fear-12 stat refugees_people 2804
+monsters-small-fear-12 stat refugees_people 5020
 monsters-small-fear-12 stat people_expelled 0
 monsters-small-fear-12 stat expelled_people 0
 monsters-small-fear-12 stat settlements_mixed 0
 monsters-small-fear-12 stat settlements_mixed_ever 0
-monsters-small-fear-12 stat settlements_fled 10
+monsters-small-fear-12 stat settlements_fled 8
 monsters-small-fear-12 stat abandoned_without_destination 1
-monsters-small-fear-12 stat abandonment_lost 1014
+monsters-small-fear-12 stat abandonment_lost 1003
 monsters-small-fear-12 stat monster_stories 3
 monsters-small-fear-12 stat ruins_oldest_year 278
+monsters-small-fear-12 stat peoples_met_by_word 0
+monsters-small-fear-12 stat dispositions_warmed 0
 case monsters-small-fear-13 13 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity turbulent monsters-small-fear
-monsters-small-fear-13 table race_relation e8eebdac73c30fa19104ff16641495dc2b19b962bb3c47235e9ac5cdbe1a7668
-monsters-small-fear-13 table settlement_race 05d60f6c390a61090ed70107021fa9f477db07f438ac94dd1dbffde570753b77
-monsters-small-fear-13 events_settlement_fled 13
+monsters-small-fear-13 table race_relation a4060683fc904327f245cdb3a1c548c1d186440a962fec220ea90e7ee92965f3
+monsters-small-fear-13 table settlement_race 410e579066160cabb79665b7a7c7552d0e293f270c852a6325c01fe347b783ea
+monsters-small-fear-13 events_settlement_fled 14
 monsters-small-fear-13 events_peoples_met 3
 monsters-small-fear-13 events_disposition_turned 0
-monsters-small-fear-13 events_refugees_arrived 5
-monsters-small-fear-13 events_settlement_mixed 1
-monsters-small-fear-13 events_standing_changed 1
+monsters-small-fear-13 events_refugees_arrived 3
+monsters-small-fear-13 events_settlement_mixed 0
+monsters-small-fear-13 events_standing_changed 0
 monsters-small-fear-13 events_people_expelled 0
-monsters-small-fear-13 stat race_relations 17
-monsters-small-fear-13 stat settlement_races 48
+monsters-small-fear-13 stat race_relations 11
+monsters-small-fear-13 stat settlement_races 24
 monsters-small-fear-13 stat race_pairs 3
 monsters-small-fear-13 stat race_pairs_met 3
 monsters-small-fear-13 stat dispositions_turned 0
 monsters-small-fear-13 stat pairs_hatred 0
 monsters-small-fear-13 stat pairs_friendship 1
-monsters-small-fear-13 stat refugees_arrived 5
-monsters-small-fear-13 stat refugees_people 3965
+monsters-small-fear-13 stat refugees_arrived 3
+monsters-small-fear-13 stat refugees_people 2269
 monsters-small-fear-13 stat people_expelled 0
 monsters-small-fear-13 stat expelled_people 0
 monsters-small-fear-13 stat settlements_mixed 0
-monsters-small-fear-13 stat settlements_mixed_ever 1
-monsters-small-fear-13 stat settlements_fled 13
+monsters-small-fear-13 stat settlements_mixed_ever 0
+monsters-small-fear-13 stat settlements_fled 14
 monsters-small-fear-13 stat abandoned_without_destination 4
-monsters-small-fear-13 stat abandonment_lost 474
+monsters-small-fear-13 stat abandonment_lost 505
 monsters-small-fear-13 stat monster_stories 3
 monsters-small-fear-13 stat ruins_oldest_year 420
+monsters-small-fear-13 stat peoples_met_by_word 0
+monsters-small-fear-13 stat dispositions_warmed 0
 case zero-0 0 0 2000 all --civs-per-race auto --event-intensity normal zero
 zero-0 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-0 table settlement_race a28dc41f775ae45f9d31b3af9ed38f48cc7449e1260ae46206b5e1e09d8eadad
+zero-0 table settlement_race 637a16768923067182c66d6d5b4029b86479f11cc790ae7089c78961b9e8af0a
 zero-0 events_settlement_fled 0
 zero-0 events_peoples_met 0
 zero-0 events_disposition_turned 0
@@ -599,11 +639,13 @@ zero-0 stat settlements_fled 0
 zero-0 stat abandoned_without_destination 0
 zero-0 stat abandonment_lost 0
 zero-0 stat monster_stories 0
-zero-0 stat ruins_oldest_year -
+zero-0 stat ruins_oldest_year 1431
+zero-0 stat peoples_met_by_word 0
+zero-0 stat dispositions_warmed 0
 case zero-1 1 0 6000 all --civs-per-race auto --event-intensity turbulent zero
 zero-1 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-1 table settlement_race c57c80b6bd7b275f70cdaa4937c30cb51dbe93fe9f685f6114c67409b4260762
-zero-1 events_settlement_fled 0
+zero-1 table settlement_race 9d41b6d0004b41a8a034695c7f97a237e443737647c07c79a3012ac4eee06b5c
+zero-1 events_settlement_fled 2
 zero-1 events_peoples_met 0
 zero-1 events_disposition_turned 0
 zero-1 events_refugees_arrived 0
@@ -611,7 +653,7 @@ zero-1 events_settlement_mixed 0
 zero-1 events_standing_changed 0
 zero-1 events_people_expelled 0
 zero-1 stat race_relations 0
-zero-1 stat settlement_races 9
+zero-1 stat settlement_races 10
 zero-1 stat race_pairs 15
 zero-1 stat race_pairs_met 0
 zero-1 stat dispositions_turned 0
@@ -623,14 +665,16 @@ zero-1 stat people_expelled 0
 zero-1 stat expelled_people 0
 zero-1 stat settlements_mixed 0
 zero-1 stat settlements_mixed_ever 0
-zero-1 stat settlements_fled 0
+zero-1 stat settlements_fled 2
 zero-1 stat abandoned_without_destination 0
-zero-1 stat abandonment_lost 0
-zero-1 stat monster_stories 0
-zero-1 stat ruins_oldest_year -
+zero-1 stat abandonment_lost 200
+zero-1 stat monster_stories 2
+zero-1 stat ruins_oldest_year 2976
+zero-1 stat peoples_met_by_word 0
+zero-1 stat dispositions_warmed 0
 case zero-2 2 0 2000 elf,goblin --civs-per-race auto --event-intensity calm zero
 zero-2 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-2 table settlement_race 0d6b2cd46623f75124b55135563592cd59d0bf9d939ba671ada35c8fc5aae46f
+zero-2 table settlement_race ed50d09d237acdd73b488ca4918e811b618095cb72c9e31d57e2d49b82968d24
 zero-2 events_settlement_fled 0
 zero-2 events_peoples_met 0
 zero-2 events_disposition_turned 0
@@ -639,7 +683,7 @@ zero-2 events_settlement_mixed 0
 zero-2 events_standing_changed 0
 zero-2 events_people_expelled 0
 zero-2 stat race_relations 0
-zero-2 stat settlement_races 16
+zero-2 stat settlement_races 24
 zero-2 stat race_pairs 1
 zero-2 stat race_pairs_met 0
 zero-2 stat dispositions_turned 0
@@ -649,13 +693,15 @@ zero-2 stat refugees_arrived 0
 zero-2 stat refugees_people 0
 zero-2 stat people_expelled 0
 zero-2 stat expelled_people 0
-zero-2 stat settlements_mixed 0
+zero-2 stat settlements_mixed 4
 zero-2 stat settlements_mixed_ever 0
 zero-2 stat settlements_fled 0
 zero-2 stat abandoned_without_destination 0
 zero-2 stat abandonment_lost 0
 zero-2 stat monster_stories 0
 zero-2 stat ruins_oldest_year -
+zero-2 stat peoples_met_by_word 0
+zero-2 stat dispositions_warmed 0
 case zero-3 3 0 6000 elf,goblin --civs-per-race auto --event-intensity normal zero
 zero-3 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 zero-3 table settlement_race 5d4562426def81d1c146b5387d4786f3fdfa4a8233a756e18fd98990f8b8000c
@@ -684,9 +730,11 @@ zero-3 stat abandoned_without_destination 0
 zero-3 stat abandonment_lost 10
 zero-3 stat monster_stories 0
 zero-3 stat ruins_oldest_year 5713
+zero-3 stat peoples_met_by_word 0
+zero-3 stat dispositions_warmed 0
 case zero-5 5 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity calm zero
 zero-5 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-5 table settlement_race 71ec93bd0884a87af6fd351acc37723669575f7900c25a578e86504a09e5c236
+zero-5 table settlement_race 385a5ed436894904f9e3e96272f632be03f17acd9e8057821ee2d5e8a0b2033b
 zero-5 events_settlement_fled 0
 zero-5 events_peoples_met 0
 zero-5 events_disposition_turned 0
@@ -695,7 +743,7 @@ zero-5 events_settlement_mixed 0
 zero-5 events_standing_changed 0
 zero-5 events_people_expelled 0
 zero-5 stat race_relations 0
-zero-5 stat settlement_races 22
+zero-5 stat settlement_races 30
 zero-5 stat race_pairs 3
 zero-5 stat race_pairs_met 0
 zero-5 stat dispositions_turned 0
@@ -705,13 +753,15 @@ zero-5 stat refugees_arrived 0
 zero-5 stat refugees_people 0
 zero-5 stat people_expelled 0
 zero-5 stat expelled_people 0
-zero-5 stat settlements_mixed 1
+zero-5 stat settlements_mixed 4
 zero-5 stat settlements_mixed_ever 0
 zero-5 stat settlements_fled 0
 zero-5 stat abandoned_without_destination 0
 zero-5 stat abandonment_lost 34
 zero-5 stat monster_stories 0
-zero-5 stat ruins_oldest_year 5679
+zero-5 stat ruins_oldest_year 5841
+zero-5 stat peoples_met_by_word 0
+zero-5 stat dispositions_warmed 0
 case zero-6 6 0 2000 all --civs-per-race 4 --event-intensity normal zero
 zero-6 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 zero-6 table settlement_race aeca5022c59faab8816856fd016410b134a36b08e2b328df764c29ae4aa5159f
@@ -737,12 +787,14 @@ zero-6 stat settlements_mixed 0
 zero-6 stat settlements_mixed_ever 0
 zero-6 stat settlements_fled 0
 zero-6 stat abandoned_without_destination 0
-zero-6 stat abandonment_lost 43
+zero-6 stat abandonment_lost 44
 zero-6 stat monster_stories 0
 zero-6 stat ruins_oldest_year 1430
+zero-6 stat peoples_met_by_word 0
+zero-6 stat dispositions_warmed 0
 case zero-7 7 0 6000 all --civs-per-race 4 --event-intensity turbulent zero
 zero-7 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-7 table settlement_race 8211d9038af277cb05abcf9b264a29d9d9b7273453780dc3d208806cb6b02490
+zero-7 table settlement_race 9e2815c4b5d5e3b92192ca443fc36da5994c4bdf45e13769256b078b6cfd6673
 zero-7 events_settlement_fled 0
 zero-7 events_peoples_met 0
 zero-7 events_disposition_turned 0
@@ -751,7 +803,7 @@ zero-7 events_settlement_mixed 0
 zero-7 events_standing_changed 0
 zero-7 events_people_expelled 0
 zero-7 stat race_relations 0
-zero-7 stat settlement_races 63
+zero-7 stat settlement_races 122
 zero-7 stat race_pairs 15
 zero-7 stat race_pairs_met 0
 zero-7 stat dispositions_turned 0
@@ -761,13 +813,15 @@ zero-7 stat refugees_arrived 0
 zero-7 stat refugees_people 0
 zero-7 stat people_expelled 0
 zero-7 stat expelled_people 0
-zero-7 stat settlements_mixed 0
+zero-7 stat settlements_mixed 6
 zero-7 stat settlements_mixed_ever 0
 zero-7 stat settlements_fled 0
 zero-7 stat abandoned_without_destination 0
-zero-7 stat abandonment_lost 283
-zero-7 stat monster_stories 0
-zero-7 stat ruins_oldest_year 3345
+zero-7 stat abandonment_lost 215
+zero-7 stat monster_stories 1
+zero-7 stat ruins_oldest_year 2905
+zero-7 stat peoples_met_by_word 0
+zero-7 stat dispositions_warmed 0
 case zero-9 9 0 6000 all --civs-per-race auto --event-intensity normal zero
 zero-9 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 zero-9 table settlement_race 3577a321572e6668a2edc7b1a5c0d56a7edb58b5ba2e03f935f31331ad496f3c
@@ -796,6 +850,8 @@ zero-9 stat abandoned_without_destination 0
 zero-9 stat abandonment_lost 65
 zero-9 stat monster_stories 0
 zero-9 stat ruins_oldest_year 5840
+zero-9 stat peoples_met_by_word 0
+zero-9 stat dispositions_warmed 0
 case zero-12 12 0 2000 goblin,human,orc --civs-per-race 4 --event-intensity normal zero
 zero-12 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 zero-12 table settlement_race 1fb53cd77ebab64adc8e87e2298288d2ddb6343797c5e8cdadb04b275f449298
@@ -824,9 +880,11 @@ zero-12 stat abandoned_without_destination 0
 zero-12 stat abandonment_lost 0
 zero-12 stat monster_stories 0
 zero-12 stat ruins_oldest_year -
+zero-12 stat peoples_met_by_word 0
+zero-12 stat dispositions_warmed 0
 case zero-13 13 0 6000 goblin,human,orc --civs-per-race 4 --event-intensity turbulent zero
 zero-13 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-zero-13 table settlement_race afe1506095b6369baeee9b2f9dce784177e4a7feb46157b091a7167d05651f89
+zero-13 table settlement_race 2567bbd315ae74af1d252862449bdeeea0b07d50cba0dc834c20931b956b751e
 zero-13 events_settlement_fled 0
 zero-13 events_peoples_met 0
 zero-13 events_disposition_turned 0
@@ -835,7 +893,7 @@ zero-13 events_settlement_mixed 0
 zero-13 events_standing_changed 0
 zero-13 events_people_expelled 0
 zero-13 stat race_relations 0
-zero-13 stat settlement_races 26
+zero-13 stat settlement_races 24
 zero-13 stat race_pairs 3
 zero-13 stat race_pairs_met 0
 zero-13 stat dispositions_turned 0
@@ -845,165 +903,177 @@ zero-13 stat refugees_arrived 0
 zero-13 stat refugees_people 0
 zero-13 stat people_expelled 0
 zero-13 stat expelled_people 0
-zero-13 stat settlements_mixed 2
+zero-13 stat settlements_mixed 1
 zero-13 stat settlements_mixed_ever 0
 zero-13 stat settlements_fled 0
 zero-13 stat abandoned_without_destination 0
 zero-13 stat abandonment_lost 212
 zero-13 stat monster_stories 0
 zero-13 stat ruins_oldest_year 4950
+zero-13 stat peoples_met_by_word 0
+zero-13 stat dispositions_warmed 0
 case geo-seed-0-512 0 512 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-geo-seed-0-512 table race_relation 2ef99a3b0cb1096fe678580e19aee9705aa8a337c48ce0a78b8d02aa99c9bba5
-geo-seed-0-512 table settlement_race 8d24ad0603e83ccf677e3732440df0b611c47ca9eae9ada8d063e72f0d0923c8
+geo-seed-0-512 table race_relation b9c17e467515a73343373e25c8683a5cca399a5e28bd87d76d52ff5ed40734d9
+geo-seed-0-512 table settlement_race 0700ec65c5ba1dadd16fb83c44f0b6ffe93e97f314646f91b81d312797d685ae
 geo-seed-0-512 events_settlement_fled 0
 geo-seed-0-512 events_peoples_met 15
-geo-seed-0-512 events_disposition_turned 0
-geo-seed-0-512 events_refugees_arrived 1
-geo-seed-0-512 events_settlement_mixed 7
+geo-seed-0-512 events_disposition_turned 4
+geo-seed-0-512 events_refugees_arrived 0
+geo-seed-0-512 events_settlement_mixed 5
 geo-seed-0-512 events_standing_changed 0
 geo-seed-0-512 events_people_expelled 0
-geo-seed-0-512 stat race_relations 27
-geo-seed-0-512 stat settlement_races 68
+geo-seed-0-512 stat race_relations 77
+geo-seed-0-512 stat settlement_races 56
 geo-seed-0-512 stat race_pairs 15
 geo-seed-0-512 stat race_pairs_met 15
-geo-seed-0-512 stat dispositions_turned 0
+geo-seed-0-512 stat dispositions_turned 4
 geo-seed-0-512 stat pairs_hatred 4
-geo-seed-0-512 stat pairs_friendship 2
-geo-seed-0-512 stat refugees_arrived 1
-geo-seed-0-512 stat refugees_people 192
+geo-seed-0-512 stat pairs_friendship 6
+geo-seed-0-512 stat refugees_arrived 0
+geo-seed-0-512 stat refugees_people 0
 geo-seed-0-512 stat people_expelled 0
 geo-seed-0-512 stat expelled_people 0
-geo-seed-0-512 stat settlements_mixed 5
-geo-seed-0-512 stat settlements_mixed_ever 6
+geo-seed-0-512 stat settlements_mixed 3
+geo-seed-0-512 stat settlements_mixed_ever 3
 geo-seed-0-512 stat settlements_fled 0
 geo-seed-0-512 stat abandoned_without_destination 0
-geo-seed-0-512 stat abandonment_lost 303
-geo-seed-0-512 stat monster_stories 1
-geo-seed-0-512 stat ruins_oldest_year 5010
+geo-seed-0-512 stat abandonment_lost 99
+geo-seed-0-512 stat monster_stories 2
+geo-seed-0-512 stat ruins_oldest_year 5074
+geo-seed-0-512 stat peoples_met_by_word 0
+geo-seed-0-512 stat dispositions_warmed 4
 case geo-seed-42-512 42 512 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-geo-seed-42-512 table race_relation 4fdc9ec957d11df2030497d737834f44ab5502bbdbd10b92f5d3363591f370bb
-geo-seed-42-512 table settlement_race c986ce4abf3406e9233a28ff4e889b1cd205a74e55f5c2f32c920ffbfe7ea552
+geo-seed-42-512 table race_relation dd4a6a17037da9ecf167b9afbded96b6bca42b0afc1bfcc6f88ae0fe5a191f54
+geo-seed-42-512 table settlement_race 4ae45e7b41df4b85c2aab7abced6fde8e8d9d066bf3344edd3100966b459194d
 geo-seed-42-512 events_settlement_fled 0
 geo-seed-42-512 events_peoples_met 15
-geo-seed-42-512 events_disposition_turned 0
-geo-seed-42-512 events_refugees_arrived 4
-geo-seed-42-512 events_settlement_mixed 5
-geo-seed-42-512 events_standing_changed 0
-geo-seed-42-512 events_people_expelled 1
-geo-seed-42-512 stat race_relations 60
-geo-seed-42-512 stat settlement_races 176
+geo-seed-42-512 events_disposition_turned 5
+geo-seed-42-512 events_refugees_arrived 5
+geo-seed-42-512 events_settlement_mixed 11
+geo-seed-42-512 events_standing_changed 2
+geo-seed-42-512 events_people_expelled 2
+geo-seed-42-512 stat race_relations 134
+geo-seed-42-512 stat settlement_races 209
 geo-seed-42-512 stat race_pairs 15
 geo-seed-42-512 stat race_pairs_met 15
-geo-seed-42-512 stat dispositions_turned 0
+geo-seed-42-512 stat dispositions_turned 5
 geo-seed-42-512 stat pairs_hatred 4
-geo-seed-42-512 stat pairs_friendship 2
-geo-seed-42-512 stat refugees_arrived 4
-geo-seed-42-512 stat refugees_people 409
-geo-seed-42-512 stat people_expelled 1
-geo-seed-42-512 stat expelled_people 63
-geo-seed-42-512 stat settlements_mixed 1
-geo-seed-42-512 stat settlements_mixed_ever 5
+geo-seed-42-512 stat pairs_friendship 5
+geo-seed-42-512 stat refugees_arrived 5
+geo-seed-42-512 stat refugees_people 1304
+geo-seed-42-512 stat people_expelled 2
+geo-seed-42-512 stat expelled_people 269
+geo-seed-42-512 stat settlements_mixed 4
+geo-seed-42-512 stat settlements_mixed_ever 9
 geo-seed-42-512 stat settlements_fled 0
-geo-seed-42-512 stat abandoned_without_destination 1
-geo-seed-42-512 stat abandonment_lost 268
-geo-seed-42-512 stat monster_stories 1
-geo-seed-42-512 stat ruins_oldest_year 3294
+geo-seed-42-512 stat abandoned_without_destination 0
+geo-seed-42-512 stat abandonment_lost 226
+geo-seed-42-512 stat monster_stories 3
+geo-seed-42-512 stat ruins_oldest_year 2344
+geo-seed-42-512 stat peoples_met_by_word 0
+geo-seed-42-512 stat dispositions_warmed 4
 case geo-phrase-512 15629206466951235176 512 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-geo-phrase-512 table race_relation 2a867ddf833a2dadd205375e420ecf1552e828eae30beb59a18f28e9b7b1c7c1
-geo-phrase-512 table settlement_race 94c64cd144e5aa44f932cc5cb1ab003599d0f2a8038d49fd6d779ce50fa990e0
+geo-phrase-512 table race_relation da3b32e87203edafd87dc4eaef86d70a97d35f7b8f04d324f4ee71a7e3d8727f
+geo-phrase-512 table settlement_race c3a6462d49271935b2d95c3529c9adf9fa022d7da5140a5e3fd5e298a6a18576
 geo-phrase-512 events_settlement_fled 0
 geo-phrase-512 events_peoples_met 15
-geo-phrase-512 events_disposition_turned 0
-geo-phrase-512 events_refugees_arrived 0
-geo-phrase-512 events_settlement_mixed 5
+geo-phrase-512 events_disposition_turned 5
+geo-phrase-512 events_refugees_arrived 2
+geo-phrase-512 events_settlement_mixed 4
 geo-phrase-512 events_standing_changed 1
 geo-phrase-512 events_people_expelled 0
-geo-phrase-512 stat race_relations 41
-geo-phrase-512 stat settlement_races 76
+geo-phrase-512 stat race_relations 89
+geo-phrase-512 stat settlement_races 84
 geo-phrase-512 stat race_pairs 15
 geo-phrase-512 stat race_pairs_met 15
-geo-phrase-512 stat dispositions_turned 0
-geo-phrase-512 stat pairs_hatred 4
-geo-phrase-512 stat pairs_friendship 2
-geo-phrase-512 stat refugees_arrived 0
-geo-phrase-512 stat refugees_people 0
+geo-phrase-512 stat dispositions_turned 5
+geo-phrase-512 stat pairs_hatred 2
+geo-phrase-512 stat pairs_friendship 5
+geo-phrase-512 stat refugees_arrived 2
+geo-phrase-512 stat refugees_people 303
 geo-phrase-512 stat people_expelled 0
 geo-phrase-512 stat expelled_people 0
-geo-phrase-512 stat settlements_mixed 4
-geo-phrase-512 stat settlements_mixed_ever 5
+geo-phrase-512 stat settlements_mixed 2
+geo-phrase-512 stat settlements_mixed_ever 3
 geo-phrase-512 stat settlements_fled 0
-geo-phrase-512 stat abandoned_without_destination 1
-geo-phrase-512 stat abandonment_lost 73
+geo-phrase-512 stat abandoned_without_destination 0
+geo-phrase-512 stat abandonment_lost 52
 geo-phrase-512 stat monster_stories 1
-geo-phrase-512 stat ruins_oldest_year 4961
+geo-phrase-512 stat ruins_oldest_year 4406
+geo-phrase-512 stat peoples_met_by_word 0
+geo-phrase-512 stat dispositions_warmed 5
 case geo-seed-1-1024 1 1024 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-geo-seed-1-1024 table race_relation 06ef3edaca4f1240ab93864d54f9cdce613c896548fd968e17880436374f0e44
-geo-seed-1-1024 table settlement_race e6ed69c3cf4aa106f7fe608aa4b9d42b6b44282dc4790650f380981491ece934
-geo-seed-1-1024 events_settlement_fled 0
+geo-seed-1-1024 table race_relation 82d471390098c989f078ab404bc922082f4a2aaca942b59d7ebf960f21ad2885
+geo-seed-1-1024 table settlement_race f5408c56e1f4f763293fdb6b1df22e0be1aeda95e12cd2ef300d4ff9d11d255c
+geo-seed-1-1024 events_settlement_fled 1
 geo-seed-1-1024 events_peoples_met 15
 geo-seed-1-1024 events_disposition_turned 5
-geo-seed-1-1024 events_refugees_arrived 3
-geo-seed-1-1024 events_settlement_mixed 13
-geo-seed-1-1024 events_standing_changed 7
-geo-seed-1-1024 events_people_expelled 0
-geo-seed-1-1024 stat race_relations 56
-geo-seed-1-1024 stat settlement_races 235
+geo-seed-1-1024 events_refugees_arrived 8
+geo-seed-1-1024 events_settlement_mixed 31
+geo-seed-1-1024 events_standing_changed 3
+geo-seed-1-1024 events_people_expelled 5
+geo-seed-1-1024 stat race_relations 115
+geo-seed-1-1024 stat settlement_races 428
 geo-seed-1-1024 stat race_pairs 15
 geo-seed-1-1024 stat race_pairs_met 15
 geo-seed-1-1024 stat dispositions_turned 5
-geo-seed-1-1024 stat pairs_hatred 5
-geo-seed-1-1024 stat pairs_friendship 2
-geo-seed-1-1024 stat refugees_arrived 3
-geo-seed-1-1024 stat refugees_people 1956
-geo-seed-1-1024 stat people_expelled 0
-geo-seed-1-1024 stat expelled_people 0
-geo-seed-1-1024 stat settlements_mixed 6
-geo-seed-1-1024 stat settlements_mixed_ever 9
-geo-seed-1-1024 stat settlements_fled 0
-geo-seed-1-1024 stat abandoned_without_destination 0
-geo-seed-1-1024 stat abandonment_lost 23
+geo-seed-1-1024 stat pairs_hatred 4
+geo-seed-1-1024 stat pairs_friendship 5
+geo-seed-1-1024 stat refugees_arrived 8
+geo-seed-1-1024 stat refugees_people 4212
+geo-seed-1-1024 stat people_expelled 5
+geo-seed-1-1024 stat expelled_people 846
+geo-seed-1-1024 stat settlements_mixed 18
+geo-seed-1-1024 stat settlements_mixed_ever 27
+geo-seed-1-1024 stat settlements_fled 1
+geo-seed-1-1024 stat abandoned_without_destination 1
+geo-seed-1-1024 stat abandonment_lost 191
 geo-seed-1-1024 stat monster_stories 3
 geo-seed-1-1024 stat ruins_oldest_year 2102
+geo-seed-1-1024 stat peoples_met_by_word 0
+geo-seed-1-1024 stat dispositions_warmed 4
 case hist-span-2000-512 7 512 2000 all --history-detail normal --civs-per-race auto --event-intensity normal
-hist-span-2000-512 table race_relation e950107e07884ca2033b648d05d237f1b9427ba66ed3a2185eae196980db9afc
-hist-span-2000-512 table settlement_race ed341404fcc0906c32762e54302f0b702ee47450f3b1e0eab2c5f296d81ca13b
+hist-span-2000-512 table race_relation 683c112d3bc71c54f3301abf85e4643d8ea2a260f45b23cb3da249ac2f5efb40
+hist-span-2000-512 table settlement_race 97051748f3cbc475df3de60001c0b2b1ae93addadd82ec6d8ec7f15f74a0c69d
 hist-span-2000-512 events_settlement_fled 0
 hist-span-2000-512 events_peoples_met 15
-hist-span-2000-512 events_disposition_turned 0
-hist-span-2000-512 events_refugees_arrived 1
-hist-span-2000-512 events_settlement_mixed 5
+hist-span-2000-512 events_disposition_turned 2
+hist-span-2000-512 events_refugees_arrived 2
+hist-span-2000-512 events_settlement_mixed 7
 hist-span-2000-512 events_standing_changed 0
-hist-span-2000-512 events_people_expelled 0
-hist-span-2000-512 stat race_relations 32
-hist-span-2000-512 stat settlement_races 74
+hist-span-2000-512 events_people_expelled 1
+hist-span-2000-512 stat race_relations 81
+hist-span-2000-512 stat settlement_races 75
 hist-span-2000-512 stat race_pairs 15
 hist-span-2000-512 stat race_pairs_met 15
-hist-span-2000-512 stat dispositions_turned 0
+hist-span-2000-512 stat dispositions_turned 2
 hist-span-2000-512 stat pairs_hatred 4
-hist-span-2000-512 stat pairs_friendship 2
-hist-span-2000-512 stat refugees_arrived 1
-hist-span-2000-512 stat refugees_people 519
-hist-span-2000-512 stat people_expelled 0
-hist-span-2000-512 stat expelled_people 0
+hist-span-2000-512 stat pairs_friendship 4
+hist-span-2000-512 stat refugees_arrived 2
+hist-span-2000-512 stat refugees_people 895
+hist-span-2000-512 stat people_expelled 1
+hist-span-2000-512 stat expelled_people 213
 hist-span-2000-512 stat settlements_mixed 4
 hist-span-2000-512 stat settlements_mixed_ever 5
 hist-span-2000-512 stat settlements_fled 0
 hist-span-2000-512 stat abandoned_without_destination 0
 hist-span-2000-512 stat abandonment_lost 0
-hist-span-2000-512 stat monster_stories 0
-hist-span-2000-512 stat ruins_oldest_year 1821
+hist-span-2000-512 stat monster_stories 1
+hist-span-2000-512 stat ruins_oldest_year 1134
+hist-span-2000-512 stat peoples_met_by_word 0
+hist-span-2000-512 stat dispositions_warmed 2
 case hist-races-elf-orc-1024 3 1024 6000 elf,orc --history-detail normal --civs-per-race auto --event-intensity normal
-hist-races-elf-orc-1024 table race_relation 39ce5c6b43fc9a5999541d8d36d34254ba647a562d9f461061a4ec305068dbc4
-hist-races-elf-orc-1024 table settlement_race 87c6766e2c34fd7e170aa44e263d847d2154fc63450b4570edea31daf654d7dc
-hist-races-elf-orc-1024 events_settlement_fled 0
+hist-races-elf-orc-1024 table race_relation bcea26ee8076fa75e918b39d20e5cedf78f2e58c3ac17c92f9f055d9c5b57d0e
+hist-races-elf-orc-1024 table settlement_race a967fbc990dcb4990a40cb7e7c2ff9b616134391c7b77382a81fa3d1734a11c4
+hist-races-elf-orc-1024 events_settlement_fled 2
 hist-races-elf-orc-1024 events_peoples_met 1
 hist-races-elf-orc-1024 events_disposition_turned 0
 hist-races-elf-orc-1024 events_refugees_arrived 0
-hist-races-elf-orc-1024 events_settlement_mixed 4
+hist-races-elf-orc-1024 events_settlement_mixed 8
 hist-races-elf-orc-1024 events_standing_changed 0
 hist-races-elf-orc-1024 events_people_expelled 0
 hist-races-elf-orc-1024 stat race_relations 2
-hist-races-elf-orc-1024 stat settlement_races 59
+hist-races-elf-orc-1024 stat settlement_races 68
 hist-races-elf-orc-1024 stat race_pairs 1
 hist-races-elf-orc-1024 stat race_pairs_met 1
 hist-races-elf-orc-1024 stat dispositions_turned 0
@@ -1013,178 +1083,222 @@ hist-races-elf-orc-1024 stat refugees_arrived 0
 hist-races-elf-orc-1024 stat refugees_people 0
 hist-races-elf-orc-1024 stat people_expelled 0
 hist-races-elf-orc-1024 stat expelled_people 0
-hist-races-elf-orc-1024 stat settlements_mixed 3
-hist-races-elf-orc-1024 stat settlements_mixed_ever 4
-hist-races-elf-orc-1024 stat settlements_fled 0
+hist-races-elf-orc-1024 stat settlements_mixed 6
+hist-races-elf-orc-1024 stat settlements_mixed_ever 8
+hist-races-elf-orc-1024 stat settlements_fled 2
 hist-races-elf-orc-1024 stat abandoned_without_destination 0
-hist-races-elf-orc-1024 stat abandonment_lost 61
-hist-races-elf-orc-1024 stat monster_stories 2
+hist-races-elf-orc-1024 stat abandonment_lost 262
+hist-races-elf-orc-1024 stat monster_stories 3
 hist-races-elf-orc-1024 stat ruins_oldest_year 5727
+hist-races-elf-orc-1024 stat peoples_met_by_word 0
+hist-races-elf-orc-1024 stat dispositions_warmed 0
 case hist-dense-1024 11 1024 6000 all --history-detail dense --civs-per-race auto --event-intensity normal
-hist-dense-1024 table race_relation 45aede66aafc63759e61b555004b767df224919420a1edbd3fe692613bc25e60
-hist-dense-1024 table settlement_race 2bbf544fb0f633ef54cace8432df3e41acf8c139c7bc41ee1f2b5b3bc047d4db
-hist-dense-1024 events_settlement_fled 2
+hist-dense-1024 table race_relation 31490b09412e3cd0f117c1a53429c599835d566d6e002a064bf07448b6ddeb07
+hist-dense-1024 table settlement_race 05e8766192301982887919465777f25edf19246e1e118bc075a2d75f81284904
+hist-dense-1024 events_settlement_fled 4
 hist-dense-1024 events_peoples_met 15
-hist-dense-1024 events_disposition_turned 0
-hist-dense-1024 events_refugees_arrived 3
-hist-dense-1024 events_settlement_mixed 19
+hist-dense-1024 events_disposition_turned 7
+hist-dense-1024 events_refugees_arrived 11
+hist-dense-1024 events_settlement_mixed 35
 hist-dense-1024 events_standing_changed 0
-hist-dense-1024 events_people_expelled 0
-hist-dense-1024 stat race_relations 37
-hist-dense-1024 stat settlement_races 161
+hist-dense-1024 events_people_expelled 6
+hist-dense-1024 stat race_relations 115
+hist-dense-1024 stat settlement_races 326
 hist-dense-1024 stat race_pairs 15
 hist-dense-1024 stat race_pairs_met 15
-hist-dense-1024 stat dispositions_turned 0
-hist-dense-1024 stat pairs_hatred 4
-hist-dense-1024 stat pairs_friendship 2
-hist-dense-1024 stat refugees_arrived 3
-hist-dense-1024 stat refugees_people 9448
-hist-dense-1024 stat people_expelled 0
-hist-dense-1024 stat expelled_people 0
-hist-dense-1024 stat settlements_mixed 13
-hist-dense-1024 stat settlements_mixed_ever 17
-hist-dense-1024 stat settlements_fled 2
-hist-dense-1024 stat abandoned_without_destination 0
-hist-dense-1024 stat abandonment_lost 446
+hist-dense-1024 stat dispositions_turned 7
+hist-dense-1024 stat pairs_hatred 5
+hist-dense-1024 stat pairs_friendship 6
+hist-dense-1024 stat refugees_arrived 11
+hist-dense-1024 stat refugees_people 4539
+hist-dense-1024 stat people_expelled 6
+hist-dense-1024 stat expelled_people 3212
+hist-dense-1024 stat settlements_mixed 10
+hist-dense-1024 stat settlements_mixed_ever 24
+hist-dense-1024 stat settlements_fled 4
+hist-dense-1024 stat abandoned_without_destination 1
+hist-dense-1024 stat abandonment_lost 705
 hist-dense-1024 stat monster_stories 3
 hist-dense-1024 stat ruins_oldest_year 2098
+hist-dense-1024 stat peoples_met_by_word 0
+hist-dense-1024 stat dispositions_warmed 5
 case hist-conflict-42-1024 42 1024 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-hist-conflict-42-1024 table race_relation d5b006da51b05b50afbe7edbf417938c5b764022451783c8f9fa67aff5bd8a27
-hist-conflict-42-1024 table settlement_race a625f4bb6b78c6a0082afa0a98e32aef8a036a2069b0c446fe65b7205fda4653
-hist-conflict-42-1024 events_settlement_fled 5
-hist-conflict-42-1024 events_peoples_met 12
-hist-conflict-42-1024 events_disposition_turned 3
-hist-conflict-42-1024 events_refugees_arrived 4
-hist-conflict-42-1024 events_settlement_mixed 5
-hist-conflict-42-1024 events_standing_changed 0
-hist-conflict-42-1024 events_people_expelled 2
-hist-conflict-42-1024 stat race_relations 41
-hist-conflict-42-1024 stat settlement_races 139
+hist-conflict-42-1024 table race_relation 87f5c66aab44990d7af4be1abc9103cf7cf046961c2e9ec6218f693e91ee2ecc
+hist-conflict-42-1024 table settlement_race 6a36742f665ab3f5d6b4653f7cda3c2bfed766475ddee38c5938c79e6432908c
+hist-conflict-42-1024 events_settlement_fled 7
+hist-conflict-42-1024 events_peoples_met 15
+hist-conflict-42-1024 events_disposition_turned 6
+hist-conflict-42-1024 events_refugees_arrived 10
+hist-conflict-42-1024 events_settlement_mixed 16
+hist-conflict-42-1024 events_standing_changed 2
+hist-conflict-42-1024 events_people_expelled 4
+hist-conflict-42-1024 stat race_relations 108
+hist-conflict-42-1024 stat settlement_races 263
 hist-conflict-42-1024 stat race_pairs 15
-hist-conflict-42-1024 stat race_pairs_met 12
-hist-conflict-42-1024 stat dispositions_turned 3
-hist-conflict-42-1024 stat pairs_hatred 5
-hist-conflict-42-1024 stat pairs_friendship 2
-hist-conflict-42-1024 stat refugees_arrived 4
-hist-conflict-42-1024 stat refugees_people 2044
-hist-conflict-42-1024 stat people_expelled 2
-hist-conflict-42-1024 stat expelled_people 719
-hist-conflict-42-1024 stat settlements_mixed 1
-hist-conflict-42-1024 stat settlements_mixed_ever 5
-hist-conflict-42-1024 stat settlements_fled 5
+hist-conflict-42-1024 stat race_pairs_met 15
+hist-conflict-42-1024 stat dispositions_turned 6
+hist-conflict-42-1024 stat pairs_hatred 4
+hist-conflict-42-1024 stat pairs_friendship 6
+hist-conflict-42-1024 stat refugees_arrived 10
+hist-conflict-42-1024 stat refugees_people 4219
+hist-conflict-42-1024 stat people_expelled 4
+hist-conflict-42-1024 stat expelled_people 902
+hist-conflict-42-1024 stat settlements_mixed 7
+hist-conflict-42-1024 stat settlements_mixed_ever 12
+hist-conflict-42-1024 stat settlements_fled 7
 hist-conflict-42-1024 stat abandoned_without_destination 0
-hist-conflict-42-1024 stat abandonment_lost 270
+hist-conflict-42-1024 stat abandonment_lost 641
 hist-conflict-42-1024 stat monster_stories 3
 hist-conflict-42-1024 stat ruins_oldest_year 2074
+hist-conflict-42-1024 stat peoples_met_by_word 0
+hist-conflict-42-1024 stat dispositions_warmed 5
 case hist-conflict-turbulent-512 42 512 6000 all --history-detail normal --civs-per-race auto --event-intensity turbulent
-hist-conflict-turbulent-512 table race_relation fc396ffa2bc2ffa6828764d096c97d091ea2e263d2689d5231fa15d9482d3d43
-hist-conflict-turbulent-512 table settlement_race ed19ef205981fffcd6f4184d24be3f9c2c1d560367fbeea8450ef009f8264b96
+hist-conflict-turbulent-512 table race_relation a84c609ca3d4693f40134916245dde20aee0404eaf1521bb391ef4a95e26db40
+hist-conflict-turbulent-512 table settlement_race 54c55ef419f8630682b2989124e3f6ca318858a21b965efe52e8d434a2385d41
 hist-conflict-turbulent-512 events_settlement_fled 0
 hist-conflict-turbulent-512 events_peoples_met 15
-hist-conflict-turbulent-512 events_disposition_turned 1
-hist-conflict-turbulent-512 events_refugees_arrived 15
-hist-conflict-turbulent-512 events_settlement_mixed 16
-hist-conflict-turbulent-512 events_standing_changed 3
-hist-conflict-turbulent-512 events_people_expelled 9
-hist-conflict-turbulent-512 stat race_relations 106
-hist-conflict-turbulent-512 stat settlement_races 404
+hist-conflict-turbulent-512 events_disposition_turned 10
+hist-conflict-turbulent-512 events_refugees_arrived 4
+hist-conflict-turbulent-512 events_settlement_mixed 17
+hist-conflict-turbulent-512 events_standing_changed 6
+hist-conflict-turbulent-512 events_people_expelled 2
+hist-conflict-turbulent-512 stat race_relations 131
+hist-conflict-turbulent-512 stat settlement_races 307
 hist-conflict-turbulent-512 stat race_pairs 15
 hist-conflict-turbulent-512 stat race_pairs_met 15
-hist-conflict-turbulent-512 stat dispositions_turned 1
-hist-conflict-turbulent-512 stat pairs_hatred 5
-hist-conflict-turbulent-512 stat pairs_friendship 2
-hist-conflict-turbulent-512 stat refugees_arrived 15
-hist-conflict-turbulent-512 stat refugees_people 8588
-hist-conflict-turbulent-512 stat people_expelled 9
-hist-conflict-turbulent-512 stat expelled_people 4553
-hist-conflict-turbulent-512 stat settlements_mixed 2
-hist-conflict-turbulent-512 stat settlements_mixed_ever 15
+hist-conflict-turbulent-512 stat dispositions_turned 10
+hist-conflict-turbulent-512 stat pairs_hatred 4
+hist-conflict-turbulent-512 stat pairs_friendship 6
+hist-conflict-turbulent-512 stat refugees_arrived 4
+hist-conflict-turbulent-512 stat refugees_people 1573
+hist-conflict-turbulent-512 stat people_expelled 2
+hist-conflict-turbulent-512 stat expelled_people 210
+hist-conflict-turbulent-512 stat settlements_mixed 10
+hist-conflict-turbulent-512 stat settlements_mixed_ever 13
 hist-conflict-turbulent-512 stat settlements_fled 0
-hist-conflict-turbulent-512 stat abandoned_without_destination 1
-hist-conflict-turbulent-512 stat abandonment_lost 527
-hist-conflict-turbulent-512 stat monster_stories 1
+hist-conflict-turbulent-512 stat abandoned_without_destination 0
+hist-conflict-turbulent-512 stat abandonment_lost 301
+hist-conflict-turbulent-512 stat monster_stories 2
 hist-conflict-turbulent-512 stat ruins_oldest_year 2094
+hist-conflict-turbulent-512 stat peoples_met_by_word 0
+hist-conflict-turbulent-512 stat dispositions_warmed 7
 case hist-conflict-civs4-512 42 512 6000 all --history-detail normal --civs-per-race 4 --event-intensity normal
-hist-conflict-civs4-512 table race_relation 2c4ff485c22a0a00142f85f2a3000e712e3506b7c1f1ccaf40b981daddef722d
-hist-conflict-civs4-512 table settlement_race 8a198bda4ffa005e7ac29494ea484b67096e44438f326874faa6c9bd99935d2d
+hist-conflict-civs4-512 table race_relation 249bc4fe5493a1944510423c945eac2c51d5f1fa8691cd2e494ea365b91a6ce0
+hist-conflict-civs4-512 table settlement_race 0b3d5ee245b771896ff459d4ab21d222675f2d59a6c19031614b2a7b9c68d3b0
 hist-conflict-civs4-512 events_settlement_fled 0
 hist-conflict-civs4-512 events_peoples_met 15
-hist-conflict-civs4-512 events_disposition_turned 1
-hist-conflict-civs4-512 events_refugees_arrived 12
-hist-conflict-civs4-512 events_settlement_mixed 16
-hist-conflict-civs4-512 events_standing_changed 0
-hist-conflict-civs4-512 events_people_expelled 5
-hist-conflict-civs4-512 stat race_relations 64
-hist-conflict-civs4-512 stat settlement_races 246
+hist-conflict-civs4-512 events_disposition_turned 8
+hist-conflict-civs4-512 events_refugees_arrived 4
+hist-conflict-civs4-512 events_settlement_mixed 8
+hist-conflict-civs4-512 events_standing_changed 2
+hist-conflict-civs4-512 events_people_expelled 1
+hist-conflict-civs4-512 stat race_relations 141
+hist-conflict-civs4-512 stat settlement_races 223
 hist-conflict-civs4-512 stat race_pairs 15
 hist-conflict-civs4-512 stat race_pairs_met 15
-hist-conflict-civs4-512 stat dispositions_turned 1
-hist-conflict-civs4-512 stat pairs_hatred 5
-hist-conflict-civs4-512 stat pairs_friendship 2
-hist-conflict-civs4-512 stat refugees_arrived 12
-hist-conflict-civs4-512 stat refugees_people 10196
-hist-conflict-civs4-512 stat people_expelled 5
-hist-conflict-civs4-512 stat expelled_people 3001
-hist-conflict-civs4-512 stat settlements_mixed 7
-hist-conflict-civs4-512 stat settlements_mixed_ever 16
+hist-conflict-civs4-512 stat dispositions_turned 8
+hist-conflict-civs4-512 stat pairs_hatred 3
+hist-conflict-civs4-512 stat pairs_friendship 7
+hist-conflict-civs4-512 stat refugees_arrived 4
+hist-conflict-civs4-512 stat refugees_people 1109
+hist-conflict-civs4-512 stat people_expelled 1
+hist-conflict-civs4-512 stat expelled_people 168
+hist-conflict-civs4-512 stat settlements_mixed 1
+hist-conflict-civs4-512 stat settlements_mixed_ever 7
 hist-conflict-civs4-512 stat settlements_fled 0
 hist-conflict-civs4-512 stat abandoned_without_destination 0
-hist-conflict-civs4-512 stat abandonment_lost 142
-hist-conflict-civs4-512 stat monster_stories 1
-hist-conflict-civs4-512 stat ruins_oldest_year 3367
+hist-conflict-civs4-512 stat abandonment_lost 417
+hist-conflict-civs4-512 stat monster_stories 3
+hist-conflict-civs4-512 stat ruins_oldest_year 2344
+hist-conflict-civs4-512 stat peoples_met_by_word 0
+hist-conflict-civs4-512 stat dispositions_warmed 7
 case hist-conflict-flight 1 512 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-hist-conflict-flight table race_relation b4dd82d9d8408e69f50c0e067aa7a6987bb70a10d9a1b70fa3e88a8803735c2c
-hist-conflict-flight table settlement_race f2427cb74e27d1c7754831f322ad23dc585206fc039b0060047aece31ee93a28
-hist-conflict-flight events_settlement_fled 0
+hist-conflict-flight table race_relation 02c2d0cbc0047832b3caa9184d6174aec9792fc9e582aa0b0405ea1b11723b24
+hist-conflict-flight table settlement_race 1903f322d57d2b183a6d77a165784164ddf9c4bb8fba8b85d21e5c3abf672be4
+hist-conflict-flight events_settlement_fled 1
 hist-conflict-flight events_peoples_met 15
-hist-conflict-flight events_disposition_turned 5
-hist-conflict-flight events_refugees_arrived 2
-hist-conflict-flight events_settlement_mixed 1
-hist-conflict-flight events_standing_changed 0
-hist-conflict-flight events_people_expelled 1
-hist-conflict-flight stat race_relations 62
-hist-conflict-flight stat settlement_races 91
+hist-conflict-flight events_disposition_turned 7
+hist-conflict-flight events_refugees_arrived 1
+hist-conflict-flight events_settlement_mixed 7
+hist-conflict-flight events_standing_changed 1
+hist-conflict-flight events_people_expelled 0
+hist-conflict-flight stat race_relations 129
+hist-conflict-flight stat settlement_races 120
 hist-conflict-flight stat race_pairs 15
 hist-conflict-flight stat race_pairs_met 15
-hist-conflict-flight stat dispositions_turned 5
-hist-conflict-flight stat pairs_hatred 5
-hist-conflict-flight stat pairs_friendship 2
-hist-conflict-flight stat refugees_arrived 2
-hist-conflict-flight stat refugees_people 459
-hist-conflict-flight stat people_expelled 1
-hist-conflict-flight stat expelled_people 50
-hist-conflict-flight stat settlements_mixed 0
-hist-conflict-flight stat settlements_mixed_ever 1
-hist-conflict-flight stat settlements_fled 0
+hist-conflict-flight stat dispositions_turned 7
+hist-conflict-flight stat pairs_hatred 2
+hist-conflict-flight stat pairs_friendship 5
+hist-conflict-flight stat refugees_arrived 1
+hist-conflict-flight stat refugees_people 2375
+hist-conflict-flight stat people_expelled 0
+hist-conflict-flight stat expelled_people 0
+hist-conflict-flight stat settlements_mixed 3
+hist-conflict-flight stat settlements_mixed_ever 4
+hist-conflict-flight stat settlements_fled 1
 hist-conflict-flight stat abandoned_without_destination 0
-hist-conflict-flight stat abandonment_lost 237
-hist-conflict-flight stat monster_stories 0
+hist-conflict-flight stat abandonment_lost 535
+hist-conflict-flight stat monster_stories 2
 hist-conflict-flight stat ruins_oldest_year 3488
+hist-conflict-flight stat peoples_met_by_word 0
+hist-conflict-flight stat dispositions_warmed 6
 case hist-conflict-73-1024 73 1024 6000 all --history-detail normal --civs-per-race auto --event-intensity normal
-hist-conflict-73-1024 table race_relation a5093dc73e3d13a930b94958bcffa880d2b9fd057683b86a63add660c17af11a
-hist-conflict-73-1024 table settlement_race 5e1c5105289103ccff35195bb0efa8b44c7f8ac00f4bc90c60b90bcec006f4aa
-hist-conflict-73-1024 events_settlement_fled 0
+hist-conflict-73-1024 table race_relation a3d2dec44031534218a7f2359c193e0dc575732d48eb3d8ba2592168508397c9
+hist-conflict-73-1024 table settlement_race cea0744f94f8488b1e2a196e8e71142b8fa79fcbbd8172980d1bd96b5c75e545
+hist-conflict-73-1024 events_settlement_fled 2
 hist-conflict-73-1024 events_peoples_met 15
-hist-conflict-73-1024 events_disposition_turned 1
-hist-conflict-73-1024 events_refugees_arrived 11
-hist-conflict-73-1024 events_settlement_mixed 25
-hist-conflict-73-1024 events_standing_changed 5
-hist-conflict-73-1024 events_people_expelled 7
-hist-conflict-73-1024 stat race_relations 50
-hist-conflict-73-1024 stat settlement_races 344
+hist-conflict-73-1024 events_disposition_turned 9
+hist-conflict-73-1024 events_refugees_arrived 16
+hist-conflict-73-1024 events_settlement_mixed 29
+hist-conflict-73-1024 events_standing_changed 3
+hist-conflict-73-1024 events_people_expelled 6
+hist-conflict-73-1024 stat race_relations 149
+hist-conflict-73-1024 stat settlement_races 406
 hist-conflict-73-1024 stat race_pairs 15
 hist-conflict-73-1024 stat race_pairs_met 15
-hist-conflict-73-1024 stat dispositions_turned 1
+hist-conflict-73-1024 stat dispositions_turned 9
 hist-conflict-73-1024 stat pairs_hatred 5
-hist-conflict-73-1024 stat pairs_friendship 2
-hist-conflict-73-1024 stat refugees_arrived 11
-hist-conflict-73-1024 stat refugees_people 9559
-hist-conflict-73-1024 stat people_expelled 7
-hist-conflict-73-1024 stat expelled_people 1718
-hist-conflict-73-1024 stat settlements_mixed 4
+hist-conflict-73-1024 stat pairs_friendship 6
+hist-conflict-73-1024 stat refugees_arrived 16
+hist-conflict-73-1024 stat refugees_people 13474
+hist-conflict-73-1024 stat people_expelled 6
+hist-conflict-73-1024 stat expelled_people 3228
+hist-conflict-73-1024 stat settlements_mixed 9
 hist-conflict-73-1024 stat settlements_mixed_ever 21
-hist-conflict-73-1024 stat settlements_fled 0
+hist-conflict-73-1024 stat settlements_fled 2
 hist-conflict-73-1024 stat abandoned_without_destination 0
-hist-conflict-73-1024 stat abandonment_lost 368
-hist-conflict-73-1024 stat monster_stories 3
-hist-conflict-73-1024 stat ruins_oldest_year 3425
+hist-conflict-73-1024 stat abandonment_lost 644
+hist-conflict-73-1024 stat monster_stories 2
+hist-conflict-73-1024 stat ruins_oldest_year 4172
+hist-conflict-73-1024 stat peoples_met_by_word 0
+hist-conflict-73-1024 stat dispositions_warmed 6
+case p5-monsters-high-1024 7 1024 6000 all --history-detail normal --civs-per-race auto --event-intensity normal --monster-pressure high
+p5-monsters-high-1024 table race_relation 5edc62358c45ba2f499f56c05d7ad6475f2ed74d37344bdafd5de564d8edebb6
+p5-monsters-high-1024 table settlement_race 0d802e43c666d7053c1e31ad15560ca1252b213d13d8b9f3402b0d182e8d36f7
+p5-monsters-high-1024 events_settlement_fled 1
+p5-monsters-high-1024 events_peoples_met 15
+p5-monsters-high-1024 events_disposition_turned 3
+p5-monsters-high-1024 events_refugees_arrived 5
+p5-monsters-high-1024 events_settlement_mixed 16
+p5-monsters-high-1024 events_standing_changed 1
+p5-monsters-high-1024 events_people_expelled 2
+p5-monsters-high-1024 stat race_relations 84
+p5-monsters-high-1024 stat settlement_races 180
+p5-monsters-high-1024 stat race_pairs 15
+p5-monsters-high-1024 stat race_pairs_met 15
+p5-monsters-high-1024 stat dispositions_turned 3
+p5-monsters-high-1024 stat pairs_hatred 4
+p5-monsters-high-1024 stat pairs_friendship 5
+p5-monsters-high-1024 stat refugees_arrived 5
+p5-monsters-high-1024 stat refugees_people 2450
+p5-monsters-high-1024 stat people_expelled 2
+p5-monsters-high-1024 stat expelled_people 720
+p5-monsters-high-1024 stat settlements_mixed 11
+p5-monsters-high-1024 stat settlements_mixed_ever 16
+p5-monsters-high-1024 stat settlements_fled 1
+p5-monsters-high-1024 stat abandoned_without_destination 0
+p5-monsters-high-1024 stat abandonment_lost 80
+p5-monsters-high-1024 stat monster_stories 3
+p5-monsters-high-1024 stat ruins_oldest_year 2729
+p5-monsters-high-1024 stat peoples_met_by_word 0
+p5-monsters-high-1024 stat dispositions_warmed 3

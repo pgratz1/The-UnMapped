@@ -14,6 +14,7 @@
 
 #include "conflict_internal.hpp"
 #include "worldgen/core/checked.hpp"
+#include "worldgen/core/wide.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/draw.hpp"
 
@@ -39,6 +40,7 @@ void ConflictSubsystem::fight(StepContext& ctx) {
         }
         const Fought f = battle(ctx, i);
         if (f != Fought::ended && wars_[i].open) {
+            withdrawals(ctx, i);  // P5-04 7.9, before 7.7 item 1
             end_checks(ctx, i, f == Fought::no_front);
         }
     }
@@ -98,9 +100,39 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     // 6.3: the defence (r9: with home defence).
     const auto [def, pass_id] = defence_at(ctx, y, target);
     const bool at_pass = pass_id != 0;
-    // 7.3 items 3 to 6; r9 20.6 item 2: the local forces.
-    const std::int64_t attack = local_force(ctx, x, region);
-    const std::int64_t defend = local_force(ctx, y, region);
+    // 7.3 items 3 to 6; r9 20.6 item 2: the local forces. P5-04 7.7: each
+    // side is its principal and its open allies of that side.
+    struct Member {
+        std::int64_t civ = 0;
+        std::int64_t force = 0;
+        std::size_t ally = 0;  // index into the war's allies
+    };
+    const std::int64_t side_x = x == w0.attacker ? 1 : 0;  // the ally side code of x's side
+    std::vector<Member> allies_x;
+    std::vector<Member> allies_y;
+    std::int64_t attack = local_force(ctx, x, region);
+    std::int64_t defend = local_force(ctx, y, region);
+    for (std::size_t k = 0; k < w0.allies.size(); ++k) {
+        const ConflictAlly& m = w0.allies[k];
+        if (!m.open) {
+            continue;
+        }
+        const std::int64_t f =
+            floor_div(checked_mul(local_force(ctx, m.civ, region), tuning_.ally_effort_permille), 1000);
+        if (f <= 0) {
+            continue;
+        }
+        (m.side == side_x ? allies_x : allies_y).push_back(Member{m.civ, f, k});
+        if (m.side == side_x) {
+            attack = checked_add(attack, f);
+        } else {
+            defend = checked_add(defend, f);
+        }
+    }
+    const auto by_id = [](const Member& a, const Member& b) { return a.civ < b.civ; };
+    std::stable_sort(allies_x.begin(), allies_x.end(), by_id);
+    std::stable_sort(allies_y.begin(), allies_y.end(), by_id);
+    const bool allied_battle = !allies_x.empty() || !allies_y.empty();
     const std::int64_t p = battle_permille_of(attack, defend, def);
     const bool x_wins = chance_pm(ctx.draw(keys_[BATTLE_WIN], word(w0.declared), 0, 0), p);
     const std::int64_t winner = x_wins ? x : y;
@@ -122,16 +154,56 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         dead_loser = floor_div(checked_mul(dead_loser, v_loser), 1000);
         dead_winner = floor_div(checked_mul(dead_winner, v_winner), 1000);
     }
-    EventSpec e = point_event(ctx, at_pass ? "battle_at_pass" : "battle", region, 0);
+    const std::vector<Member>& allies_w = x_wins ? allies_x : allies_y;
+    const std::vector<Member>& allies_l = x_wins ? allies_y : allies_x;
+    EventSpec e = point_event(ctx, allied_battle ? "allied_battle" : (at_pass ? "battle_at_pass" : "battle"), region, 0);
     e.participants = {civ_role("winner", winner), civ_role("loser", loser)};
+    for (const Member& m : allies_w) {
+        e.participants.push_back(civ_role("winner_ally", m.civ));
+    }
+    for (const Member& m : allies_l) {
+        e.participants.push_back(civ_role("loser_ally", m.civ));
+    }
     e.values = {dead_winner, dead_loser};
-    if (at_pass) {
+    if (at_pass || allied_battle) {
         e.values.push_back(pass_id);
     }
     e.causes = {w0.declared};
     const std::int64_t ev = ctx.append(e);
-    const std::int64_t dw = casualties(ctx, winner, dead_winner, ev);
-    const std::int64_t dl = casualties(ctx, loser, dead_loser, ev);
+    // P5-04 7.7: a side's dead split over its allies in ascending id by
+    // force (floor), the rest to the principal; winners first.
+    std::array<std::int64_t, 2> side_dead{};
+    const auto split = [&](const std::vector<Member>& members, std::int64_t principal, std::int64_t total,
+                           std::int64_t force_total) {
+        std::int64_t given = 0;
+        std::int64_t taken = 0;
+        for (const Member& m : members) {
+            // Audit A1: dead x force can pass 2^63 (both of the order of a force, < 2^40); the exact 128-bit
+            // product and floor division, whose quotient is at most `total` (m.force <= force_total).
+            if (total < 0 || m.force < 0) {
+                fail("history: conflict: battle split: negative dead " + int_text(total) + " or force " +
+                     int_text(m.force));
+            }
+            const U128DivMod q = divmod_u128_u64(
+                mul_u64_wide(static_cast<std::uint64_t>(total), static_cast<std::uint64_t>(m.force)),
+                static_cast<std::uint64_t>(std::max<std::int64_t>(1, force_total)));
+            if (q.quotient.hi != 0 || q.quotient.lo > static_cast<std::uint64_t>(total)) {
+                fail("history: conflict: battle split: share above the side's dead");
+            }
+            const std::int64_t share = static_cast<std::int64_t>(q.quotient.lo);
+            given = checked_add(given, share);
+            const std::int64_t d = casualties(ctx, m.civ, share, ev);
+            ConflictAlly& rec = wars_[i].allies[m.ally];
+            rec.dead = checked_add(rec.dead, share);  // reading A6: the computed share
+            taken = checked_add(taken, d);
+        }
+        const std::int64_t d = casualties(ctx, principal, total - given, ev);
+        return std::pair<std::int64_t, std::int64_t>{d, checked_add(taken, d)};
+    };
+    const auto [dw, side_w] = split(allies_w, winner, dead_winner, f_winner);
+    const auto [dl, side_l] = split(allies_l, loser, dead_loser, f_loser);
+    side_dead[0] = side_w;
+    side_dead[1] = side_l;
     {
         ConflictWar& w = wars_[i];
         w.dead[side(w, winner)] = checked_add(w.dead[side(w, winner)], dw);
@@ -146,7 +218,7 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         }
     }
     if (x_wins && !seen_settlements(ctx, y, region).empty()) {  // r9: hidden ones are never besieged
-        siege(ctx, i, x, y, region, attack, dw, ev);
+        siege(ctx, i, x, y, region, attack, side_dead[0], ev);  // P5-04 7.7: the side's force and dead
     }
     return Fought::battle;
 }
@@ -256,6 +328,7 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     {
         ConflictWar& war = wars_[i];  // r10 20.15 item 1
         war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], p);
+        war.plunder[side(war, x)] = checked_add(war.plunder[side(war, x)], p);  // P5-04 7.15
     }
     const std::int64_t dead = floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
     state.set_population(t, p - dead);
@@ -339,6 +412,10 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
     std::int64_t ev = 0;
     if (sack) {
         const std::int64_t p = state.settlement(t).population;
+        {
+            ConflictWar& war = wars_[i];  // P5-04 7.15: the people at the fall, before the toll
+            war.plunder[side(war, x)] = checked_add(war.plunder[side(war, x)], p);
+        }
         const std::int64_t dead = floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
         state.set_population(t, p - dead);
         EventSpec e = point_event(ctx, "sacked", region, t);
@@ -489,9 +566,20 @@ void ConflictSubsystem::conquer(StepContext& ctx, std::int64_t y, std::int64_t x
         }
     }
     close_relations_of(ctx, y, ev);
-    for (ConflictWar& w : wars_) {
+    const std::size_t nw = wars_.size();
+    for (std::size_t k = 0; k < nw; ++k) {
+        ConflictWar& w = wars_[k];
+        // P5-04 7.11: an ended ally leaves with the ending event.
+        for (ConflictAlly& m : w.allies) {
+            if (w.open && m.open && m.civ == y) {
+                m.open = false;
+                m.closed_by = 4;
+                m.close_event = ev;
+            }
+        }
         if (w.open && (w.attacker == y || w.defender == y)) {
-            w.open = false;  // over, no peace event
+            close_allies_at_side_end(ctx, k, y, ev);
+            wars_[k].open = false;  // over, no peace event
         }
     }
     for (auto it = claims_.begin(); it != claims_.end();) {
@@ -628,6 +716,7 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     }
     const std::int64_t ev = ctx.append(e);
     close_war(ctx, i, ev);
+    wars_[i].winner = winner;  // P5-04 7.15
     note_futile(ctx, w);  // r9 20.4, at the end event (r10 20.21 item 6)
     if (ceding) {
         cede(ctx, w.goal, loser, winner, ev);  // cession of the goal (7.7)
@@ -643,7 +732,10 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
         t.causes = {ev};
         const std::int64_t tev = ctx.append(t);
         (void)casualties(ctx, loser, cost.tribute, tev);
+        wars_[i].tribute_people = cost.tribute;  // P5-04 7.15
+        wars_[i].tribute_event = tev;
     }
+    close_allies(ctx, i, ev);  // P5-04 7.10: after the costs
     return true;
 }
 
@@ -657,6 +749,99 @@ void ConflictSubsystem::close_war(StepContext& ctx, std::size_t i, std::int64_t 
     add_grudge(a, b, tuning_.war_grudge);
     drop_pair(a, b);
     wars_[i].open = false;
+    wars_[i].end_event = ev;  // P5-04 7.6
+}
+
+// P5-04 7.10: the open allies leave at the war's end, each with a peace.
+void ConflictSubsystem::close_allies(StepContext& ctx, std::size_t i, std::int64_t ev) {
+    State& state = ctx.state();
+    const std::size_t n = wars_[i].allies.size();
+    for (std::size_t k = 0; k < n; ++k) {
+        const ConflictAlly m = wars_[i].allies[k];
+        if (!m.open) {
+            continue;
+        }
+        const std::int64_t enemy = m.side == 0 ? wars_[i].attacker : wars_[i].defender;
+        // Audit A2: the row only while still open (as close_allies_at_side_end); no peace with an ended enemy.
+        const RelationKey key = civ_relation(m.civ, enemy, "war");
+        if (state.relations().count(key) != 0) {
+            state.close_relation(key, ev);
+        }
+        if (!state.civ(enemy).ended_year) {
+            state.open_relation(symmetric_relation(m.civ, enemy, "peace"), ev);
+        }
+        last_peace_[ordered(m.civ, enemy)] = Peace{ctx.year(), ev};
+        add_grudge(m.civ, enemy, tuning_.war_grudge);
+        drop_pair(m.civ, enemy);
+        ConflictAlly& rec = wars_[i].allies[k];
+        rec.open = false;
+        rec.closed_by = 1;
+        rec.close_event = ev;
+    }
+}
+
+// P5-04 7.11: a principal ended; the war is over with no peace. Each open
+// ally's war row is closed with the ended side's event (already closed
+// when the ended side is the ally's enemy).
+void ConflictSubsystem::close_allies_at_side_end(StepContext& ctx, std::size_t i, std::int64_t ended,
+                                                 std::int64_t ev) {
+    State& state = ctx.state();
+    ConflictWar& w0 = wars_[i];
+    const std::int64_t survivor = ended == w0.attacker ? w0.defender : w0.attacker;
+    w0.winner = state.civ(survivor).ended_year ? 0 : survivor;
+    // Reading A13: with both principals ended, the smaller id's ending event.
+    w0.end_event = w0.winner == 0 ? state.civ(std::min(ended, survivor)).ending_event : ev;
+    if (w0.end_event == 0) {
+        w0.end_event = ev;
+    }
+    const std::size_t n = w0.allies.size();
+    for (std::size_t k = 0; k < n; ++k) {
+        const ConflictAlly m = wars_[i].allies[k];
+        if (!m.open) {
+            continue;
+        }
+        const std::int64_t enemy = m.side == 0 ? wars_[i].attacker : wars_[i].defender;
+        const RelationKey key = civ_relation(m.civ, enemy, "war");
+        if (state.relations().count(key) != 0) {
+            state.close_relation(key, ev);
+        }
+        ConflictAlly& rec = wars_[i].allies[k];
+        rec.open = false;
+        rec.closed_by = 3;
+        rec.close_event = ev;
+    }
+}
+
+// P5-04 7.9: a bled-out ally leaves the war with a peace of its own.
+void ConflictSubsystem::withdrawals(StepContext& ctx, std::size_t i) {
+    State& state = ctx.state();
+    const std::size_t n = wars_[i].allies.size();
+    for (std::size_t k = 0; k < n; ++k) {
+        const ConflictAlly m = wars_[i].allies[k];
+        if (!m.open) {
+            continue;
+        }
+        const std::int64_t base = floor_div(checked_mul(m.pop0, race_of_civ(ctx, m.civ).muster), 1000);
+        if (checked_mul(m.dead, 1000) < checked_mul(tuning_.exhaustion_permille, std::max<std::int64_t>(1, base))) {
+            continue;
+        }
+        const ConflictWar& w = wars_[i];
+        const std::int64_t enemy = m.side == 0 ? w.attacker : w.defender;
+        const std::int64_t partner = m.side == 0 ? w.defender : w.attacker;
+        EventSpec e = point_event(ctx, "ally_withdrew", 0, 0);
+        e.participants = {civ_role("ally", m.civ), civ_role("partner", partner), civ_role("enemy", enemy)};
+        e.causes = {w.last_event};
+        const std::int64_t ev = ctx.append(e);
+        state.close_relation(civ_relation(m.civ, enemy, "war"), ev);
+        state.open_relation(symmetric_relation(m.civ, enemy, "peace"), ev);
+        last_peace_[ordered(m.civ, enemy)] = Peace{ctx.year(), ev};
+        add_grudge(m.civ, enemy, tuning_.war_grudge);
+        drop_pair(m.civ, enemy);
+        ConflictAlly& rec = wars_[i].allies[k];
+        rec.open = false;
+        rec.closed_by = 2;
+        rec.close_event = ev;
+    }
 }
 
 // r10 20.17 item 2: the searcher gives up; a truce without cost (T6 only).
@@ -675,6 +860,7 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
     const std::int64_t ev = ctx.append(e);
     search_written_ = true;
     close_war(ctx, i, ev);
+    close_allies(ctx, i, ev);  // P5-04 7.10
     note_futile(ctx, w);  // 20.4: the goal unchanged by an unfound war counts
     // r14 21.7 item 1: R is weary for every claimant against y for
     // search_weary_years, until its holder changes.

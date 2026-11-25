@@ -99,6 +99,11 @@ struct ConflictTuning {
     std::int64_t quarrel_strength_permille = 0;
     std::int64_t toll_spread_permille = 0;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
+    // P5-04 4.3 (generator 0.26.0). The defaults of a hand-made tuning keep
+    // 0.25.0's rules while no alliance, trade or mine exists (7.14).
+    std::int64_t allied_strain_permille = 250, ally_deterrence_permille = 300, ally_effort_permille = 1000;
+    std::int64_t trade_strength_permille = 50, trade_strength_max = 3;
+    std::int64_t forge_strength_permille = 50, arms_strength_permille = 100;
 };
 
 // The loaded definition. FatalError "history: tuning: the content has no
@@ -273,6 +278,48 @@ public:
         (void)race_b;
         return false;
     }
+    // P5-04 7.13: the pair's last disposition_turned, 0 when none.
+    [[nodiscard]] virtual std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const {
+        (void)race_a;
+        (void)race_b;
+        return 0;
+    }
+};
+
+// P5-04 7.1: what conflict reads of alliances, trade and arms
+// (AlliancesSubsystem). With no view set, or a view with no alliance, no
+// trade and no mine, conflict is as at 0.25.0.
+class AllianceView {
+public:
+    virtual ~AllianceView() = default;
+    [[nodiscard]] virtual bool allied(std::int64_t a, std::int64_t b) const = 0;           // an open alliance
+    [[nodiscard]] virtual std::span<const std::int64_t> allies(std::int64_t c) const = 0;  // ascending
+    [[nodiscard]] virtual std::int64_t trade_partners(std::int64_t c) const = 0;           // open trades of c
+    [[nodiscard]] virtual bool forged(std::int64_t c) const = 0;                           // c has an open mine
+    [[nodiscard]] virtual bool arms(std::int64_t c) const = 0;                             // c buys arms
+};
+
+// P5-04 7.6: an ally that joined a war, in join order.
+struct ConflictAlly {
+    std::int64_t civ = 0;
+    std::int64_t side = 0;  // 0 the defender's, 1 the attacker's
+    std::int64_t join_event = 0;
+    std::int64_t dead = 0;
+    std::int64_t pop0 = 0;
+    bool open = true;
+    // How the record closed: 0 open, 1 the war's end, 2 withdrew (7.9), 3 a
+    // side's end (7.11), 4 the ally's own end; and the closing event.
+    std::int64_t closed_by = 0;
+    std::int64_t close_event = 0;
+};
+
+// P5-04 7.15: what a won war leaves to share.
+struct WarSpoils {
+    std::int64_t winner = 0, loser = 0;  // truce, both ended: 0, 0
+    std::int64_t end_event = 0, goal_region = 0;
+    std::int64_t tribute_people = 0, tribute_event = 0, plunder = 0;  // the winner's plunder
+    std::int64_t winner_dead = 0, winner_pop0 = 0;                    // the principal's own
+    std::int64_t side_dead = 0;                                       // the winner's side (7.8)
 };
 
 // --- The subsystem (13) ----------------------------------------------------------------------
@@ -300,6 +347,15 @@ struct ConflictWar {
     std::int64_t unfound = 0;
     // r14 21.7 item 2: the regions this war fought a battle in, ascending.
     std::vector<std::int64_t> fought;
+    // P5-04 7.6, 7.15: the joined allies in join order; the war's ending
+    // event (0 while open); the winner of its peace or war_won, or the
+    // survivor of a principal's end (0 a truce or none); per principal the
+    // people of the settlements it sacked before the toll; the tribute.
+    std::vector<ConflictAlly> allies;
+    std::int64_t end_event = 0;
+    std::int64_t winner = 0;
+    std::array<std::int64_t, 2> plunder{};
+    std::int64_t tribute_people = 0, tribute_event = 0;
 };
 
 class ConflictSubsystem final : public Subsystem, public TensionSource {
@@ -324,6 +380,43 @@ public:
     // P5-03 7.1: the peoples' dispositions (set once by the stage; nullptr:
     // the camp table, as at 0.23.0) and the camp table they start from.
     void set_dispositions(const DispositionView* view) noexcept { dispositions_ = view; }
+    // P5-04 7.1: alliances, trade and arms (set once by the stage; nullptr:
+    // none, as at 0.25.0).
+    void set_alliances(const AllianceView* view) noexcept { alliances_ = view; }
+
+    // P5-04 7.13: const reads with the live state of the step.
+    [[nodiscard]] std::int64_t disposition_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    // Any open war relation between a and b, either way (principal or joined).
+    [[nodiscard]] bool at_war(std::int64_t a, std::int64_t b) const;
+    // The wars with civ as a side and its open joined records.
+    [[nodiscard]] std::int64_t open_wars_of(std::int64_t civ) const;
+    [[nodiscard]] std::int64_t force(const StepContext& context, std::int64_t civ) const;
+    [[nodiscard]] bool truce_over(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    // 5.1: non-islet regions held x 1000 div N.
+    [[nodiscard]] std::int64_t share(const StepContext& context, std::int64_t civ) const;
+    // The pair's last peace (year, event), or none.
+    [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> last_peace(std::int64_t a, std::int64_t b) const;
+    // 5.1's front(x, y) with front_hops(x, y) is not empty.
+    [[nodiscard]] bool reaches(const StepContext& context, std::int64_t x, std::int64_t y) const;
+    // The war of declaration event `war`; FatalError when there is none.
+    [[nodiscard]] bool war_open(std::int64_t war) const;
+    [[nodiscard]] std::int64_t war_end_event(std::int64_t war) const;
+    // The ally's joined record of the war is closed.
+    [[nodiscard]] bool ally_left(std::int64_t war, std::int64_t ally) const;
+    // The joined record of `ally` in `war` (FatalError when none).
+    [[nodiscard]] const ConflictAlly& ally_record(std::int64_t war, std::int64_t ally) const;
+    // 7.15: fatal while the war is open.
+    [[nodiscard]] WarSpoils war_spoils(std::int64_t war) const;
+    [[nodiscard]] std::int64_t ally_dead(std::int64_t war, std::int64_t ally) const;
+    // 7.15: grudge{a, b} += units (a != b, units >= 0).
+    void add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units);
+    // P5-04 (engineer's reading, proposals): two realms that swear an
+    // alliance set aside their strain and claims on each other (both
+    // directions), as a peace does.
+    void forgive(std::int64_t a, std::int64_t b);
+    // 7.6: ally joins the war of declaration event `war` against the side
+    // it is not called by; `event` its ally_joined_war.
+    void join_war(StepContext& context, std::int64_t war, std::int64_t ally, std::int64_t side, std::int64_t event);
     [[nodiscard]] const ConflictCamp& camp_table() const noexcept { return tuning_.camp; }
 
     // Inspection (tests; not used by the engine).
@@ -401,7 +494,14 @@ private:
     [[nodiscard]] std::vector<std::int64_t> seen_settlements(const StepContext& context, std::int64_t civ,
                                                              std::int64_t region) const;
     [[nodiscard]] bool last_refuge_of(const State& state, std::int64_t civ) const;
-    [[nodiscard]] std::int64_t force(const StepContext& context, std::int64_t civ) const;
+    // P5-04 7.5: the trade, forge and arms factors.
+    [[nodiscard]] std::int64_t strengthened(std::int64_t civ, std::int64_t f) const;
+    [[nodiscard]] bool allied(std::int64_t a, std::int64_t b) const;
+    [[nodiscard]] std::size_t war_index(std::int64_t war) const;
+    // P5-04 7.9, 7.10, 7.11.
+    void withdrawals(StepContext& context, std::size_t war);
+    void close_allies(StepContext& context, std::size_t war, std::int64_t event);
+    void close_allies_at_side_end(StepContext& context, std::size_t war, std::int64_t ended, std::int64_t event);
     // r9 20.6 item 2: the local force at a battlefield, divided by open wars.
     [[nodiscard]] std::int64_t local_force(const StepContext& context, std::int64_t civ, std::int64_t region) const;
     [[nodiscard]] std::int64_t front_hops(std::int64_t a, std::int64_t b) const;
@@ -422,11 +522,7 @@ private:
     [[nodiscard]] std::optional<Flight> flight_plan(const StepContext& context, std::int64_t x, std::int64_t y,
                                                     std::int64_t t) const;
     [[nodiscard]] Cost cost_plan(const StepContext& context, std::int64_t winner, std::int64_t loser) const;
-    [[nodiscard]] std::int64_t open_wars_of(std::int64_t civ) const;
-    [[nodiscard]] bool at_war(std::int64_t a, std::int64_t b) const;
     [[nodiscard]] bool attacking(std::int64_t a) const;
-    [[nodiscard]] bool truce_over(const StepContext& context, std::int64_t a, std::int64_t b) const;
-    [[nodiscard]] std::int64_t disposition_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
     [[nodiscard]] std::int64_t target_key_value(const StepContext& context, std::int64_t race,
                                                 const FrontEntry& e) const;
     [[nodiscard]] FrontEntry best_target(const StepContext& context, std::int64_t race,
@@ -521,6 +617,7 @@ private:
     // r17 22.1 item 1: a -> b while a's awakening quarrel with b is open.
     std::map<std::int64_t, std::int64_t> quarrel_with_;
     const DispositionView* dispositions_ = nullptr;  // P5-03 7.1
+    const AllianceView* alliances_ = nullptr;        // P5-04 7.1
 };
 
 }  // namespace worldgen::history

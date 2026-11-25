@@ -35,3 +35,6 @@ awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
 stances = [{ race = "goblin", value = -100 }]
+origin_allies = []
+ally_join_permille = 800
+mining_permille = 1000

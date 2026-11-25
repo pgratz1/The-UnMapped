@@ -85,7 +85,7 @@ const std::vector<Rule>& shipped_rules() {
          {"{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"}},   // P5-02 21.2
         {"great_sack", {"sacked"}, {"dead"}, 1500, 1, 0, false, 500, 80, "settlement", "attacker",
          {"{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"}},
-        {"slaughter", {"battle", "battle_at_pass"}, {"winner_dead", "loser_dead"}, 5000, 100, 0, false, 600, 70, "loser",
+        {"slaughter", {"battle", "battle_at_pass", "allied_battle"}, {"winner_dead", "loser_dead"}, 5000, 100, 0, false, 600, 70, "loser",
          "winner", {"The Red {noun}", "The Bloody {noun}", "The Rout of {name}", "The {noun} of the Slain",
                     "The Weeping {noun}", "The Grim {noun}"}},
         {"plague", {"plague_outbreak"}, {"total"}, 3000, 1, 0, false, 400, 60, "settlement", "civilization",
@@ -275,7 +275,7 @@ TEST_CASE("P3-01 r16 5.4: the four named checks of history.renaming, with their 
     // renaming_rule_lists: a kind twice, a value twice, a form twice
     {
         const wd::LoadError e = one_error(
-            load(with_renaming_edit("kinds = [\"battle\", \"battle_at_pass\"]", "kinds = [\"battle\", \"battle\"]")));
+            load(with_renaming_edit("kinds = [\"battle\", \"battle_at_pass\", \"allied_battle\"]", "kinds = [\"battle\", \"battle\"]")));
         CHECK(e.message == "check 'renaming_rule_lists' " + check_prefix() + "rules[3].kinds[1] 'battle' repeats kinds[0]");
     }
     {
@@ -337,13 +337,13 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
     for (const wd::Definition& d : h->definitions) {
         if (d.id != "report") continue;
         const std::vector<wd::Value>& ev = d.record.get("events").as_array();
-        REQUIRE(ev.size() == 62U);   // P5-02 10.2
+        REQUIRE(ev.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.2
         const wd::Record& last = ev[42].as_record();   // kind 43; kinds 44 to 55 follow (P5-02 10.2)
         CHECK(last.get_string("kind") == "region_renamed");
         CHECK(last.get_int("salience") == 60);
         CHECK(last.get_string("template") ==   // P5-02 21.2: a realm's seat, the ravage
               "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
-              "slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
+              "slaughter,allied_battle=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
               "ravage|After |, }{@region_former} became known as {@region}.");
     }
 }

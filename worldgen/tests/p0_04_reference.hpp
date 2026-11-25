@@ -277,7 +277,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.24.0"},
+        {"generator_version", "0.26.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -288,7 +288,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
         {"param.map_size", std::string(map_size)},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "10"},   // P5-03 16.1
+        {"schema_version", "11"},   // P5-03 16.1; P5-04 9.2
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -537,7 +537,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.24.0\n"
+    "generator_version = 0.26.0\n"
     "history_end_year = 6000\n"
     "param.civs_per_race = auto\n"
     "param.divine_activity = normal\n"
@@ -548,7 +548,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "param.map_size = 1024\n"
     "param.monster_pressure = normal\n"
     "param.races = elf,goblin,dwarf,faerie,human,orc\n"
-    "schema_version = 10\n"
+    "schema_version = 11\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"

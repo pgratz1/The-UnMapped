@@ -391,6 +391,21 @@ inline std::string year_dump(const wh::YearState& st, const wh::Timeline* t = nu
                 }
             }
         }
+        // P5-04 12 (P4-01 r6; reading T1 of the reference: after every earlier line of D(Y)): `alliance <a> <b>
+        // <since>` per alliance row in force at Y, then `trade <a> <b> <since>` per trade row, ascending (a, b)
+        for (const wh::AllianceState& a : t->alliances_at(st.year)) {
+            out += "alliance " + num(a.a) + " " + num(a.b) + " " + num(a.since) + "\n";
+        }
+        std::vector<std::pair<std::pair<std::int64_t, std::int64_t>, std::int64_t>> trades;
+        for (const db::RelationRow& r : t->relations()) {
+            if (r.kind == "trade" && r.since <= st.year && (!r.until || st.year < *r.until)) {
+                trades.push_back({{r.a_id, r.b_id}, r.since});
+            }
+        }
+        std::sort(trades.begin(), trades.end());
+        for (const auto& [ab, since] : trades) {
+            out += "trade " + num(ab.first) + " " + num(ab.second) + " " + num(since) + "\n";
+        }
     }
     return out;
 }

@@ -130,7 +130,8 @@ FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
 FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0")   # 0.21.0, 0.22.0: no peoples rule
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
+            "0.26.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -168,7 +169,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.24.0")
+    use_version("0.16.0" if on else "0.25.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -314,7 +315,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62, 78)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
@@ -343,6 +344,10 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 78:   # P5-04 8.1 (0.26.0): kinds 63 to 78
+        return pe.COMPILED_026
+    if len(pe.COMPILED) == 62 and pe.RENDER_R25:   # P5-03a 10.4: the five value rows
+        return pe.COMPILED_025
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
             42: COMPILED_021, 43: COMPILED_022, 55: COMPILED_023, 62: COMPILED_024}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
@@ -872,7 +877,8 @@ class World(pe.World):
     def open_site_at(self, sid):
         """11.2 (b): an open site (any kind) has the settlement sid (through the monsters, when installed)."""
         m = getattr(self, "monsters", None)
-        return m is not None and any(x["settlement"] == sid and x["ending"] == 0 for x in m.sites)
+        # P5-04 7.16: a mine (kind 3) does not hold back a ruin's fading
+        return m is not None and any(x["settlement"] == sid and x["ending"] == 0 and x["kind"] != 3 for x in m.sites)
 
     def ending_now(self, s):
         """P5-02 8.3 (with 11.3's code 6) of a ruined settlement, from its ruin event."""
@@ -2422,7 +2428,7 @@ def check_invariants(c, res, inp, w, label):
         "capital_moved": ab, "civ_ended": ab, "ruin_faded": ab,
         "settlement_dwindled": blows + (("colony_founded",) if FLAGS["memory"] else ()),   # r12 22.2 item 3
     }
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     for e in res["event"]:
         key = keys[e[3]]
         cs = causes.get(e[0], [])
@@ -2571,8 +2577,8 @@ def check_r12_invariants(c, res, w, label, kind, ev, vals, causes, base):
                    vals[e[0]][3] == total and vals[e[0]][4] == n.get(e[0], 0) and e[7] == want)
     mem = t["cause_memory_years"]
     reds = {"famine", "plague", "plague_outbreak", "plague_spread", "succession_crisis", "battle", "battle_at_pass",
-            "tribute", "colony_founded"}
-    keys = {k["id"]: k["key"] for k in COMPILED}
+            "tribute", "colony_founded", "allied_battle"}   # allied_battle: P5-04 11.1 (no older world has it)
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     for e in res["event"]:
         if keys[e[3]] in ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to"):
             for x in causes.get(e[0], []):
@@ -2868,7 +2874,7 @@ settlements standing 90 ruined 1 faded 0
 
 def chronicle_lines(res, inp):
     """15.2's line form: <span> e<id> <kind>/<salience>: <sentence> [causes ...]."""
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     causes = {}
     for (e, c) in res["event_cause"]:
         causes.setdefault(e, []).append(c)
@@ -2883,7 +2889,7 @@ def chronicle_lines(res, inp):
 
 
 def kind_counts(res):
-    keys = {k["id"]: k["key"] for k in COMPILED}
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026)}   # P5-04: kinds 63 to 78 named
     out = {}
     for e in res["event"]:
         out[keys[e[3]]] = out.get(keys[e[3]], 0) + 1

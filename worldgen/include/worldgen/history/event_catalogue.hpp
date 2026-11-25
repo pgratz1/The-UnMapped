@@ -290,6 +290,10 @@ struct MonsterTables {
     std::span<const db::RaceRelationRow> race_relations;
     std::span<const db::SettlementRaceRow> settlement_races;
     std::span<const std::int64_t> race_ids;
+    // P5-04 9.1 (schema 11): the relation rows and, per civilization of
+    // civ_ids (same order), its ending event (0 none).
+    std::span<const db::RelationRow> relations;
+    std::span<const std::int64_t> civ_endings;
 };
 [[nodiscard]] std::optional<std::string> monster_tables_problem(const MonsterTables& t);
 

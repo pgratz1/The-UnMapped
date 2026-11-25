@@ -75,6 +75,12 @@ struct RaceShare {
     friend bool operator==(const RaceShare&, const RaceShare&) = default;
 };
 
+// P5-04 12: an alliance in force at a year.
+struct AllianceState {
+    std::int64_t a, b, since, since_event;
+    friend bool operator==(const AllianceState&, const AllianceState&) = default;
+};
+
 // Everything that depends on the year (section 4).
 struct YearState {
     std::int64_t year = 0, phase = 0, age = 0;
@@ -130,6 +136,15 @@ public:
     // FatalError "timeline: no race <r>" for a race the world does not have.
     [[nodiscard]] RaceRelationState race_relation_at(std::int64_t race_a, std::int64_t race_b, std::int64_t year) const;
     [[nodiscard]] std::vector<RaceShare> settlement_races(std::int64_t settlement, std::int64_t year) const;
+    // P5-04 12: the relation rows of kind alliance in force at Y (since <=
+    // Y < until), ascending (a, b); the allies of civ at Y, ascending; the
+    // connected components of the alliance graph among the civilizations
+    // alive at Y with an ally, each ascending, ordered by smallest id; the
+    // trade rows in force at Y, ascending (a, b).
+    [[nodiscard]] std::vector<AllianceState> alliances_at(std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> allies_of(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] std::vector<std::vector<std::int64_t>> alliance_groups_at(std::int64_t year) const;
+    [[nodiscard]] std::vector<std::pair<std::int64_t, std::int64_t>> trades_at(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 

@@ -676,6 +676,14 @@ Schema history_conflict_schema() {
         i("toll_spread_permille", 0, 500),        // P3-06 r22 24.5
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
+        // P5-04 4.3 (generator 0.26.0), appended in this order.
+        i("allied_strain_permille", 0, 1000),
+        i("ally_deterrence_permille", 0, 1000),
+        i("ally_effort_permille", 0, 1000),
+        i("trade_strength_permille", 0, 1000),
+        i("trade_strength_max", 0, 16),
+        i("forge_strength_permille", 0, 1000),
+        i("arms_strength_permille", 0, 1000),
     };
     std::vector<Check> checks{
         Check{"conflict_declare",
@@ -963,6 +971,11 @@ Schema race_schema() {
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),
         // P5-03 4.1 (generator 0.24.0): the race's leaning toward other races.
         Field::required("stances", Type::array(Type::record(race_stance_schema()), 0, 8)),
+        // P5-04 4.1 (generator 0.26.0): allies by origin, the readiness to
+        // join an ally's war and to open mines.
+        Field::required("origin_allies", Type::array(Type::string(32), 0, 8)),
+        Field::required("ally_join_permille", Type::integer(0, 1000)),
+        Field::required("mining_permille", Type::integer(0, 1000)),
     };
     std::vector<Check> checks{
         Check{"race_generation_below_lifespan", [](const Record& r) { return check_race_generation_below_lifespan(r); }},
@@ -1361,6 +1374,133 @@ Schema history_monsters_schema() {
                   if (r.get_int("hunt_permille") > r.get_int("hunt_max_permille")) {
                       return "hunt_permille " + int_text(r.get_int("hunt_permille")) + " is above hunt_max_permille " +
                              int_text(r.get_int("hunt_max_permille"));
+                  }
+                  return std::nullopt;
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+// P5-04 4.2 (generator 0.26.0): the tuning id history.alliances, in the
+// table's order, with its five checks.
+Schema history_alliances_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    std::vector<Field> fields{
+        i("ally_hops", -1, 8),
+        i("ally_min_disposition", -2000, 2000),
+        i("ally_full_disposition", -2000, 2000),
+        i("ally_friend_disposition", -2000, 2000),
+        i("ally_break_disposition", -2000, 2000),
+        i("allies_max", 0, 16),
+        i("ally_after_war_years", 0, 100000),
+        i("foe_years", 1, 100000),
+        i("fear_share", 0, 1000),
+        i("form_foe_permille", 0, 1000),
+        i("form_fear_permille", 0, 1000),
+        i("form_trade_permille", 0, 1000),
+        i("form_friend_permille", 0, 1000),
+        i("form_max_permille", 0, 1000),
+        i("bloc_share_max", 0, 1000),
+        i("bloc_lapse_share", 0, 1001),
+        i("term_years", 1, 100000),
+        i("refusals_to_break", 1, 100),
+        i("defend_permille", 0, 1000),
+        i("attack_permille", 0, 1000),
+        i("hostility_full", 1, 2000),
+        i("ally_wars_max", 1, 16),
+        i("ally_memory", 0, 1000),
+        i("renew_memory", 0, 1000),
+        i("join_memory", 0, 1000),
+        i("refuse_memory", 0, 1000),
+        i("betray_memory", 0, 1000),
+        i("ally_war_memory", 0, 1000),
+        i("trade_hops", -1, 8),
+        i("trade_min_disposition", -2000, 2000),
+        i("trade_break_margin", 0, 2000),
+        i("trade_after_war_years", 0, 100000),
+        i("trade_permille", 0, 1000),
+        i("trade_max", 0, 16),
+        i("trade_credit_years", 1, 100000),
+        i("trade_memory", 0, 1000),
+        i("trade_ally_years", 0, 100000),
+        i("spoils_plunder_permille", 0, 1000),
+        i("spoils_floor_permille", 0, 1000),
+        i("spoils_cap_permille", 0, 1000),
+        i("spoils_grant_permille", 0, 1000),
+        i("spoils_warmth_permille", 0, 1000),
+        i("spoils_part_permille", 0, 1000),
+        i("spoils_need_permille", 0, 1000),
+        i("spoils_grant_min", 0, 1000),
+        i("spoils_grant_max", 0, 1000),
+        i("share_memory", 0, 1000),
+        i("withheld_memory", 0, 1000),
+        i("withheld_grudge", 0, 2000),
+        i("withheld_to_break", 1, 100),
+        i("mine_permille", 0, 1000),
+        i("mine_ore_min", 1, 100000),
+        i("mine_settlement_min", 0, 1000000),
+        i("arms_trade_permille", 0, 4000),
+        Field::required("mine_forms", Type::array(Type::string(64), 1, 4)),
+    };
+    const auto above = [](const Record& r, std::string_view a, std::string_view b,
+                          std::string_view words) -> std::optional<std::string> {
+        return std::string(a) + " " + int_text(r.get_int(a)) + std::string(words) + std::string(b) + " " +
+               int_text(r.get_int(b));
+    };
+    std::vector<Check> checks{
+        Check{"alliances_spoils",
+              [above](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("spoils_floor_permille") > r.get_int("spoils_cap_permille")) {
+                      return above(r, "spoils_floor_permille", "spoils_cap_permille", " is above ");
+                  }
+                  if (r.get_int("spoils_grant_min") > r.get_int("spoils_grant_max")) {
+                      return above(r, "spoils_grant_min", "spoils_grant_max", " is above ");
+                  }
+                  return std::nullopt;
+              }},
+        Check{"alliances_mine_forms",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::vector<Value>& forms = r.get_array("mine_forms");
+                  for (std::size_t k = 0; k < forms.size(); ++k) {
+                      const std::string& f = forms[k].as_string();
+                      constexpr std::string_view SLOT = "{settlement}";
+                      std::size_t slots = 0;
+                      std::size_t braces = 0;
+                      for (std::size_t at = f.find(SLOT); at != std::string::npos; at = f.find(SLOT, at + 1)) {
+                          ++slots;
+                      }
+                      for (const char ch : f) {
+                          braces += (ch == '{' || ch == '}') ? 1 : 0;
+                      }
+                      if (slots != 1 || braces != 2) {
+                          return "mine_forms[" + uint_text(k) + "] '" + f + "' must contain {settlement} once";
+                      }
+                  }
+                  return std::nullopt;
+              }},
+        Check{"alliances_dispositions",
+              [above](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("ally_min_disposition") >= r.get_int("ally_full_disposition")) {
+                      return above(r, "ally_min_disposition", "ally_full_disposition", " is not below ");
+                  }
+                  if (r.get_int("ally_break_disposition") >= r.get_int("ally_min_disposition")) {
+                      return above(r, "ally_break_disposition", "ally_min_disposition", " is not below ");
+                  }
+                  return std::nullopt;
+              }},
+        Check{"alliances_blocs",
+              [above](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("bloc_share_max") >= r.get_int("bloc_lapse_share")) {
+                      return above(r, "bloc_share_max", "bloc_lapse_share", " is not below ");
+                  }
+                  return std::nullopt;
+              }},
+        Check{"alliances_trade",
+              [above](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("trade_min_disposition") >= r.get_int("ally_full_disposition")) {
+                      return above(r, "trade_min_disposition", "ally_full_disposition", " is not below ");
                   }
                   return std::nullopt;
               }},

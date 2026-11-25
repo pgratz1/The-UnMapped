@@ -199,7 +199,8 @@ struct Field {
 
 const std::vector<Field>& tuning_fields() {
     static const std::vector<Field> v = {
-        {"living_permille", 0, 1000, 100},       {"undead_min_dead", 1, 1000000000, 4000},
+        // P5-03a 10.2: undead_min_dead 1000 (the floor of the threshold; was 4000)
+        {"living_permille", 0, 1000, 100},       {"undead_min_dead", 1, 1000000000, 1000},
         {"undead_window_years", 1, 100000, 100}, {"hunt_hops", 0, 8, 2},
         {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 20},
         {"hunt_memory_years", 1, 100000, 30},    {"slay_max_permille", 0, 1000, 900},
@@ -316,7 +317,10 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     const Load l = load(history_data::shipped_files());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
-    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U);   // pressure first; r1 4.3: prey_*; P5-03 9.4: 8 last
+    // pressure first; r1 4.3: prey_*; P5-03 9.4: 8; P5-03a 10.2: undead_dead_permille last
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U);
+    CHECK(t.name_at(t.size() - 1U) == "undead_dead_permille");
+    CHECK(t.get_int("undead_dead_permille") == 25);
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();
     REQUIRE(p.size() == 3U);
@@ -684,7 +688,7 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     // the report entries: kind 43's cause words (21.2) and the twelve entries of 10.2
     const wd::Record& rep = definition(*l.content, "history", "report").record;
     const std::vector<wd::Value>& ev = rep.value_at(0).as_array();
-    REQUIRE(ev.size() == 62U);
+    REQUIRE(ev.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     CHECK(has(ev[42].as_record().get_string("template"),
               "became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }"));
     const std::vector<std::pair<std::string_view, std::int64_t>> want = {

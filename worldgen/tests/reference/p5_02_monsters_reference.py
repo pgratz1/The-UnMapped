@@ -56,9 +56,22 @@ P503_STREAMS = ("hist.beasts.bold_kind", "hist.monsters.fear")
 def p503():
     """P5-03 part B (9, 12, 13, 14) is on with the peoples flag of 0.24.0."""
     return pp.FLAGS.get("p503", False)
+
+
+def p503a():
+    """P5-03a 6 (the undead threshold by world population) is on with the conflict flag of 0.25.0."""
+    import p3_conflict_reference as pcr
+    return pcr.FLAGS.get("p503a", False)
+
+
+def undead_threshold_025(min_dead, permille, P_W, M):
+    """P5-03a 6: T = max(undead_min_dead, P_W x undead_dead_permille div 1000); S(r) >= T x 1000 div max(1, M)."""
+    T = max(min_dead, P_W * permille // 1000)
+    return T * 1000 // max(1, M)
 CIV, SETTLEMENT, REGION, MONSTER, SITE = pe.CIV, pe.SETTLEMENT, pe.REGION, pe.MONSTER, pe.SITE
 AWAKE, ASLEEP, SLAIN, DIED = 1, 2, 3, 4
 LAIR, OUTPOST = 1, 2
+MINE = 3   # P5-04 9.2: written by the alliances subsystem through the site seam (7.16); every loop here skips it
 # 11.2 site.ending
 OPEN, END_SLAIN, END_DIED, END_MOVED, END_LOST, END_FELL, END_QUIET = 0, 1, 2, 3, 4, 5, 6
 BEAST_MAX = 1000000
@@ -270,7 +283,7 @@ class Monsters:
 
     def taken(self):
         t = set((s["x"], s["y"]) for s in self.w.settlements)
-        t |= set((s["x"], s["y"]) for s in self.sites if s["ending"] == OPEN)
+        t |= set((s["x"], s["y"]) for s in self.sites if s["ending"] == OPEN and s["kind"] != MINE)   # P5-04 7.16
         return t
 
     def cells_of(self, rid):
@@ -562,7 +575,7 @@ class Monsters:
             r = ev["region"]
             if r == 0:
                 continue
-            if key in ("battle", "battle_at_pass"):
+            if key in ("battle", "battle_at_pass", "allied_battle"):   # P5-04 11.1: the battle kinds set
                 dead = ev["values"][1] + ev["values"][2]
             elif key == "sacked":
                 dead = ev["values"][1]
@@ -576,9 +589,14 @@ class Monsters:
 
     def undead(self):
         w, t = self.w, self.t
+        # P5-03a 6: P_W, the summed population of the standing settlements of State (hidden ones included)
+        P_W = sum(s["population"] for s in w.settlements if w.standing(s)) if p503a() else 0
         for r in self.regions:
             ent = self.W.get(r, [])
-            need = t["undead_min_dead"] * 1000 // max(1, self.M) if p503() else t["undead_min_dead"]   # P5-03 14.2
+            if p503a():
+                need = undead_threshold_025(t["undead_min_dead"], t["undead_dead_permille"], P_W, self.M)
+            else:
+                need = t["undead_min_dead"] * 1000 // max(1, self.M) if p503() else t["undead_min_dead"]   # P5-03 14.2
             if sum(x[1] for x in ent) < need:
                 continue
             for k in range(1, len(self.kinds) + 1):
@@ -597,16 +615,16 @@ class Monsters:
                 if bev["key"] == "sacked":
                     x = bev["settlement"]
                     if x and w.stl(x)["status"] in (3, 4) and not any(
-                            s["settlement"] == x and s["ending"] == OPEN for s in self.sites):
+                            s["settlement"] == x and s["ending"] == OPEN and s["kind"] != MINE for s in self.sites):
                         at = x
                 self.appear(k, r, key="undead_rose", causes=causes, at_settlement=at)
                 self.W[r] = []
                 return
 
     # ---------------------------------------------------------------- 6.4 the monsters' year
-    def end_site(self, sid, e, ending):
+    def end_site(self, sid, e, ending, year=None):
         s = self.site(sid)
-        s["ended_year"], s["ending_event"], s["ending"] = self.w.year, e, ending
+        s["ended_year"], s["ending_event"], s["ending"] = self.w.year if year is None else year, e, ending
 
     def die_of_age(self, m):
         w = self.w
@@ -1043,6 +1061,13 @@ def rows_from_db(path):
     return out
 
 
+def toll_dead(P, tau, kill_max, over_permille):
+    """P5-03 9.2: raw = P x tau div 1000; above kill_max only toll_over_permille of the rest; at most P - 1."""
+    raw = P * tau // 1000
+    dead = raw if raw <= kill_max else kill_max + (raw - kill_max) * over_permille // 1000
+    return max(0, min(dead, P - 1))
+
+
 class Rows:
     """Indexes over a world's history rows (res-style tuples)."""
 
@@ -1071,6 +1096,9 @@ class Rows:
         self.civ = {c[0]: c for c in res["civilization"]}
         self.monsters = list(res.get("monster", []))
         self.sites = list(res.get("site", []))
+        self.census = {}
+        for r in res.get("settlement_census", []):
+            self.census.setdefault(r[0], []).append(r)
         nb = {}
         for b in (borders or []):
             nb.setdefault(b[0], set()).add(b[1])
@@ -1177,8 +1205,15 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         h = x.hops(lair[3]).get(e[5])
         if h is None or h > kd["range_hops"]:
             out.append("5: raid e%d at %s hops" % (e[0], h))
-        if not 0 <= x.value(e[0], "dead") <= kd["kill_max"]:
-            out.append("5: raid e%d dead %d" % (e[0], x.value(e[0], "dead")))
+        dead = x.value(e[0], "dead")
+        if tuning.get("toll_over_permille") is None:   # P5-02: at most kill_max
+            if not 0 <= dead <= kd["kill_max"]:
+                out.append("5: raid e%d dead %d" % (e[0], dead))
+        elif dead < 0:   # P5-03 9.2 (P5-03a 12 item 4): above kill_max only at toll_over_permille of the rest
+            out.append("5: raid e%d dead %d" % (e[0], dead))
+        # (above kill_max: the toll of 9.2 needs the settlement's population at the raid, which the rows do not keep
+        # (a census row is the state at a step's end): reading M5, only dead >= 0 is checked from rows; the run's own
+        # tolls are checked against 9.2 in the replay)
     # 6
     for m in x.monsters:
         lair = x.sites[m[3] - 1]
@@ -1189,7 +1224,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if m[9] in (SLAIN, DIED) and (lair[13] == OPEN or lair[11] != m[6]):
             out.append("6: ended monster %d lair ended %s, died %s" % (m[0], lair[11], m[6]))
     for s in x.sites:
-        if s[6]:
+        if s[6] and s[2] != MINE:   # P5-04 9.2: a mine's settlement is its town (the alliances' check-world)
             k = x.kind_of(s[10])
             st = x.stl.get(s[6])
             if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose"):
@@ -1233,17 +1268,35 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
             out.append("10: settlement %d ending %s, derived %d" % (st[0], st[14] if len(st) > 14 else None,
                                                                   want[st[0]]))
     # 11: causes (10.2) and W9
-    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked"), "monster_woke": ("monster_slept",
+    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked", "allied_battle"), "monster_woke": ("monster_slept",
                    "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke"),
-                   "monster_raid": ("monster_appeared", "undead_rose", "monster_woke"),
                    "settlement_overrun": ("monster_raid",), "monster_slain": ("monster_raid",),
                    "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose"),
-                   "outpost_built": ("war_declared",)}
+                   "outpost_built": ("war_declared", "ally_joined_war")}   # P5-04 7.6: a joined war row's event
     for k, allowed in cause_kinds.items():
         for e in x.events_of(k):
             cs = x.causes.get(e[0], [])
             if not cs or any(x.kind_of(c) not in allowed for c in cs) or (k != "undead_rose" and len(cs) != 1):
                 out.append("11: %s e%d causes %s" % (k, e[0], [x.kind_of(c) for c in cs]))
+    # P5-03 9.1 (P5-03a 12 item 4): a raid cites its monster's waking event and at most one earlier raid of the
+    # monster on the same settlement within raid_chain_years (before P5-03: the waking event alone)
+    waking = {}
+    for e in x.events_of("monster_appeared", "undead_rose", "monster_woke"):
+        for mid in x.role(e[0], "monster"):
+            waking.setdefault(mid, set()).add(e[0])
+    chain = tuning.get("raid_chain_years")
+    for e in x.events_of("monster_raid"):
+        cs = x.causes.get(e[0], [])
+        mid = x.role(e[0], "monster")[0]
+        wk = [c for c in cs if c in waking.get(mid, set())]
+        rd = [c for c in cs if x.kind_of(c) == "monster_raid"]
+        bad = len(wk) != 1 or len(wk) + len(rd) != len(cs) or len(rd) > (0 if chain is None else 1)
+        for c in rd:
+            ce = x.ev[c]
+            if ce[6] != e[6] or x.role(c, "monster")[0] != mid or c >= e[0] or e[1] - ce[1] >= chain:
+                bad = True
+        if bad:
+            out.append("11: monster_raid e%d causes %s" % (e[0], [x.kind_of(c) for c in cs]))
     for e in x.events_of("monster_appeared", "beasts_bold"):
         if x.causes.get(e[0]):
             out.append("11: %s e%d has causes" % (x.key[e[3]], e[0]))
@@ -1908,7 +1961,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.24.0"   # P5-03 part B; --version 0.23.0 serves the committed P5-02 file
+    version = "0.26.0"   # P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

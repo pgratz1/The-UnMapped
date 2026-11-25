@@ -73,6 +73,10 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
                      {"peace_memory_per_century", wd::Value::integer(0)}, {"foe_war_memory", wd::Value::integer(0)},
                      {"foe_monster_memory", wd::Value::integer(0)}, {"meet_sealed_hops", wd::Value::integer(-1)},
                      {"conquest_settlers_span_permille", wd::Value::integer(0)}});
+    // P5-04 7.14 (0.26.0): the alliances at their zero too (the stage without monsters builds none)
+    c = with_fields(c, "alliances",
+                    {{"ally_hops", wd::Value::integer(-1)}, {"trade_hops", wd::Value::integer(-1)},
+                     {"mine_permille", wd::Value::integer(0)}});
     for (wd::KindContent& k : c.kinds) {
         if (k.kind != "race") {
             continue;
@@ -80,8 +84,8 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
         for (wd::Definition& d : k.definitions) {
             wd::Record r;
             for (std::size_t i = 0; i < d.record.size(); ++i) {
-                r.add(d.record.name_at(i),
-                      d.record.name_at(i) == "stances" ? wd::Value::array({}) : d.record.value_at(i));
+                const bool empty = d.record.name_at(i) == "stances" || d.record.name_at(i) == "origin_allies";
+                r.add(d.record.name_at(i), empty ? wd::Value::array({}) : d.record.value_at(i));
             }
             d.record = std::move(r);
         }

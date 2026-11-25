@@ -105,6 +105,25 @@ std::vector<std::uint8_t> with_markers(const fs::path& path, std::vector<std::ui
     return under;
 }
 
+// The faded ruins at year y whose cell holds no other settlement marker: a faded ruin is drawn first (P4-04 6.1), so
+// one on the cell of a later ruin or a standing settlement is hidden under it.
+std::int64_t uncovered_faded(const fs::path& path, std::int64_t y) {
+    const Opened o = open(path);
+    auto ix = wi::MarkerIndex::load(o.reader, o.h);
+    REQUIRE(ix.ok());
+    const wi::YearMarkers m = ix.value().markers_at(o.h, y, wi::MarkerOptions{true, true, true});
+    std::int64_t n = 0;
+    for (const wi::SettlementMarker& f : m.settlements) {
+        if (f.status != 4) continue;
+        bool covered = false;
+        for (const wi::SettlementMarker& s : m.settlements) {
+            covered = covered || (s.status != 4 && s.x == f.x && s.y == f.y);
+        }
+        n += covered ? 0 : 1;
+    }
+    return n;
+}
+
 // The library's territory image (P4-03 r4 9.2, the timeline form).
 std::vector<std::uint8_t> library_territory(const fs::path& path, std::int64_t y, std::uint32_t k) {
     const Opened o = open(path);
@@ -169,8 +188,11 @@ TEST_CASE("cli P4-04 10.5 item 1: --markers over every image, default names, the
             run_ok(sb, {"render", "--db", path, "--composite", "territory", "--markers", "--faded"},
                    out / "world.territory-6000.markers-faded.png");
         CHECK(faded.rgb == with_markers(db, library_territory(db, 6000, 1), N, N, 1, 6000, true));
-        // the seed 42 world has faded ruins at E (P4-04 preamble: 8), so the two images differ
-        CHECK(faded.rgb != png_of(out / "world.territory-6000.markers.png").rgb);
+        // --faded changes the image exactly when some faded ruin at E is not under a later settlement's marker at
+        // its cell. At 0.26.0 the seed 42 world's three faded ruins (s2, s10, s11) all lie under one (s42 standing,
+        // s38 and s36 ruined, each founded on the old site), so the two images are equal there.
+        const bool differ = faded.rgb != png_of(out / "world.territory-6000.markers.png").rgb;
+        CHECK(differ == (uncovered_faded(db, 6000) > 0));
     }
     // regions, map and --layer elevation: over the CLI's own image without --markers
     struct C {

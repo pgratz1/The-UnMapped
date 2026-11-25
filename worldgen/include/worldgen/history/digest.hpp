@@ -58,6 +58,8 @@ inline constexpr std::size_t SUMMARY_MONSTER_ENDED_LINES = 2;
 // P5-03a 9.5 (format v6): the settlement_mixed events that may enter the
 // summary set: the first of each pair of races, at most this many.
 inline constexpr std::size_t SUMMARY_MIXED_MAX = 3;
+// P5-04 10.2: the alliance lines of [alliances] at summary.
+inline constexpr std::int64_t SUMMARY_ALLIANCES_MAX = 10;
 // P5-03 17.2 (a reading): a settlement is mixed at E when a race other than
 // the ruling one has at least this share (the shipped mixed_min_permille;
 // the report reads the world only).
@@ -207,6 +209,13 @@ struct HistoryDigest {
     // P5-03 10.1: harm(m) per monster (index id - 1) and the told monsters.
     std::vector<std::int64_t> monster_harm;
     std::int64_t monster_stories = 0;
+    // P5-04 10.2: the largest bloc share (6.2, by the report's islet rule)
+    // over every year and civilization, the earliest year and smallest id at
+    // a tie, with the civilization's allies at that year; bloc_any false
+    // when no alliance ever stood.
+    bool bloc_any = false;
+    std::int64_t bloc_max = 0, bloc_max_year = 0, bloc_max_civ = 0;
+    std::vector<std::int64_t> bloc_max_allies;
 };
 
 // P5-03 17.2: a mixed standing settlement at E with its shares in force at

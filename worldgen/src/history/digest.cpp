@@ -379,7 +379,8 @@ bool standing(std::int64_t status) noexcept {
 struct Kinds {
     Id war_declared = 0, peace = 0, war_won = 0, truce = 0, region_ceded = 0, settlements_ceded = 0, tribute = 0;
     Id sacked = 0, settlement_captured = 0, capital_moved = 0, refugees_settled = 0, civ_conquered = 0;
-    Id civ_ended = 0, search_abandoned = 0, battle = 0, battle_at_pass = 0, siege = 0, colony_founded = 0;
+    Id civ_ended = 0, search_abandoned = 0, battle = 0, battle_at_pass = 0, allied_battle = 0, siege = 0, colony_founded = 0;
+    Id ally_joined_war = 0, ally_refused = 0, alliance_betrayed = 0, spoils_shared = 0, spoils_withheld = 0;  // P5-04
     Id civ_seceded = 0, refuge_held = 0;
     Id claim = 0, claim_settlements = 0, quiet_stretch = 0, plague_spread = 0, civ_founded = 0;
     // P3-07 r19 25: kinds 41 and 42, the flare-up, the calamity kinds of
@@ -414,6 +415,12 @@ struct Kinds {
         search_abandoned = id("search_abandoned");
         battle = id("battle");
         battle_at_pass = id("battle_at_pass");
+        allied_battle = id("allied_battle");  // P5-04 11.1
+        ally_joined_war = id("ally_joined_war");
+        ally_refused = id("ally_refused");
+        alliance_betrayed = id("alliance_betrayed");
+        spoils_shared = id("spoils_shared");
+        spoils_withheld = id("spoils_withheld");
         siege = id("siege");
         colony_founded = id("colony_founded");
         civ_seceded = id("civ_seceded");
@@ -455,7 +462,7 @@ struct Kinds {
         return calamity(k) || k == plague_spread || k == settlement_dwindled;
     }
     // P3-07 r17 24.1: the chain kinds W and the war-event kinds E_w.
-    [[nodiscard]] bool battle_kind(Id k) const noexcept { return k == battle || k == battle_at_pass; }
+    [[nodiscard]] bool battle_kind(Id k) const noexcept { return k == battle || k == battle_at_pass || (allied_battle != 0 && k == allied_battle); }
     [[nodiscard]] bool chain(Id k) const noexcept {
         return k == war_declared || battle_kind(k) || k == siege || k == sacked || k == settlement_captured ||
                k == refuge_held || k == peace || k == war_won || k == truce;
@@ -543,7 +550,7 @@ private:
         war_row_.assign(n + 1, NONE);
         for (std::size_t i = 0; i < t_.relations.size(); ++i) {
             const db::RelationRow& r = t_.relations[i];
-            if (r.kind == "war" && r.since_event >= 1 && static_cast<std::size_t>(r.since_event) <= n &&
+            if (principal_war(r) && r.since_event >= 1 && static_cast<std::size_t>(r.since_event) <= n &&
                 war_row_[static_cast<std::size_t>(r.since_event)] == NONE) {
                 war_row_[static_cast<std::size_t>(r.since_event)] = i;
             }
@@ -802,6 +809,9 @@ private:
         std::map<Key, int> state;  // 3 war, 2 peace, 1 enmity, 0 none
         for (const std::size_t i : c.relations) {
             const db::RelationRow& r = t_.relations[i];
+            if ((r.kind == "war" && !principal_war(r)) || r.kind == "alliance" || r.kind == "trade") {
+                continue;  // P5-04 10.4: an ally's joined row, an alliance and a trade are no adversaries
+            }
             const bool is_a = r.a_type == 3 && r.a_id == civ;
             const Key other = is_a ? Key{r.b_type, r.b_id} : Key{r.a_type, r.a_id};
             CivilizationDigest::Adversary& adv = adversaries[other];
@@ -1096,6 +1106,22 @@ private:
         } else if (kinds_.fall(k)) {
             add_effects(e, [this](Id x) { return kinds_.consequence(x); });
         }
+        // P5-04 10.3: the calls to arms and the betrayal of a declaration,
+        // the shares of the spoils of a war's ending, the declaration of a
+        // betrayal.
+        if (k == kinds_.war_declared) {
+            add_effects(e, [this](Id x) {
+                return x == kinds_.ally_joined_war || x == kinds_.ally_refused || x == kinds_.alliance_betrayed;
+            });
+        } else if (k == kinds_.peace || k == kinds_.war_won || k == kinds_.civ_conquered) {
+            add_effects(e, [this](Id x) { return x == kinds_.spoils_shared || x == kinds_.spoils_withheld; });
+        } else if (kinds_.alliance_betrayed != 0 && k == kinds_.alliance_betrayed) {
+            for (const Id c : events_[static_cast<std::size_t>(e - 1)].causes) {
+                if (kind(c) == kinds_.war_declared) {
+                    out.push_back(c);
+                }
+            }
+        }
         // r21 26.5 item 1: every renaming e caused.
         add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
         // P5-03 11.3: a flight for fear brings the abandonment it caused.
@@ -1129,6 +1155,11 @@ private:
         const Id k = e.row.kind;
         if (e.row.salience < SUMMARY_MIN_SALIENCE || kinds_.is_claim(k) || kinds_.battle_kind(k) ||
             k == kinds_.plague_spread || k == kinds_.quiet_stretch) {
+            return false;
+        }
+        // P5-04 8.3 (reading): a call to arms is in the summary as a
+        // companion of its war only.
+        if (k == kinds_.ally_joined_war || k == kinds_.ally_refused) {
             return false;
         }
         if (k == kinds_.settlement_mixed &&
@@ -1350,6 +1381,199 @@ private:
         renaming_stats();
         monster_stats();
         relations_stats();  // P5-03 17.4
+        alliance_stats();   // P5-04 10.5
+    }
+
+    // P5-04 10.5: appended at the end, in this order (full only).
+    void alliance_stats() {
+        const auto count_kind = [this](std::string_view key) {
+            const KindDef* k = view_.catalogue().find(key);
+            std::int64_t n = 0;
+            if (k != nullptr) {
+                for (const HistoryView::Event& e : events_) {
+                    n += e.row.kind == k->id ? 1 : 0;
+                }
+            }
+            return n;
+        };
+        const auto kind_id = [this](std::string_view key) -> Id {
+            const KindDef* k = view_.catalogue().find(key);
+            return k != nullptr ? k->id : -1;
+        };
+        const Id formed = kind_id("alliance_formed"), lapsed = kind_id("alliance_lapsed");
+        const Id broken = kind_id("alliance_broken"), betrayed = kind_id("alliance_betrayed");
+        const Id spurned = kind_id("alliance_spurned"), joined = kind_id("ally_joined_war");
+        const Id shared = kind_id("spoils_shared"), withheld = kind_id("spoils_withheld");
+        std::int64_t standing_n = 0, cross = 0, origin = 0, with_realm = 0;
+        std::vector<std::int64_t> lengths;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind != "alliance") {
+                continue;
+            }
+            standing_n += r.until ? 0 : 1;
+            const std::size_t ra = race_of(r.a_id);
+            const std::size_t rb = race_of(r.b_id);
+            cross += ra != rb ? 1 : 0;
+            if (r.until) {
+                lengths.push_back(*r.until - r.since);
+                const Id k = kind(r.until_event);
+                with_realm += (k != lapsed && k != broken && k != betrayed && k != spurned) ? 1 : 0;
+            }
+        }
+        std::int64_t defence = 0, people = 0;
+        std::vector<Id> with_ally;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == formed && !e.values.empty() && e.values[0] == 0) {
+                ++origin;
+            }
+            if (e.row.kind == joined) {
+                defence += (!e.values.empty() && e.values[0] == 0) ? 1 : 0;
+                for (const Id c : e.causes) {
+                    if (kind(c) == kinds_.war_declared) {
+                        with_ally.push_back(c);
+                    }
+                }
+            }
+            if ((e.row.kind == shared || e.row.kind == withheld) && !e.values.empty()) {
+                people += e.values[0];
+            }
+        }
+        std::stable_sort(with_ally.begin(), with_ally.end());
+        with_ally.erase(std::unique(with_ally.begin(), with_ally.end()), with_ally.end());
+        std::stable_sort(lengths.begin(), lengths.end());
+        put("alliances_formed", count_kind("alliance_formed"));
+        put("alliances_standing", standing_n);
+        put("alliances_cross_race", cross);
+        put("alliances_origin", origin);
+        put("alliances_lapsed", count_kind("alliance_lapsed"));
+        put("alliances_broken", count_kind("alliance_broken"));
+        put("alliances_betrayed", count_kind("alliance_betrayed"));
+        put("alliances_ended_with_realm", with_realm);
+        put("alliances_years_median", lengths.empty() ? STAT_NONE : lengths[(lengths.size() - 1) / 2]);
+        put("allies_joined", count_kind("ally_joined_war"));
+        put("allies_joined_defence", defence);
+        put("allies_refused", count_kind("ally_refused"));
+        put("allies_withdrew", count_kind("ally_withdrew"));
+        put("wars_with_ally", static_cast<std::int64_t>(with_ally.size()));
+        put("allied_battles", count_kind("allied_battle"));
+        blocs_by_year();
+        put("bloc_share_max_permille", d_.bloc_any ? d_.bloc_max : 0);
+        put("bloc_over_800_years", bloc_over_800_);
+        std::int64_t trade_standing = 0;
+        for (const db::RelationRow& r : t_.relations) {
+            trade_standing += (r.kind == "trade" && !r.until) ? 1 : 0;
+        }
+        put("trade_opened", count_kind("trade_opened"));
+        put("trade_standing", trade_standing);
+        put("trade_broken", count_kind("trade_broken"));
+        put("alliances_spurned", count_kind("alliance_spurned"));
+        const std::int64_t granted = count_kind("spoils_shared");
+        const std::int64_t owed = granted + count_kind("spoils_withheld");
+        put("spoils_owed", owed);
+        put("spoils_granted", granted);
+        put("spoils_withheld", owed - granted);
+        put("spoils_granted_permille", owed == 0 ? STAT_NONE : permille(granted, owed));
+        put("spoils_people_owed", people);
+        std::int64_t mines_open = 0;
+        std::vector<Id> sellers;  // open mines at E - 1 (an open site row)
+        for (const db::SiteRow& x : t_.sites) {
+            if (x.kind == 3 && !x.ended_year) {
+                ++mines_open;
+                sellers.push_back(x.founder_civ);
+            }
+        }
+        std::stable_sort(sellers.begin(), sellers.end());
+        const auto seller = [&sellers](Id c) { return std::binary_search(sellers.begin(), sellers.end(), c); };
+        std::vector<Id> buyers;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind != "trade" || r.until) {
+                continue;
+            }
+            if (seller(r.a_id) && !seller(r.b_id)) {
+                buyers.push_back(r.b_id);
+            } else if (seller(r.b_id) && !seller(r.a_id)) {
+                buyers.push_back(r.a_id);
+            }
+        }
+        std::stable_sort(buyers.begin(), buyers.end());
+        buyers.erase(std::unique(buyers.begin(), buyers.end()), buyers.end());
+        put("mines_opened", count_kind("mine_opened"));
+        put("mines_open", mines_open);
+        put("arms_sold", count_kind("arms_sold"));
+        put("arms_buyers_at_end", static_cast<std::int64_t>(buyers.size()));
+    }
+
+    // P5-04 10.2, 10.5: the bloc shares by year, from the region rows
+    // (non-islet) and the alliance rows in force (since <= Y < until).
+    void blocs_by_year() {
+        std::vector<const db::RelationRow*> rows;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind == "alliance") {
+                rows.push_back(&r);
+            }
+        }
+        d_.bloc_any = !rows.empty();
+        if (rows.empty() || nonislet_ <= 0 || e_ <= 0) {
+            return;
+        }
+        const std::size_t span = static_cast<std::size_t>(e_);
+        const std::size_t nc = t_.civilizations.size();
+        // held[c][y]: non-islet regions held, by a difference array.
+        std::vector<std::vector<std::int64_t>> held(nc);
+        for (std::size_t k = 0; k < nc; ++k) {
+            if (control_of_[k].empty()) {
+                continue;
+            }
+            std::vector<std::int64_t>& h = held[k];
+            h.assign(span + 1, 0);
+            for (const std::size_t i : control_of_[k]) {
+                const db::RegionControlRow& r = t_.region_control[i];
+                const RegionInfo* g = region(r.region);
+                if (g == nullptr || islet(*g)) {
+                    continue;
+                }
+                ++h[static_cast<std::size_t>(r.from_year)];
+                --h[static_cast<std::size_t>(r.to_year.value_or(e_))];
+            }
+            for (std::size_t y = 1; y <= span; ++y) {
+                h[y] += h[y - 1];
+            }
+        }
+        const auto share = [&](Id c, std::size_t y) -> std::int64_t {
+            if (!is_civ(c) || held[civ_index(c)].empty()) {
+                return 0;
+            }
+            return held[civ_index(c)][y] * 1000 / nonislet_;
+        };
+        std::int64_t run = 0;
+        for (std::size_t y = 0; y < span; ++y) {
+            const auto year = static_cast<std::int64_t>(y);
+            std::map<Id, std::vector<Id>> allies;
+            for (const db::RelationRow* r : rows) {
+                if (r->since <= year && (!r->until || year < *r->until)) {
+                    allies[r->a_id].push_back(r->b_id);
+                    allies[r->b_id].push_back(r->a_id);
+                }
+            }
+            bool over = false;
+            for (auto& [c, list] : allies) {
+                std::stable_sort(list.begin(), list.end());
+                std::int64_t bs = share(c, y);
+                for (const Id z : list) {
+                    bs += share(z, y);
+                }
+                bs = std::min<std::int64_t>(1000, bs);
+                over = over || bs > 800;
+                if (bs > d_.bloc_max || (d_.bloc_max_civ == 0)) {
+                    d_.bloc_max = bs;
+                    d_.bloc_max_year = year;
+                    d_.bloc_max_civ = c;
+                    d_.bloc_max_allies = list;
+                }
+            }
+            run = over ? run + 1 : 0;
+            bloc_over_800_ = std::max(bloc_over_800_, run);
+        }
     }
 
     // P5-02 12.6: appended at the end, in this order.
@@ -1738,8 +1962,8 @@ private:
         std::int64_t open = 0, wars = 0, wars_open = 0;
         for (const db::RelationRow& r : t_.relations) {
             open += r.until ? 0 : 1;
-            wars += r.kind == "war" ? 1 : 0;
-            wars_open += (r.kind == "war" && !r.until) ? 1 : 0;
+            wars += principal_war(r) ? 1 : 0;  // P5-04 10.4
+            wars_open += (principal_war(r) && !r.until) ? 1 : 0;
         }
         put("relations", static_cast<std::int64_t>(t_.relations.size()));
         put("relations_open", open);
@@ -1802,7 +2026,7 @@ private:
         for (const db::RelationRow& r : t_.relations) {
             enmity += r.kind == "enmity" ? 1 : 0;
             peace += r.kind == "peace" ? 1 : 0;
-            if (r.kind == "war") {
+            if (principal_war(r)) {
                 const std::int64_t years = r.until.value_or(e_) - r.since;
                 war_total += years;
                 war_max = std::max(war_max, years);
@@ -1846,10 +2070,17 @@ private:
         for (std::size_t k = 0; k < t_.races.size(); ++k) {
             std::int64_t n = 0;
             for (const db::RelationRow& r : t_.relations) {
-                n += (r.kind == "war" && r.a_type == 3 && race_of(r.a_id) == k) ? 1 : 0;
+                n += (principal_war(r) && r.a_type == 3 && race_of(r.a_id) == k) ? 1 : 0;
             }
             put("wars_attacker_" + t_.races[k].key, n);
         }
+    }
+
+    // P5-04 10.4: a war row that is a war, not an ally's joined row.
+    [[nodiscard]] bool principal_war(const db::RelationRow& r) const {
+        return r.kind == "war" && !(kinds_.ally_joined_war != 0 && r.since_event >= 1 &&
+                                    static_cast<std::size_t>(r.since_event) <= events_.size() &&
+                                    kind(r.since_event) == kinds_.ally_joined_war);
     }
 
     // The participant of `role` (by key) of event e, or 0.
@@ -1897,7 +2128,7 @@ private:
             goals[{role_entity(e, "defender"), e.row.region}].push_back(d);
             bool changed = false;
             for (const Id b : effects_[static_cast<std::size_t>(d)]) {
-                if (kind(b) != kinds_.battle && kind(b) != kinds_.battle_at_pass) {
+                if (!kinds_.battle_kind(kind(b))) {
                     continue;
                 }
                 for (const Id s : effects_[static_cast<std::size_t>(b)]) {
@@ -2008,6 +2239,7 @@ private:
     std::vector<std::vector<std::size_t>> control_of_;  // index civ - 1: its region_control rows
     std::int64_t nonislet_ = 0;
     std::int64_t share_max_ = 0, share_max_civ_ = 0, share_max_year_ = 0;
+    std::int64_t bloc_over_800_ = 0;  // P5-04 10.5
     std::array<std::int64_t, 5> share_runs_{};
     std::vector<std::int64_t> race_population_;
     std::vector<std::int64_t> race_regions_;

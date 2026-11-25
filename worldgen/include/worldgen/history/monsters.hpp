@@ -171,8 +171,22 @@ public:
     // P5-03 12.2: the region names in force (the renaming subsystem, set by
     // the history stage; without it a host is named for region.name).
     void set_region_names(const RenamingSubsystem* renaming) noexcept { renaming_ = renaming; }
-    // P5-03 11.2 (WildView): an open site stands on the settlement.
+    // P5-03 11.2 (WildView): an open site of kind 1 or 2 stands on the
+    // settlement (P5-04 6.12: a mine does not hold back a ruin's fading).
     [[nodiscard]] bool holds_site(std::int64_t settlement) const override;
+
+    // P5-04 7.16: the site seam for the alliances subsystem's mines (kind 3).
+    struct SiteSpec {
+        std::int64_t id = 0, kind = 3;
+        std::string name;
+        std::int64_t region = 0, x = 0, y = 0;
+        std::int64_t settlement = 0, founder_civ = 0, monster = 0;
+        std::int64_t origin_year = 0, origin_event = 0;
+    };
+    [[nodiscard]] std::int64_t next_site_id() const noexcept { return static_cast<std::int64_t>(sites_.size()) + 1; }
+    // FatalError unless spec.id == next_site_id() and spec.kind == 3.
+    void open_site(const SiteSpec& spec);
+    void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);
 
     // 6.2.2: the beast rows of the run's end (year end_year - 1), called by
     // the stage once the engine has run. Idempotent.
@@ -228,7 +242,7 @@ private:
     };
     struct Site {
         std::int64_t id = 0;
-        std::int64_t kind = 1;  // 1 lair, 2 outpost
+        std::int64_t kind = 1;  // 1 lair, 2 outpost, 3 mine (P5-04)
         std::string name;
         std::int64_t region = 0, x = 0, y = 0;
         std::int64_t settlement = 0, founder = 0, monster = 0;

@@ -142,8 +142,14 @@ inline constexpr std::string_view hist_monsters_fear = "hist.monsters.fear";
 inline constexpr std::string_view hist_peoples_abandon_loss = "hist.peoples.abandon_loss";
 inline constexpr std::string_view hist_relations_expel = "hist.relations.expel";
 inline constexpr std::string_view hist_relations_settlers = "hist.relations.settlers";  // P5-03a 5.1
+// P5-04 3 (generator 0.26.0).
+inline constexpr std::string_view hist_alliances_form = "hist.alliances.form";
+inline constexpr std::string_view hist_alliances_join = "hist.alliances.join";
+inline constexpr std::string_view hist_alliances_trade = "hist.alliances.trade";
+inline constexpr std::string_view hist_alliances_spoils = "hist.alliances.spoils";
+inline constexpr std::string_view hist_alliances_mine = "hist.alliances.mine";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 77> all_stream_names = {
+inline constexpr std::array<std::string_view, 82> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -221,6 +227,11 @@ inline constexpr std::array<std::string_view, 77> all_stream_names = {
     hist_peoples_abandon_loss,
     hist_relations_expel,
     hist_relations_settlers,
+    hist_alliances_form,
+    hist_alliances_join,
+    hist_alliances_trade,
+    hist_alliances_spoils,
+    hist_alliances_mine,
 };
 
 }  // namespace worldgen::streams

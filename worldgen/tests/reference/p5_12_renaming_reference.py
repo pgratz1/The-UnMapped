@@ -215,6 +215,8 @@ def build_name(forms, start, name_value, noun_value, registry, common=None, filt
     for j in range(n):
         fi = (start + j) % n
         f = forms[fi]
+        if name_value is None and ("{name}" in f or "{stem}" in f):
+            continue   # no {name} for this event: the form cannot be filled (P5-03a; never so before 0.25.0)
         nm = fill(f, name_value, noun_value, stem_value)
         parts = form_parts(f, name_value or "", noun_value, stem_value)
         prob = name_problem(nm, parts, common, filt)
@@ -369,7 +371,13 @@ class Renaming:
         if t == SETTLEMENT:
             return w.stl(x)["name"]
         if t == pe.MONSTER:   # P5-02 9.3: {name} is the monster's root, read through the monsters subsystem
-            return w.monsters.monster_root_of(x)
+            root = w.monsters.monster_root_of(x)
+            # 0.25.0 (P5-03a proposals entry, the engineer's fix as ruled by the lead): a host named for its place
+            # (P5-03 12.2) has no root, so the event gives no {name}: only the forms without {name} or {stem} can be
+            # chosen, and when none fits the rule does not rename (0.24.0 filled {name} with "").
+            if root == "" and pcr.FLAGS.get("p503a", False):
+                return None
+            return root
         c = w.civ(x)
         forms = w.dat.naming[self.culture_key[c["culture"]]]["civilization_forms"]
         return realm_root(c["name"], forms)
@@ -575,6 +583,12 @@ def rows_violations(res, t, geo_names, other_names, nouns=None, seed=None):
             if met is not None:   # P5-03 15: the weight of the rule whose conditions the cause meets
                 wa = met.weight(a, rs[i - 1] if i > 0 else None)
                 wb = met.weight(b, a)
+                if wa is None:
+                    # P5-03a 12 item 3: the earlier row's rule looked up by the cause kinds of every rule (heartland's
+                    # became_city included: its capital condition is read at E, R15a, and may fail there), so that a
+                    # rule in force is never None; the lightest such rule, the reading that can raise no false
+                    # positive
+                    wa = min_weight(rule_by_kind, kinds, ev, causes.get(a[4], []))
             else:
                 wa = max_weight(rule_by_kind, kinds, ev, causes.get(a[4], []))
                 wb = max_weight(rule_by_kind, kinds, ev, causes.get(b[4], []))
@@ -622,6 +636,12 @@ def max_weight(rule_by_kind, kinds, ev, cs):
     rules that read that kind, which is the chosen rule's when only one qualifies)."""
     ws = [rule["weight"] for c in cs for rule in rule_by_kind.get(kinds[ev[c][3]], [])]
     return max(ws) if ws else None
+
+
+def min_weight(rule_by_kind, kinds, ev, cs):
+    """The lightest weight of the rules that read the cause's kind (P5-03a 12 item 3), None when no rule does."""
+    ws = [rule["weight"] for c in cs for rule in rule_by_kind.get(kinds[ev[c][3]], [])]
+    return min(ws) if ws else None
 
 
 def rule_of(res_w, row):
@@ -1188,6 +1208,27 @@ def check_p503_15(c):
     c.eq("P5-03 15 both met, the heavier's chance 0: the lighter's weight", m.weight(rows[1], rows[0]), 80)
     m = RuleMatch(res, t, None)
     c.eq("P5-03 15 both met, no seed: the heavier", m.weight(rows[1], rows[0]), 90)
+    # P5-03a 12 item 3 (validation finding 2): an earlier row whose rule's conditions cannot be read from the rows
+    # (heartland: became_city with a capital condition read at E) is looked up by the cause kinds of every rule
+    t2 = dict(t, rules=[dict(key="heartland", kinds=["became_city"], values=[], min_magnitude=1, window_years=1,
+                             min_salience=0, capital=True, chance_permille=1000, weight=50),
+                        dict(key="capital_sack", kinds=["sacked"], values=[], min_magnitude=1, window_years=1,
+                             min_salience=0, capital=False, chance_permille=1000, weight=90)])
+    res2 = dict(event_kind=[(18, "became_city"), (25, "sacked"), (43, "region_renamed")], event_kind_value=[],
+                event=[(1, 100, 100, 18, 1, 7, 3, 50), (2, 100, 100, 43, 1, 7, 0, 30),
+                       (3, 500, 500, 25, 1, 7, 4, 90), (4, 500, 500, 43, 1, 7, 0, 30)],
+                event_value=[], event_cause=[(2, 1), (4, 3)], civilization=[(1, "A", 1, 1, 0, 9)],
+                event_participant=[(1, 1, 1, CIV, 1)],
+                region_name=[(7, 100, "Aa", 1, 2), (7, 500, "Bb", 1, 4)])
+    rows2 = sorted(res2["region_name"])
+    c.eq("P5-03a 12.3 the heartland row's conditions fail at E", RuleMatch(res2, t2, None).weight(rows2[0], None), None)
+    c.eq("P5-03a 12.3 no invariant 2 message: heartland (50) then capital_sack (90)",
+         [w for w in rows_violations(res2, t2, {7: "Zz"}, []) if w.startswith("2:")], [])
+    res2["region_name"] = [(7, 100, "Aa", 1, 4), (7, 500, "Bb", 1, 2)]
+    res2["event"] = [(1, 500, 500, 18, 1, 7, 3, 50), (2, 500, 500, 43, 1, 7, 0, 30),
+                     (3, 100, 100, 25, 1, 7, 4, 90), (4, 100, 100, 43, 1, 7, 0, 30)]
+    c.ok("P5-03a 12.3 capital_sack (90) then heartland (50) is still out of order",
+         any(w.startswith("2:") for w in rows_violations(res2, t2, {7: "Zz"}, [])))
 
 
 def cmd_check(argv):
@@ -1238,7 +1279,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.24.0"   # P5-03: rule 7's {name}'s Waste and the histories of 0.24.0; --version 0.23.0 keeps P5-02's file
+    version = "0.26.0"   # P5-04: the histories of 0.26.0 (0.25.0: P5-03a); --version 0.24.0 keeps P5-03's file, 0.23.0 P5-02's
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

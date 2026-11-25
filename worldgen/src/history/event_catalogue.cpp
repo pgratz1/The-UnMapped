@@ -4,6 +4,7 @@
 #include "worldgen/history/event_catalogue.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <tuple>
 #include <cstddef>
 #include <new>
@@ -265,6 +266,40 @@ EventCatalogue build_compiled() {
                                role(2, "civilization", EntityType::civilization, 1, 1),
                                role(3, "race", EntityType::race, 1, 1)},
                               {"people", "standing", "years"}, 0, {}});
+    // P5-04 8.1 (generator 0.26.0): kinds 63 to 78, alliances, trade, the
+    // spoils of allied wars, mines and arms.
+    const auto civ = [](std::int64_t seq, std::string_view name, std::int64_t lo = 1, std::int64_t hi = 1) {
+        return role(seq, name, EntityType::civilization, lo, hi);
+    };
+    const auto pair_of = [&civ](std::string_view a, std::string_view b) {
+        return std::vector<RoleDef>{civ(1, a), civ(2, b)};
+    };
+    const auto pair_foe = [&civ] {
+        return std::vector<RoleDef>{civ(1, "ally_a"), civ(2, "ally_b"), civ(3, "foe", 0, 1)};
+    };
+    const auto call = [&civ] { return std::vector<RoleDef>{civ(1, "ally"), civ(2, "partner"), civ(3, "enemy")}; };
+    const auto spoils = [&civ] { return std::vector<RoleDef>{civ(1, "principal"), civ(2, "ally"), civ(3, "enemy")}; };
+    c.kinds.push_back(KindDef{63, "alliance_formed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
+    c.kinds.push_back(KindDef{64, "alliance_renewed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
+    c.kinds.push_back(KindDef{65, "alliance_lapsed", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{66, "alliance_broken", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{67, "alliance_betrayed", true, 0, 0, pair_of("betrayer", "betrayed"), {}, 0, {}});
+    c.kinds.push_back(KindDef{68, "ally_joined_war", true, 0, 0, call(), {"side"}, 0, {}});
+    c.kinds.push_back(KindDef{69, "ally_refused", true, 0, 0, call(), {}, 0, {}});
+    c.kinds.push_back(KindDef{70, "ally_withdrew", true, 0, 0, call(), {}, 0, {}});
+    c.kinds.push_back(KindDef{71, "allied_battle", true, 1, 0,
+                              {civ(1, "winner"), civ(2, "loser"), civ(3, "winner_ally", 0, 16),
+                               civ(4, "loser_ally", 0, 16)},
+                              {"winner_dead", "loser_dead", "pass"}, 0, {}});
+    c.kinds.push_back(KindDef{72, "trade_opened", true, 0, 0, pair_of("partner_a", "partner_b"), {}, 0, {}});
+    c.kinds.push_back(KindDef{73, "trade_broken", true, 0, 0, pair_of("partner_a", "partner_b"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{74, "spoils_shared", true, 1, 0, spoils(), {"share"}, 0, {}});
+    c.kinds.push_back(KindDef{75, "spoils_withheld", true, 1, 0, spoils(), {"share"}, 0, {}});
+    c.kinds.push_back(KindDef{76, "alliance_spurned", true, 1, 0, pair_of("ally", "principal"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{77, "mine_opened", true, 1, 1,
+                              {civ(1, "civilization"), role(2, "site", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{78, "arms_sold", true, 0, 0,
+                              {civ(1, "seller"), civ(2, "buyer"), role(3, "site", EntityType::site, 1, 1)}, {}, 0, {}});
     return c;
 }
 
@@ -326,7 +361,7 @@ enum class TokenType : std::uint8_t {
 };
 
 // kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where };
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -530,6 +565,10 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::aside;
         } else if (*form == "where") {
             out.form = Form::where;
+        } else if (*form == "with") {  // P5-04 8.2
+            out.form = Form::with;
+        } else if (*form == "against") {
+            out.form = Form::against;
         } else {
             return unknown;
         }
@@ -547,7 +586,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
         r->type != EntityType::monster) {
         return "form '" + std::string(*form) + "' needs a monster role" + where;
     }
-    if (r->min_count == 0 && out.form != Form::all) {
+    if (r->min_count == 0 && out.form != Form::all && out.form != Form::with && out.form != Form::against) {
         return "role '" + r->role + "' may have no participant" + where;
     }
     return std::nullopt;
@@ -915,9 +954,11 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::GodRow& r : read(db::read_god_rows(world), db::GOD_TABLE)) {
             v.gods_.emplace_back(r.id, r.name);
         }
+        std::vector<std::pair<std::int64_t, std::int64_t>> civ_endings;  // P5-04 9.1: (id, ending_event)
         for (const db::CivilizationRow& r : read(db::read_civilization_rows(world), db::CIVILIZATION_TABLE)) {
             v.civilizations_.emplace_back(r.id, r.name);
             v.civilization_info_.emplace_back(r.id, CivilizationInfo{r.race, r.founded_year});
+            civ_endings.emplace_back(r.id, r.ending_event);  // P5-04 9.1
         }
         const std::vector<db::SettlementRow> settlement_rows = read(db::read_settlement_rows(world), db::SETTLEMENT_TABLE);
         for (const db::SettlementRow& r : settlement_rows) {
@@ -1141,6 +1182,16 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             mt.race_relations = race_relations;
             mt.settlement_races = settlement_races;
             mt.race_ids = race_ids;
+            // P5-04 9.1 (schema 11).
+            const std::vector<db::RelationRow> relation_rows = read(db::read_relation_rows(world), db::RELATION_TABLE);
+            std::stable_sort(civ_endings.begin(), civ_endings.end());
+            std::vector<std::int64_t> ending_of;
+            for (const auto& [id, ending] : civ_endings) {
+                (void)id;
+                ending_of.push_back(ending);
+            }
+            mt.relations = relation_rows;
+            mt.civ_endings = ending_of;
             if (std::optional<std::string> why = monster_tables_problem(mt)) {
                 view_fail(*why);
             }
@@ -1678,6 +1729,130 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
     return std::nullopt;
 }
 
+// P5-04 9.1 (schema 11): the relation rows of alliances, trade and joined
+// wars, then the values and citations of kinds 63 to 78, after the checks of
+// P5-03 16.4.
+template <class KindKey, class ParticipantOf>
+std::optional<std::string> alliance_tables_problem(const MonsterTables& t, const KindKey& kind_key,
+                                                   const ParticipantOf& participant,
+                                                   std::span<const std::pair<std::size_t, std::size_t>> causes) {
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const auto ending_of = [&t](std::int64_t civ) -> std::int64_t {
+        const auto it = std::lower_bound(t.civ_ids.begin(), t.civ_ids.end(), civ);
+        if (it == t.civ_ids.end() || *it != civ || t.civ_endings.size() != t.civ_ids.size()) {
+            return 0;
+        }
+        return t.civ_endings[static_cast<std::size_t>(it - t.civ_ids.begin())];
+    };
+    const auto names_pair = [&](std::int64_t e, std::string_view r1, std::string_view r2, std::int64_t a,
+                                std::int64_t b, bool either) {
+        const std::int64_t x = participant(e, r1);
+        const std::int64_t y = participant(e, r2);
+        return (x == a && y == b) || (either && x == b && y == a);
+    };
+    for (const db::RelationRow& r : t.relations) {
+        const bool civs = r.a_type == 3 && r.b_type == 3;
+        if (!civs || (r.kind != "alliance" && r.kind != "trade" && r.kind != "war")) {
+            continue;
+        }
+        const std::string at = "corrupt table 'relation': row (" + int_text(r.a_type) + ", " + int_text(r.a_id) + ", " +
+                               int_text(r.b_type) + ", " + int_text(r.b_id) + ", " + r.kind + ", " +
+                               int_text(r.since) + "): ";
+        const std::string_view sk = kind_key(r.since_event);
+        if (r.kind == "alliance" &&
+            !(sk == "alliance_formed" && names_pair(r.since_event, "ally_a", "ally_b", r.a_id, r.b_id, false))) {
+            return at + "alliance since_event " + int_text(r.since_event) + " is not an alliance_formed of the pair";
+        }
+        if (r.kind == "trade" &&
+            !(sk == "trade_opened" && names_pair(r.since_event, "partner_a", "partner_b", r.a_id, r.b_id, false))) {
+            return at + "trade since_event " + int_text(r.since_event) + " is not a trade_opened of the pair";
+        }
+        if (r.kind == "war" &&
+            !((sk == "war_declared" && names_pair(r.since_event, "attacker", "defender", r.a_id, r.b_id, false)) ||
+              (sk == "ally_joined_war" && names_pair(r.since_event, "ally", "enemy", r.a_id, r.b_id, false)))) {
+            return at + "war since_event " + int_text(r.since_event) +
+                   " is not a war_declared or an ally_joined_war of the pair";
+        }
+        if (r.kind == "alliance" && r.until) {
+            const std::string_view uk = kind_key(r.until_event);
+            const bool ends = ((uk == "alliance_lapsed" || uk == "alliance_broken") &&
+                               names_pair(r.until_event, "ally_a", "ally_b", r.a_id, r.b_id, false)) ||
+                              (uk == "alliance_betrayed" &&
+                               names_pair(r.until_event, "betrayer", "betrayed", r.a_id, r.b_id, true)) ||
+                              (uk == "alliance_spurned" &&
+                               names_pair(r.until_event, "ally", "principal", r.a_id, r.b_id, true)) ||
+                              (r.until_event != 0 &&
+                               (r.until_event == ending_of(r.a_id) || r.until_event == ending_of(r.b_id)));
+            if (!ends) {
+                return at + "until_event " + int_text(r.until_event) + " does not end the alliance";
+            }
+        }
+    }
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const std::string_view k = kind_key(v.event);
+        const KindDef* kind = t.catalogue->find(k);
+        if (kind == nullptr) {
+            continue;
+        }
+        std::string_view key;
+        std::int64_t lo = 0;
+        std::int64_t hi = 0;
+        if ((k == "alliance_formed" || k == "alliance_renewed") && v.seq == kind->value_seq("basis")) {
+            key = "basis";
+            hi = 4;
+        } else if ((k == "alliance_lapsed" || k == "alliance_broken" || k == "alliance_spurned") &&
+                   v.seq == kind->value_seq("reason")) {
+            key = "reason";
+            hi = 1;
+        } else if (k == "trade_broken" && v.seq == kind->value_seq("reason")) {
+            key = "reason";
+            hi = 2;
+        } else if (k == "ally_joined_war" && v.seq == kind->value_seq("side")) {
+            key = "side";
+            hi = 1;
+        } else if (k == "allied_battle" && v.seq == kind->value_seq("pass")) {
+            key = "pass";
+            hi = std::numeric_limits<std::int64_t>::max();  // reading: the pass rows are not read here
+        } else if ((k == "spoils_shared" || k == "spoils_withheld") && v.seq == kind->value_seq("share")) {
+            key = "share";
+            lo = 1;
+            hi = std::numeric_limits<std::int64_t>::max();
+        } else {
+            continue;
+        }
+        if (v.value < lo || v.value > hi) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value " + std::string(key) + " " +
+                   int_text(v.value) + " outside " + int_text(lo) + " to " +
+                   (hi == std::numeric_limits<std::int64_t>::max() ? std::string("its maximum") : int_text(hi));
+        }
+    }
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        if (k == "allied_battle" && participant(e.id, "winner_ally") == 0 && participant(e.id, "loser_ally") == 0) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": allied_battle without an ally";
+        }
+        if (k != "spoils_shared" && k != "spoils_withheld") {
+            continue;
+        }
+        bool ending = false;
+        bool join = false;
+        const auto [c0, c1] = causes[static_cast<std::size_t>(e.id - 1)];
+        for (std::size_t i = c0; i < c1; ++i) {
+            const std::int64_t c = t.causes[i].cause;
+            const std::string_view ck = kind_key(c);
+            ending = ending || ck == "peace" || ck == "war_won" || ck == "civ_conquered";
+            join = join || (ck == "ally_joined_war" && participant(c, "ally") == participant(e.id, "ally"));
+        }
+        if (!ending || !join) {
+            return "corrupt table 'event': row " + int_text(e.id) + ": spoils without its war";
+        }
+    }
+    return std::nullopt;
+}
+
 // P5-03 16.4: every participant of entity type 1 names a race row. 16.4
 // gives no text; the message and the place in the order are those of
 // HistoryView::load, which checks every participant's entity as it reads
@@ -1832,7 +2007,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.id != static_cast<std::int64_t>(i) + 1) {
             return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
         }
-        if (r.kind != 1 && r.kind != 2) return at + "kind " + int_text(r.kind) + " is not 1 or 2";
+        if (r.kind != 1 && r.kind != 2 && r.kind != 3) return at + "kind " + int_text(r.kind) + " is not 1, 2 or 3";
         if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
         if (r.x < 0 || r.y < 0 || r.x >= t.map_size || r.y >= t.map_size) {
             return at + "cell " + int_text(r.x) + " " + int_text(r.y) + " outside the map";
@@ -1847,14 +2022,18 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.kind == 1) {
             if (r.monster < 1 || r.monster > n_monsters) return at + "monster " + int_text(r.monster) + " is not a monster row";
             if (r.founder_civ != 0) return at + "founder_civ " + int_text(r.founder_civ) + " of a lair";
-        } else {
+        } else if (r.kind == 2) {
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "monster " + int_text(r.monster) + " of an outpost";
+        } else {  // P5-04 9.2: a mine
+            if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
+            if (r.monster != 0) return at + "mine with a monster";
+            if (r.settlement == 0) return at + "mine without a settlement";
         }
         if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
         const std::string_view ok = kind_key(r.origin_event);
         const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
-                                ok == "outpost_built") &&
+                                ok == "outpost_built" || ok == "mine_opened") &&
                                year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
         if (!origin_ok) {
             return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
@@ -1873,6 +2052,9 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             }
         }
         if (r.ending < 0 || r.ending > 6) return at + "ending " + int_text(r.ending) + " outside 0 to 6";
+        if (r.kind == 3 && r.ending != 0 && r.ending != 4 && r.ending != 5) {
+            return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a mine";
+        }
     }
     // monster.
     for (std::size_t i = 0; i < t.monsters.size(); ++i) {
@@ -1967,7 +2149,10 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
                    " is not a beast";
         }
     }
-    return relation_tables_problem(t, kind_key, participant);
+    if (std::optional<std::string> why = relation_tables_problem(t, kind_key, participant)) {
+        return why;
+    }
+    return alliance_tables_problem(t, kind_key, participant, causes);
 }
 
 // --- render_event (8.5) ------------------------------------------------------------------
@@ -2139,13 +2324,19 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         ps.push_back(&p);
                     }
                 }
-                if (t.form == Form::all) {
+                if ((t.form == Form::with || t.form == Form::against) && !ps.empty()) {
+                    out += t.form == Form::with ? ", with " : " against ";  // P5-04 8.2
+                }
+                if (t.form == Form::all || t.form == Form::with || t.form == Form::against) {
                     for (std::size_t i = 0; i < ps.size(); ++i) {
                         if (i > 0) {
                             out += i + 1 == ps.size() ? " and " : ", ";
                         }
                         append_name(name_of(*ps[i], Form::name), static_cast<EntityType>(ps[i]->entity_type),
                                     ps[i]->entity_id);
+                    }
+                    if (t.form == Form::with && !ps.empty()) {
+                        out += ",";
                     }
                 } else {
                     if (ps.empty()) {

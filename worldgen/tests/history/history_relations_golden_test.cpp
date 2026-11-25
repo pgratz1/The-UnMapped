@@ -22,6 +22,7 @@
 
 #include "../history_report_checks.hpp"
 #include "p5_03_relations_runs.hpp"
+#include "p5_03a_checks.hpp"
 #include "worldgen/inspect/history_report.hpp"
 
 namespace {
@@ -110,6 +111,7 @@ void check_case(const RCase& g) {
         }
     }
     CHECK(p503check::violations(*w) == std::vector<std::string>{});
+    CHECK(p503a_check::violations(*w) == std::vector<std::string>{});   // P5-03a 14 item 12
 }
 
 // --- I0 (7.4) --------------------------------------------------------------------------------------------
@@ -123,7 +125,9 @@ const std::vector<std::string>& i0_tables() {
 }
 
 void check_i0(const eng::HistoryInputs& in, const wd::ContentSet& c) {
-    const p503api::RTables with = p503api::history_stage(c, in);
+    // P5-04 (0.26.0): the configuration without relations builds no alliances, so the stage runs with P5-04's zero
+    // tuning (its I0, 7.14: the same as without the subsystem)
+    const p503api::RTables with = p503api::history_stage(p503api::alliances_zero_of(c), in);
     p503api::RelConfig::Options o;
     o.relations = false;
     o.ledger = false;
@@ -146,7 +150,7 @@ void check_i0(const eng::HistoryInputs& in, const wd::ContentSet& c) {
 // P5-02 7.5's zero tuning with this spec's zero (P5-02's I0 with part B and part A both off)
 const wd::ContentSet& zero_both() {
     static const wd::ContentSet c = monsters_content::with_monsters(
-        p503api::zero_content(),
+        p503api::alliances_zero_of(p503api::zero_content()),   // P5-04 (0.26.0): and its zero (P5-04 7.14)
         {{"pressure", monsters_content::pressure_of(0, 0, 0)}, {"drag_max_permille", p503api::V(0)},
          {"feed_max_permille", p503api::V(0)}, {"bold_permille", p503api::V(0)}, {"outpost_permille", p503api::V(0)}},
         {}, {}, {{"ghost_permille", p503api::V(0)}});

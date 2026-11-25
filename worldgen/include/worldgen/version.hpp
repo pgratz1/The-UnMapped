@@ -52,7 +52,7 @@ namespace worldgen {
 // follow-ups: peace, common enemies, meetings by word, graded settlers, the
 // expulsion gap, the undead threshold by world population, new event values
 // of kinds 57, 60 and 62); now 0.25.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.25.0";
+inline constexpr std::string_view GENERATOR_VERSION = "0.26.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

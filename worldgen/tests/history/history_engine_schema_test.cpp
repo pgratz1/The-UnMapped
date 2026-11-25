@@ -157,7 +157,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen history statements, fourteenth to "
           "thirty-second (settlement with ending; region_name; beast, monster_kind, beast_population, monster, site)") {
-    CHECK(eng::schema_version() == 10);
+    CHECK(eng::schema_version() == 11);
     const std::vector<std::string> ddl = eng::ddl_statements();
     REQUIRE(ddl.size() == 34U);   // P5-03 16.1
     REQUIRE(new_ddl().size() == 21U);   // P5-03 16.1
@@ -185,7 +185,7 @@ TEST_CASE("P3-04 9.1, r21 23.4, P5-02 11.1: schema version 9 and the nineteen hi
                   "'settlement_census', 'region_control', 'relation', 'event_kind_role', 'event_kind_value', "
                   "'region_name', 'beast_population', 'monster', 'site', 'race_relation', 'settlement_race')") ==
           std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"11"}});
 }
 
 TEST_CASE("P3-04 9.4, 16.1 item 12: 17 required meta keys, history_end_year fourth") {
@@ -208,7 +208,7 @@ TEST_CASE("P3-04 9.6, 16.5: the empty world's size (34 pages, unconfirmed; EMPTY
     CHECK(static_cast<std::int64_t>(dbtest::be32(bytes, 28)) == EMPTY_WORLD_PAGES);  // header page count
 }
 
-TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schema version <v>, this build reads 10") {
+TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schema version <v>, this build reads 11") {
     dbtest::TempDir dir("engine-v6");
     int k = 0;
     for (const char* v : {"6", "8"}) {
@@ -221,7 +221,7 @@ TEST_CASE("P3-04 9.5, P5-02 11.1: version 6 and 8 files are refused: world schem
             const auto r = db::WorldReader::open(path);
             REQUIRE_FALSE(r.ok());
             CHECK(r.code() == db::ErrorCode::unsupported_schema_version);
-            CHECK(r.error().message == std::string("world schema version ") + v + ", this build reads 10");
+            CHECK(r.error().message == std::string("world schema version ") + v + ", this build reads 11");
         }
     }
 }
@@ -234,7 +234,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
         const std::string path = generated(dir, "none-" + std::to_string(span) + ".db", "none", span);
         const db::WorldReader r = open_world(path);
         CHECK(r.meta("history_end_year").value_or("<absent>") == std::to_string(span));
-        CHECK(r.meta("schema_version").value_or("") == "10");   // P5-03 16.1 (9 at P5-02, 8 at P5-12)
+        CHECK(r.meta("schema_version").value_or("") == "11");   // P5-03 16.1 (9 at P5-02, 8 at P5-12)
         for (const std::string& t : ddl_tables()) {
             CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }

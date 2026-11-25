@@ -113,6 +113,26 @@ const db::RaceRow* find_race(const history::HistoryTables& t, Id id) {
     }
     return nullptr;
 }
+const db::CivilizationRow* find_civilization(const history::HistoryTables& t, Id id) {
+    const auto it = std::lower_bound(t.civilizations.begin(), t.civilizations.end(), id,
+                                     [](const db::CivilizationRow& c, Id x) { return c.id < x; });
+    return it != t.civilizations.end() && it->id == id ? &*it : nullptr;
+}
+
+// P5-04 10.2: the basis word of an alliance_formed (its value basis).
+std::string_view alliance_basis_word(const HistoryView& v, Id formed) {
+    static constexpr std::array<std::string_view, 5> BASIS = {"by origin", "against a common enemy", "in fear",
+                                                              "in friendship", "after trade"};
+    if (formed < 1 || static_cast<std::size_t>(formed) > v.events().size()) {
+        return "?";
+    }
+    const HistoryView::Event& e = v.events()[static_cast<std::size_t>(formed - 1)];
+    if (e.values.empty() || e.values[0] < 0 || e.values[0] > 4) {
+        return "?";
+    }
+    return BASIS[static_cast<std::size_t>(e.values[0])];
+}
+
 const db::AgeRow* find_age(const history::HistoryTables& t, std::int64_t year) {
     for (const db::AgeRow& a : t.ages) {
         if (a.start_year <= year && year <= a.end_year) {
@@ -216,6 +236,7 @@ public:
             }
             add(std::move(l));
         }
+        allies(c);  // P5-04 10.3
         return std::move(lines_);
     }
 
@@ -234,6 +255,44 @@ private:
     }
 
     void add(BlockLine line) { lines_.push_back(std::move(line)); }
+
+    // P5-04 10.3: the alliances the realm was ever in.
+    void allies(const db::CivilizationRow& c) {
+        std::vector<const db::RelationRow*> rows;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind == "alliance" && (r.a_id == c.id || r.b_id == c.id)) {
+                rows.push_back(&r);
+            }
+        }
+        std::stable_sort(rows.begin(), rows.end(), [&c](const db::RelationRow* a, const db::RelationRow* b) {
+            const Id oa = a->a_id == c.id ? a->b_id : a->a_id;
+            const Id ob = b->a_id == c.id ? b->b_id : b->a_id;
+            return a->since != b->since ? a->since < b->since : oa < ob;
+        });
+        std::string head = "  allies: " + num(static_cast<std::int64_t>(rows.size()));
+        if (level_ == HistoryLevel::summary) {
+            std::vector<Id> at_end;
+            for (const db::RelationRow* r : rows) {
+                if (!r->until) {
+                    at_end.push_back(r->a_id == c.id ? r->b_id : r->a_id);
+                }
+            }
+            std::stable_sort(at_end.begin(), at_end.end());
+            for (std::size_t k = 0; k < at_end.size(); ++k) {
+                head += (k == 0 ? "; at the end: c" : ", c") + num(at_end[k]);
+            }
+            add({lit(head)});
+            return;
+        }
+        add({lit(head)});
+        for (const db::RelationRow* r : rows) {
+            const Id other = r->a_id == c.id ? r->b_id : r->a_id;
+            const db::CivilizationRow* o = find_civilization(t_, other);
+            add({lit("    c" + num(other) + " "), txt(o != nullptr ? o->name : std::string()),
+                 lit(": " + num(r->since) + "-" + (r->until ? num(*r->until) : std::string("E")) + ", " +
+                     std::string(alliance_basis_word(v_, r->since_event)))});
+        }
+    }
 
     // r17 24.5: one line per adversary, summary only; r19 25.4: a line for
     // each adversary with a war row, then one count line for the others.
@@ -314,7 +373,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V6));  // P5-03a 9.1
+        line(std::string(HISTORY_REPORT_HEADER_V7));  // P5-04 10.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -334,6 +393,7 @@ public:
         monsters();  // P5-02 12.4
         sites();     // P5-02 12.5
         peoples();   // P5-03 17.2
+        alliances();  // P5-04 10.2
         stats();
         return std::move(out_);
     }
@@ -742,21 +802,22 @@ private:
     // P5-02 12.5: [sites].
     void sites() {
         line("[sites]");
-        std::int64_t open = 0, lairs = 0, outposts = 0;
+        std::int64_t open = 0, lairs = 0, outposts = 0, mines = 0;
         for (const db::SiteRow& x : t_.sites) {
             open += x.ended_year ? 0 : 1;
             lairs += x.kind == 1 ? 1 : 0;
             outposts += x.kind == 2 ? 1 : 0;
+            mines += x.kind == 3 ? 1 : 0;  // P5-04 10.6
         }
         line("sites: " + num(static_cast<std::int64_t>(t_.sites.size())) + "; open " + num(open) + "; lairs " +
-             num(lairs) + ", outposts " + num(outposts));
+             num(lairs) + ", outposts " + num(outposts) + ", mines " + num(mines));
         if (level_ != HistoryLevel::full) {
             return;
         }
         static constexpr std::array<std::string_view, 6> ENDING = {"slain", "died", "moved", "lost", "fell", "quiet"};
         for (const db::SiteRow& x : t_.sites) {
             std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + ": " +
-                            (x.kind == 1 ? "lair" : "outpost") + " in " + region(x.region) + " at " + num(x.x) + " " +
+                            (x.kind == 1 ? "lair" : (x.kind == 2 ? "outpost" : "mine")) + " in " + region(x.region) + " at " + num(x.x) + " " +
                             num(x.y) + ", since " + num(x.origin_year) + " e" + num(x.origin_event);
             if (x.founder_civ != 0) {
                 l += ", of " + civ(x.founder_civ);
@@ -980,8 +1041,10 @@ private:
     void open_wars() {
         std::vector<const db::RelationRow*> rows;
         for (const db::RelationRow& r : t_.relations) {
-            if (r.kind == "war" && !r.until) {
-                rows.push_back(&r);
+            const history::KindDef* joined = v_.catalogue().find("ally_joined_war");
+            if (r.kind == "war" && !r.until &&
+                !(joined != nullptr && r.since_event >= 1 && event(r.since_event).row.kind == joined->id)) {
+                rows.push_back(&r);  // P5-04 10.4: an ally's joined row is not a war
             }
         }
         std::stable_sort(rows.begin(), rows.end(), [](const db::RelationRow* a, const db::RelationRow* b) {
@@ -1188,6 +1251,209 @@ private:
     // --- [stats] (6.9) ------------------------------------------------------
 
     // r19 25.7 item 4: at summary only the keys of SUMMARY_STATS.
+    // --- [alliances] (P5-04 10.2) -------------------------------------------
+
+    [[nodiscard]] Id kind_id(std::string_view key) const {
+        const history::KindDef* k = v_.catalogue().find(key);
+        return k != nullptr ? k->id : -1;
+    }
+    [[nodiscard]] std::string civ_tag(Id c) const {
+        const db::CivilizationRow* r = find_civilization(t_, c);
+        return "c" + num(c) + " " + escape_history_text(r != nullptr ? r->name : std::string());
+    }
+
+    void alliances() {
+        line("[alliances]");
+        const bool full = level_ == HistoryLevel::full;
+        const bool counts_only = !full && static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS;
+        const Id lapsed = kind_id("alliance_lapsed"), broken = kind_id("alliance_broken");
+        const Id spurned = kind_id("alliance_spurned"), betrayed = kind_id("alliance_betrayed");
+        const Id formed = kind_id("alliance_formed"), renewed = kind_id("alliance_renewed");
+        const Id joined = kind_id("ally_joined_war"), refused = kind_id("ally_refused");
+        const Id withdrew = kind_id("ally_withdrew"), shared = kind_id("spoils_shared");
+        const Id withheld = kind_id("spoils_withheld"), declared = kind_id("war_declared");
+        const Id opened = kind_id("trade_opened"), trade_broken = kind_id("trade_broken");
+        const Id arms = kind_id("arms_sold");
+        std::vector<const db::RelationRow*> rows, trades;
+        for (const db::RelationRow& r : t_.relations) {
+            (r.kind == "alliance" ? rows : trades).push_back(&r);
+            if (r.kind != "alliance" && r.kind != "trade") {
+                trades.pop_back();
+            }
+        }
+        const auto by_from = [](const db::RelationRow* a, const db::RelationRow* b) {
+            if (a->since != b->since) return a->since < b->since;
+            if (a->a_id != b->a_id) return a->a_id < b->a_id;
+            return a->b_id < b->b_id;
+        };
+        std::stable_sort(rows.begin(), rows.end(), by_from);
+        std::stable_sort(trades.begin(), trades.end(), by_from);
+        std::int64_t n_formed = 0, n_lapsed = 0, n_broken = 0, n_spurned = 0, n_betrayed = 0, n_realm = 0, standing = 0;
+        std::int64_t j_all = 0, j_def = 0, n_ref = 0, n_wd = 0, n_gr = 0, n_wh = 0, p_owed = 0, p_gr = 0;
+        std::int64_t wars = 0, n_opened = 0, n_tb = 0, tb[3] = {0, 0, 0}, n_arms = 0;
+        std::vector<Id> with_ally;
+        for (const HistoryView::Event& e : v_.events()) {
+            const Id k = e.row.kind;
+            n_formed += k == formed ? 1 : 0;
+            n_ref += k == refused ? 1 : 0;
+            n_wd += k == withdrew ? 1 : 0;
+            wars += k == declared ? 1 : 0;
+            n_opened += k == opened ? 1 : 0;
+            n_arms += k == arms ? 1 : 0;
+            if (k == trade_broken) {
+                ++n_tb;
+                if (!e.values.empty() && e.values[0] >= 0 && e.values[0] <= 2) {
+                    ++tb[e.values[0]];
+                }
+            }
+            if (k == joined) {
+                ++j_all;
+                j_def += (!e.values.empty() && e.values[0] == 0) ? 1 : 0;
+                for (const Id c : e.causes) {
+                    if (event(c).row.kind == declared) {
+                        with_ally.push_back(c);
+                    }
+                }
+            }
+            if (k == shared || k == withheld) {
+                const std::int64_t share = e.values.empty() ? 0 : e.values[0];
+                p_owed += share;
+                (k == shared ? n_gr : n_wh) += 1;
+                p_gr += k == shared ? share : 0;
+            }
+        }
+        std::stable_sort(with_ally.begin(), with_ally.end());
+        with_ally.erase(std::unique(with_ally.begin(), with_ally.end()), with_ally.end());
+        for (const db::RelationRow* r : rows) {
+            if (!r->until) {
+                ++standing;
+                continue;
+            }
+            const Id k = event(r->until_event).row.kind;
+            n_lapsed += k == lapsed ? 1 : 0;
+            n_broken += k == broken ? 1 : 0;
+            n_spurned += k == spurned ? 1 : 0;
+            n_betrayed += k == betrayed ? 1 : 0;
+            n_realm += (k != lapsed && k != broken && k != spurned && k != betrayed) ? 1 : 0;
+        }
+        line("alliances: " + num(n_formed) + " formed, " + num(standing) + " standing at E; ended: " + num(n_lapsed) +
+             " lapsed, " + num(n_broken) + " broken, " + num(n_spurned) + " spurned, " + num(n_betrayed) +
+             " betrayed, " + num(n_realm) + " with a realm");
+        // The alliance lines.
+        std::vector<std::string> lines;
+        std::int64_t more = 0;
+        if (!counts_only) {
+            for (const db::RelationRow* r : rows) {
+                const Id end_kind = r->until ? event(r->until_event).row.kind : 0;
+                if (!full && r->until && end_kind != betrayed && end_kind != spurned) {
+                    continue;
+                }
+                if (!full && static_cast<std::int64_t>(lines.size()) >= history::SUMMARY_ALLIANCES_MAX) {
+                    ++more;
+                    continue;
+                }
+                std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
+                                (r->until ? num(*r->until) : std::string("E")) + ", " +
+                                std::string(alliance_basis_word(v_, r->since_event));
+                const HistoryView::Event& f = event(r->since_event);
+                if (const Id foe = role_of(f, "foe"); foe != 0) {
+                    l += " against c" + num(foe);
+                }
+                l += ", e" + num(r->since_event);
+                std::int64_t k_renew = 0, k_join = 0, k_ref = 0, k_gr = 0, k_wh = 0;
+                const auto pair_is = [&](Id x, Id y) {
+                    return (x == r->a_id && y == r->b_id) || (x == r->b_id && y == r->a_id);
+                };
+                const std::int64_t last = r->until ? *r->until : t_.end_year;
+                for (const HistoryView::Event& e : v_.events()) {
+                    if (e.row.year < r->since || e.row.year > last) {
+                        continue;
+                    }
+                    const Id k = e.row.kind;
+                    if (k == renewed && pair_is(role_of(e, "ally_a"), role_of(e, "ally_b"))) {
+                        ++k_renew;
+                    } else if ((k == joined || k == refused) && pair_is(role_of(e, "ally"), role_of(e, "partner"))) {
+                        (k == joined ? k_join : k_ref) += 1;
+                    } else if ((k == shared || k == withheld) && pair_is(role_of(e, "principal"), role_of(e, "ally"))) {
+                        (k == shared ? k_gr : k_wh) += 1;
+                    }
+                }
+                if (k_renew > 0) {
+                    l += "; renewed " + num(k_renew);
+                }
+                if (k_join > 0 || k_ref > 0) {
+                    l += "; joined " + num(k_join) + ", refused " + num(k_ref);
+                }
+                if (k_gr > 0 || k_wh > 0) {
+                    l += "; spoils " + num(k_gr) + " granted, " + num(k_wh) + " withheld";
+                }
+                if (r->until) {
+                    const std::string_view w = end_kind == lapsed     ? "lapsed"
+                                               : end_kind == broken   ? "broken"
+                                               : end_kind == spurned  ? "spurned"
+                                               : end_kind == betrayed ? "betrayed"
+                                                                      : "ended";
+                    l += "; " + std::string(w) + " e" + num(r->until_event);
+                }
+                lines.push_back(std::move(l));
+            }
+        }
+        for (std::string& l : lines) {
+            line(std::move(l));
+        }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
+        line("calls to arms: " + num(j_all) + " joined (" + num(j_def) + " in defence, " + num(j_all - j_def) +
+             " in attack), " + num(n_ref) + " refused, " + num(n_wd) + " withdrew; wars with an ally: " +
+             num(static_cast<std::int64_t>(with_ally.size())) + " of " + num(wars));
+        if (n_gr + n_wh == 0) {
+            line("spoils: none");
+        } else {
+            line("spoils: " + num(n_gr + n_wh) + " owed, " + num(n_gr) + " granted, " + num(n_wh) + " withheld; " +
+                 num(p_owed) + " people owed, " + num(p_gr) + " granted");
+        }
+        if (!d_.bloc_any) {
+            line("largest bloc: none");
+        } else {
+            // Reading: ASCII text (lint non-ascii-literal), "permille" for the sign.
+            std::string l = "largest bloc: " + num(d_.bloc_max) + " permille, c" + num(d_.bloc_max_civ);
+            for (std::size_t k = 0; k < d_.bloc_max_allies.size(); ++k) {
+                l += (k == 0 ? " with c" : ", c") + num(d_.bloc_max_allies[k]);
+            }
+            line(l + " in " + num(d_.bloc_max_year));
+        }
+        std::int64_t trade_standing = 0;
+        for (const db::RelationRow* r : trades) {
+            trade_standing += r->until ? 0 : 1;
+        }
+        line("trade: " + num(n_opened) + " opened, " + num(trade_standing) + " standing at E; broken " + num(n_tb) +
+             " (war " + num(tb[0]) + ", cooled " + num(tb[1]) + ", out of reach " + num(tb[2]) + "); arms sold " +
+             num(n_arms));
+        if (!full) {
+            return;
+        }
+        for (const db::RelationRow* r : trades) {
+            std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
+                            (r->until ? num(*r->until) : std::string("E")) + ", e" + num(r->since_event);
+            const std::int64_t last = r->until ? *r->until : t_.end_year;
+            for (const HistoryView::Event& e : v_.events()) {
+                if (e.row.kind == arms && e.row.year >= r->since && e.row.year <= last) {
+                    const Id seller = role_of(e, "seller");
+                    const Id buyer = role_of(e, "buyer");
+                    if ((seller == r->a_id && buyer == r->b_id) || (seller == r->b_id && buyer == r->a_id)) {
+                        l += "; arms from c" + num(seller);
+                        break;
+                    }
+                }
+            }
+            if (r->until) {
+                l += "; broken e" + num(r->until_event);
+            }
+            line(std::move(l));
+        }
+    }
+
     void stats() {
         line("[stats]");
         for (const auto& [key, value] : d_.stats) {

@@ -209,8 +209,9 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 8U);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
-    const wd::Definition& chrono = history->definitions[0];
+    REQUIRE(history->definitions.size() == 9U);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    CHECK(history->definitions[0].id == "alliances");   // P5-04 4.2: ids in byte order
+    const wd::Definition& chrono = history->definitions[1];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
     for (std::size_t f = 0; f < 3; ++f) {
@@ -264,16 +265,17 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 8U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+    REQUIRE(history.id_schemas.size() == 9U);   // P5-04 4.2: alliances  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
                                                // renaming P5-12 (r16 5.4); monsters P5-02 4.3; relations P5-03 4.2
-    CHECK(history.id_schemas[0].id == "chronology");
-    CHECK(history.id_schemas[1].id == "conflict");
-    CHECK(history.id_schemas[2].id == "engine");
-    CHECK(history.id_schemas[3].id == "monsters");
-    CHECK(history.id_schemas[4].id == "peoples");
-    CHECK(history.id_schemas[5].id == "relations");   // P5-03 4.2
-    CHECK(history.id_schemas[6].id == "renaming");
-    CHECK(history.id_schemas[7].id == "report");
+    CHECK(history.id_schemas[0].id == "alliances");   // P5-04 4.2
+    CHECK(history.id_schemas[1].id == "chronology");
+    CHECK(history.id_schemas[2].id == "conflict");
+    CHECK(history.id_schemas[3].id == "engine");
+    CHECK(history.id_schemas[4].id == "monsters");
+    CHECK(history.id_schemas[5].id == "peoples");
+    CHECK(history.id_schemas[6].id == "relations");   // P5-03 4.2
+    CHECK(history.id_schemas[7].id == "renaming");
+    CHECK(history.id_schemas[8].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -388,7 +390,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 8U);  // relations.toml from 0.24.0 (P5-03 4.2),
+    CHECK(directory_from_disk(data, "history").entries.size() == 9U);  // alliances.toml from 0.26.0 (P5-04 4.2),
+                                                                         // relations.toml from 0.24.0 (P5-03 4.2),
                                                                          // conflict.toml from 0.16.0 (P3-06 12.1),
                                                                          // renaming.toml from 0.22.0 (P5-12 4),
                                                                          // monsters.toml from 0.23.0 (P5-02 4.3)
@@ -582,6 +585,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
+        f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
@@ -608,6 +612,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         f["history/renaming.toml"] = std::string(history_data::RENAMING_TOML);   // P5-12 4
         f["history/relations.toml"] = std::string(history_data::RELATIONS_TOML);   // P5-03 4.2
+        f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
         const Load l = load(f);
         INFO(dump(l));
@@ -708,7 +713,7 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'deities' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'monsters', "
+          "unknown id 'deities' for kind 'history'; expected one of 'alliances', 'chronology', 'conflict', 'engine', 'monsters', "
           "'peoples', 'relations', 'renaming', 'report'");   // relations: P5-03 4.2
 }
 
@@ -998,26 +1003,36 @@ TEST_CASE("P3-01 3: every race field is required and no other key is accepted") 
     }
 }
 
-TEST_CASE("P3-04 r13 4.2: report_event.template is string(512) from 0.19.0: 512 bytes load, 513 are refused") {
+TEST_CASE("P3-04 r13 4.2, P5-03a: report_event.template is string(1024) from 0.25.0: 1024 bytes load, 1025 are refused") {
+    // string(512) from 0.19.0; string(1024) from 0.25.0 (lead's ruling at P5-03a: the cause-list templates of
+    // kinds 58 and 59 with the words of P5-03a 3.5 and 7.3 are longer than 512 bytes).
     const std::string old = "{creator} awakened the {race:plural} in {@region}.";
     REQUIRE(contains(history_data::REPORT_TOML, old));
     // plain text after the placeholders keeps the template valid (8.4); only the length changes
-    const std::string at512 = old + std::string(512 - old.size(), 'x');
-    REQUIRE(at512.size() == 512U);
-    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at512)).ok(), "512 bytes");
-    const Load l = load(shipped_edited("history/report.toml", old, at512 + "x"));
+    const std::string at1024 = old + std::string(1024 - old.size(), 'x');
+    REQUIRE(at1024.size() == 1024U);
+    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at1024)).ok(), "1024 bytes");
+    const Load l = load(shipped_edited("history/report.toml", old, at1024 + "x"));
     const wd::LoadError e = only_error(l);
     CHECK(e.path == "history/report.toml");
     CHECK(contains(e.message, "template"));
-    // the shipped cause-list templates of kinds 16 and 31 exceed the old bound of 256 (P3-05 r12 22.3)
-    for (const char* k : {"settlement_abandoned\"", "settlement_abandoned_to\""}) {
-        const std::string t(history_data::REPORT_TOML);
-        const std::size_t at = t.find(std::string("kind = \"") + k);
+    // the shipped cause-list templates of kinds 16 and 31 exceed the bound of 256 before 0.19.0 (P3-05 r12 22.3);
+    // those of kinds 58 and 59 the bound of 512 before 0.25.0
+    const std::string t(history_data::REPORT_TOML);
+    const auto length_of = [&](const std::string& k) {
+        const std::size_t at = t.find("kind = \"" + k + "\"");
         REQUIRE(at != std::string::npos);
         const std::size_t from = t.find("template = \"", at) + 12;
         const std::size_t to = t.find("\" }", from);
-        CHECK(to - from > 256U);
-        CHECK(to - from <= 512U);
+        return to - from;
+    };
+    for (const char* k : {"settlement_abandoned", "settlement_abandoned_to"}) {
+        CHECK(length_of(k) > 256U);
+        CHECK(length_of(k) <= 1024U);
+    }
+    for (const char* k : {"disposition_turned", "refugees_arrived"}) {
+        CHECK(length_of(k) > 512U);
+        CHECK(length_of(k) <= 1024U);
     }
 }
 

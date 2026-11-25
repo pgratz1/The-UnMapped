@@ -21,382 +21,443 @@
 #   kinds_seen <key>,...    over the monsters-small fixtures: the monster kinds that appeared
 #   events_seen <key>,...   over the monsters-small fixtures: the event kinds of 44-55 written at least once
 world geo-seed-0-512 0 512 6000 all normal auto normal normal
-geo-seed-0-512 table beast_population 174 f9efa11fa7c7965de3ff6d3583f44b08ff620b3da2dc16fe5606e347635e3b5d
-geo-seed-0-512 table monster 2 23d293b9453a55ffbf5ccdc903c3d70fc1e100eee6510b6d8b3e289416c6162a
-geo-seed-0-512 table site 5 fbc64b8044db3476527bb849990a31c9e889de7263a117345320ba65074ae6a5
-geo-seed-0-512 ending 04a2118ded791e4d619f74ddb9e6c09fbe908c7738bb290a97aa7974842f6ad0
-geo-seed-0-512 M monsters 2 alive 0 slain 1 died 1 raids 24 killed 1043 overruns 0 risen 0 lair_settlement_open 0
-geo-seed-0-512 G ghost 4 endings 0:31,1:6,3:1,4:3 standing 31 population 40631 shunned 0
-geo-seed-0-512 S outposts 3 ended 2 bold 1 monster_flares 0
+geo-seed-0-512 table beast_population 154 00192f7584e17311e45965b4617e926bf4ec114d11dbc70249ed608aa2810bae
+geo-seed-0-512 table monster 3 63fc1282f43163bb9083b3ae6d4f6b1093d46ad014e2a502fdab2020a6c9362e
+geo-seed-0-512 table site 10 a784ba531a2a43b01cd6180916102bd284be6573e0b3b954149297952877bdd4
+geo-seed-0-512 ending 1112cdbc8b7f1e59a4c686ef954493122af1e17894bf508e915fc6100e61b305
+geo-seed-0-512 M monsters 3 alive 1 slain 1 died 1 raids 30 killed 1743 overruns 1 risen 1 lair_settlement_open 1
+geo-seed-0-512 G ghost 2 endings 0:33,1:4,2:1,3:1,4:1 standing 33 population 55035 shunned 1
+geo-seed-0-512 S outposts 5 ended 3 bold 1 monster_flares 0
 geo-seed-0-512 m1 giant 4 born 76 e4 died 2568 hoard 0 | Gurngrain Cliffbreaker | lair The Hall of Gurngrain
-geo-seed-0-512 m2 troll 3 born 3790 e38 died 4266 hoard 105 | Zirk the Grey | lair Zirk's Hollow
+geo-seed-0-512 m2 troll 3 born 3790 e41 died 4266 hoard 105 | Zirk the Grey | lair Zirk's Hollow
+geo-seed-0-512 m3 undead 2 born 5620 e206 died - hoard 0 | The Dead of East Steppe | lair The Howes of East Steppe
 geo-seed-0-512 si1 lair rg12 265 372 s0 c0 m1 76 e4 2568 2 | The Hall of Gurngrain
-geo-seed-0-512 si2 lair rg10 251 249 s0 c0 m2 3790 e38 4266 1 | Zirk's Hollow
-geo-seed-0-512 si3 outpost rg11 342 269 s0 c2 m0 5543 e133 5752 6 | Zink-Nutch Stockade
-geo-seed-0-512 si4 outpost rg9 250 249 s0 c6 m0 5610 e163 5729 4 | Ghazbuurk Stockade
-geo-seed-0-512 si5 outpost rg6 255 245 s0 c3 m0 5893 e236 - 0 | Karndro Watch
+geo-seed-0-512 si2 outpost rg6 254 245 s13 c3 m0 3266 e35 - 0 | The Delvings of Kidinkorn
+geo-seed-0-512 si3 lair rg10 251 249 s0 c0 m2 3790 e41 4266 1 | Zirk's Hollow
+geo-seed-0-512 si4 outpost rg4 386 202 s0 c5 m0 5570 e192 5771 6 | Hinbim Tower
+geo-seed-0-512 si5 lair rg8 367 249 s0 c0 m3 5620 e206 5639 3 | The Barrows of East Steppe
+geo-seed-0-512 si6 lair rg8 464 241 s31 c0 m3 5639 e213 - 0 | The Howes of East Steppe
+geo-seed-0-512 si7 outpost rg9 250 249 s0 c6 m0 5663 e223 5802 4 | Thaam'thakh Stockade
+geo-seed-0-512 si8 outpost rg8 367 249 s0 c2 m0 5862 e289 5871 4 | Skrot-Graz Stockade
+geo-seed-0-512 si9 outpost rg4 386 202 s0 c5 m0 5866 e291 - 0 | Alod Watch
+geo-seed-0-512 si10 outpost rg7 116 218 s0 c1 m0 5942 e314 - 0 | Sima Watch
 world geo-seed-42-512 42 512 6000 all normal auto normal normal
-geo-seed-42-512 table beast_population 310 b348f2d36c33bf1cac61c8ebd5a72f6f350c9aacf4d46e94f7d52207ed5b5e1b
-geo-seed-42-512 table monster 1 57c073f5ea110af9d68040cca2b767f03b266458cfaed49faf3790f118081969
-geo-seed-42-512 table site 14 ee1503d08c353927822190351aabfee612be9bc33c1c8fcb9e5dad53ca3bfc5a
-geo-seed-42-512 ending ceb498e28aca3badcf540ed5a8131bd1c3f822271da329bf78ca839080d1d0fe
-geo-seed-42-512 M monsters 1 alive 0 slain 1 died 0 raids 20 killed 669 overruns 1 risen 0 lair_settlement_open 0
-geo-seed-42-512 G ghost 8 endings 0:46,1:13,2:1,3:6,4:2 standing 46 population 63002 shunned 0
-geo-seed-42-512 S outposts 12 ended 7 bold 0 monster_flares 0
-geo-seed-42-512 m1 troll 3 born 2074 e27 died 3664 hoard 57 | Gogg Stonehide | lair The Den of Gogg
-geo-seed-42-512 si1 lair rg5 213 184 s0 c0 m1 2074 e27 3367 3 | Gogg's Hollow
-geo-seed-42-512 si2 outpost rg12 326 344 s0 c1 m0 2478 e64 2486 4 | The Spire of Vaennma
-geo-seed-42-512 si3 outpost rg8 187 196 s0 c4 m0 3245 e170 - 0 | Dreezz Lookout
-geo-seed-42-512 si4 lair rg8 164 279 s27 c0 m1 3367 e223 3664 1 | The Den of Gogg
-geo-seed-42-512 si5 outpost rg11 415 266 s0 c1 m0 3632 e242 - 0 | The Spire of Glimae
-geo-seed-42-512 si6 outpost rg9 264 254 s0 c3 m0 4148 e293 4458 4 | Nuzz Stockade
-geo-seed-42-512 si7 outpost rg6 416 265 s0 c5 m0 4264 e324 4668 6 | Khurinko Watch
-geo-seed-42-512 si8 outpost rg9 264 254 s0 c4 m0 4465 e377 - 0 | Gnutchsnob Stockade
-geo-seed-42-512 si9 outpost rg6 416 265 s0 c5 m0 4984 e440 5194 6 | Broringarn Watch
-geo-seed-42-512 si10 outpost rg4 369 186 s0 c8 m0 5548 e521 5793 6 | Rendos Watch
-geo-seed-42-512 si11 outpost rg5 213 184 s0 c3 m0 5557 e531 5776 6 | Slink Stockade
-geo-seed-42-512 si12 outpost rg10 205 388 s0 c7 m0 5621 e581 5636 5 | Kinkslork Stockade
-geo-seed-42-512 si13 outpost rg5 213 184 s0 c3 m0 5831 e660 - 0 | Zeex Lookout
-geo-seed-42-512 si14 outpost rg4 369 186 s0 c8 m0 5831 e661 - 0 | Cickdard Tower
+geo-seed-42-512 table beast_population 309 31e38db799e5e908c0f8aeecb81227f73170a77fdbac57b29cad4f4ae5269a6a
+geo-seed-42-512 table monster 3 bde3ea69669e72e7a128f3674cf9352c2a3e857463d2e7154da5ac61f95ab931
+geo-seed-42-512 table site 16 23f6f7daadd2407032bbb59c200e90db0976e19ebfd645ae88e7780633a678e3
+geo-seed-42-512 ending 7e12b7d393c2b755ff19d507661ccdcf27ea5d130e119023523099a5ad0fbe93
+geo-seed-42-512 M monsters 3 alive 1 slain 1 died 1 raids 18 killed 939 overruns 1 risen 2 lair_settlement_open 1
+geo-seed-42-512 G ghost 6 endings 0:36,1:14,2:1,3:3,4:3 standing 36 population 66346 shunned 1
+geo-seed-42-512 S outposts 10 ended 3 bold 0 monster_flares 0
+geo-seed-42-512 m1 troll 4 born 2074 e42 died 4067 hoard 59 | Gogg Stonehide | lair Gogg's Hollow
+geo-seed-42-512 m2 undead 3 born 4339 e311 died 4390 hoard 0 | The Host of Mofaesi's Fall | lair The Barrows of Mofaesi's Fall
+geo-seed-42-512 m3 undead 2 born 5160 e473 died - hoard 0 | The Dead of Steardwud | lair The Howes of Steardwud
+geo-seed-42-512 si1 lair rg5 213 184 s0 c0 m1 2074 e42 4067 2 | Gogg's Hollow
+geo-seed-42-512 si2 outpost rg11 415 266 s0 c1 m0 2329 e72 - 0 | The Spire of Vaennma
+geo-seed-42-512 si3 outpost rg7 165 196 s0 c2 m0 2982 e135 - 0 | Aelithie Watch
+geo-seed-42-512 si4 outpost rg2 196 171 s30 c4 m0 3252 e157 5977 4 | The Delvings of Grin
+geo-seed-42-512 si5 outpost rg12 326 344 s0 c1 m0 3276 e169 3849 4 | The Spire of Glimae
+geo-seed-42-512 si6 outpost rg3 123 176 s0 c3 m0 3291 e179 4392 4 | Nuzz Stockade
+geo-seed-42-512 si7 outpost rg8 187 196 s0 c3 m0 4262 e290 5097 4 | Nuxskrab Stockade
+geo-seed-42-512 si8 lair rg7 164 195 s0 c0 m2 4339 e311 4342 3 | The Howes of Mofaesi's Fall
+geo-seed-42-512 si9 lair rg7 134 203 s33 c0 m2 4342 e313 4390 1 | The Barrows of Mofaesi's Fall
+geo-seed-42-512 si10 outpost rg9 264 254 s0 c3 m0 4930 e391 - 0 | Grakrab Lookout
+geo-seed-42-512 si11 outpost rg3 119 102 s13 c4 m0 4942 e414 5788 4 | The Mines of Cesie
+geo-seed-42-512 si12 lair rg4 397 129 s40 c0 m3 5160 e473 - 0 | The Howes of Steardwud
+geo-seed-42-512 si13 outpost rg1 241 152 s0 c7 m0 5704 e607 - 0 | Wesrad Tower
+geo-seed-42-512 si14 outpost rg4 369 186 s0 c9 m0 5704 e608 - 0 | The Watch of Shukh'uraag
+geo-seed-42-512 si15 outpost rg6 416 265 s0 c9 m0 5774 e637 - 0 | Groz'azush Stockade
+geo-seed-42-512 si16 outpost rg12 326 344 s0 c3 m0 5891 e703 - 0 | Grazzsnak Stockade
 world geo-phrase-512 15629206466951235176 512 6000 all normal auto normal normal
-geo-phrase-512 table beast_population 209 8246efb7bffbc8ca2142d023cf525e3130c75f30e8b0a04c05ecd5141f210632
-geo-phrase-512 table monster 1 bc7e60a4e12bfd9ae04716355f8b359ca6a1b72a78d6a2376d2a55be07d08f32
-geo-phrase-512 table site 9 37abaf6392e78df0f0df58e7f631f2836a3965c5817925ff0e2af108f2efcd9c
-geo-phrase-512 ending c1a4bc33562e47592a9870fa15e99ff76eb29fa499d2f07fa33b60e2866c9a97
-geo-phrase-512 M monsters 1 alive 1 slain 0 died 0 raids 3 killed 280 overruns 1 risen 0 lair_settlement_open 1
-geo-phrase-512 G ghost 2 endings 0:36,1:5,2:1,3:2 standing 36 population 66951 shunned 1
-geo-phrase-512 S outposts 7 ended 4 bold 0 monster_flares 1
-geo-phrase-512 m1 dragon 2 born 1975 e11 died - hoard 108 | Aerae the Old | lair Aerae's Deep
+geo-phrase-512 table beast_population 226 d93a86d6e6eaa2ec16ad152d22ff1e8365e623043dbf9d6ecb40421df979c1ac
+geo-phrase-512 table monster 1 15e52b8fbb6a10d23095ff9a04c0223c58eb395e3b92a8bcf900b8da8930c8b1
+geo-phrase-512 table site 11 993473b779dbb9f201d5f7e53351c9b0eb19b090a6619479129bda8563010925
+geo-phrase-512 ending fa1fab92b04270d04c26758a4377188c5677310dc3c83981eee1b6b4edc93b9a
+geo-phrase-512 M monsters 1 alive 1 slain 0 died 0 raids 3 killed 429 overruns 1 risen 0 lair_settlement_open 1
+geo-phrase-512 G ghost 1 endings 0:34,1:9,2:1,4:1 standing 34 population 60116 shunned 1
+geo-phrase-512 S outposts 7 ended 4 bold 1 monster_flares 1
+geo-phrase-512 m1 dragon 2 born 1975 e11 died - hoard 155 | Aerae the Old | lair Aerae's Deep
 geo-phrase-512 si1 lair rg8 295 269 s0 c0 m1 1975 e11 5802 3 | The Lair of Aerae
-geo-phrase-512 si2 outpost rg10 309 282 s0 c2 m0 5077 e168 5286 6 | Skinkbit Lookout
-geo-phrase-512 si3 outpost rg12 183 362 s0 c6 m0 5626 e205 5830 6 | Brerd Tower
-geo-phrase-512 si4 outpost rg13 325 312 s0 c2 m0 5678 e239 5940 4 | Zeesnix Lookout
-geo-phrase-512 si5 lair rg6 386 173 s42 c0 m1 5802 e270 - 0 | Aerae's Deep
-geo-phrase-512 si6 outpost rg10 309 282 s0 c2 m0 5935 e314 5946 4 | Beerk Lookout
-geo-phrase-512 si7 outpost rg3 122 149 s0 c7 m0 5936 e315 - 0 | Shol Stockade
-geo-phrase-512 si8 outpost rg5 123 152 s0 c7 m0 5938 e321 - 0 | The Watch of Zolzaash
-geo-phrase-512 si9 outpost rg12 183 362 s0 c6 m0 5951 e343 - 0 | Gorashol Watch
+geo-phrase-512 si2 outpost rg7 277 233 s0 c2 m0 2930 e62 - 0 | Skinkbit Lookout
+geo-phrase-512 si3 outpost rg8 296 268 s18 c4 m0 3337 e78 - 0 | The Mines of Gommku Hold
+geo-phrase-512 si4 outpost rg9 80 246 s0 c1 m0 3342 e82 - 0 | The Spire of Thitho
+geo-phrase-512 si5 outpost rg13 317 366 s19 c4 m0 3977 e105 4017 4 | The Mines of Dramnarn
+geo-phrase-512 si6 outpost rg8 296 269 s0 c4 m0 4010 e112 4226 6 | Godingrou Watch
+geo-phrase-512 si7 outpost rg13 325 312 s0 c2 m0 5045 e213 5940 4 | Skrizz Stockade
+geo-phrase-512 si8 outpost rg11 393 286 s0 c5 m0 5045 e214 - 0 | The Thorn of Votoflia
+geo-phrase-512 si9 outpost rg3 122 149 s0 c7 m0 5702 e324 5711 4 | Shaabuuld Stockade
+geo-phrase-512 si10 outpost rg5 123 152 s0 c6 m0 5731 e365 5738 4 | Alin Watch
+geo-phrase-512 si11 lair rg3 198 122 s44 c0 m1 5802 e387 - 0 | Aerae's Deep
 world geo-seed-1-1024 1 1024 6000 all normal auto normal normal
-geo-seed-1-1024 table beast_population 1070 bfe59e51d688a4c632d27fe8e7a34387b0e6a7b97825076d9e580cf65f4faea1
-geo-seed-1-1024 table monster 5 5de722b466520e73afa0503bd482f33081d1952c4b01b14dc43a93cad5c4690d
-geo-seed-1-1024 table site 18 6a07d0a80179b4ba55e02c54ba1112c3287e7cbd415e7bea8c45d1ac1c41ed88
-geo-seed-1-1024 ending 3becde7310ffea8b69b2338162b955cbeaeed19745ed533941b6b6762b728347
-geo-seed-1-1024 M monsters 5 alive 1 slain 3 died 1 raids 11 killed 492 overruns 2 risen 1 lair_settlement_open 0
-geo-seed-1-1024 G ghost 1 endings 0:88,1:12,2:2,3:1 standing 88 population 185903 shunned 0
-geo-seed-1-1024 S outposts 11 ended 5 bold 5 monster_flares 0
+geo-seed-1-1024 table beast_population 1098 1a42af047cf67cc9eab59544dc520f757ea167b578e74ea6312ab1f06a51ab33
+geo-seed-1-1024 table monster 5 69449cc996f9429968287a24f5fcb788c4b8d85cf2818677ab8e3f70d7c5f9aa
+geo-seed-1-1024 table site 25 f8948a84d70191317cd6fee19a46511fcc4ed1c7a5ca43a56bfcd810ce75e910
+geo-seed-1-1024 ending bdbc2f3e3e45115a5a3c25d530c2a62c95a9aec1bbce42395a8a9a5862710143
+geo-seed-1-1024 M monsters 5 alive 0 slain 3 died 2 raids 35 killed 1789 overruns 4 risen 1 lair_settlement_open 0
+geo-seed-1-1024 G ghost 2 endings 0:123,1:16,2:4,3:2,6:1 standing 123 population 217079 shunned 0
+geo-seed-1-1024 S outposts 13 ended 8 bold 7 monster_flares 0
 geo-seed-1-1024 m1 troll 3 born 975 e6 died 2133 hoard 7 | Zug the Grey | lair Zug's Hollow
-geo-seed-1-1024 m2 troll 3 born 2871 e103 died 4651 hoard 2 | Mossback Nux-Nink | lair The Den of Nux-Nink
-geo-seed-1-1024 m3 ogre 4 born 3196 e122 died 4196 hoard 0 | Og'zuld the Fat | lair Og'zuld's Larder
-geo-seed-1-1024 m4 troll 3 born 3841 e193 died 3999 hoard 6 | Gruk Stonehide | lair Gruk's Hollow
-geo-seed-1-1024 m5 undead 2 born 5656 e720 died - hoard 0 | The Host of Ferrybrake | lair The Barrows of Ferrybrake
+geo-seed-1-1024 m2 troll 3 born 2871 e107 died 4504 hoard 13 | Mossback Nux-Nink | lair The Den of Nux-Nink
+geo-seed-1-1024 m3 ogre 4 born 3196 e142 died 4196 hoard 0 | Og'zuld the Fat | lair The Pit of Og'zuld
+geo-seed-1-1024 m4 troll 3 born 3841 e242 died 5019 hoard 54 | Gruk Stonehide | lair Gruk's Hollow
+geo-seed-1-1024 m5 undead 4 born 4885 e495 died 5885 hoard 0 | The Host of Iennrer | lair The Howes of Iennrer
 geo-seed-1-1024 si1 lair rg26 438 624 s0 c0 m1 975 e6 2102 3 | The Den of Zug
 geo-seed-1-1024 si2 lair rg18 303 430 s9 c0 m1 2102 e26 2133 1 | Zug's Hollow
-geo-seed-1-1024 si3 outpost rg13 548 393 s0 c3 m0 2580 e74 3348 4 | Kubagg Lookout
-geo-seed-1-1024 si4 outpost rg10 489 356 s0 c1 m0 2593 e83 - 0 | Maessa Watch
-geo-seed-1-1024 si5 lair rg41 773 812 s0 c0 m2 2871 e103 4649 3 | Nux-Nink's Hollow
-geo-seed-1-1024 si6 lair rg11 830 355 s0 c0 m3 3196 e122 4196 2 | Og'zuld's Larder
-geo-seed-1-1024 si7 outpost rg24 455 555 s0 c3 m0 3336 e142 - 0 | Zix-Skub Stockade
-geo-seed-1-1024 si8 lair rg38 436 681 s0 c0 m4 3841 e193 3999 1 | Gruk's Hollow
-geo-seed-1-1024 si9 outpost rg13 548 393 s0 c5 m0 3997 e205 - 0 | Gnutch Stockade
-geo-seed-1-1024 si10 outpost rg22 559 495 s0 c3 m0 4008 e218 - 0 | Krikkrix Stockade
-geo-seed-1-1024 si11 lair rg42 634 709 s61 c0 m2 4649 e345 4651 1 | The Den of Nux-Nink
-geo-seed-1-1024 si12 outpost rg42 513 684 s0 c7 m0 5068 e508 5284 6 | Faetee Watch
-geo-seed-1-1024 si13 outpost rg45 446 715 s0 c2 m0 5222 e585 5434 6 | Slank-Nirk Stockade
-geo-seed-1-1024 si14 outpost rg51 476 807 s0 c4 m0 5222 e586 5233 4 | The Tower of Throukdak
-geo-seed-1-1024 si15 outpost rg50 409 812 s0 c2 m0 5225 e592 5434 6 | Skug Lookout
-geo-seed-1-1024 si16 outpost rg14 723 492 s0 c6 m0 5627 e711 - 0 | Teemaesh Watch
-geo-seed-1-1024 si17 lair rg9 689 373 s0 c0 m5 5656 e720 - 0 | The Barrows of Ferrybrake
-geo-seed-1-1024 si18 outpost rg32 750 549 s0 c6 m0 5767 e784 - 0 | The Thorn of Witwyia
+geo-seed-1-1024 si3 lair rg41 773 812 s0 c0 m2 2871 e107 4497 3 | Nux-Nink's Hollow
+geo-seed-1-1024 si4 lair rg11 830 355 s0 c0 m3 3196 e142 4196 2 | The Pit of Og'zuld
+geo-seed-1-1024 si5 outpost rg49 663 835 s46 c4 m0 3341 e148 - 0 | The Mines of Girin
+geo-seed-1-1024 si6 lair rg38 436 681 s0 c0 m4 3841 e242 3955 3 | The Den of Gruk
+geo-seed-1-1024 si7 outpost rg15 334 372 s0 c1 m0 3944 e256 4878 4 | Maemieth Watch
+geo-seed-1-1024 si8 lair rg35 273 641 s64 c0 m4 3955 e269 5019 1 | Gruk's Hollow
+geo-seed-1-1024 si9 outpost rg18 351 515 s0 c5 m0 4219 e325 - 0 | Gnutch Stockade
+geo-seed-1-1024 si10 outpost rg24 455 555 s0 c3 m0 4232 e342 5184 6 | Krikkrix Stockade
+geo-seed-1-1024 si11 outpost rg13 548 393 s0 c3 m0 4236 e345 5184 6 | Skabink Lookout
+geo-seed-1-1024 si12 outpost rg52 735 840 s75 c4 m0 4318 e380 4497 4 | The Delvings of Harkhid Deep
+geo-seed-1-1024 si13 lair rg52 735 840 s75 c0 m2 4497 e401 4504 1 | The Den of Nux-Nink
+geo-seed-1-1024 si14 outpost rg52 737 884 s81 c4 m0 4628 e446 - 0 | The Delvings of Tourk
+geo-seed-1-1024 si15 outpost rg17 415 465 s0 c1 m0 4874 e480 4980 4 | Iesroll Watch
+geo-seed-1-1024 si16 lair rg15 362 367 s3 c0 m5 4885 e495 4980 3 | The Barrows of Iennrer
+geo-seed-1-1024 si17 lair rg17 567 427 s68 c0 m5 4980 e530 5885 2 | The Howes of Iennrer
+geo-seed-1-1024 si18 outpost rg22 559 495 s0 c3 m0 5545 e735 - 0 | Zank Stockade
+geo-seed-1-1024 si19 outpost rg6 312 376 s0 c3 m0 5674 e854 5885 6 | Gnizeeb Lookout
+geo-seed-1-1024 si20 outpost rg37 317 677 s0 c9 m0 5713 e901 5816 4 | Skugskreeb Stockade
+geo-seed-1-1024 si21 outpost rg35 337 683 s0 c9 m0 5716 e902 5931 5 | Dratch Stockade
+geo-seed-1-1024 si22 outpost rg32 750 549 s0 c8 m0 5789 e986 5801 4 | Edar Watch
+geo-seed-1-1024 si23 outpost rg40 769 774 s0 c11 m0 5799 e1004 - 0 | Wembir Watch
+geo-seed-1-1024 si24 outpost rg37 317 677 s0 c10 m0 5921 e1134 - 0 | Gruld Stockade
+geo-seed-1-1024 si25 outpost rg50 409 812 s0 c2 m0 5995 e1219 - 0 | Skreek Stockade
 world hist-span-2000-512 7 512 2000 all normal auto normal normal
-hist-span-2000-512 table beast_population 230 767206960d79c7971d5a713580ef3dd7f20cd6ff88b58c38ed148a831ce2d377
-hist-span-2000-512 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-span-2000-512 table site 3 e9137b094a63fdb416b54bc03890d67ac56c55057b5d29ed3760597120598326
-hist-span-2000-512 ending 37a9aa88f8572115c11e65d5eb44bba8d8b537ebbb5696e0af995b0db2f963b2
-hist-span-2000-512 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-hist-span-2000-512 G ghost 0 endings 0:36,1:2 standing 36 population 49850 shunned 0
-hist-span-2000-512 S outposts 3 ended 1 bold 0 monster_flares 0
-hist-span-2000-512 si1 outpost rg11 134 307 s0 c2 m0 1153 e45 1648 6 | Raecaeve Watch
-hist-span-2000-512 si2 outpost rg5 219 268 s0 c3 m0 1646 e111 - 0 | Skeerk Stockade
-hist-span-2000-512 si3 outpost rg7 184 209 s0 c3 m0 1936 e170 - 0 | Slonk-Skuzz Lookout
+hist-span-2000-512 table beast_population 248 8d57f88e33395328be0388478dcb293aa9f66701de2e3443e20ea059ecbeadf1
+hist-span-2000-512 table monster 1 63eb1c478a96f710c4921f152571262bdcf6a57ac899e2a39ab549b78be38982
+hist-span-2000-512 table site 8 2b8aac85a047eea0b508dc5aa2fd2d5431bda88a6ba81bcab61fe0ef3642041c
+hist-span-2000-512 ending 4db0ebc7ccc7bcf706857e975343f0bbd1e1cb46ec3aae500e5978a5a3a79739
+hist-span-2000-512 M monsters 1 alive 1 slain 0 died 0 raids 1 killed 57 overruns 1 risen 1 lair_settlement_open 1
+hist-span-2000-512 G ghost 0 endings 0:27,1:4,2:1 standing 27 population 33136 shunned 1
+hist-span-2000-512 S outposts 5 ended 2 bold 1 monster_flares 0
+hist-span-2000-512 m1 undead 1 born 1974 e238 died - hoard 0 | The Dead of the Shaw of the Hunt | lair The Howes of the Shaw of the Hunt
+hist-span-2000-512 si1 outpost rg5 219 268 s0 c3 m0 1124 e45 1134 4 | Snuk Stockade
+hist-span-2000-512 si2 outpost rg8 194 249 s10 c4 m0 1132 e48 - 0 | The Delvings of Harinhimm
+hist-span-2000-512 si3 outpost rg5 219 268 s0 c1 m0 1429 e94 1984 4 | The Spire of Ornath
+hist-span-2000-512 si4 outpost rg9 443 267 s0 c3 m0 1434 e99 - 0 | Slog-Gronk Stockade
+hist-span-2000-512 si5 outpost rg10 259 285 s0 c3 m0 1754 e150 - 0 | Drat Stockade
+hist-span-2000-512 si6 outpost rg7 184 209 s0 c7 m0 1962 e230 - 0 | Uruldthuu Stockade
+hist-span-2000-512 si7 lair rg7 184 208 s0 c0 m1 1974 e238 1997 3 | The Barrows of the Shaw of the Hunt
+hist-span-2000-512 si8 lair rg5 304 217 s5 c0 m1 1997 e259 - 0 | The Howes of the Shaw of the Hunt
 world hist-races-elf-orc-1024 3 1024 6000 elf,orc normal auto normal normal
-hist-races-elf-orc-1024 table beast_population 323 4a65ab0abc49c2ad353e14ebf41a5a242e687147cf45ae86d05cce9680f990e9
-hist-races-elf-orc-1024 table monster 3 054a2870090a8918e2038f1986d12e7e4ae6afce9d6792aba0ac6684a126c6a5
-hist-races-elf-orc-1024 table site 8 dd316ff155ce9684511c869d44d5783e9967538d4bc2d8e4028b8713b1e48e32
-hist-races-elf-orc-1024 ending 7beb53f52d2e836f99cd6273fc648e943522bb4cb659d5c82879ff1c6270bb96
-hist-races-elf-orc-1024 M monsters 3 alive 1 slain 1 died 1 raids 6 killed 274 overruns 2 risen 1 lair_settlement_open 1
-hist-races-elf-orc-1024 G ghost 1 endings 0:46,1:2,2:2,3:1 standing 46 population 83675 shunned 1
-hist-races-elf-orc-1024 S outposts 3 ended 0 bold 0 monster_flares 0
-hist-races-elf-orc-1024 m1 ogre 4 born 4652 e64 died 5652 hoard 0 | Uukh'ghak the Gaunt | lair Uukh'ghak's Larder
-hist-races-elf-orc-1024 m2 troll 3 born 5577 e76 died 5792 hoard 8 | Skrubbot Stonehide | lair Skrubbot's Hollow
-hist-races-elf-orc-1024 m3 undead 1 born 5947 e183 died - hoard 0 | The Dead of Pitchthorn Forest | lair The Barrows of Pitchthorn Forest
-hist-races-elf-orc-1024 si1 lair rg41 663 678 s0 c0 m1 4652 e64 5652 2 | Uukh'ghak's Larder
-hist-races-elf-orc-1024 si2 lair rg27 376 644 s0 c0 m2 5577 e76 5792 3 | The Den of Skrubbot
-hist-races-elf-orc-1024 si3 lair rg32 571 627 s42 c0 m2 5792 e118 5792 1 | Skrubbot's Hollow
-hist-races-elf-orc-1024 si4 outpost rg6 628 320 s0 c1 m0 5866 e152 - 0 | The Spire of Ithigletho
-hist-races-elf-orc-1024 si5 outpost rg14 773 384 s0 c2 m0 5929 e176 - 0 | Vierele Watch
-hist-races-elf-orc-1024 si6 lair rg9 742 335 s0 c0 m3 5947 e183 5958 3 | The Howes of Pitchthorn Forest
-hist-races-elf-orc-1024 si7 outpost rg9 666 323 s0 c3 m0 5951 e186 - 0 | The Watch of Sholdbuuk
-hist-races-elf-orc-1024 si8 lair rg6 676 290 s46 c0 m3 5958 e190 - 0 | The Barrows of Pitchthorn Forest
+hist-races-elf-orc-1024 table beast_population 325 0718285bc81cd45601e2506bc85372b913ef1a5482eb508ecdc577a52e4eacde
+hist-races-elf-orc-1024 table monster 4 c1117997a21da3aa2b3c49690febf8469e8484bca451434f614b4995bb8d3c01
+hist-races-elf-orc-1024 table site 9 357c11a2044ec0d12ea7e3361d77164596cc75370c62802c8d89cf22a23b3af6
+hist-races-elf-orc-1024 ending bfbabbac18da847c13d12917756ff035034217b85459f2362aa744b7ecf4981c
+hist-races-elf-orc-1024 M monsters 4 alive 2 slain 1 died 1 raids 20 killed 1799 overruns 3 risen 2 lair_settlement_open 2
+hist-races-elf-orc-1024 G ghost 1 endings 0:38,1:4,2:3,3:1,6:2 standing 38 population 84642 shunned 2
+hist-races-elf-orc-1024 S outposts 2 ended 1 bold 0 monster_flares 0
+hist-races-elf-orc-1024 m1 ogre 4 born 4652 e96 died 5652 hoard 0 | Uukh'ghak the Gaunt | lair Uukh'ghak's Larder
+hist-races-elf-orc-1024 m2 troll 3 born 5577 e114 died 5792 hoard 8 | Skrubbot Stonehide | lair Skrubbot's Hollow
+hist-races-elf-orc-1024 m3 undead 1 born 5851 e188 died - hoard 0 | The Host of Pitchthorn Forest | lair The Howes of Pitchthorn Forest
+hist-races-elf-orc-1024 m4 undead 1 born 5870 e206 died - hoard 0 | The Dead of Pitchthorn Forest | lair The Barrows of Pitchthorn Forest III
+hist-races-elf-orc-1024 si1 lair rg41 663 678 s0 c0 m1 4652 e96 5652 2 | Uukh'ghak's Larder
+hist-races-elf-orc-1024 si2 lair rg27 376 644 s0 c0 m2 5577 e114 5792 3 | The Den of Skrubbot
+hist-races-elf-orc-1024 si3 lair rg32 571 627 s42 c0 m2 5792 e157 5792 1 | Skrubbot's Hollow
+hist-races-elf-orc-1024 si4 lair rg9 742 335 s0 c0 m3 5851 e188 5868 3 | The Barrows of Pitchthorn Forest
+hist-races-elf-orc-1024 si5 outpost rg6 628 320 s0 c1 m0 5866 e198 5949 4 | Vierele Watch
+hist-races-elf-orc-1024 si6 lair rg14 763 427 s16 c0 m3 5868 e201 - 0 | The Howes of Pitchthorn Forest
+hist-races-elf-orc-1024 si7 lair rg9 742 335 s0 c0 m4 5870 e206 5931 3 | The Barrows of Pitchthorn Forest II
+hist-races-elf-orc-1024 si8 outpost rg5 818 220 s0 c2 m0 5918 e228 - 0 | The Spire of Lithienn
+hist-races-elf-orc-1024 si9 lair rg5 825 350 s3 c0 m4 5931 e238 - 0 | The Barrows of Pitchthorn Forest III
 world hist-dense-1024 11 1024 6000 all dense auto normal normal
-hist-dense-1024 table beast_population 603 ecac01a55860ab4ffa79ca9733dc6ad6f526e8013dec4bc38b4a39e577af4d9a
-hist-dense-1024 table monster 10 906d381c5e1a8e2ef2a16fb37332f386b577e9ac492f2bff13ae22787f97545b
-hist-dense-1024 table site 22 8dea25d01a4e0c1f80ebbccb6d0cc6ca509f62b6d321987d5e3c46a173ea7b87
-hist-dense-1024 ending bfb927abfcfc0c7b85b64e761aeaf56504322a477292d62413ddf8b666cf9342
-hist-dense-1024 M monsters 10 alive 2 slain 4 died 4 raids 44 killed 1604 overruns 2 risen 1 lair_settlement_open 0
-hist-dense-1024 G ghost 3 endings 0:87,1:10,2:2,3:2,4:1,6:2 standing 87 population 221138 shunned 0
-hist-dense-1024 S outposts 10 ended 4 bold 5 monster_flares 0
+hist-dense-1024 table beast_population 853 169e112b970a4e0b1bd7482085e7cd0230a20462ffbe777ac9f932fdcc342272
+hist-dense-1024 table monster 11 e9cc564433f031ccbe65e47f338c1d1124744d80c0e0796e2d0552f1fe2993b9
+hist-dense-1024 table site 33 9376af46bc2929b483681785fd3bff8fef8d51fa9b6332c5f5ee3d73391e0da9
+hist-dense-1024 ending 8642f603cebfd0744cbf72a3148bce72414e836609b8432363ae1db959f58f8c
+hist-dense-1024 M monsters 11 alive 1 slain 5 died 5 raids 49 killed 2762 overruns 3 risen 2 lair_settlement_open 1
+hist-dense-1024 G ghost 5 endings 0:100,1:17,2:3,3:4,4:1,6:4 standing 100 population 234682 shunned 1
+hist-dense-1024 S outposts 17 ended 9 bold 3 monster_flares 0
 hist-dense-1024 m1 troll 4 born 975 e6 died 2970 hoard 0 | Drub | lair The Den of Drub
 hist-dense-1024 m2 troll 4 born 1200 e7 died 3195 hoard 0 | Mossback Snag | lair The Den of Snag
 hist-dense-1024 m3 ogre 3 born 1475 e11 died 2111 hoard 12 | Gruukazug the Glutton | lair The Pit of Gruukazug
 hist-dense-1024 m4 ogre 4 born 2420 e52 died 3420 hoard 0 | Uug'dom | lair Uug'dom's Larder
 hist-dense-1024 m5 wyvern 3 born 2870 e64 died 3335 hoard 0 | The Brood of Keeb | lair Keeb's Crag
-hist-dense-1024 m6 troll 4 born 3070 e71 died 5070 hoard 0 | Skruzz-Gruz of the Fells | lair The Den of Skruzz-Gruz
-hist-dense-1024 m7 troll 2 born 4045 e123 died - hoard 50 | Grutch Stonehide | lair Grutch's Hollow
-hist-dense-1024 m8 troll 3 born 5157 e296 died 5214 hoard 60 | Grageenk | lair The Den of Grageenk
-hist-dense-1024 m9 ogre 3 born 5481 e371 died 5624 hoard 3 | Kuu the Fat | lair The Pit of Kuu
-hist-dense-1024 m10 undead 2 born 5946 e726 died - hoard 0 | The Restless of the Reaped Sward | lair The Howes of the Reaped Sward
+hist-dense-1024 m6 troll 4 born 3070 e71 died 5070 hoard 6 | Skruzz-Gruz of the Fells | lair The Den of Skruzz-Gruz
+hist-dense-1024 m7 troll 3 born 4045 e126 died 4467 hoard 18 | Grutch Stonehide | lair Grutch's Hollow
+hist-dense-1024 m8 undead 4 born 4505 e241 died 5481 hoard 0 | The Dead of Slunkgneez Hole | lair The Howes of Slunkgneez Hole
+hist-dense-1024 m9 undead 3 born 5027 e373 died 5149 hoard 0 | The Host of Horsegrass | lair The Howes of Horsegrass
+hist-dense-1024 m10 troll 2 born 5157 e437 died - hoard 36 | Sleerk the Grey | lair Sleerk's Hollow
+hist-dense-1024 m11 ogre 3 born 5481 e618 died 5587 hoard 13 | Aarz'shaagh Bonebreaker | lair Aarz'shaagh's Larder
 hist-dense-1024 si1 lair rg17 625 360 s0 c0 m1 975 e6 2970 2 | The Den of Drub
 hist-dense-1024 si2 lair rg2 579 94 s0 c0 m2 1200 e7 3195 2 | The Den of Snag
 hist-dense-1024 si3 lair rg19 343 449 s0 c0 m3 1475 e11 2111 1 | The Pit of Gruukazug
 hist-dense-1024 si4 lair rg44 665 718 s0 c0 m4 2420 e52 3420 2 | Uug'dom's Larder
 hist-dense-1024 si5 lair rg46 666 719 s0 c0 m5 2870 e64 3335 1 | Keeb's Crag
 hist-dense-1024 si6 lair rg12 624 359 s0 c0 m6 3070 e71 5070 2 | The Den of Skruzz-Gruz
-hist-dense-1024 si7 lair rg3 581 94 s0 c0 m7 4045 e123 - 0 | Grutch's Hollow
-hist-dense-1024 si8 lair rg8 469 280 s0 c0 m8 5157 e296 5174 3 | Grageenk's Hollow
-hist-dense-1024 si9 lair rg8 364 300 s58 c0 m8 5174 e307 5214 1 | The Den of Grageenk
-hist-dense-1024 si10 outpost rg39 671 715 s0 c2 m0 5200 e330 5406 6 | Zugat Lookout
-hist-dense-1024 si11 lair rg22 648 424 s0 c0 m9 5481 e371 5623 3 | Kuu's Larder
-hist-dense-1024 si12 lair rg22 622 432 s75 c0 m9 5623 e400 5624 1 | The Pit of Kuu
-hist-dense-1024 si13 outpost rg30 482 528 s0 c9 m0 5681 e457 - 0 | Zog-Nug Stockade
-hist-dense-1024 si14 outpost rg15 292 382 s0 c1 m0 5697 e474 - 0 | The Spire of Thoithier
-hist-dense-1024 si15 outpost rg20 677 421 s0 c6 m0 5826 e575 5837 4 | Gnirk-Keeb Lookout
-hist-dense-1024 si16 outpost rg39 671 715 s0 c2 m0 5840 e601 - 0 | Gaz Lookout
-hist-dense-1024 si17 outpost rg34 781 571 s0 c6 m0 5840 e602 - 0 | Slurk Stockade
-hist-dense-1024 si18 outpost rg37 819 661 s0 c6 m0 5849 e610 5861 4 | Koz Lookout
-hist-dense-1024 si19 outpost rg27 667 712 s0 c4 m0 5892 e671 5909 4 | The Thorn of Mouglish
-hist-dense-1024 si20 outpost rg25 783 554 s0 c6 m0 5895 e676 - 0 | Skrit Stockade
-hist-dense-1024 si21 lair rg23 405 557 s0 c0 m10 5946 e726 - 0 | The Howes of the Reaped Sward
-hist-dense-1024 si22 outpost rg11 235 249 s0 c7 m0 5984 e746 - 0 | Edir Watch
+hist-dense-1024 si7 outpost rg4 525 162 s21 c3 m0 3297 e78 - 0 | The Mines of Gadbrairin Deep
+hist-dense-1024 si8 lair rg3 581 94 s0 c0 m7 4045 e126 4467 1 | Grutch's Hollow
+hist-dense-1024 si9 outpost rg5 556 126 s32 c3 m0 4237 e156 5864 4 | The Mines of Nuntark
+hist-dense-1024 si10 outpost rg37 819 661 s0 c2 m0 4446 e203 4450 4 | Zugat Lookout
+hist-dense-1024 si11 lair rg37 836 679 s19 c0 m8 4505 e241 4507 3 | The Barrows of Slunkgneez Hole
+hist-dense-1024 si12 lair rg45 865 722 s39 c0 m8 4507 e244 5481 2 | The Howes of Slunkgneez Hole
+hist-dense-1024 si13 lair rg26 619 495 s0 c0 m9 5027 e373 5081 3 | The Barrows of Horsegrass
+hist-dense-1024 si14 lair rg17 559 449 s58 c0 m9 5081 e393 5149 1 | The Howes of Horsegrass
+hist-dense-1024 si15 lair rg8 469 280 s0 c0 m10 5157 e437 5158 3 | The Den of Sleerk
+hist-dense-1024 si16 lair rg8 399 245 s56 c0 m10 5158 e441 - 0 | Sleerk's Hollow
+hist-dense-1024 si17 outpost rg39 671 715 s0 c2 m0 5200 e482 5431 6 | Slurk Stockade
+hist-dense-1024 si18 outpost rg34 781 571 s0 c6 m0 5208 e488 5431 6 | Koz Lookout
+hist-dense-1024 si19 lair rg22 648 424 s0 c0 m11 5481 e618 5587 1 | Aarz'shaagh's Larder
+hist-dense-1024 si20 outpost rg23 474 442 s0 c7 m0 5572 e668 5772 6 | Skrit Stockade
+hist-dense-1024 si21 outpost rg35 532 685 s0 c10 m0 5595 e711 5941 5 | Slitch-Snaz Stockade
+hist-dense-1024 si22 outpost rg5 526 154 s0 c3 m0 5596 e715 5864 4 | Drairdmid Watch
+hist-dense-1024 si23 outpost rg32 535 557 s0 c10 m0 5607 e747 5624 4 | Geetch Stockade
+hist-dense-1024 si24 outpost rg26 621 490 s0 c6 m0 5611 e756 5624 4 | Skrozz Lookout
+hist-dense-1024 si25 outpost rg45 806 728 s0 c6 m0 5612 e759 5814 6 | Geet Stockade
+hist-dense-1024 si26 outpost rg15 292 382 s0 c1 m0 5617 e769 - 0 | The Spire of Momesie
+hist-dense-1024 si27 outpost rg6 427 184 s0 c7 m0 5624 e793 - 0 | Keerk-Zax Lookout
+hist-dense-1024 si28 outpost rg27 667 712 s0 c6 m0 5635 e820 - 0 | Skeeb Stockade
+hist-dense-1024 si29 outpost rg26 621 490 s0 c13 m0 5747 e917 - 0 | Slitch Stockade
+hist-dense-1024 si30 outpost rg19 286 400 s0 c8 m0 5770 e951 - 0 | Alom Tower
+hist-dense-1024 si31 outpost rg10 307 348 s0 c9 m0 5814 e1034 - 0 | Aelneth Watch
+hist-dense-1024 si32 outpost rg23 474 442 s0 c7 m0 5818 e1041 - 0 | Gatch Stockade
+hist-dense-1024 si33 outpost rg36 484 613 s0 c8 m0 5922 e1166 - 0 | Bresdis Watch
 world hist-conflict-42-1024 42 1024 6000 all normal auto normal normal
-hist-conflict-42-1024 table beast_population 633 a5fbd9245a152f08b8382b352f90a16d2313dff31166e70e97ae2a1fc97eeb4b
-hist-conflict-42-1024 table monster 6 da625428e851ef8066cbc2f0b7f6b13f44dd888e9901aa03f1212652b51c1a4a
-hist-conflict-42-1024 table site 20 c50b026a86809d0dd934e2092d7cbdb35d8b58db3eb3191908815ad87881cf24
-hist-conflict-42-1024 ending cc91d38b06d9e3c58520930b9b3e54797c1fb14f6e796fc98c5c735b4bf5a489
-hist-conflict-42-1024 M monsters 6 alive 1 slain 4 died 1 raids 42 killed 2444 overruns 3 risen 1 lair_settlement_open 1
-hist-conflict-42-1024 G ghost 0 endings 0:81,1:8,2:3,6:5 standing 81 population 238174 shunned 1
-hist-conflict-42-1024 S outposts 11 ended 4 bold 6 monster_flares 1
-hist-conflict-42-1024 m1 dragon 3 born 325 e7 died 4843 hoard 260 | Vifae the Gold-Eyed | lair Vifae's Deep
+hist-conflict-42-1024 table beast_population 737 599b8d8aebc71e5f32fc0000bdf82019fabf04c3aac05f73e5f397c9b3b0ad63
+hist-conflict-42-1024 table monster 7 e2adf7b3af70ad775584a3ff9122ff523e134bc0b9411e3cffb71bf58a235d17
+hist-conflict-42-1024 table site 26 113422af490e98a8c286872a6f2b0327bff22b6b903129ea9a7f97e4a16978c3
+hist-conflict-42-1024 ending 0baf7365916f9afd8ef5e956c9b4168f3f9ece34b502fb77468bec412cf63f82
+hist-conflict-42-1024 M monsters 7 alive 1 slain 4 died 2 raids 66 killed 4706 overruns 4 risen 2 lair_settlement_open 1
+hist-conflict-42-1024 G ghost 2 endings 0:75,1:18,2:4,4:2,6:7 standing 75 population 247829 shunned 1
+hist-conflict-42-1024 S outposts 12 ended 6 bold 5 monster_flares 1
+hist-conflict-42-1024 m1 dragon 2 born 325 e7 died - hoard 457 | Vifae the Gold-Eyed | lair The Lair of Vifae
 hist-conflict-42-1024 m2 troll 3 born 750 e12 died 2189 hoard 120 | Neezz the Grey | lair The Den of Neezz
 hist-conflict-42-1024 m3 wyvern 4 born 875 e15 died 1875 hoard 0 | The Brood of Sneenkzat | lair The Eyrie of Sneenkzat
-hist-conflict-42-1024 m4 troll 3 born 2074 e35 died 3332 hoard 40 | Gneerk Stonehide | lair Gneerk's Hollow
-hist-conflict-42-1024 m5 troll 3 born 2112 e45 died 2561 hoard 8 | Gnizzeezz | lair Gnizzeezz's Hollow
-hist-conflict-42-1024 m6 undead 1 born 5959 e661 died - hoard 0 | The Dead of Hudrorstead | lair The Barrows of Hudrorstead
-hist-conflict-42-1024 si1 lair rg38 407 816 s0 c0 m1 325 e7 4843 1 | Vifae's Deep
+hist-conflict-42-1024 m4 troll 3 born 2074 e35 died 3332 hoard 49 | Gneerk Stonehide | lair The Den of Gneerk
+hist-conflict-42-1024 m5 troll 3 born 2112 e45 died 3248 hoard 114 | Gnizzeezz | lair The Den of Gnizzeezz
+hist-conflict-42-1024 m6 undead 4 born 4263 e340 died 5244 hoard 0 | The Restless of Sprayridge Thicket | lair The Barrows of Sprayridge Thicket
+hist-conflict-42-1024 m7 undead 3 born 5062 e469 died 5064 hoard 0 | The Restless of Swineherd's Oath | lair The Howes of Swineherd's Oath
+hist-conflict-42-1024 si1 lair rg38 407 816 s0 c0 m1 325 e7 5751 3 | Vifae's Deep
 hist-conflict-42-1024 si2 lair rg15 328 358 s0 c0 m2 750 e12 2074 3 | Neezz's Hollow
 hist-conflict-42-1024 si3 lair rg19 243 382 s0 c0 m3 875 e15 1875 2 | The Eyrie of Sneenkzat
 hist-conflict-42-1024 si4 lair rg22 252 476 s10 c0 m2 2074 e34 2189 1 | The Den of Neezz
-hist-conflict-42-1024 si5 lair rg5 373 372 s0 c0 m4 2074 e35 3332 1 | Gneerk's Hollow
-hist-conflict-42-1024 si6 lair rg34 623 683 s0 c0 m5 2112 e45 2536 3 | The Den of Gnizzeezz
-hist-conflict-42-1024 si7 outpost rg31 367 628 s0 c3 m0 2529 e109 - 0 | Nuxskrab Stockade
-hist-conflict-42-1024 si8 lair rg32 602 600 s25 c0 m5 2536 e113 2561 1 | Gnizzeezz's Hollow
-hist-conflict-42-1024 si9 outpost rg27 252 530 s0 c1 m0 3285 e176 - 0 | Elacaend Watch
-hist-conflict-42-1024 si10 outpost rg44 409 816 s0 c4 m0 3617 e206 3635 5 | The Tower of Grurn
-hist-conflict-42-1024 si11 outpost rg41 439 751 s0 c3 m0 3628 e210 3842 6 | Slink Stockade
-hist-conflict-42-1024 si12 outpost rg35 301 611 s0 c1 m0 4254 e258 4849 4 | The Spire of Elielien
-hist-conflict-42-1024 si13 outpost rg42 509 678 s0 c10 m0 5628 e481 5831 6 | Zeex Lookout
-hist-conflict-42-1024 si14 outpost rg4 312 279 s0 c9 m0 5704 e531 - 0 | Cickdard Tower
-hist-conflict-42-1024 si15 outpost rg8 235 369 s0 c11 m0 5811 e580 - 0 | Groz'azush Stockade
-hist-conflict-42-1024 si16 lair rg4 273 196 s66 c0 m6 5959 e661 5965 3 | The Howes of Hudrorstead
-hist-conflict-42-1024 si17 lair rg3 330 235 s91 c0 m6 5965 e670 - 0 | The Barrows of Hudrorstead
-hist-conflict-42-1024 si18 outpost rg32 513 526 s0 c3 m0 5970 e689 - 0 | Slatskazz Lookout
-hist-conflict-42-1024 si19 outpost rg34 634 694 s0 c6 m0 5970 e690 - 0 | Voshae Watch
-hist-conflict-42-1024 si20 outpost rg42 509 678 s0 c10 m0 5987 e718 - 0 | Gneex Stockade
+hist-conflict-42-1024 si5 lair rg5 373 372 s0 c0 m4 2074 e35 2418 3 | Gneerk's Hollow
+hist-conflict-42-1024 si6 lair rg34 623 683 s0 c0 m5 2112 e45 3248 1 | The Den of Gnizzeezz
+hist-conflict-42-1024 si7 lair rg23 430 520 s18 c0 m4 2418 e112 3332 1 | The Den of Gneerk
+hist-conflict-42-1024 si8 outpost rg44 513 704 s39 c5 m0 3258 e188 3430 5 | The Delvings of Drand
+hist-conflict-42-1024 si9 outpost rg23 471 394 s38 c4 m0 3260 e190 - 0 | The Mines of Haidbram Hold
+hist-conflict-42-1024 si10 outpost rg35 301 611 s0 c1 m0 3429 e249 3844 4 | Erin Watch
+hist-conflict-42-1024 si11 outpost rg31 367 628 s0 c3 m0 3842 e284 5637 4 | Slink Stockade
+hist-conflict-42-1024 si12 outpost rg23 439 385 s0 c4 m0 3854 e297 - 0 | Drondroli Watch
+hist-conflict-42-1024 si13 outpost rg22 313 375 s0 c3 m0 3855 e299 4392 4 | Zeex Lookout
+hist-conflict-42-1024 si14 lair rg27 259 543 s0 c0 m6 4263 e340 4264 3 | The Howes of Sprayridge Thicket
+hist-conflict-42-1024 si15 lair rg22 218 437 s42 c0 m6 4264 e342 5244 2 | The Barrows of Sprayridge Thicket
+hist-conflict-42-1024 si16 outpost rg32 513 526 s0 c3 m0 5003 e445 5536 4 | Grazzsnak Stockade
+hist-conflict-42-1024 si17 lair rg42 509 678 s0 c0 m7 5062 e469 5064 1 | The Howes of Swineherd's Oath
+hist-conflict-42-1024 si18 outpost rg27 252 530 s0 c1 m0 5543 e596 - 0 | Iesve Watch
+hist-conflict-42-1024 si19 outpost rg35 301 611 s0 c1 m0 5544 e598 - 0 | The Spire of Cathfe
+hist-conflict-42-1024 si20 outpost rg22 313 375 s0 c7 m0 5545 e600 - 0 | Gneex Stockade
+hist-conflict-42-1024 si21 outpost rg18 648 474 s0 c8 m0 5703 e714 - 0 | Sunt Tower
+hist-conflict-42-1024 si22 outpost rg32 513 526 s0 c11 m0 5724 e752 - 0 | Skak-Snak Lookout
+hist-conflict-42-1024 si23 lair rg31 303 537 s34 c0 m1 5751 e781 - 0 | The Lair of Vifae
+hist-conflict-42-1024 si24 outpost rg31 367 628 s0 c13 m0 5802 e836 5807 5 | Skrogag Lookout
+hist-conflict-42-1024 si25 outpost rg28 552 560 s0 c3 m0 5823 e861 5878 4 | Skuggdrit Lookout
+hist-conflict-42-1024 si26 outpost rg41 443 754 s33 c4 m0 5988 e1018 - 0 | The Delvings of Skrunk Pit
 world hist-conflict-turbulent-512 42 512 6000 all normal auto turbulent normal
-hist-conflict-turbulent-512 table beast_population 423 f11d6a222cb7308913b3ec6a869ce34073b923ead85270a940304fa1699b5c6b
-hist-conflict-turbulent-512 table monster 1 70a7d55fbfc500d2b5ac282dbf30a0af7be152bc125fd3e0e1f3bb62156878aa
-hist-conflict-turbulent-512 table site 15 e178ce32cddab983ad8cba43e15e62ad5b42b734e7422c673363b35a27712ca9
-hist-conflict-turbulent-512 ending 4519ed4d9e35a902c230e3e457ff2d6dc07914a354d25a7b418825fcc1729616
-hist-conflict-turbulent-512 M monsters 1 alive 0 slain 0 died 1 raids 12 killed 461 overruns 1 risen 0 lair_settlement_open 0
-hist-conflict-turbulent-512 G ghost 16 endings 0:39,1:25,2:1,3:5,4:11 standing 39 population 63323 shunned 0
-hist-conflict-turbulent-512 S outposts 13 ended 7 bold 0 monster_flares 0
-hist-conflict-turbulent-512 m1 troll 4 born 2074 e27 died 4067 hoard 48 | Gogg Stonehide | lair The Den of Gogg
-hist-conflict-turbulent-512 si1 lair rg5 213 184 s0 c0 m1 2074 e27 3367 3 | Gogg's Hollow
-hist-conflict-turbulent-512 si2 outpost rg11 415 266 s0 c1 m0 2329 e57 4973 6 | The Spire of Vaennma
-hist-conflict-turbulent-512 si3 outpost rg3 123 176 s0 c4 m0 3289 e193 4659 5 | Dreezz Lookout
-hist-conflict-turbulent-512 si4 outpost rg2 187 187 s0 c4 m0 3293 e194 3860 4 | Slatch Lookout
-hist-conflict-turbulent-512 si5 lair rg1 306 107 s32 c0 m1 3367 e239 4067 2 | The Den of Gogg
-hist-conflict-turbulent-512 si6 outpost rg7 165 196 s0 c2 m0 3437 e261 - 0 | Sethei Watch
-hist-conflict-turbulent-512 si7 outpost rg8 187 196 s0 c3 m0 3853 e303 4392 4 | Nuxskrab Stockade
-hist-conflict-turbulent-512 si8 outpost rg12 326 344 s0 c3 m0 3866 e319 4604 4 | Gnutchsnob Stockade
-hist-conflict-turbulent-512 si9 outpost rg14 215 393 s0 c5 m0 4278 e380 4493 6 | Broringarn Watch
-hist-conflict-turbulent-512 si10 outpost rg2 187 187 s0 c6 m0 4653 e514 - 0 | Grakrab Lookout
-hist-conflict-turbulent-512 si11 outpost rg14 215 393 s0 c5 m0 4673 e529 - 0 | The Tower of Khuringor
-hist-conflict-turbulent-512 si12 outpost rg5 213 184 s0 c3 m0 5307 e771 - 0 | Kinkslork Stockade
-hist-conflict-turbulent-512 si13 outpost rg10 205 388 s0 c3 m0 5315 e782 5329 4 | Zeex Lookout
-hist-conflict-turbulent-512 si14 outpost rg4 369 186 s0 c5 m0 5320 e788 - 0 | The Tower of Khaindnair
-hist-conflict-turbulent-512 si15 outpost rg8 187 196 s0 c9 m0 5495 e851 - 0 | Zinkdrunk Lookout
+hist-conflict-turbulent-512 table beast_population 300 8386d5bbd62736c530d47e5d449b4deb8a02dd29ebea4313b0119570b3e65093
+hist-conflict-turbulent-512 table monster 2 1fbe6b4daca4242c190dc0a31dd0ec9aa3dcad348c7644542a20781431511917
+hist-conflict-turbulent-512 table site 14 545e19c62fa71d37fcee08cb0c8469b81ad468941960e111b3301d63976f323e
+hist-conflict-turbulent-512 ending c8b675d9a83bbbe22726b5dc5b66976331076c56857a231f26cfc31e3bcd2e43
+hist-conflict-turbulent-512 M monsters 2 alive 0 slain 2 died 0 raids 19 killed 1348 overruns 2 risen 1 lair_settlement_open 0
+hist-conflict-turbulent-512 G ghost 7 endings 0:37,1:11,2:2,3:3,4:4 standing 37 population 70757 shunned 0
+hist-conflict-turbulent-512 S outposts 7 ended 5 bold 1 monster_flares 0
+hist-conflict-turbulent-512 m1 troll 3 born 2074 e42 died 2312 hoard 106 | Gogg Stonehide | lair The Den of Gogg
+hist-conflict-turbulent-512 m2 undead 3 born 5825 e838 died 5955 hoard 0 | The Host of Snozz-Skink | lair The Barrows of Snozz-Skink
+hist-conflict-turbulent-512 si1 lair rg5 213 184 s0 c0 m1 2074 e42 2296 3 | Gogg's Hollow
+hist-conflict-turbulent-512 si2 lair rg5 316 219 s16 c0 m1 2296 e80 2312 1 | The Den of Gogg
+hist-conflict-turbulent-512 si3 outpost rg12 326 344 s0 c3 m0 2762 e159 5536 4 | Dreezz Lookout
+hist-conflict-turbulent-512 si4 outpost rg3 123 176 s0 c3 m0 3136 e202 4392 4 | Slatch Lookout
+hist-conflict-turbulent-512 si5 outpost rg11 415 266 s0 c1 m0 3146 e215 5749 6 | The Spire of Glimae
+hist-conflict-turbulent-512 si6 outpost rg2 196 171 s31 c4 m0 3252 e241 - 0 | The Delvings of Toukmairk
+hist-conflict-turbulent-512 si7 outpost rg3 101 142 s4 c4 m0 4984 e487 5093 4 | The Mines of Raenme
+hist-conflict-turbulent-512 si8 outpost rg9 264 254 s0 c3 m0 5525 e600 5550 4 | Gnutchsnob Stockade
+hist-conflict-turbulent-512 si9 outpost rg5 213 184 s0 c3 m0 5799 e801 - 0 | Skubux Lookout
+hist-conflict-turbulent-512 si10 outpost rg13 206 392 s0 c7 m0 5800 e806 - 0 | Rendos Watch
+hist-conflict-turbulent-512 si11 outpost rg10 205 388 s0 c9 m0 5800 e807 5822 4 | Slink Stockade
+hist-conflict-turbulent-512 si12 lair rg5 290 184 s12 c0 m2 5825 e838 5930 3 | The Howes of Snozz-Skink
+hist-conflict-turbulent-512 si13 outpost rg10 171 335 s53 c4 m0 5834 e842 - 0 | The Mines of Grax Hole
+hist-conflict-turbulent-512 si14 lair rg8 230 310 s28 c0 m2 5930 e873 5955 1 | The Barrows of Snozz-Skink
 world hist-conflict-civs4-512 42 512 6000 all normal 4 normal normal
-hist-conflict-civs4-512 table beast_population 427 b95334aaa6c9ae2bf5c76ce477984ec2f591371a472d7b6f6748b7ef8c48e9f2
-hist-conflict-civs4-512 table monster 1 8994c5bedf1f80b86bfb8c2216b5032bb6111330f9206c9f3dffb39946b674d1
-hist-conflict-civs4-512 table site 14 e5b905ef703572fc181cf28319d632d8a2ed0552bd0f4ef6cf3d2bcbe37c1a76
-hist-conflict-civs4-512 ending 0698db18d7edf82f1e57681e8573a100e0efcaa99de04ffc706d45deb876e06a
-hist-conflict-civs4-512 M monsters 1 alive 0 slain 0 died 1 raids 11 killed 331 overruns 1 risen 0 lair_settlement_open 0
-hist-conflict-civs4-512 G ghost 4 endings 0:41,1:33,2:1,3:1,4:3 standing 41 population 81829 shunned 0
-hist-conflict-civs4-512 S outposts 12 ended 8 bold 1 monster_flares 0
-hist-conflict-civs4-512 m1 troll 4 born 2074 e29 died 4067 hoard 30 | Gogg Stonehide | lair The Den of Gogg
-hist-conflict-civs4-512 si1 lair rg5 213 184 s0 c0 m1 2074 e29 3367 3 | Gogg's Hollow
-hist-conflict-civs4-512 si2 outpost rg8 187 196 s0 c3 m0 2462 e86 2481 4 | Snirkkork Stockade
-hist-conflict-civs4-512 si3 outpost rg14 215 393 s0 c1 m0 2783 e154 2793 4 | Aelithie Watch
-hist-conflict-civs4-512 si4 outpost rg10 205 388 s0 c4 m0 2784 e155 3417 6 | Slatch Lookout
-hist-conflict-civs4-512 si5 outpost rg8 187 196 s0 c5 m0 3178 e214 3207 5 | Drix Stockade
-hist-conflict-civs4-512 si6 outpost rg7 165 196 s0 c2 m0 3184 e223 3218 5 | Sethei Watch
-hist-conflict-civs4-512 si7 lair rg8 250 274 s40 c0 m1 3367 e320 4067 2 | The Den of Gogg
-hist-conflict-civs4-512 si8 outpost rg8 187 196 s0 c3 m0 4262 e391 4392 4 | Gnutchsnob Stockade
-hist-conflict-civs4-512 si9 outpost rg7 165 196 s0 c4 m0 4993 e489 5008 4 | Skubux Lookout
-hist-conflict-civs4-512 si10 outpost rg2 187 187 s0 c6 m0 4997 e490 - 0 | The Tower of Grurn
-hist-conflict-civs4-512 si11 outpost rg8 187 196 s0 c11 m0 5396 e592 - 0 | Slink Stockade
-hist-conflict-civs4-512 si12 outpost rg9 264 254 s0 c6 m0 5624 e637 - 0 | Drondroli Watch
-hist-conflict-civs4-512 si13 outpost rg5 213 184 s0 c3 m0 5750 e729 - 0 | Zeex Lookout
-hist-conflict-civs4-512 si14 outpost rg14 215 393 s0 c13 m0 5930 e830 5950 5 | Gogkeetch Lookout
+hist-conflict-civs4-512 table beast_population 350 634e30e765b79271b8d5ca477782540c11769e4909621478a099354fed88eb0c
+hist-conflict-civs4-512 table monster 3 e5500f3aeb3108996fcafe0caa805909b9d38d53faccf4286e5d2e987d10819c
+hist-conflict-civs4-512 table site 21 6084f3bf8768c0aafebbb8add56ef09175f6aa696f017c0e82a59236a48d245f
+hist-conflict-civs4-512 ending 2e4232d1fcf3669f74b9ed2ce62207053736af6673f30a54537f71852d3e03a1
+hist-conflict-civs4-512 M monsters 3 alive 1 slain 1 died 1 raids 22 killed 1198 overruns 3 risen 2 lair_settlement_open 1
+hist-conflict-civs4-512 G ghost 9 endings 0:50,1:13,2:3,3:5,4:4 standing 50 population 75843 shunned 1
+hist-conflict-civs4-512 S outposts 14 ended 7 bold 1 monster_flares 0
+hist-conflict-civs4-512 m1 troll 3 born 2074 e44 died 3685 hoard 40 | Gogg Stonehide | lair The Den of Gogg
+hist-conflict-civs4-512 m2 undead 4 born 3706 e393 died 4693 hoard 0 | The Host of Gloeliel | lair The Howes of Gloeliel
+hist-conflict-civs4-512 m3 undead 2 born 5665 e804 died - hoard 0 | The Restless of Central Downs | lair The Howes of Central Downs
+hist-conflict-civs4-512 si1 lair rg5 213 184 s0 c0 m1 2074 e44 3367 3 | Gogg's Hollow
+hist-conflict-civs4-512 si2 outpost rg11 415 266 s0 c1 m0 2329 e83 - 0 | The Spire of Vaennma
+hist-conflict-civs4-512 si3 outpost rg8 187 196 s0 c3 m0 2329 e84 4392 4 | Dreezz Lookout
+hist-conflict-civs4-512 si4 outpost rg12 326 344 s0 c3 m0 2928 e171 5097 4 | Slatch Lookout
+hist-conflict-civs4-512 si5 outpost rg10 205 388 s0 c4 m0 2929 e173 3444 4 | Drix Stockade
+hist-conflict-civs4-512 si6 outpost rg7 165 196 s0 c2 m0 3273 e231 - 0 | Sethei Watch
+hist-conflict-civs4-512 si7 outpost rg2 196 171 s41 c5 m0 3295 e247 - 0 | The Mines of Doundkind
+hist-conflict-civs4-512 si8 lair rg8 239 310 s38 c0 m1 3367 e273 3685 1 | The Den of Gogg
+hist-conflict-civs4-512 si9 outpost rg2 187 187 s0 c5 m0 3425 e302 - 0 | Broringarn Watch
+hist-conflict-civs4-512 si10 outpost rg14 215 393 s0 c4 m0 3438 e312 3444 4 | Grakrab Lookout
+hist-conflict-civs4-512 si11 lair rg3 119 102 s14 c0 m2 3706 e393 3707 3 | The Barrows of Gloeliel
+hist-conflict-civs4-512 si12 lair rg7 82 206 s6 c0 m2 3707 e398 4693 2 | The Howes of Gloeliel
+hist-conflict-civs4-512 si13 outpost rg14 215 393 s0 c10 m0 5407 e664 5610 6 | Zeex Lookout
+hist-conflict-civs4-512 si14 outpost rg5 213 184 s0 c3 m0 5419 e683 - 0 | Gogkeetch Lookout
+hist-conflict-civs4-512 si15 outpost rg4 369 186 s0 c9 m0 5662 e802 5957 6 | Dont Tower
+hist-conflict-civs4-512 si16 lair rg9 264 254 s0 c0 m3 5665 e804 5693 3 | The Barrows of Central Downs
+hist-conflict-civs4-512 si17 outpost rg14 215 393 s0 c10 m0 5692 e831 - 0 | Ziz Stockade
+hist-conflict-civs4-512 si18 lair rg9 299 247 s69 c0 m3 5693 e834 - 0 | The Howes of Central Downs
+hist-conflict-civs4-512 si19 outpost rg6 416 265 s0 c12 m0 5755 e865 - 0 | Grokh Stockade
+hist-conflict-civs4-512 si20 outpost rg12 326 344 s0 c8 m0 5780 e893 5785 4 | Gneex Stockade
+hist-conflict-civs4-512 si21 outpost rg10 205 388 s0 c13 m0 5829 e936 - 0 | Krig Lookout
 world hist-conflict-flight 1 512 6000 all normal auto normal normal
-hist-conflict-flight table beast_population 242 addddb3789129fd23bb5ed6dd4801c268aad92b14204983aac168fa62440285a
-hist-conflict-flight table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-conflict-flight table site 10 290f7f69df1670e67d2d64d860909e911f1f0cbf9ea8cee18cea0d81c752b5a6
-hist-conflict-flight ending 16b5e599df89865487c3096f25d3b183a3af8545687064105eeebcd40ea1cedd
-hist-conflict-flight M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-hist-conflict-flight G ghost 6 endings 0:39,1:12,3:1,4:5 standing 39 population 77361 shunned 0
-hist-conflict-flight S outposts 10 ended 5 bold 0 monster_flares 0
-hist-conflict-flight si1 outpost rg6 371 275 s0 c1 m0 2346 e34 2350 4 | Eleminn Watch
-hist-conflict-flight si2 outpost rg7 217 325 s0 c3 m0 2347 e37 2571 6 | Bark-Snak Lookout
-hist-conflict-flight si3 outpost rg10 203 329 s0 c4 m0 3629 e194 3652 4 | Grordhad Watch
-hist-conflict-flight si4 outpost rg5 210 316 s0 c3 m0 3649 e209 3866 6 | Drork Stockade
-hist-conflict-flight si5 outpost rg9 383 419 s0 c4 m0 4190 e232 - 0 | The Tower of Kumbro
-hist-conflict-flight si6 outpost rg5 210 316 s0 c3 m0 4353 e265 - 0 | Zuskogg Lookout
-hist-conflict-flight si7 outpost rg3 155 196 s0 c6 m0 4363 e270 - 0 | Wiewhogli Watch
-hist-conflict-flight si8 outpost rg7 217 325 s0 c3 m0 4590 e307 - 0 | Krik Stockade
-hist-conflict-flight si9 outpost rg10 203 329 s0 c7 m0 5519 e419 5735 6 | Tird Tower
-hist-conflict-flight si10 outpost rg10 203 329 s0 c7 m0 5850 e527 - 0 | Wint Tower
+hist-conflict-flight table beast_population 283 3592af8b33fb9497e15a104b79883fdbfd29e8dbabb4a854ad04642f60f05cf5
+hist-conflict-flight table monster 2 bd5ff2e5b55cdf8dd78ac6ba8162a04c4fb8ebf72d0e9ff65295550731915b86
+hist-conflict-flight table site 12 80854806b9ed6ab15f2cc5e4004787927e6270f630fc3d86327d8d10a9befe25
+hist-conflict-flight ending 846e02761ca9b7d7eb865de7d17d65ae9c1f87f4fbff8b20a403468c98677c16
+hist-conflict-flight M monsters 2 alive 1 slain 1 died 0 raids 10 killed 730 overruns 1 risen 2 lair_settlement_open 0
+hist-conflict-flight G ghost 6 endings 0:42,1:6,2:1,3:3,4:3,6:1 standing 42 population 86845 shunned 0
+hist-conflict-flight S outposts 8 ended 4 bold 0 monster_flares 0
+hist-conflict-flight m1 undead 3 born 3532 e218 died 4325 hoard 0 | The Dead of Sabletree Barrows | lair The Howes of Sabletree Barrows
+hist-conflict-flight m2 undead 2 born 5873 e667 died - hoard 0 | The Dead of Thornspring Barrows | lair The Howes of Thornspring Barrows
+hist-conflict-flight si1 outpost rg6 371 275 s0 c1 m0 2346 e35 2353 4 | Eleminn Watch
+hist-conflict-flight si2 outpost rg7 217 325 s0 c3 m0 2347 e38 2571 6 | Bark-Snak Lookout
+hist-conflict-flight si3 outpost rg1 361 134 s0 c1 m0 2351 e40 - 0 | Melier Watch
+hist-conflict-flight si4 outpost rg2 288 178 s0 c3 m0 2797 e102 - 0 | Drork Stockade
+hist-conflict-flight si5 outpost rg4 281 174 s0 c3 m0 3451 e184 3666 6 | Dreek Lookout
+hist-conflict-flight si6 lair rg5 210 316 s0 c0 m1 3532 e218 3562 3 | The Barrows of Sabletree Barrows
+hist-conflict-flight si7 lair rg8 128 273 s11 c0 m1 3562 e231 4325 1 | The Howes of Sabletree Barrows
+hist-conflict-flight si8 outpost rg9 383 420 s36 c4 m0 3841 e247 4048 4 | The Delvings of Taidinkhai
+hist-conflict-flight si9 outpost rg7 217 325 s0 c3 m0 4065 e278 - 0 | Gnutch Stockade
+hist-conflict-flight si10 outpost rg10 203 329 s0 c4 m0 5587 e557 - 0 | The Tower of Baikbrali
+hist-conflict-flight si11 outpost rg4 281 174 s0 c7 m0 5852 e650 5857 4 | Stad Tower
+hist-conflict-flight si12 lair rg4 213 189 s0 c0 m2 5873 e667 - 0 | The Howes of Thornspring Barrows
 world hist-conflict-73-1024 73 1024 6000 all normal auto normal normal
-hist-conflict-73-1024 table beast_population 888 1707b0adb1e3ad03c17c9c0f6415657fd730243bc6d83f302ffb8fe885e47061
-hist-conflict-73-1024 table monster 11 549b1774f2b9db2bf595cfdd7f42cf350995d28dee86474f01070ab9d21ecda6
-hist-conflict-73-1024 table site 35 1230cfb74963abfbd3fc9e1a4ce469417735a0df74db9acd7c616ef3ecdd2270
-hist-conflict-73-1024 ending c8caefae258bc2f0924803f7785cb54705dae982ba941480f1aaae82951d1c2a
-hist-conflict-73-1024 M monsters 11 alive 1 slain 5 died 5 raids 37 killed 3341 overruns 3 risen 4 lair_settlement_open 0
-hist-conflict-73-1024 G ghost 6 endings 0:115,1:20,2:3,3:4,4:2 standing 115 population 215802 shunned 0
-hist-conflict-73-1024 S outposts 21 ended 14 bold 2 monster_flares 2
-hist-conflict-73-1024 m1 giant 4 born 725 e9 died 3216 hoard 0 | Tukbamm Cliffbreaker | lair Tukbamm's Seat
-hist-conflict-73-1024 m2 ogre 4 born 1700 e23 died 2691 hoard 50 | Ukh'kuuz Bonebreaker | lair Ukh'kuuz's Larder
-hist-conflict-73-1024 m3 ogre 3 born 2047 e37 died 2102 hoard 8 | Gruggrog | lair Gruggrog's Larder
-hist-conflict-73-1024 m4 wyvern 4 born 3116 e204 died 4110 hoard 0 | The Screamers of Sleegg | lair Sleegg's Crag
-hist-conflict-73-1024 m5 wyvern 4 born 3291 e223 died 4291 hoard 0 | The Brood of Zeegat | lair Zeegat's Crag
-hist-conflict-73-1024 m6 undead 4 born 4232 e494 died 5228 hoard 0 | The Host of Sourlea | lair The Barrows of Sourlea
-hist-conflict-73-1024 m7 troll 3 born 4646 e664 died 4755 hoard 7 | Old Drig-Nozz | lair Drig-Nozz's Hollow
-hist-conflict-73-1024 m8 giant 1 born 4721 e668 died - hoard 26 | Thoumdurin the Tall | lair Thoumdurin's Seat
-hist-conflict-73-1024 m9 undead 3 born 5150 e920 died 5639 hoard 0 | The Dead of the Torn Vale | lair The Howes of the Torn Vale
-hist-conflict-73-1024 m10 undead 3 born 5672 e1061 died 5745 hoard 0 | The Restless of the Ruin of Zigrink Pit | lair The Howes of the Ruin of Zigrink Pit
-hist-conflict-73-1024 m11 undead 3 born 5733 e1107 died 5788 hoard 0 | The Host of Kotch | lair The Barrows of Kotch
-hist-conflict-73-1024 si1 lair rg37 248 564 s0 c0 m1 725 e9 3216 2 | Tukbamm's Seat
-hist-conflict-73-1024 si2 lair rg49 659 776 s0 c0 m2 1700 e23 2691 2 | Ukh'kuuz's Larder
-hist-conflict-73-1024 si3 lair rg36 487 561 s0 c0 m3 2047 e37 2102 1 | Gruggrog's Larder
-hist-conflict-73-1024 si4 outpost rg9 523 313 s0 c1 m0 2645 e105 - 0 | The Spire of Glimer
-hist-conflict-73-1024 si5 outpost rg11 358 361 s0 c3 m0 2670 e131 - 0 | Boz Lookout
-hist-conflict-73-1024 si6 outpost rg12 230 405 s0 c2 m0 2676 e138 2678 4 | The Spire of Aellmis
-hist-conflict-73-1024 si7 lair rg10 791 274 s0 c0 m4 3116 e204 4110 2 | Sleegg's Crag
-hist-conflict-73-1024 si8 lair rg44 240 617 s0 c0 m5 3291 e223 4291 2 | Zeegat's Crag
-hist-conflict-73-1024 si9 outpost rg18 432 451 s0 c3 m0 3909 e393 4788 4 | Neek-Nurk Stockade
-hist-conflict-73-1024 si10 outpost rg33 580 497 s0 c4 m0 3933 e420 4135 6 | Skreebuzz Stockade
-hist-conflict-73-1024 si11 outpost rg45 653 738 s0 c4 m0 4221 e461 5803 4 | Gnadreegg Lookout
-hist-conflict-73-1024 si12 outpost rg33 580 497 s0 c4 m0 4222 e466 4427 6 | Snuzsnab Stockade
-hist-conflict-73-1024 si13 lair rg27 599 417 s0 c0 m6 4232 e494 4252 3 | The Howes of Sourlea
-hist-conflict-73-1024 si14 outpost rg5 656 176 s0 c7 m0 4238 e498 4996 6 | Grasnozz Lookout
-hist-conflict-73-1024 si15 outpost rg14 775 346 s0 c7 m0 4246 e504 - 0 | Geenkbigg Stockade
-hist-conflict-73-1024 si16 lair rg19 577 333 s63 c0 m6 4252 e513 5228 2 | The Barrows of Sourlea
-hist-conflict-73-1024 si17 outpost rg36 540 530 s0 c5 m0 4264 e541 4265 5 | Skrig-Drugg Lookout
-hist-conflict-73-1024 si18 outpost rg12 230 405 s0 c2 m0 4271 e549 4762 4 | The Spire of Veithiel
-hist-conflict-73-1024 si19 outpost rg19 601 331 s0 c6 m0 4292 e560 4787 4 | The Tower of Thour
-hist-conflict-73-1024 si20 lair rg1 760 260 s0 c0 m7 4646 e664 4746 3 | The Den of Drig-Nozz
-hist-conflict-73-1024 si21 lair rg44 240 617 s0 c0 m8 4721 e668 - 0 | Thoumdurin's Seat
-hist-conflict-73-1024 si22 lair rg5 598 190 s106 c0 m7 4746 e671 4755 1 | Drig-Nozz's Hollow
-hist-conflict-73-1024 si23 outpost rg32 782 522 s0 c4 m0 4761 e681 4996 6 | Skoz-Krutch Lookout
-hist-conflict-73-1024 si24 outpost rg7 756 260 s0 c6 m0 4775 e697 4787 4 | Korngrok Watch
-hist-conflict-73-1024 si25 outpost rg49 585 682 s0 c3 m0 5086 e852 5101 4 | Snizz Lookout
-hist-conflict-73-1024 si26 outpost rg33 580 497 s0 c7 m0 5117 e878 5144 4 | Gnot Lookout
-hist-conflict-73-1024 si27 outpost rg4 477 223 s0 c3 m0 5124 e883 - 0 | Dribank Lookout
-hist-conflict-73-1024 si28 lair rg33 593 565 s0 c0 m9 5150 e920 5639 1 | The Howes of the Torn Vale
-hist-conflict-73-1024 si29 outpost rg40 799 613 s0 c4 m0 5612 e984 - 0 | Greezz Lookout
-hist-conflict-73-1024 si30 outpost rg7 756 260 s0 c7 m0 5619 e1001 - 0 | Krizdrunk Stockade
-hist-conflict-73-1024 si31 lair rg36 487 561 s0 c0 m10 5672 e1061 5745 1 | The Howes of the Ruin of Zigrink Pit
-hist-conflict-73-1024 si32 lair rg27 597 484 s57 c0 m11 5733 e1107 5754 3 | The Howes of Kotch
-hist-conflict-73-1024 si33 lair rg25 698 415 s38 c0 m11 5754 e1122 5788 1 | The Barrows of Kotch
-hist-conflict-73-1024 si34 outpost rg38 682 569 s0 c4 m0 5941 e1243 - 0 | Krazz Lookout
-hist-conflict-73-1024 si35 outpost rg20 141 502 s0 c9 m0 5970 e1289 5972 4 | Stild Tower
+hist-conflict-73-1024 table beast_population 1076 99955e8d3c6c502fdd50a224c62ea7d2c215d890940dfdd83bf9a54d901b9da9
+hist-conflict-73-1024 table monster 8 aba0f372b5ac94451d54d631f7a5c20603399a50c3cbdba9ce01b2ce00452ad0
+hist-conflict-73-1024 table site 28 1a227a0ff2702b5b7f759315713d1495a8d2a0e3558558617b1cf15700f4d2a3
+hist-conflict-73-1024 ending 11d0c293fd03f110143a96a104d830edc2c37d2e2701e494bd1d060ff0fd6b18
+hist-conflict-73-1024 M monsters 8 alive 2 slain 2 died 4 raids 35 killed 3255 overruns 1 risen 1 lair_settlement_open 1
+hist-conflict-73-1024 G ghost 5 endings 0:101,1:27,2:1,3:4,4:1,6:2 standing 101 population 219080 shunned 1
+hist-conflict-73-1024 S outposts 17 ended 11 bold 1 monster_flares 1
+hist-conflict-73-1024 m1 giant 4 born 725 e15 died 3216 hoard 0 | Tukbamm Cliffbreaker | lair Tukbamm's Seat
+hist-conflict-73-1024 m2 ogre 4 born 1700 e35 died 2691 hoard 0 | Ukh'kuuz Bonebreaker | lair Ukh'kuuz's Larder
+hist-conflict-73-1024 m3 ogre 3 born 2047 e51 died 2102 hoard 8 | Gruggrog | lair Gruggrog's Larder
+hist-conflict-73-1024 m4 wyvern 4 born 3116 e248 died 4110 hoard 0 | The Screamers of Sleegg | lair The Eyrie of Sleegg
+hist-conflict-73-1024 m5 wyvern 4 born 3291 e272 died 4291 hoard 0 | The Brood of Zeegat | lair The Eyrie of Zeegat
+hist-conflict-73-1024 m6 giant 2 born 4721 e764 died - hoard 0 | Dundthou the Tall | lair The Hall of Dundthou
+hist-conflict-73-1024 m7 ogre 3 born 4996 e859 died 5089 hoard 27 | Dak'zagh the Gaunt | lair The Pit of Dak'zagh
+hist-conflict-73-1024 m8 undead 2 born 5150 e1014 died - hoard 0 | The Host of the Grim Downs | lair The Barrows of the Grim Downs
+hist-conflict-73-1024 si1 lair rg37 248 564 s0 c0 m1 725 e15 3216 2 | Tukbamm's Seat
+hist-conflict-73-1024 si2 lair rg49 659 776 s0 c0 m2 1700 e35 2691 2 | Ukh'kuuz's Larder
+hist-conflict-73-1024 si3 lair rg36 487 561 s0 c0 m3 2047 e51 2102 1 | Gruggrog's Larder
+hist-conflict-73-1024 si4 outpost rg9 523 313 s0 c1 m0 2499 e112 - 0 | The Spire of Glimer
+hist-conflict-73-1024 si5 outpost rg23 312 499 s0 c3 m0 2499 e113 3191 6 | Boz Lookout
+hist-conflict-73-1024 si6 lair rg10 791 274 s0 c0 m4 3116 e248 4110 2 | The Eyrie of Sleegg
+hist-conflict-73-1024 si7 lair rg44 240 617 s0 c0 m5 3291 e272 4291 2 | The Eyrie of Zeegat
+hist-conflict-73-1024 si8 outpost rg11 358 361 s0 c4 m0 3381 e309 5521 4 | Nukrug Lookout
+hist-conflict-73-1024 si9 outpost rg13 789 340 s78 c5 m0 3446 e344 - 0 | The Mines of Morkmun
+hist-conflict-73-1024 si10 outpost rg6 299 184 s0 c2 m0 3964 e402 - 0 | The Spire of Londni
+hist-conflict-73-1024 si11 outpost rg7 737 239 s87 c5 m0 4085 e466 4293 4 | The Mines of Toktu Deep
+hist-conflict-73-1024 si12 outpost rg2 568 205 s0 c1 m0 4163 e480 4229 4 | The Spire of Mefa
+hist-conflict-73-1024 si13 outpost rg4 477 223 s0 c4 m0 4234 e555 5096 4 | Gunut Stockade
+hist-conflict-73-1024 si14 outpost rg39 378 622 s0 c3 m0 4238 e567 4471 6 | Grasnozz Lookout
+hist-conflict-73-1024 si15 outpost rg49 585 682 s0 c3 m0 4245 e577 4471 6 | Geenkbigg Stockade
+hist-conflict-73-1024 si16 outpost rg18 432 451 s0 c3 m0 4689 e750 - 0 | Keek-Gok Stockade
+hist-conflict-73-1024 si17 outpost rg7 756 260 s0 c3 m0 4693 e755 4696 4 | Skrig-Drugg Lookout
+hist-conflict-73-1024 si18 lair rg44 240 617 s0 c0 m6 4721 e764 - 0 | The Hall of Dundthou
+hist-conflict-73-1024 si19 outpost rg2 568 205 s0 c3 m0 4771 e814 - 0 | Krurkgnib Stockade
+hist-conflict-73-1024 si20 lair rg14 775 346 s0 c0 m7 4996 e859 5089 1 | The Pit of Dak'zagh
+hist-conflict-73-1024 si21 outpost rg41 591 664 s0 c4 m0 5112 e979 5328 6 | Skreeb-Zazz Lookout
+hist-conflict-73-1024 si22 lair rg33 593 565 s0 c0 m8 5150 e1014 5862 3 | The Howes of the Grim Downs
+hist-conflict-73-1024 si23 outpost rg45 653 738 s0 c4 m0 5540 e1153 5752 6 | Skoz-Krutch Lookout
+hist-conflict-73-1024 si24 outpost rg12 230 405 s0 c6 m0 5541 e1161 - 0 | Sliz-Krot Stockade
+hist-conflict-73-1024 si25 outpost rg8 600 327 s0 c1 m0 5748 e1315 5750 4 | The Spire of Foltha
+hist-conflict-73-1024 si26 lair rg32 782 522 s125 c0 m8 5862 e1466 - 0 | The Barrows of the Grim Downs
+hist-conflict-73-1024 si27 outpost rg21 264 528 s0 c6 m0 5871 e1482 5887 4 | Dribank Lookout
+hist-conflict-73-1024 si28 outpost rg40 799 613 s0 c10 m0 5975 e1601 - 0 | Skigritch Lookout
 world p5-monsters-high-1024 7 1024 6000 all normal auto normal high
-p5-monsters-high-1024 table beast_population 822 ca005039dc1d7ad8639939998a84856a319088f8df803f97130d6801543bec50
-p5-monsters-high-1024 table monster 10 b659e98c3b960bdf5abcd24a265355dd10ebd3bc8e097b0aaf027bc352c5370a
-p5-monsters-high-1024 table site 24 6fc5e4c4b3f4e20d06b69e160b63cc12d56da6561aa51e51164cda01ebe9726d
-p5-monsters-high-1024 ending 67353bcf28db790c5017a276028eea143b290284b729eec4edbad68f004307a2
-p5-monsters-high-1024 M monsters 10 alive 1 slain 6 died 3 raids 65 killed 3999 overruns 4 risen 2 lair_settlement_open 1
-p5-monsters-high-1024 G ghost 6 endings 0:60,1:7,2:4,3:5,4:1,6:8 standing 60 population 130309 shunned 1
-p5-monsters-high-1024 S outposts 10 ended 6 bold 8 monster_flares 0
+p5-monsters-high-1024 table beast_population 727 2bbe4e9cbef5593c0f53b3f6fbd75b2ec5c37538f0edadf10a03eb4539726286
+p5-monsters-high-1024 table monster 13 78b5ffc7f51fc9bcd97fa26026e8399705881b4d92ab9321818dc1e34a76f9da
+p5-monsters-high-1024 table site 32 0664e39bf7c31bb3ad093b6bfccd66b93cc490f999bd6200205c6f5d213998d7
+p5-monsters-high-1024 ending 2170e6092bc0fb71e511296d418b791b5cef3c9c21974a71922e4d7eac41512c
+p5-monsters-high-1024 M monsters 13 alive 2 slain 7 died 4 raids 61 killed 5115 overruns 6 risen 6 lair_settlement_open 1
+p5-monsters-high-1024 G ghost 0 endings 0:82,1:7,2:6,6:1 standing 82 population 179719 shunned 1
+p5-monsters-high-1024 S outposts 8 ended 4 bold 5 monster_flares 0
 p5-monsters-high-1024 m1 troll 4 born 275 e8 died 2265 hoard 0 | Sneeskriz Stonehide | lair The Den of Sneeskriz
 p5-monsters-high-1024 m2 ogre 4 born 800 e11 died 1800 hoard 0 | Duurk'gro the Gaunt | lair The Pit of Duurk'gro
-p5-monsters-high-1024 m3 wyvern 4 born 2149 e47 died 3140 hoard 0 | The Brood of Dribgreegg | lair Dribgreegg's Crag
-p5-monsters-high-1024 m4 wyvern 3 born 2390 e63 died 2687 hoard 0 | The Nukskrog Brood | lair Nukskrog's Crag
-p5-monsters-high-1024 m5 troll 3 born 3065 e108 died 3277 hoard 241 | Mossback Grax | lair The Den of Grax
-p5-monsters-high-1024 m6 troll 3 born 3665 e185 died 4273 hoard 59 | Old Girk-Gneerk | lair The Den of Girk-Gneerk
-p5-monsters-high-1024 m7 troll 3 born 3790 e244 died 4333 hoard 26 | Skeekskink the Grey | lair Skeekskink's Hollow
-p5-monsters-high-1024 m8 troll 3 born 5677 e506 died 5686 hoard 31 | Snunark of the Fells | lair Snunark's Hollow
-p5-monsters-high-1024 m9 undead 2 born 5923 e614 died - hoard 0 | The Host of the Grove of Fords | lair The Howes of the Grove of Fords
-p5-monsters-high-1024 m10 undead 3 born 5936 e636 died 5972 hoard 0 | The Restless of the Windswept Plain | lair The Barrows of the Windswept Plain
+p5-monsters-high-1024 m3 wyvern 4 born 2149 e49 died 3140 hoard 0 | The Brood of Dribgreegg | lair Dribgreegg's Crag
+p5-monsters-high-1024 m4 wyvern 3 born 2390 e67 died 2701 hoard 0 | The Nukskrog Brood | lair Nukskrog's Crag
+p5-monsters-high-1024 m5 undead 3 born 2713 e101 died 3373 hoard 0 | The Restless of Wanetree Wood | lair The Howes of Wanetree Wood
+p5-monsters-high-1024 m6 undead 4 born 3440 e213 died 4426 hoard 0 | The Host of Southwest Steppe | lair The Barrows of Southwest Steppe
+p5-monsters-high-1024 m7 troll 3 born 3665 e262 died 4979 hoard 43 | Old Skeekskink | lair Skeekskink's Hollow
+p5-monsters-high-1024 m8 troll 3 born 3790 e269 died 4944 hoard 179 | Snunark the Grey | lair Snunark's Hollow
+p5-monsters-high-1024 m9 undead 3 born 5004 e579 died 5037 hoard 0 | The Dead of the Haunt of Skeekskink | lair The Barrows of the Haunt of Skeekskink
+p5-monsters-high-1024 m10 undead 3 born 5631 e677 died 5674 hoard 0 | The Host of the Haunt of Skeekskink | lair The Howes of the Haunt of Skeekskink II
+p5-monsters-high-1024 m11 troll 3 born 5677 e722 died 5708 hoard 64 | Mossback Drob-Neezz | lair The Den of Drob-Neezz
+p5-monsters-high-1024 m12 undead 2 born 5825 e818 died - hoard 0 | The Dead of the Steppe of the Crow | lair The Howes of the Steppe of the Crow
+p5-monsters-high-1024 m13 undead 2 born 5893 e861 died - hoard 0 | The Host of Illwood | lair The Barrows of Illwood
 p5-monsters-high-1024 si1 lair rg32 877 505 s0 c0 m1 275 e8 2265 2 | The Den of Sneeskriz
 p5-monsters-high-1024 si2 lair rg35 439 564 s0 c0 m2 800 e11 1800 2 | The Pit of Duurk'gro
-p5-monsters-high-1024 si3 lair rg22 871 374 s0 c0 m3 2149 e47 3140 2 | Dribgreegg's Crag
-p5-monsters-high-1024 si4 lair rg27 521 607 s0 c0 m4 2390 e63 2687 1 | Nukskrog's Crag
-p5-monsters-high-1024 si5 lair rg25 438 530 s0 c0 m5 3065 e108 3277 1 | The Den of Grax
-p5-monsters-high-1024 si6 outpost rg31 313 585 s0 c2 m0 3246 e114 4958 6 | The Spire of Socae
-p5-monsters-high-1024 si7 lair rg13 376 372 s0 c0 m6 3665 e185 3719 3 | Girk-Gneerk's Hollow
-p5-monsters-high-1024 si8 outpost rg35 439 564 s0 c3 m0 3716 e188 4759 4 | Skokrazz Stockade
-p5-monsters-high-1024 si9 lair rg6 497 199 s32 c0 m6 3719 e190 4273 1 | The Den of Girk-Gneerk
-p5-monsters-high-1024 si10 outpost rg39 336 662 s0 c3 m0 3746 e227 3748 4 | Snizz-Snogg Stockade
-p5-monsters-high-1024 si11 lair rg22 871 374 s0 c0 m7 3790 e244 4333 1 | Skeekskink's Hollow
-p5-monsters-high-1024 si12 outpost rg39 336 662 s0 c2 m0 4232 e262 4958 6 | The Spire of Ithaennglo
-p5-monsters-high-1024 si13 outpost rg18 871 373 s0 c5 m0 4786 e374 4989 6 | The Tower of Braidin
-p5-monsters-high-1024 si14 outpost rg43 454 715 s0 c3 m0 5653 e479 - 0 | Gnuslatch Lookout
-p5-monsters-high-1024 si15 lair rg11 558 313 s0 c0 m8 5677 e506 5679 3 | The Den of Snunark
-p5-monsters-high-1024 si16 lair rg11 575 250 s12 c0 m8 5679 e508 5686 1 | Snunark's Hollow
-p5-monsters-high-1024 si17 outpost rg46 456 722 s0 c9 m0 5813 e556 5818 4 | Urolduush Stockade
-p5-monsters-high-1024 si18 outpost rg36 536 606 s0 c9 m0 5816 e564 - 0 | Krurk'baaz Stockade
-p5-monsters-high-1024 si19 outpost rg42 601 736 s0 c8 m0 5821 e571 - 0 | Hord Watch
-p5-monsters-high-1024 si20 lair rg20 793 421 s0 c0 m9 5923 e614 5928 3 | The Barrows of the Grove of Fords
-p5-monsters-high-1024 si21 lair rg9 557 223 s30 c0 m9 5928 e629 - 0 | The Howes of the Grove of Fords
-p5-monsters-high-1024 si22 outpost rg41 715 689 s0 c8 m0 5928 e631 - 0 | Mint Tower
-p5-monsters-high-1024 si23 lair rg36 535 609 s0 c0 m10 5936 e636 5970 3 | The Howes of the Windswept Plain
-p5-monsters-high-1024 si24 lair rg36 634 657 s74 c0 m10 5970 e660 5972 1 | The Barrows of the Windswept Plain
+p5-monsters-high-1024 si3 lair rg22 871 374 s0 c0 m3 2149 e49 3140 2 | Dribgreegg's Crag
+p5-monsters-high-1024 si4 lair rg27 521 607 s0 c0 m4 2390 e67 2701 1 | Nukskrog's Crag
+p5-monsters-high-1024 si5 outpost rg31 313 585 s0 c2 m0 2691 e81 2696 4 | Isvies Watch
+p5-monsters-high-1024 si6 lair rg31 213 539 s0 c0 m5 2713 e101 2729 3 | The Barrows of Wanetree Wood
+p5-monsters-high-1024 si7 lair rg28 215 471 s3 c0 m5 2729 e109 3373 1 | The Howes of Wanetree Wood
+p5-monsters-high-1024 si8 outpost rg18 871 372 s41 c5 m0 3341 e165 - 0 | The Delvings of Thornthrai Deep
+p5-monsters-high-1024 si9 outpost rg21 374 375 s0 c4 m0 3346 e171 - 0 | Krunk-Nazz Stockade
+p5-monsters-high-1024 si10 lair rg35 439 564 s0 c0 m6 3440 e213 3447 3 | The Howes of Southwest Steppe
+p5-monsters-high-1024 si11 lair rg43 393 702 s15 c0 m6 3447 e218 4426 2 | The Barrows of Southwest Steppe
+p5-monsters-high-1024 si12 outpost rg36 536 606 s42 c6 m0 3465 e226 - 0 | The Delvings of Hairnbodin Hold
+p5-monsters-high-1024 si13 lair rg13 376 372 s0 c0 m7 3665 e262 4963 3 | The Den of Skeekskink
+p5-monsters-high-1024 si14 lair rg22 871 374 s0 c0 m8 3790 e269 4944 1 | Snunark's Hollow
+p5-monsters-high-1024 si15 outpost rg28 255 482 s0 c2 m0 3949 e286 - 0 | The Spire of Moevae
+p5-monsters-high-1024 si16 outpost rg45 370 724 s0 c4 m0 3968 e313 4190 6 | Skeegg Stockade
+p5-monsters-high-1024 si17 outpost rg43 454 715 s0 c4 m0 4352 e426 4576 6 | Kik Stockade
+p5-monsters-high-1024 si18 outpost rg22 875 434 s58 c5 m0 4376 e455 - 0 | The Delvings of Dornbu
+p5-monsters-high-1024 si19 outpost rg15 902 385 s59 c5 m0 4426 e463 - 0 | The Mines of Brurk
+p5-monsters-high-1024 si20 outpost rg23 203 374 s0 c4 m0 4827 e493 - 0 | Gnok Stockade
+p5-monsters-high-1024 si21 lair rg8 500 257 s62 c0 m7 4963 e558 4979 1 | Skeekskink's Hollow
+p5-monsters-high-1024 si22 lair rg8 479 261 s0 c0 m9 5004 e579 5037 1 | The Barrows of the Haunt of Skeekskink
+p5-monsters-high-1024 si23 lair rg8 479 261 s0 c0 m10 5631 e677 5641 3 | The Howes of the Haunt of Skeekskink
+p5-monsters-high-1024 si24 lair rg11 519 284 s79 c0 m10 5641 e691 5674 1 | The Howes of the Haunt of Skeekskink II
+p5-monsters-high-1024 si25 lair rg11 558 313 s0 c0 m11 5677 e722 5683 3 | Drob-Neezz's Hollow
+p5-monsters-high-1024 si26 lair rg9 662 261 s46 c0 m11 5683 e732 5708 1 | The Den of Drob-Neezz
+p5-monsters-high-1024 si27 lair rg42 555 796 s0 c0 m12 5825 e818 5848 3 | The Barrows of the Steppe of the Crow
+p5-monsters-high-1024 si28 lair rg42 630 715 s91 c0 m12 5848 e827 - 0 | The Howes of the Steppe of the Crow
+p5-monsters-high-1024 si29 outpost rg25 334 528 s38 c6 m0 5892 e860 - 0 | The Mines of Grunk Hole
+p5-monsters-high-1024 si30 lair rg25 438 530 s0 c0 m13 5893 e861 - 0 | The Barrows of Illwood
+p5-monsters-high-1024 si31 outpost rg33 579 556 s0 c8 m0 5967 e902 5974 4 | Asheld Watch
+p5-monsters-high-1024 si32 outpost rg36 535 609 s0 c6 m0 5999 e936 - 0 | The Tower of Thirinka
 fixture monsters-small-0 0 2000 all auto normal monsters-small
-monsters-small-0 table beast_population 92 c94c203927dc2671226dd40bf4b81ef0d2f7aed621d12c52a2875b7a1848d549
-monsters-small-0 table monster 17 5b76f0416f13e6bb4b2669d158aa36a75cebedc5ebc6d1888252be47bdff8482
-monsters-small-0 table site 22 f25cd8fc4cb4b98c966f11c2b715c9859dd887d822b7a64d65962c61c6029f7b
-monsters-small-0 ending 26f04f336e6734a258e078db2239f2ddc8994b632000dab2a2ada91a3597336f
-monsters-small-0 M monsters 17 alive 11 slain 1 died 5 raids 109 killed 2677 overruns 5 risen 0 lair_settlement_open 4
-monsters-small-0 G ghost 0 endings 0:7,1:1,2:5,6:2 standing 7 population 6989 shunned 4
-monsters-small-0 S outposts 0 ended 0 bold 0 monster_flares 1
+monsters-small-0 table beast_population 90 ceb35c2ebf10ba3295c1e306ba34fa18fd87388906a275082f9127361bf6f175
+monsters-small-0 table monster 18 b0503f5f740f30619a6bc65cc46bf21fb85d5e0cfbf102e2c98e8022d6695326
+monsters-small-0 table site 27 80ad2fd57dea0a4069989e5066c57af923f9220bf3efe6e2fb15ce6dd54df1a5
+monsters-small-0 ending fe7550f59f8d78bc953236685dbc33875340955c31440ff0c636557aa5480b31
+monsters-small-0 M monsters 18 alive 11 slain 2 died 5 raids 111 killed 2679 overruns 5 risen 0 lair_settlement_open 4
+monsters-small-0 G ghost 0 endings 0:8,1:2,2:5,6:2 standing 8 population 6941 shunned 4
+monsters-small-0 S outposts 2 ended 0 bold 0 monster_flares 1
 monsters-small-0 m1 wyvern 4 born 1 e4 died 998 hoard 0 | The Nog-Nak Brood | lair The Eyrie of Nog-Nak
 monsters-small-0 m2 wyvern 4 born 13 e6 died 998 hoard 0 | The Brood of Zirk | lair The Eyrie of Zirk
 monsters-small-0 m3 ogre 4 born 16 e8 died 998 hoard 0 | Uuz'thuugh the Glutton | lair The Pit of Uuz'thuugh
 monsters-small-0 m4 troll 2 born 17 e9 died - hoard 12 | Greeb Stonehide | lair The Den of Greeb
 monsters-small-0 m5 troll 2 born 41 e19 died - hoard 26 | Zunk of the Fells | lair Zunk's Hollow
 monsters-small-0 m6 troll 2 born 49 e23 died - hoard 0 | Mossback Neezz | lair The Den of Neezz
-monsters-small-0 m7 dragon 2 born 50 e24 died - hoard 21 | Vaenoithae the Red | lair Vaenoithae's Deep
+monsters-small-0 m7 dragon 2 born 50 e24 died - hoard 8 | Vaenoithae the Red | lair Vaenoithae's Deep
 monsters-small-0 m8 ogre 4 born 77 e27 died 1073 hoard 3 | Grurk the Gaunt | lair The Pit of Grurk
 monsters-small-0 m9 ogre 4 born 92 e33 died 1092 hoard 0 | Azaal | lair The Pit of Azaal
 monsters-small-0 m10 wyvern 3 born 1023 e101 died 1419 hoard 0 | The Screamers of Skub-Slux | lair Skub-Slux's Crag
 monsters-small-0 m11 ogre 2 born 1073 e104 died - hoard 0 | Uguurz Bonebreaker | lair The Pit of Uguurz
 monsters-small-0 m12 ogre 2 born 1102 e125 died - hoard 2 | Bul the Fat | lair Bul's Larder
-monsters-small-0 m13 wyvern 2 born 1113 e134 died - hoard 0 | The Skrarkkrab Brood | lair The Eyrie of Skrarkkrab
-monsters-small-0 m14 ogre 2 born 1263 e152 died - hoard 0 | Maghgraarz the Hungering | lair Maghgraarz's Larder
-monsters-small-0 m15 giant 2 born 1441 e176 died - hoard 137 | Doktou the Tall | lair The Hall of Doktou
-monsters-small-0 m16 wyvern 2 born 1467 e178 died - hoard 0 | The Screamers of Grutslok | lair The Eyrie of Grutslok
-monsters-small-0 m17 giant 2 born 1852 e270 died - hoard 12 | Gimmgidin Cliffbreaker | lair Gimmgidin's Seat
+monsters-small-0 m13 wyvern 3 born 1113 e134 died 1912 hoard 0 | The Skrarkkrab Brood | lair The Eyrie of Skrarkkrab
+monsters-small-0 m14 ogre 2 born 1263 e155 died - hoard 0 | Maghgraarz the Hungering | lair Maghgraarz's Larder
+monsters-small-0 m15 giant 2 born 1441 e180 died - hoard 142 | Doktou the Tall | lair The Hall of Doktou
+monsters-small-0 m16 wyvern 2 born 1467 e182 died - hoard 0 | The Screamers of Grutslok | lair The Eyrie of Grutslok
+monsters-small-0 m17 giant 2 born 1852 e285 died - hoard 12 | Gimmgidin Cliffbreaker | lair Gimmgidin's Seat
+monsters-small-0 m18 wyvern 2 born 1930 e394 died - hoard 0 | The Krirkgnork Brood | lair The Eyrie of Krirkgnork
 monsters-small-0 si1 lair rg18 88 123 s0 c0 m1 1 e4 998 2 | The Eyrie of Nog-Nak
 monsters-small-0 si2 lair rg25 161 173 s0 c0 m2 13 e6 998 2 | The Eyrie of Zirk
 monsters-small-0 si3 lair rg13 90 111 s0 c0 m3 16 e8 998 2 | The Pit of Uuz'thuugh
@@ -411,80 +472,87 @@ monsters-small-0 si11 lair rg25 161 173 s0 c0 m10 1023 e101 1419 1 | Skub-Slux's
 monsters-small-0 si12 lair rg16 32 142 s0 c0 m11 1073 e104 - 0 | The Pit of Uguurz
 monsters-small-0 si13 lair rg13 90 111 s0 c0 m12 1102 e125 1113 3 | The Pit of Bul
 monsters-small-0 si14 lair rg14 155 76 s6 c0 m12 1113 e133 - 0 | Bul's Larder
-monsters-small-0 si15 lair rg15 165 99 s0 c0 m13 1113 e134 - 0 | The Eyrie of Skrarkkrab
-monsters-small-0 si16 lair rg6 22 47 s0 c0 m14 1263 e152 - 0 | Maghgraarz's Larder
-monsters-small-0 si17 lair rg24 127 155 s0 c0 m15 1441 e176 1844 3 | Doktou's Seat
-monsters-small-0 si18 lair rg18 88 123 s0 c0 m16 1467 e178 1863 3 | Grutslok's Crag
-monsters-small-0 si19 lair rg25 164 186 s13 c0 m15 1844 e242 - 0 | The Hall of Doktou
-monsters-small-0 si20 lair rg13 90 111 s0 c0 m17 1852 e270 - 0 | Gimmgidin's Seat
-monsters-small-0 si21 lair rg20 186 136 s15 c0 m16 1863 e277 - 0 | The Eyrie of Grutslok
-monsters-small-0 si22 lair rg10 190 68 s10 c0 m7 1984 e343 - 0 | Vaenoithae's Deep
+monsters-small-0 si15 lair rg15 165 99 s0 c0 m13 1113 e134 1912 1 | The Eyrie of Skrarkkrab
+monsters-small-0 si16 outpost rg5 161 7 s5 c3 m0 1138 e151 - 0 | The Delvings of Gromka
+monsters-small-0 si17 lair rg6 22 47 s0 c0 m14 1263 e155 - 0 | Maghgraarz's Larder
+monsters-small-0 si18 lair rg24 127 155 s0 c0 m15 1441 e180 1844 3 | Doktou's Seat
+monsters-small-0 si19 lair rg18 88 123 s0 c0 m16 1467 e182 1863 3 | Grutslok's Crag
+monsters-small-0 si20 outpost rg10 190 68 s10 c3 m0 1718 e243 1869 4 | The Delvings of Nodin
+monsters-small-0 si21 lair rg25 164 186 s13 c0 m15 1844 e257 - 0 | The Hall of Doktou
+monsters-small-0 si22 lair rg13 90 111 s0 c0 m17 1852 e285 - 0 | Gimmgidin's Seat
+monsters-small-0 si23 lair rg20 186 136 s15 c0 m16 1863 e294 - 0 | The Eyrie of Grutslok
+monsters-small-0 si24 lair rg18 88 123 s0 c0 m18 1930 e394 - 0 | The Eyrie of Krirkgnork
+monsters-small-0 si25 outpost rg4 132 4 s0 c5 m0 1981 e415 - 0 | Mord Watch
+monsters-small-0 si26 outpost rg5 161 20 s0 c3 m0 1982 e419 - 0 | The Tower of Mirindou
+monsters-small-0 si27 lair rg4 125 36 s16 c0 m7 1984 e425 - 0 | Vaenoithae's Deep
 fixture monsters-small-1 1 6000 all auto turbulent monsters-small
 monsters-small-1 table beast_population 18 dfd6c8067988dead532f7192d43e545bc15b96503bf96353f8558cef2952aa22
-monsters-small-1 table monster 6 8da4b5bc893aa6831bae3641dfce1eac59bf73dba710976a6174cff093707f39
-monsters-small-1 table site 7 7d7b4e83ce65be919219ccc3c8fe3c0e4f20aa4288263962416e1272082892dc
+monsters-small-1 table monster 6 5fffc66c60ac3b602b5952791589c3c86e509cb75ef3f749dba3ec8ffff37c87
+monsters-small-1 table site 7 c00b2adf29aead2309c959210cd3dc5b74de16cd4751f551ceeda6c36a71ffdc
 monsters-small-1 ending 72aab6c7b6be5a790dfffc9a04a5c3231a71999fb4a6e97897223433948139fe
-monsters-small-1 M monsters 6 alive 1 slain 1 died 4 raids 22 killed 697 overruns 1 risen 0 lair_settlement_open 1
-monsters-small-1 G ghost 0 endings 0:6,2:1,6:2 standing 6 population 19127 shunned 1
+monsters-small-1 M monsters 6 alive 1 slain 1 died 4 raids 22 killed 693 overruns 1 risen 0 lair_settlement_open 1
+monsters-small-1 G ghost 0 endings 0:6,2:1,6:2 standing 6 population 19121 shunned 1
 monsters-small-1 S outposts 0 ended 0 bold 0 monster_flares 0
 monsters-small-1 m1 wyvern 4 born 5 e4 died 1000 hoard 0 | The Zug Brood | lair The Eyrie of Zug
 monsters-small-1 m2 ogre 4 born 1000 e10 died 2000 hoard 0 | Momthaakh the Gaunt | lair The Pit of Momthaakh
 monsters-small-1 m3 wyvern 4 born 2025 e15 died 3021 hoard 0 | The Brood of Zut | lair Zut's Crag
 monsters-small-1 m4 ogre 3 born 3046 e157 died 3358 hoard 8 | Ark'ghuukh Bonebreaker | lair Ark'ghuukh's Larder
 monsters-small-1 m5 ogre 4 born 3440 e231 died 4428 hoard 16 | Ag'thaark the Glutton | lair Ag'thaark's Larder
-monsters-small-1 m6 troll 2 born 4478 e363 died - hoard 25 | Gisnut | lair Gisnut's Hollow
+monsters-small-1 m6 troll 2 born 4478 e373 died - hoard 24 | Gisnut | lair Gisnut's Hollow
 monsters-small-1 si1 lair rg1 141 57 s0 c0 m1 5 e4 1000 2 | The Eyrie of Zug
 monsters-small-1 si2 lair rg1 141 57 s0 c0 m2 1000 e10 2000 2 | The Pit of Momthaakh
 monsters-small-1 si3 lair rg1 141 57 s0 c0 m3 2025 e15 3021 2 | Zut's Crag
 monsters-small-1 si4 lair rg1 141 57 s0 c0 m4 3046 e157 3358 1 | Ark'ghuukh's Larder
 monsters-small-1 si5 lair rg1 141 57 s0 c0 m5 3440 e231 4428 2 | Ag'thaark's Larder
-monsters-small-1 si6 lair rg1 141 57 s0 c0 m6 4478 e363 4934 3 | The Den of Gisnut
-monsters-small-1 si7 lair rg1 74 17 s4 c0 m6 4934 e369 - 0 | Gisnut's Hollow
+monsters-small-1 si6 lair rg1 141 57 s0 c0 m6 4478 e373 4934 3 | The Den of Gisnut
+monsters-small-1 si7 lair rg1 74 17 s4 c0 m6 4934 e383 - 0 | Gisnut's Hollow
 fixture monsters-small-2 2 2000 elf,goblin auto calm monsters-small
-monsters-small-2 table beast_population 108 36746a00e2b6c5e996cba17f6ba856663babe5ca984eec9b99433a7e3bccb74d
-monsters-small-2 table monster 15 0388d7fd7019d28a30ebd39a0c766cb62cadd06aaf73e8be42017f2f528a3008
-monsters-small-2 table site 22 ebb4acc3f0ed4d84310e49d01316e07a0a75c041d991bc5565e9ecadb6455109
-monsters-small-2 ending 77710f19620b4c99bfd35eb5a52833e8fa7fa8f485c2b2dbaa4a4831394592aa
-monsters-small-2 M monsters 15 alive 6 slain 5 died 4 raids 115 killed 5248 overruns 4 risen 0 lair_settlement_open 2
-monsters-small-2 G ghost 0 endings 0:8,1:5,2:4,6:2 standing 8 population 16471 shunned 2
-monsters-small-2 S outposts 3 ended 1 bold 0 monster_flares 0
+monsters-small-2 table beast_population 120 65f1346e7b9b0cc67b1b8814f06cf51e973be09100fc88959917fa4d68332aad
+monsters-small-2 table monster 17 a95845f91226bb3be32aebf92015fe7a006cadbe5dadceb58ce333b17d1ba718
+monsters-small-2 table site 22 96a7ff32b0da922bf33f08256258a45b8ab03f3245bb3c6bae714f5b8a546773
+monsters-small-2 ending 2b4d3f23a814ad616271a8901a817b64a1b87690ad7b0402fbaf174382b2b98a
+monsters-small-2 M monsters 17 alive 7 slain 6 died 4 raids 126 killed 4332 overruns 2 risen 0 lair_settlement_open 1
+monsters-small-2 G ghost 0 endings 0:8,1:8,2:2,6:2 standing 8 population 16921 shunned 1
+monsters-small-2 S outposts 3 ended 3 bold 0 monster_flares 0
 monsters-small-2 m1 ogre 3 born 6 e6 died 11 hoard 0 | Zuum'zuuld the Fat | lair The Pit of Zuum'zuuld
-monsters-small-2 m2 ogre 4 born 10 e8 died 993 hoard 37 | Ghokh the Glutton | lair Ghokh's Larder
-monsters-small-2 m3 troll 3 born 21 e14 died 1644 hoard 111 | Skrixskruz | lair The Den of Skrixskruz
+monsters-small-2 m2 ogre 4 born 10 e8 died 993 hoard 0 | Ghokh the Glutton | lair Ghokh's Larder
+monsters-small-2 m3 troll 2 born 21 e14 died - hoard 6 | Skrixskruz | lair Skrixskruz's Hollow
 monsters-small-2 m4 ogre 4 born 22 e15 died 1018 hoard 15 | Azoz'urash the Hungering | lair The Pit of Azoz'urash
-monsters-small-2 m5 ogre 4 born 24 e17 died 1018 hoard 17 | Uld'gruuld Bonebreaker | lair The Pit of Uld'gruuld
-monsters-small-2 m6 troll 2 born 35 e26 died - hoard 28 | Mossback Nax | lair Nax's Hollow
-monsters-small-2 m7 wyvern 4 born 100 e42 died 1093 hoard 0 | The Screamers of Slakik | lair Slakik's Crag
-monsters-small-2 m8 troll 3 born 918 e124 died 1912 hoard 70 | Gnark of the Fells | lair Gnark's Hollow
-monsters-small-2 m9 ogre 3 born 1018 e134 died 1407 hoard 7 | Urash | lair The Pit of Urash
-monsters-small-2 m10 ogre 2 born 1093 e136 died - hoard 14 | Kraal the Gaunt | lair Kraal's Larder
-monsters-small-2 m11 wyvern 1 born 1218 e138 died - hoard 0 | The Brood of Krozigg | lair Krozigg's Crag
-monsters-small-2 m12 ogre 2 born 1410 e186 died - hoard 14 | Uguu | lair Uguu's Larder
-monsters-small-2 m13 ogre 1 born 1610 e190 died - hoard 5 | Makh | lair The Pit of Makh
-monsters-small-2 m14 wyvern 3 born 1649 e224 died 1681 hoard 0 | The Slogg Brood | lair The Eyrie of Slogg
-monsters-small-2 m15 dragon 2 born 1721 e256 died - hoard 490 | Mavethi the Red | lair Mavethi's Deep
+monsters-small-2 m5 ogre 4 born 24 e17 died 1018 hoard 0 | Uld'gruuld Bonebreaker | lair The Pit of Uld'gruuld
+monsters-small-2 m6 troll 3 born 35 e27 died 1912 hoard 53 | Mossback Nax | lair The Den of Nax
+monsters-small-2 m7 wyvern 4 born 100 e43 died 1093 hoard 0 | The Screamers of Slakik | lair Slakik's Crag
+monsters-small-2 m8 ogre 3 born 1018 e149 died 1418 hoard 7 | Uukh'tho | lair The Pit of Uukh'tho
+monsters-small-2 m9 ogre 3 born 1093 e151 died 1423 hoard 5 | Urash | lair The Pit of Urash
+monsters-small-2 m10 troll 3 born 1193 e153 died 1307 hoard 10 | Old Skeeznork | lair The Den of Skeeznork
+monsters-small-2 m11 ogre 1 born 1268 e158 died - hoard 47 | Zarz the Gaunt | lair The Pit of Zarz
+monsters-small-2 m12 troll 3 born 1360 e205 died 1929 hoard 162 | Bognagg | lair The Den of Bognagg
+monsters-small-2 m13 ogre 1 born 1477 e254 died - hoard 48 | Makh | lair Makh's Larder
+monsters-small-2 m14 ogre 2 born 1527 e256 died - hoard 0 | Orz'zo | lair The Pit of Orz'zo
+monsters-small-2 m15 wyvern 2 born 1796 e315 died - hoard 0 | The Brood of Gnugrib | lair Gnugrib's Crag
+monsters-small-2 m16 troll 2 born 1934 e418 died - hoard 2 | Slank Stonehide | lair The Den of Slank
+monsters-small-2 m17 troll 2 born 1939 e422 died - hoard 9 | Krig | lair The Den of Krig
 monsters-small-2 si1 lair rg5 11 112 s0 c0 m1 6 e6 11 1 | The Pit of Zuum'zuuld
 monsters-small-2 si2 lair rg3 12 57 s0 c0 m2 10 e8 993 2 | Ghokh's Larder
-monsters-small-2 si3 lair rg4 131 91 s0 c0 m3 21 e14 1394 3 | Skrixskruz's Hollow
+monsters-small-2 si3 lair rg4 131 91 s0 c0 m3 21 e14 - 0 | Skrixskruz's Hollow
 monsters-small-2 si4 lair rg8 107 177 s0 c0 m4 22 e15 1018 2 | The Pit of Azoz'urash
 monsters-small-2 si5 lair rg6 191 144 s0 c0 m5 24 e17 1018 2 | The Pit of Uld'gruuld
-monsters-small-2 si6 lair rg5 11 112 s0 c0 m6 35 e26 - 0 | Nax's Hollow
-monsters-small-2 si7 lair rg2 191 18 s0 c0 m7 100 e42 1093 2 | Slakik's Crag
-monsters-small-2 si8 lair rg1 64 45 s0 c0 m8 918 e124 1405 3 | The Den of Gnark
-monsters-small-2 si9 lair rg3 12 57 s0 c0 m9 1018 e134 1407 1 | The Pit of Urash
-monsters-small-2 si10 lair rg8 107 177 s0 c0 m10 1093 e136 1393 3 | The Pit of Kraal
-monsters-small-2 si11 lair rg2 191 18 s0 c0 m11 1218 e138 - 0 | Krozigg's Crag
-monsters-small-2 si12 lair rg7 62 148 s14 c0 m10 1393 e155 - 0 | Kraal's Larder
-monsters-small-2 si13 lair rg4 156 61 s7 c0 m3 1394 e158 1644 1 | The Den of Skrixskruz
-monsters-small-2 si14 lair rg1 77 28 s13 c0 m8 1405 e181 1912 1 | Gnark's Hollow
-monsters-small-2 si15 lair rg3 12 57 s0 c0 m12 1410 e186 - 0 | Uguu's Larder
-monsters-small-2 si16 lair rg8 107 177 s0 c0 m13 1610 e190 - 0 | The Pit of Makh
-monsters-small-2 si17 lair rg4 131 91 s0 c0 m14 1649 e224 1681 1 | The Eyrie of Slogg
-monsters-small-2 si18 outpost rg1 9 14 s0 c4 m0 1720 e255 - 0 | Gak Lookout
-monsters-small-2 si19 lair rg4 131 91 s0 c0 m15 1721 e256 1903 3 | The Lair of Mavethi
-monsters-small-2 si20 outpost rg4 129 65 s0 c3 m0 1837 e298 - 0 | Zokkrok Stockade
-monsters-small-2 si21 outpost rg2 189 8 s0 c5 m0 1841 e316 1957 5 | Nagg Stockade
-monsters-small-2 si22 lair rg4 170 96 s19 c0 m15 1903 e369 - 0 | Mavethi's Deep
+monsters-small-2 si6 lair rg5 11 112 s0 c0 m6 35 e27 1795 3 | Nax's Hollow
+monsters-small-2 si7 lair rg2 191 18 s0 c0 m7 100 e43 1093 2 | Slakik's Crag
+monsters-small-2 si8 outpost rg2 189 8 s0 c3 m0 931 e128 1143 6 | Gnurk-Krozz Stockade
+monsters-small-2 si9 lair rg3 12 57 s0 c0 m8 1018 e149 1418 1 | The Pit of Uukh'tho
+monsters-small-2 si10 lair rg8 107 177 s0 c0 m9 1093 e151 1423 1 | The Pit of Urash
+monsters-small-2 si11 lair rg2 191 18 s0 c0 m10 1193 e153 1307 1 | The Den of Skeeznork
+monsters-small-2 si12 lair rg1 64 45 s0 c0 m11 1268 e158 - 0 | The Pit of Zarz
+monsters-small-2 si13 lair rg2 191 18 s0 c0 m12 1360 e205 1929 1 | The Den of Bognagg
+monsters-small-2 si14 outpost rg2 189 8 s0 c3 m0 1418 e230 1423 4 | Kreerk Stockade
+monsters-small-2 si15 outpost rg1 9 14 s0 c4 m0 1418 e231 1627 6 | Bik Stockade
+monsters-small-2 si16 lair rg3 12 57 s0 c0 m13 1477 e254 - 0 | Makh's Larder
+monsters-small-2 si17 lair rg8 107 177 s0 c0 m14 1527 e256 - 0 | The Pit of Orz'zo
+monsters-small-2 si18 lair rg7 83 183 s19 c0 m6 1795 e312 1912 1 | The Den of Nax
+monsters-small-2 si19 lair rg5 11 112 s0 c0 m15 1796 e315 1921 3 | The Eyrie of Gnugrib
+monsters-small-2 si20 lair rg7 62 148 s18 c0 m15 1921 e400 - 0 | Gnugrib's Crag
+monsters-small-2 si21 lair rg5 11 112 s0 c0 m16 1934 e418 - 0 | The Den of Slank
+monsters-small-2 si22 lair rg2 191 18 s0 c0 m17 1939 e422 - 0 | The Den of Krig
 fixture monsters-small-3 3 6000 elf,goblin auto normal monsters-small
 monsters-small-3 table beast_population 57 0f9215e5d8334c962103bdfa017f71b80cd42f720f84e64567e798668fc39a95
 monsters-small-3 table monster 48 08211e6c3a563ad52b7c2bd9ea150ab282356dd635a7659411da6a222a15b5ad
@@ -591,169 +659,163 @@ monsters-small-3 si47 lair rg10 175 61 s0 c0 m46 5297 e180 - 0 | The Hall of Gir
 monsters-small-3 si48 lair rg12 70 115 s0 c0 m47 5336 e182 - 0 | Zodraz's Hollow
 monsters-small-3 si49 lair rg25 173 181 s0 c0 m48 5397 e199 - 0 | Kragkeezz's Crag
 fixture monsters-small-5 5 6000 goblin,human,orc 4 calm monsters-small
-monsters-small-5 table beast_population 102 34772a0b83b2ea3f13b98906f4fcd8643935b1887d1c65d825508b615fca1f3d
-monsters-small-5 table monster 62 e259672a18659e9b148b6160b329acae76bfff223027d03643542d1ec3bd28b3
-monsters-small-5 table site 63 6e933bb510de898636e879d90905427c22f5912d23caaa2853f62aec57ae910b
-monsters-small-5 ending 6912ba020506025e496104a15eb63fd70dc9d2f0fd024d16373d4fa3d8ef46de
-monsters-small-5 M monsters 62 alive 10 slain 20 died 32 raids 402 killed 16840 overruns 1 risen 0 lair_settlement_open 0
-monsters-small-5 G ghost 0 endings 0:8,1:6,2:1,6:6 standing 8 population 10362 shunned 0
-monsters-small-5 S outposts 0 ended 0 bold 0 monster_flares 3
-monsters-small-5 m1 troll 4 born 0 e10 died 2000 hoard 23 | Skanix of the Fells | lair Skanix's Hollow
+monsters-small-5 table beast_population 134 9f831e1c7a8a0a934703688c78e38aecd7a0f807934d2df10ce913e49b19b72b
+monsters-small-5 table monster 54 4e84a940d88369cafe8378ab5a194453a56185b9728eb2245fd77cf73523e070
+monsters-small-5 table site 62 298566c6c50b94b9b710a7e4898292cc17ded6a3f349141ae574068470574768
+monsters-small-5 ending 1da0ea82fc26ac6d1ef21183c26953130e3b4fdf3f6f7205092f35d381563fb1
+monsters-small-5 M monsters 54 alive 11 slain 12 died 31 raids 466 killed 20749 overruns 4 risen 0 lair_settlement_open 1
+monsters-small-5 G ghost 0 endings 0:8,1:6,2:4,6:6 standing 8 population 10200 shunned 1
+monsters-small-5 S outposts 4 ended 4 bold 0 monster_flares 5
+monsters-small-5 m1 troll 4 born 0 e10 died 2000 hoard 94 | Skanix of the Fells | lair The Den of Skanix
 monsters-small-5 m2 wyvern 4 born 1 e11 died 1000 hoard 0 | The Screamers of Kotslitch | lair The Eyrie of Kotslitch
-monsters-small-5 m3 giant 4 born 3 e13 died 2500 hoard 0 | Burnbud Stonehand | lair The Hall of Burnbud
-monsters-small-5 m4 ogre 4 born 8 e18 died 1000 hoard 2 | Ghorz'krark the Gaunt | lair The Pit of Ghorz'krark
-monsters-small-5 m5 troll 4 born 9 e20 died 2000 hoard 15 | Old Gnasneeb | lair The Den of Gnasneeb
-monsters-small-5 m6 giant 4 born 30 e30 died 2530 hoard 9 | Hakda the Grey | lair Hakda's Seat
-monsters-small-5 m7 ogre 4 born 32 e31 died 1025 hoard 0 | Daashgrokh Bonebreaker | lair Daashgrokh's Larder
-monsters-small-5 m8 dragon 2 born 35 e33 died - hoard 70 | Thievo the Black | lair Thievo's Deep
-monsters-small-5 m9 ogre 4 born 48 e45 died 1025 hoard 4 | Uuz'uguul | lair The Pit of Uuz'uguul
+monsters-small-5 m3 giant 4 born 3 e13 died 2500 hoard 496 | Burnbud Stonehand | lair The Hall of Burnbud
+monsters-small-5 m4 ogre 4 born 8 e18 died 1000 hoard 11 | Ghorz'krark the Gaunt | lair The Pit of Ghorz'krark
+monsters-small-5 m5 troll 4 born 9 e20 died 2000 hoard 49 | Old Gnasneeb | lair The Den of Gnasneeb
+monsters-small-5 m6 giant 3 born 30 e30 died 595 hoard 9 | Hakda the Grey | lair Hakda's Seat
+monsters-small-5 m7 ogre 3 born 32 e31 died 763 hoard 25 | Daashgrokh Bonebreaker | lair Daashgrokh's Larder
+monsters-small-5 m8 dragon 2 born 35 e33 died - hoard 123 | Thievo the Black | lair Thievo's Deep
+monsters-small-5 m9 ogre 4 born 48 e45 died 1048 hoard 47 | Uuz'uguul | lair The Pit of Uuz'uguul
 monsters-small-5 m10 troll 4 born 104 e88 died 2100 hoard 0 | Mossback Skrax | lair Skrax's Hollow
 monsters-small-5 m11 wyvern 4 born 250 e132 died 1250 hoard 0 | The Kreegg Brood | lair The Eyrie of Kreegg
-monsters-small-5 m12 wyvern 4 born 1000 e277 died 2000 hoard 0 | The Brood of Slib | lair The Eyrie of Slib
-monsters-small-5 m13 ogre 3 born 1050 e280 died 1149 hoard 8 | Daam'durz the Glutton | lair The Pit of Daam'durz
-monsters-small-5 m14 ogre 4 born 1075 e281 died 2075 hoard 4 | Uguul the Fat | lair The Pit of Uguul
-monsters-small-5 m15 ogre 4 born 1174 e367 died 2150 hoard 9 | Ghukh | lair The Pit of Ghukh
-monsters-small-5 m16 ogre 4 born 1175 e368 died 2175 hoard 12 | Ghogh the Hungering | lair The Pit of Ghogh
-monsters-small-5 m17 wyvern 4 born 1675 e413 died 2675 hoard 0 | The Gubunk Brood | lair Gubunk's Crag
-monsters-small-5 m18 troll 4 born 2025 e417 died 4025 hoard 3 | Slog-Zeenk | lair The Den of Slog-Zeenk
-monsters-small-5 m19 ogre 3 born 2075 e420 died 2559 hoard 0 | Azaash | lair Azaash's Larder
-monsters-small-5 m20 troll 4 born 2100 e422 died 4100 hoard 0 | Drotsleerk Stonehide | lair Drotsleerk's Hollow
-monsters-small-5 m21 troll 4 born 2125 e423 died 4125 hoard 0 | Snux | lair Snux's Hollow
-monsters-small-5 m22 wyvern 4 born 2150 e425 died 3150 hoard 0 | The Brood of Sneezz | lair The Eyrie of Sneezz
-monsters-small-5 m23 ogre 3 born 2200 e427 died 2556 hoard 0 | Grol'ghuld | lair The Pit of Grol'ghuld
-monsters-small-5 m24 ogre 3 born 2250 e428 died 2544 hoard 10 | Shuugshaag | lair The Pit of Shuugshaag
-monsters-small-5 m25 giant 4 born 2500 e430 died 5000 hoard 192 | Toumni | lair Toumni's Seat
-monsters-small-5 m26 ogre 4 born 2550 e449 died 3550 hoard 1 | Uroshgroz | lair Uroshgroz's Larder
-monsters-small-5 m27 giant 4 born 2572 e472 died 5072 hoard 17 | Maidinni the Tall | lair Maidinni's Seat
-monsters-small-5 m28 ogre 4 born 2575 e477 died 3575 hoard 0 | Kraark'bold | lair Kraark'bold's Larder
-monsters-small-5 m29 ogre 4 born 2600 e479 died 3600 hoard 0 | Uruughzaag | lair The Pit of Uruughzaag
-monsters-small-5 m30 wyvern 4 born 2775 e482 died 3775 hoard 0 | The Brood of Neekruz | lair The Eyrie of Neekruz
-monsters-small-5 m31 wyvern 4 born 3250 e484 died 4250 hoard 0 | The Screamers of Zeenksnog | lair Zeenksnog's Crag
-monsters-small-5 m32 ogre 4 born 3550 e486 died 4550 hoard 0 | Ghaagh | lair Ghaagh's Larder
-monsters-small-5 m33 ogre 4 born 3725 e489 died 4725 hoard 0 | Duush | lair Duush's Larder
-monsters-small-5 m34 ogre 4 born 3775 e491 died 4775 hoard 0 | Aam'magh | lair Aam'magh's Larder
-monsters-small-5 m35 wyvern 4 born 3975 e492 died 4975 hoard 0 | The Brood of Zakoz | lair The Eyrie of Zakoz
-monsters-small-5 m36 troll 3 born 4075 e494 died 5751 hoard 40 | Kogrurk | lair Kogrurk's Hollow
-monsters-small-5 m37 troll 2 born 4125 e497 died - hoard 189 | Zugg-Sneerk | lair The Den of Zugg-Sneerk
-monsters-small-5 m38 troll 1 born 4150 e498 died - hoard 0 | Baggkuzz | lair Baggkuzz's Hollow
-monsters-small-5 m39 wyvern 4 born 4275 e500 died 5253 hoard 0 | The Brood of Zugneezz | lair The Eyrie of Zugneezz
-monsters-small-5 m40 ogre 3 born 4575 e502 died 5380 hoard 11 | Kaghmukh | lair Kaghmukh's Larder
-monsters-small-5 m41 ogre 3 born 4775 e505 died 5013 hoard 16 | Krurk | lair The Pit of Krurk
-monsters-small-5 m42 ogre 4 born 4825 e506 died 5825 hoard 113 | Uush'thum | lair The Pit of Uush'thum
-monsters-small-5 m43 wyvern 3 born 5050 e566 died 5820 hoard 0 | The Brood of Skreedrunk | lair Skreedrunk's Crag
-monsters-small-5 m44 ogre 3 born 5056 e573 died 5589 hoard 154 | Krald'daal | lair The Pit of Krald'daal
-monsters-small-5 m45 wyvern 1 born 5306 e679 died - hoard 0 | The Screamers of Gronk | lair Gronk's Crag
-monsters-small-5 m46 giant 2 born 5328 e696 died - hoard 68 | Hulidrurin | lair The Hall of Hulidrurin
-monsters-small-5 m47 ogre 3 born 5387 e774 died 5458 hoard 0 | Osh'dash | lair Osh'dash's Larder
-monsters-small-5 m48 giant 3 born 5403 e791 died 5680 hoard 189 | Gourbri | lair Gourbri's Seat
-monsters-small-5 m49 ogre 3 born 5527 e896 died 5559 hoard 12 | Shoshthuu | lair The Pit of Shoshthuu
-monsters-small-5 m50 ogre 3 born 5560 e932 died 5602 hoard 35 | Gru'urash | lair Gru'urash's Larder
-monsters-small-5 m51 ogre 3 born 5611 e1035 died 5897 hoard 44 | Baaghkaal | lair Baaghkaal's Larder
-monsters-small-5 m52 ogre 3 born 5616 e1038 died 5744 hoard 93 | Thu | lair Thu's Larder
-monsters-small-5 m53 ogre 2 born 5751 e1122 died - hoard 0 | Uurk'muuz | lair Uurk'muuz's Larder
-monsters-small-5 m54 giant 3 born 5787 e1137 died 5810 hoard 27 | Khaimm | lair The Hall of Khaimm
-monsters-small-5 m55 troll 3 born 5798 e1147 died 5841 hoard 9 | Skriskruz | lair Skriskruz's Hollow
-monsters-small-5 m56 troll 3 born 5849 e1185 died 5868 hoard 16 | Slizz | lair Slizz's Hollow
-monsters-small-5 m57 ogre 3 born 5865 e1191 died 5900 hoard 27 | Uush'uruugh | lair The Pit of Uush'uruugh
-monsters-small-5 m58 troll 2 born 5869 e1198 died - hoard 139 | Bobslot | lair Bobslot's Hollow
-monsters-small-5 m59 wyvern 3 born 5903 e1215 died 5924 hoard 0 | The Skrax Brood | lair Skrax's Crag
-monsters-small-5 m60 wyvern 1 born 5935 e1230 died - hoard 0 | The Screamers of Grodreeb | lair The Eyrie of Grodreeb
-monsters-small-5 m61 ogre 1 born 5958 e1237 died - hoard 0 | Arz'dokh | lair Arz'dokh's Larder
-monsters-small-5 m62 ogre 1 born 5995 e1244 died - hoard 0 | Uruurk | lair Uruurk's Larder
-monsters-small-5 si1 lair rg4 63 34 s0 c0 m1 0 e10 2000 2 | Skanix's Hollow
+monsters-small-5 m12 ogre 4 born 788 e360 died 1775 hoard 16 | Ugamkaagh the Hungering | lair The Pit of Ugamkaagh
+monsters-small-5 m13 giant 4 born 1000 e370 died 3500 hoard 0 | Braimbrar the Tall | lair Braimbrar's Seat
+monsters-small-5 m14 ogre 4 born 1035 e376 died 2025 hoard 0 | Uguul the Fat | lair The Pit of Uguul
+monsters-small-5 m15 wyvern 3 born 1040 e378 died 1042 hoard 0 | The Brood of Skonk | lair Skonk's Crag
+monsters-small-5 m16 ogre 3 born 1075 e402 died 1298 hoard 83 | Ghogh the Glutton | lair The Pit of Ghogh
+monsters-small-5 m17 wyvern 4 born 1136 e439 died 2125 hoard 0 | The Gubunk Brood | lair Gubunk's Crag
+monsters-small-5 m18 ogre 4 born 1300 e521 died 2300 hoard 27 | Azaaghkrug | lair Azaaghkrug's Larder
+monsters-small-5 m19 wyvern 4 born 1526 e597 died 2526 hoard 0 | The Screamers of Zeetch-Keek | lair Zeetch-Keek's Crag
+monsters-small-5 m20 ogre 4 born 1775 e672 died 2775 hoard 0 | Uul'shuush | lair The Pit of Uul'shuush
+monsters-small-5 m21 troll 4 born 2000 e675 died 4000 hoard 0 | Snux | lair The Den of Snux
+monsters-small-5 m22 ogre 3 born 2025 e677 died 2545 hoard 0 | Shuul | lair Shuul's Larder
+monsters-small-5 m23 troll 4 born 2100 e679 died 4100 hoard 0 | Grik Stonehide | lair The Den of Grik
+monsters-small-5 m24 troll 4 born 2125 e681 died 4125 hoard 3 | Skogrog | lair Skogrog's Hollow
+monsters-small-5 m25 wyvern 4 born 2150 e682 died 3150 hoard 0 | The Screamers of Gneebiz | lair Gneebiz's Crag
+monsters-small-5 m26 ogre 3 born 2325 e684 died 2933 hoard 167 | Uroshgroz | lair The Pit of Uroshgroz
+monsters-small-5 m27 giant 3 born 2500 e686 died 2713 hoard 192 | Maidinni Cliffbreaker | lair The Hall of Maidinni
+monsters-small-5 m28 ogre 4 born 2550 e706 died 3550 hoard 0 | Kraark'bold | lair Kraark'bold's Larder
+monsters-small-5 m29 wyvern 4 born 2575 e727 died 3575 hoard 0 | The Screamers of Krork-Slonk | lair Krork-Slonk's Crag
+monsters-small-5 m30 ogre 3 born 2828 e780 died 3639 hoard 111 | Azuurz | lair The Pit of Azuurz
+monsters-small-5 m31 giant 4 born 2875 e813 died 5353 hoard 130 | Taimmu | lair The Hall of Taimmu
+monsters-small-5 m32 ogre 4 born 3025 e873 died 4025 hoard 29 | Ghaagh | lair The Pit of Ghaagh
+monsters-small-5 m33 wyvern 4 born 3550 e926 died 4550 hoard 0 | The Skeeg Brood | lair The Eyrie of Skeeg
+monsters-small-5 m34 giant 2 born 3575 e928 died - hoard 17 | Garkho | lair Garkho's Seat
+monsters-small-5 m35 wyvern 4 born 3616 e937 died 4600 hoard 0 | The Brood of Zakoz | lair Zakoz's Crag
+monsters-small-5 m36 ogre 4 born 3628 e943 died 4625 hoard 2 | Maarzugu | lair Maarzugu's Larder
+monsters-small-5 m37 ogre 4 born 3647 e951 died 4625 hoard 0 | Ghuugbu | lair Ghuugbu's Larder
+monsters-small-5 m38 ogre 4 born 4025 e959 died 5025 hoard 40 | Aarz'ghurz | lair Aarz'ghurz's Larder
+monsters-small-5 m39 troll 2 born 4125 e962 died - hoard 1 | Zugneezz | lair The Den of Zugneezz
+monsters-small-5 m40 troll 3 born 4175 e963 died 5863 hoard 121 | Skix | lair The Den of Skix
+monsters-small-5 m41 troll 1 born 4250 e964 died - hoard 57 | Grik | lair The Den of Grik II
+monsters-small-5 m42 wyvern 4 born 4575 e968 died 5575 hoard 0 | The Brood of Kax | lair Kax's Crag
+monsters-small-5 m43 ogre 3 born 4625 e972 died 5004 hoard 6 | Ugaald'korz | lair The Pit of Ugaald'korz
+monsters-small-5 m44 wyvern 4 born 4650 e973 died 5650 hoard 0 | The Screamers of Sneenk | lair Sneenk's Crag
+monsters-small-5 m45 ogre 4 born 4675 e974 died 5675 hoard 0 | Ghald | lair Ghald's Larder
+monsters-small-5 m46 ogre 3 born 5056 e1040 died 5620 hoard 56 | Kukh | lair The Pit of Kukh
+monsters-small-5 m47 ogre 2 born 5100 e1074 died - hoard 174 | Osh'dash | lair The Pit of Osh'dash
+monsters-small-5 m48 giant 1 born 5403 e1100 died - hoard 82 | Gourbri | lair Gourbri's Seat
+monsters-small-5 m49 wyvern 2 born 5712 e1297 died - hoard 0 | The Screamers of Slogg | lair The Eyrie of Slogg
+monsters-small-5 m50 ogre 1 born 5741 e1314 died - hoard 0 | Gru'urash | lair The Pit of Gru'urash
+monsters-small-5 m51 troll 3 born 5866 e1436 died 5962 hoard 94 | Gnizz | lair The Den of Gnizz
+monsters-small-5 m52 ogre 2 born 5885 e1448 died - hoard 64 | Thu | lair Thu's Larder
+monsters-small-5 m53 wyvern 1 born 5934 e1486 died - hoard 0 | The Brood of Keek-Skugg | lair The Eyrie of Keek-Skugg
+monsters-small-5 m54 troll 1 born 5977 e1508 died - hoard 0 | Bax | lair Bax's Hollow
+monsters-small-5 si1 lair rg4 63 34 s0 c0 m1 0 e10 1277 3 | Skanix's Hollow
 monsters-small-5 si2 lair rg13 70 155 s0 c0 m2 1 e11 1000 2 | The Eyrie of Kotslitch
 monsters-small-5 si3 lair rg3 186 2 s0 c0 m3 3 e13 2500 2 | The Hall of Burnbud
 monsters-small-5 si4 lair rg10 26 103 s0 c0 m4 8 e18 1000 2 | The Pit of Ghorz'krark
 monsters-small-5 si5 lair rg14 121 147 s0 c0 m5 9 e20 560 3 | Gnasneeb's Hollow
-monsters-small-5 si6 lair rg7 59 68 s0 c0 m6 30 e30 2530 2 | Hakda's Seat
-monsters-small-5 si7 lair rg2 109 8 s0 c0 m7 32 e31 1025 2 | Daashgrokh's Larder
+monsters-small-5 si6 lair rg7 59 68 s0 c0 m6 30 e30 595 1 | Hakda's Seat
+monsters-small-5 si7 lair rg2 109 8 s0 c0 m7 32 e31 763 1 | Daashgrokh's Larder
 monsters-small-5 si8 lair rg11 92 105 s0 c0 m8 35 e33 - 0 | Thievo's Deep
-monsters-small-5 si9 lair rg12 146 109 s0 c0 m9 48 e45 1025 2 | The Pit of Uuz'uguul
+monsters-small-5 si9 lair rg12 146 109 s0 c0 m9 48 e45 1048 2 | The Pit of Uuz'uguul
 monsters-small-5 si10 lair rg16 70 191 s0 c0 m10 104 e88 2100 2 | Skrax's Hollow
 monsters-small-5 si11 lair rg9 158 81 s0 c0 m11 250 e132 1250 2 | The Eyrie of Kreegg
-monsters-small-5 si12 lair rg15 187 135 s8 c0 m5 560 e174 2000 2 | The Den of Gnasneeb
-monsters-small-5 si13 lair rg13 70 155 s0 c0 m12 1000 e277 2000 2 | The Eyrie of Slib
-monsters-small-5 si14 lair rg1 33 3 s0 c0 m13 1050 e280 1149 1 | The Pit of Daam'durz
-monsters-small-5 si15 lair rg10 26 103 s0 c0 m14 1075 e281 2075 2 | The Pit of Uguul
-monsters-small-5 si16 lair rg1 33 3 s0 c0 m15 1174 e367 2150 2 | The Pit of Ghukh
-monsters-small-5 si17 lair rg5 103 46 s0 c0 m16 1175 e368 2175 2 | The Pit of Ghogh
-monsters-small-5 si18 lair rg12 146 109 s0 c0 m17 1675 e413 2675 2 | Gubunk's Crag
-monsters-small-5 si19 lair rg6 145 45 s0 c0 m18 2025 e417 4025 2 | The Den of Slog-Zeenk
-monsters-small-5 si20 lair rg4 63 34 s0 c0 m19 2075 e420 2559 1 | Azaash's Larder
-monsters-small-5 si21 lair rg16 70 191 s0 c0 m20 2100 e422 4100 2 | Drotsleerk's Hollow
-monsters-small-5 si22 lair rg13 70 155 s0 c0 m21 2125 e423 4125 2 | Snux's Hollow
-monsters-small-5 si23 lair rg10 26 103 s0 c0 m22 2150 e425 3150 2 | The Eyrie of Sneezz
-monsters-small-5 si24 lair rg5 103 46 s0 c0 m23 2200 e427 2556 1 | The Pit of Grol'ghuld
-monsters-small-5 si25 lair rg2 109 8 s0 c0 m24 2250 e428 2544 1 | The Pit of Shuugshaag
-monsters-small-5 si26 lair rg3 186 2 s0 c0 m25 2500 e430 5000 2 | Toumni's Seat
-monsters-small-5 si27 lair rg15 176 143 s0 c0 m26 2550 e449 3550 2 | Uroshgroz's Larder
-monsters-small-5 si28 lair rg7 59 68 s0 c0 m27 2572 e472 5072 2 | Maidinni's Seat
-monsters-small-5 si29 lair rg1 33 3 s0 c0 m28 2575 e477 3575 2 | Kraark'bold's Larder
-monsters-small-5 si30 lair rg18 187 187 s0 c0 m29 2600 e479 3600 2 | The Pit of Uruughzaag
-monsters-small-5 si31 lair rg4 63 34 s0 c0 m30 2775 e482 3775 2 | The Eyrie of Neekruz
-monsters-small-5 si32 lair rg10 26 103 s0 c0 m31 3250 e484 4250 2 | Zeenksnog's Crag
-monsters-small-5 si33 lair rg14 121 147 s0 c0 m32 3550 e486 4550 2 | Ghaagh's Larder
-monsters-small-5 si34 lair rg1 33 3 s0 c0 m33 3725 e489 4725 2 | Duush's Larder
-monsters-small-5 si35 lair rg15 176 143 s0 c0 m34 3775 e491 4775 2 | Aam'magh's Larder
-monsters-small-5 si36 lair rg4 63 34 s0 c0 m35 3975 e492 4975 2 | The Eyrie of Zakoz
-monsters-small-5 si37 lair rg6 145 45 s0 c0 m36 4075 e494 5751 1 | Kogrurk's Hollow
-monsters-small-5 si38 lair rg12 146 109 s0 c0 m37 4125 e497 - 0 | The Den of Zugg-Sneerk
-monsters-small-5 si39 lair rg13 70 155 s0 c0 m38 4150 e498 - 0 | Baggkuzz's Hollow
-monsters-small-5 si40 lair rg10 26 103 s0 c0 m39 4275 e500 5253 2 | The Eyrie of Zugneezz
-monsters-small-5 si41 lair rg5 103 46 s0 c0 m40 4575 e502 5380 1 | Kaghmukh's Larder
-monsters-small-5 si42 lair rg18 187 187 s0 c0 m41 4775 e505 5013 1 | The Pit of Krurk
-monsters-small-5 si43 lair rg14 121 147 s0 c0 m42 4825 e506 5825 2 | The Pit of Uush'thum
-monsters-small-5 si44 lair rg9 158 81 s0 c0 m43 5050 e566 5820 1 | Skreedrunk's Crag
-monsters-small-5 si45 lair rg18 187 187 s0 c0 m44 5056 e573 5589 1 | The Pit of Krald'daal
-monsters-small-5 si46 lair rg4 63 34 s0 c0 m45 5306 e679 - 0 | Gronk's Crag
-monsters-small-5 si47 lair rg7 59 68 s0 c0 m46 5328 e696 - 0 | The Hall of Hulidrurin
-monsters-small-5 si48 lair rg10 26 103 s0 c0 m47 5387 e774 5458 1 | Osh'dash's Larder
-monsters-small-5 si49 lair rg5 103 46 s0 c0 m48 5403 e791 5680 1 | Gourbri's Seat
-monsters-small-5 si50 lair rg17 108 182 s0 c0 m49 5527 e896 5559 1 | The Pit of Shoshthuu
-monsters-small-5 si51 lair rg2 109 8 s0 c0 m50 5560 e932 5602 1 | Gru'urash's Larder
-monsters-small-5 si52 lair rg18 187 187 s0 c0 m51 5611 e1035 5897 1 | Baaghkaal's Larder
-monsters-small-5 si53 lair rg1 33 3 s0 c0 m52 5616 e1038 5744 1 | Thu's Larder
-monsters-small-5 si54 lair rg10 26 103 s0 c0 m53 5751 e1122 - 0 | Uurk'muuz's Larder
-monsters-small-5 si55 lair rg3 186 2 s0 c0 m54 5787 e1137 5810 1 | The Hall of Khaimm
-monsters-small-5 si56 lair rg6 145 45 s0 c0 m55 5798 e1147 5841 1 | Skriskruz's Hollow
-monsters-small-5 si57 lair rg14 121 147 s0 c0 m56 5849 e1185 5868 1 | Slizz's Hollow
-monsters-small-5 si58 lair rg1 33 3 s0 c0 m57 5865 e1191 5900 1 | The Pit of Uush'uruugh
-monsters-small-5 si59 lair rg3 186 2 s0 c0 m58 5869 e1198 - 0 | Bobslot's Hollow
-monsters-small-5 si60 lair rg2 109 8 s0 c0 m59 5903 e1215 5924 1 | Skrax's Crag
-monsters-small-5 si61 lair rg2 109 8 s0 c0 m60 5935 e1230 - 0 | The Eyrie of Grodreeb
-monsters-small-5 si62 lair rg16 70 191 s0 c0 m61 5958 e1237 - 0 | Arz'dokh's Larder
-monsters-small-5 si63 lair rg5 103 46 s0 c0 m62 5995 e1244 - 0 | Uruurk's Larder
+monsters-small-5 si12 lair rg15 187 135 s8 c0 m5 560 e175 2000 2 | The Den of Gnasneeb
+monsters-small-5 si13 outpost rg2 111 13 s0 c5 m0 656 e281 756 5 | Gnurk-Gnik Stockade
+monsters-small-5 si14 lair rg2 109 8 s0 c0 m12 788 e360 1775 2 | The Pit of Ugamkaagh
+monsters-small-5 si15 lair rg13 70 155 s0 c0 m13 1000 e370 3500 2 | Braimbrar's Seat
+monsters-small-5 si16 lair rg10 26 103 s0 c0 m14 1035 e376 2025 2 | The Pit of Uguul
+monsters-small-5 si17 lair rg7 59 68 s0 c0 m15 1040 e378 1042 1 | Skonk's Crag
+monsters-small-5 si18 lair rg12 146 109 s0 c0 m16 1075 e402 1298 1 | The Pit of Ghogh
+monsters-small-5 si19 outpost rg5 102 46 s0 c1 m0 1107 e408 1117 4 | Skreenk Stockade
+monsters-small-5 si20 lair rg6 145 45 s0 c0 m17 1136 e439 2125 2 | Gubunk's Crag
+monsters-small-5 si21 lair rg4 32 59 s11 c0 m1 1277 e500 2000 2 | The Den of Skanix
+monsters-small-5 si22 lair rg5 103 46 s0 c0 m18 1300 e521 2300 2 | Azaaghkrug's Larder
+monsters-small-5 si23 lair rg12 146 109 s0 c0 m19 1526 e597 2526 2 | Zeetch-Keek's Crag
+monsters-small-5 si24 lair rg9 158 81 s0 c0 m20 1775 e672 2775 2 | The Pit of Uul'shuush
+monsters-small-5 si25 lair rg7 59 68 s0 c0 m21 2000 e675 4000 2 | The Den of Snux
+monsters-small-5 si26 lair rg4 63 34 s0 c0 m22 2025 e677 2545 1 | Shuul's Larder
+monsters-small-5 si27 lair rg16 70 191 s0 c0 m23 2100 e679 4100 2 | The Den of Grik
+monsters-small-5 si28 lair rg6 145 45 s0 c0 m24 2125 e681 4125 2 | Skogrog's Hollow
+monsters-small-5 si29 lair rg10 26 103 s0 c0 m25 2150 e682 3150 2 | Gneebiz's Crag
+monsters-small-5 si30 lair rg1 33 3 s0 c0 m26 2325 e684 2933 1 | The Pit of Uroshgroz
+monsters-small-5 si31 lair rg3 186 2 s0 c0 m27 2500 e686 2713 1 | The Hall of Maidinni
+monsters-small-5 si32 lair rg15 176 143 s0 c0 m28 2550 e706 3550 2 | Kraark'bold's Larder
+monsters-small-5 si33 outpost rg5 102 46 s0 c9 m0 2560 e717 2831 5 | Geezeenk Lookout
+monsters-small-5 si34 lair rg4 63 34 s0 c0 m29 2575 e727 3100 3 | The Eyrie of Krork-Slonk
+monsters-small-5 si35 outpost rg2 111 13 s0 c7 m0 2723 e766 3475 6 | Skigg Lookout
+monsters-small-5 si36 lair rg2 109 8 s0 c0 m30 2828 e780 3639 1 | The Pit of Azuurz
+monsters-small-5 si37 lair rg3 186 2 s0 c0 m31 2875 e813 5353 2 | The Hall of Taimmu
+monsters-small-5 si38 lair rg14 121 147 s0 c0 m32 3025 e873 4025 2 | The Pit of Ghaagh
+monsters-small-5 si39 lair rg4 9 35 s15 c0 m29 3100 e883 3575 2 | Krork-Slonk's Crag
+monsters-small-5 si40 lair rg9 158 81 s0 c0 m33 3550 e926 4550 2 | The Eyrie of Skeeg
+monsters-small-5 si41 lair rg13 70 155 s0 c0 m34 3575 e928 - 0 | Garkho's Seat
+monsters-small-5 si42 lair rg10 26 103 s0 c0 m35 3616 e937 4600 2 | Zakoz's Crag
+monsters-small-5 si43 lair rg15 176 143 s0 c0 m36 3628 e943 4625 2 | Maarzugu's Larder
+monsters-small-5 si44 lair rg2 109 8 s0 c0 m37 3647 e951 4625 2 | Ghuugbu's Larder
+monsters-small-5 si45 lair rg1 33 3 s0 c0 m38 4025 e959 5025 2 | Aarz'ghurz's Larder
+monsters-small-5 si46 lair rg6 145 45 s0 c0 m39 4125 e962 - 0 | The Den of Zugneezz
+monsters-small-5 si47 lair rg4 63 34 s0 c0 m40 4175 e963 5863 1 | The Den of Skix
+monsters-small-5 si48 lair rg16 70 191 s0 c0 m41 4250 e964 5871 3 | Grik's Hollow
+monsters-small-5 si49 lair rg12 146 109 s0 c0 m42 4575 e968 5575 2 | Kax's Crag
+monsters-small-5 si50 lair rg18 187 187 s0 c0 m43 4625 e972 5004 1 | The Pit of Ugaald'korz
+monsters-small-5 si51 lair rg10 26 103 s0 c0 m44 4650 e973 5650 2 | Sneenk's Crag
+monsters-small-5 si52 lair rg7 59 68 s0 c0 m45 4675 e974 5675 2 | Ghald's Larder
+monsters-small-5 si53 lair rg18 187 187 s0 c0 m46 5056 e1040 5620 1 | The Pit of Kukh
+monsters-small-5 si54 lair rg1 33 3 s0 c0 m47 5100 e1074 - 0 | The Pit of Osh'dash
+monsters-small-5 si55 lair rg5 103 46 s0 c0 m48 5403 e1100 - 0 | Gourbri's Seat
+monsters-small-5 si56 lair rg3 186 2 s0 c0 m49 5712 e1297 - 0 | The Eyrie of Slogg
+monsters-small-5 si57 lair rg10 26 103 s0 c0 m50 5741 e1314 - 0 | The Pit of Gru'urash
+monsters-small-5 si58 lair rg12 146 109 s0 c0 m51 5866 e1436 5962 1 | The Den of Gnizz
+monsters-small-5 si59 lair rg16 59 165 s23 c0 m41 5871 e1440 - 0 | The Den of Grik II
+monsters-small-5 si60 lair rg2 109 8 s0 c0 m52 5885 e1448 - 0 | Thu's Larder
+monsters-small-5 si61 lair rg4 63 34 s0 c0 m53 5934 e1486 - 0 | The Eyrie of Keek-Skugg
+monsters-small-5 si62 lair rg7 59 68 s0 c0 m54 5977 e1508 - 0 | Bax's Hollow
 fixture monsters-small-6 6 2000 all 4 normal monsters-small
-monsters-small-6 table beast_population 124 310f1719c4e5574e763ec58558e825fbb436c18ab4081eaa414ea946e0852568
-monsters-small-6 table monster 21 594a3065a48d3925644194625562a86dfc0811beca4181d72fcd7a3938dd4622
-monsters-small-6 table site 27 e54befeeb32590f5354b18a3de562b58a3aff2a5a883f2c6527679d5372f7f25
-monsters-small-6 ending f1af5aafb8cbc55d381976736fa28630fc3f792c7a440e1520f4f622d4b6a031
-monsters-small-6 M monsters 21 alive 10 slain 6 died 5 raids 157 killed 4945 overruns 3 risen 0 lair_settlement_open 1
-monsters-small-6 G ghost 0 endings 0:11,1:5,2:3,6:4 standing 11 population 12590 shunned 1
-monsters-small-6 S outposts 3 ended 2 bold 0 monster_flares 0
-monsters-small-6 m1 giant 1 born 10 e4 died - hoard 117 | Girndrai | lair Girndrai's Seat
-monsters-small-6 m2 troll 3 born 12 e5 died 1874 hoard 24 | Old Gritch | lair Gritch's Hollow
+monsters-small-6 table beast_population 114 8b75cb75b3fe77c0d6a3c7186e2d95cbfd033c8d4a5a570772c780f71274b708
+monsters-small-6 table monster 24 c117c467eb4eda81d3f2bb9c8f81d556fdc1c44e0661b32acd78235dd62272c9
+monsters-small-6 table site 33 6e8f910dfd7cb8e1b8f75b299eb8c26c12960b3d7a5b6d7d58c7a3d95b203663
+monsters-small-6 ending ba2aa961379de16f169533445b22cf8ce392ff17764012f0329c5ea27d2df896
+monsters-small-6 M monsters 24 alive 10 slain 9 died 5 raids 177 killed 5197 overruns 2 risen 0 lair_settlement_open 0
+monsters-small-6 G ghost 1 endings 0:14,1:4,2:2,4:1,6:2 standing 14 population 14805 shunned 0
+monsters-small-6 S outposts 3 ended 2 bold 0 monster_flares 1
+monsters-small-6 m1 giant 3 born 10 e4 died 1686 hoard 83 | Girndrai | lair Girndrai's Seat
+monsters-small-6 m2 troll 3 born 12 e5 died 1830 hoard 57 | Old Gritch | lair Gritch's Hollow
 monsters-small-6 m3 wyvern 4 born 14 e6 died 992 hoard 0 | The Brood of Drut | lair Drut's Crag
 monsters-small-6 m4 ogre 4 born 16 e7 died 992 hoard 0 | Ok'uruuk the Glutton | lair Ok'uruuk's Larder
-monsters-small-6 m5 giant 2 born 18 e8 died - hoard 0 | Khammhourd the Grey | lair The Hall of Khammhourd
+monsters-small-6 m5 giant 2 born 18 e8 died - hoard 12 | Khammhourd the Grey | lair The Hall of Khammhourd
 monsters-small-6 m6 troll 1 born 20 e9 died - hoard 6 | Guxzazz of the Fells | lair Guxzazz's Hollow
 monsters-small-6 m7 wyvern 4 born 22 e11 died 1017 hoard 0 | The Screamers of Gnizz-Gruz | lair The Eyrie of Gnizz-Gruz
-monsters-small-6 m8 troll 2 born 26 e12 died - hoard 21 | Drix-Skeenk Stonehide | lair Drix-Skeenk's Hollow
+monsters-small-6 m8 troll 2 born 26 e12 died - hoard 23 | Drix-Skeenk Stonehide | lair Drix-Skeenk's Hollow
 monsters-small-6 m9 dragon 2 born 35 e15 died - hoard 11 | Elaver the Gold-Eyed | lair The Lair of Elaver
 monsters-small-6 m10 ogre 4 born 150 e25 died 1150 hoard 0 | Ok'kum the Fat | lair Ok'kum's Larder
 monsters-small-6 m11 ogre 4 born 175 e26 died 1151 hoard 10 | Kogthoz the Hungering | lair The Pit of Kogthoz
-monsters-small-6 m12 ogre 3 born 992 e130 died 1764 hoard 25 | Grugh | lair Grugh's Larder
+monsters-small-6 m12 ogre 3 born 992 e130 died 1430 hoard 29 | Grugh | lair Grugh's Larder
 monsters-small-6 m13 wyvern 1 born 1017 e134 died - hoard 0 | The Skruzzdruz Brood | lair Skruzzdruz's Crag
-monsters-small-6 m14 wyvern 3 born 1119 e225 died 1969 hoard 0 | The Brood of Skrat | lair The Eyrie of Skrat
-monsters-small-6 m15 ogre 3 born 1243 e310 died 1427 hoard 12 | Maaz'grakh | lair The Pit of Maaz'grakh
-monsters-small-6 m16 ogre 2 born 1444 e412 died - hoard 20 | Uguum the Gaunt | lair Uguum's Larder
-monsters-small-6 m17 ogre 1 born 1499 e445 died - hoard 23 | Zagh'gragh Bonebreaker | lair Zagh'gragh's Larder
-monsters-small-6 m18 ogre 3 born 1791 e599 died 1865 hoard 12 | Shul | lair Shul's Larder
-monsters-small-6 m19 ogre 2 born 1874 e654 died - hoard 5 | Al'thuz | lair The Pit of Al'thuz
-monsters-small-6 m20 troll 3 born 1913 e695 died 1999 hoard 67 | Mossback Skruz-Skroz | lair Skruz-Skroz's Hollow
-monsters-small-6 m21 wyvern 1 born 1997 e773 died - hoard 0 | The Kogg Brood | lair The Eyrie of Kogg
+monsters-small-6 m14 wyvern 3 born 1119 e226 died 1969 hoard 0 | The Brood of Skrat | lair The Eyrie of Skrat
+monsters-small-6 m15 ogre 3 born 1243 e340 died 1431 hoard 10 | Maaz'grakh | lair Maaz'grakh's Larder
+monsters-small-6 m16 ogre 3 born 1368 e348 died 1415 hoard 6 | Uguum the Gaunt | lair The Pit of Uguum
+monsters-small-6 m17 ogre 1 born 1444 e419 died - hoard 8 | Zagh'gragh Bonebreaker | lair Zagh'gragh's Larder
+monsters-small-6 m18 ogre 3 born 1499 e471 died 1710 hoard 19 | Shul | lair The Pit of Shul
+monsters-small-6 m19 ogre 1 born 1625 e563 died - hoard 57 | Al'thuz | lair The Pit of Al'thuz
+monsters-small-6 m20 ogre 3 born 1714 e664 died 1859 hoard 13 | Darz'graz | lair Darz'graz's Larder
+monsters-small-6 m21 giant 1 born 1791 e698 died - hoard 39 | Nadin Stonehand | lair The Hall of Nadin
+monsters-small-6 m22 ogre 3 born 1874 e746 died 1884 hoard 8 | Baam | lair Baam's Larder
+monsters-small-6 m23 troll 2 born 1913 e758 died - hoard 25 | Gneek | lair The Den of Gneek
+monsters-small-6 m24 ogre 2 born 1966 e806 died - hoard 2 | Dag | lair The Pit of Dag
 monsters-small-6 si1 lair rg22 59 187 s0 c0 m1 10 e4 981 3 | The Hall of Girndrai
-monsters-small-6 si2 lair rg4 41 44 s0 c0 m2 12 e5 1874 1 | Gritch's Hollow
+monsters-small-6 si2 lair rg4 41 44 s0 c0 m2 12 e5 1830 1 | Gritch's Hollow
 monsters-small-6 si3 lair rg15 146 101 s0 c0 m3 14 e6 992 2 | Drut's Crag
 monsters-small-6 si4 lair rg18 172 140 s0 c0 m4 16 e7 992 2 | Ok'uruuk's Larder
 monsters-small-6 si5 lair rg16 11 134 s0 c0 m5 18 e8 - 0 | The Hall of Khammhourd
@@ -764,31 +826,37 @@ monsters-small-6 si9 lair rg17 75 125 s0 c0 m9 35 e15 - 0 | The Lair of Elaver
 monsters-small-6 si10 lair rg10 51 94 s0 c0 m10 150 e25 1150 2 | Ok'kum's Larder
 monsters-small-6 si11 lair rg20 119 165 s0 c0 m11 175 e26 1151 2 | The Pit of Kogthoz
 monsters-small-6 si12 lair rg14 112 112 s2 c0 m7 689 e42 1017 2 | The Eyrie of Gnizz-Gruz
-monsters-small-6 si13 lair rg23 121 187 s11 c0 m1 981 e112 - 0 | Girndrai's Seat
-monsters-small-6 si14 lair rg6 167 46 s0 c0 m12 992 e130 1764 1 | Grugh's Larder
+monsters-small-6 si13 lair rg23 121 187 s11 c0 m1 981 e112 1686 1 | Girndrai's Seat
+monsters-small-6 si14 lair rg6 167 46 s0 c0 m12 992 e130 1430 1 | Grugh's Larder
 monsters-small-6 si15 lair rg11 84 95 s0 c0 m13 1017 e134 - 0 | Skruzzdruz's Crag
-monsters-small-6 si16 lair rg15 146 101 s0 c0 m14 1119 e225 1969 1 | The Eyrie of Skrat
-monsters-small-6 si17 outpost rg3 182 13 s0 c3 m0 1125 e234 - 0 | Skugg Lookout
-monsters-small-6 si18 outpost rg2 107 7 s0 c6 m0 1126 e238 1131 5 | Kot Lookout
-monsters-small-6 si19 lair rg10 51 94 s0 c0 m15 1243 e310 1427 1 | The Pit of Maaz'grakh
-monsters-small-6 si20 lair rg20 119 165 s0 c0 m16 1444 e412 - 0 | Uguum's Larder
-monsters-small-6 si21 lair rg24 140 187 s0 c0 m17 1499 e445 - 0 | Zagh'gragh's Larder
-monsters-small-6 si22 outpost rg2 107 7 s0 c14 m0 1723 e577 1923 6 | Skakutch Lookout
-monsters-small-6 si23 lair rg7 26 73 s0 c0 m18 1791 e599 1865 1 | Shul's Larder
-monsters-small-6 si24 lair rg6 167 46 s0 c0 m19 1874 e654 - 0 | The Pit of Al'thuz
-monsters-small-6 si25 lair rg5 118 44 s0 c0 m20 1913 e695 1926 3 | The Den of Skruz-Skroz
-monsters-small-6 si26 lair rg2 100 19 s13 c0 m20 1926 e706 1999 1 | Skruz-Skroz's Hollow
-monsters-small-6 si27 lair rg10 51 94 s0 c0 m21 1997 e773 - 0 | The Eyrie of Kogg
+monsters-small-6 si16 outpost rg9 169 69 s14 c7 m0 1104 e212 - 0 | The Delvings of Khalikhi Hold
+monsters-small-6 si17 outpost rg16 40 135 s15 c8 m0 1115 e220 1183 5 | The Mines of Khaidin
+monsters-small-6 si18 outpost rg6 190 40 s16 c9 m0 1117 e221 - 0 | The Delvings of Thid Deep
+monsters-small-6 si19 lair rg15 146 101 s0 c0 m14 1119 e226 1969 1 | The Eyrie of Skrat
+monsters-small-6 si20 outpost rg3 182 13 s0 c3 m0 1125 e244 1613 5 | Zugok Stockade
+monsters-small-6 si21 outpost rg2 107 7 s0 c6 m0 1126 e248 1184 5 | Grig Stockade
+monsters-small-6 si22 outpost rg7 68 51 s17 c10 m0 1131 e257 - 0 | The Delvings of Throumkhun
+monsters-small-6 si23 lair rg10 51 94 s0 c0 m15 1243 e340 1431 1 | Maaz'grakh's Larder
+monsters-small-6 si24 lair rg20 119 165 s0 c0 m16 1368 e348 1415 1 | The Pit of Uguum
+monsters-small-6 si25 lair rg20 119 165 s0 c0 m17 1444 e419 - 0 | Zagh'gragh's Larder
+monsters-small-6 si26 lair rg24 140 187 s0 c0 m18 1499 e471 1710 1 | The Pit of Shul
+monsters-small-6 si27 lair rg19 60 154 s0 c0 m19 1625 e563 - 0 | The Pit of Al'thuz
+monsters-small-6 si28 lair rg10 51 94 s0 c0 m20 1714 e664 1859 1 | Darz'graz's Larder
+monsters-small-6 si29 lair rg22 59 187 s0 c0 m21 1791 e698 - 0 | The Hall of Nadin
+monsters-small-6 si30 lair rg6 167 46 s0 c0 m22 1874 e746 1884 1 | Baam's Larder
+monsters-small-6 si31 lair rg5 118 44 s0 c0 m23 1913 e758 - 0 | The Den of Gneek
+monsters-small-6 si32 outpost rg3 182 13 s0 c18 m0 1955 e792 - 0 | Kirkkeeb Stockade
+monsters-small-6 si33 lair rg10 51 94 s0 c0 m24 1966 e806 - 0 | The Pit of Dag
 fixture monsters-small-7 7 6000 all 4 turbulent monsters-small
-monsters-small-7 table beast_population 180 cf1cf30ab4e4c9ccbc452d5e851b41abdb985b1739049c95e403b22ddfc88f5a
-monsters-small-7 table monster 52 98fd83d190bf81f0eb8a72089c1dbfa24010b7d9d160682c576a3572bf5d7d6f
-monsters-small-7 table site 62 7f8c803e873cfe3f3ba5d7419968bec9d9dc8c8c8bf4680b359dc81586f7175c
-monsters-small-7 ending 984a5a0503518c1eea601646a8f0274c6b5892507c04a41f0cc8328d0e83f76f
-monsters-small-7 M monsters 52 alive 11 slain 13 died 28 raids 398 killed 12329 overruns 5 risen 0 lair_settlement_open 1
-monsters-small-7 G ghost 1 endings 0:11,1:18,2:5,3:1,6:8 standing 11 population 17880 shunned 1
-monsters-small-7 S outposts 5 ended 5 bold 0 monster_flares 2
+monsters-small-7 table beast_population 171 d6b2c566ac6ecbbf9e4c480f7a13746fb9f1816e92af45964f20fe8b7655bb94
+monsters-small-7 table monster 50 dfd77507c874cb2a35689cbee1ff7bc95f133862ad27a3472a669ae2ed512a49
+monsters-small-7 table site 69 d6d7fe1362dffab60bf75112bdf406baf22a39ddfdd4cbabc49bcf5afe99661a
+monsters-small-7 ending f0a3e81e12c4b3774c72027706d1fb5057e098f51f92959b529ae00d05c4408c
+monsters-small-7 M monsters 50 alive 10 slain 12 died 28 raids 583 killed 23353 overruns 8 risen 0 lair_settlement_open 1
+monsters-small-7 G ghost 0 endings 0:9,1:12,2:8,6:8 standing 9 population 11114 shunned 1
+monsters-small-7 S outposts 7 ended 7 bold 0 monster_flares 1
 monsters-small-7 m1 wyvern 4 born 8 e5 died 1000 hoard 0 | The Brood of Sneeskriz | lair Sneeskriz's Crag
-monsters-small-7 m2 dragon 2 born 16 e7 died - hoard 457 | Laglatho the Red | lair The Lair of Laglatho
+monsters-small-7 m2 dragon 2 born 16 e7 died - hoard 394 | Laglatho the Red | lair The Lair of Laglatho
 monsters-small-7 m3 ogre 4 born 48 e12 died 1025 hoard 0 | Kul the Glutton | lair The Pit of Kul
 monsters-small-7 m4 ogre 4 born 59 e16 died 1050 hoard 0 | Buugh the Hungering | lair Buugh's Larder
 monsters-small-7 m5 ogre 4 born 60 e17 died 1050 hoard 0 | Kuk the Gaunt | lair Kuk's Larder
@@ -804,41 +872,39 @@ monsters-small-7 m14 wyvern 4 born 1275 e70 died 2265 hoard 0 | The Screamers of
 monsters-small-7 m15 wyvern 4 born 1350 e71 died 2340 hoard 0 | The Kig Brood | lair The Eyrie of Kig
 monsters-small-7 m16 ogre 4 born 2025 e73 died 3015 hoard 6 | Kuuld | lair The Pit of Kuuld
 monsters-small-7 m17 ogre 4 born 2050 e75 died 3040 hoard 5 | Thal'thaak Bonebreaker | lair The Pit of Thal'thaak
-monsters-small-7 m18 giant 4 born 2077 e106 died 4576 hoard 308 | Hairk the Tall | lair The Hall of Hairk
-monsters-small-7 m19 ogre 4 born 2081 e114 died 3065 hoard 0 | Gruuz'dash | lair Gruuz'dash's Larder
-monsters-small-7 m20 troll 4 born 2097 e140 died 4090 hoard 9 | Zizzsloz of the Fells | lair Zizzsloz's Hollow
-monsters-small-7 m21 troll 4 born 2110 e149 died 4090 hoard 6 | Mossback Zeerk | lair Zeerk's Hollow
-monsters-small-7 m22 troll 4 born 2133 e188 died 4115 hoard 7 | Dribiz Stonehide | lair Dribiz's Hollow
-monsters-small-7 m23 wyvern 4 born 2465 e267 died 3465 hoard 0 | The Screamers of Gneek | lair Gneek's Crag
-monsters-small-7 m24 wyvern 3 born 2765 e276 died 3376 hoard 0 | The Screamers of Kignugg | lair Kignugg's Crag
-monsters-small-7 m25 ogre 3 born 3015 e280 died 3379 hoard 4 | Um'azaa | lair Um'azaa's Larder
-monsters-small-7 m26 ogre 3 born 3140 e283 died 3459 hoard 8 | Ghaa | lair Ghaa's Larder
-monsters-small-7 m27 ogre 4 born 3190 e284 died 4190 hoard 24 | Ghog | lair The Pit of Ghog
-monsters-small-7 m28 ogre 4 born 3383 e407 died 4376 hoard 14 | Az'kuush | lair The Pit of Az'kuush
-monsters-small-7 m29 giant 4 born 3431 e509 died 5931 hoard 73 | Dudgi | lair The Hall of Dudgi
-monsters-small-7 m30 wyvern 4 born 3455 e560 died 4451 hoard 0 | The Screamers of Krixzox | lair Krixzox's Crag
-monsters-small-7 m31 ogre 3 born 3490 e614 died 3525 hoard 36 | Krakhkraag | lair Krakhkraag's Larder
-monsters-small-7 m32 ogre 4 born 3565 e660 died 4551 hoard 69 | Zaal'ghu | lair The Pit of Zaal'ghu
-monsters-small-7 m33 wyvern 4 born 3640 e666 died 4626 hoard 0 | The Brood of Skeebskeex | lair Skeebskeex's Crag
-monsters-small-7 m34 troll 3 born 4140 e767 died 5263 hoard 50 | Kritsneeg | lair The Den of Kritsneeg
-monsters-small-7 m35 ogre 3 born 4289 e808 died 4886 hoard 4 | Duld'thuum | lair The Pit of Duld'thuum
-monsters-small-7 m36 ogre 3 born 4376 e899 died 5286 hoard 13 | Bal | lair The Pit of Bal
-monsters-small-7 m37 troll 1 born 4427 e913 died - hoard 13 | Grizz | lair Grizz's Hollow
-monsters-small-7 m38 troll 2 born 4443 e932 died - hoard 13 | Grik | lair Grik's Hollow
-monsters-small-7 m39 wyvern 4 born 4520 e985 died 5507 hoard 0 | The Konk Brood | lair The Eyrie of Konk
-monsters-small-7 m40 ogre 3 born 4551 e995 died 5026 hoard 0 | Zam'azog | lair Zam'azog's Larder
-monsters-small-7 m41 giant 2 born 4651 e999 died - hoard 6 | Damthi Cliffbreaker | lair The Hall of Damthi
-monsters-small-7 m42 ogre 3 born 5047 e1169 died 5660 hoard 51 | Kuu'kash | lair Kuu'kash's Larder
-monsters-small-7 m43 ogre 3 born 5079 e1188 died 5202 hoard 5 | Ald'dol | lair Ald'dol's Larder
-monsters-small-7 m44 wyvern 2 born 5185 e1216 died - hoard 0 | The Brood of Skrux-Skak | lair Skrux-Skak's Crag
-monsters-small-7 m45 ogre 3 born 5232 e1285 died 5719 hoard 56 | Uug'azaam | lair The Pit of Uug'azaam
-monsters-small-7 m46 ogre 2 born 5382 e1330 died - hoard 12 | Azuugugu | lair The Pit of Azuugugu
-monsters-small-7 m47 troll 2 born 5532 e1384 died - hoard 24 | Drig-Neeb | lair Drig-Neeb's Hollow
-monsters-small-7 m48 wyvern 2 born 5557 e1385 died - hoard 0 | The Screamers of Keesneez | lair The Eyrie of Keesneez
-monsters-small-7 m49 ogre 2 born 5734 e1575 died - hoard 21 | Shu | lair The Pit of Shu
-monsters-small-7 m50 ogre 3 born 5766 e1627 died 5809 hoard 48 | Bomgruk | lair Bomgruk's Larder
-monsters-small-7 m51 ogre 2 born 5850 e1686 died - hoard 66 | Ugald'krork | lair Ugald'krork's Larder
-monsters-small-7 m52 giant 2 born 5975 e1757 died - hoard 36 | Drud | lair The Hall of Drud
+monsters-small-7 m18 giant 4 born 2077 e105 died 4576 hoard 473 | Hairk the Tall | lair The Hall of Hairk
+monsters-small-7 m19 ogre 4 born 2081 e113 died 3065 hoard 0 | Gruuz'dash | lair Gruuz'dash's Larder
+monsters-small-7 m20 troll 4 born 2097 e140 died 4090 hoard 30 | Zizzsloz of the Fells | lair Zizzsloz's Hollow
+monsters-small-7 m21 troll 4 born 2110 e149 died 4090 hoard 13 | Mossback Zeerk | lair Zeerk's Hollow
+monsters-small-7 m22 troll 4 born 2133 e190 died 4115 hoard 5 | Dribiz Stonehide | lair Dribiz's Hollow
+monsters-small-7 m23 wyvern 4 born 2465 e265 died 3465 hoard 0 | The Screamers of Gneek | lair Gneek's Crag
+monsters-small-7 m24 wyvern 3 born 2765 e274 died 3376 hoard 0 | The Screamers of Kignugg | lair Kignugg's Crag
+monsters-small-7 m25 ogre 3 born 3015 e278 died 3379 hoard 4 | Um'azaa | lair Um'azaa's Larder
+monsters-small-7 m26 ogre 3 born 3140 e282 died 3459 hoard 8 | Ghaa | lair Ghaa's Larder
+monsters-small-7 m27 ogre 3 born 3190 e283 died 3587 hoard 52 | Ghog | lair The Pit of Ghog
+monsters-small-7 m28 ogre 4 born 3383 e409 died 4376 hoard 55 | Az'kuush | lair Az'kuush's Larder
+monsters-small-7 m29 giant 4 born 3431 e524 died 5931 hoard 223 | Dudgi | lair Dudgi's Seat
+monsters-small-7 m30 wyvern 3 born 3455 e602 died 4233 hoard 0 | The Screamers of Krixzox | lair Krixzox's Crag
+monsters-small-7 m31 ogre 4 born 3490 e690 died 4476 hoard 20 | Krakhkraag | lair Krakhkraag's Larder
+monsters-small-7 m32 wyvern 4 born 3597 e807 died 4576 hoard 0 | The Keegrax Brood | lair Keegrax's Crag
+monsters-small-7 m33 ogre 4 born 3615 e825 died 4615 hoard 24 | Kaal'zakh | lair The Pit of Kaal'zakh
+monsters-small-7 m34 troll 3 born 4140 e1198 died 5476 hoard 228 | Kritsneeg | lair Kritsneeg's Hollow
+monsters-small-7 m35 troll 2 born 4243 e1238 died - hoard 195 | Bubskatch | lair The Den of Bubskatch
+monsters-small-7 m36 ogre 3 born 4401 e1388 died 5298 hoard 15 | Bal | lair The Pit of Bal
+monsters-small-7 m37 troll 1 born 4451 e1391 died - hoard 42 | Grizz | lair Grizz's Hollow
+monsters-small-7 m38 ogre 4 born 4501 e1395 died 5482 hoard 135 | Ash'azok | lair Ash'azok's Larder
+monsters-small-7 m39 giant 2 born 4648 e1452 died - hoard 276 | Tair | lair The Hall of Tair
+monsters-small-7 m40 ogre 3 born 4651 e1460 died 4784 hoard 48 | Zam'azog | lair Zam'azog's Larder
+monsters-small-7 m41 wyvern 4 born 4701 e1465 died 5701 hoard 0 | The Geegnaz Brood | lair Geegnaz's Crag
+monsters-small-7 m42 ogre 3 born 4793 e1515 died 4952 hoard 40 | Kuu'kash | lair Kuu'kash's Larder
+monsters-small-7 m43 ogre 3 born 4989 e1579 died 5437 hoard 54 | Ald'dol | lair The Pit of Ald'dol
+monsters-small-7 m44 ogre 2 born 5343 e1909 died - hoard 25 | Kog | lair Kog's Larder
+monsters-small-7 m45 ogre 2 born 5444 e2036 died - hoard 30 | Uug'azaam | lair Uug'azaam's Larder
+monsters-small-7 m46 wyvern 3 born 5480 e2071 died 5747 hoard 0 | The Beez Brood | lair The Eyrie of Beez
+monsters-small-7 m47 ogre 2 born 5482 e2073 died - hoard 21 | Thuush'ghaa | lair Thuush'ghaa's Larder
+monsters-small-7 m48 troll 2 born 5601 e2128 died - hoard 63 | Keesneez | lair Keesneez's Hollow
+monsters-small-7 m49 wyvern 2 born 5935 e2359 died - hoard 0 | The Screamers of Sneeg-Neek | lair The Eyrie of Sneeg-Neek
+monsters-small-7 m50 giant 1 born 5975 e2380 died - hoard 16 | Moummtho | lair Moummtho's Seat
 monsters-small-7 si1 lair rg3 75 36 s0 c0 m1 8 e5 1000 2 | Sneeskriz's Crag
 monsters-small-7 si2 lair rg14 137 148 s0 c0 m2 16 e7 - 0 | The Lair of Laglatho
 monsters-small-7 si3 lair rg16 156 175 s0 c0 m3 48 e12 1025 2 | The Pit of Kul
@@ -858,287 +924,312 @@ monsters-small-7 si16 lair rg13 48 152 s0 c0 m15 1350 e71 2340 2 | The Eyrie of 
 monsters-small-7 si17 lair rg4 181 33 s0 c0 m16 2025 e73 3015 2 | The Pit of Kuuld
 monsters-small-7 si18 lair rg2 117 0 s0 c0 m17 2050 e75 3040 2 | The Pit of Thal'thaak
 monsters-small-7 si19 lair rg7 98 77 s3 c0 m9 2065 e85 2075 1 | Zeezz's Hollow
-monsters-small-7 si20 lair rg3 75 36 s0 c0 m18 2077 e106 3397 3 | Hairk's Seat
-monsters-small-7 si21 lair rg5 43 71 s0 c0 m19 2081 e114 3065 2 | Gruuz'dash's Larder
+monsters-small-7 si20 lair rg3 75 36 s0 c0 m18 2077 e105 3397 3 | Hairk's Seat
+monsters-small-7 si21 lair rg5 43 71 s0 c0 m19 2081 e113 3065 2 | Gruuz'dash's Larder
 monsters-small-7 si22 lair rg7 29 96 s0 c0 m20 2097 e140 2116 3 | The Den of Zizzsloz
 monsters-small-7 si23 lair rg9 86 99 s0 c0 m21 2110 e149 4090 2 | Zeerk's Hollow
 monsters-small-7 si24 lair rg7 34 95 s7 c0 m20 2116 e156 4090 2 | Zizzsloz's Hollow
-monsters-small-7 si25 lair rg1 70 17 s0 c0 m22 2133 e188 4115 2 | Dribiz's Hollow
-monsters-small-7 si26 lair rg16 156 175 s0 c0 m23 2465 e267 3465 2 | Gneek's Crag
-monsters-small-7 si27 lair rg13 48 152 s0 c0 m24 2765 e276 3376 1 | Kignugg's Crag
-monsters-small-7 si28 lair rg15 68 173 s0 c0 m25 3015 e280 3379 1 | Um'azaa's Larder
-monsters-small-7 si29 lair rg5 43 71 s0 c0 m26 3140 e283 3459 1 | Ghaa's Larder
-monsters-small-7 si30 lair rg2 117 0 s0 c0 m27 3190 e284 4190 2 | The Pit of Ghog
-monsters-small-7 si31 lair rg15 68 173 s0 c0 m28 3383 e407 4376 2 | The Pit of Az'kuush
-monsters-small-7 si32 lair rg4 188 29 s18 c0 m18 3397 e431 4576 2 | The Hall of Hairk
-monsters-small-7 si33 lair rg12 108 140 s0 c0 m29 3431 e509 5931 2 | The Hall of Dudgi
-monsters-small-7 si34 lair rg3 75 36 s0 c0 m30 3455 e560 4451 2 | Krixzox's Crag
-monsters-small-7 si35 lair rg13 48 152 s0 c0 m31 3490 e614 3525 1 | Krakhkraag's Larder
-monsters-small-7 si36 lair rg16 156 175 s0 c0 m32 3565 e660 4551 2 | The Pit of Zaal'ghu
-monsters-small-7 si37 lair rg13 48 152 s0 c0 m33 3640 e666 4626 2 | Skeebskeex's Crag
-monsters-small-7 si38 outpost rg4 153 24 s0 c12 m0 3818 e732 4040 6 | Nak-Zib Lookout
-monsters-small-7 si39 lair rg1 70 17 s0 c0 m34 4140 e767 5263 1 | The Den of Kritsneeg
-monsters-small-7 si40 lair rg8 190 92 s0 c0 m35 4289 e808 4886 1 | The Pit of Duld'thuum
-monsters-small-7 si41 lair rg5 43 71 s0 c0 m36 4376 e899 5286 1 | The Pit of Bal
-monsters-small-7 si42 lair rg11 26 126 s0 c0 m37 4427 e913 - 0 | Grizz's Hollow
-monsters-small-7 si43 lair rg7 29 96 s0 c0 m38 4443 e932 - 0 | Grik's Hollow
-monsters-small-7 si44 outpost rg10 173 99 s0 c17 m0 4476 e941 4725 6 | Goulihi Watch
-monsters-small-7 si45 lair rg3 75 36 s0 c0 m39 4520 e985 5507 2 | The Eyrie of Konk
-monsters-small-7 si46 lair rg16 156 175 s0 c0 m40 4551 e995 5026 1 | Zam'azog's Larder
-monsters-small-7 si47 lair rg13 48 152 s0 c0 m41 4651 e999 - 0 | The Hall of Damthi
-monsters-small-7 si48 lair rg4 181 33 s0 c0 m42 5047 e1169 5660 1 | Kuu'kash's Larder
-monsters-small-7 si49 lair rg16 156 175 s0 c0 m43 5079 e1188 5202 1 | Ald'dol's Larder
-monsters-small-7 si50 lair rg6 113 57 s0 c0 m44 5185 e1216 - 0 | Skrux-Skak's Crag
-monsters-small-7 si51 lair rg2 117 0 s0 c0 m45 5232 e1285 5719 1 | The Pit of Uug'azaam
-monsters-small-7 si52 lair rg5 43 71 s0 c0 m46 5382 e1330 - 0 | The Pit of Azuugugu
-monsters-small-7 si53 lair rg16 156 175 s0 c0 m47 5532 e1384 - 0 | Drig-Neeb's Hollow
-monsters-small-7 si54 lair rg3 75 36 s0 c0 m48 5557 e1385 - 0 | The Eyrie of Keesneez
-monsters-small-7 si55 outpost rg4 153 24 s0 c12 m0 5654 e1429 5934 6 | Gusleetch Lookout
-monsters-small-7 si56 outpost rg6 181 61 s0 c23 m0 5657 e1437 5668 4 | The Watch of Maam'kuld
-monsters-small-7 si57 outpost rg6 181 61 s0 c23 m0 5696 e1512 5704 4 | The Watch of Buld
-monsters-small-7 si58 lair rg2 117 0 s0 c0 m49 5734 e1575 5744 3 | Shu's Larder
-monsters-small-7 si59 lair rg1 49 7 s43 c0 m49 5744 e1592 - 0 | The Pit of Shu
-monsters-small-7 si60 lair rg4 181 33 s0 c0 m50 5766 e1627 5809 1 | Bomgruk's Larder
-monsters-small-7 si61 lair rg4 181 33 s0 c0 m51 5850 e1686 - 0 | Ugald'krork's Larder
-monsters-small-7 si62 lair rg12 108 140 s0 c0 m52 5975 e1757 - 0 | The Hall of Drud
+monsters-small-7 si25 lair rg1 70 17 s0 c0 m22 2133 e190 4115 2 | Dribiz's Hollow
+monsters-small-7 si26 outpost rg7 70 92 s0 c1 m0 2176 e219 5557 6 | The Spire of Vaniefe
+monsters-small-7 si27 lair rg16 156 175 s0 c0 m23 2465 e265 3465 2 | Gneek's Crag
+monsters-small-7 si28 lair rg13 48 152 s0 c0 m24 2765 e274 3376 1 | Kignugg's Crag
+monsters-small-7 si29 lair rg15 68 173 s0 c0 m25 3015 e278 3379 1 | Um'azaa's Larder
+monsters-small-7 si30 lair rg5 43 71 s0 c0 m26 3140 e282 3459 1 | Ghaa's Larder
+monsters-small-7 si31 lair rg2 117 0 s0 c0 m27 3190 e283 3587 1 | The Pit of Ghog
+monsters-small-7 si32 outpost rg15 42 189 s19 c5 m0 3383 e407 3881 5 | The Delvings of Nourin Hold
+monsters-small-7 si33 lair rg15 68 173 s0 c0 m28 3383 e409 4376 2 | Az'kuush's Larder
+monsters-small-7 si34 outpost rg3 80 25 s20 c6 m0 3393 e429 3401 5 | The Delvings of Braird Deep
+monsters-small-7 si35 lair rg4 188 29 s18 c0 m18 3397 e435 4576 2 | The Hall of Hairk
+monsters-small-7 si36 outpost rg16 125 177 s0 c8 m0 3403 e461 3404 5 | Skreex-Kigg Stockade
+monsters-small-7 si37 lair rg12 108 140 s0 c0 m29 3431 e524 5742 3 | The Hall of Dudgi
+monsters-small-7 si38 lair rg3 75 36 s0 c0 m30 3455 e602 4233 1 | Krixzox's Crag
+monsters-small-7 si39 outpost rg14 129 155 s0 c3 m0 3482 e668 4190 6 | Drik-Zab Stockade
+monsters-small-7 si40 lair rg13 48 152 s0 c0 m31 3490 e690 4476 2 | Krakhkraag's Larder
+monsters-small-7 si41 outpost rg9 12 119 s21 c7 m0 3490 e691 4256 4 | The Mines of Momm Hold
+monsters-small-7 si42 lair rg6 113 57 s0 c0 m32 3597 e807 4576 2 | Keegrax's Crag
+monsters-small-7 si43 lair rg5 43 71 s0 c0 m33 3615 e825 4615 2 | The Pit of Kaal'zakh
+monsters-small-7 si44 lair rg1 70 17 s0 c0 m34 4140 e1198 5111 3 | The Den of Kritsneeg
+monsters-small-7 si45 lair rg3 75 36 s0 c0 m35 4243 e1238 - 0 | The Den of Bubskatch
+monsters-small-7 si46 lair rg8 190 92 s0 c0 m36 4401 e1388 5298 1 | The Pit of Bal
+monsters-small-7 si47 lair rg7 29 96 s0 c0 m37 4451 e1391 - 0 | Grizz's Hollow
+monsters-small-7 si48 lair rg13 48 152 s0 c0 m38 4501 e1395 5482 2 | Ash'azok's Larder
+monsters-small-7 si49 outpost rg15 74 176 s25 c7 m0 4576 e1400 - 0 | The Mines of Thorngai
+monsters-small-7 si50 lair rg6 113 57 s0 c0 m39 4648 e1452 - 0 | The Hall of Tair
+monsters-small-7 si51 lair rg16 156 175 s0 c0 m40 4651 e1460 4784 1 | Zam'azog's Larder
+monsters-small-7 si52 lair rg11 26 126 s0 c0 m41 4701 e1465 5557 3 | The Eyrie of Geegnaz
+monsters-small-7 si53 lair rg16 156 175 s0 c0 m42 4793 e1515 4952 1 | Kuu'kash's Larder
+monsters-small-7 si54 lair rg16 156 175 s0 c0 m43 4989 e1579 5437 1 | The Pit of Ald'dol
+monsters-small-7 si55 outpost rg6 181 61 s0 c2 m0 5108 e1665 5109 4 | Gusleetch Lookout
+monsters-small-7 si56 lair rg2 165 3 s30 c0 m34 5111 e1679 5476 1 | Kritsneeg's Hollow
+monsters-small-7 si57 outpost rg3 23 47 s0 c14 m0 5338 e1892 5340 5 | Zoslotch Stockade
+monsters-small-7 si58 outpost rg1 28 17 s0 c23 m0 5338 e1893 5557 6 | Brod Tower
+monsters-small-7 si59 lair rg5 43 71 s0 c0 m44 5343 e1909 - 0 | Kog's Larder
+monsters-small-7 si60 outpost rg4 153 24 s0 c27 m0 5359 e1948 5564 5 | Kuskrutch Stockade
+monsters-small-7 si61 lair rg4 181 33 s0 c0 m45 5444 e2036 - 0 | Uug'azaam's Larder
+monsters-small-7 si62 lair rg16 156 175 s0 c0 m46 5480 e2071 5747 1 | The Eyrie of Beez
+monsters-small-7 si63 lair rg2 117 0 s0 c0 m47 5482 e2073 5570 3 | The Pit of Thuush'ghaa
+monsters-small-7 si64 lair rg10 190 97 s32 c0 m41 5557 e2083 5701 2 | Geegnaz's Crag
+monsters-small-7 si65 lair rg1 49 7 s34 c0 m47 5570 e2110 - 0 | Thuush'ghaa's Larder
+monsters-small-7 si66 lair rg13 48 152 s0 c0 m48 5601 e2128 - 0 | Keesneez's Hollow
+monsters-small-7 si67 lair rg10 164 116 s31 c0 m29 5742 e2252 5931 2 | Dudgi's Seat
+monsters-small-7 si68 lair rg11 26 126 s0 c0 m49 5935 e2359 - 0 | The Eyrie of Sneeg-Neek
+monsters-small-7 si69 lair rg12 108 140 s0 c0 m50 5975 e2380 - 0 | Moummtho's Seat
 fixture monsters-small-9 9 6000 all auto normal monsters-small
-monsters-small-9 table beast_population 68 c50bd60f8779850fa4fbdf23a474849f69d632e681584eb07a7f23f0045bf0a1
+monsters-small-9 table beast_population 71 31aa45a9e8297deab6a9e2277637e8ce8c7ce86ee4638c78f5c9f1cef5e9edcc
 monsters-small-9 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-monsters-small-9 table site 0 18d8d609947c6b82b9607704ae40d3317038e709238514de750b5c7411ba4c20
-monsters-small-9 ending 269b3fa47c18353652fab324e59180c0c90b37d762f20e0c9fb10d2a287c6b8d
+monsters-small-9 table site 1 173b91cf2f234504d66e1e2814e30c264b16108ec4cc420d9d693da68b859fc7
+monsters-small-9 ending 6f38a6d8545290cf6a5aeda2e1f7f82493fb9bcdbf4b3fca22728d5508557283
 monsters-small-9 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-monsters-small-9 G ghost 0 endings 0:8,1:1 standing 8 population 4368 shunned 0
+monsters-small-9 G ghost 0 endings 0:8,1:1 standing 8 population 4528 shunned 0
 monsters-small-9 S outposts 0 ended 0 bold 0 monster_flares 0
+monsters-small-9 si1 outpost rg37 46 178 s4 c3 m0 3354 e80 - 0 | The Mines of Kourn Hold
 fixture monsters-small-12 12 2000 goblin,human,orc 4 normal monsters-small
-monsters-small-12 table beast_population 123 f50a6832651766eb7d723acdec18107b8607922e69a39803f685504d8c25605f
-monsters-small-12 table monster 11 61cf6f5d8c686e871d6061f49e872465a7d75ee9fdd949eca07d7418142390f5
-monsters-small-12 table site 16 c37572ff2b0136b2cf54e39e277d4264e7f1bebb3f423a3886aa236ed1a7f9d2
-monsters-small-12 ending 5309ac068d748d878c6723caa20cbf2c27c7375435619a03808790b990828f45
-monsters-small-12 M monsters 11 alive 4 slain 4 died 3 raids 67 killed 2827 overruns 2 risen 0 lair_settlement_open 1
-monsters-small-12 G ghost 0 endings 0:12,1:6,2:2,6:5 standing 12 population 30099 shunned 1
-monsters-small-12 S outposts 3 ended 2 bold 0 monster_flares 0
-monsters-small-12 m1 troll 1 born 9 e9 died - hoard 91 | Kronitch | lair Kronitch's Hollow
+monsters-small-12 table beast_population 118 f6ae8fcc6029c00d699646c101387bcf0ea6809c8c6a240adb5a091cc2dd9cf1
+monsters-small-12 table monster 11 d4e355205d071f4dcacc6ed25b48ef6b8bb0626b6e448219ce65e780a20a54bb
+monsters-small-12 table site 17 4192e5b7b5b0b03749013d1ef8c0e3c9980f9fa8aec782f3d2961442ef2ade39
+monsters-small-12 ending aca3c602a8a41f14c557da7c1ed7697395953852e9c1c3cb154e5f24db29d2f9
+monsters-small-12 M monsters 11 alive 4 slain 4 died 3 raids 71 killed 3239 overruns 2 risen 2 lair_settlement_open 2
+monsters-small-12 G ghost 0 endings 0:14,1:6,2:2,6:5 standing 14 population 28220 shunned 2
+monsters-small-12 S outposts 4 ended 1 bold 0 monster_flares 0
+monsters-small-12 m1 troll 3 born 9 e9 died 1968 hoard 60 | Kronitch | lair Kronitch's Hollow
 monsters-small-12 m2 dragon 2 born 14 e11 died - hoard 18 | Elorelie the Old | lair The Lair of Elorelie
 monsters-small-12 m3 ogre 4 born 15 e12 died 1009 hoard 0 | Kaakh the Gaunt | lair Kaakh's Larder
 monsters-small-12 m4 ogre 3 born 22 e16 died 291 hoard 14 | Zuk'thuul | lair Zuk'thuul's Larder
-monsters-small-12 m5 ogre 4 born 50 e25 died 1034 hoard 5 | Thuk the Fat | lair Thuk's Larder
-monsters-small-12 m6 ogre 4 born 459 e112 died 1459 hoard 0 | Maag Bonebreaker | lair Maag's Larder
-monsters-small-12 m7 ogre 3 born 1034 e125 died 1666 hoard 35 | Aagh'mag the Hungering | lair Aagh'mag's Larder
-monsters-small-12 m8 ogre 3 born 1509 e127 died 1848 hoard 24 | A'zal | lair The Pit of A'zal
-monsters-small-12 m9 ogre 2 born 1732 e284 died - hoard 64 | Bork'uguk the Glutton | lair The Pit of Bork'uguk
-monsters-small-12 m10 ogre 3 born 1811 e449 died 1886 hoard 49 | Thaaz | lair Thaaz's Larder
-monsters-small-12 m11 ogre 2 born 1933 e577 died - hoard 0 | Ugorz | lair Ugorz's Larder
+monsters-small-12 m5 ogre 4 born 50 e25 died 1034 hoard 9 | Thuk the Fat | lair Thuk's Larder
+monsters-small-12 m6 ogre 4 born 392 e85 died 1384 hoard 5 | Maag Bonebreaker | lair The Pit of Maag
+monsters-small-12 m7 ogre 3 born 1034 e156 died 1666 hoard 35 | Aagh'mag the Hungering | lair The Pit of Aagh'mag
+monsters-small-12 m8 ogre 3 born 1509 e158 died 1688 hoard 1 | A'zal | lair The Pit of A'zal
+monsters-small-12 m9 undead 2 born 1688 e233 died - hoard 0 | The Dead of Greez | lair The Barrows of Greez
+monsters-small-12 m10 ogre 2 born 1732 e274 died - hoard 78 | Thaaz the Glutton | lair Thaaz's Larder
+monsters-small-12 m11 undead 2 born 1737 e308 died - hoard 0 | The Restless of Synthetic 3 | lair The Howes of Synthetic 3
 monsters-small-12 si1 lair rg1 13 0 s0 c0 m1 9 e9 279 3 | The Den of Kronitch
 monsters-small-12 si2 lair rg4 45 121 s0 c0 m2 14 e11 - 0 | The Lair of Elorelie
 monsters-small-12 si3 lair rg5 100 171 s0 c0 m3 15 e12 1009 2 | Kaakh's Larder
 monsters-small-12 si4 lair rg2 186 44 s0 c0 m4 22 e16 291 1 | Zuk'thuul's Larder
 monsters-small-12 si5 lair rg3 48 87 s0 c0 m5 50 e25 1034 2 | Thuk's Larder
-monsters-small-12 si6 lair rg1 189 0 s12 c0 m1 279 e55 - 0 | Kronitch's Hollow
-monsters-small-12 si7 lair rg2 186 44 s0 c0 m6 459 e112 1459 2 | Maag's Larder
-monsters-small-12 si8 lair rg5 100 171 s0 c0 m7 1034 e125 1666 1 | Aagh'mag's Larder
-monsters-small-12 si9 lair rg2 186 44 s0 c0 m8 1509 e127 1781 3 | A'zal's Larder
-monsters-small-12 si10 lair rg5 100 171 s0 c0 m9 1732 e284 - 0 | The Pit of Bork'uguk
-monsters-small-12 si11 outpost rg2 138 58 s0 c6 m0 1732 e291 1739 5 | Zeegg Lookout
-monsters-small-12 si12 outpost rg3 157 79 s0 c5 m0 1773 e398 1776 4 | Slik Lookout
-monsters-small-12 si13 lair rg2 91 46 s23 c0 m8 1781 e428 1848 1 | The Pit of A'zal
-monsters-small-12 si14 lair rg3 48 87 s0 c0 m10 1811 e449 1886 1 | Thaaz's Larder
-monsters-small-12 si15 outpost rg4 26 123 s0 c7 m0 1837 e455 - 0 | Droz-Greegg Stockade
-monsters-small-12 si16 lair rg2 186 44 s0 c0 m11 1933 e577 - 0 | Ugorz's Larder
+monsters-small-12 si6 lair rg1 189 0 s12 c0 m1 279 e56 1968 1 | Kronitch's Hollow
+monsters-small-12 si7 lair rg2 186 44 s0 c0 m6 392 e85 1384 2 | The Pit of Maag
+monsters-small-12 si8 outpost rg2 138 58 s0 c2 m0 423 e105 431 5 | Keek Stockade
+monsters-small-12 si9 lair rg5 100 171 s0 c0 m7 1034 e156 1666 1 | The Pit of Aagh'mag
+monsters-small-12 si10 lair rg2 186 44 s0 c0 m8 1509 e158 1688 1 | The Pit of A'zal
+monsters-small-12 si11 lair rg2 91 46 s23 c0 m9 1688 e233 - 0 | The Barrows of Greez
+monsters-small-12 si12 lair rg5 100 171 s0 c0 m10 1732 e274 - 0 | Thaaz's Larder
+monsters-small-12 si13 outpost rg4 26 123 s0 c7 m0 1733 e289 - 0 | Slusneez Lookout
+monsters-small-12 si14 lair rg3 48 87 s0 c0 m11 1737 e308 1898 3 | The Barrows of Synthetic 3
+monsters-small-12 si15 lair rg3 106 97 s21 c0 m11 1898 e528 - 0 | The Howes of Synthetic 3
+monsters-small-12 si16 outpost rg3 157 79 s0 c6 m0 1906 e540 - 0 | Keetch Stockade
+monsters-small-12 si17 outpost rg2 138 58 s0 c8 m0 1918 e571 - 0 | The Watch of Zaz'kraak
 fixture monsters-small-13 13 6000 goblin,human,orc 4 turbulent monsters-small
-monsters-small-13 table beast_population 160 ecb56c3b9ba18f5c2b91e8947100bbf3206b36d380118e365b768a04a9171039
-monsters-small-13 table monster 53 4c6e1501501b08f6f6e3a173e44bb1df230705de30d1189ce189fd43e203818b
-monsters-small-13 table site 57 971b47bb20dd486b9d29eeb513effa3fa921d85f5df6341505cd1c3623178093
-monsters-small-13 ending 158e3864d4e9c563d5e53fc00a398dc0305263c998907d1559d813ebaf3549b0
-monsters-small-13 M monsters 53 alive 9 slain 11 died 33 raids 467 killed 22814 overruns 1 risen 0 lair_settlement_open 0
-monsters-small-13 G ghost 0 endings 0:7,1:11,2:1,6:12 standing 7 population 11060 shunned 0
-monsters-small-13 S outposts 3 ended 3 bold 0 monster_flares 3
-monsters-small-13 m1 wyvern 4 born 2 e10 died 1002 hoard 0 | The Screamers of Gizz | lair The Eyrie of Gizz
+monsters-small-13 table beast_population 145 5baeda9e6214e36bf34cf65c74eb3cd25492f3f53bf7e582f7eeaed15f6a6fe0
+monsters-small-13 table monster 57 5fa3bdae97041c45d9da678385f04d4690813997c6b2129e934c0bd6161dd0f8
+monsters-small-13 table site 70 cee0c0c561642b3cf01bee7e9e3a1da69915703db2d9c26a27ce635f1616b5b8
+monsters-small-13 ending 5f3e37279bc2426d7280166bbcfe9f854754c24a1619a6ce2a76c4bd84895b11
+monsters-small-13 M monsters 57 alive 11 slain 11 died 35 raids 343 killed 16764 overruns 4 risen 1 lair_settlement_open 0
+monsters-small-13 G ghost 0 endings 0:8,1:11,2:4,6:9 standing 8 population 12848 shunned 0
+monsters-small-13 S outposts 9 ended 9 bold 0 monster_flares 2
+monsters-small-13 m1 wyvern 4 born 2 e10 died 1000 hoard 0 | The Screamers of Gizz | lair The Eyrie of Gizz
 monsters-small-13 m2 dragon 2 born 6 e13 died - hoard 242 | Foelaefa Ashwing | lair Foelaefa's Deep
-monsters-small-13 m3 ogre 3 born 9 e14 died 717 hoard 67 | Ak'urugh Bonebreaker | lair The Pit of Ak'urugh
-monsters-small-13 m4 ogre 4 born 13 e16 died 1013 hoard 39 | Krom'kraa the Fat | lair The Pit of Krom'kraa
-monsters-small-13 m5 ogre 4 born 14 e17 died 1014 hoard 4 | Ark'urark the Gaunt | lair Ark'urark's Larder
-monsters-small-13 m6 troll 4 born 15 e18 died 2000 hoard 0 | Bub-Kagg of the Fells | lair The Den of Bub-Kagg
-monsters-small-13 m7 troll 4 born 20 e20 died 2000 hoard 94 | Old Skuslux | lair The Den of Skuslux
-monsters-small-13 m8 giant 4 born 37 e31 died 2525 hoard 232 | Grairinga the Tall | lair Grairinga's Seat
+monsters-small-13 m3 ogre 4 born 9 e14 died 1000 hoard 30 | Ak'urugh Bonebreaker | lair The Pit of Ak'urugh
+monsters-small-13 m4 ogre 4 born 13 e16 died 1000 hoard 7 | Krom'kraa the Fat | lair The Pit of Krom'kraa
+monsters-small-13 m5 ogre 4 born 14 e17 died 1025 hoard 4 | Ark'urark the Gaunt | lair Ark'urark's Larder
+monsters-small-13 m6 troll 4 born 15 e18 died 2025 hoard 0 | Bub-Kagg of the Fells | lair The Den of Bub-Kagg
+monsters-small-13 m7 troll 4 born 20 e20 died 2050 hoard 32 | Old Skuslux | lair The Den of Skuslux
+monsters-small-13 m8 giant 4 born 37 e31 died 2537 hoard 15 | Grairinga the Tall | lair Grairinga's Seat
 monsters-small-13 m9 troll 4 born 128 e68 died 2125 hoard 0 | Mossback Sluz | lair The Den of Sluz
 monsters-small-13 m10 wyvern 4 born 225 e96 died 1225 hoard 0 | The Bitgratch Brood | lair Bitgratch's Crag
-monsters-small-13 m11 giant 4 born 375 e105 died 2875 hoard 52 | Khoudmo | lair The Hall of Khoudmo
-monsters-small-13 m12 ogre 4 born 762 e608 died 1750 hoard 86 | Thuukdoz | lair The Pit of Thuukdoz
-monsters-small-13 m13 ogre 4 born 1021 e768 died 2025 hoard 4 | Azol the Glutton | lair The Pit of Azol
-monsters-small-13 m14 ogre 4 born 1025 e770 died 2025 hoard 0 | Shuukh the Hungering | lair The Pit of Shuukh
-monsters-small-13 m15 wyvern 4 born 1050 e772 died 2050 hoard 0 | The Brood of Gnitch | lair The Eyrie of Gnitch
-monsters-small-13 m16 wyvern 4 born 1250 e774 died 2250 hoard 0 | The Brood of Nunk | lair The Eyrie of Nunk
-monsters-small-13 m17 ogre 3 born 1750 e776 died 2484 hoard 19 | Krogkrok | lair Krogkrok's Larder
-monsters-small-13 m18 ogre 4 born 2025 e783 died 3025 hoard 58 | Uguurk'gruk | lair The Pit of Uguurk'gruk
-monsters-small-13 m19 troll 4 born 2050 e785 died 4050 hoard 114 | Drax Stonehide | lair The Den of Drax
-monsters-small-13 m20 ogre 4 born 2075 e786 died 3075 hoard 0 | Ugug | lair Ugug's Larder
-monsters-small-13 m21 wyvern 4 born 2100 e787 died 3100 hoard 0 | The Snank-Keet Brood | lair Snank-Keet's Crag
-monsters-small-13 m22 troll 4 born 2150 e789 died 4150 hoard 0 | Gnix-Droz | lair The Den of Gnix-Droz
-monsters-small-13 m23 troll 4 born 2175 e790 died 4175 hoard 286 | Skasnok | lair The Den of Skasnok
-monsters-small-13 m24 wyvern 4 born 2250 e795 died 3250 hoard 0 | The Screamers of Slig-Skork | lair The Eyrie of Slig-Skork
-monsters-small-13 m25 giant 4 born 2563 e1026 died 5063 hoard 113 | Brarn | lair Brarn's Seat
-monsters-small-13 m26 ogre 3 born 2600 e1076 died 2657 hoard 6 | Kogh | lair Kogh's Larder
-monsters-small-13 m27 ogre 4 born 2725 e1115 died 3725 hoard 0 | Kaldush | lair Kaldush's Larder
-monsters-small-13 m28 ogre 4 born 3050 e1119 died 4050 hoard 45 | Zaash | lair Zaash's Larder
-monsters-small-13 m29 ogre 4 born 3100 e1122 died 4100 hoard 11 | Uruk | lair Uruk's Larder
-monsters-small-13 m30 wyvern 4 born 3125 e1123 died 4125 hoard 0 | The Screamers of Krozogg | lair The Eyrie of Krozogg
-monsters-small-13 m31 wyvern 4 born 3300 e1125 died 4300 hoard 0 | The Keegg Brood | lair Keegg's Crag
-monsters-small-13 m32 giant 4 born 3475 e1126 died 5975 hoard 68 | Nimmgi the Grey | lair The Hall of Nimmgi
-monsters-small-13 m33 ogre 4 born 3775 e1168 died 4775 hoard 62 | Am'shald | lair Am'shald's Larder
-monsters-small-13 m34 troll 2 born 4050 e1172 died - hoard 194 | Snix | lair The Den of Snix
-monsters-small-13 m35 ogre 4 born 4075 e1175 died 5075 hoard 30 | Za'kuum | lair The Pit of Za'kuum
-monsters-small-13 m36 ogre 3 born 4100 e1180 died 4543 hoard 102 | Maaldghagh | lair Maaldghagh's Larder
-monsters-small-13 m37 troll 2 born 4150 e1183 died - hoard 0 | Kaz | lair Kaz's Hollow
-monsters-small-13 m38 wyvern 4 born 4200 e1187 died 5200 hoard 0 | The Brood of Grogg | lair Grogg's Crag
-monsters-small-13 m39 ogre 4 born 4550 e1451 died 5537 hoard 2 | Duz'ghom | lair Duz'ghom's Larder
-monsters-small-13 m40 wyvern 4 born 4675 e1454 died 5675 hoard 0 | The Screamers of Gnax | lair Gnax's Crag
-monsters-small-13 m41 ogre 3 born 4800 e1456 died 5651 hoard 69 | Ork'ghog | lair Ork'ghog's Larder
-monsters-small-13 m42 troll 2 born 4954 e1479 died - hoard 8 | Grodrot | lair Grodrot's Hollow
-monsters-small-13 m43 ogre 3 born 5087 e1597 died 5168 hoard 3 | Kaagh'kuukh | lair The Pit of Kaagh'kuukh
-monsters-small-13 m44 ogre 1 born 5175 e1622 died - hoard 0 | Gham'urok | lair The Pit of Gham'urok
-monsters-small-13 m45 giant 2 born 5237 e1637 died - hoard 0 | Dirn | lair The Hall of Dirn
-monsters-small-13 m46 wyvern 2 born 5312 e1663 died - hoard 0 | The Screamers of Kreekrigg | lair The Eyrie of Kreekrigg
-monsters-small-13 m47 ogre 3 born 5562 e1666 died 5618 hoard 8 | Daarz | lair The Pit of Daarz
-monsters-small-13 m48 ogre 3 born 5668 e1746 died 5763 hoard 88 | Urol'kaz | lair Urol'kaz's Larder
-monsters-small-13 m49 ogre 3 born 5680 e1759 died 5734 hoard 20 | Uuz'gham | lair The Pit of Uuz'gham
-monsters-small-13 m50 ogre 3 born 5744 e1796 died 5786 hoard 29 | Kaaz'buk | lair Kaaz'buk's Larder
-monsters-small-13 m51 ogre 1 born 5899 e1851 died - hoard 59 | Azomghum | lair Azomghum's Larder
-monsters-small-13 m52 ogre 2 born 5921 e1865 died - hoard 24 | Kum | lair Kum's Larder
-monsters-small-13 m53 wyvern 3 born 5938 e1876 died 5958 hoard 0 | The Brood of Sleezgob | lair The Eyrie of Sleezgob
+monsters-small-13 m11 giant 4 born 375 e106 died 2875 hoard 48 | Khoudmo | lair The Hall of Khoudmo
+monsters-small-13 m12 undead 4 born 504 e346 died 1500 hoard 0 | The Dead of Skrink-Slub Pit | lair The Howes of Skrink-Slub Pit
+monsters-small-13 m13 ogre 4 born 1025 e471 died 2050 hoard 0 | Azol the Glutton | lair Azol's Larder
+monsters-small-13 m14 wyvern 4 born 1050 e472 died 2050 hoard 0 | The Brood of Dreeb | lair The Eyrie of Dreeb
+monsters-small-13 m15 ogre 4 born 1075 e473 died 2075 hoard 0 | Kraagh the Hungering | lair Kraagh's Larder
+monsters-small-13 m16 ogre 4 born 1125 e474 died 2125 hoard 0 | Daak | lair The Pit of Daak
+monsters-small-13 m17 wyvern 4 born 1250 e476 died 2250 hoard 0 | The Screamers of Dreezz | lair Dreezz's Crag
+monsters-small-13 m18 ogre 4 born 2075 e492 died 3075 hoard 0 | Uguurk'gruk | lair Uguurk'gruk's Larder
+monsters-small-13 m19 wyvern 4 born 2100 e494 died 3100 hoard 0 | The Brood of Drax | lair Drax's Crag
+monsters-small-13 m20 ogre 4 born 2125 e498 died 3125 hoard 0 | Ugug | lair Ugug's Larder
+monsters-small-13 m21 ogre 4 born 2150 e499 died 3150 hoard 9 | Buuk | lair The Pit of Buuk
+monsters-small-13 m22 troll 4 born 2175 e500 died 4175 hoard 81 | Gnix-Droz | lair Gnix-Droz's Hollow
+monsters-small-13 m23 troll 4 born 2250 e507 died 4250 hoard 174 | Skasnok Stonehide | lair Skasnok's Hollow
+monsters-small-13 m24 troll 4 born 2300 e510 died 4300 hoard 0 | Slig-Skork | lair The Den of Slig-Skork
+monsters-small-13 m25 wyvern 4 born 2475 e513 died 3475 hoard 0 | The Screamers of Kraxbeenk | lair The Eyrie of Kraxbeenk
+monsters-small-13 m26 giant 4 born 2613 e744 died 5112 hoard 92 | Baiktaird | lair The Hall of Baiktaird
+monsters-small-13 m27 ogre 4 born 3100 e950 died 4100 hoard 9 | Kaldush | lair The Pit of Kaldush
+monsters-small-13 m28 ogre 4 born 3125 e953 died 4125 hoard 0 | Zaash | lair The Pit of Zaash
+monsters-small-13 m29 ogre 4 born 3150 e955 died 4150 hoard 0 | Uruk | lair Uruk's Larder
+monsters-small-13 m30 giant 4 born 3175 e956 died 5675 hoard 120 | Drainka the Grey | lair Drainka's Seat
+monsters-small-13 m31 wyvern 4 born 3246 e975 died 4225 hoard 0 | The Keegg Brood | lair The Eyrie of Keegg
+monsters-small-13 m32 wyvern 4 born 3475 e980 died 4475 hoard 0 | The Screamers of Kitch-Droz | lair The Eyrie of Kitch-Droz
+monsters-small-13 m33 ogre 3 born 4100 e986 died 4946 hoard 12 | Am'shald | lair Am'shald's Larder
+monsters-small-13 m34 ogre 4 born 4150 e990 died 5150 hoard 7 | Uu'kruugh | lair Uu'kruugh's Larder
+monsters-small-13 m35 ogre 4 born 4200 e992 died 5187 hoard 0 | Za'kuum | lair The Pit of Za'kuum
+monsters-small-13 m36 troll 2 born 4300 e998 died - hoard 0 | Skaknonk | lair Skaknonk's Hollow
+monsters-small-13 m37 wyvern 4 born 4350 e1001 died 5350 hoard 0 | The Screamers of Kaz | lair The Eyrie of Kaz
+monsters-small-13 m38 troll 2 born 4575 e1004 died - hoard 67 | Grogg | lair The Den of Grogg
+monsters-small-13 m39 troll 3 born 4600 e1005 died 5635 hoard 161 | Sleenk | lair The Den of Sleenk
+monsters-small-13 m40 wyvern 4 born 4775 e1006 died 5775 hoard 0 | The Screamers of Gnax | lair The Eyrie of Gnax
+monsters-small-13 m41 ogre 3 born 5112 e1219 died 5157 hoard 27 | Ork'ghog | lair Ork'ghog's Larder
+monsters-small-13 m42 ogre 1 born 5181 e1298 died - hoard 72 | Kuum | lair Kuum's Larder
+monsters-small-13 m43 ogre 1 born 5212 e1309 died - hoard 0 | Kaagh'kuukh | lair The Pit of Kaagh'kuukh
+monsters-small-13 m44 ogre 3 born 5230 e1322 died 5607 hoard 57 | Gham'urok | lair Gham'urok's Larder
+monsters-small-13 m45 giant 2 born 5609 e1644 died - hoard 41 | Dirn | lair The Hall of Dirn
+monsters-small-13 m46 ogre 3 born 5613 e1652 died 5634 hoard 12 | Zuukuguu | lair Zuukuguu's Larder
+monsters-small-13 m47 wyvern 2 born 5658 e1683 died - hoard 0 | The Giz Brood | lair Giz's Crag
+monsters-small-13 m48 ogre 3 born 5668 e1709 died 5690 hoard 19 | Urol'kaz | lair The Pit of Urol'kaz
+monsters-small-13 m49 giant 3 born 5689 e1730 died 5725 hoard 8 | Khind | lair The Hall of Khind
+monsters-small-13 m50 ogre 3 born 5701 e1737 died 5705 hoard 5 | Kaaz'buk | lair The Pit of Kaaz'buk
+monsters-small-13 m51 troll 3 born 5712 e1749 died 5756 hoard 35 | Gneeg | lair The Den of Gneeg
+monsters-small-13 m52 ogre 3 born 5721 e1758 died 5913 hoard 67 | Kum | lair The Pit of Kum
+monsters-small-13 m53 troll 3 born 5757 e1833 died 5856 hoard 41 | Sleezgob | lair Sleezgob's Hollow
+monsters-small-13 m54 giant 2 born 5793 e1874 died - hoard 7 | Khangrimm Cliffbreaker | lair Khangrimm's Seat
+monsters-small-13 m55 wyvern 1 born 5873 e1920 died - hoard 0 | The Skraskab Brood | lair The Eyrie of Skraskab
+monsters-small-13 m56 troll 1 born 5886 e1927 died - hoard 0 | Keex-Skat | lair The Den of Keex-Skat
+monsters-small-13 m57 ogre 2 born 5921 e1955 died - hoard 15 | Uro | lair The Pit of Uro
 monsters-small-13 si1 lair rg16 34 184 s0 c0 m1 2 e10 435 3 | Gizz's Crag
 monsters-small-13 si2 lair rg19 150 169 s0 c0 m2 6 e13 - 0 | Foelaefa's Deep
-monsters-small-13 si3 lair rg17 59 168 s0 c0 m3 9 e14 717 1 | The Pit of Ak'urugh
-monsters-small-13 si4 lair rg4 146 39 s0 c0 m4 13 e16 1013 2 | The Pit of Krom'kraa
-monsters-small-13 si5 lair rg3 99 3 s0 c0 m5 14 e17 1014 2 | Ark'urark's Larder
-monsters-small-13 si6 lair rg15 191 143 s0 c0 m6 15 e18 2000 2 | The Den of Bub-Kagg
-monsters-small-13 si7 lair rg8 104 77 s0 c0 m7 20 e20 2000 2 | The Den of Skuslux
-monsters-small-13 si8 lair rg9 130 86 s0 c0 m8 37 e31 2525 2 | Grairinga's Seat
+monsters-small-13 si3 lair rg17 59 168 s0 c0 m3 9 e14 1000 2 | The Pit of Ak'urugh
+monsters-small-13 si4 lair rg4 146 39 s0 c0 m4 13 e16 1000 2 | The Pit of Krom'kraa
+monsters-small-13 si5 lair rg3 99 3 s0 c0 m5 14 e17 1025 2 | Ark'urark's Larder
+monsters-small-13 si6 lair rg15 191 143 s0 c0 m6 15 e18 2025 2 | The Den of Bub-Kagg
+monsters-small-13 si7 lair rg8 104 77 s0 c0 m7 20 e20 2050 2 | The Den of Skuslux
+monsters-small-13 si8 lair rg9 130 86 s0 c0 m8 37 e31 2537 2 | Grairinga's Seat
 monsters-small-13 si9 lair rg5 181 21 s0 c0 m9 128 e68 2125 2 | The Den of Sluz
 monsters-small-13 si10 lair rg7 67 53 s0 c0 m10 225 e96 1225 2 | Bitgratch's Crag
-monsters-small-13 si11 lair rg12 78 141 s0 c0 m11 375 e105 2875 2 | The Hall of Khoudmo
-monsters-small-13 si12 lair rg16 8 181 s17 c0 m1 435 e184 1002 2 | The Eyrie of Gizz
-monsters-small-13 si13 lair rg18 107 165 s0 c0 m12 762 e608 1750 2 | The Pit of Thuukdoz
-monsters-small-13 si14 lair rg4 146 39 s0 c0 m13 1021 e768 2025 2 | The Pit of Azol
-monsters-small-13 si15 lair rg11 11 134 s0 c0 m14 1025 e770 2025 2 | The Pit of Shuukh
-monsters-small-13 si16 lair rg13 83 107 s0 c0 m15 1050 e772 2050 2 | The Eyrie of Gnitch
-monsters-small-13 si17 lair rg7 67 53 s0 c0 m16 1250 e774 2250 2 | The Eyrie of Nunk
-monsters-small-13 si18 lair rg2 62 7 s0 c0 m17 1750 e776 2484 1 | Krogkrok's Larder
-monsters-small-13 si19 lair rg18 107 165 s0 c0 m18 2025 e783 3025 2 | The Pit of Uguurk'gruk
-monsters-small-13 si20 lair rg8 104 77 s0 c0 m19 2050 e785 4050 2 | The Den of Drax
-monsters-small-13 si21 lair rg15 191 143 s0 c0 m20 2075 e786 3075 2 | Ugug's Larder
-monsters-small-13 si22 lair rg4 146 39 s0 c0 m21 2100 e787 3100 2 | Snank-Keet's Crag
-monsters-small-13 si23 lair rg5 181 21 s0 c0 m22 2150 e789 4150 2 | The Den of Gnix-Droz
-monsters-small-13 si24 lair rg17 59 168 s0 c0 m23 2175 e790 4175 2 | The Den of Skasnok
-monsters-small-13 si25 lair rg13 83 107 s0 c0 m24 2250 e795 3250 2 | The Eyrie of Slig-Skork
-monsters-small-13 si26 outpost rg6 39 84 s0 c3 m0 2392 e930 2850 6 | Zeedrark Lookout
-monsters-small-13 si27 lair rg10 189 89 s0 c0 m25 2563 e1026 5063 2 | Brarn's Seat
-monsters-small-13 si28 outpost rg1 28 28 s0 c13 m0 2574 e1053 2651 5 | Bozot Stockade
-monsters-small-13 si29 lair rg16 34 184 s0 c0 m26 2600 e1076 2657 1 | Kogh's Larder
-monsters-small-13 si30 lair rg3 99 3 s0 c0 m27 2725 e1115 3725 2 | Kaldush's Larder
-monsters-small-13 si31 lair rg9 130 86 s0 c0 m28 3050 e1119 4050 2 | Zaash's Larder
-monsters-small-13 si32 lair rg7 67 53 s0 c0 m29 3100 e1122 4100 2 | Uruk's Larder
-monsters-small-13 si33 lair rg15 191 143 s0 c0 m30 3125 e1123 4125 2 | The Eyrie of Krozogg
-monsters-small-13 si34 lair rg13 83 107 s0 c0 m31 3300 e1125 4300 2 | Keegg's Crag
-monsters-small-13 si35 lair rg4 146 39 s0 c0 m32 3475 e1126 5975 2 | The Hall of Nimmgi
-monsters-small-13 si36 lair rg3 99 3 s0 c0 m33 3775 e1168 4775 2 | Am'shald's Larder
-monsters-small-13 si37 lair rg9 130 86 s0 c0 m34 4050 e1172 - 0 | The Den of Snix
-monsters-small-13 si38 lair rg8 104 77 s0 c0 m35 4075 e1175 5075 2 | The Pit of Za'kuum
-monsters-small-13 si39 lair rg7 67 53 s0 c0 m36 4100 e1180 4543 1 | Maaldghagh's Larder
-monsters-small-13 si40 lair rg5 181 21 s0 c0 m37 4150 e1183 - 0 | Kaz's Hollow
-monsters-small-13 si41 lair rg15 191 143 s0 c0 m38 4200 e1187 5200 2 | Grogg's Crag
-monsters-small-13 si42 outpost rg1 28 28 s0 c17 m0 4473 e1384 4529 5 | Zag Stockade
-monsters-small-13 si43 lair rg2 62 7 s0 c0 m39 4550 e1451 5537 2 | Duz'ghom's Larder
-monsters-small-13 si44 lair rg18 107 165 s0 c0 m40 4675 e1454 5675 2 | Gnax's Crag
-monsters-small-13 si45 lair rg6 44 70 s0 c0 m41 4800 e1456 5651 1 | Ork'ghog's Larder
-monsters-small-13 si46 lair rg1 12 39 s0 c0 m42 4954 e1479 - 0 | Grodrot's Hollow
-monsters-small-13 si47 lair rg13 83 107 s0 c0 m43 5087 e1597 5168 1 | The Pit of Kaagh'kuukh
-monsters-small-13 si48 lair rg3 99 3 s0 c0 m44 5175 e1622 - 0 | The Pit of Gham'urok
-monsters-small-13 si49 lair rg15 191 143 s0 c0 m45 5237 e1637 - 0 | The Hall of Dirn
-monsters-small-13 si50 lair rg10 189 89 s0 c0 m46 5312 e1663 - 0 | The Eyrie of Kreekrigg
-monsters-small-13 si51 lair rg13 83 107 s0 c0 m47 5562 e1666 5618 1 | The Pit of Daarz
-monsters-small-13 si52 lair rg12 78 141 s0 c0 m48 5668 e1746 5763 1 | Urol'kaz's Larder
-monsters-small-13 si53 lair rg16 34 184 s0 c0 m49 5680 e1759 5734 1 | The Pit of Uuz'gham
-monsters-small-13 si54 lair rg13 83 107 s0 c0 m50 5744 e1796 5786 1 | Kaaz'buk's Larder
-monsters-small-13 si55 lair rg18 107 165 s0 c0 m51 5899 e1851 - 0 | Azomghum's Larder
-monsters-small-13 si56 lair rg11 11 134 s0 c0 m52 5921 e1865 - 0 | Kum's Larder
-monsters-small-13 si57 lair rg8 104 77 s0 c0 m53 5938 e1876 5958 1 | The Eyrie of Sleezgob
+monsters-small-13 si11 lair rg12 78 141 s0 c0 m11 375 e106 2875 2 | The Hall of Khoudmo
+monsters-small-13 si12 outpost rg11 14 142 s0 c6 m0 431 e183 650 6 | Slogzut Lookout
+monsters-small-13 si13 lair rg16 8 181 s17 c0 m1 435 e189 1000 2 | The Eyrie of Gizz
+monsters-small-13 si14 lair rg2 48 1 s8 c0 m12 504 e346 520 3 | The Barrows of Skrink-Slub Pit
+monsters-small-13 si15 lair rg1 9 1 s5 c0 m12 520 e405 1500 2 | The Howes of Skrink-Slub Pit
+monsters-small-13 si16 lair rg11 11 134 s0 c0 m13 1025 e471 2050 2 | Azol's Larder
+monsters-small-13 si17 lair rg13 83 107 s0 c0 m14 1050 e472 2050 2 | The Eyrie of Dreeb
+monsters-small-13 si18 lair rg10 189 89 s0 c0 m15 1075 e473 2075 2 | Kraagh's Larder
+monsters-small-13 si19 lair rg2 62 7 s0 c0 m16 1125 e474 2125 2 | The Pit of Daak
+monsters-small-13 si20 lair rg7 67 53 s0 c0 m17 1250 e476 2250 2 | Dreezz's Crag
+monsters-small-13 si21 lair rg15 191 143 s0 c0 m18 2075 e492 3075 2 | Uguurk'gruk's Larder
+monsters-small-13 si22 lair rg4 146 39 s0 c0 m19 2100 e494 3100 2 | Drax's Crag
+monsters-small-13 si23 lair rg13 83 107 s0 c0 m20 2125 e498 3125 2 | Ugug's Larder
+monsters-small-13 si24 lair rg8 104 77 s0 c0 m21 2150 e499 2504 3 | Buuk's Larder
+monsters-small-13 si25 lair rg17 59 168 s0 c0 m22 2175 e500 4175 2 | Gnix-Droz's Hollow
+monsters-small-13 si26 lair rg7 67 53 s0 c0 m23 2250 e507 2657 3 | The Den of Skasnok
+monsters-small-13 si27 lair rg5 181 21 s0 c0 m24 2300 e510 4300 2 | The Den of Slig-Skork
+monsters-small-13 si28 lair rg16 34 184 s0 c0 m25 2475 e513 3475 2 | The Eyrie of Kraxbeenk
+monsters-small-13 si29 lair rg3 106 20 s25 c0 m21 2504 e530 3150 2 | The Pit of Buuk
+monsters-small-13 si30 outpost rg6 39 84 s0 c3 m0 2594 e683 3100 6 | Notch Stockade
+monsters-small-13 si31 lair rg9 130 86 s0 c0 m26 2613 e744 5112 2 | The Hall of Baiktaird
+monsters-small-13 si32 lair rg2 69 1 s24 c0 m23 2657 e789 4250 2 | Skasnok's Hollow
+monsters-small-13 si33 lair rg7 67 53 s0 c0 m27 3100 e950 4100 2 | The Pit of Kaldush
+monsters-small-13 si34 lair rg15 191 143 s0 c0 m28 3125 e953 4125 2 | The Pit of Zaash
+monsters-small-13 si35 lair rg3 99 3 s0 c0 m29 3150 e955 4150 2 | Uruk's Larder
+monsters-small-13 si36 lair rg8 104 77 s0 c0 m30 3175 e956 5675 2 | Drainka's Seat
+monsters-small-13 si37 lair rg13 83 107 s0 c0 m31 3246 e975 4225 2 | The Eyrie of Keegg
+monsters-small-13 si38 lair rg10 189 89 s0 c0 m32 3475 e980 4475 2 | The Eyrie of Kitch-Droz
+monsters-small-13 si39 lair rg7 67 53 s0 c0 m33 4100 e986 4946 1 | Am'shald's Larder
+monsters-small-13 si40 lair rg12 78 141 s0 c0 m34 4150 e990 5150 2 | Uu'kruugh's Larder
+monsters-small-13 si41 lair rg3 99 3 s0 c0 m35 4200 e992 5187 2 | The Pit of Za'kuum
+monsters-small-13 si42 lair rg15 191 143 s0 c0 m36 4300 e998 - 0 | Skaknonk's Hollow
+monsters-small-13 si43 lair rg18 107 165 s0 c0 m37 4350 e1001 5350 2 | The Eyrie of Kaz
+monsters-small-13 si44 lair rg10 189 89 s0 c0 m38 4575 e1004 - 0 | The Den of Grogg
+monsters-small-13 si45 lair rg4 146 39 s0 c0 m39 4600 e1005 5635 1 | The Den of Sleenk
+monsters-small-13 si46 lair rg13 83 107 s0 c0 m40 4775 e1006 5775 2 | The Eyrie of Gnax
+monsters-small-13 si47 outpost rg1 28 28 s0 c18 m0 5006 e1090 5009 5 | Gat-Drok Stockade
+monsters-small-13 si48 outpost rg17 64 146 s0 c19 m0 5055 e1160 5946 6 | Zeetch Lookout
+monsters-small-13 si49 lair rg6 44 70 s0 c0 m41 5112 e1219 5157 1 | Ork'ghog's Larder
+monsters-small-13 si50 outpost rg1 28 28 s0 c21 m0 5143 e1256 5149 5 | Skikskirk Stockade
+monsters-small-13 si51 lair rg7 67 53 s0 c0 m42 5181 e1298 - 0 | Kuum's Larder
+monsters-small-13 si52 lair rg3 99 3 s0 c0 m43 5212 e1309 - 0 | The Pit of Kaagh'kuukh
+monsters-small-13 si53 lair rg9 130 86 s0 c0 m44 5230 e1322 5607 1 | Gham'urok's Larder
+monsters-small-13 si54 outpost rg16 41 144 s0 c23 m0 5255 e1360 5260 5 | Skruk-Skeeg Stockade
+monsters-small-13 si55 outpost rg11 14 142 s0 c22 m0 5338 e1389 5985 6 | Gatchkrunk Lookout
+monsters-small-13 si56 outpost rg16 41 144 s0 c19 m0 5344 e1402 5361 4 | Sluz Lookout
+monsters-small-13 si57 outpost rg16 41 144 s0 c25 m0 5384 e1480 5438 5 | Gnugg Stockade
+monsters-small-13 si58 lair rg16 34 184 s0 c0 m45 5609 e1644 - 0 | The Hall of Dirn
+monsters-small-13 si59 lair rg18 107 165 s0 c0 m46 5613 e1652 5634 1 | Zuukuguu's Larder
+monsters-small-13 si60 lair rg5 181 21 s0 c0 m47 5658 e1683 - 0 | Giz's Crag
+monsters-small-13 si61 lair rg12 78 141 s0 c0 m48 5668 e1709 5690 1 | The Pit of Urol'kaz
+monsters-small-13 si62 lair rg8 104 77 s0 c0 m49 5689 e1730 5725 1 | The Hall of Khind
+monsters-small-13 si63 lair rg18 107 165 s0 c0 m50 5701 e1737 5705 1 | The Pit of Kaaz'buk
+monsters-small-13 si64 lair rg9 130 86 s0 c0 m51 5712 e1749 5756 1 | The Den of Gneeg
+monsters-small-13 si65 lair rg17 59 168 s0 c0 m52 5721 e1758 5913 1 | The Pit of Kum
+monsters-small-13 si66 lair rg9 130 86 s0 c0 m53 5757 e1833 5856 1 | Sleezgob's Hollow
+monsters-small-13 si67 lair rg4 146 39 s0 c0 m54 5793 e1874 - 0 | Khangrimm's Seat
+monsters-small-13 si68 lair rg9 130 86 s0 c0 m55 5873 e1920 - 0 | The Eyrie of Skraskab
+monsters-small-13 si69 lair rg8 104 77 s0 c0 m56 5886 e1927 - 0 | The Den of Keex-Skat
+monsters-small-13 si70 lair rg11 11 134 s0 c0 m57 5921 e1955 - 0 | The Pit of Uro
 fixture monsters-small-14 14 2000 all 4 calm monsters-small
-monsters-small-14 table beast_population 179 9db675dabf49cf204bd39eb798d5ff02e78b52fe8ea51287cd7208095f78a8dd
-monsters-small-14 table monster 22 9d717cb65e2b0696d66450dd9ce2379e84d7e03f0fdc78e71f32f2ae3b029a5b
-monsters-small-14 table site 32 d4ff871bb939fcc1ffe107657925317cfc84f66c36d632f1a642294a17fbf602
-monsters-small-14 ending 2a5331e0a34e6afe1827d2c370c94af194af5d2037ea79188076667181b61936
-monsters-small-14 M monsters 22 alive 10 slain 7 died 5 raids 166 killed 5572 overruns 2 risen 0 lair_settlement_open 1
-monsters-small-14 G ghost 0 endings 0:12,1:14,2:2,6:4 standing 12 population 19609 shunned 1
+monsters-small-14 table beast_population 156 ac227c3e9884cf428077b5c04390ba2c265f0eadb07d6179676d7b00cc184c8b
+monsters-small-14 table monster 18 c632d1740fa4e4b5efffb762a5880df6610daf630c5bac55909ffb5166eef128
+monsters-small-14 table site 33 ab21f0f6a2e187348c057e96ead120c3102c356acab7c226ea0741f85e99a7c7
+monsters-small-14 ending 77fdbd0691005a0c440bc7fbf9558b91f31f729236115ca98a89dfa05d0d5961
+monsters-small-14 M monsters 18 alive 9 slain 6 died 3 raids 115 killed 4589 overruns 2 risen 0 lair_settlement_open 1
+monsters-small-14 G ghost 0 endings 0:13,1:10,2:2,6:3 standing 13 population 23567 shunned 1
 monsters-small-14 S outposts 8 ended 5 bold 0 monster_flares 1
-monsters-small-14 m1 wyvern 4 born 8 e4 died 989 hoard 0 | The Brood of Zog-Neenk | lair The Eyrie of Zog-Neenk
+monsters-small-14 m1 wyvern 4 born 8 e4 died 997 hoard 0 | The Brood of Zog-Neenk | lair The Eyrie of Zog-Neenk
 monsters-small-14 m2 dragon 2 born 9 e5 died - hoard 0 | Masofae the Gold-Eyed | lair Masofae's Deep
-monsters-small-14 m3 giant 2 born 16 e6 died - hoard 37 | Munhomm Cliffbreaker | lair Munhomm's Seat
-monsters-small-14 m4 ogre 4 born 36 e9 died 1014 hoard 0 | Thashmork the Glutton | lair The Pit of Thashmork
-monsters-small-14 m5 troll 2 born 38 e10 died - hoard 22 | Old Gak | lair The Den of Gak
-monsters-small-14 m6 giant 2 born 50 e12 died - hoard 43 | Khoudin the Tall | lair Khoudin's Seat
-monsters-small-14 m7 troll 2 born 92 e14 died - hoard 30 | Mossback Gank | lair The Den of Gank
+monsters-small-14 m3 giant 2 born 16 e6 died - hoard 28 | Munhomm Cliffbreaker | lair Munhomm's Seat
+monsters-small-14 m4 ogre 4 born 36 e9 died 1022 hoard 0 | Thashmork the Glutton | lair The Pit of Thashmork
+monsters-small-14 m5 troll 2 born 38 e10 died - hoard 143 | Old Gak | lair Gak's Hollow
+monsters-small-14 m6 giant 2 born 50 e12 died - hoard 46 | Khoudin the Tall | lair The Hall of Khoudin
+monsters-small-14 m7 troll 2 born 92 e14 died - hoard 31 | Mossback Gank | lair The Den of Gank
 monsters-small-14 m8 ogre 4 born 142 e16 died 1141 hoard 1 | Ag'uraakh | lair The Pit of Ag'uraakh
 monsters-small-14 m9 ogre 3 born 167 e17 died 735 hoard 1 | Duu'ugog the Gaunt | lair The Pit of Duu'ugog
-monsters-small-14 m10 troll 2 born 267 e18 died - hoard 74 | Skob | lair Skob's Hollow
-monsters-small-14 m11 ogre 4 born 738 e58 died 1738 hoard 2 | Zaagshald Bonebreaker | lair The Pit of Zaagshald
-monsters-small-14 m12 wyvern 4 born 922 e216 died 1922 hoard 0 | The Gnikuzz Brood | lair Gnikuzz's Crag
-monsters-small-14 m13 ogre 3 born 1102 e369 died 1429 hoard 9 | Kalazuugh | lair Kalazuugh's Larder
-monsters-small-14 m14 ogre 3 born 1183 e512 died 1556 hoard 64 | Ghuukh the Hungering | lair Ghuukh's Larder
-monsters-small-14 m15 ogre 2 born 1526 e778 died - hoard 9 | Aash'shuurk | lair The Pit of Aash'shuurk
-monsters-small-14 m16 ogre 3 born 1568 e799 died 1691 hoard 25 | Grum'daagh the Fat | lair The Pit of Grum'daagh
-monsters-small-14 m17 wyvern 3 born 1635 e845 died 1684 hoard 0 | The Screamers of Gratgrag | lair Gratgrag's Crag
-monsters-small-14 m18 ogre 2 born 1696 e887 died - hoard 2 | Zaagrarz | lair Zaagrarz's Larder
-monsters-small-14 m19 ogre 3 born 1743 e933 died 1890 hoard 17 | Uguush | lair The Pit of Uguush
-monsters-small-14 m20 ogre 3 born 1900 e1037 died 1958 hoard 40 | Zukthugh | lair The Pit of Zukthugh
-monsters-small-14 m21 wyvern 2 born 1914 e1047 died - hoard 0 | The Bogrank Brood | lair Bogrank's Crag
-monsters-small-14 m22 ogre 1 born 1975 e1155 died - hoard 4 | Krald | lair The Pit of Krald
-monsters-small-14 si1 lair rg1 24 55 s0 c0 m1 8 e4 989 2 | The Eyrie of Zog-Neenk
+monsters-small-14 m10 troll 2 born 267 e18 died - hoard 62 | Skob | lair Skob's Hollow
+monsters-small-14 m11 ogre 3 born 738 e58 died 1690 hoard 43 | Zaagshald Bonebreaker | lair The Pit of Zaagshald
+monsters-small-14 m12 wyvern 3 born 922 e185 died 1697 hoard 0 | The Gnikuzz Brood | lair Gnikuzz's Crag
+monsters-small-14 m13 ogre 3 born 1022 e193 died 1122 hoard 2 | Kalazuugh | lair The Pit of Kalazuugh
+monsters-small-14 m14 wyvern 3 born 1047 e194 died 1113 hoard 0 | The Screamers of Zeegg | lair Zeegg's Crag
+monsters-small-14 m15 ogre 2 born 1141 e296 died - hoard 2 | Aash'shuurk | lair The Pit of Aash'shuurk
+monsters-small-14 m16 ogre 2 born 1183 e368 died - hoard 21 | Grum'daagh the Fat | lair The Pit of Grum'daagh
+monsters-small-14 m17 ogre 2 born 1696 e683 died - hoard 11 | Aag'maaz the Hungering | lair The Pit of Aag'maaz
+monsters-small-14 m18 wyvern 3 born 1708 e692 died 1982 hoard 0 | The Gitch-Nox Brood | lair The Eyrie of Gitch-Nox
+monsters-small-14 si1 lair rg1 24 55 s0 c0 m1 8 e4 997 2 | The Eyrie of Zog-Neenk
 monsters-small-14 si2 lair rg13 116 158 s0 c0 m2 9 e5 - 0 | Masofae's Deep
 monsters-small-14 si3 lair rg9 29 121 s0 c0 m3 16 e6 - 0 | Munhomm's Seat
-monsters-small-14 si4 lair rg4 102 67 s0 c0 m4 36 e9 1014 2 | The Pit of Thashmork
-monsters-small-14 si5 lair rg6 125 25 s0 c0 m5 38 e10 - 0 | The Den of Gak
-monsters-small-14 si6 lair rg2 51 7 s0 c0 m6 50 e12 1122 3 | The Hall of Khoudin
+monsters-small-14 si4 lair rg4 102 67 s0 c0 m4 36 e9 1022 2 | The Pit of Thashmork
+monsters-small-14 si5 lair rg6 125 25 s0 c0 m5 38 e10 1417 3 | The Den of Gak
+monsters-small-14 si6 lair rg2 51 7 s0 c0 m6 50 e12 - 0 | The Hall of Khoudin
 monsters-small-14 si7 lair rg14 127 175 s0 c0 m7 92 e14 - 0 | The Den of Gank
 monsters-small-14 si8 lair rg3 70 94 s0 c0 m8 142 e16 709 3 | Ag'uraakh's Larder
 monsters-small-14 si9 lair rg5 117 89 s0 c0 m9 167 e17 735 1 | The Pit of Duu'ugog
 monsters-small-14 si10 lair rg10 41 159 s0 c0 m10 267 e18 - 0 | Skob's Hollow
 monsters-small-14 si11 lair rg11 78 125 s3 c0 m8 709 e40 1141 2 | The Pit of Ag'uraakh
-monsters-small-14 si12 lair rg16 178 166 s0 c0 m11 738 e58 1738 2 | The Pit of Zaagshald
-monsters-small-14 si13 lair rg3 70 94 s0 c0 m12 922 e216 1922 2 | Gnikuzz's Crag
-monsters-small-14 si14 outpost rg11 59 139 s0 c1 m0 976 e242 - 0 | The Spire of Ithimier
-monsters-small-14 si15 outpost rg7 167 31 s0 c5 m0 979 e258 985 4 | Krat Stockade
-monsters-small-14 si16 lair rg5 117 89 s0 c0 m13 1102 e369 1429 1 | Kalazuugh's Larder
-monsters-small-14 si17 lair rg2 44 61 s15 c0 m6 1122 e417 - 0 | Khoudin's Seat
-monsters-small-14 si18 outpost rg5 120 55 s0 c10 m0 1172 e474 1288 5 | Dreex-Grozz Lookout
-monsters-small-14 si19 outpost rg6 127 22 s0 c11 m0 1176 e487 1295 5 | Ninkkrug Lookout
-monsters-small-14 si20 lair rg1 24 55 s0 c0 m14 1183 e512 1556 1 | Ghuukh's Larder
-monsters-small-14 si21 outpost rg4 83 83 s0 c4 m0 1287 e554 1414 4 | Bukgrib Lookout
-monsters-small-14 si22 lair rg5 117 89 s0 c0 m15 1526 e778 - 0 | The Pit of Aash'shuurk
-monsters-small-14 si23 lair rg12 93 172 s0 c0 m16 1568 e799 1691 1 | The Pit of Grum'daagh
-monsters-small-14 si24 lair rg1 24 55 s0 c0 m17 1635 e845 1684 1 | Gratgrag's Crag
-monsters-small-14 si25 lair rg12 93 172 s0 c0 m18 1696 e887 - 0 | Zaagrarz's Larder
-monsters-small-14 si26 outpost rg1 23 40 s0 c3 m0 1735 e899 1964 4 | Drotch Stockade
-monsters-small-14 si27 outpost rg16 189 128 s0 c15 m0 1742 e932 - 0 | Runt Watch
-monsters-small-14 si28 lair rg1 24 55 s0 c0 m19 1743 e933 1890 1 | The Pit of Uguush
-monsters-small-14 si29 outpost rg15 167 158 s0 c6 m0 1750 e964 - 0 | Slux Stockade
-monsters-small-14 si30 lair rg16 178 166 s0 c0 m20 1900 e1037 1958 1 | The Pit of Zukthugh
-monsters-small-14 si31 lair rg1 24 55 s0 c0 m21 1914 e1047 - 0 | Bogrank's Crag
-monsters-small-14 si32 lair rg3 70 94 s0 c0 m22 1975 e1155 - 0 | The Pit of Krald
+monsters-small-14 si12 lair rg16 178 166 s0 c0 m11 738 e58 1690 1 | The Pit of Zaagshald
+monsters-small-14 si13 lair rg3 70 94 s0 c0 m12 922 e185 1697 1 | Gnikuzz's Crag
+monsters-small-14 si14 lair rg5 117 89 s0 c0 m13 1022 e193 1122 1 | The Pit of Kalazuugh
+monsters-small-14 si15 lair rg1 24 55 s0 c0 m14 1047 e194 1113 1 | Zeegg's Crag
+monsters-small-14 si16 outpost rg14 144 171 s19 c8 m0 1098 e227 1167 5 | The Delvings of Hairin Hold
+monsters-small-14 si17 outpost rg6 136 81 s18 c7 m0 1123 e281 1178 4 | The Mines of Drimmkhirn
+monsters-small-14 si18 outpost rg10 31 186 s17 c6 m0 1125 e283 1170 5 | The Delvings of Grairin
+monsters-small-14 si19 lair rg5 117 89 s0 c0 m15 1141 e296 - 0 | The Pit of Aash'shuurk
+monsters-small-14 si20 outpost rg7 167 31 s0 c5 m0 1174 e342 1383 6 | Skirk-Zeez Stockade
+monsters-small-14 si21 lair rg1 24 55 s0 c0 m16 1183 e368 - 0 | The Pit of Grum'daagh
+monsters-small-14 si22 lair rg7 149 1 s10 c0 m5 1417 e400 - 0 | Gak's Hollow
+monsters-small-14 si23 outpost rg3 64 48 s0 c4 m0 1423 e407 1681 4 | Kok Lookout
+monsters-small-14 si24 outpost rg4 83 83 s0 c11 m0 1424 e411 1489 5 | Grutch Lookout
+monsters-small-14 si25 outpost rg10 36 147 s0 c10 m0 1498 e530 - 0 | The Thorn of Mafly
+monsters-small-14 si26 outpost rg5 111 57 s21 c7 m0 1501 e543 1552 4 | The Delvings of Droulihim Deep
+monsters-small-14 si27 outpost rg2 46 0 s0 c3 m0 1554 e564 - 0 | Snik-Slux Lookout
+monsters-small-14 si28 lair rg12 93 172 s0 c0 m17 1696 e683 - 0 | The Pit of Aag'maaz
+monsters-small-14 si29 lair rg6 125 25 s0 c0 m18 1708 e692 1982 1 | The Eyrie of Gitch-Nox
+monsters-small-14 si30 outpost rg1 23 40 s0 c3 m0 1740 e728 1865 4 | Grib Lookout
+monsters-small-14 si31 outpost rg6 134 31 s25 c7 m0 1852 e790 - 0 | The Mines of Numgroli
+monsters-small-14 si32 outpost rg6 127 22 s0 c7 m0 1869 e844 - 0 | The Tower of Mirk
+monsters-small-14 si33 outpost rg1 23 40 s0 c16 m0 1870 e849 1982 5 | Gruneezz Stockade
 fixture zero-0 0 2000 all auto normal zero
 zero-0 table beast_population 31 747c9df6b568ccdd45b90a062c4ac7ce6e796cdcf8d1226223c918ec917d1057
 zero-0 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-zero-0 table site 0 18d8d609947c6b82b9607704ae40d3317038e709238514de750b5c7411ba4c20
-zero-0 ending e26b02f489ba0b956ed4ef400e4b018fa3293f4466f95ee22251b545d58c228d
+zero-0 table site 2 b94b6c391e3f387a6644595c553cc44c69d22b8c635f5907cdd58e1793243766
+zero-0 ending 8b0ea830089a763f831f2a5d6fbbf722e8578fc6ac0bea90246fd4673a4c008d
 zero-0 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-zero-0 G ghost 0 endings 0:14,1:2 standing 14 population 9557 shunned 0
+zero-0 G ghost 0 endings 0:14,1:1 standing 14 population 9547 shunned 0
 zero-0 S outposts 0 ended 0 bold 0 monster_flares 0
+zero-0 si1 outpost rg5 161 7 s5 c3 m0 1138 e20 - 0 | The Mines of Gromka
+zero-0 si2 outpost rg10 190 66 s10 c3 m0 1793 e59 - 0 | The Delvings of Nodin
 fixture zero-1 1 6000 all auto turbulent zero
 zero-1 table beast_population 4 f50f2c117f31ada6f12b3fe384a1426af2e0c90bbc2871157a4cdc4b978a0a49
 zero-1 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
 zero-1 table site 0 18d8d609947c6b82b9607704ae40d3317038e709238514de750b5c7411ba4c20
 zero-1 ending 2afcdef1ff4d5b170dd450f96d14e7710c58c7ef6865948338d22f53ad756a83
 zero-1 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-zero-1 G ghost 0 endings 0:9 standing 9 population 19004 shunned 0
+zero-1 G ghost 0 endings 0:9 standing 9 population 19012 shunned 0
 zero-1 S outposts 0 ended 0 bold 0 monster_flares 0
-kinds_seen dragon,giant,ogre,troll,wyvern
-events_seen monster_appeared,monster_woke,monster_slept,monster_raid,settlement_overrun,monster_slain,monster_driven_off,monster_died,outpost_built,outpost_abandoned
+kinds_seen dragon,giant,ogre,troll,undead,wyvern
+events_seen monster_appeared,undead_rose,monster_woke,monster_slept,monster_raid,settlement_overrun,monster_slain,monster_driven_off,monster_died,outpost_built,outpost_abandoned

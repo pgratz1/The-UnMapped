@@ -62,7 +62,9 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h11-v2",    // r19 25.13 item 11 (the spec's "H9 v2")
                                                "h12-v3",    // r21 26.8 item 9 (P5-12)
                                                "h13-v4",    // P5-02 19.1 item 15 (format v4, schema 9)
-                                               "h14-v5"};   // P5-03 24.1 item 11 (format v5, schema 10)
+                                               "h14-v5",    // P5-03 24.1 item 11 (format v5, schema 10)
+                                               "h15-v6",    // P5-03a 14 item 11 (format v6, schema 10)
+                                               "h16-alliances"};   // P5-04 18.1 item 16 (format v7, schema 11)
     return v;
 }
 
@@ -597,7 +599,7 @@ inline const std::map<std::string, GoldenCase>& golden() {
             ls >> name >> what >> a;
             if (what == "stats") {
                 ls >> b;
-                out[name].stats.emplace_back(a, std::stoll(b));
+                out[name].stats.emplace_back(a, b == "-" ? std::int64_t{-1} : std::stoll(b));   // `-`: -1, as stats_list
             } else if (what == "table") {
                 ls >> b;
                 out[name].tables[a] = b;

@@ -81,7 +81,7 @@ TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until hi
     CHECK(read_bytes(a) == read_bytes(b));
     CHECK(meta_of(a, "stages") == ALL_STAGES);
     CHECK(meta_of(a, "history_end_year") == "6000");
-    CHECK(meta_of(a, "schema_version") == "10");   // P5-03 16.1
+    CHECK(meta_of(a, "schema_version") == "11");   // P5-03 16.1
     // The shipped history stage is peoples since 0.15.0: the golden comparison of this world is
     // cli_history_peoples_test.cpp's (p3-05-peoples.txt); p3-04-engine.txt describes stub worlds, which the
     // CLI cannot generate.

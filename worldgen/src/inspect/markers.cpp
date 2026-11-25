@@ -125,7 +125,7 @@ EventSymbol event_symbol(std::string_view kind_key) noexcept {
     if (kind_key == "siege" || kind_key == "refuge_held") {
         return EventSymbol::siege;
     }
-    if (kind_key == "battle" || kind_key == "battle_at_pass") {
+    if (kind_key == "battle" || kind_key == "battle_at_pass" || kind_key == "allied_battle") {  // P5-04 11.1
         return EventSymbol::battle;
     }
     if (kind_key == "plague" || kind_key == "plague_outbreak" || kind_key == "plague_spread") {
@@ -464,6 +464,19 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
         }
     }
 
+    // P5-04 11.3: the mines existing at Y, ascending id.
+    out.sites.clear();
+    if (options.sites) {
+        for (const std::int64_t id : history.timeline.sites_existing(year)) {
+            const history::SiteState s = history.timeline.site_at(id, year);
+            if (s.kind == 3 && s.open) {
+                out.sites.push_back(SiteMarker{id, s.x, s.y, s.kind, s.founder});
+            }
+        }
+        std::stable_sort(out.sites.begin(), out.sites.end(),
+                         [](const SiteMarker& a, const SiteMarker& b) { return a.site < b.site; });
+    }
+
     // 3.5: passes, ascending id.
     out.passes.clear();
     if (options.passes) {
@@ -694,6 +707,23 @@ Glyph ring_glyph() {
     return std::move(g).take();
 }
 
+// P5-04 11.3: the mine, a pick and a hammer crossed in the 7 x 7 cell: the
+// two diagonals of radius 2 with a head at each upper end, then the halo on
+// every 0 cell with an 8-neighbour of class fill.
+Glyph mine_glyph() {
+    GlyphGrid g(3);
+    for (std::int32_t d = -2; d <= 2; ++d) {
+        g.set(d, d, GLYPH_FILL);
+        g.set(d, -d, GLYPH_FILL);
+    }
+    g.set(-1, -2, GLYPH_FILL);
+    g.set(-2, -1, GLYPH_FILL);
+    g.set(1, -2, GLYPH_FILL);
+    g.set(2, -1, GLYPH_FILL);
+    g.halo(GLYPH_FILL);
+    return std::move(g).take();
+}
+
 std::string key_text(GlyphKey key) {
     return "base " + num(key.base) + (key.declining ? " declining" : "") + (key.capital ? " capital" : "");
 }
@@ -703,6 +733,9 @@ std::string key_text(GlyphKey key) {
 Glyph marker_glyph(GlyphKey key) {
     if (key.base >= 1 && key.base <= 5) {
         return settlement_glyph(key.base, key.declining, key.capital);
+    }
+    if (key.base == GLYPH_MINE && !key.declining && !key.capital) {
+        return mine_glyph();  // P5-04 11.3
     }
     if (key.declining || key.capital || (key.base < 8 || key.base > 11)) {
         throw FatalError("marker_glyph: no glyph for " + key_text(key));
@@ -758,10 +791,13 @@ private:
         if (key.base >= 8 && key.base <= 11 && !key.declining && !key.capital) {
             return 20U + static_cast<std::size_t>(key.base - 8U);
         }
+        if (key.base == GLYPH_MINE && !key.declining && !key.capital) {
+            return 24U;
+        }
         (void)marker_glyph(key);  // throws its FatalError
         draw_fatal("no glyph for base " + num(key.base));
     }
-    std::array<std::optional<Glyph>, 24> glyphs_;
+    std::array<std::optional<Glyph>, 25> glyphs_;
 };
 
 class Canvas {
@@ -865,6 +901,12 @@ void draw_markers(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_
         return 0;
     };
     for (int pass = 3; pass <= 6; ++pass) {
+        if (pass == 5) {  // P5-04 11.3: sites, between ruins and standing settlements
+            for (const SiteMarker& s : markers.sites) {
+                canvas.draw(glyphs.get(GlyphKey{GLYPH_MINE, false, false}), s.x + SITE_GLYPH_OFFSET,
+                            s.y - SITE_GLYPH_OFFSET, MARKER_MINE);
+            }
+        }
         for (const SettlementMarker& m : markers.settlements) {
             if (pass_of(m) != pass) {
                 continue;

@@ -619,6 +619,7 @@ KindRegistry builtin_kinds() {
     // later P3 specs add their ids.
     Kind history = Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
                                         {
+                                            IdSchema{std::string(HISTORY_ALLIANCES_ID), history_alliances_schema()},
                                             IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
                                             IdSchema{std::string(HISTORY_CONFLICT_ID), history_conflict_schema()},
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},

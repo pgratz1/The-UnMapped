@@ -261,13 +261,42 @@ inline wd::ContentSet without_stances(const wd::ContentSet& base) {
 
 inline wd::Value V(std::int64_t v) { return wd::Value::integer(v); }
 
+// Every race's `origin_allies` replaced by the empty array (P5-04 4.2's zero fixture).
+inline wd::ContentSet without_origin_allies(const wd::ContentSet& base) {
+    wd::ContentSet c = base;
+    for (wd::KindContent& k : c.kinds) {
+        if (k.kind != "race") continue;
+        for (wd::Definition& d : k.definitions) {
+            wd::Record r;
+            for (std::size_t i = 0; i < d.record.size(); ++i) {
+                const bool o = d.record.name_at(i) == "origin_allies";
+                r.add(d.record.name_at(i), o ? wd::Value::array({}) : d.record.value_at(i));
+            }
+            d.record = std::move(r);
+        }
+    }
+    return c;
+}
+
+// P5-04 4.2: the zero tuning of P5-04's I0 (7.14): no reach, no trade reach, no mine, no origin ally. The
+// configurations "without" a subsystem of P5-02 and P5-03 build no alliances either, so their I0 runs the stage with
+// this tuning (by P5-04's I0, the same as without the subsystem).
+inline wd::ContentSet alliances_zero_of(const wd::ContentSet& base) {
+    return without_origin_allies(
+        with_history(base, "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}}));
+}
+
 // 4.2 the zero tuning of I0 (7.4), with every race's stances empty.
 inline wd::ContentSet zero_of(const wd::ContentSet& base) {
     return without_stances(with_history(
         base, "relations",
         {{"war_memory", V(0)}, {"conquest_memory", V(0)}, {"sack_memory", V(0)}, {"capture_memory", V(0)},
          {"expel_memory", V(0)}, {"shelter_memory", V(0)}, {"meet_hops", V(-1)}, {"welcome_min", V(2001)},
-         {"subject_years", V(100000)}, {"mixed_min_permille", V(1001)}, {"expel_permille", V(0)}}));
+         {"subject_years", V(100000)}, {"mixed_min_permille", V(1001)}, {"expel_permille", V(0)},
+         // P5-03a 10.1: the new *_memory fields and peace_memory_per_century 0, meet_sealed_hops -1, the
+         // settlers' span 0 (the reference's RELATIONS_ZERO_025)
+         {"foe_war_memory", V(0)}, {"foe_monster_memory", V(0)}, {"peace_memory_per_century", V(0)},
+         {"meet_sealed_hops", V(-1)}, {"conquest_settlers_span_permille", V(0)}}));
 }
 inline const wd::ContentSet& zero_content() {
     static const wd::ContentSet c = zero_of(conflict_test::shipped());
@@ -286,7 +315,12 @@ inline const std::map<std::string, wd::Value>& relations_small_edits() {
         {"war_memory", V(400)},      {"conquest_memory", V(600)},  {"sack_memory", V(300)},
         {"capture_memory", V(200)},  {"expel_memory", V(300)},     {"shelter_memory", V(300)},
         {"expel_permille", V(1000)}, {"welcome_min", V(-2000)},    {"conquest_settlers_permille", V(600)},
-        {"subject_years", V(0)}};
+        {"subject_years", V(0)},
+        // P5-03a 10.1 (the reference's RELATIONS_SMALL_025): meetings by word within 3 borders after 0 years, the
+        // new *_memory fields large as the others, no expulsion gap; the settlers' span 400 (600 + 400 = 1000 passes
+        // relations_settlers; reading X4)
+        {"meet_sealed_hops", V(3)},  {"meet_sealed_years", V(0)},  {"foe_war_memory", V(300)},
+        {"foe_monster_memory", V(300)}, {"expel_gap_years", V(0)}, {"conquest_settlers_span_permille", V(400)}};
     return m;
 }
 inline const wd::ContentSet& relations_small_content() {

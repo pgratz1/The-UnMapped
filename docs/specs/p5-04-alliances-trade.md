@@ -1,6 +1,8 @@
 # P5-04 Alliances and trade
 
-Status: **r2, approved by Paul on 2026-11-24** with the decisions of section 24 (r1 was the draft of the same day). Written by the spec writer on `p5/04-spec`, cut from `origin/p5/03a-impl` at c5b68ff (generator 0.25.0 in flight, schema 10, history report format v6; P5-03a not yet merged, its code and spec r1 with the calibrated values of its proposals entry are in this tree; this stage is implemented on top of it). Phase P5 History depth, stage 04 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-04", 3.2, 4, 6, 7, 8, 8.3; 3.1 and 6.1 superseded on vassalage, `civilization_census` and `history.economy`, 20). Generator **0.26.0**. **Schema 11**: `site.kind` gains code 3 `mine` (part C, 9.2); relation kinds are text keys (P3-06 4.3) and kinds are appended (P3-04 8.2), so parts A and B alone would not have needed it. History report format **v7** (10.1, the lead's ruling).
+Status: **r3, as built and ruled** (2026-11-24): r2 (approved by Paul on 2026-11-24 with the decisions of section 24) corrected to the engineer's branch `p5/04-impl` (0b7b858) and the test writer's reference (`p5_04_alliances_reference.py`, readings P1 to P12 and A1 to A19) with the lead's rulings; no design change. r1 was the draft of the same day.
+
+**r3 changes** (all ruled by the lead): (1) ruling A9: a pair whose alliance or trade row closed earlier in a step opens none again in that step (6.3, 6.4, 6.8); (2) spec defect fixed: every `alliance_formed`, origin included, drops the pair's strain and claims both ways (`ConflictSubsystem::forgive`, 6.3, 7.2); (3) the calibrated values replace the starting values (4.2, 4.3; `border_friction` 520), with the consequences in the plan, 6.7, 6.11 and 24 L2; (4) the engineer's readings: `join_war` takes the side (6.5, 7.6), spoils owed only after a `peace`, `war_won` or `civ_conquered` (6.11), calls to arms companions only (10.3), fear on the step's start bloc shares and the bloc test live (6.2, 6.3), reach as a breadth-first search (6.2), `pass` checked only for >= 0 (9.1), a mine's ended year (6.12), the Q4 shedding stop (6.7), A12 (6.12), A13 (6.11, 7.15); (5) the test writer's readings on output: `<bs> permille` (10.2), alliance, trade and joined `war` rows out of a realm's adversaries (10.4), the bloc bound by rule at tick years only (13 item 8, AL9); (6) the mine glyph's cells (11.3); (7) two reader messages (9.1, 9.2); (8) the measured column of 15.1 (the engineer's figures); (9) 82 streams, `DispositionView::turn_event` and `RelationsSubsystem::met_event`, monsters' `holds_site` and lair occupied test skip kind 3 (3, 6.12, 7.13, 7.16). Written by the spec writer on `p5/04-spec`, cut from `origin/p5/03a-impl` at c5b68ff (generator 0.25.0 in flight, schema 10, history report format v6; P5-03a not yet merged, its code and spec r1 with the calibrated values of its proposals entry are in this tree; this stage is implemented on top of it). Phase P5 History depth, stage 04 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-04", 3.2, 4, 6, 7, 8, 8.3; 3.1 and 6.1 superseded on vassalage, `civilization_census` and `history.economy`, 20). Generator **0.26.0**. **Schema 11**: `site.kind` gains code 3 `mine` (part C, 9.2); relation kinds are text keys (P3-06 4.3) and kinds are appended (P3-04 8.2), so parts A and B alone would not have needed it. History report format **v7** (10.1, the lead's ruling).
 
 Sources: design doc 5 ("Deep time": "the first wars and alliances form"; the race table: faeries "allies of the elves by origin"; "Entities": civilizations with "relations to other civilizations"; "What phase P3 has settled": "Alliances, vassalage, trade and wealth come with phase P5"; "Waiting for phase P5": "aligned peoples in contact form partnerships that strengthen both, and an ally may join a partner's war"; "The plan for phase P5": "Dwarves are great forgers", the exit check "a bloc of allies and vassals is held to the same runaway bound as a single realm"), 6 (`relation`, `site`), 13; P5-00 (3.1, 3.2, 4, 6.1, 7, 8.1 to 8.3); P3-04 r23 (6.9, 8.2, 8.4); P3-06 r23 (4, 5, 6, 7, 20, 21, 22); P3-07 r24; P5-02 r2 (sites); P5-03 r2 and P5-03a r1 (dispositions, `DispositionView`, `credit`); the P5-03a audit's advisory A4 (`origin/p5/03a-audit`, `docs/reviews/p5-03a-relations-followups-audit.md`); `docs/design/proposals.md`: "Paul's notes of 2026-11-20" item 3 (alliances and trade: "a close partner might come to the aid of an ally" in battle), Paul's decision of 2026-11-22 on the mountain peoples, and P5-03a's calibration entry (wars median 25 at 0.25.0, `border_friction` 300). Paul's direction of 2026-11-24 (relayed by the lead): alliances forged, more often rather than less; the lead's scope ruling: alliances are the centre of this stage, trade and wealth are kept thin. Paul's decisions of 2026-11-24 on r1's seven questions (section 24): part C now; allies fight in the partner's battles; an ally receives a share of the spoils, and withholding it sours the alliance; elves and faeries allied by origin; betrayal, wealth, vassalage and the bloc bound as recommended. The lead's rulings of the same day: report format v7, browser group `alliances` = 7, tuning id `history.alliances`, the P5-00 amendment note.
 
@@ -22,11 +24,11 @@ spoils: 6 owed, 4 granted, 2 withheld
 ```
 
 **The rules in short.**
-- *Who may ally*: two realms within three open borders of each other, not at war and not lately at war, whose disposition (their peoples' disposition less the realms' grudge) is at least −300, with a reason: a common enemy, fear of a great realm or bloc, long trade, or friendship. Faeries and elves ally by origin with no reason needed, wherever they live. Good and evil (−700) ally only after centuries of goodwill between their peoples.
-- *How one forms*: each tick year a qualifying pair forms one by a keyed draw whose chance grows with the reason and the warmth. Each realm has at most three allies.
+- *Who may ally*: two realms within three open borders of each other, not at war and not lately at war, not parted earlier in the same step, whose disposition (their peoples' disposition less the realms' grudge) is at least −300, with a reason: a common enemy, fear of a great realm or bloc, long trade, or friendship. Faeries and elves ally by origin with no reason needed, wherever they live. Good and evil (−700) ally only after centuries of goodwill between their peoples.
+- *How one forms*: each tick year a qualifying pair forms one by a keyed draw whose chance grows with the reason and the warmth. Each realm has at most three allies. At the oath the two set aside the strain and claims they held on each other.
 - *Kept, renewed, lapsed*: every 150 years an alliance is renewed if a reason still holds, else it lapses. It breaks when the two cool below −350, or when an ally refuses its partner's defence twice.
-- *Called to arms*: when a war is declared, the defender's allies are called (likely), then the attacker's (rarely, and only allies that dislike the enemy). An ally that joins fights in its partner's battles near its own lands; the enemy's battles against the side count the ally's levies, and the ally takes its share of the dead. Allies take no land and pay no tribute; the principal realms' peace decides the war. A bled-out ally leaves the war.
-- *Spoils*: when a war ends with the ally's side winning, the spoils are the tribute the loser paid plus a quarter of the people of the towns the winner sacked; land is never shared. Each ally still in the war that lost people in it is owed a share in proportion to its dead (at least a tenth, at most four tenths). The partner grants it by a keyed draw that is likelier the warmer the two are and the more the ally did, and less likely the more the partner itself bled. A granted share warms the two peoples. A share kept chills them and leaves a grudge between the two realms; one kept share does not break an alliance by itself, but two in one term end it at its renewal, and an alliance that cools past breaking after spoils were kept is broken by the wronged ally, "after the spoils of the Grey Fells were kept from it".
+- *Called to arms*: when a war is declared, the defender's allies are called (likely), then the attacker's (less often, and only allies that dislike the enemy). An ally that joins fights in its partner's battles near its own lands; the enemy's battles against the side count the ally's levies, and the ally takes its share of the dead. Allies take no land and pay no tribute; the principal realms' peace decides the war. A bled-out ally leaves the war.
+- *Spoils*: when a war ends with the ally's side winning, the spoils are the tribute the loser paid plus a quarter of the people of the towns the winner sacked; land is never shared. Each ally still in the war that lost people in it is owed a share in proportion to its dead (at least a tenth, at most four tenths). The partner grants it by a keyed draw that is likelier the warmer the two are and the more the ally did, and less likely the more the partner itself bled. A granted share warms the two peoples. A share kept chills them and leaves a grudge between the two realms; a kept share does not break an alliance at once, but one kept in a term ends it at its renewal (r3: `withheld_to_break` 1, as calibrated), and an alliance that cools past breaking after spoils were kept is broken by the wronged ally, "after the spoils of the Grey Fells were kept from it".
 - *Betrayal*: allies quarrel at a quarter of the usual rate; when one still declares war on the other, that is a betrayal, the alliance ends and the betrayed never trusts the betrayer again.
 - *Peoples remember*: forming, joining, sharing spoils and trading warm the two races through P5-03a's `credit`; refusals, kept spoils and betrayals chill them; an ally that fought a people grows colder toward it.
 - *Blocs*: no alliance forms when either side's bloc (a realm with its allies) would hold more than half of the land; a bloc above 700‰ sheds its weakest ally at once; the coalition by fear of P3-06 now fears blocs, not only realms.
@@ -35,7 +37,7 @@ spoils: 6 owed, 4 granted, 2 withheld
 
 **Scope: option C, now** (Paul, 2026-11-24): alliances, thin trade, and the dwarves' mines and arms, in one stage; **schema 11** for the site kind; a mine glyph in the viewer. Wealth is left out: no rule needs a wealth number (a share of spoils is counted in people, as tribute is). Vassalage is deferred until after figures.
 
-**Targets in everyday terms** (1024 default worlds; validation measures, the engineer calibrates): 6 to 15 alliances formed in a typical world, at least 3 standing at the end; between a third and two thirds of them across races; elves and faeries allied in every world where both live; an ally joins in 20% to 45% of wars, mostly in defence; of the shares owed, half to five sixths granted; an alliance spurned over spoils in a fifth to three fifths of worlds, but few: at most one ended alliance in ten; a betrayal in 20% to 60% of worlds, 3% to 15% of alliances ending in one; 8 to 25 trades opened; a mine in nine of ten worlds whose dwarves hold ore, arms sold in most of them; wars per world still 22 to 28 (25 now); no bloc above 800‰ of the land for more than 1,000 years (by rule, never for more than one step, about 25 years); the summary still within its limits.
+**Targets in everyday terms** (1024 default worlds; validation measures, the engineer calibrates): 6 to 15 alliances formed in a typical world, at least 3 standing at the end; between a third and two thirds of them across races; elves and faeries allied in every world where both live; an ally joins in 20% to 45% of wars, mostly in defence; of the shares owed, half to five sixths granted; an alliance spurned over spoils in a fifth to three fifths of worlds, but few: at most one ended alliance in ten; a betrayal in 20% to 60% of worlds, 3% to 15% of alliances ending in one; 8 to 25 trades opened; a mine in nine of ten worlds whose dwarves hold ore, arms sold in most of them; wars per world still 22 to 28 (25 now); no bloc above 800‰ of the land for more than 1,000 years (by rule, never for more than one step, about 25 years); the summary still within its limits. The engineer's measurements at r3 are in 15.1.
 
 **Decided** (section 24): r1's seven questions, by Paul on 2026-11-24, and the lead's rulings of the same day.
 
@@ -57,7 +59,7 @@ The runaway bound of P5-00 8.3 is extended to blocs and kept by rule (6.7, 7.3).
 | A2 | `AlliancesSubsystem`: formation, origin, calls, betrayal, renewal, lapse, breaks, blocs, credits | 5, 6 | P3-04 6.4 (configuration) | yes |
 | A3 | Seams into conflict: allied strain, fear of blocs, deterrence, joined allies, allied battles, withdrawal, ends | 7 | P3-06 5.1, 5.2, 6.1, 7.2, 7.3, 7.7, 7.8, 8.1, 20.15 | yes |
 | A4 | Event kinds 63 to 71; renderer forms `with`, `against` | 8 | P3-04 8.2, 8.4 | yes |
-| A5 | Spoils: the share owed, granted or withheld, and the alliance spurned; events 74 to 76; seams `war_spoils`, `add_grudge` | 6.7, 6.11, 7.15, 8 | P3-06 4.2 (a grudge source), 7.10 | yes |
+| A5 | Spoils: the share owed, granted or withheld, and the alliance spurned; events 74 to 76; seams `war_spoils`, `add_grudge_seam` | 6.7, 6.11, 7.15, 8 | P3-06 4.2 (a grudge source), 7.10 | yes |
 | B1 | Trade: relation `trade`, its strength, credit, events 72, 73 | 6.8, 7.5, 8 | P3-06 6.1 | yes |
 | C1 | Mines: race field `mining_permille`, site kind 3 `mine`, event 77 | 4.1, 4.2, 6.12, 8, 9.2 | P3-01, P5-02 11 | yes, schema 11 |
 | C2 | Forges and arms: strength of a realm with a mine and of its buyers, event 78 | 4.3, 6.13, 7.5, 8 | P3-06 6.1 | yes |
@@ -70,13 +72,13 @@ The runaway bound of P5-00 8.3 is extended to blocs and kept by rule (6.7, 7.3).
 ## 3. Inputs, streams, draws
 
 - **Live state** (`State`): civilizations (race, founded year and event, ended), settlements (owner, region, status, population, founding event), regions (owner, owner event, `ore_reach_cells` of P1-06), relations (`war`, `peace`, `alliance`, `trade`), sites (P5-02; this stage adds and ends `mine` sites, 6.12).
-- **Conflict's const reads** (7.13, 7.15): `disposition_of`, `at_war`, `open_wars_of`, `force`, `reaches`, `truce_over`, `lying_low`, `share`, `last_peace`, `war_open`, `war_end_event`, `war_spoils`; and two mutators, `join_war` (7.6) and `add_grudge` (7.15).
-- **Relations**: `DispositionView` (`disposition`, `band`, `met`, `hatred_event`, and the new `turn_event`, 7.13) and `RelationsSubsystem::credit` (P5-03a 3.5).
+- **Conflict's const reads** (7.13, 7.15): `disposition_of`, `at_war`, `open_wars_of`, `force`, `reaches`, `truce_over`, `lying_low`, `share`, `last_peace`, `war_open`, `war_end_event`, `war_spoils`; and three mutators, `join_war` (7.6), `add_grudge_seam` (7.15) and `forgive` (7.2).
+- **Relations**: `DispositionView` (`disposition`, `band`, `met`, `hatred_event`, and the new `turn_event`, 7.13), `RelationsSubsystem::credit` (P5-03a 3.5) and the new `RelationsSubsystem::met_event(race_a, race_b)` (the pair's `peoples_met`, 0 when they have not met; 6.8).
 - **Peoples**: `PeoplesView::hops` (open borders, P3-05 4.4), `population`.
 - **The log**: `war_declared` events from a cursor (6.5), through `StepContext`'s reads.
 - **Data**: race fields `origin_allies`, `ally_join_permille`, `mining_permille` (4.1) and `muster_permille` (P3-06 20.6); `history.alliances` (4.2); `history.conflict`'s new fields (4.3) and `shelter_years`, `fear_share`, `exhaustion_permille`, `truce_years`, `war_grudge`.
 - **Settings**: none. `param.event_intensity` does not scale this stage (its wars already scale by it).
-- **Streams** (P5-00 4.2), appended to `streams.hpp` after `hist.relations.settlers`, in this order: `hist.alliances.form`, `hist.alliances.join`, `hist.alliances.trade`, `hist.alliances.spoils`, `hist.alliances.mine`.
+- **Streams** (P5-00 4.2), appended to `streams.hpp` after `hist.relations.settlers`, in this order: `hist.alliances.form`, `hist.alliances.join`, `hist.alliances.trade`, `hist.alliances.spoils`, `hist.alliances.mine`. The stream list then holds **82** streams.
 
 | Stream | a, b, k | Section |
 | --- | --- | --- |
@@ -119,13 +121,13 @@ Keyed by data, never by race key in code (P5-00 9.3).
 
 ### 4.2 Tuning `history.alliances` (new fixed id of kind `history`; `game/data/history/alliances.toml` and both fixture roots)
 
-All required, in this order. Starting values; the engineer calibrates them (15.2) and r2 records the shipped ones.
+All required, in this order. The column gives the **shipped** values (calibrated by the engineer, 15.2; r3); where calibration moved a value, r2's starting value follows in brackets.
 
-| Field | Type | Start | Meaning |
+| Field | Type | Shipped | Meaning |
 | --- | --- | --- | --- |
 | `ally_hops` | int(−1, 8) | 3 | reach: presences within this many open borders (6.2); −1: never (a test seam) |
 | `ally_min_disposition` | int(−2000, 2000) | −300 | the least disposition at which two realms ally |
-| `ally_full_disposition` | int(−2000, 2000) | 300 | at or above this the warmth is full (6.2) |
+| `ally_full_disposition` | int(−2000, 2000) | 150 (start 300) | at or above this the warmth is full (6.2) |
 | `ally_friend_disposition` | int(−2000, 2000) | 150 | friendship is a reason at or above this (6.2) |
 | `ally_break_disposition` | int(−2000, 2000) | −350 | an alliance breaks below this (6.7) |
 | `allies_max` | int(0, 16) | 3 | allies a realm may have at once |
@@ -141,10 +143,10 @@ All required, in this order. Starting values; the engineer calibrates them (15.2
 | `bloc_lapse_share` | int(0, 1001) | 700 | a bloc above this sheds allies (6.7); 1001: never |
 | `term_years` | int(1, 100000) | 150 | years between renewals (6.7) |
 | `refusals_to_break` | int(1, 100) | 2 | refused defence calls that break an alliance |
-| `defend_permille` | int(0, 1000) | 700 | base chance that an ally joins its partner's defence |
-| `attack_permille` | int(0, 1000) | 200 | base chance that an ally joins its partner's attack |
+| `defend_permille` | int(0, 1000) | 1000 (start 700) | base chance that an ally joins its partner's defence |
+| `attack_permille` | int(0, 1000) | 500 (start 200) | base chance that an ally joins its partner's attack |
 | `hostility_full` | int(1, 2000) | 500 | an ally's hostility toward the enemy at which an attack call is at full chance |
-| `ally_wars_max` | int(1, 16) | 2 | an ally joins only while its open wars are fewer than this |
+| `ally_wars_max` | int(1, 16) | 3 (start 2) | an ally joins only while its open wars are fewer than this |
 | `ally_memory` | int(0, 1000) | 30 | `credit` at a formation |
 | `renew_memory` | int(0, 1000) | 15 | at a renewal |
 | `join_memory` | int(0, 1000) | 30 | at a join, between ally and partner |
@@ -163,17 +165,17 @@ All required, in this order. Starting values; the engineer calibrates them (15.2
 | `spoils_plunder_permille` | int(0, 1000) | 250 | the part of a sacked town's people counted as spoils (6.11) |
 | `spoils_floor_permille` | int(0, 1000) | 100 | the least part of the spoils an ally that fought is owed |
 | `spoils_cap_permille` | int(0, 1000) | 400 | the most part of the spoils one ally is owed |
-| `spoils_grant_permille` | int(0, 1000) | 450 | base chance that the principal grants a share |
+| `spoils_grant_permille` | int(0, 1000) | 350 (start 450) | base chance that the principal grants a share |
 | `spoils_warmth_permille` | int(0, 1000) | 300 | added at full warmth between principal and ally |
 | `spoils_part_permille` | int(0, 1000) | 500 | added per mille of the ally's part (at the cap 400: + 200) |
 | `spoils_need_permille` | int(0, 1000) | 400 | taken away when the principal is bled to exhaustion |
 | `spoils_grant_min` | int(0, 1000) | 100 | least chance of a grant |
 | `spoils_grant_max` | int(0, 1000) | 950 | most chance of a grant |
 | `share_memory` | int(0, 1000) | 25 | `credit` at a granted share |
-| `withheld_memory` | int(0, 1000) | 50 | lost at a withheld share |
-| `withheld_grudge` | int(0, 2000) | 120 | grudge between the two realms at a withheld share |
-| `withheld_to_break` | int(1, 100) | 2 | withheld shares in one term that end the alliance at its renewal (6.7) |
-| `mine_permille` | int(0, 1000) | 20 | yearly chance per region with ore (6.12; part C) |
+| `withheld_memory` | int(0, 1000) | 100 (start 50) | lost at a withheld share |
+| `withheld_grudge` | int(0, 2000) | 400 (start 120) | grudge between the two realms at a withheld share |
+| `withheld_to_break` | int(1, 100) | 1 (start 2) | withheld shares in one term that end the alliance at its renewal (6.7) |
+| `mine_permille` | int(0, 1000) | 40 (start 20) | yearly chance per region with ore (6.12; part C) |
 | `mine_ore_min` | int(1, 100000) | 1 | least `ore_reach_cells` of a mine's region |
 | `mine_settlement_min` | int(0, 1000000) | 200 | least population of the town a mine is opened at |
 | `arms_trade_permille` | int(0, 4000) | 2000 | trade's opening chance for a pair with exactly one seller of arms, per mille of the usual (6.13) |
@@ -185,15 +187,17 @@ Checks (with the history data checks): `alliances_spoils`: `spoils_floor_permill
 
 ### 4.3 `history.conflict` fields (appended after `capital_captured_salience`; amends P3-06 12.1)
 
-| Field | Type | Start | Meaning |
+| Field | Type | Shipped | Meaning |
 | --- | --- | --- | --- |
-| `allied_strain_permille` | int(0, 1000) | 250 | strain between allies, per mille of the usual rate (7.2) |
-| `ally_deterrence_permille` | int(0, 1000) | 300 | the defender's allies' force counted in a declaration's odds (7.4) |
+| `allied_strain_permille` | int(0, 1000) | 160 (start 250) | strain between allies, per mille of the usual rate (7.2) |
+| `ally_deterrence_permille` | int(0, 1000) | 50 (start 300) | the defender's allies' force counted in a declaration's odds (7.4) |
 | `ally_effort_permille` | int(0, 1000) | 1000 | an ally's local force counted in its partner's battle (7.7) |
 | `trade_strength_permille` | int(0, 1000) | 50 | force gained per trade partner (7.5) |
 | `trade_strength_max` | int(0, 16) | 3 | trade partners counted for strength |
 | `forge_strength_permille` | int(0, 1000) | 50 | force gained by a realm with an open mine (7.5; part C) |
 | `arms_strength_permille` | int(0, 1000) | 100 | force gained by a buyer of arms (7.5; part C) |
+
+One existing field changes value (data only; P3-06 12.1): **`border_friction` 300 → 520** (P5-03a's calibrated 300), the lead's last lever for C1 (15.2 step 2): with alliances and trade the wars fell from 25 to 21.5 a world whatever deterrence, strength or memory did.
 
 ## 5. State
 
@@ -228,7 +232,7 @@ All read once per step into the cache (live state at the step's start for this s
 
 - **Alive, visible, free**: c alive and visible (P3-06's `alive_visible`) and not lying low (`ConflictSubsystem::lying_low`, P3-06 22.3).
 - **Presence** P(c): P3-06 5.1's simple definition (as P5-03 6.2.4).
-- **Reach**: hops(x, y) = the smallest `PeoplesView::hops(R_x)[R_y]` over R_x ∈ P(x), R_y ∈ P(y) (unreachable: none). x and y are **in reach** when hops(x, y) ≤ `ally_hops`; **in trade reach** when ≤ `trade_hops`. Symmetric.
+- **Reach**: hops(x, y) = the smallest `PeoplesView::hops(R_x)[R_y]` over R_x ∈ P(x), R_y ∈ P(y) (unreachable: none). x and y are **in reach** when hops(x, y) ≤ `ally_hops`; **in trade reach** when ≤ `trade_hops`. Symmetric. Computed (r3, as built) by one breadth-first search per realm in the cache, over the open borders from every region of P(x) at distance 0, to the radius max(`ally_hops`, `trade_hops` + 1) (the largest any rule asks, 6.8's margin included); within that radius the distance found equals the smallest `PeoplesView::hops`, and beyond it the pair is out of reach for every rule.
 - **Disposition** d(x, y) = `ConflictSubsystem::disposition_of(x, y)` (P3-06 4.1 as amended by P5-03 7.1: D(r_x, r_y) − grudge{x, y}).
 - **Warmth** w(x, y) = clamp((d(x, y) − `ally_min_disposition`) × 1000 div (`ally_full_disposition` − `ally_min_disposition`), 0, 1000), for d ≥ `ally_min_disposition`.
 - **Share** s(c) = `ConflictSubsystem::share(c)` (P3-06 5.1: non-islet regions held × 1000 div N). **Allies** A(c): the realms in an open alliance with c, ascending. **Bloc share** bs(c) = min(1000, s(c) + Σ_{z ∈ A(c)} s(z)). A **bloc** is a realm with its direct allies (P5-00 8.3); allies of allies are not in it.
@@ -236,14 +240,14 @@ All read once per step into the cache (live state at the step's start for this s
 - **Lately at war** (x, y): at war, or the pair's `last_peace` year (P3-06 3.2) is above Y − `ally_after_war_years` (for trade, − `trade_after_war_years`).
 - **Reasons** of a pair (x, y), each with its cause event and, for the first two, its foe z:
   1. **Common enemy**: the z ∉ {x, y}, alive and visible, with a `war_declared` between z and one of x, y (either side, as principal) that is open or whose year is above Y − `foe_years`, such that the other of x, y has d(·, z) < 0 and is in reach of z. Cause: the latest such `war_declared` (largest id); z its other side. (A joined war does not make a common enemy; only declarations do.)
-  2. **Fear**: the z ∉ {x, y} with bs(z) ≥ `fear_share`, alive and visible, not allied with x or y, in reach of both, with d(x, z) < 0 and d(y, z) < 0; the z of the largest bs(z), then the smaller id. Cause: the largest `owner_event` among the regions z holds (the latest gain of land).
+  2. **Fear**: the z ∉ {x, y} with bs(z) ≥ `fear_share`, alive and visible, not allied with x or y, in reach of both, with d(x, z) < 0 and d(y, z) < 0; the z of the largest bs(z), then the smaller id. **bs(z) here is the bloc share of the step's start** (the cache), not changed by the alliances formed or ended earlier in the step; the bloc test of 6.3 reads the bloc shares live. Cause: the largest `owner_event` among the regions z holds (the latest gain of land); when z holds no region, z's `founding_event` (reading A10).
   3. **Trade**: an open trade between x and y opened at least `trade_ally_years` before Y. Cause: its `trade_opened`.
   4. **Friendship**: d(x, y) ≥ `ally_friend_disposition`. Cause: the later of the younger realm's `founding_event` and `turn_event(r_x, r_y)` when that turn was into friendship (7.13); for r_x = r_y the younger's founding event.
 - **Basis** of an alliance: 0 **origin** (6.4), 1 **common enemy**, 2 **fear**, 3 **friendship**, 4 **trade**: the first reason present in the order common enemy, fear, trade, friendship (codes 1, 2, 4, 3).
 
 ### 6.3 Formation (T2)
 
-For each pair (x, y), x < y ascending, of civilizations that are alive, visible and free, not allied, not in the betrayed pairs, not lately at war, in reach, with d(x, y) ≥ `ally_min_disposition`, |A(x)| < `allies_max` and |A(y)| < `allies_max` (live: counts change as alliances form in this loop):
+For each pair (x, y), x < y ascending, of civilizations that are alive, visible and free, not allied, not in the betrayed pairs, **not a pair whose `alliance` row closed earlier in this step** (the lead's ruling A9, below), not lately at war, in reach, with d(x, y) ≥ `ally_min_disposition`, |A(x)| < `allies_max` and |A(y)| < `allies_max` (live: counts change as alliances form in this loop):
 
 ```
 m = (common enemy ? form_foe_permille : 0) + (fear ? form_fear_permille : 0)
@@ -251,13 +255,15 @@ m = (common enemy ? form_foe_permille : 0) + (fear ? form_fear_permille : 0)
 p = min(form_max_permille, m × w(x, y) div 1000)
 ```
 
-If p > 0 and both bs(x) + s(y) + Σ_{z ∈ A(y)} s(z) ≤ `bloc_share_max` and bs(y) + s(x) + Σ_{z ∈ A(x)} s(z) ≤ `bloc_share_max` (the blocs after forming; bloc shares live, 6.2's cache updated for this loop), and `chance_pm(D(hist.alliances.form; x, y, 0), p)`: append **`alliance_formed`** (region 0, settlement 0; participants x `ally_a`, y `ally_b`, and the foe z as `foe` for bases 1 and 2; value `basis`; causes the reasons' cause events present, ascending); open relation `alliance` (x, y) with it; record the alliance (renewal = the formation); `credit(r_x, r_y, ally_memory, the event)`.
+If p > 0 and both bs(x) + s(y) + Σ_{z ∈ A(y)} s(z) ≤ `bloc_share_max` and bs(y) + s(x) + Σ_{z ∈ A(x)} s(z) ≤ `bloc_share_max` (the blocs after forming; bloc shares live, 6.2's cache updated for this loop), and `chance_pm(D(hist.alliances.form; x, y, 0), p)`: append **`alliance_formed`** (region 0, settlement 0; participants x `ally_a`, y `ally_b`, and the foe z as `foe` for bases 1 and 2; value `basis`; causes the reasons' cause events present, ascending); open relation `alliance` (x, y) with it; `ConflictSubsystem::forgive(x, y)` (7.2: the pair's strain and claims on each other, both ways, are dropped); record the alliance (renewal = the formation); `credit(r_x, r_y, ally_memory, the event)`.
 
 The bloc test comes before the draw, so no draw is made for a pair it refuses.
 
+**Ruling A9** (the lead, 2026-11-24; a gap of r2, with P3-04 6.7's "opened twice before one bookkeeping"): a pair whose `alliance` row was closed earlier in the same step (by a betrayal, a break, a spurning or a lapse) forms no alliance again in that step, by 6.3 or 6.4; likewise a pair whose `trade` row closed earlier in the step opens no trade in it (6.8). Otherwise a refusal that breaks an alliance at a declaration and a formation in the same T2 would open the row twice in one year.
+
 ### 6.4 Origin alliances (T2)
 
-For each pair (x, y), x < y ascending, alive, visible and free, not allied, not in the betrayed pairs, not at war, whose races list each other in `origin_allies`: if |A(x)| < `allies_max`, |A(y)| < `allies_max` and the bloc test of 6.3 passes: append `alliance_formed` with `basis` 0, no foe, cause the younger realm's `founding_event`; open the relation; record it with the origin flag; `credit(r_x, r_y, ally_memory, event)`. No draw and **no reach is needed**: kin of one camp know each other wherever they live (reading, 25). An origin alliance is never renewed by an event (6.7), never broken by a refusal (6.5), and its ally is called as any other.
+For each pair (x, y), x < y ascending, alive, visible and free, not allied, not in the betrayed pairs, not closed earlier in this step (A9, 6.3), not at war, whose races list each other in `origin_allies`: if |A(x)| < `allies_max`, |A(y)| < `allies_max` and the bloc test of 6.3 passes: append `alliance_formed` with `basis` 0, no foe, cause the younger realm's `founding_event`; open the relation; `ConflictSubsystem::forgive(x, y)` (as 6.3); record it with the origin flag; `credit(r_x, r_y, ally_memory, event)`. No draw and **no reach is needed**: kin of one camp know each other wherever they live (reading, 25). An origin alliance is never renewed by an event (6.7), never broken by a refusal (6.5), and its ally is called as any other.
 
 ### 6.5 Calls to arms (T2)
 
@@ -271,6 +277,7 @@ For each pair (x, y), x < y ascending, alive, visible and free, not allied, not 
 - `ConflictSubsystem::reaches(z, e)` (z's armies can reach the enemy, 7.13);
 - Y ≥ `founded_year`(e) + `shelter_years` (P3-06 7.2's shelter: a new realm is not attacked in its first years, by allies either);
 - `open_wars_of(z)` < `ally_wars_max`;
+- the war w is still open (`ConflictSubsystem::war_open(w)`);
 - for an attack call only: `truce_over(z, e)` and d(z, e) < 0.
 
 **The chance.**
@@ -284,7 +291,7 @@ attack:   p = attack_permille × ally_join_permille(r_z) div 1000 × h div 1000
 
 (w(z, p) is 0 when d(z, p) < `ally_min_disposition`; force is P3-06 6.1's whole force as amended in 7.5.) z **joins** if `chance_pm(D(hist.alliances.join; w, z, 0), p)`:
 
-- **Join**: append **`ally_joined_war`** (region 0, settlement 0; participants z `ally`, p `partner`, e `enemy`; value `side`; causes w and the alliance's formation or last renewal event, ascending); `ConflictSubsystem::join_war(ctx, w, z, that event)` (7.6); a joined record (w, z, p, e, event); `credit(r_z, r_p, join_memory, event)`.
+- **Join**: append **`ally_joined_war`** (region 0, settlement 0; participants z `ally`, p `partner`, e `enemy`; value `side`; causes w and the alliance's formation or last renewal event, ascending); `ConflictSubsystem::join_war(ctx, w, z, side, that event)` (7.6; the side is passed, since the war alone cannot tell which side the caller's ally takes); a joined record (w, z, p, e, event); `credit(r_z, r_p, join_memory, event)`.
 - **Refusal of a defence call** (not joined, side 0, the alliance not of origin): append **`ally_refused`** (participants z `ally`, p `partner`, e `enemy`; causes w and the alliance's formation or last renewal event); refusals += 1; `credit(r_z, r_p, −refuse_memory, event)`; if refusals ≥ `refusals_to_break`: append **`alliance_broken`** (participants the pair as `ally_a`, `ally_b`; value `reason` 0; cause the refusal); close the relation with it; drop the alliance.
 - An origin ally that does not join, and an attack call refused, write nothing.
 
@@ -303,14 +310,14 @@ In this order, each over the open alliances ascending (x, y), on a copy of the k
 1. **Cooling**: d(x, y) < `ally_break_disposition` (and the alliance not of origin):
    - if the term's withheld count is 0: append `alliance_broken` (value `reason` 1; cause the alliance's formation or last renewal event); close; drop;
    - else the alliance is **spurned**: append **`alliance_spurned`** (region: the withheld record's region; participants the wronged ally `ally`, the other `principal`; value `reason` 1; causes the last `spoils_withheld` and the formation or last renewal event, ascending); close; drop.
-2. **Blocs too great**: for each civilization c ascending with bs(c) > `bloc_lapse_share` (live): while bs(c) > `bloc_lapse_share` and A(c) is not empty, the alliance of c with the z ∈ A(c) of the smallest s(z) (then the larger id) lapses: append **`alliance_lapsed`** (participants the pair; value `reason` 1; cause the alliance's formation or last renewal event); close; drop. Origin alliances lapse by this rule too (the bound is the exit check's).
+2. **Blocs too great**: for each civilization c ascending with bs(c) > `bloc_lapse_share` (live): while bs(c) > `bloc_lapse_share` and A(c) is not empty, the alliance of c with the z ∈ A(c) of the smallest s(z) (then the larger id) lapses: append **`alliance_lapsed`** (participants the pair; value `reason` 1; cause the alliance's formation or last renewal event); close; drop. Origin alliances lapse by this rule too (the bound is the exit check's). In Q4, when the pair's first civilization has no `quiet_events_left`, the shedding does not happen and **c's pass stops** there (no other ally of c is shed in its place); it is tried again at the next T2 or Q4.
 3. **Renewal**: an alliance with Y ≥ renewal year + `term_years` (in Q4: Y + L − 1 ≥ it, tested at Y):
    - of origin: its renewal year becomes Y, no event; the withheld count becomes 0;
    - else if the term's withheld count ≥ `withheld_to_break`: append `alliance_spurned` (as in item 1, value `reason` 0); close; drop;
    - else if some reason of 6.2 holds: append **`alliance_renewed`** (participants the pair and the foe for bases 1 and 2; value `basis` by 6.2's order; causes the reasons' events and the last renewal or formation, ascending); the renewal year and event become Y and it; the withheld count becomes 0; `credit(r_x, r_y, renew_memory, event)`;
    - else: append `alliance_lapsed` (value `reason` 0; cause the last renewal or formation); close; drop.
 
-**Spoils and breaking** (Paul, 2026-11-24: "if the other ally doesn't want to give it, it might sour the relationship"). A withheld share (6.11) is a grievance in two places: the peoples' memory (`credit`, − `withheld_memory`) and the realms' grudge (+ `withheld_grudge`, which decays as every grudge, P3-06 4.2), so d(x, y) falls by up to 170 at the shipped values. No rule breaks an alliance at one withheld share: it is renewed at its term if a reason holds. Two in one term (`withheld_to_break`) end it at its renewal; and an alliance already cool that the grievance takes below `ally_break_disposition` is broken by cooling, written as spurned because spoils were kept in its term (the last straw, not the only cause). An alliance formed at d ≥ `ally_min_disposition` + 170 = −130 cannot be broken by one withheld share in the year of it. Origin alliances are never spurned (their bond is not of interest, 6.4); their peoples still remember. In the sentence the spoils are named by the war's goal region at the year of the break: *"After the spoils of the Grey Fells were kept from it, the Kingdom of Cear broke its alliance with the Hold of Durn."*
+**Spoils and breaking** (Paul, 2026-11-24: "if the other ally doesn't want to give it, it might sour the relationship"). A withheld share (6.11) is a grievance in two places: the peoples' memory (`credit`, − `withheld_memory`) and the realms' grudge (+ `withheld_grudge`, which decays as every grudge, P3-06 4.2), so d(x, y) falls by up to 500 at the shipped values (100 + 400). No rule breaks an alliance in the year of a withheld share by the share alone: `withheld_to_break` shares in one term (**1** as shipped, r3: few shares are owed, so one kept share is enough) end it at its renewal; and an alliance already cool that the grievance takes below `ally_break_disposition` is broken by cooling, written as spurned because spoils were kept in its term (the last straw, not the only cause). Only an alliance at d ≥ `ally_break_disposition` + 500 = 150 at the share is sure not to cool past breaking by it. Origin alliances are never spurned (their bond is not of interest, 6.4); their peoples still remember. In the sentence the spoils are named by the war's goal region at the year of the break: *"After the spoils of the Grey Fells were kept from it, the Kingdom of Cear broke its alliance with the Hold of Durn."*
 
 Every event of this section in Q4 needs `quiet_events_left` > 0 of its first civilization participant (x, the smaller id; for `alliance_spurned` the wronged ally), else it waits for the next T2 or Q4.
 
@@ -322,7 +329,7 @@ An alliance with an ended side is closed by conflict's housekeeping (P3-06 8.1 i
 
 **Breaks** (T2 and Q4, open trades ascending, on a copy of the keys): d(x, y) < `trade_min_disposition` − `trade_break_margin`: `trade_broken` reason 1, cause the `trade_opened`; else not in trade reach (hops > `trade_hops` + 1, a margin of one border): reason 2, same cause. Close; drop.
 
-**Openings** (T2 and Q4): for each pair (x, y), x < y ascending, alive, visible and free, not trading, not lately at war (`trade_after_war_years`), in trade reach, with d(x, y) ≥ `trade_min_disposition`, fewer than `trade_max` trades each (live):
+**Openings** (T2 and Q4): for each pair (x, y), x < y ascending, alive, visible and free, not trading, not a pair whose `trade` row closed earlier in this step (A9, 6.3), not lately at war (`trade_after_war_years`), in trade reach, with d(x, y) ≥ `trade_min_disposition`, fewer than `trade_max` trades each (live):
 
 ```
 wt = clamp((d(x, y) − trade_min_disposition) × 1000 div (ally_full_disposition − trade_min_disposition), 0, 1000)
@@ -332,7 +339,7 @@ p  = min(1000, trade_permille × wt div 1000 × L)     Q4
 
 For a pair with exactly one seller of arms (part C, 6.13), p = min(1000, p × `arms_trade_permille` div 1000).
 
-if `chance_pm(D(hist.alliances.trade; x, y, 0), p)`: append **`trade_opened`** (participants x `partner_a`, y `partner_b`; cause: the largest of the younger's `founding_event`, the pair's `last_peace` event and `peoples_met` of (r_x, r_y) when r_x ≠ r_y); open relation `trade` (x, y); next credit year = Y + `trade_credit_years`. In Q4 the events of this section need `quiet_events_left(x)` > 0.
+if `chance_pm(D(hist.alliances.trade; x, y, 0), p)`: append **`trade_opened`** (participants x `partner_a`, y `partner_b`; cause: the largest of the younger's `founding_event`, the pair's `last_peace` event and the `peoples_met` of (r_x, r_y), read by `RelationsSubsystem::met_event(r_x, r_y)`, when r_x ≠ r_y); open relation `trade` (x, y); next credit year = Y + `trade_credit_years`. In Q4 the events of this section need `quiet_events_left(x)` > 0.
 
 Trade is open in quiet centuries as well as in active phases: peace is when trade grows. `ally_full_disposition` > `trade_min_disposition` is required (`alliances_trade`: `trade_min_disposition <a> is not below ally_full_disposition <b>`).
 
@@ -385,7 +392,7 @@ V(w) = tribute_people(w) + plunder(w) × spoils_plunder_permille div 1000
 
 with `tribute_people` the value `people` of the `tribute` the war's ending caused (0 when none) and `plunder` the sum, over the settlements W sacked in w, of their population at the fall before its toll (the value 20.15 adds to taken(W) for a sack; captures are not counted). Both come from `ConflictSubsystem::war_spoils(w)` (7.15). **Land is never shared**: a ceded region and a captured town stay the principal's, so allies never redraw the map, and the bloc bound (6.7) and the territory view keep their meaning (reading, 24 L1). Nothing moves either: a granted share is a record and a warming, as a tribute moves no people to its payee (P3-06 20.3).
 
-**Who is owed.** For a joined record (w, z, p, e) whose war is no longer open: the war's **winner** W is `war_spoils(w).winner`: the winner of its `peace` or `war_won`, or, when it ended by a principal's end (7.11), the surviving principal; a truce has none. So an end by the partner's own end leaves the partner's allies owed nothing. z is **owed** a share when W = p, z's ally record was closed by the war's end (not by `ally_withdrew`, not by z's own end), z and W are alive, dead(z) = `ally_dead(w, z)` > 0 (z lost people in w's battles: it fought), and V(w) > 0. Otherwise the record is settled with no event.
+**Who is owed.** For a joined record (w, z, p, e) whose war is no longer open: the war's **winner** W is `war_spoils(w).winner`: the winner of its `peace` or `war_won`, or, when it ended by a principal's end (7.11), the surviving principal; a truce has none, nor has a war whose two principals both ended (its `end_event` is then the ending event of the principal of the smaller id; reading A13). The enemy's end closes the ally's record as the war's end (so it is owed, V from sacks); the partner's end leaves the enemy the survivor, so the partner's allies are owed nothing. z is **owed** a share when the war's ending event is a `peace`, `war_won` or `civ_conquered` (the kinds 9.1's reader check accepts; a war ended by a side's `civ_ended`, or by a truce, owes nothing), W = p, z's ally record was closed by the war's end (not by `ally_withdrew`, not by z's own end), z and W are alive, dead(z) = `ally_dead(w, z)` > 0 (z lost people in w's battles: it fought), and V(w) > 0. Otherwise the record is settled with no event.
 
 **The share.** Let dead_S = `side_dead` of `war_spoils(w)`, the dead of W's side in w (W's own and every ally's of that side, withdrawn ones included; 7.8). For each owed ally z, in join order of w:
 
@@ -405,16 +412,16 @@ g     = clamp(spoils_grant_permille + spoils_warmth_permille × w(W, z) div 1000
               spoils_grant_min, spoils_grant_max)
 ```
 
-(own_dead and pop0 = `winner_dead` and `winner_pop0`, the principal's own in w, as 7.7 item 1's exhaustion reads them), the share is **granted** if `chance_pm(D(hist.alliances.spoils; w, z, 0), g)`, else **withheld**. A warm pair, an ally that bled much and a principal that bled little make a grant likely; a cold pair and a bled-out principal make keeping likely. Shipped, a pair at warmth 600 with an ally at part 200 and a principal half-way to exhaustion: g = 450 + 180 + 100 − 200 = 530.
+(own_dead and pop0 = `winner_dead` and `winner_pop0`, the principal's own in w, as 7.7 item 1's exhaustion reads them), the share is **granted** if `chance_pm(D(hist.alliances.spoils; w, z, 0), g)`, else **withheld**. A warm pair, an ally that bled much and a principal that bled little make a grant likely; a cold pair and a bled-out principal make keeping likely. Shipped, a pair at warmth 600 with an ally at part 200 and a principal half-way to exhaustion: g = 350 + 180 + 100 − 200 = 430.
 
 - **Granted**: append **`spoils_shared`** (region: w's goal region; settlement 0; participants W `principal`, z `ally`, the loser `enemy`; value `share`; causes the war's ending event and z's `ally_joined_war`, ascending); `credit(r_W, r_z, share_memory, event)`.
-- **Withheld**: append **`spoils_withheld`** (the same shape); `credit(r_W, r_z, −withheld_memory, event)`; `ConflictSubsystem::add_grudge(W, z, withheld_grudge)` (7.15: the grievance between the two realms, which `credit` cannot carry when they are of one race); if W and z have an open alliance: its term's withheld count += 1 and its withheld record = (this event, w's goal region, z). 6.7 decides what the alliance does with it.
+- **Withheld**: append **`spoils_withheld`** (the same shape); `credit(r_W, r_z, −withheld_memory, event)`; `ConflictSubsystem::add_grudge_seam(W, z, withheld_grudge)` (7.15: the grievance between the two realms, which `credit` cannot carry when they are of one race); if W and z have an open alliance: its term's withheld count += 1 and its withheld record = (this event, w's goal region, z). 6.7 decides what the alliance does with it.
 
 The record is settled. In Q4 either event needs `quiet_events_left(W)` > 0 (the principal is its first civilization participant), else the record waits unsettled for the next T6 or Q4. Each record draws at most once (the key is the war and the ally).
 
 ### 6.12 Mines (part C; closings in T2, T6 and Q4; openings in T2 and Q4)
 
-Sites are kept by `MonstersSubsystem` (P5-02 5), which writes table `site`; mines are sites of the same table and the same id sequence. This stage adds them through a seam (7.16) and every P5-02 rule that reads sites reads kinds 1 and 2 only (`holds_site` of P5-03 11.2 included: a mine does not hold back a ruin's fading; it closes before, below).
+Sites are kept by `MonstersSubsystem` (P5-02 5), which writes table `site`; mines are sites of the same table and the same id sequence. This stage adds them through a seam (7.16) and every P5-02 rule that reads sites reads kinds 1 and 2 only (`MonstersSubsystem::holds_site` of P5-03 11.2 and the "occupied" test of an undead lair placed in the ruin it rose from (P5-02 6.3.2) included: a mine does not hold back a ruin's fading, nor keep a lair out of a ruin; it closes when its town is ruined, below).
 
 **Closings** (first, every step; open mines ascending by site id): a mine of c at settlement t in region R ends when
 
@@ -423,16 +430,16 @@ Sites are kept by `MonstersSubsystem` (P5-02 5), which writes table `site`; mine
 | 5 the founder's realm fell | c has ended | c's `ending_event` |
 | 4 the founder lost the land | t is not standing, or t's owner is not c, or R's owner is not c | t's `ruin_event` when t is not standing; else the event that last changed t's owner (a `settlement_captured`, `region_ceded` or `settlements_ceded`) when it is not c; else R's `owner_event` |
 
-`end_site(site, Y, that event, ending)` (7.16); the mine is dropped from the open mines; no event of its own (as an outpost lost, P5-02 6.6.3). The ending event is of year Y: every step that takes a town or a region runs before this subsystem in the same year (6.10), and closings run in T2, T6 and Q4.
+`end_site_seam(site, year of that event, that event, ending)` (7.16); the mine is dropped from the open mines; no event of its own (as an outpost lost, P5-02 6.6.3). **The ended year is the ending event's own year** (r3, as built; the reader checks that `ending_event` is of `ended_year`, 9.2). That is Y in every case this section names when the loss happens in a step before this subsystem's in the same year (closings run in T2, T6 and Q4); a town or region lost after this subsystem's Q4 (later in the quiet step) closes the mine at the next step, still with that event's year.
 
-**Openings** (T2 and Q4, after the closings): for each civilization c ascending, alive, visible and free, with `mining_permille`(r_c) > 0; for each region R ascending with owner c, `ore_reach_cells`(R) ≥ `mine_ore_min`, and no open mine of c in R: t = c's standing settlement in R with the largest population (then the smaller id) that never had a mine; none, or its population below `mine_settlement_min`: skip.
+**Openings** (T2 and Q4, after the closings): for each civilization c ascending, alive, visible and free, with `mining_permille`(r_c) > 0; for each region R ascending with owner c, `ore_reach_cells`(R) ≥ `mine_ore_min`, and no open mine of c in R: t = c's standing settlement in R with the largest population (then the smaller id) among those that never had a mine, hidden settlements included (reading A12); none, or its population below `mine_settlement_min`: skip (there is no fallback to a settlement that already had a mine).
 
 ```
 p = mine_permille × mining_permille(r_c) div 1000          T2
 p = min(1000, p × L)                                       Q4
 ```
 
-If `chance_pm(D(hist.alliances.mine; c, R, 0), p)`: id = `next_site_id()`; append **`mine_opened`** (region R, settlement t; participants c `civilization`, id `site`; cause the larger of R's `owner_event` and t's `founding_event`); `open_site` (kind 3; name `mine_forms[(id − 1) mod n]` with `{settlement}` t's name, a leading `The ` lowered to `the ` (P1-06 r3 14.7); region R; cell and settlement of t; `founder_civ` c; `monster` 0; origin Y and the event); record the mine and t. One mine per settlement ever, so mine names are unique. In Q4 the event needs `quiet_events_left(c)` > 0.
+If `chance_pm(D(hist.alliances.mine; c, R, 0), p)`: id = `next_site_id()`; append **`mine_opened`** (region R, settlement t; participants c `civilization`, id `site`; cause the larger of R's `owner_event` and t's `founding_event`); `open_site` (kind 3; name `mine_forms[(id − 1) mod n]` with `{settlement}` t's name, a leading `The ` of it lowered to `the ` (P1-06 r3 14.7) only when `{settlement}` is not at the start of the form (reading P8; at the start the name is kept); region R; cell and settlement of t; `founder_civ` c; `monster` 0; origin Y and the event); record the mine and t. One mine per settlement ever, so mine names are unique. In Q4 the event needs `quiet_events_left(c)` > 0.
 
 ### 6.13 Forges and arms (part C; T2 and Q4, after the mines)
 
@@ -469,6 +476,8 @@ With no view set (or a view with no alliance, no trade and no mine), conflict is
 
 For an allied pair (a, b): rate(a, b) = rate as 5.2 × `allied_strain_permille` div 1000 (applied after 5.2's left-to-right evaluation, before the step's multiplication). Claims, declarations and the tension read the strain as before; a declaration between allies is a betrayal (6.6).
 
+**At the oath** (r3; a defect of r2): `void ConflictSubsystem::forgive(std::int64_t a, std::int64_t b)` (a ≠ b, fatal otherwise: `history: conflict: forgive(<a>, <b>)`) sets the strain of the pair in both directions to 0 and drops its claims in both directions (as a declaration does for its two sides, and as `join_war` does, 7.6). The alliances subsystem calls it at every `alliance_formed`, origin alliances included (6.3, 6.4), right after opening the `alliance` row. Reason: without it two realms kept the strain and claims they had built before swearing, and almost every betrayal (140 of 140 in the engineer's first sweep, 23% of ended alliances, in 68 worlds) was a declaration on a claim older than the alliance, which `allied_strain_permille` could not move; with it a betrayal comes only from strain built while allied.
+
 ### 7.3 Fear of blocs (amends 5.1)
 
 fear(b) = `fear_weight` × max(0, bs(b) − `fear_share`) div (1000 − `fear_share`), with bs(b) = min(1000, share(b) + Σ_{z ∈ allies(b)} share(z)) in place of share(b). The coalition by fear (10.1 item 3) now rises against every member of a great bloc.
@@ -491,9 +500,9 @@ They apply wherever force is read: declarations, odds, battles, the joint streng
 
 ### 7.6 `join_war` and the joined ally (new)
 
-`ConflictWar` gains `allies`: a list in join order of {civilization z, side (0 the defender's, 1 the attacker's), join event, dead, pop0, open}; and `end_event` (the war's ending event, 0 while open). `void ConflictSubsystem::join_war(StepContext&, std::int64_t war, std::int64_t ally, std::int64_t event)` with war the declaration event id:
+`ConflictWar` gains `allies`: a list in join order of {civilization z, side (0 the defender's, 1 the attacker's), join event, dead, pop0, open}; and `end_event` (the war's ending event, 0 while open). `void ConflictSubsystem::join_war(StepContext&, std::int64_t war, std::int64_t ally, std::int64_t side, std::int64_t event)` with war the declaration event id and side the ally's side (0 or 1; the enemy is the attacker for side 0, the defender for side 1):
 
-1. Fatal (`history: conflict: join_war: <reason>`) unless the war is open, `ally` is not a side or an ally of it, and the pair (ally, enemy) has no open `war` relation (the caller's conditions, 6.5).
+1. Fatal (`history: conflict: join_war: <reason>`) unless the war is open, side is 0 or 1, `ally` is not a side or an ally of it, and the pair (ally, enemy) has no open `war` relation (the caller's conditions, 6.5).
 2. Append the ally record (pop0 = `PeoplesView::population(ally)`, dead 0, open).
 3. Close the open `peace` relation of (ally, enemy) with `event`, if any; open relation `war` (ally, enemy) with `event` (asymmetric: the ally as a); strain of both directions 0; drop the claims of both directions.
 
@@ -531,7 +540,7 @@ Unchanged in rule: 8.1 item 1 already closes every open relation of an ended sid
 
 ### 7.13 Other reads
 
-`ConflictSubsystem` makes public, as const reads with the live state of the step: `disposition_of(ctx, a, b)`, `at_war(a, b)` (now: any open `war` relation either way), `open_wars_of(c)`, `force(ctx, c)`, `truce_over(ctx, a, b)`, `lying_low(ctx, c)`, `share(ctx, c)`, `last_peace(a, b)` (year and event, or none), `reaches(ctx, x, y)` (true when 5.1's `front(x, y)` with x's march hops, 8.1's `enmity_hops` where an enmity row exists, is not empty), `war_open(w)`, `war_end_event(w)`, `ally_left(w, z)`, `war_spoils(w)` (7.15). `DispositionView` gains `std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const` (the pair's last `disposition_turned`, 0 none) and its band.
+`ConflictSubsystem` makes public, as const reads with the live state of the step: `disposition_of(ctx, a, b)`, `at_war(a, b)` (now: any open `war` relation either way), `open_wars_of(c)`, `force(ctx, c)`, `truce_over(ctx, a, b)`, `lying_low(ctx, c)`, `share(ctx, c)`, `last_peace(a, b)` (year and event, or none), `reaches(ctx, x, y)` (true when 5.1's `front(x, y)` with x's march hops, 8.1's `enmity_hops` where an enmity row exists, is not empty), `war_open(w)`, `war_end_event(w)`, `ally_left(w, z)`, `ally_record(w, z)` (the ally's record of 7.6 in war w: side, join event, dead, pop0, open, and the event and code that closed it; fatal when z did not join w), `war_spoils(w)` (7.15); and the mutator `forgive(a, b)` (7.2). `DispositionView` gains `std::int64_t turn_event(std::int64_t race_a, std::int64_t race_b) const` (the pair's last `disposition_turned`, 0 none) and its band.
 
 ### 7.14 Proof obligation I0
 
@@ -544,6 +553,7 @@ With the `zero` tuning (4.2) and the `history.conflict` fields at any value, the
 ```cpp
 struct WarSpoils {
     std::int64_t winner, loser;        // peace, war_won: as the event; a principal's end (7.11): the survivor, the ended; truce, both ended: 0, 0
+                                       // (both ended: end_event is the ending event of the smaller id, A13)
     std::int64_t end_event, goal_region;
     std::int64_t tribute_people, tribute_event, plunder;   // the winner's plunder
     std::int64_t winner_dead, winner_pop0;                 // the principal's own, as exhaustion reads them
@@ -551,10 +561,10 @@ struct WarSpoils {
 };
 WarSpoils war_spoils(std::int64_t war) const;                       // fatal while the war is open
 std::int64_t ally_dead(std::int64_t war, std::int64_t ally) const;  // the ally's dead in the war
-void add_grudge(std::int64_t a, std::int64_t b, std::int64_t units);
+void add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units);
 ```
 
-`add_grudge` (a ≠ b, units ≥ 0, fatal otherwise): grudge{min(a, b), max(a, b)} += units. It is a new grudge source of P3-06 4.2's table ("an ally's share of the spoils withheld", 6.11) and decays as every grudge. It is called only from 6.11, at one fixed point of this subsystem's T6 and Q4; conflict reads it at its next call. Conflict keeps each ended war's record (allies, dead, plunder, tribute, end) at least until every joined record of it is settled and credited by this subsystem (keeping every ended war is simplest; the reads are the contract, the storage the engineer's).
+`add_grudge_seam` (a ≠ b, units ≥ 0, fatal otherwise): grudge{min(a, b), max(a, b)} += units. It is a new grudge source of P3-06 4.2's table ("an ally's share of the spoils withheld", 6.11) and decays as every grudge. It is called only from 6.11, at one fixed point of this subsystem's T6 and Q4; conflict reads it at its next call. Conflict keeps each ended war's record (allies, dead, plunder, tribute, end) at least until every joined record of it is settled and credited by this subsystem (keeping every ended war is simplest; the reads are the contract, the storage the engineer's).
 
 ### 7.16 The site seam (new; amends P5-02 5, 6.6, 11)
 
@@ -563,10 +573,10 @@ void add_grudge(std::int64_t a, std::int64_t b, std::int64_t units);
 ```cpp
 std::int64_t next_site_id() const;                                  // the id the next site will take
 void open_site(const SiteSpec&);                                    // kind 3 only from this stage; fatal unless spec.id == next_site_id()
-void end_site(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);  // as P5-02's
+void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);  // as P5-02's
 ```
 
-with `SiteSpec` {id, kind, name, region, x, y, settlement, founder_civ, monster, origin_year, origin_event}. Monsters runs before alliances in every step (6.1), so ids are allocated in one order. Every loop of P5-02 over sites (outposts' ends, lairs, `holds_site`, the report's lairs and outposts counts) tests the kind and skips kind 3. `site_rows()` writes every site, mines included, in id order.
+with `SiteSpec` {id, kind, name, region, x, y, settlement, founder_civ, monster, origin_year, origin_event}. Monsters runs before alliances in every step (6.1), so ids are allocated in one order. Every loop of P5-02 over sites (outposts' ends, lairs, `holds_site`, the report's lairs and outposts counts) tests the kind and skips kind 3 (`holds_site` and the lair's "occupied" test of 6.12 included). `site_rows()` writes every site, mines included, in id order.
 
 ## 8. Events
 
@@ -635,7 +645,7 @@ Causes (W6): a formation, its reasons' events (or the younger's founding for ori
 | `war` (joined) | no: a the ally, b the enemy | `ally_joined_war` | `ally_withdrew`, the war's `peace`/`war_won`/`truce`, or a side's ending event |
 | `peace` (after a joined war) | yes | `ally_withdrew` or the war's ending event | as P3-06 4.3 |
 
-At most one open row per key; a renewal writes no row. **Reader checks** (`HistoryView::load`, after P3-04's relation checks; `corrupt table 'relation': row <key>: <reason>`, first failing row in key order): `alliance since_event <e> is not an alliance_formed of the pair`; `trade since_event <e> is not a trade_opened of the pair`; `war since_event <e> is not a war_declared or an ally_joined_war of the pair` (an `ally_joined_war` names a as `ally` and b as `enemy`); for a closed `alliance` row, `until_event <e> does not end the alliance` (one of the four kinds naming the pair, or a side's `ending_event`). Event checks (P5-03 16.4's form): `basis` 0 to 4, `reason` 0 to 1 (65, 66, 76) and 0 to 2 (73), `side` 0 to 1, `pass` 0 or a `pass` row, `share` ≥ 1; every `allied_battle` has at least one ally participant (`allied_battle without an ally`); every `spoils_shared` and `spoils_withheld` cites a `peace`, `war_won` or `civ_conquered` and an `ally_joined_war` naming its `ally` (`spoils without its war`).
+At most one open row per key; a renewal writes no row. **Reader checks** (`HistoryView::load`, after P3-04's relation checks; `corrupt table 'relation': row (<a_type>, <a_id>, <b_type>, <b_id>, <kind>, <since>): <reason>`, first failing row in key order): `alliance since_event <e> is not an alliance_formed of the pair`; `trade since_event <e> is not a trade_opened of the pair`; `war since_event <e> is not a war_declared or an ally_joined_war of the pair` (an `ally_joined_war` names a as `ally` and b as `enemy`); for a closed `alliance` row, `until_event <e> does not end the alliance` (one of the four kinds naming the pair, or a side's `ending_event`). Event checks (P5-03 16.4's form): `basis` 0 to 4, `reason` 0 to 1 (65, 66, 76) and 0 to 2 (73), `side` 0 to 1, `pass` ≥ 0 (only that: `HistoryView::load` reads no `pass` rows, so it cannot test that a non-zero value names one), `share` ≥ 1; every `allied_battle` has at least one ally participant (`allied_battle without an ally`); every `spoils_shared` and `spoils_withheld` cites a `peace`, `war_won` or `civ_conquered` and an `ally_joined_war` naming its `ally` (`spoils without its war`).
 
 ### 9.2 Schema 11: the site kind `mine` (part C; hard rule 7)
 
@@ -644,7 +654,7 @@ At most one open row per key; a renewal writes no row. **Reader checks** (`Histo
 - `SCHEMA_VERSION` (`worldgen/include/worldgen/db/schema.hpp`), `PRAGMA user_version` and `meta.schema_version` **11**; readers refuse version 10 worlds (as every bump, P0-02).
 - The empty world keeps its 45 pages and 184320 bytes; its bytes change (the version), so `p0-worlds.txt` is re-recorded (17).
 - A mine row: `kind` 3, `settlement` the town it was opened at (≠ 0), `founder_civ` the realm (≠ 0), `monster` 0, `origin_event` its `mine_opened`, `ending` 0 open, 4 the founder lost the land, 5 the founder's realm fell (6.12).
-- **Reader check** (amends P5-02 11.4's `site` line): `kind <k> is not 1, 2 or 3`; for kind 3: `unknown civilization <c>`, monster ≠ 0 (`mine with a monster`), settlement 0 (`mine without a settlement`), `origin_event` of kind `mine_opened` (the list of kinds gains it), `ending <k> is not 0, 4 or 5 for a mine`.
+- **Reader check** (amends P5-02 11.4's `site` line): `kind <k> is not 1, 2 or 3`; for kind 3: `unknown civilization <c>`, monster ≠ 0 (`mine with a monster`), settlement 0 (`mine without a settlement`), `origin_event` of kind `mine_opened` (the list of kinds gains it; the message stays P5-02's: `corrupt table 'site': row <id>: origin_event <e> is not an event of its year naming this site`), `ending <k> is not 0, 4 or 5 for a mine`.
 - `docs/specs/schema.md` (the engineer): section 1 (the version line: "Current schema version: 11 (from generator 0.26.0, the P5-04 merge: site kind 3 `mine`)"), the `site` paragraph (kind 3 and its endings), section 5 (changelog row: "10 → 11 with generator 0.26.0: `site.kind` gains code 3 `mine`; no DDL change; the empty world stays 45 pages; readers refuse version 10 worlds; the event catalogue gains kinds 63 to 78; relation kinds `alliance` and `trade`, joined `war` rows. Proposals 'Schema 11: mine sites (P5-04 part C)'"), section 6 (kinds 63 to 78; the relation kinds list gains `alliance`, `trade` and the joined `war` rows).
 - Proposals entry "Schema 11: mine sites (P5-04 part C)" (decided, 25).
 
@@ -662,26 +672,26 @@ alliances: <n> formed, <m> standing at E; ended: <l> lapsed, <b> broken, <s> spu
   c<a> <name> and c<b> <name>: <from>-<to|E>, <basis word>[ against c<z>], e<id>[; renewed <k>][; joined <j>, refused <r>][; spoils <g> granted, <k> withheld][; <lapsed|broken|spurned|betrayed|ended> e<id>]
 calls to arms: <j> joined (<d> in defence, <a> in attack), <r> refused, <w> withdrew; wars with an ally: <k> of <n>
 spoils: <o> owed, <g> granted, <k> withheld; <p> people owed, <q> granted
-largest bloc: <bs>‰, c<id> with c<id>[, c<id>…] in <year>
+largest bloc: <bs> permille, c<id> with c<id>[, c<id>…] in <year>
 trade: <n> opened, <m> standing at E; broken <k> (war <a>, cooled <b>, out of reach <c>); arms sold <s>
   c<a> <name> and c<b> <name>: <from>-<to|E>, e<id>[; arms from c<s>][; broken e<id>]
 ```
 
-Basis words: `by origin`, `against a common enemy`, `in fear`, `in friendship`, `after trade`. `joined`/`refused` count kinds 68 and 69 of the pair (either as ally). `wars with an ally` counts `war_declared` events with a kind 68 citing them, of all `war_declared`. `spoils`: `owed` counts kinds 74 and 75, `granted` 74, `withheld` 75, the people their `share` values; `spoils: none` when none was owed. An alliance line's `spoils` part counts the pair's kinds 74 and 75 (either as principal) and is left out when both are 0. `arms from c<s>` names the seller of the pair's `arms_sold`. **Largest bloc**: the largest bs(c) (6.2 by the report's islet rule, as `share_max_permille`) over every year and civilization, the earliest year and smallest id at a tie, with c's allies at that year; `largest bloc: none` when no alliance ever stood. Alliance lines by (from, a, b); trade lines likewise. Plurals as P5-03a 9.4 (`1 alliance`…). **Full**: every line. **Summary**: the five count lines, the alliance lines standing at E and those ended by betrayal or spurned, at most `SUMMARY_ALLIANCES_MAX` (**10**, `digest.hpp`) by (from, a, b) then `  and <x> more`; no trade lines. When the world has more than `SUMMARY_LINES_CIVS` civilizations, the count lines only.
+Basis words: `by origin`, `against a common enemy`, `in fear`, `in friendship`, `after trade`. `joined`/`refused` count kinds 68 and 69 of the pair (either as ally). `wars with an ally` counts `war_declared` events with a kind 68 citing them, of all `war_declared`. `spoils`: `owed` counts kinds 74 and 75, `granted` 74, `withheld` 75, the people their `share` values; `spoils: none` when none was owed. An alliance line's `spoils` part counts the pair's kinds 74 and 75 (either as principal) and is left out when both are 0. `arms from c<s>` names the seller of the pair's `arms_sold`. The bloc share prints as `<bs> permille` (reading P1: the report is ASCII text, lint rule `non-ascii-literal`). **Largest bloc**: the largest bs(c) (6.2 by the report's islet rule, as `share_max_permille`) over every year and civilization, the earliest year and smallest id at a tie, with c's allies at that year; `largest bloc: none` when no alliance ever stood. Alliance lines by (from, a, b); trade lines likewise. Plurals as P5-03a 9.4 (`1 alliance`…). **Full**: every line. **Summary**: the five count lines, the alliance lines standing at E and those ended by betrayal or spurned, at most `SUMMARY_ALLIANCES_MAX` (**10**, `digest.hpp`) by (from, a, b) then `  and <x> more`; no trade lines. When the world has more than `SUMMARY_LINES_CIVS` civilizations, the count lines only.
 
 ### 10.3 `[civilizations]`, companions, chronicle
 
 - Appended at the end of each block: `  allies: <n>` (alliances the realm was ever in); full: followed by `    c<id> <name>: <from>-<to|E>, <basis word>` per alliance; summary: the count only, and `; at the end: c<id>, c<id>` when the realm has allies at E.
-- **Companions** (amends P3-07 24.2): `ally_joined_war` and `ally_refused` are companions of the `war_declared` they cite; `spoils_shared` and `spoils_withheld` are companions of the war ending they cite; `alliance_betrayed` is a companion of its declaration and the declaration of it.
+- **Companions** (amends P3-07 24.2): `ally_joined_war` and `ally_refused` are companions of the `war_declared` they cite, and only that: they are never summary candidates by themselves (8.3's "companion of its war"); `spoils_shared` and `spoils_withheld` are companions of the war ending they cite; `alliance_betrayed` is a companion of its declaration and the declaration of it.
 - **Battles**: `allied_battle` is a battle kind everywhere P3-07 names `battle` and `battle_at_pass` (11.1): not a summary candidate by itself, a war's last battle in its frame, a unit of 21.2.
 
 ### 10.4 War lines and counts
 
-A `war` row whose `since_event` is an `ally_joined_war` is an ally's row, not a war: it is in no war line, no adversaries count, `wars`, `wars_open`, `wars_hollow_permille` or T16's battles per war; the digest's war of an event (24.1) is unchanged, since a joined row's ending event is its war's (its `since_event` is larger than the war's declaration). So every existing line keeps its meaning.
+A `war` row whose `since_event` is an `ally_joined_war` is an ally's row, not a war: it is in no war line, no adversaries count, `wars`, `wars_open`, `wars_hollow_permille` or T16's battles per war; the digest's war of an event (24.1) is unchanged, since a joined row's ending event is its war's (its `since_event` is larger than the war's declaration). So every existing line keeps its meaning. **Adversaries** (P3-07's summary lines of a civilization, from the rows R of its 6.6): R leaves out the realm's `alliance` and `trade` rows and its joined `war` rows (an ally is not an adversary, nor is a trade partner); every other row counts as before.
 
 ### 10.5 `[stats]` (appended, full only; `SUMMARY_STATS` unchanged)
 
-In this order: `alliances_formed`, `alliances_standing`, `alliances_cross_race`, `alliances_origin`, `alliances_lapsed`, `alliances_broken`, `alliances_betrayed`, `alliances_ended_with_realm`, `alliances_years_median` (median length of ended alliances, `-` when none), `allies_joined`, `allies_joined_defence`, `allies_refused`, `allies_withdrew`, `wars_with_ally`, `allied_battles`, `bloc_share_max_permille`, `bloc_over_800_years` (the longest run of consecutive years in which some bloc's share is above 800‰), `trade_opened`, `trade_standing`, `trade_broken`, `alliances_spurned`, `spoils_owed`, `spoils_granted`, `spoils_withheld`, `spoils_granted_permille` (granted × 1000 div owed, `-` when none owed), `spoils_people_owed`, `mines_opened`, `mines_open`, `arms_sold`, `arms_buyers_at_end` (realms with arms(c) = 1 at E − 1).
+In this order: `alliances_formed`, `alliances_standing`, `alliances_cross_race`, `alliances_origin`, `alliances_lapsed`, `alliances_broken`, `alliances_betrayed`, `alliances_ended_with_realm`, `alliances_years_median` (the lower median of the lengths, until − since, of ended alliances: the element at index (n − 1) div 2 of the ascending list; `-` when none), `allies_joined`, `allies_joined_defence`, `allies_refused`, `allies_withdrew`, `wars_with_ally`, `allied_battles`, `bloc_share_max_permille`, `bloc_over_800_years` (the longest run of consecutive years in which some bloc's share is above 800‰), `trade_opened`, `trade_standing`, `trade_broken`, `alliances_spurned`, `spoils_owed`, `spoils_granted`, `spoils_withheld`, `spoils_granted_permille` (granted × 1000 div owed, `-` when none owed), `spoils_people_owed`, `mines_opened`, `mines_open`, `arms_sold`, `arms_buyers_at_end` (realms with arms(c) = 1 at E − 1).
 
 ### 10.6 `[sites]`
 
@@ -710,7 +720,19 @@ Kinds 63 to 70, 72 to 76 and 78 are in the new group **`alliances` = 7** (append
 
 ### 11.3 The mine marker (part C; amends P4-04 3.6, 4, 6.1)
 
-P4-04 reserved entry type 6 `site` and glyph codes 16 to 31 for site kinds. This stage builds the first: `markers_at(Y)` gives one entry of type 6 for every site of **kind 3** existing at Y (origin_year ≤ Y and (ended_year NULL or Y < ended_year), P3-04 10's half-open rule; from `Timeline::sites_existing`), at the site's cell, glyph code **19** (16 + kind) `mine`: two crossed strokes (a pick and a hammer) in the 7 × 7 glyph cell, dark grey (60, 60, 60) with a one-pixel light outline as the settlement glyphs; drawn in P4-04 6.1's reserved position (between ruins and standing settlements), so a standing town hides its own mine's glyph only where they overlap (the mine is at the town's cell: the viewer offsets the site glyph by one glyph cell to the upper right, the library's `draw_markers` likewise). Lairs and outposts stay unbuilt (P4-04 3.6). Hover text: `<site name> (mine of <civilization name>), since <year>`. `MarkerOptions::sites` (new, default on) and the viewer's Markers group gain a `mines` row (the viewer engineer). The `--markers` overlay images and `markers.txt` hashes change; `p4-04-markers.txt` is re-recorded (17).
+P4-04 reserved entry type 6 `site` and glyph codes 16 to 31 for site kinds. This stage builds the first: `markers_at(Y)` gives one entry of type 6 for every site of **kind 3** existing at Y (origin_year ≤ Y and (ended_year NULL or Y < ended_year), P3-04 10's half-open rule; from `Timeline::sites_existing`), at the site's cell, glyph code **19** (16 + kind) `mine`: two crossed strokes (a pick and a hammer: the two diagonals of radius 2 with a head at each upper end) in the 7 × 7 glyph cell, fill F = (60, 60, 60) with the markers' halo H = (240, 240, 240), `.` transparent. Rows dy = −3 to 3 (top to bottom), columns dx = −3 to 3 (left to right):
+
+```
+HHHHHHH
+HFFHFFH
+HFFHFFH
+HHHFHHH
+HHFHFHH
+HFHHHFH
+HHH.HHH
+```
+
+Drawn in P4-04 6.1's reserved position (between ruins and standing settlements), with its centre 7 cells right of and 7 cells above its settlement's cell (one glyph cell to the upper right: the mine is at the town's cell), in the library's `draw_markers` and in the viewer alike; so a standing town hides its own mine's glyph only where they overlap. Lairs and outposts stay unbuilt (P4-04 3.6). Hover text: `<site name> (mine of <civilization name>), since <year>`. `MarkerOptions::sites` (new, default on) and the viewer's Markers group gain a `mines` row (the viewer engineer). The `--markers` overlay images and `markers.txt` hashes change; `p4-04-markers.txt` is re-recorded (17).
 
 ## 12. Timeline reads (amends P4-01; r6)
 
@@ -735,7 +757,7 @@ In force at Y: since ≤ Y < until (P3-04 10's half-open rule). `alliance_groups
 5. Every `allied_battle` has at least one ally, every ally participant had an open joined row against the other side at the event; `winner_dead` ≤ the defeated's total; 20.16's bound holds on side totals.
 6. No ally participant of a war is the besieger, taker or payee of a cost of that war; costs name principals only.
 7. Every `alliance_betrayed` cites a `war_declared` between its two realms of the same year.
-8. **Bloc bound**: no bloc share above `bloc_lapse_share` at the end of any T2 or Q4 of this subsystem; so with the shipped 700 no bloc holds more than 800‰ beyond one step (P5-00 8.3's hard bound: 1,000 years, met by construction).
+8. **Bloc bound**: no bloc share above `bloc_lapse_share` at the end of any T2 or Q4 of this subsystem; so with the shipped 700 no bloc holds more than 800‰ beyond one step (P5-00 8.3's hard bound: 1,000 years, met by construction). The bound holds by rule **at tick years only** (the end of a T2 or Q4 is not visible in the rows, and between them conflict's gains can lift a bloc above it until the next T2 or Q4; a Q4 shedding can also wait for a budget, 6.7): a check over rows tests AL9's hard bound (the longest run of years above 800‰ ≤ 1,000) and reports the longest run above `bloc_lapse_share` (reading P7).
 9. With the `zero` tuning, I0 (7.14) holds.
 10. P3's hard bounds (P3-00 12.3), "no race dies out", the shelter rule (no call against a sheltered realm), P5-03's and P5-03a's invariants.
 11. **Spoils**: every `spoils_shared` or `spoils_withheld` follows, in the same year or a later one, a `peace`, `war_won` or `civ_conquered` of the war its `ally_joined_war` cites, whose winner is its `principal` and whose loser is its `enemy`; its ally had dead in that war and did not withdraw; at most one of the two per (war, ally); Σ `share` over a war ≤ V(w) (replayed from the `tribute` and `sacked` events); no region, settlement or relation row changes owner or opens because of a share.
@@ -749,7 +771,8 @@ In force at Y: since ≤ Y < until (P3-04 10's half-open rule). `alliance_groups
 - Containers: `std::map` keyed by id pairs for alliances and trades, `std::set` for betrayed pairs, a vector of joined records in record order; conflict's `ConflictWar::allies` in join order. No unordered container, no pointer keys.
 - The log cursor reads events in ascending id. Opens and closes of relations are made on key copies (6.10). The join seam changes conflict's members only through `join_war`, called at one fixed point of this subsystem's T2.
 - Arithmetic int64, checked multiplication: largest products force × 1000 (force < 2^40, 7.5) < 2^50; shares ≤ 1000; disposition terms within ±10^4 × 1000.
-- `credit` calls (6.9) are at fixed points with existing events (A4); `add_grudge` (7.15) at one fixed point of 6.11.
+- `credit` calls (6.9) are at fixed points with existing events (A4); `add_grudge_seam` (7.15) at one fixed point of 6.11; `forgive` (7.2) at each `alliance_formed`, right after its row opens.
+- The per-step set of pairs closed in the step (A9) is an ordered set, cleared at the start of each `run`.
 - Site ids: allocated by `MonstersSubsystem::next_site_id()` and checked by `open_site` (7.16); the monsters subsystem runs before this one in every step, so the id order is the order of 6.1 within a step.
 - Mine names are filled from `mine_forms` by the site id (6.12), no draw.
 - Spoils arithmetic: V ≤ population sums < 2^31; V × part ≤ 2^31 × 1000; the exhaustion denominator max(1, …) avoids a division by zero.
@@ -766,36 +789,36 @@ Specified with part A: 6.8 (rules), 6.9 (credit), 7.5 (strength), events 72 and 
 
 ### 15.1 Targets
 
-At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. Bounds are r2 estimates; the measured column is filled in at the integration (r3).
+At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. Bounds are r2's. The measured column holds the engineer's calibration figures at r3 (release build, 1024 defaults, seeds 0–99; `civs4` seeds 0–29; `docs/design/proposals.md`, P5-04 entry); validation re-measures them on its own sweeps, and its figures replace these.
 
-| Target | Definition | Bound |
-| --- | --- | --- |
-| **AL1** | `alliance_formed` per world | median 6 to 15; at least one in ≥ 95 worlds |
-| **AL2** | alliances standing at E | median ≥ 3 |
-| **AL3** | alliances across races | 30% to 70% of formed; within a race reported by race |
-| **AL4** | elves and faeries by origin | every world with an elven and a faerie realm alive together at some year has an origin alliance (by rule) |
-| **AL5** | wars with an ally (`wars_with_ally` / `wars`) | 20% to 45%; joins in defence ≥ 70% of joins |
-| **AL6** | refusals | reported; `ally_refused` ≤ `ally_joined_war` |
-| **AL7** | betrayals | at least one in 20% to 60% of worlds; 3% to 15% of ended alliances |
-| **AL8** | how alliances end; median length | reported (lapsed, broken, spurned, betrayed, with a realm) |
-| **AL9** | blocs | hard (every world of every sweep, 512 included): `bloc_over_800_years` ≤ 1000 (by rule: ≤ one step); typical: `bloc_share_max_permille` median ≤ 450, max ≤ 700 |
-| **AL10** | allied battles | reported; share of battles |
-| **SP1** | shares granted (`spoils_granted_permille` over the sweep's pooled owed shares) | 500 to 850 per mille; `spoils_owed` median ≥ 1 per world |
-| **SP2** | alliances spurned (`alliances_spurned`) | few but present: at least one in 20% to 60% of worlds; at most 10% of ended alliances |
-| **SP3** | spoils kept and remembered | reported: withheld shares followed by a spurning of the same pair, by an `alliance_broken` by cooling, or by neither; the median d(x, y) fall at a withheld share |
-| **TR1** | `trade_opened` per world; standing at E | median 8 to 25; median ≥ 3 |
-| **TR2** | alliances of basis trade, or citing a `trade_opened` | ≥ 15% of formed |
-| **TR3** | strength of trade | reported: wars won by the side with more trade partners |
-| **MC1** | mines | a mine in ≥ 90% of worlds with a dwarven realm holding a region with `ore_reach_cells` ≥ `mine_ore_min` and a settlement of `mine_settlement_min` there (P5-00 8.3's dwarves in mines); `mines_opened` median 2 to 8 in worlds with dwarves |
-| **MC2** | arms | `arms_sold` in ≥ 60% of worlds with a mine; arms buyers at E reported |
-| **MC3** | strength of the dwarves | reported: dwarven wars won and dwarven regions at E against 0.25.0 (a check that +5% forge strength does not make the dwarves a runaway: P3-00 12.3 and the race's region share bound hold) |
-| **RR** | P5-03a's RR2a to RR5 | still within their bounds (regression); friendship at E median ≥ 3 |
-| **C1** | wars per world (`war_declared`) | median 22 to 28 (25 at 0.25.0, ±15%; the lead's bound) |
-| **T16** | repeated battles (allied battles included) | ≤ 2 per thousand |
-| **G2** | standing settlements; population at E | medians ≥ 81 and the bound in force after P5-03a (205,000 proposed) |
-| **T18** | summary lines | default median ≤ 620; every world ≤ L(C); `civs4` median ≤ 1,050 |
-| **P** | participation (P5-00 8.3) | every race is a participant of an alliance or trade event in ≥ 90% of worlds where it has a realm in reach of another (reported per race) |
-| **timing** | `generate` seed 0 1024 release | at most 5 s over 0.25.0 (P5-00 8.1) |
+| Target | Definition | Bound | Measured at r3 (the engineer's figures) |
+| --- | --- | --- | --- |
+| **AL1** | `alliance_formed` per world | median 6 to 15; at least one in ≥ 95 worlds | median 14 (mean 14.4; every world ≥ 4) |
+| **AL2** | alliances standing at E | median ≥ 3 | median 9 |
+| **AL3** | alliances across races | 30% to 70% of formed; within a race reported by race | 66% |
+| **AL4** | elves and faeries by origin | every world with an elven and a faerie realm alive together at some year has an origin alliance (by rule) | 100 of 100 |
+| **AL5** | wars with an ally (`wars_with_ally` / `wars`) | 20% to 45%; joins in defence ≥ 70% of joins | 25.8%; defence 82% of joins |
+| **AL6** | refusals | reported; `ally_refused` ≤ `ally_joined_war` | refused 687, joined 736 |
+| **AL7** | betrayals | at least one in 20% to 60% of worlds; 3% to 15% of ended alliances | 50 worlds; 14.5% of ended |
+| **AL8** | how alliances end; median length | reported (lapsed, broken, spurned, betrayed, with a realm) | ended 525: lapsed 82, broken 245, spurned 28, betrayed 76, with a realm 94; median length 294 years |
+| **AL9** | blocs | hard (every world of every sweep, 512 included): `bloc_over_800_years` ≤ 1000 (by rule at tick years: ≤ one step, 13 item 8); typical: `bloc_share_max_permille` median ≤ 450, max ≤ 700 | never above 800; median 368, max 567 |
+| **AL10** | allied battles | reported; share of battles | 1,585 of 7,622 battles |
+| **SP1** | shares granted (`spoils_granted_permille` over the sweep's pooled owed shares) | 500 to 850 per mille; `spoils_owed` median ≥ 1 per world | 681 per mille of 119 owed; median 1 a world |
+| **SP2** | alliances spurned (`alliances_spurned`) | few but present: at least one in 20% to 60% of worlds; at most 10% of ended alliances | 28 worlds; 5.3% of ended |
+| **SP3** | spoils kept and remembered | reported: withheld shares followed by a spurning of the same pair, by an `alliance_broken` by cooling, or by neither; the median d(x, y) fall at a withheld share | — |
+| **TR1** | `trade_opened` per world; standing at E | median 8 to 25; median ≥ 3 | median 14.5; standing median 10 |
+| **TR2** | alliances of basis trade, or citing a `trade_opened` | ≥ 15% of formed | 43% |
+| **TR3** | strength of trade | reported: wars won by the side with more trade partners | — |
+| **MC1** | mines | a mine in ≥ 90% of worlds with a dwarven realm holding a region with `ore_reach_cells` ≥ `mine_ore_min` and a settlement of `mine_settlement_min` there (P5-00 8.3's dwarves in mines); `mines_opened` median 2 to 8 in worlds with dwarves | 99 worlds; median 2 |
+| **MC2** | arms | `arms_sold` in ≥ 60% of worlds with a mine; arms buyers at E reported | 85 of 99 |
+| **MC3** | strength of the dwarves | reported: dwarven wars won and dwarven regions at E against 0.25.0 (a check that +5% forge strength does not make the dwarves a runaway: P3-00 12.3 and the race's region share bound hold) | — |
+| **RR** | P5-03a's RR2a to RR5 | still within their bounds (regression); friendship at E median ≥ 3 | friendship at E median 4; 53% of turns into friendship |
+| **C1** | wars per world (`war_declared`) | median 22 to 28 (25 at 0.25.0, ±15%; the lead's bound) | median 23 (mean 24.4) |
+| **T16** | repeated battles (allied battles included) | ≤ 2 per thousand | 1.44 per thousand |
+| **G2** | standing settlements; population at E | medians ≥ 81 and the bound in force after P5-03a (205,000 proposed) | 83; 208,364 |
+| **T18** | summary lines | default median ≤ 620; every world ≤ L(C); `civs4` median ≤ 1,050 | default median 577, max 742; `civs4` median 932, max 1,070 |
+| **P** | participation (P5-00 8.3) | every race is a participant of an alliance or trade event in ≥ 90% of worlds where it has a realm in reach of another (reported per race; validation measures it with this denominator) | over all worlds, not the bound's denominator: dwarf 89%, human 92%, goblin 98%, orc 97%, elf 100%, faerie 100% |
+| **timing** | `generate` seed 0 1024 release | at most 5 s over 0.25.0 (P5-00 8.1) | 17.4 s (0.25.0: 15.5 to 18.9 s on the same machine) |
 
 ### 15.2 Calibration (data only, the engineer, in this order; values into r3)
 
@@ -812,6 +835,8 @@ At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. 
 
 G2, T16 and RR checked after each step.
 
+**Done (r3)**: the shipped values are in 4.2 and 4.3 (the changed ones with their starting values). Changed: `ally_full_disposition` 150 (AL6: defence calls were refused more often than answered), `defend_permille` 1000, `attack_permille` 500 and `ally_wars_max` 3 (AL5), `spoils_grant_permille` 350, `withheld_memory` 100, `withheld_grudge` 400 and `withheld_to_break` 1 (SP2: few shares are owed), `mine_permille` 40 (MC1), `allied_strain_permille` 160 (AL7, after `forgive`, 7.2), `ally_deterrence_permille` 50 and `border_friction` 520 (C1; without alliances and trade `border_friction` 420 gave 25 wars). Every other value as r2 started it.
+
 ## 16. Order of implementation and roles
 
 One branch, one engineer, one test writer working from the specs separately. `GENERATOR_VERSION` 0.26.0 and `SCHEMA_VERSION` 11 in step 1; goldens once, in step 11.
@@ -820,7 +845,7 @@ One branch, one engineer, one test writer working from the specs separately. `GE
 | --- | --- | --- |
 | 1 | Version and schema 11; data: race fields, `history.alliances`, conflict fields, `history.report` entries, renaming data; both fixture roots | 4, 8.3, 9.2, 11.1 |
 | 2 | Catalogue 63–78; forms `with`, `against` | 8 |
-| 3 | Conflict seams: `AllianceView`, allied strain, fear of blocs, deterrence, trade, forge and arms strength, `join_war`, allied battles, score, withdrawal, ends, spoils reads, `add_grudge`; public reads | 7 |
+| 3 | Conflict seams: `AllianceView`, allied strain, fear of blocs, deterrence, trade, forge and arms strength, `join_war`, allied battles, score, withdrawal, ends, spoils reads, `add_grudge_seam`; public reads | 7 |
 | 4 | The site seam in monsters | 7.16 |
 | 5 | `AlliancesSubsystem` (A, B, spoils, mines, arms), its streams | 5, 6 |
 | 6 | Battle kinds set in monsters, digest, markers, browser groups; the mine marker in the library (`markers_at`, `draw_markers`, glyph 19) | 11 |
@@ -857,15 +882,15 @@ Every world file changes (`GENERATOR_VERSION`, schema 11 in `user_version` and `
 
 1. Data: the race fields and `race_origin_allies`'s messages (one-sided origin included); every `history.alliances` field's bounds and absence; `alliances_dispositions`, `alliances_blocs`, `alliances_trade`, `alliances_spoils`, `alliances_mine_forms`; the conflict fields.
 2. Terms: reach at `ally_hops` and + 1, −1; warmth at its two ends; bloc share with and without allies; each reason with its cause and foe (common enemy within and at `foe_years`, a joined war not counting; fear at `fear_share`; trade at `trade_ally_years`; friendship and its turn cause); the basis order.
-3. Formation: each condition one by one (betrayed pair, lately at war, `allies_max` live in the loop, the bloc test before the draw); the event, relation and credit.
+3. Formation: each condition one by one (betrayed pair, a pair whose alliance closed earlier in the step (A9), lately at war, `allies_max` live in the loop, the bloc test before the draw, fear on the step's start bloc shares); the event, relation and credit; `forgive` (strain 0 and no claims both ways after the formation, origin alliances included).
 4. Origin: no reach needed; `allies_max`; no renewal event; no break by refusal; lapse by the bloc rule; never spurned.
 5. Calls: every condition of 6.5 (allied with both, already at war, `reaches`, shelter, `ally_wars_max`, truce and hostility for attack); the two chances at their caps; join (event, `join_war`, credit), refusal and the break at `refusals_to_break`; origin refusals silent; no chain.
 6. Betrayal: a declaration between allies, its events, the betrayed set, calls without the betrayer, trade broken.
 7. Keeping: cooling at `ally_break_disposition` ± 1; bloc lapse sheds the smallest share first until within the bound; renewal with each reason, lapse without; quiet budget and Q4's renewal test.
-8. Trade: openings at their chance in T2 and Q4, the cause; breaks by war, cooling and reach (+ 1 margin); credits in T2 and over a quiet step of several periods.
-9. Conflict seams: allied strain; fear by bloc share; deterrence in odds and tension; trade, forge and arms strength in force and local force (the three factors in order, floor division each); `join_war` (relations opened and closed, strains, claims, fatal reasons); allied battle (side forces, casualties split with remainder to the principal, the kind chosen only with an ally present, `pass`); the score with allies' dead; withdrawal; ends with allies (peace rows, `last_peace`, grudge); ends by a side's end; plunder and tribute recorded for `war_spoils`; `add_grudge` and its decay; no view: 0.25.0's behaviour.
-10. **Spoils**: V with tribute only, sacks only (`spoils_plunder_permille`), both, none (no event); captures and cessions not counted; owed only on the winning side, not after a truce, not to a withdrawn or ended ally, not with dead 0, after an end by the enemy's end (V from sacks), not after the partner's end; part at the floor, in between and at the cap; two and three allies with the shares never above V (join order, remainder); g at `spoils_grant_min` and `spoils_grant_max`, and each of its terms alone; granted: event, causes, credit; withheld: event, credit, `add_grudge`, the alliance's withheld record (none when the pair has no open alliance); the quiet-step wait for the principal's budget; one draw per (war, ally).
-11. **Spurned**: one withheld share and a reason at the renewal: renewed, count reset; `withheld_to_break` shares in a term: spurned at the renewal (reason 0, region and causes); cooling with a withheld share in the term: spurned (reason 1), without: broken; an origin alliance with withheld shares: renewed silently, never spurned; the region named at the year of the break (a renamed region, P5-12).
+8. Trade: openings at their chance in T2 and Q4, the cause; no reopening in the step of a break (A9); breaks by war, cooling and reach (+ 1 margin); credits in T2 and over a quiet step of several periods.
+9. Conflict seams: allied strain; fear by bloc share; deterrence in odds and tension; trade, forge and arms strength in force and local force (the three factors in order, floor division each); `join_war` (relations opened and closed, strains, claims, fatal reasons); allied battle (side forces, casualties split with remainder to the principal, the kind chosen only with an ally present, `pass`); the score with allies' dead; withdrawal; ends with allies (peace rows, `last_peace`, grudge); ends by a side's end; plunder and tribute recorded for `war_spoils`; `add_grudge_seam` and its decay; no view: 0.25.0's behaviour.
+10. **Spoils**: V with tribute only, sacks only (`spoils_plunder_permille`), both, none (no event); captures and cessions not counted; owed only on the winning side, not after a truce, not to a withdrawn or ended ally, not with dead 0, after an end by the enemy's end (V from sacks), not after the partner's end; part at the floor, in between and at the cap; two and three allies with the shares never above V (join order, remainder); g at `spoils_grant_min` and `spoils_grant_max`, and each of its terms alone; granted: event, causes, credit; withheld: event, credit, `add_grudge_seam`, the alliance's withheld record (none when the pair has no open alliance); the quiet-step wait for the principal's budget; one draw per (war, ally).
+11. **Spurned**: with `withheld_to_break` 2, one withheld share and a reason at the renewal: renewed, count reset; `withheld_to_break` shares in a term: spurned at the renewal (reason 0, region and causes); cooling with a withheld share in the term: spurned (reason 1), without: broken; an origin alliance with withheld shares: renewed silently, never spurned; the region named at the year of the break (a renamed region, P5-12).
 12. **Mines**: each condition of 6.12 (race field 0, region not held, ore below `mine_ore_min`, town below `mine_settlement_min`, a settlement that had a mine, an open mine in the region); the chance in T2 and Q4; the site row (id from `next_site_id`, name form by id with `The` lowered, cell, settlement, founder); the event and its cause; each closing (realm fell, town ruined, town captured, region ceded, town ceded, region lost with the town still the founder's) with its ending code and event of year Y; P5-02's loops skip kind 3 (`holds_site`, outposts).
 13. **Arms**: a trade with one seller: `arms_sold` once, its causes and credit; two sellers: none; a seller's first mine opening during a trade: the sale then; trade broken and reopened: sold anew; forged and arms flags; the opening boost `arms_trade_permille`.
 14. Rendering: `{r:with}`, `{r:against}` with none, one and three participants, and `template_problem`; every new template on a fixture event; the cause words.
@@ -936,7 +961,7 @@ P5-00 3.1 (P5-04's row) and 6.1 (P5-04's tables) are **superseded** by this spec
 - `alliance_formed`'s `basis` is extended by appending codes (a figure's marriage, a god's blessing) with a new kind if roles change (P3-04 8.2).
 - Trade's, forges' and arms' strength are factors in `force_of` (7.5); wealth can later replace the partner count and the flags without moving any call site.
 - A share of the spoils is a value in people (6.11); when wealth comes, `share` can be read as its measure, or a new kind can carry goods, without changing 74 and 75.
-- `credit` (6.9) remains the one path by which these events move peoples' dispositions; `add_grudge` (7.15) the one path by which they move a grudge between realms.
+- `credit` (6.9) remains the one path by which these events move peoples' dispositions; `add_grudge_seam` (7.15) the one path by which they move a grudge between realms.
 - Mines are `site` rows of kind 3 made through the site seam (7.16); P5-07 deepens them (6.14).
 - Roads (P5-05) change `PeoplesView::hops`, and reach and trade reach follow.
 
@@ -962,7 +987,7 @@ P5-00 3.1 (P5-04's row) and 6.1 (P5-04's tables) are **superseded** by this spec
 **Paul, 2026-11-24**, on r1's seven questions (relayed by the lead):
 
 1. **Allies in the partner's battles**: as recommended. Allies fight inside the partner's battles (`allied_battle`, 7.7).
-2. **Spoils**, changed from r1's recommendation: *"the ally should receive a share and if the other ally doesn't want to give it, it might sour the relationship."* An ally that fought in a won war is owed a share of the tribute and plunder in proportion to its dead; the principal grants or withholds it by a keyed draw; a withheld share chills the peoples, adds a grudge between the realms, and two in one term (or one that cools a cool alliance past breaking) end the alliance as spurned (6.7, 6.11).
+2. **Spoils**, changed from r1's recommendation: *"the ally should receive a share and if the other ally doesn't want to give it, it might sour the relationship."* An ally that fought in a won war is owed a share of the tribute and plunder in proportion to its dead; the principal grants or withholds it by a keyed draw; a withheld share chills the peoples, adds a grudge between the realms, and two in one term (or one that cools a cool alliance past breaking) end the alliance as spurned (6.7, 6.11). (r3: calibration made it one in a term, `withheld_to_break` 1; 24 L2.)
 3. **Elves and faeries**: as recommended. Allied by origin from the faeries' first year wherever they live, never broken by a refusal; faeries seldom send armies (6.4, 4.1).
 4. **Betrayal and desertion**: as recommended (6.5, 6.6).
 5. **Wealth and vassalage**: as recommended. No wealth number; vassalage deferred until after figures (20).
@@ -974,7 +999,7 @@ P5-00 3.1 (P5-04's row) and 6.1 (P5-04's tables) are **superseded** by this spec
 **Readings taken in r2** (the spec writer's; for the lead, not Paul):
 
 - **L1. No land in the spoils.** Only tribute and plunder (sacks) are shared; a ceded region or a captured town stays the principal's. Reason: a share of land would let allies redraw the map, which the bloc bound counts by direct allies and the territory view draws by holder; and a region given to an ally the principal did not conquer it for would need a cession event and a holder change outside conflict. *Recommendation*: keep it so.
-- **L2. One withheld share does not break.** No rule ends an alliance at one withheld share, but its chill (up to 170 at the shipped values) can take an alliance already near −350 below the break line, and then the break by cooling is written as spurned. Alliances formed at −130 or warmer cannot break in the year of one withheld share. *Recommendation*: keep it (the last straw reads true); if the lead wants a strict "never at one share", the cooling test can ignore the most recent withheld share's grudge for `term_years`, at the cost of one more rule.
+- **L2. One withheld share does not break at once.** No rule ends an alliance in the year of a withheld share by the share alone, but its chill (up to 170 at r2's starting values) can take an alliance already near −350 below the break line, and then the break by cooling is written as spurned. *Recommendation*: keep it (the last straw reads true); if the lead wants a strict "never at one share", the cooling test can ignore the most recent withheld share's grudge for `term_years`, at the cost of one more rule. **r3**: calibration set `withheld_to_break` to 1 and the chill to up to 500 (`withheld_memory` 100, `withheld_grudge` 400), so one kept share in a term now ends the alliance at its renewal, and only an alliance at d ≥ 150 is sure not to cool past breaking by it (6.7); Paul's "it might sour the relationship" still holds, more firmly than r2's "two in one term".
 - **L3. Spoils measured in people, nothing moves.** A share is a number (the event's `share`), as a tribute's people are; no population moves to the ally, as none moves to a tribute's payee (P3-06 20.3). *Recommendation*: keep it until wealth.
 - **L4. Origin alliances are never spurned.** Kept spoils chill the elves and faeries but never end their bond (only betrayal and the bloc rule do). *Recommendation*: keep it.
 - **L5. The forge's own strength.** A realm with an open mine gains `forge_strength_permille` (5%) itself, besides the arms its buyers gain; r1 had only the buyers. Reason: "Dwarves are great forgers" (design 5) should show in the dwarves' own wars. *Recommendation*: keep it, calibrated against MC3.
@@ -986,4 +1011,5 @@ Two entries in `docs/design/proposals.md`: "History: alliances and trade, P5-04 
 ## Revision notes
 
 - r1 (2026-11-24): first draft, for Paul's approval.
+- r3 (2026-11-24): as built and ruled; no design change. The nine changes listed under the status line: A9 (6.3, 6.4, 6.8); `forgive` at every formation (6.3, 6.4, 7.2, 7.13, 3, 14, 18.1); the shipped values (4.2, 4.3, plan, 6.7, 6.11's example, 15.2, 24 L2); the engineer's readings (6.2, 6.3, 6.5, 6.7, 6.11, 6.12, 7.6, 7.15, 9.1, 10.3); the test writer's readings on output (10.2, 10.4, 13 item 8, AL9); the mine glyph's cells (11.3); the reader messages (9.1, 9.2); the measured column (15.1); 82 streams, `turn_event`, `met_event`, kind 3 skipped by `holds_site` and the lair's occupied test (3, 6.8, 6.12, 7.16). Then, by the lead's rulings on the spec writer's list of differences (the code stands): the call condition `war_open` (6.5), A10's fear cause (6.2), P8's mine-name rule (6.12), the seam names `add_grudge_seam` and `end_site_seam` and the public `ally_record` (7.13, 7.15, 7.16 and every mention), the lower median (10.5), participation's denominator (15.1).
 - r2 (2026-11-24): approved by Paul with his decisions (24). Part C taken now and folded into the numbered sections (4.1–4.3, 5, 6.12–6.14, 7.1, 7.5, 7.16, 8, 9.2, 10.6, 11.3, 19); schema 11; report format v7 (lead); spoils of war for allies (6.11, 7.15, events 74 and 75) and the alliance spurned over spoils kept (6.7, event 76); mine and arms kinds renumbered 77 and 78; the forge's own strength (L5); targets SP1–SP3 and MC1–MC3, calibration order, tests, goldens and amendments updated; open questions replaced by the decided list; P5-00 superseded on three points (20).

@@ -94,8 +94,8 @@ void check_corruptions(const std::vector<Corruption>& cases) {
 TEST_SUITE("history-report") {
 
 TEST_CASE("P3-07 r21 26.1: H12 is v3 at both levels") {
-    CHECK(hrtest::lines_of(text(HistoryLevel::summary)).front() == "# worldgen history v5");   // P5-02 12.1
-    CHECK(hrtest::lines_of(text(HistoryLevel::full)).front() == "# worldgen history v5");
+    CHECK(hrtest::lines_of(text(HistoryLevel::summary)).front() == "# worldgen history v7");   // P5-02 12.1; P5-03a 9.1
+    CHECK(hrtest::lines_of(text(HistoryLevel::full)).front() == "# worldgen history v7");
 }
 
 TEST_CASE("P3-07 r21 26.2, 26.8 item 2: renamed regions, a region renamed twice and one once") {
@@ -195,8 +195,10 @@ TEST_CASE("P3-07 r21 26.5 item 2: the four [stats] keys at full, 17 summary keys
     const auto full = hrtest::stats_list(text(HistoryLevel::full));
     std::vector<std::string> tail;
     // P5-02 12.6 (v4): the seventeen keys of 12.6 follow; the four of r21 26.5 come right before them; P5-03 17.4
-    // (v5): eighteen more after those
-    for (std::size_t i = full.size() - 4 - 17 - 18; i < full.size() - 17 - 18; ++i) tail.push_back(full[i].first);
+    // (v5): eighteen more after those; P5-03a 9.6 (v6): two more; P5-04 10.5 (v7): thirty more
+    for (std::size_t i = full.size() - 4 - 17 - 18 - 2 - 30; i < full.size() - 17 - 18 - 2 - 30; ++i) {
+        tail.push_back(full[i].first);
+    }
     CHECK(tail == std::vector<std::string>{"region_names", "regions_renamed", "refuges", "refuges_hidden"});
     const auto st = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(st.at("region_names") == 3);
@@ -306,9 +308,10 @@ TEST_CASE("P3-07 r22 26.4, 26.2: a claim note names a region renamed after the d
         CHECK(contains_line(present, "  rg3: The Grey Downs since 1800, e1022; formerly Bel Downs"));
     }
     CHECK(contains_line(block(full, "[present]"), "  rg3 The Grey Downs: The Kingdom of Bel (c2) since 801"));
-    // P5-03 17 (format v5, generator 0.24.0): the reference's text of the same world at v5
-    CHECK(hrtest::sha_hex(summary) == "4908c76ceccfad6980ea108f36cf7c29e949f38c4d11413d0202706c5553fc08");
-    CHECK(hrtest::sha_hex(full) == "b41c57515922f80e0e7a6321c22865a3807ab982bbd1bbdfc24e569a658cea82");
+    // P5-04 10 (format v7, generator 0.26.0): the reference's text of the same world at v7 (p3_report_reference.py
+    // fixture h12-v3, these statements, report; at v6 ad99363d... and 6f841276...)
+    CHECK(hrtest::sha_hex(summary) == "2d9cc570fd1655ceab0eda9eb38c38350f8294eb456bdc0cdb53ebb853a18095");
+    CHECK(hrtest::sha_hex(full) == "fa1716d1a3757bbd4a9df37c5198aea1d0ebdd291c749ee70a7fd136a8d94bbe");
 }
 
 }  // TEST_SUITE

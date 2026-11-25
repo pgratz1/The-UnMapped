@@ -145,7 +145,8 @@ const wd::ContentSet& zero_content() {
 // zero monsters tuning and P5-03's zero relations tuning (P5-03 7.4: equal to the subsystem not installed) with
 // the configuration that installs neither.
 const wd::ContentSet& zero_both_content() {
-    static const wd::ContentSet c = p503api::zero_of(zero_content());
+    // P5-04 (0.26.0): and P5-04's zero, since the configuration without monsters builds no alliances (P5-04 7.14)
+    static const wd::ContentSet c = p503api::alliances_zero_of(p503api::zero_of(zero_content()));
     return c;
 }
 // The shipped content with ghost_permille 0 (the configuration without the subsystem of I0).
@@ -334,7 +335,7 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
     std::map<std::int64_t, const Row*> stl;
     for (const Row& s : t.settlement) stl[at(s, 0)] = &s;
     for (const Row& s : t.site) {
-        if (at(s, 6) == 0) continue;
+        if (at(s, 6) == 0 || at(s, 2) == 3) continue;   // P5-04 7.16: P5-02's site rules read kinds 1 and 2
         const Row* x = stl[at(s, 6)];
         if (x == nullptr || (at(*x, 10) != 3 && at(*x, 10) != 4)) out.push_back("6: a site's settlement stands");
     }
@@ -447,8 +448,10 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
     // every kind appears and every event kind but beasts_bold is written over the monsters-small fixtures; at
     // 0.24.0 (P5-03 14.2: the slaughter that raises the dead scales with the pressure) no host rises on them, so
     // the undead and undead_rose are witnessed by the world cases instead (geo-seed-1-1024's m5, hist-conflict-73-
-    // 1024's m6 and three more)
-    CHECK(monsters_golden().kinds_seen == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "wyvern"});
+    // 1024's m6 and three more); at 0.25.0 (P5-03a 6: the threshold follows the world's population) a host rises
+    // on the monsters-small fixtures too
+    CHECK(monsters_golden().kinds_seen ==
+          std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
     CHECK(monsters_golden().events_seen.size() >= 10U);
     std::size_t undead = 0;
     for (const MCase& c : monsters_golden().cases) {
@@ -476,7 +479,7 @@ TEST_CASE("P5-02 19.3: the fixtures monsters-small and zero against the golden f
         check_against(g, t);
         if (g.data == "zero") {
             CHECK(t.monster.empty());
-            CHECK(t.site.empty());
+            for (const Row& s : t.site) CHECK(at(s, 2) == 3);   // P5-04: only mines (kind 3) without monsters
         }
     }
 }

@@ -99,6 +99,10 @@ const std::vector<Range>& ranges() {
         // P3-06 r22 24.2, 24.5 (P5-01, generator 0.21.0): after quarrel_min_settlements
         {"quarrel_strength_permille", 0, 1000}, {"toll_spread_permille", 0, 500},
         {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
+        // P5-04 4.3 (generator 0.26.0): seven fields after capital_captured_salience
+        {"allied_strain_permille", 0, 1000}, {"ally_deterrence_permille", 0, 1000}, {"ally_effort_permille", 0, 1000},
+        {"trade_strength_permille", 0, 1000}, {"trade_strength_max", 0, 16}, {"forge_strength_permille", 0, 1000},
+        {"arms_strength_permille", 0, 1000},
     };
     return v;
 }
@@ -144,7 +148,7 @@ TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 59 fie
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
-    CHECK(r.size() == 61U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1; r22 +2
+    CHECK(r.size() == 68U);  // P5-04 4.3 (0.26.0): seven more; 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1; r22 +2
     CHECK(r.get_int("quarrel_strain") == 600);
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
@@ -255,9 +259,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 62U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 62U);  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -292,7 +296,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 76U);   // P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    REQUIRE(names.size() == 82U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -317,11 +321,17 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
         "hist.monsters.hunt_outcome", "hist.monsters.lair_name", "hist.sites.outpost", "hist.peoples.ghost",
         "hist.names.monster", "hist.names.site", "hist.monsters.raid_target"};
     // P5-03 3 (generator 0.24.0): four more after hist.monsters.raid_target, in this order
+    // P5-03a 2 (generator 0.25.0): hist.relations.settlers after hist.relations.expel
     const std::vector<std::string_view> p503 = {"hist.beasts.bold_kind", "hist.monsters.fear",
-                                                "hist.peoples.abandon_loss", "hist.relations.expel"};
-    REQUIRE(at + 9 + p502.size() + p503.size() == names.size() - 1);
+                                                "hist.peoples.abandon_loss", "hist.relations.expel",
+                                                "hist.relations.settlers"};
+    // P5-04 3 (generator 0.26.0): the five hist.alliances streams after hist.relations.settlers, in this order
+    const std::vector<std::string_view> p504 = {"hist.alliances.form", "hist.alliances.join", "hist.alliances.trade",
+                                                "hist.alliances.spoils", "hist.alliances.mine"};
+    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() == names.size() - 1);
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
     for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
+    for (std::size_t i = 0; i < p504.size(); ++i) CHECK(names[at + 10 + p502.size() + p503.size() + i] == p504[i]);
 }
 
 }  // TEST_SUITE
