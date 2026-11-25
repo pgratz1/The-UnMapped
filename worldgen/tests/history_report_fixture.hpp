@@ -598,7 +598,7 @@ inline const std::map<std::string, GoldenCase>& golden() {
             ls >> name >> what >> a;
             if (what == "stats") {
                 ls >> b;
-                out[name].stats.emplace_back(a, std::stoll(b));
+                out[name].stats.emplace_back(a, b == "-" ? std::int64_t{-1} : std::stoll(b));   // `-`: -1, as stats_list
             } else if (what == "table") {
                 ls >> b;
                 out[name].tables[a] = b;

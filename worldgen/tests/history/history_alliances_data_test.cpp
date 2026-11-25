@@ -70,6 +70,22 @@ void one_failure(const Files& f, const std::string& path, const std::string& che
     CHECK(l.errors[0].message == "check '" + check + "' failed for '" + def + "': " + message);
 }
 
+// The race checks run after loading (history::check_history_data, as P5-03's race_stances tests). An edit of one
+// race's list can fail the other race's check too (the faeries list the elves, who list them no longer), so the
+// error of `def` is looked for among the errors.
+void race_failure(const Files& f, const std::string& path, const std::string& def, const std::string& message) {
+    const Load l = load(f);
+    INFO(dump(l));
+    REQUIRE(l.ok());
+    const std::vector<wd::LoadError> e = h::check_history_data(*l.content);
+    REQUIRE_FALSE(e.empty());
+    bool found = false;
+    for (const wd::LoadError& x : e) {
+        found = found || (x.path == path && x.message == "check 'race_origin_allies' failed for '" + def + "': " + message);
+    }
+    CHECK_MESSAGE(found, (e.front().path + ": " + e.front().message));
+}
+
 void alliances_failure(const Files& f, const std::string& check, const std::string& message) {
     one_failure(f, AL, check, "history.alliances", message);
 }
@@ -244,19 +260,24 @@ TEST_CASE("P5-04 4.1: the race fields after stances, shipped values, ranges and 
 
 TEST_CASE("P5-04 4.1: race_origin_allies: not a race, the race itself, twice, one-sided") {
     const std::string elf = "races/elf.toml";
-    one_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["dragon"])"), elf,
-                "race_origin_allies", "race.elf", "origin_allies[0] 'dragon' is not a race");
-    one_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["elf"])"), elf, "race_origin_allies",
-                "race.elf", "origin_allies[0] 'elf' is the race itself");
-    one_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["faerie", "faerie"])"), elf,
-                "race_origin_allies", "race.elf", "origin_allies[1] 'faerie' is listed twice");
+    race_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["dragon"])"), elf, "race.elf",
+                 "origin_allies[0] 'dragon' is not a race");
+    race_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["elf"])"), elf, "race.elf",
+                 "origin_allies[0] 'elf' is the race itself");
+    race_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["faerie", "faerie"])"), elf,
+                 "race.elf", "origin_allies[1] 'faerie' is listed twice");
     // one-sided: the elves list the dwarves, who do not list them (reading P11: the message names the listed race)
-    one_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["faerie", "dwarf"])"), elf,
-                "race_origin_allies", "race.elf", "origin_allies 'dwarf' is not returned by race 'dwarf'");
+    race_failure(edited(elf, R"(origin_allies = ["faerie"])", R"(origin_allies = ["faerie", "dwarf"])"), elf,
+                 "race.elf", "origin_allies 'dwarf' is not returned by race 'dwarf'");
+    // the elves no longer list the faeries, who still list them: the faeries' check fails
+    race_failure(edited(elf, R"(origin_allies = ["faerie"])", "origin_allies = []"), "races/faerie.toml",
+                 "race.faerie", "origin_allies 'elf' is not returned by race 'elf'");
     // both sides cleared: no origin alliance, no error
     Files f = edited("races/elf.toml", R"(origin_allies = ["faerie"])", "origin_allies = []");
     f = edited(f, "races/faerie.toml", R"(origin_allies = ["elf"])", "origin_allies = []");
-    CHECK(load(f).ok());
+    const Load l = load(f);
+    REQUIRE(l.ok());
+    CHECK(h::check_history_data(*l.content).empty());
 }
 
 TEST_CASE("P5-04 4.3: history.conflict: seven fields after capital_captured_salience, required, in range") {

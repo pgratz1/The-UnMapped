@@ -295,7 +295,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nrace_relation = "));   // P5-03 16.1
     CHECK(contains(r.out, "\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
-    CHECK(contains(r.out, "\nschema_version = 10\n"));
+    CHECK(contains(r.out, "\nschema_version = 11\n"));
 }
 
 TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and no region keys") {

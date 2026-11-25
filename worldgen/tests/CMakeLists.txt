@@ -460,12 +460,14 @@ target_compile_definitions(worldgen-tests PRIVATE
 # the timeline reads of 12, markers and browser groups of 11), the invariants of 13 on alliances-small and generated
 # worlds, I0 (7.14). The adapter of the names the spec does not fix is history/p5_04_alliances_api.hpp (switched on
 # by UNMAPPED_P504_API at integration). Slow cases in the suite "alliances-slow". The reference is
-# reference/p5_04_alliances_reference.py; the golden file golden/p5-04-alliances.txt is recorded at integration.
+# reference/p5_04_alliances_reference.py; the golden file golden/p5-04-alliances.txt (recorded at integration from
+# the reference chain) is read by history_alliances_golden_test.cpp.
 target_sources(worldgen-tests PRIVATE
     history/history_alliances_data_test.cpp
     history/history_alliances_catalogue_test.cpp
     history/history_alliances_h16_test.cpp
     history/history_alliances_property_test.cpp
+    history/history_alliances_golden_test.cpp
 )
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]

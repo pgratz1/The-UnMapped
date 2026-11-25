@@ -547,7 +547,7 @@ TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.22.0 
     Sandbox sb;
     const ProcessResult v = sb.cli({"--version"});
     REQUIRE(v.exit_code == EXIT_OK);
-    CHECK(v.out == std::string("worldgen-cli 0.25.0 schema 10 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.26.0 schema 11 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 }
 
 TEST_CASE("cli P3-01 7: the shipped data the CLI reads by default has the golden content hash") {

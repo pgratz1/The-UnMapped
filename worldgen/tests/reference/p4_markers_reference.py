@@ -437,6 +437,10 @@ def glyph(base, declining=False, capital=False):
                 if base == 10 and abs(dx) <= 2 and dy == abs(dx) - 1:
                     cells[i] = 3
         return radius, (cells if base == 9 else halo(radius, cells))
+    if base == MINE_GLYPH and not declining and not capital:   # P5-04 r3 11.3 (the lead's cells)
+        rows = MINE_ROWS
+        cells = [{"H": 1, "F": 2, ".": 0}[ch] for row in rows for ch in row]
+        return 3, cells
     if base == 11:
         radius = 11
         n = 2 * radius + 1
@@ -450,6 +454,14 @@ def glyph(base, declining=False, capital=False):
                     cells[i] = 2
         return radius, halo(radius, cells)
     raise ValueError("glyph: base %d" % base)
+
+
+# P5-04 r3 11.3: the mine glyph (code 19 = 16 + site kind 3), rows dy -3..3, columns dx -3..3; F the fill
+# (60, 60, 60), H the halo, . nothing; drawn SITE_OFFSET cells right of and above the site's cell, after the ruins and
+# before the standing settlements, the mines in ascending site id.
+MINE_ROWS = ("HHHHHHH", "HFFHFFH", "HFFHFFH", "HHHFHHH", "HHFHFHH", "HFHHHFH", "HHH.HHH")
+MINE_FILL = (60, 60, 60)
+SITE_OFFSET = 7
 
 
 def glyph_name(base, declining=False, capital=False):
@@ -508,8 +520,9 @@ def draw_list(m, colours):
         return colours[s["owner"] - 1] if s["owner"] else NO_OWNER
     out += [(s["x"], s["y"], (9, False, False), FADED) for s in ss if s["type"] == "faded"]
     out += [(s["x"], s["y"], (8, False, False), None) for s in ss if s["type"] == "ruin"]
-    if m.get("sites"):   # P5-04 11.3: between ruins and standing settlements; the glyph is not specified (K1)
-        raise NotImplementedError("P5-04 11.3: the mine glyph's pixels are not in the spec (reading K1)")
+    # P5-04 r3 11.3: the mines between ruins and standing settlements, ascending site id
+    out += [(x["x"] + SITE_OFFSET, x["y"] - SITE_OFFSET, (MINE_GLYPH, False, False), MINE_FILL)
+            for x in sorted(m.get("sites", ()), key=lambda x: x["site"])]
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and not s["capital"]]
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and s["capital"]]
     return out
@@ -851,7 +864,7 @@ def check_draw_order(c):
     for (x, y), rgb in want.items():
         c.eq("6.1 pixel (%d, %d)" % (x, y), px(x, y), rgb)
     # every pixel changed is one of the marker colours
-    allowed = {INK, HALO, NO_OWNER, (200, 0, 200)} | set(colours)
+    allowed = {INK, HALO, NO_OWNER, (200, 0, 200), MINE_FILL} | set(colours)
     c.eq("12 inv 9 colours", {px(x, y) for y in range(h_) for x in range(w_)} - allowed - {bg}, set())
     # scale 3 equals scale 1 scaled
     img3 = draw(bytearray(bytes(bg) * (w_ * h_ * 9)), w_, h_, 3, m, colours)

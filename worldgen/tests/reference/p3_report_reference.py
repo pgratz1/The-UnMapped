@@ -2038,7 +2038,7 @@ def golden_text(inputs):
             lines.append("%s %s %s" % (name, level, sha(report(w, level))))
         if not is_fixture and name not in SAMPLE_CASES:
             for k, v in stats(w, Digest(w)):
-                lines.append("%s stats %s %d" % (name, k, v))
+                lines.append("%s stats %s %s" % (name, k, v))   # P5-04 10.5: spoils_granted_permille may be "-"
         if is_fixture:
             for t, h in detail_tables(path):
                 lines.append("%s table %s %s" % (name, t, h))
