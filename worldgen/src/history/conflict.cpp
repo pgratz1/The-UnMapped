@@ -879,6 +879,13 @@ WarSpoils ConflictSubsystem::war_spoils(std::int64_t war) const {
     return s;
 }
 
+void ConflictSubsystem::forgive(std::int64_t a, std::int64_t b) {
+    if (a == b) {
+        fail("history: conflict: forgive(" + int_text(a) + ", " + int_text(b) + ")");
+    }
+    drop_pair(a, b);
+}
+
 void ConflictSubsystem::add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units) {
     if (a == b || units < 0) {
         fail("history: conflict: add_grudge(" + int_text(a) + ", " + int_text(b) + ", " + int_text(units) + ")");

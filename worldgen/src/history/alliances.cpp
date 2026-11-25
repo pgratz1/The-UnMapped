@@ -465,8 +465,8 @@ AlliancesSubsystem::Reasons AlliancesSubsystem::reasons(const StepContext& ctx, 
                 out.fear_event = std::max(out.fear_event, state.region(r).owner_event);
             }
         }
-        if (out.fear_event == 0) {
-            out.fear = 0;
+        if (out.fear_event == 0) {  // reading A10: a feared realm that holds no region
+            out.fear_event = state.civ(out.fear).founding_event;
         }
     }
     // 3. Long trade.
@@ -492,6 +492,7 @@ AlliancesSubsystem::Reasons AlliancesSubsystem::reasons(const StepContext& ctx, 
 void AlliancesSubsystem::open_alliance(StepContext& ctx, std::int64_t x, std::int64_t y, std::int64_t event,
                                        Alliance a) {
     ctx.state().open_relation(alliance_key(x, y), event);
+    conflict_.forgive(x, y);  // reading: claims are set aside at the oath
     a.formed_year = ctx.year();
     a.formed_event = event;
     a.renew_year = ctx.year();
@@ -505,12 +506,14 @@ void AlliancesSubsystem::open_alliance(StepContext& ctx, std::int64_t x, std::in
 
 void AlliancesSubsystem::close_alliance(StepContext& ctx, const Pair& p, std::int64_t event) {
     ctx.state().close_relation(alliance_key(p.first, p.second), event);
+    closed_now_.insert(std::pair<Pair, bool>{p, true});
     alliances_.erase(p);
     rebuild_allies();
 }
 
 void AlliancesSubsystem::close_trade(StepContext& ctx, const Pair& p, std::int64_t event) {
     ctx.state().close_relation(trade_key(p.first, p.second), event);
+    closed_now_.insert(std::pair<Pair, bool>{p, false});
     trades_.erase(p);
     arms_sold_.erase(Pair{p.first, p.second});
     arms_sold_.erase(Pair{p.second, p.first});
@@ -558,6 +561,7 @@ void AlliancesSubsystem::drop_closed(const StepContext& ctx) {
 
 void AlliancesSubsystem::run(StepContext& ctx) {
     prepare(ctx);
+    closed_now_.clear();  // ruling A9: per step
     drop_closed(ctx);
     switch (ctx.step()) {
         case Step::t2:
@@ -853,7 +857,8 @@ void AlliancesSubsystem::origin_alliances(StepContext& ctx) {
                 !std::binary_search(ry.origin_allies.begin(), ry.origin_allies.end(), rx.id) || allied(x, y) ||
                 betrayed_.count(Pair{x, y}) != 0 || conflict_.at_war(x, y) ||
                 static_cast<std::int64_t>(allies(x).size()) >= tuning_.allies_max ||
-                static_cast<std::int64_t>(allies(y).size()) >= tuning_.allies_max || !bloc_test(x, y)) {
+                static_cast<std::int64_t>(allies(y).size()) >= tuning_.allies_max || !bloc_test(x, y) ||
+                closed_now_.count({Pair{x, y}, true}) != 0) {
                 continue;
             }
             EventSpec e = point_event(ctx, "alliance_formed", 0, 0);
@@ -884,7 +889,7 @@ void AlliancesSubsystem::formations(StepContext& ctx) {
         for (std::size_t j = i + 1; j < civs.size(); ++j) {
             const std::int64_t x = civs[i];
             const std::int64_t y = civs[j];
-            if (allied(x, y) || betrayed_.count(Pair{x, y}) != 0 ||
+            if (allied(x, y) || betrayed_.count(Pair{x, y}) != 0 || closed_now_.count({Pair{x, y}, true}) != 0 ||
                 static_cast<std::int64_t>(allies(x).size()) >= tuning_.allies_max ||
                 static_cast<std::int64_t>(allies(y).size()) >= tuning_.allies_max ||
                 !in_reach(x, y, tuning_.ally_hops) || lately_at_war(ctx, x, y, tuning_.ally_after_war_years)) {
@@ -969,7 +974,8 @@ void AlliancesSubsystem::trade_openings(StepContext& ctx) {
         for (std::size_t j = i + 1; j < civs.size(); ++j) {
             const std::int64_t x = civs[i];
             const std::int64_t y = civs[j];
-            if (trades_.count(Pair{x, y}) != 0 || trade_partners(x) >= tuning_.trade_max ||
+            if (trades_.count(Pair{x, y}) != 0 || closed_now_.count({Pair{x, y}, false}) != 0 ||
+                trade_partners(x) >= tuning_.trade_max ||
                 trade_partners(y) >= tuning_.trade_max || !in_reach(x, y, tuning_.trade_hops) ||
                 lately_at_war(ctx, x, y, tuning_.trade_after_war_years)) {
                 continue;
@@ -1057,7 +1063,7 @@ void AlliancesSubsystem::spoils(StepContext& ctx, Joined& j) {
                                        floor_div(checked_mul(s.plunder, tuning_.spoils_plunder_permille), 1000));
     const std::string_view end_kind = s.end_event != 0 ? ctx.event_kind(s.end_event) : std::string_view{};
     const bool cited = end_kind == "peace" || end_kind == "war_won" || end_kind == "civ_conquered";
-    if (s.winner == 0 || s.winner != j.partner || rec.closed_by != 1 || state.civ(j.ally).ended_year ||
+    if (s.winner == 0 || s.winner != j.partner || (rec.closed_by != 1 && rec.closed_by != 3) || state.civ(j.ally).ended_year ||
         state.civ(s.winner).ended_year || rec.dead <= 0 || v <= 0 || !cited) {
         j.settled = true;
         return;
@@ -1176,7 +1182,7 @@ void AlliancesSubsystem::mine_openings(StepContext& ctx) {
             std::int64_t t = 0;
             for (std::int64_t id = 1; id <= ns; ++id) {
                 const Settlement& s = state.settlement(id);
-                if (s.owner_civ != c || s.region != r || !standing(s) || !ctx.visible(s) || mined_.count(id) != 0) {
+                if (s.owner_civ != c || s.region != r || !standing(s) || mined_.count(id) != 0) {  // A12: hidden too
                     continue;
                 }
                 if (t == 0 || s.population > state.settlement(t).population) {

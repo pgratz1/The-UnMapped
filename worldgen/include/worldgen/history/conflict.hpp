@@ -410,6 +410,10 @@ public:
     [[nodiscard]] std::int64_t ally_dead(std::int64_t war, std::int64_t ally) const;
     // 7.15: grudge{a, b} += units (a != b, units >= 0).
     void add_grudge_seam(std::int64_t a, std::int64_t b, std::int64_t units);
+    // P5-04 (engineer's reading, proposals): two realms that swear an
+    // alliance set aside their strain and claims on each other (both
+    // directions), as a peace does.
+    void forgive(std::int64_t a, std::int64_t b);
     // 7.6: ally joins the war of declaration event `war` against the side
     // it is not called by; `event` its ally_joined_war.
     void join_war(StepContext& context, std::int64_t war, std::int64_t ally, std::int64_t side, std::int64_t event);

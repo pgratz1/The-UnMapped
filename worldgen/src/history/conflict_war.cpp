@@ -181,7 +181,7 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
             given = checked_add(given, share);
             const std::int64_t d = casualties(ctx, m.civ, share, ev);
             ConflictAlly& rec = wars_[i].allies[m.ally];
-            rec.dead = checked_add(rec.dead, d);
+            rec.dead = checked_add(rec.dead, share);  // reading A6: the computed share
             taken = checked_add(taken, d);
         }
         const std::int64_t d = casualties(ctx, principal, total - given, ev);
@@ -770,7 +770,11 @@ void ConflictSubsystem::close_allies_at_side_end(StepContext& ctx, std::size_t i
     ConflictWar& w0 = wars_[i];
     const std::int64_t survivor = ended == w0.attacker ? w0.defender : w0.attacker;
     w0.winner = state.civ(survivor).ended_year ? 0 : survivor;
-    w0.end_event = ev;
+    // Reading A13: with both principals ended, the smaller id's ending event.
+    w0.end_event = w0.winner == 0 ? state.civ(std::min(ended, survivor)).ending_event : ev;
+    if (w0.end_event == 0) {
+        w0.end_event = ev;
+    }
     const std::size_t n = w0.allies.size();
     for (std::size_t k = 0; k < n; ++k) {
         const ConflictAlly m = wars_[i].allies[k];
