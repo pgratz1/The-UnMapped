@@ -266,8 +266,8 @@ TEST_CASE("P5-04 9.1, 9.2: H16 loads; each corruption refused with its message")
             "alliance since_event 23 is not an alliance_formed of the pair");
     refused("trade-since", "UPDATE relation SET since_event = 7 WHERE kind = 'trade' AND a_id = 3 AND b_id = 5;",
             "trade since_event 7 is not a trade_opened of the pair");
-    refused("war-since", "UPDATE relation SET since_event = 41 WHERE kind = 'war' AND a_id = 5 AND since = 600;",
-            "war since_event 41 is not a war_declared or an ally_joined_war of the pair");
+    refused("war-since", "UPDATE relation SET since_event = 23 WHERE kind = 'war' AND a_id = 5 AND since = 600;",
+            "war since_event 23 is not a war_declared or an ally_joined_war of the pair");
     refused("alliance-until", "UPDATE relation SET until_event = 61 WHERE kind = 'alliance' AND a_id = 4 AND b_id = 7;",
             "until_event 61 does not end the alliance");
     // 9.1 event values

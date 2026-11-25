@@ -2148,7 +2148,7 @@ def check_invariants(c, name, w):
         heads = [line for line in lines if line.startswith("[") and line.endswith("]") and " " not in line]
         c.eq("%s %s: bytes and lines" % (name, lv), ok, True)
         want_heads = heads_want[lv] if not V4 else heads_want[lv][:-1] + ["[monsters]", "[sites]"] + (
-            ["[peoples]"] if V5 else []) + ["[stats]"]
+            ["[peoples]"] if V5 else []) + (["[alliances]"] if V7 else []) + ["[stats]"]
         c.eq("%s %s: 24.4 blocks" % (name, lv), heads, want_heads)   # P5-02 12.4, 12.5
     s, f = (texts[lv].decode("ascii") for lv in ("summary", "full"))
     stat = dict(line.split(" = ") for line in block(f, "[stats]"))   # 25.12 item 2: invariant 6 read on full
@@ -2187,6 +2187,9 @@ def check_invariants(c, name, w):
             ms = [x for x in v if x.startswith("  milestones: ")]
             c.eq("%s %s: 9.2 milestones count" % (name, k), [int(x.split(": ")[1]) for x in ms], [fcount.get(k)])
             sb[k] = ["  milestones:" if x.startswith("  milestones: ") else x for x in v]
+    if V7:   # P5-04 10.3: "  allies: <n>" at both levels; the summary's "; at the end: ..." suffix
+        for k, v in sb.items():
+            sb[k] = [x.split("; at the end: ")[0] if x.startswith("  allies: ") else x for x in v]
     ended = {"c%d" % x[0] for x in w.t["civilization"] if x[8] is not None}
     c.eq("%s: 24.10 item 3 [civilizations] (alive blocks)" % name, {k: v for k, v in sb.items() if not V2 or
                                                                     k not in ended},
@@ -2361,7 +2364,7 @@ def check_fixture_facts_v2(c):
     w = load_world(path)
     d = Digest(w)
     s, f = report(w, "summary").decode("ascii"), report(w, "full").decode("ascii")
-    hv = ("# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3
+    hv = ("# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3
           else "# worldgen history v2")   # P5-02 12.1, P5-03 17.1
     c.eq("H11 25.1 header", (s.split("\n")[0], f.split("\n")[0]), (hv, hv))
     c.eq("H11 T = 100 (300 chants of 100)", d.T, 100)
@@ -2470,20 +2473,44 @@ def check_budget_r1(c):
         LINES_MAX_SEAM[0] = None
 
 
+def check_fixture_facts_v7(c):
+    """P5-04 18.1 item 16 on H16: the [alliances] block at both levels, the sites lines, the civilization lines
+    (the same expectations as history_alliances_h16_test.cpp)."""
+    w = load_world(fixture_db("h16-alliances"))
+    f = report(w, "full").decode("latin-1").splitlines()
+    s = report(load_world(fixture_db("h16-alliances")), "summary").decode("latin-1").splitlines()
+    c.eq("H16 header", (f[0], s[0]), ("# worldgen history v7", "# worldgen history v7"))
+    i, j = f.index("[alliances]"), f.index("[stats]")
+    c.eq("H16 [alliances] full count lines", [l for l in f[i:j] if not l.startswith("  ")][1:], [
+        "alliances: 6 formed, 1 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 1 betrayed, 0 with a realm",
+        "calls to arms: 3 joined (3 in defence, 0 in attack), 1 refused, 0 withdrew; wars with an ally: 3 of 7",
+        "spoils: 3 owed, 1 granted, 2 withheld; 270 people owed, 10 granted",
+        "largest bloc: 400 permille, c1 with c2, c3 in 1300",
+        "trade: 3 opened, 2 standing at E; broken 1 (war 1, cooled 0, out of reach 0); arms sold 1"])
+    i, j = s.index("[alliances]"), s.index("[stats]")
+    c.eq("H16 [alliances] summary alliance lines", [l.split(":")[0] for l in s[i:j] if l.startswith("  ")],
+         ["  c1 The House of Aelin and c2 The Court of Onsae", "  c3 The Hold of Durn and c5 The Kingdom of Cear",
+          "  c4 The Gub Horde and c7 The Urarz Horde"])
+    c.eq("H16 sites count", s[s.index("[sites]") + 1], "sites: 2; open 1; lairs 0, outposts 0, mines 2")
+    c.eq("H16 c1 allies at summary", [l for l in s if l.startswith("  allies:")][0], "  allies: 3; at the end: c2")
+
+
 def check_fixture_facts_v6(c):
     """H15 (P5-03a 14 item 11), hand-checked; the C++ tests spell out the same lines. Event ids as renumbered by
     year at integration (the meeting e25, the expulsion e47, the longer quiet stretch e48)."""
     w = load_world(fixture_db("h15-v6"))
     s = report(w, "summary").decode("ascii").split("\n")
     f = report(w, "full").decode("ascii").split("\n")
-    c.eq("H15 9.1 header v6 at both levels", (s[0], f[0]), ("# worldgen history v6", "# worldgen history v6"))
+    hv = "# worldgen history v7" if V7 else "# worldgen history v6"   # P5-04 10.1
+    c.eq("H15 9.1 header v6 at both levels", (s[0], f[0]), (hv, hv))
 
     def block(ls, head, nxt):
         i = ls.index(head)
         j = next(k for k in range(i + 1, len(ls)) if ls[k].startswith(nxt))
         return ls[i:j]
-    ps = block(s, "[peoples]", "[stats]")
-    pf = block(f, "[peoples]", "[stats]")
+    nxt = "[alliances]" if V7 else "[stats]"   # P5-04 10.2: [alliances] after [peoples]
+    ps = block(s, "[peoples]", nxt)
+    pf = block(f, "[peoples]", nxt)
     c.eq("H15 9.4 [peoples] at summary", ps, [
         "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
         "  Elves and Goblins: wariness -430, met 310 e25, turned 1200 e49 from hatred",
@@ -2503,7 +2530,8 @@ def check_fixture_facts_v6(c):
     c3 = block(s, "c3 The Krurz Horde", "c4 ")
     c.eq("H15 9.2 the milestones count and the one quiet stretch at summary", c3[c3.index("  milestones: 8"):], [
         "  milestones: 8", "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was quiet; "
-                           "one realm held it. (The Krurz Horde: 15 new generations of rulers.)"])
+                           "one realm held it. (The Krurz Horde: 15 new generations of rulers.)"] + (
+        ["  allies: 0"] if V7 else []))   # P5-04 10.3
     c.eq("H15 9.2 full keeps the list", [x for x in f if x.startswith("  milestones")],
          ["  milestones:"] * 4)
     c1 = block(s, "c1 The House of Aelin", "c2 ")
@@ -2520,7 +2548,8 @@ def check_fixture_facts_v6(c):
     c.eq("H15 9.5 the first mixed event of each race pair is a candidate, the second not",
          [x in cands for x in (36, 39, 45, 52)], [True, False, True, False])
     st = [x for x in f if x.startswith("peoples_met_by_word") or x.startswith("dispositions_warmed")]
-    c.eq("H15 9.6 [stats] appended", (st, f[-3:-1]), (["peoples_met_by_word = 1", "dispositions_warmed = 1"],
+    tail = f[-3 - 30:-1 - 30] if V7 else f[-3:-1]   # P5-04 10.5 appends 30 keys after them
+    c.eq("H15 9.6 [stats] appended", (st, tail), (["peoples_met_by_word = 1", "dispositions_warmed = 1"],
                                                        ["peoples_met_by_word = 1", "dispositions_warmed = 1"]))
     c.eq("H15 9.6 no new key at summary", [x for x in s if x.startswith("peoples_met_by_word")], [])
     sents = {e: w.sentence(e) for e in (36, 41, 44, 45, 47, 49, 37)}
@@ -2545,6 +2574,8 @@ def cmd_check(argv):
         check_fixture_facts_v2(c)
     if V6:
         check_fixture_facts_v6(c)
+    if V7:
+        check_fixture_facts_v7(c)
     for name in fixture_names():
         check_invariants(c, name, load_world(fixture_db(name)))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)

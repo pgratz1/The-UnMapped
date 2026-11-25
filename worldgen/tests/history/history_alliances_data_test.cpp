@@ -18,7 +18,9 @@
 #include "../p3_01_history_support.hpp"
 #include "p5_03_relations_checks.hpp"
 #include "p5_04_alliances_data.hpp"
+#include "worldgen/db/schema.hpp"
 #include "worldgen/history/data_checks.hpp"
+#include "worldgen/version.hpp"
 
 namespace {
 
@@ -303,6 +305,17 @@ TEST_CASE("P5-04 8.3, 11.1: the report entries of kinds 63 to 78; allied_battle 
     const Files f = p504data::files_026();
     CHECK(f.at("history/renaming.toml").find(R"(kinds = ["battle", "battle_at_pass", "allied_battle"])") !=
           std::string::npos);
+}
+
+TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value; generator 0.26.0, schema 11") {
+    // p3_data_reference.py golden - at 0.26.0 (the spec's start values; calibration, 15.2, moves it: then the value
+    // is re-derived from the reference, never from the C++)
+    const Load l = load(p504data::files_026());
+    REQUIRE_MESSAGE(l.ok(), dump(l));
+    CHECK(worldgen::data::content_hash_hex(*l.content) ==
+          "f590d6ca8997b73c257e0557717f2f78c93084d0d03dd63999a11dd9b34601e8");
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");
+    CHECK(worldgen::db::SCHEMA_VERSION == 11);
 }
 
 TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold the 0.26.0 data") {

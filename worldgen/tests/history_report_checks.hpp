@@ -274,6 +274,10 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
                 continue;
             }
             if (in_milestones && l.rfind("    ", 0) == 0) continue;
+            if (l.rfind("  allies: ", 0) == 0) {   // P5-04 10.3: the summary's "; at the end: ..." suffix
+                out.push_back(l.substr(0, l.find("; at the end: ")));
+                continue;
+            }
             if (full && ended && (l.rfind("  home: ", 0) == 0 || l.rfind("  peak regions: ", 0) == 0 ||
                                   l.rfind("  peak population: ", 0) == 0 || l.rfind("  events: ", 0) == 0)) {
                 continue;
@@ -448,9 +452,11 @@ inline const std::set<std::string>& summary_stat_keys() {
 inline void check_invariants(const db::WorldReader& r, const std::string& summary, const std::string& full) {
     // P5-02 12.4, 12.5 (v4): [monsters] and [sites] after [present]; P5-03 17.2 (v5): [peoples] after [sites]
     const std::vector<std::string> heads_s = {"[settings]", "[ages]",     "[chronicle]", "[civilizations]",
-                                              "[present]",  "[monsters]", "[sites]",     "[peoples]", "[stats]"};
+                                              "[present]",  "[monsters]", "[sites]",     "[peoples]", "[alliances]",
+                                              "[stats]"};   // P5-04 10.2
     const std::vector<std::string> heads_f = {"[settings]", "[ages]",    "[phases]", "[chronicle]", "[civilizations]",
-                                              "[present]",  "[monsters]", "[sites]",  "[peoples]", "[stats]"};
+                                              "[present]",  "[monsters]", "[sites]",  "[peoples]", "[alliances]",
+                                              "[stats]"};
     for (const std::string* text : {&summary, &full}) {
         const bool is_full = text == &full;
         CAPTURE(is_full);
@@ -463,7 +469,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         const std::vector<std::string> lines = lines_of(*text);
         REQUIRE(lines.size() >= 2U);
         // r19 25.1: the header is v2 (tested on the text: the spec names no library constant for it)
-        CHECK(lines[0] == "# worldgen history v6");   // P5-02 12.1; P5-03 17.1; P5-03a 9.1
+        CHECK(lines[0] == "# worldgen history v7");   // P5-02 12.1; P5-03 17.1; P5-03a 9.1
         CHECK(lines[1] == (is_full ? "level = full" : "level = summary"));
         std::vector<std::string> got_heads;
         for (const std::string& l : lines) {

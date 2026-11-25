@@ -562,6 +562,109 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
     return out;
 }
 
+// The causes and closings of 6.5 to 6.13 and 8.3's cause list (W6), as rows show them.
+inline std::vector<std::string> cause_violations(const World& w) {
+    std::vector<std::string> out;
+    const Rows r(w);
+    const Index& x = r.x();
+    const auto cites = [&](std::int64_t e, const std::string& k) {
+        std::vector<std::int64_t> v;
+        for (const std::int64_t c : x.cause_list(e)) {
+            if (r.kind(c) == k) v.push_back(c);
+        }
+        return v;
+    };
+    const auto pair_of = [&](std::int64_t e, const char* a, const char* b) {
+        return std::set<std::int64_t>{r.one(e, a), r.one(e, b)};
+    };
+    // 6.5: a refusal answers a defence call, never of an origin alliance; it cites the declaration and the alliance
+    for (const std::int64_t e : r.of("ally_refused")) {
+        const auto d = cites(e, "war_declared");
+        const auto f = cites(e, "alliance_formed"), n = cites(e, "alliance_renewed");
+        if (d.size() != 1U || r.one(d[0], "defender") != r.one(e, "partner") || r.one(d[0], "attacker") != r.one(e, "enemy")) {
+            out.push_back("6.5: ally_refused e" + s(e) + " is not a refused defence call");
+        }
+        if (f.size() + n.size() != 1U) out.push_back("6.5: ally_refused e" + s(e) + " cites no alliance");
+        else if (!f.empty() && r.value(f[0], "basis") == 0) out.push_back("6.5: ally_refused e" + s(e) + " of an origin ally");
+    }
+    // 6.5, 6.7: breaks and lapses
+    for (const std::int64_t e : r.of("alliance_broken")) {
+        const std::int64_t reason = r.value(e, "reason");
+        if (reason == 0) {
+            const auto rf = cites(e, "ally_refused");
+            if (rf.size() != 1U || std::set<std::int64_t>{r.one(rf[0], "ally"), r.one(rf[0], "partner")} !=
+                                       pair_of(e, "ally_a", "ally_b")) {
+                out.push_back("6.5: alliance_broken e" + s(e) + " by desertion cites no refusal of its pair");
+            }
+        } else if (cites(e, "alliance_formed").size() + cites(e, "alliance_renewed").size() != 1U) {
+            out.push_back("6.7: alliance_broken e" + s(e) + " by cooling cites no formation or renewal");
+        }
+    }
+    for (const std::int64_t e : r.of("alliance_lapsed")) {
+        if (cites(e, "alliance_formed").size() + cites(e, "alliance_renewed").size() != 1U) {
+            out.push_back("6.7: alliance_lapsed e" + s(e) + " cites no formation or renewal");
+        }
+    }
+    // every closed alliance row is closed by one of the four kinds naming the pair or by a side's ending event
+    for (const Row* row : r.rows("alliance")) {
+        if (is_null(*row, 6)) continue;
+        const std::int64_t u = at(*row, 8);
+        const std::string k = r.kind(u);
+        const bool four = k == "alliance_lapsed" || k == "alliance_broken" || k == "alliance_spurned" ||
+                          k == "alliance_betrayed";
+        const bool side = u == at(*x.civ.at(at(*row, 1)), 9) || u == at(*x.civ.at(at(*row, 3)), 9);
+        if (!four && !side) out.push_back("9.1: alliance row since e" + s(at(*row, 7)) + " closed by e" + s(u));
+    }
+    // 6.8: trade breaks: by war the declaration of the pair; by cooling or reach its opening
+    for (const std::int64_t e : r.of("trade_broken")) {
+        const std::int64_t reason = r.value(e, "reason");
+        if (reason == 0) {
+            const auto d = cites(e, "war_declared");
+            if (d.size() != 1U || pair_of(d[0], "attacker", "defender") != pair_of(e, "partner_a", "partner_b")) {
+                out.push_back("6.8: trade_broken e" + s(e) + " by war cites no declaration of its pair");
+            }
+        } else if (cites(e, "trade_opened").size() != 1U) {
+            out.push_back("6.8: trade_broken e" + s(e) + " cites no opening");
+        }
+    }
+    // 6.13: an arms sale cites its trade's opening and its forge's mine_opened
+    for (const std::int64_t e : r.of("arms_sold")) {
+        const auto t = cites(e, "trade_opened"), m = cites(e, "mine_opened");
+        if (t.size() != 1U || m.size() != 1U || pair_of(t[0], "partner_a", "partner_b") != pair_of(e, "seller", "buyer") ||
+            r.one(m[0], "site") != r.one(e, "site")) {
+            out.push_back("6.13: arms_sold e" + s(e) + " causes");
+        }
+    }
+    // 6.12: a mine's cause is the larger of its region's gain and its town's founding (one cause)
+    for (const std::int64_t e : r.of("mine_opened")) {
+        if (x.cause_list(e).size() != 1U) out.push_back("6.12: mine_opened e" + s(e) + " has not one cause");
+    }
+    // 7.9, 7.10, 7.11: a joined war row closes with the war's end, the ally's withdrawal or a side's ending
+    for (const Row* row : r.rows("war")) {
+        if (r.kind(at(*row, 7)) != "ally_joined_war" || is_null(*row, 6)) continue;
+        const std::int64_t u = at(*row, 8);
+        const std::string k = r.kind(u);
+        const bool ok = k == "ally_withdrew" || k == "peace" || k == "war_won" || k == "truce" ||
+                        k == "civ_conquered" || k == "civ_ended" || k == "alliance_betrayed";
+        if (!ok) out.push_back("7.10: joined war row of e" + s(at(*row, 7)) + " closed by " + k + " e" + s(u));
+        if (k == "ally_withdrew" && (r.one(u, "ally") != at(*row, 1) || r.one(u, "enemy") != at(*row, 3))) {
+            out.push_back("7.9: ally_withdrew e" + s(u) + " closes another ally's row");
+        }
+    }
+    // 6.6: a betrayal's calls are made without the betrayer: no join of the betrayer in the declaration
+    for (const std::int64_t b : r.of("alliance_betrayed")) {
+        for (const std::int64_t d : cites(b, "war_declared")) {
+            for (const std::int64_t j : r.kids(d)) {
+                if (r.kind(j) == "ally_joined_war" && r.one(j, "ally") == r.one(b, "betrayed") &&
+                    r.one(j, "enemy") == r.one(b, "betrayer") && r.one(j, "partner") == r.one(b, "betrayer")) {
+                    out.push_back("6.6: e" + s(j) + " joins the betrayer's war");
+                }
+            }
+        }
+    }
+    return out;
+}
+
 // Counts of the new kinds, for messages and the "every kind happens" checks.
 inline std::map<std::string, std::int64_t> kind_counts(const World& w) {
     const Index x(w);

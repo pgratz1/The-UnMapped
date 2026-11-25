@@ -81,6 +81,7 @@ void check_world_file(std::uint64_t seed, std::int64_t size) {
     const p503check::World w = p503check::world_of_file(r, conflict_test::shipped());
     const p504check::Geo g = p504check::geo_of_file(r);
     CHECK(p504check::violations(w, g, p504check::data_of(conflict_test::shipped())) == std::vector<std::string>{});
+    CHECK(p504check::cause_violations(w) == std::vector<std::string>{});
     MESSAGE("seed " << seed << " at " << size << ": " << line_of(p504check::kind_counts(w)));
 }
 
@@ -120,6 +121,7 @@ TEST_CASE("P5-04 18.3: alliances-small: the invariants of 13 hold and every kind
                                                            alliances_small());
         CHECK(p504check::violations(w, p504check::geo_of_inputs(in), p504check::data_of(alliances_small())) ==
               std::vector<std::string>{});
+        CHECK(p504check::cause_violations(w) == std::vector<std::string>{});
         const auto counts = p504check::kind_counts(w);
         for (const auto& [k, n] : counts) {
             if (n > 0) seen.insert(k);
