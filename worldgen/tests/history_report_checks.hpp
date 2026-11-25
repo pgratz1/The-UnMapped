@@ -403,7 +403,8 @@ inline void v6_ruins(const std::string& summary, const std::string& full) {
 
 // r19 25.2, 25.6: the phase of each event and the ids of the calamity kinds and of flare_up, from the stored rows.
 inline std::vector<std::string> v2_summary_violations(const worldgen::history::HistoryView& view,
-                                                      const std::set<std::int64_t>& shown) {
+                                                      const std::set<std::int64_t>& shown,
+                                                      std::int64_t majors = 0) {
     std::vector<std::string> bad;
     std::set<std::int64_t> cal;
     for (const char* k : {"famine", "plague", "plague_outbreak", "succession_crisis"}) {
@@ -430,8 +431,13 @@ inline std::vector<std::string> v2_summary_violations(const worldgen::history::H
             ++per_phase[e.row.phase];
         }
     }
+    // P5-06 25.2: the major calamities G are outside the cap (a phase keeps its G members and then the best other
+    // ones up to the cap), so the shown calamities beyond two a phase total at most |G| (the stats key
+    // summary_major_calamities).
+    std::int64_t excess = 0;
     for (const auto& [p, n] : per_phase) {
-        if (n > 2) bad.push_back("p" + std::to_string(p) + ": " + std::to_string(n) + " calamities shown (25.2)");
+        if (n > 2) excess += n - 2;
+        if (n > 2 && excess > majors) bad.push_back("p" + std::to_string(p) + ": " + std::to_string(n) + " calamities shown (25.2)");
     }
     for (const auto& e : view.events()) {
         if (flare != nullptr && e.row.kind == flare->id && war_phases.count(e.row.phase) != 0U &&
@@ -514,7 +520,8 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     if (stats.at("summary_threshold") < 100) CHECK(shown.size() <= 250U);
     CHECK(wars.orphans(shown) == 0);
     CHECK(wars.violations(shown) == std::vector<std::string>{});
-    CHECK(v2_summary_violations(view, shown) == std::vector<std::string>{});   // r19 25.12 item 1
+    CHECK(v2_summary_violations(view, shown, stats.count("summary_major_calamities") != 0U ? stats.at("summary_major_calamities") : 0) ==
+          std::vector<std::string>{});   // r19 25.12 item 1; P5-06 25.2
     // 24.10 item 2: shown and hidden per phase heading (both levels) and [phases] (full)
     for (const std::string* text : {&summary, &full}) {
         std::map<std::int64_t, std::int64_t> per_phase, heading;

@@ -106,15 +106,15 @@ TEST_CASE("P5-02 12.4: [monsters] after [present]: every monster at full; the li
     for (const std::string& l : lines) {
         if (!l.empty() && l[0] == '[') heads.push_back(l);
     }
-    REQUIRE(heads.size() >= 6U);   // P5-03 17.2 (v5): [peoples] after [sites]; P5-04 10.2 (v7): [alliances]
-    CHECK(std::vector<std::string>(heads.end() - 6, heads.end()) ==
-          std::vector<std::string>{"[present]", "[monsters]", "[sites]", "[peoples]", "[alliances]", "[stats]"});
+    REQUIRE(heads.size() >= 7U);   // P5-03 17.2 (v5): [peoples] after [sites]; P5-04 10.2 (v7): [alliances]; P5-06 10.1 (v8): [figures]
+    CHECK(std::vector<std::string>(heads.end() - 7, heads.end()) ==
+          std::vector<std::string>{"[present]", "[monsters]", "[sites]", "[peoples]", "[alliances]", "[figures]", "[stats]"});
 }
 
 TEST_CASE("P5-02 12.5: [sites] after [monsters]: every site at full, the count line only at summary") {
     CHECK(block(text(HistoryLevel::full), "[sites]") ==
           std::vector<std::string>{
-              "sites: 5; open 2; lairs 3, outposts 2, mines 0",
+              "sites: 5; open 2; lairs 3, outposts 2, mines 0, towers 0",
               "  si1 Grakh's Hollow: lair in Cor Fells (rg3) at 35 35, since 500 e15; ended 700 e18 slain",
               "  si2 The Lair of Saelith: lair in Cor Fells (rg3) at 36 36, since 975 e20; ended 1300 e23 moved",
               "  si3 Saelith's Deep: lair in Arn Vale (rg1) at 14 12, since 1300 e23, at Arnwick (s2); open",
@@ -122,7 +122,7 @@ TEST_CASE("P5-02 12.5: [sites] after [monsters]: every site at full, the count l
               "  si5 Bel Tower: outpost in Bel Downs (rg2) at 22 22, since 1470 e28, of The Kingdom of Bel (c2); ended "
               "1700 e33 quiet"});
     CHECK(block(text(HistoryLevel::summary), "[sites]") ==
-          std::vector<std::string>{"sites: 5; open 2; lairs 3, outposts 2, mines 0"});
+          std::vector<std::string>{"sites: 5; open 2; lairs 3, outposts 2, mines 0, towers 0"});
 }
 
 TEST_CASE("P5-02 12.6: the [stats] keys appended at the end, full only; the summary's keys unchanged") {
@@ -134,15 +134,17 @@ TEST_CASE("P5-02 12.6: the [stats] keys appended at the end, full only; the summ
         {"outposts", 2},        {"outposts_open", 1},        {"beasts_bold", 1},       {"settlements_left", 3},
         {"regions_shunned", 1}};
     // P5-03 17.4 (v5): eighteen keys appended after these; P5-03a 9.6 (v6): two more after those
-    const std::ptrdiff_t p503 = 18 + 2 + 30;   // P5-04 10.5 (v7): thirty more after those
-    REQUIRE(st.size() >= want.size() + 50U);
+    const std::ptrdiff_t p503 = 18 + 2 + 30 + 26;   // P5-04 10.5 (v7): thirty more after those; P5-06 10.5 (v8): 26 more
+    REQUIRE(st.size() >= want.size() + 76U);
     CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - p503 - static_cast<std::ptrdiff_t>(want.size()),
                                                             st.end() - p503) == want);
-    CHECK(st[st.size() - 50U].first == "race_relations");   // P5-04 10.5: 30 keys after P5-03's and P5-03a's
-    CHECK(st[st.size() - 33U].first == "ruins_oldest_year");
-    CHECK(st[st.size() - 32U].first == "peoples_met_by_word");
-    CHECK(st[st.size() - 31U].first == "dispositions_warmed");
-    CHECK(st.back().first == "arms_buyers_at_end");
+    CHECK(st[st.size() - 76U].first == "race_relations");   // P5-04 10.5: 30 keys after P5-03's and P5-03a's
+    CHECK(st[st.size() - 59U].first == "ruins_oldest_year");
+    CHECK(st[st.size() - 58U].first == "peoples_met_by_word");
+    CHECK(st[st.size() - 57U].first == "dispositions_warmed");
+    CHECK(st[st.size() - 26U].first == "figures");   // P5-06 10.5: the 26 keys of v8 close [stats]
+    CHECK(st[st.size() - 27U].first == "arms_buyers_at_end");
+    CHECK(st.back().first == "summary_major_calamities");
     const auto m = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(m.at("events_monster_appeared") == 2);
     CHECK(m.at("events_outpost_abandoned") == 1);
