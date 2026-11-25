@@ -455,6 +455,18 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P5_03_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-03-relations.txt"
 )
+# Alliances and trade (spec P5-04, generator 0.26.0, schema 11, report v7): the data of 4 (history.alliances, the race
+# and conflict fields), the catalogue rows of 8.1, fixture H16 (the templates, the reader's checks of 9, report v7,
+# the timeline reads of 12, markers and browser groups of 11), the invariants of 13 on alliances-small and generated
+# worlds, I0 (7.14). The adapter of the names the spec does not fix is history/p5_04_alliances_api.hpp (switched on
+# by UNMAPPED_P504_API at integration). Slow cases in the suite "alliances-slow". The reference is
+# reference/p5_04_alliances_reference.py; the golden file golden/p5-04-alliances.txt is recorded at integration.
+target_sources(worldgen-tests PRIVATE
+    history/history_alliances_data_test.cpp
+    history/history_alliances_catalogue_test.cpp
+    history/history_alliances_h16_test.cpp
+    history/history_alliances_property_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -602,6 +614,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD markers 30 "*markers_*"
     SHARD browser 30 "*browser_*"
     SHARD relations 30 "*history_relations_*"
+    SHARD alliances 30 "*history_alliances_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -622,5 +635,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-markers 1250 "*-slow" "*markers_*"
     SLOW slow-browser 300 "*-slow" "*browser_*"
     SLOW slow-relations 300 "*-slow" "*history_relations_*"
+    SLOW slow-alliances 300 "*-slow" "*history_alliances_*"
     SLOW_REST slow-other 10 "*-slow"
 )

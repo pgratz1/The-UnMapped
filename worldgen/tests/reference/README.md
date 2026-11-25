@@ -1817,6 +1817,62 @@ overrun, flight or abandonment anywhere (movers reach the place through the ledg
 an event there; seed 42 at 1024, s116 in 5821); P3-06's enmity row opens at or after the younger realm's founding
 year (stress-14: D crossed `enmity_max` within the hatred band 5 and 15 years later); the seed 0 milestone witnesses.
 
+## Generator 0.26.0 (P5-04: alliances, trade, the dwarves' mines and arms)
+
+Written from `docs/specs/p5-04-alliances-trade.md` r2 (approved 2026-11-24, scope C; the lead's rulings on L1 to L5:
+kept as written) without the engineer's branch. Phase 1 records no golden.
+
+- `p3_data_reference.py` (default 0.26.0; `--version 0.25.0` reproduces the committed `p3-01-data.txt` of
+  `1eda9b8`, `P5_04_BASE_COMMIT`): `RACE_026` and `RACE_FIELDS_026` (4.1), `ALLIANCES_RANGES_026`, `MINE_FORMS_026`,
+  `ALLIANCES_TUNING_026`, `ALLIANCES_ZERO_026`, `ALLIANCES_SMALL_026` and `CONFLICT_SMALL_026` (4.2, 18.3),
+  `CONFLICT_NEW_RANGES_026` (4.3), `REPORT_ENTRIES_026` (8.3), `CAUSE_KINDS_026` with `_cause_026` (11.1: reading D1,
+  `allied_battle=` right after `battle_at_pass=`), the renaming rule `slaughter`'s kinds, `race_origin_messages`
+  (reading P11), `alliances_check_messages`, `pre_026`, `check_spec_026`. These listings are the one place to edit
+  after calibration (15.2), then `golden`; `worldgen/tests/history/p5_04_alliances_data.hpp` is generated from them.
+- `p3_engine_reference.py` (default 0.26.0; `--version 0.25.0` the P5-03a file): `KINDS_026` (63 to 78), `COMPILED_026`,
+  `RENDER_R26` (8.2: the forms `with` and `against`), schema 11, `HEADER_026`, `check_render_r26` (every template of
+  8.3 on hand-made events, the samples of 8.3 and the plan).
+- `p5_04_alliances_reference.py` (new): the formulas of 6 and 7 as functions with hand-checked `units` (111 checks);
+  the row model `AW` and, on any world file, `check-world` (13 items 1 to 8 with 8 as AL9's hard bound, 10's shelter
+  rule, 11 to 14), the reader messages of 9.1 and 9.2, `stats` (10.5), `block` (10.2), the civilization lines (10.3),
+  the mine lines (10.6), the timeline reads and dump lines (12), the browser groups (11.2), the mine marker entries
+  (11.3), `golden` (17's file, from world files of the reference chain). Readings P1 to P12: `readings`.
+- `p5_04_h16_fixture.py` (new): writes fixture H16 (`data/history-report/h16-alliances.toml`, 18.1 item 16).
+- `p3_report_reference.py` (default 0.26.0, format v7, `V7`; `--version 0.25.0` reproduces `p3-07-report.txt`
+  byte for byte): the header, `[alliances]` after `[peoples]`, `  allies:` lines, the companions of 10.3, mines in
+  `[sites]`, the `[stats]` keys of 10.5, the joined war rows kept out of the war counts and adversaries (10.4;
+  reading R18: alliance and trade rows are no adversaries either), `allied_battle` in the battle kinds (11.1),
+  fixture H16, the fixture DDL at schema 11.
+- `p3_conflict_reference.py`: `BATTLES()` (the battle kinds set of 11.1 in its row checks and `stats21_lines`), the
+  flag `alliances` (0.26.0) and the seams of 7 in `World` (`allied`, `allies_of`, `bloc_share`, `strengthened`,
+  `deterred`, `open_wars_of`, `join_war`, `side_forces`, `allied_casualties`, `withdrawals`, `allies_at_end`,
+  `allies_ended`, `allies_at_side_end`, `side_end_spoils`, `war_spoils`, `principal_war_rows`); its row checks know
+  kinds 63 to 78 and the `alliance`, `trade` and joined `war` rows (check-world at schema 11);
+  `p3_peoples_reference.py`: 0.26.0 in `VERSIONS` (no peoples rule; a mine holds back no ruin's fading);
+  `p5_02_monsters_reference.py`: `allied_battle` in the violent dead, kind 3 skipped by its site loops;
+  `p5_03_relations_reference.py`: the P5-04 kinds among the contributions of its turn checks.
+- The replay (phase 1, second part): `p5_04_alliances_reference.Alliances` (5, 6), installed after the relations in
+  T2, T6 and Q4; `REPLAY_TODO` names what is where, `readings` lists A1 to A19 (the places integration compares).
+  `fixtures [--quick]`: alliances-small (18.3; reading A11: every race, `SMALL_SEEDS`, every kind of 63 to 78 on
+  seeds 3, 6, 10), check-world's invariants and the reader checks on its histories and on the shipped tuning's stress
+  histories, I0 against no subsystem and against 0.25.0 on stress seeds 0, 1, 2, 5 (about 4 minutes);
+  `i0-world --inputs DIR CASE...` I0 on world cases (geo-seed-0-512 and geo-seed-42-512 equal 0.25.0's, every
+  history table; 3 minutes). `p3_report_reference.py build-inputs` writes schema 11 worlds at 0.26.0 from 0.25.0
+  C++ sources (region names kept); a 1024 world takes about 15 s of CPU.
+- `p4_timeline_reference.py`: rule set `p5-04` (default; P4-01 r6): `alliances_at`, `allies_of`, `alliance_groups_at`,
+  `trades_at`, the dump lines `alliance` and `trade` after every earlier line of D(Y) (reading T1), `check_p504` on
+  H16; `--rules p5-03a` reproduces `p4-01-timeline.txt` byte for byte.
+- `p4_markers_reference.py` (default 0.26.0; `--version 0.25.0` reproduces `p4-04-markers.txt`): `allied_battle` a
+  battle symbol, the mine entries of 11.3 and their dump lines `site <id> <x> <y> <kind> <glyph>` (reading K2); the
+  drawn glyph is not specified (reading K1): `draw_list` refuses a mine until it is ruled.
+- `p4_browser_reference.py` (default 0.26.0; `--version 0.25.0` reproduces `p4-05-browser.txt`): `GROUP_KEYS_026`
+  (11.2: `alliances` = 7, 71 in `war`, 77 in `settlements`, `ALL_GROUPS` 0xFF).
+
+Phase 2 needs, before any world-dependent golden can be recorded from the references: the calibrated values in the
+listings above, the mine glyph's bitmap in the spec (11.3), then the command list of P5-03's phase 2 with
+`p5_04_alliances_reference.py golden --inputs <the reference's worlds>` added (the golden itself reads world files:
+a second or two for fifteen cases; building them with `build-inputs` is the cost).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

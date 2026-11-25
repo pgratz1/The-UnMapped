@@ -97,8 +97,11 @@ SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 # The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
 # 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
 # (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p5-03a"
-RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
+RULES = "p5-04"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
+# P5-04 (0.26.0, the default rule set "p5-04"; P4-01 r6): alliances and trades by year (12) and their dump lines;
+# the 0.26.0 report inputs (phase 2). `--rules p5-03a` keeps the 0.25.0 file.
+INPUTS_P5_04 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-04-int", "report-inputs")
 # P5-03 (0.24.0): the 0.24.0 report inputs (p3_report_reference.py build-inputs at 0.24.0; phase 2)
 INPUTS_P5_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-03-int", "report-inputs")
 # P5-03a (0.25.0, the default rule set "p5-03a"): no timeline rule changes (no table or column is added); the 0.25.0
@@ -107,35 +110,40 @@ INPUTS_P5_03A = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", 
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
+    return RULES in ("p4-03", "p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
 
 
 def p403a():
     """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
-    return RULES in ("p4-03a", "p5-02", "p5-03", "p5-03a")
+    return RULES in ("p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a")
+    return RULES in ("p5-12", "p4-03a", "p5-02", "p5-03", "p5-03a", "p5-04")
 
 
 def r4():
     """P4-01 r4 (P5-02 13): sites, monsters, beasts and settlement endings in the dumps (READINGS P5)."""
-    return RULES in ("p5-02", "p5-03", "p5-03a")
+    return RULES in ("p5-02", "p5-03", "p5-03a", "p5-04")
 
 
 def r5():
     """P4-01 r5 (P5-03 18): race relations and settlement shares by year, and their dump lines."""
-    return RULES in ("p5-03", "p5-03a")
+    return RULES in ("p5-03", "p5-03a", "p5-04")
+
+
+def r6():
+    """P4-01 r6 (P5-04 12): alliances and trades by year, and their dump lines."""
+    return RULES == "p5-04"
 
 
 def default_inputs():
-    return INPUTS_P5_03A if RULES == "p5-03a" else INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
+    return INPUTS_P5_04 if r6() else INPUTS_P5_03A if RULES == "p5-03a" else INPUTS_P5_03 if r5() else INPUTS_P5_02 if r4() else INPUTS_P5_12 if r3() else INPUTS_P4_03 if p403() else INPUTS_P4_01
 
 
 def generator_version():
-    return "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.26.0" if r6() else "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -475,6 +483,40 @@ class History:
                 best = r[3]
         return best
 
+    # P5-04 12 (P4-01 r6): alliances and trades in force at Y (since <= Y < until)
+    def alliances_at(self, y):
+        return sorted((r[1], r[3], r[5], r[7]) for r in self.relations
+                      if r[4] == "alliance" and r[5] <= y and (r[6] is None or y < r[6]))
+
+    def allies_of(self, c, y):
+        return sorted(b if a == c else a for a, b, _s, _e in self.alliances_at(y) if c in (a, b))
+
+    def alliance_groups_at(self, y):
+        """Connected components of the alliance graph among the civilizations alive at Y with an ally."""
+        alive = set(self.alive(y))
+        nb = {}
+        for a, b, _s, _e in self.alliances_at(y):
+            if a in alive and b in alive:
+                nb.setdefault(a, set()).add(b)
+                nb.setdefault(b, set()).add(a)
+        out, seen = [], set()
+        for c in sorted(nb):
+            if c in seen:
+                continue
+            comp, todo = set(), [c]
+            while todo:
+                x = todo.pop()
+                if x not in comp:
+                    comp.add(x)
+                    todo += sorted(nb[x] - comp)
+            seen |= comp
+            out.append(sorted(comp))
+        return out
+
+    def trades_at(self, y):
+        return sorted((r[1], r[3]) for r in self.relations
+                      if r[4] == "trade" and r[5] <= y and (r[6] is None or y < r[6]))
+
     def relations_in_force(self, y):
         return [i for i, r in enumerate(self.relations) if r[5] <= y and (r[6] is None or y < r[6])]
 
@@ -599,6 +641,12 @@ def year_dump(h, y):
             if len(mx) > 1:
                 for g, sh, st in mx:
                     out.append("mix %d %d %d %d" % (s[0], g, sh, st))
+    if r6():   # P5-04 12 (reading T1: after every earlier line of D(Y)): the alliances, then the trades in force
+        for a, b, since, _e in h.alliances_at(y):
+            out.append("alliance %d %d %d" % (a, b, since))
+        for r in sorted((r for r in h.relations if r[4] == "trade" and r[5] <= y and (r[6] is None or y < r[6])),
+                        key=lambda r: (r[1], r[3])):
+            out.append("trade %d %d %d" % (r[1], r[3], r[5]))
     return ("\n".join(out) + "\n").encode("ascii")
 
 
@@ -1677,6 +1725,33 @@ def check_p503(c):
             c.eq("P5-03 18 race_relation_at%r fails" % (args,), str(ex), msg)
 
 
+def check_p504(c):
+    """P5-04 18.1 item 17 on fixture H16 (h16-alliances.toml): the four reads around a formation, a betrayal, a
+    spurning and a lapse; sites_existing with a mine."""
+    h = History(fixture_db("h16-alliances"))
+    for y, want in ((49, []), (50, [(1, 2)]), (479, [(1, 2)]), (480, [(1, 2), (3, 5)]), (629, [(1, 2), (3, 5)]),
+                    (630, [(1, 2)]), (650, [(1, 2), (6, 7)]), (800, [(1, 2)]), (900, [(1, 2), (4, 7)]),
+                    (999, [(1, 2), (4, 7)]), (1000, [(1, 2)]), (1249, [(1, 2), (1, 5)]), (1250, [(1, 2)]),
+                    (1300, [(1, 2), (1, 3)]), (1999, [(1, 2)])):
+        c.eq("P5-04 12 alliances_at(%d)" % y, [(a, b) for a, b, _s, _e in h.alliances_at(y)], want)
+    c.eq("P5-04 12 alliances_at(480) since", [(s_, e) for _a, _b, s_, e in h.alliances_at(480)][1][0], 480)
+    for (civ, y), want in (((1, 1300), [2, 3]), ((3, 1300), [1]), ((5, 600), [3]), ((5, 630), []), ((7, 999), [4]),
+                           ((4, 1000), []), ((2, 0), [])):
+        c.eq("P5-04 12 allies_of(%d, %d)" % (civ, y), h.allies_of(civ, y), want)
+    for y, want in ((1300, [[1, 2, 3]]), (480, [[1, 2], [3, 5]]), (1999, [[1, 2]]), (40, [])):
+        c.eq("P5-04 12 alliance_groups_at(%d)" % y, h.alliance_groups_at(y), want)
+    for y, want in ((399, []), (400, [(3, 5)]), (420, [(1, 5), (3, 5), (4, 7)]), (999, [(1, 5), (3, 5), (4, 7)]),
+                    (1000, [(1, 5), (3, 5)])):
+        c.eq("P5-04 12 trades_at(%d)" % y, h.trades_at(y), want)
+    for y, want in ((449, []), (450, [1]), (454, [1]), (455, [1, 2]), (1999, [1, 2])):
+        c.eq("P5-04 12 sites_existing(%d) (mines)" % y, h.sites_existing(y), want)
+    for (sid, y), want in (((2, 1504), 1), ((2, 1505), 0), ((1, 1999), 1)):
+        c.eq("P5-04 12 site_at(%d, %d) open" % (sid, y), h.site_at(sid, y)[8], want)
+    d = year_dump(h, 1300).decode().splitlines()
+    c.eq("P5-04 12 D(1300)'s alliance and trade lines", [x for x in d if x.split(" ")[0] in ("alliance", "trade")],
+         ["alliance 1 2 50", "alliance 1 3 1300", "trade 1 5 410", "trade 3 5 400"])
+
+
 def cmd_check(argv):
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else default_inputs()
     quick = "--quick" in argv
@@ -1696,6 +1771,8 @@ def cmd_check(argv):
     check_t1(c)
     if r5():
         check_p503(c)
+    if r6():
+        check_p504(c)
     for name in fixture_names_p3() + (T1_NAME,):
         check_invariants(c, name, fixture_db(name))
     have = all(os.path.exists(os.path.join(inputs, n + ".db")) for n in WORLD_CASES)
@@ -1785,6 +1862,8 @@ def main(argv):
             prr.use_version("0.23.0")
         elif RULES == "p5-03":
             prr.use_version("0.24.0")
+        elif RULES == "p5-03a":
+            prr.use_version("0.25.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "distances":
         return cmd_distances(rest)

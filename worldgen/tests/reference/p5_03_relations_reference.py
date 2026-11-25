@@ -1511,9 +1511,16 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
     return out
 
 
-POSITIVE_KINDS_025 = ("refugees_arrived", "war_declared", "monster_raid", "settlement_overrun")
+POSITIVE_KINDS_025 = ("refugees_arrived", "war_declared", "monster_raid", "settlement_overrun",
+                      # P5-04 6.9 (no older world holds these kinds)
+                      "alliance_formed", "alliance_renewed", "ally_joined_war", "spoils_shared", "arms_sold",
+                      "trade_opened")
 NEGATIVE_KINDS_025 = ("war_won", "peace", "truce", "civ_conquered", "sacked", "settlement_captured",
-                      "people_expelled")
+                      "people_expelled",
+                      # P5-04 6.9: refusals, betrayals, kept spoils; a joined war's end (its ending event, the
+                      # withdrawal, a side's ending event)
+                      "ally_refused", "alliance_betrayed", "spoils_withheld", "ally_withdrew", "search_abandoned",
+                      "civ_ended")
 
 
 def violations_025(res, x, t, met, rows_of):
@@ -2580,7 +2587,7 @@ def cmd_check_world(paths, data_root="game/data"):
         races = {r[0]: r for r in conn.execute("SELECT * FROM race").fetchall()}
         conn.close()
         c = Checker()
-        c.eq("%s schema_version" % path, meta.get("schema_version"), "10")
+        c.eq("%s schema_version" % path, meta.get("schema_version"), str(pe.SCHEMA_VERSION))   # 10; 11 at 0.26.0
         E = int(meta.get("history_end_year", "6000"))
         key_id = {dat.race[r]["key"]: r for r in dat.race}
         st = {key_id[k]: {key_id[x]: v for x, v in dat.race[key_id[k]].get("stances", [])} for k in key_id}
