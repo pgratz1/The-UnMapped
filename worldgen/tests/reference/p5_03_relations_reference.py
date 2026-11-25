@@ -1384,12 +1384,18 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
     arrivals_into = {}
     for e in x.events_of("refugees_arrived"):
         arrivals_into.setdefault(e[6], []).append(e[1])
+    # P5-03a validation finding 1 (default seed 66 at 1024): a settlement_mixed of the colony in its founding year
+    # (5.1's movers reaching it the same year) leaves first rows already mixed; the census holds the year's last state
+    mixed_in = {}
+    for e in x.events_of("settlement_mixed"):
+        mixed_in.setdefault(e[6], []).append(e[1])
     for s, races in per.items():
         y0 = min(yy for lst in races.values() for (yy, _a, _b) in lst)
         first = in_force(races, y0)
         fe = x.stl[s][7]
         fk = x.kind_of(fe) if fe in x.ev else ""
-        if fk in ("colony_founded", "settlement_founded") and y0 not in arrivals_into.get(s, []):
+        if (fk in ("colony_founded", "settlement_founded") and y0 not in arrivals_into.get(s, [])
+                and y0 not in mixed_in.get(s, [])):
             fr = civ_race[x.stl[s][5]]
             want = {fr: (1000, RULING)}
             q = civ_race.get(x.owner_at(s, y0))
