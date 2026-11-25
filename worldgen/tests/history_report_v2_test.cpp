@@ -157,7 +157,8 @@ TEST_CASE("P3-07 r19 25.13 item 5: an ended realm in short at summary, unchanged
               // P5-03a 9.2 (v6): the count of the full list (its six events) and the quiet stretch only
               "  milestones: 6",
               "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
-              "kept the peace. (Esk: 54 new generations of rulers.)"});
+              "kept the peace. (Esk: 54 new generations of rulers.)",
+               "  allies: 0"});   // P5-04 10.3 (v7): in every block
     const std::vector<std::string> f5 = civ_block(full(), 5);
     CHECK(contains_line(f5, "  home: Esk Heath (rg7), grassland"));
     CHECK(contains_line(f5, "  peak regions: 1, 0-1199"));

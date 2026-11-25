@@ -196,7 +196,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-02 10.1: kinds 44 to 55 appended in the table's order, their uses, roles and values") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 62U);
+    REQUIRE(c.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     struct K {
         std::int64_t id;
         const char* key;
@@ -319,7 +319,7 @@ TEST_CASE("P5-02 11.4: the scene loads; each damaged site row is refused with it
     const std::string head = "corrupt table 'site': row ";
     refused("site-id", "UPDATE site SET id = " + n(s.s0 + 16) + " WHERE id = " + s6 + ";",
             head + n(s.s0 + 16) + ": id " + n(s.s0 + 16) + " is not " + s6);
-    refused("site-kind", "UPDATE site SET kind = 3 WHERE id = " + s1 + ";", head + s1 + ": kind 3 is not 1 or 2");
+    refused("site-kind", "UPDATE site SET kind = 4 WHERE id = " + s1 + ";", head + s1 + ": kind 4 is not 1, 2 or 3");   // P5-04 9.2: 3 a mine
     refused("site-region", "UPDATE site SET region = 999999 WHERE id = " + s1 + ";",
             head + s1 + ": unknown region 999999");
     refused("site-cell", "UPDATE site SET x = 512, y = 0 WHERE id = " + s1 + ";",

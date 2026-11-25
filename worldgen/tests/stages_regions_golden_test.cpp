@@ -873,7 +873,7 @@ TEST_CASE("P1-06 2, 3, RG14: the stage entry reads the thirteen layers and table
     // Schema 7 (P3-04); every row an integer or text (no REAL), names TEXT.
     const dbtest::SqliteFile db(dir.file("ok.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"11"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         const auto rows = db.rows(std::string("SELECT count(*) FROM ") + table);
@@ -942,7 +942,7 @@ TEST_CASE("P1-06 2: the stage reads neither coast_dist, temperature, rainfall no
 // --- Schema 5 (P0-02 amendment 17; 10.1 test 6) ------------------------------------------------------
 
 TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tables (schema 10 since P5-03: 45 pages, 184320 bytes)") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 10);
+    CHECK(worldgen::db::SCHEMA_VERSION == 11);
     dbtest::TempDir dir("regions-schema");
     REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
@@ -951,8 +951,8 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA page_count") == std::vector<std::vector<std::string>>{{"45"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"10"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"11"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"11"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
         CAPTURE(std::string_view(table));
         CHECK(db.rows(std::string("SELECT count(*) FROM ") + table) == std::vector<std::vector<std::string>>{{"0"}});
@@ -985,7 +985,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
           std::vector<std::vector<std::string>>{{"0"}});
 }
 
-TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 10") {
+TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 11") {
     dbtest::TempDir dir("regions-schema4");
     for (const char* sql : {"PRAGMA user_version = 4", "UPDATE meta SET value = '4' WHERE key = 'schema_version'"}) {
         CAPTURE(std::string_view(sql));
@@ -997,7 +997,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world s
         const auto r = worldgen::db::WorldReader::open(path);
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == worldgen::db::ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 4, this build reads 10");
+        CHECK(r.error().message == "world schema version 4, this build reads 11");
     }
 }
 

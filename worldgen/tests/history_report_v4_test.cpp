@@ -106,8 +106,8 @@ TEST_CASE("P5-02 12.4: [monsters] after [present]: every monster at full; the li
     for (const std::string& l : lines) {
         if (!l.empty() && l[0] == '[') heads.push_back(l);
     }
-    REQUIRE(heads.size() >= 5U);   // P5-03 17.2 (v5): [peoples] after [sites]
-    CHECK(std::vector<std::string>(heads.end() - 5, heads.end()) ==
+    REQUIRE(heads.size() >= 6U);   // P5-03 17.2 (v5): [peoples] after [sites]; P5-04 10.2 (v7): [alliances]
+    CHECK(std::vector<std::string>(heads.end() - 6, heads.end()) ==
           std::vector<std::string>{"[present]", "[monsters]", "[sites]", "[peoples]", "[alliances]", "[stats]"});
 }
 

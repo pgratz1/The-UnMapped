@@ -688,7 +688,7 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     // the report entries: kind 43's cause words (21.2) and the twelve entries of 10.2
     const wd::Record& rep = definition(*l.content, "history", "report").record;
     const std::vector<wd::Value>& ev = rep.value_at(0).as_array();
-    REQUIRE(ev.size() == 62U);
+    REQUIRE(ev.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     CHECK(has(ev[42].as_record().get_string("template"),
               "became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }"));
     const std::vector<std::pair<std::string_view, std::int64_t>> want = {

@@ -186,7 +186,7 @@ TEST_CASE("P5-04 4.2, 6.8: alliances_dispositions, alliances_blocs and alliances
 TEST_CASE("P5-04 4.2: the zero tuning of I0 and the alliances-small tuning of 18.3 load") {
     Files z = edited(AL, "ally_hops = 3", "ally_hops = -1");
     z = edited(z, AL, "trade_hops = 3", "trade_hops = -1");
-    z = edited(z, AL, "mine_permille = 20", "mine_permille = 0");
+    z = edited(z, AL, "mine_permille = 40", "mine_permille = 0");
     const Load lz = load(z);
     CHECK_MESSAGE(lz.ok(), dump(lz));
     Files s = p504data::files_026();
@@ -313,7 +313,7 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     const Load l = load(p504data::files_026());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
-          "f590d6ca8997b73c257e0557717f2f78c93084d0d03dd63999a11dd9b34601e8");
+          "48f6ad624a8b3fd76af51c8162872dc926ca75997000c3fcc42be9b0be6a9d4e");   // p3-01-data.txt game/data at the calibrated values
     CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.26.0");
     CHECK(worldgen::db::SCHEMA_VERSION == 11);
 }

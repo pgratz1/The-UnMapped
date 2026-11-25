@@ -164,13 +164,16 @@ std::string corrupt(const std::string& name, const std::string& sql) {
     return path;
 }
 
-void refused(const std::string& name, const std::string& sql, const std::string& message) {
+// `both`: read_history_tables refuses it too, with the same message. 9.1 places the relation row checks in
+// HistoryView::load only (r3, the engineer's reading 12), so those cases test that reader alone.
+void refused(const std::string& name, const std::string& sql, const std::string& message, bool both = true) {
     CAPTURE(name);
     const db::WorldReader r = hrtest::open_world(corrupt(name, sql));
     const auto e = eng::view_error(r);
     REQUIRE_MESSAGE(e.has_value(), "HistoryView::load accepted " << name);
     CHECK(e->code == db::ErrorCode::corrupt_layer);
     CHECK_MESSAGE(e->message.find(message) != std::string::npos, e->message);
+    if (!both) return;
     const auto t = h::read_history_tables(r);
     REQUIRE_FALSE(t.ok());
     CHECK(t.error().message == e->message);
@@ -263,13 +266,13 @@ TEST_CASE("P5-04 9.1, 9.2: H16 loads; each corruption refused with its message")
     }
     // 9.1 relation rows (key: a_type a_id b_type b_id kind since; the reader's key format as P5-03's)
     refused("alliance-since", "UPDATE relation SET since_event = 23 WHERE kind = 'alliance' AND a_id = 3 AND b_id = 5;",
-            "alliance since_event 23 is not an alliance_formed of the pair");
+            "alliance since_event 23 is not an alliance_formed of the pair", false);
     refused("trade-since", "UPDATE relation SET since_event = 7 WHERE kind = 'trade' AND a_id = 3 AND b_id = 5;",
-            "trade since_event 7 is not a trade_opened of the pair");
+            "trade since_event 7 is not a trade_opened of the pair", false);
     refused("war-since", "UPDATE relation SET since_event = 23 WHERE kind = 'war' AND a_id = 5 AND since = 600;",
-            "war since_event 23 is not a war_declared or an ally_joined_war of the pair");
+            "war since_event 23 is not a war_declared or an ally_joined_war of the pair", false);
     refused("alliance-until", "UPDATE relation SET until_event = 61 WHERE kind = 'alliance' AND a_id = 4 AND b_id = 7;",
-            "until_event 61 does not end the alliance");
+            "until_event 61 does not end the alliance", false);
     // 9.1 event values
     refused("basis", "UPDATE event_value SET value = 5 WHERE event = 30 AND seq = 1;", "basis");
     refused("lapsed-reason", "UPDATE event_value SET value = 2 WHERE event = 64 AND seq = 1;", "reason");

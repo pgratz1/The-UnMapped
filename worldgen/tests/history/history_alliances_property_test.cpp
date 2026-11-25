@@ -62,9 +62,19 @@ const wd::ContentSet& zero() {
     return c;
 }
 
+// 18.3 with the reference's reading A11: the stress cases with every race present (so that dwarves mine and the
+// elves and faeries ally by origin), on stress seeds of the conflict golden file (together every kind of 63 to
+// 78 at the calibrated values; seed 5 holds the spurnings).
 const std::vector<std::uint64_t>& fixture_seeds() {
-    static const std::vector<std::uint64_t> v = {0U, 1U, 2U, 3U, 5U, 7U};
+    static const std::vector<std::uint64_t> v = {3U, 5U, 6U, 7U};
     return v;
+}
+
+eng::HistoryInputs small_inputs(std::uint64_t seed, const wd::ContentSet& content) {
+    const conflict_test::CCase& c = conflict_test::conflict_case(("stress-" + std::to_string(seed)).c_str());
+    auto st = conflict_test::settings_of(c);
+    st.races = chrono_test::races_of_text("all");
+    return conflict_test::inputs_of(conflict_test::make_synthetic(seed), seed, st, content);
 }
 
 std::string line_of(const std::map<std::string, std::int64_t>& m) {
@@ -116,7 +126,7 @@ TEST_CASE("P5-04 18.3: alliances-small: the invariants of 13 hold and every kind
     std::set<std::string> seen;
     for (const std::uint64_t seed : fixture_seeds()) {
         CAPTURE(seed);
-        const eng::HistoryInputs in = p503run::stress_inputs(seed, alliances_small());
+        const eng::HistoryInputs in = small_inputs(seed, alliances_small());
         const p503check::World w = p503check::world_of_run(p503api::history_stage(alliances_small(), in), in,
                                                            alliances_small());
         CHECK(p504check::violations(w, p504check::geo_of_inputs(in), p504check::data_of(alliances_small())) ==

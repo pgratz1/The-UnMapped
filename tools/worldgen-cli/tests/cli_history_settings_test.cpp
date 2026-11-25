@@ -513,7 +513,7 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             if (key == "content_hash") {
                 value = golden.at(root);
             } else if (key == "generator_version") {
-                value = "0.25.0";
+                value = "0.26.0";
             }
         }
         const ProcessResult d = sb.cli({"hash", "--db", u8(world), "--detail"});
@@ -536,7 +536,7 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             want.replace(at + 1, end - at - 1, key + " = " + value);
         };
         replace_line("content_hash", golden.at(root));
-        replace_line("generator_version", "0.25.0");
+        replace_line("generator_version", "0.26.0");
         const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
         REQUIRE(rep.exit_code == EXIT_OK);
         CHECK(rep.out == want);

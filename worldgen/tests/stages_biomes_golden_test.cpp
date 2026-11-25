@@ -654,7 +654,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
 // --- Schema 4 (section 3, P1-03 3, P1-00 9.2, P0-02 amendment 16) ------------------------------
 
 TEST_CASE("P1-04 3, 10.1 test 9: SCHEMA_VERSION 4; DDL of meta, layer, pass, biome (schema 3), climate (schema 4)") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 10);  // P3-03 5.1; 9 since P5-02
+    CHECK(worldgen::db::SCHEMA_VERSION == 11);  // P3-03 5.1; 9 since P5-02
     REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 34U);  // schema 9: P5-02 11.1; schema 8: region_name (P5-12 7.2)
     CHECK(worldgen::db::DDL_STATEMENTS[0].substr(0, 18) == "CREATE TABLE meta ");
     CHECK(worldgen::db::DDL_STATEMENTS[1].substr(0, 19) == "CREATE TABLE layer ");
@@ -674,12 +674,12 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
                 .ok());
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"10"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"11"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"11"}});
     {
         auto r = worldgen::db::WorldReader::open(dir.file("e.db"));
         REQUIRE(r.ok());
-        CHECK(r.value().schema_version() == 10);
+        CHECK(r.value().schema_version() == 11);
     }
     // The sqlite_schema rows in creation order (rowid): the five tables with
     // their DDL, and the automatic indexes of layer.name and biome.key.
@@ -727,7 +727,7 @@ TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {
     REQUIRE(db.ok());
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"10"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"11"}});
 }
 
 // --- Slow checks (opt-in) ------------------------------------------------------------------------

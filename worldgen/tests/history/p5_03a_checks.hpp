@@ -87,10 +87,15 @@ inline std::vector<std::string> violations(const World& w) {
     const Index x(w);
     const eng::Tables& t = w.rows.t;
     auto rel = [&](const char* f) { return p503api::tuning_int(*w.content, "relations", f); };
+    // P5-04 6.9 (0.26.0): the credits of alliances, trade and arms are contributions too (the reference's
+    // POSITIVE_KINDS_025 and NEGATIVE_KINDS_025).
     static const std::set<std::string> positive = {"refugees_arrived", "war_declared", "monster_raid",
-                                                   "settlement_overrun"};
+                                                   "settlement_overrun", "alliance_formed", "alliance_renewed",
+                                                   "ally_joined_war", "spoils_shared", "arms_sold", "trade_opened"};
     static const std::set<std::string> negative = {"war_won", "peace", "truce", "civ_conquered", "sacked",
-                                                   "settlement_captured", "people_expelled"};
+                                                   "settlement_captured", "people_expelled", "ally_refused",
+                                                   "alliance_betrayed", "spoils_withheld", "ally_withdrew",
+                                                   "search_abandoned", "civ_ended"};
     // (a) and 3.5
     std::map<Pair, std::int64_t> met, band;
     for (const std::int64_t e : x.events_of("peoples_met")) {

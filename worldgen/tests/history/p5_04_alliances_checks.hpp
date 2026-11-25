@@ -646,7 +646,8 @@ inline std::vector<std::string> cause_violations(const World& w) {
         const std::int64_t u = at(*row, 8);
         const std::string k = r.kind(u);
         const bool ok = k == "ally_withdrew" || k == "peace" || k == "war_won" || k == "truce" ||
-                        k == "civ_conquered" || k == "civ_ended" || k == "alliance_betrayed";
+                        k == "civ_conquered" || k == "civ_ended" || k == "alliance_betrayed" ||
+                        k == "search_abandoned";   // reading A3: a search given up ends its allies as a truce
         if (!ok) out.push_back("7.10: joined war row of e" + s(at(*row, 7)) + " closed by " + k + " e" + s(u));
         if (k == "ally_withdrew" && (r.one(u, "ally") != at(*row, 1) || r.one(u, "enemy") != at(*row, 3))) {
             out.push_back("7.9: ally_withdrew e" + s(u) + " closes another ally's row");

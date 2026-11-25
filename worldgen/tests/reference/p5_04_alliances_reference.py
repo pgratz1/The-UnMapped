@@ -2205,7 +2205,7 @@ class Alliances:
 # 18.3: alliances-small = the conflict stress data with ALLIANCES_SMALL_026 and CONFLICT_SMALL_026 (p3_data_reference),
 # every race present (reading A11: the stress cases' race lists replaced by `all`, so that dwarves mine and the elves
 # and faeries ally by origin), on these stress seeds.
-SMALL_SEEDS = (3, 6, 10, 0, 1, 2, 5, 9, 11, 12)   # the first three hold every kind of 63 to 78
+SMALL_SEEDS = (3, 5, 6, 7, 10, 0, 1, 2, 9, 12)   # the first four hold every kind of 63 to 78 (as the C++ fixture)
 I0_SEEDS = (0, 1, 2, 5)
 
 

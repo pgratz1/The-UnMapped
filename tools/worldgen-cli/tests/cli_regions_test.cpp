@@ -462,7 +462,7 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code == EXIT_INPUT);
-        CHECK(contains(r.err, "world schema version 4, this build reads 10"));
+        CHECK(contains(r.err, "world schema version 4, this build reads 11"));
         CHECK(r.out.empty());
     }
     // Plain `hash` hashes the bytes without opening the world (P0-04 8).

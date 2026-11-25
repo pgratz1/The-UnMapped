@@ -127,7 +127,7 @@ std::string template_of(const char* key) {
 
 const std::string M =
     "famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"
-    "battle_at_pass=war,tribute=tribute";
+    "battle_at_pass=war,allied_battle=war,tribute=tribute";   // P5-04 11.1: allied_battle after battle_at_pass
 
 }  // namespace
 

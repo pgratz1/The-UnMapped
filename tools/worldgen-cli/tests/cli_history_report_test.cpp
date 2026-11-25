@@ -191,7 +191,7 @@ TEST_CASE("cli P3-07 14.2 item 12: a schema 6 file is refused by the reader") {
     const ProcessResult r = sb.cli({"report", "--db", u8(db), "--history"});
     CHECK(r.exit_code == EXIT_INPUT);
     CHECK(r.out.empty());
-    CHECK(r.err == "worldgen-cli: error: world schema version 6, this build reads 10\n");
+    CHECK(r.err == "worldgen-cli: error: world schema version 6, this build reads 11\n");
 }
 
 TEST_CASE("cli P5-12 10 step 1: a schema 7 file (0.21.0) is refused by the reader") {
@@ -203,7 +203,7 @@ TEST_CASE("cli P5-12 10 step 1: a schema 7 file (0.21.0) is refused by the reade
     const ProcessResult r = sb.cli({"report", "--db", u8(db), "--history"});
     CHECK(r.exit_code == EXIT_INPUT);
     CHECK(r.out.empty());
-    CHECK(r.err == "worldgen-cli: error: world schema version 7, this build reads 10\n");
+    CHECK(r.err == "worldgen-cli: error: world schema version 7, this build reads 11\n");
 }
 
 }  // TEST_SUITE

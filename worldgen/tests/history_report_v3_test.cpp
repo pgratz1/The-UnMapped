@@ -195,8 +195,10 @@ TEST_CASE("P3-07 r21 26.5 item 2: the four [stats] keys at full, 17 summary keys
     const auto full = hrtest::stats_list(text(HistoryLevel::full));
     std::vector<std::string> tail;
     // P5-02 12.6 (v4): the seventeen keys of 12.6 follow; the four of r21 26.5 come right before them; P5-03 17.4
-    // (v5): eighteen more after those; P5-03a 9.6 (v6): two more
-    for (std::size_t i = full.size() - 4 - 17 - 18 - 2; i < full.size() - 17 - 18 - 2; ++i) tail.push_back(full[i].first);
+    // (v5): eighteen more after those; P5-03a 9.6 (v6): two more; P5-04 10.5 (v7): thirty more
+    for (std::size_t i = full.size() - 4 - 17 - 18 - 2 - 30; i < full.size() - 17 - 18 - 2 - 30; ++i) {
+        tail.push_back(full[i].first);
+    }
     CHECK(tail == std::vector<std::string>{"region_names", "regions_renamed", "refuges", "refuges_hidden"});
     const auto st = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(st.at("region_names") == 3);

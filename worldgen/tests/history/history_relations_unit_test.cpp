@@ -173,7 +173,12 @@ TEST_CASE("P5-03 6.2.3: turns' causes are the pair's contributions (kinds of 6.2
     // (P5-03a 3.3: and the common enemies' war_declared, monster_raid and settlement_overrun)
     static const std::set<std::string> moving = {"war_won", "peace", "truce", "civ_conquered", "sacked",
                                                  "settlement_captured", "people_expelled", "refugees_arrived",
-                                                 "war_declared", "monster_raid", "settlement_overrun"};
+                                                 "war_declared", "monster_raid", "settlement_overrun",
+                                                 // P5-04 6.9 (0.26.0): the credits of alliances, trade and arms
+                                                 "alliance_formed", "alliance_renewed", "ally_joined_war",
+                                                 "spoils_shared", "arms_sold", "trade_opened", "ally_refused",
+                                                 "alliance_betrayed", "spoils_withheld", "ally_withdrew",
+                                                 "search_abandoned", "civ_ended"};
     for (const std::uint64_t seed : stress_seeds()) {
         CAPTURE(seed);
         const p503check::World w = p503run::stage_fixture(seed, p503api::relations_small_content());

@@ -923,17 +923,23 @@ TEST_CASE("P1-06 r3 4.1, 10.5 data: the fixture roots hold byte-identical copies
 
 TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after geo.regions.cost, 52 names") {
     const auto& names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 77U);  // P5-03a 2: hist.relations.settlers; P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
+    CHECK(names.size() == 82U)  /* P5-04 3: five hist.alliances streams (0.26.0) */;  // P5-03a 2: hist.relations.settlers; P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
     // P5-12 3 (0.22.0): hist.renaming.chance and hist.renaming.name appended after hist.conflict.toll, in that order;
     // P5-02 3 (0.23.0) fifteen more after them, then (r1) hist.monsters.raid_target.
     // P5-03 3 (0.24.0): hist.beasts.bold_kind, hist.monsters.fear, hist.peoples.abandon_loss, hist.relations.expel.
     // P5-03a 2 (0.25.0): hist.relations.settlers after hist.relations.expel.
-    CHECK(names[names.size() - 24] == "hist.conflict.toll");
-    CHECK(names[names.size() - 23] == "hist.renaming.chance");
-    CHECK(names[names.size() - 22] == "hist.renaming.name");
-    CHECK(names[names.size() - 6] == "hist.monsters.raid_target");
-    CHECK(names[names.size() - 2] == "hist.relations.expel");
-    CHECK(names[names.size() - 1] == "hist.relations.settlers");
+    // P5-04 3 (0.26.0): hist.alliances.form, .join, .trade, .spoils and .mine after hist.relations.settlers.
+    CHECK(names[names.size() - 29] == "hist.conflict.toll");
+    CHECK(names[names.size() - 28] == "hist.renaming.chance");
+    CHECK(names[names.size() - 27] == "hist.renaming.name");
+    CHECK(names[names.size() - 11] == "hist.monsters.raid_target");
+    CHECK(names[names.size() - 7] == "hist.relations.expel");
+    CHECK(names[names.size() - 6] == "hist.relations.settlers");
+    CHECK(names[names.size() - 5] == "hist.alliances.form");
+    CHECK(names[names.size() - 4] == "hist.alliances.join");
+    CHECK(names[names.size() - 3] == "hist.alliances.trade");
+    CHECK(names[names.size() - 2] == "hist.alliances.spoils");
+    CHECK(names[names.size() - 1] == "hist.alliances.mine");
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "geo.regions.cost") {

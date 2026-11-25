@@ -19,6 +19,7 @@
 #include <tuple>
 #include <vector>
 
+#include "p5_04_alliances_data.hpp"
 #include "p5_03_relations_runs.hpp"
 #include "p5_03a_relations_data.hpp"
 #include "worldgen/db/testing.hpp"
@@ -189,7 +190,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-03a 10.4: kinds 57, 60 and 62 gain sealed; standing, majority; standing, years (seq after the old)") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 62U);
+    REQUIRE(c.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     CHECK(values_of(c.kinds[56]) == "disposition,band,sealed");
     CHECK(values_of(c.kinds[59]) == "share,standing,majority");
     CHECK(values_of(c.kinds[61]) == "people,standing,years");
@@ -221,7 +222,7 @@ TEST_CASE("P5-03a 7.2, 10.3: the shipped monster templates and those of 57, 58, 
         CAPTURE(key);
         const eng::KindDef* k = cat.find(key);
         REQUIRE(k != nullptr);
-        CHECK(k->templ == templ);
+        CHECK(k->templ == p504data::with_allied_cause(templ));   // P5-04 11.1: allied_battle after battle_at_pass
         CHECK_FALSE(eng::template_problem(*k, k->templ).has_value());
     }
 }
