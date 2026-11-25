@@ -49,6 +49,8 @@ std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
         case GLYPH_FADED: return key.declining || key.capital ? std::string() : std::string("faded");
         case GLYPH_PASS: return key.declining || key.capital ? std::string() : std::string("pass");
         case GLYPH_RING: return key.declining || key.capital ? std::string() : std::string("ring");
+        case worldgen::inspect::GLYPH_MINE:  // P5-04 11.3
+            return key.declining || key.capital ? std::string() : std::string("mine");
         default: break;
     }
     const std::string_view word = worldgen::history::settlement_kind_word(key.base);
@@ -66,7 +68,7 @@ std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
 }
 
 std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name) {
-    for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING}) {
+    for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING, worldgen::inspect::GLYPH_MINE}) {
         if (name == marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false})) {
             return worldgen::inspect::GlyphKey{base, false, false};
         }
