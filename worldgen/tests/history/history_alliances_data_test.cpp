@@ -168,9 +168,9 @@ TEST_CASE("P5-04 4.2: alliances_mine_forms: {settlement} exactly once and no oth
 }
 
 TEST_CASE("P5-04 4.2, 6.8: alliances_dispositions, alliances_blocs and alliances_trade at and one past") {
-    CHECK(load(edited(AL, "ally_min_disposition = -300", "ally_min_disposition = 299")).ok());
-    alliances_failure(edited(AL, "ally_min_disposition = -300", "ally_min_disposition = 300"),
-                      "alliances_dispositions", "ally_min_disposition 300 is not below ally_full_disposition 300");
+    CHECK(load(edited(AL, "ally_min_disposition = -300", "ally_min_disposition = 149")).ok());
+    alliances_failure(edited(AL, "ally_min_disposition = -300", "ally_min_disposition = 150"),
+                      "alliances_dispositions", "ally_min_disposition 150 is not below ally_full_disposition 150");
     CHECK(load(edited(AL, "ally_break_disposition = -350", "ally_break_disposition = -301")).ok());
     alliances_failure(edited(AL, "ally_break_disposition = -350", "ally_break_disposition = -300"),
                       "alliances_dispositions", "ally_break_disposition -300 is not below ally_min_disposition -300");
@@ -178,9 +178,9 @@ TEST_CASE("P5-04 4.2, 6.8: alliances_dispositions, alliances_blocs and alliances
     alliances_failure(edited(AL, "bloc_share_max = 500", "bloc_share_max = 700"), "alliances_blocs",
                       "bloc_share_max 700 is not below bloc_lapse_share 700");
     CHECK(load(edited(AL, "bloc_lapse_share = 700", "bloc_lapse_share = 1001")).ok());   // 1001: never
-    CHECK(load(edited(AL, "trade_min_disposition = -250", "trade_min_disposition = 299")).ok());
-    alliances_failure(edited(AL, "trade_min_disposition = -250", "trade_min_disposition = 300"), "alliances_trade",
-                      "trade_min_disposition 300 is not below ally_full_disposition 300");
+    CHECK(load(edited(AL, "trade_min_disposition = -250", "trade_min_disposition = 149")).ok());
+    alliances_failure(edited(AL, "trade_min_disposition = -250", "trade_min_disposition = 150"), "alliances_trade",
+                      "trade_min_disposition 150 is not below ally_full_disposition 150");
 }
 
 TEST_CASE("P5-04 4.2: the zero tuning of I0 and the alliances-small tuning of 18.3 load") {

@@ -1190,15 +1190,14 @@ class World(pp.World):
                     winner_dead=war["dead"][W] if W else 0, winner_pop0=war["pop0"][W] if W else 0,
                     side_dead=self.side_dead(war, W) if W else 0)
 
-    def join_war(self, w, z, e):
-        """7.6: the ally z joins war w (its declaration event) with event e."""
+    def join_war(self, w, z, side, e):
+        """7.6: the ally z joins war w (its declaration event) on side `side` (0 the defender's, 1 the attacker's;
+        explicit, the lead's ruling at integration) with event e."""
         war = self.war_index.get(w)
         if war is None or not war["open"]:
             fatal("history: conflict: join_war: the war is not open")
         if z in (war["a"], war["b"]) or any(r["z"] == z for r in war["allies"]):
             fatal("history: conflict: join_war: the ally is a side or an ally of the war")
-        ev = self.events[e - 1]
-        side = ev["values"][1]
         enemy = war["a"] if side == 0 else war["b"]
         if rel_key(z, enemy, "war") in self.relations or rel_key(enemy, z, "war") in self.relations:
             fatal("history: conflict: join_war: the ally is at war with the enemy")

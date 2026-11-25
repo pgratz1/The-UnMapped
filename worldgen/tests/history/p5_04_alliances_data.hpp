@@ -31,7 +31,7 @@ inline const std::vector<Field>& alliances_fields() {
     static const std::vector<Field> v = {
         {"ally_hops", -1, 8, 3},
         {"ally_min_disposition", -2000, 2000, -300},
-        {"ally_full_disposition", -2000, 2000, 300},
+        {"ally_full_disposition", -2000, 2000, 150},
         {"ally_friend_disposition", -2000, 2000, 150},
         {"ally_break_disposition", -2000, 2000, -350},
         {"allies_max", 0, 16, 3},
@@ -47,10 +47,10 @@ inline const std::vector<Field>& alliances_fields() {
         {"bloc_lapse_share", 0, 1001, 700},
         {"term_years", 1, 100000, 150},
         {"refusals_to_break", 1, 100, 2},
-        {"defend_permille", 0, 1000, 700},
-        {"attack_permille", 0, 1000, 200},
+        {"defend_permille", 0, 1000, 1000},
+        {"attack_permille", 0, 1000, 500},
         {"hostility_full", 1, 2000, 500},
-        {"ally_wars_max", 1, 16, 2},
+        {"ally_wars_max", 1, 16, 3},
         {"ally_memory", 0, 1000, 30},
         {"renew_memory", 0, 1000, 15},
         {"join_memory", 0, 1000, 30},
@@ -69,17 +69,17 @@ inline const std::vector<Field>& alliances_fields() {
         {"spoils_plunder_permille", 0, 1000, 250},
         {"spoils_floor_permille", 0, 1000, 100},
         {"spoils_cap_permille", 0, 1000, 400},
-        {"spoils_grant_permille", 0, 1000, 450},
+        {"spoils_grant_permille", 0, 1000, 350},
         {"spoils_warmth_permille", 0, 1000, 300},
         {"spoils_part_permille", 0, 1000, 500},
         {"spoils_need_permille", 0, 1000, 400},
         {"spoils_grant_min", 0, 1000, 100},
         {"spoils_grant_max", 0, 1000, 950},
         {"share_memory", 0, 1000, 25},
-        {"withheld_memory", 0, 1000, 50},
-        {"withheld_grudge", 0, 2000, 120},
-        {"withheld_to_break", 1, 100, 2},
-        {"mine_permille", 0, 1000, 20},
+        {"withheld_memory", 0, 1000, 100},
+        {"withheld_grudge", 0, 2000, 400},
+        {"withheld_to_break", 1, 100, 1},
+        {"mine_permille", 0, 1000, 40},
         {"mine_ore_min", 1, 100000, 1},
         {"mine_settlement_min", 0, 1000000, 200},
         {"arms_trade_permille", 0, 4000, 2000},
@@ -89,8 +89,8 @@ inline const std::vector<Field>& alliances_fields() {
 // 4.3: appended to history.conflict after capital_captured_salience.
 inline const std::vector<Field>& conflict_fields() {
     static const std::vector<Field> v = {
-        {"allied_strain_permille", 0, 1000, 250},
-        {"ally_deterrence_permille", 0, 1000, 300},
+        {"allied_strain_permille", 0, 1000, 160},
+        {"ally_deterrence_permille", 0, 1000, 50},
         {"ally_effort_permille", 0, 1000, 1000},
         {"trade_strength_permille", 0, 1000, 50},
         {"trade_strength_max", 0, 16, 3},
@@ -119,7 +119,7 @@ inline constexpr std::string_view ALLIANCES_TOML = R"(# Alliances, trade, the dw
 [history.alliances]
 ally_hops = 3
 ally_min_disposition = -300
-ally_full_disposition = 300
+ally_full_disposition = 150
 ally_friend_disposition = 150
 ally_break_disposition = -350
 allies_max = 3
@@ -135,10 +135,10 @@ bloc_share_max = 500
 bloc_lapse_share = 700
 term_years = 150
 refusals_to_break = 2
-defend_permille = 700
-attack_permille = 200
+defend_permille = 1000
+attack_permille = 500
 hostility_full = 500
-ally_wars_max = 2
+ally_wars_max = 3
 ally_memory = 30
 renew_memory = 15
 join_memory = 30
@@ -157,17 +157,17 @@ trade_ally_years = 100
 spoils_plunder_permille = 250
 spoils_floor_permille = 100
 spoils_cap_permille = 400
-spoils_grant_permille = 450
+spoils_grant_permille = 350
 spoils_warmth_permille = 300
 spoils_part_permille = 500
 spoils_need_permille = 400
 spoils_grant_min = 100
 spoils_grant_max = 950
 share_memory = 25
-withheld_memory = 50
-withheld_grudge = 120
-withheld_to_break = 2
-mine_permille = 20
+withheld_memory = 100
+withheld_grudge = 400
+withheld_to_break = 1
+mine_permille = 40
 mine_ore_min = 1
 mine_settlement_min = 200
 arms_trade_permille = 2000

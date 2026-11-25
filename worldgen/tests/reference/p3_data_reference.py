@@ -2929,6 +2929,10 @@ def check_spec_025(c):
 # The 0.26.0 listings (P5-04, docs/specs/p5-04-alliances-trade.md r2: 4.1, 4.2, 4.3, 8.3, 11.1), derived from the
 # 0.25.0 ones by the edits the spec states, at the spec's starting values (calibration, 15.2, may move them: then
 # ALLIANCES_RANGES_026, RACE_FIELDS_026, CONFLICT_NEW_RANGES_026 and REPORT_ENTRIES_026 are the one place to edit,
+# with CONFLICT_CHANGED_026; at integration (phase 2) they hold the engineer's calibrated values (15.2, commit 9a5f64e:
+# ally_full_disposition 150, defend_permille 1000, attack_permille 500, ally_wars_max 3, spoils_grant_permille 350,
+# withheld_memory 100, withheld_grudge 400, withheld_to_break 1, mine_permille 40, allied_strain_permille 160,
+# ally_deterrence_permille 50, history.conflict.border_friction 300 -> 520),
 # then `golden`).
 # ---------------------------------------------------------------------------
 # 4.1: three race fields appended after stances, all required.
@@ -2952,25 +2956,25 @@ def _race_026(n, text):
 RACE_FILES_026 = {n: _race_026(n, t) for n, t in RACE_FILES_024.items()}
 # 4.2: history.alliances, every field required, in this order (name, lo, hi, start value); mine_forms apart.
 ALLIANCES_RANGES_026 = (
-    ("ally_hops", -1, 8, 3), ("ally_min_disposition", -2000, 2000, -300), ("ally_full_disposition", -2000, 2000, 300),
+    ("ally_hops", -1, 8, 3), ("ally_min_disposition", -2000, 2000, -300), ("ally_full_disposition", -2000, 2000, 150),
     ("ally_friend_disposition", -2000, 2000, 150), ("ally_break_disposition", -2000, 2000, -350),
     ("allies_max", 0, 16, 3), ("ally_after_war_years", 0, 100000, 100), ("foe_years", 1, 100000, 100),
     ("fear_share", 0, 1000, 300), ("form_foe_permille", 0, 1000, 40), ("form_fear_permille", 0, 1000, 30),
     ("form_trade_permille", 0, 1000, 20), ("form_friend_permille", 0, 1000, 10), ("form_max_permille", 0, 1000, 60),
     ("bloc_share_max", 0, 1000, 500), ("bloc_lapse_share", 0, 1001, 700), ("term_years", 1, 100000, 150),
-    ("refusals_to_break", 1, 100, 2), ("defend_permille", 0, 1000, 700), ("attack_permille", 0, 1000, 200),
-    ("hostility_full", 1, 2000, 500), ("ally_wars_max", 1, 16, 2), ("ally_memory", 0, 1000, 30),
+    ("refusals_to_break", 1, 100, 2), ("defend_permille", 0, 1000, 1000), ("attack_permille", 0, 1000, 500),
+    ("hostility_full", 1, 2000, 500), ("ally_wars_max", 1, 16, 3), ("ally_memory", 0, 1000, 30),
     ("renew_memory", 0, 1000, 15), ("join_memory", 0, 1000, 30), ("refuse_memory", 0, 1000, 40),
     ("betray_memory", 0, 1000, 150), ("ally_war_memory", 0, 1000, 75), ("trade_hops", -1, 8, 3),
     ("trade_min_disposition", -2000, 2000, -250), ("trade_break_margin", 0, 2000, 100),
     ("trade_after_war_years", 0, 100000, 50), ("trade_permille", 0, 1000, 15), ("trade_max", 0, 16, 4),
     ("trade_credit_years", 1, 100000, 50), ("trade_memory", 0, 1000, 20), ("trade_ally_years", 0, 100000, 100),
     ("spoils_plunder_permille", 0, 1000, 250), ("spoils_floor_permille", 0, 1000, 100),
-    ("spoils_cap_permille", 0, 1000, 400), ("spoils_grant_permille", 0, 1000, 450),
+    ("spoils_cap_permille", 0, 1000, 400), ("spoils_grant_permille", 0, 1000, 350),
     ("spoils_warmth_permille", 0, 1000, 300), ("spoils_part_permille", 0, 1000, 500),
     ("spoils_need_permille", 0, 1000, 400), ("spoils_grant_min", 0, 1000, 100), ("spoils_grant_max", 0, 1000, 950),
-    ("share_memory", 0, 1000, 25), ("withheld_memory", 0, 1000, 50), ("withheld_grudge", 0, 2000, 120),
-    ("withheld_to_break", 1, 100, 2), ("mine_permille", 0, 1000, 20), ("mine_ore_min", 1, 100000, 1),
+    ("share_memory", 0, 1000, 25), ("withheld_memory", 0, 1000, 100), ("withheld_grudge", 0, 2000, 400),
+    ("withheld_to_break", 1, 100, 1), ("mine_permille", 0, 1000, 40), ("mine_ore_min", 1, 100000, 1),
     ("mine_settlement_min", 0, 1000000, 200), ("arms_trade_permille", 0, 4000, 2000))
 MINE_FORMS_026 = ["The Mines of {settlement}", "The Delvings of {settlement}"]
 ALLIANCES_026 = tuple((n, INT) for n, _, _, _ in ALLIANCES_RANGES_026) + (("mine_forms", ARR(STR)),)
@@ -2980,7 +2984,7 @@ assert len(ALLIANCES_026) == 55
 ALLIANCES_ZERO_026 = dict(ALLIANCES_TUNING_026, ally_hops=-1, trade_hops=-1, mine_permille=0)
 # 4.3: history.conflict, seven fields appended after capital_captured_salience.
 CONFLICT_NEW_RANGES_026 = (
-    ("allied_strain_permille", 0, 1000, 250), ("ally_deterrence_permille", 0, 1000, 300),
+    ("allied_strain_permille", 0, 1000, 160), ("ally_deterrence_permille", 0, 1000, 50),
     ("ally_effort_permille", 0, 1000, 1000), ("trade_strength_permille", 0, 1000, 50),
     ("trade_strength_max", 0, 16, 3), ("forge_strength_permille", 0, 1000, 50),
     ("arms_strength_permille", 0, 1000, 100))
@@ -3053,7 +3057,13 @@ def _renaming_026(text):
     return _edit(text, 'kinds = ["battle", "battle_at_pass"]\n', 'kinds = ["battle", "battle_at_pass", "allied_battle"]\n')
 
 
+CONFLICT_CHANGED_026 = {"border_friction": 520}   # 15.2 calibration (0.25.0: 300)
+
+
 def _conflict_026(text):
+    for k, v in sorted(CONFLICT_CHANGED_026.items()):
+        old = tomllib.loads(text)["history"]["conflict"][k]
+        text = _edit(text, "\n%s = %d\n" % (k, old), "\n%s = %d\n" % (k, v))
     return _edit(text, "\ncapital_captured_salience = 80\n",
                  "\ncapital_captured_salience = 80\n" + "".join("%s = %d\n" % (n, v)
                                                                  for n, _, _, v in CONFLICT_NEW_RANGES_026))
@@ -3155,13 +3165,13 @@ def check_spec_026(c):
              [("alliances_mine_forms", "mine_forms[0] 'A' must contain {settlement} once")]),
             (dict(mine_forms=["{settlement} of {name}"]),
              [("alliances_mine_forms", "mine_forms[0] '{settlement} of {name}' must contain {settlement} once")]),
-            (dict(ally_min_disposition=300), [("alliances_dispositions", "ally_min_disposition 300 is not below "
-                                                                         "ally_full_disposition 300")]),
+            (dict(ally_min_disposition=150), [("alliances_dispositions", "ally_min_disposition 150 is not below "
+                                                                         "ally_full_disposition 150")]),
             (dict(ally_break_disposition=-300), [("alliances_dispositions", "ally_break_disposition -300 is not below "
                                                                             "ally_min_disposition -300")]),
             (dict(bloc_share_max=700), [("alliances_blocs", "bloc_share_max 700 is not below bloc_lapse_share 700")]),
-            (dict(trade_min_disposition=300), [("alliances_trade", "trade_min_disposition 300 is not below "
-                                                                   "ally_full_disposition 300")])):
+            (dict(trade_min_disposition=150), [("alliances_trade", "trade_min_disposition 150 is not below "
+                                                                   "ally_full_disposition 150")])):
         c.eq("alliances checks on %r" % edit, alliances_check_messages(dict(al, **edit)), want)
     races = parsed_spec("race")
     for k, (o, j, m) in RACE_FIELDS_026.items():
@@ -3181,7 +3191,8 @@ def check_spec_026(c):
     old = tomllib.loads(HISTORY_FILES_025["conflict.toml"])["history"]["conflict"]
     c.eq("history.conflict: 0.25.0's fields then seven (4.3)", list(co),
          list(old) + [n for n, _, _, _ in CONFLICT_NEW_RANGES_026])
-    c.eq("history.conflict values", co, dict(old, **{n: v for n, _, _, v in CONFLICT_NEW_RANGES_026}))
+    c.eq("history.conflict values", co, dict(old, **CONFLICT_CHANGED_026,
+                                             **{n: v for n, _, _, v in CONFLICT_NEW_RANGES_026}))
     evl = h["report"]["events"]
     c.eq("report lists 78 kinds (0.26.0)", len(evl), 78)
     c.eq("entries 63 to 78 (8.3)", [(e["kind"], e["salience"], e["template"]) for e in evl[62:]],

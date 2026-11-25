@@ -622,9 +622,9 @@ class Monsters:
                 return
 
     # ---------------------------------------------------------------- 6.4 the monsters' year
-    def end_site(self, sid, e, ending):
+    def end_site(self, sid, e, ending, year=None):
         s = self.site(sid)
-        s["ended_year"], s["ending_event"], s["ending"] = self.w.year, e, ending
+        s["ended_year"], s["ending_event"], s["ending"] = self.w.year if year is None else year, e, ending
 
     def die_of_age(self, m):
         w = self.w

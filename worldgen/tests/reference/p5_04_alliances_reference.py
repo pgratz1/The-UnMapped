@@ -1583,6 +1583,8 @@ class Alliances:
             if cv["ended_year"] is None and w.visible(cv):
                 self.pres[c] = sorted(set(w.held(c)) | {s["region"] for s in w.svis(c)})
         self.shares = {c: w.share(c) for c in self.pres}
+        # lead ruling (integration): fear reads the bloc shares of the step's start, the bloc test reads them live
+        self.bs0 = {c: self.bs(c) for c in self.pres}
         self.hops_cache = {}
         self.sellers0 = self.sellers()
         self.closed_now = set()
@@ -1669,7 +1671,7 @@ class Alliances:
         for z in sorted(self.pres):
             if z in (x, y) or not self.av(z) or self.allied(z, x) or self.allied(z, y):
                 continue
-            b = self.bs(z)
+            b = self.bs0.get(z, 0)
             if b < t["fear_share"] or not (self.in_reach(x, z) and self.in_reach(y, z)):
                 continue
             if self.d(x, z) < 0 and self.d(y, z) < 0 and (fz is None or b > fz[0]):
@@ -1728,8 +1730,9 @@ class Alliances:
                     self.arms_sold.discard(p)
 
     def inert(self, k):
-        """Reading A8: a pair with an ended side waits for conflict's housekeeping."""
-        return self.ended(k[0]) or self.ended(k[1])
+        """Reading A8, as ruled by the lead at integration: not special-cased; the subsystem acts on every row
+        that conflict's housekeeping left open."""
+        return False
 
     # --- 6.5, 6.6, 6.8 broken by war: the log
     def read_log(self):
@@ -1776,7 +1779,7 @@ class Alliances:
                     continue        # broken earlier in this declaration's calls
                 if not self.avf(z) or z in (a, b) or self.allied(z, e):
                     continue
-                if w.at_war(z, e) or w.at_war(z, p) or not w.reaches(z, e):
+                if w.at_war(z, e) or w.at_war(z, p) or not w.war_open(wd) or not w.reaches(z, e):
                     continue
                 if Y < w.civ(e)["founded_year"] + ct["shelter_years"]:
                     continue
@@ -1795,7 +1798,7 @@ class Alliances:
                     ej = w.append("ally_joined_war", participants=(("ally", CIV, z), ("partner", CIV, p),
                                                                     ("enemy", CIV, e)), values=(side,),
                                   causes=tuple(sorted({wd, rec["renew_event"]})))
-                    w.join_war(wd, z, ej)
+                    w.join_war(wd, z, side, ej)
                     self.joined.append(dict(w=wd, z=z, p=p, e=e, join=ej, credited=False, settled=False))
                     self.credit(z, p, t["join_memory"], ej)
                     self.log.append((Y, "joined", wd, z, side, pch))
@@ -1892,6 +1895,10 @@ class Alliances:
         e = w.append("alliance_formed", participants=(("ally_a", CIV, x), ("ally_b", CIV, y)) +
                      ((("foe", CIV, foe),) if foe else ()), values=(basis,), causes=tuple(sorted(set(causes))))
         self.open_alliance(x, y, e)
+        # lead ruling (integration): at every alliance_formed, origin included, the pair's strain and claims on each
+        # other are dropped both ways
+        w.zero_strain(x, y)
+        w.drop_claims(x, y)
         self.alliances[(x, y)] = dict(year=w.year, event=e, basis=basis, foe=foe, origin=origin, renew_year=w.year,
                                       renew_event=e, refusals=0, withheld=0, w_event=0, w_region=0, w_ally=0)
         self.credit(x, y, t["ally_memory"], e)
@@ -2024,7 +2031,7 @@ class Alliances:
                 ev, ending = w.owner[R][1], ENDING_LOST
             else:
                 continue
-            m.end_site(sid, ev, ending)
+            m.end_site(sid, ev, ending, year=w.events[ev - 1]["year"])
             del self.mines[(c, R)]
             self.log.append((w.year, "mine-closed", sid, ending, ev))
 
@@ -2106,8 +2113,12 @@ class Alliances:
         V = spoils_value(sp["tribute_people"], sp["plunder"], t["spoils_plunder_permille"])
         war = w.war_of(r["w"])
 
+        # lead ruling (integration): a share is owed only when the war ends by peace, war_won or civ_conquered
+        ek = w.events[sp["end_event"] - 1]["key"] if sp["end_event"] else None
+        cited = ek in ("peace", "war_won", "civ_conquered")
+
         def owed(q):
-            return (W == q["partner"] and q["closed_by"] == "end" and not self.ended(q["z"]) and W
+            return (cited and W == q["partner"] and q["closed_by"] == "end" and not self.ended(q["z"]) and W
                     and not self.ended(W) and q["dead"] > 0 and V > 0)
         recs = [q for q in war["allies"] if owed(q)]
         me = w.ally_record(r["w"], r["z"])
@@ -2144,8 +2155,10 @@ class Alliances:
 
     # --- the steps (6.1)
     def t2(self):
-        self.cache()
+        self.closed_now = set()
+        self.trade_closed_now = set()
         self.drop_closed()
+        self.cache()
         self.read_log()
         self.keeping()
         self.origins()
@@ -2158,14 +2171,18 @@ class Alliances:
         self.arms_sales()
 
     def t6(self):
-        self.cache()
+        self.closed_now = set()
+        self.trade_closed_now = set()
         self.drop_closed()
+        self.cache()
         self.joined_ends()
         self.mine_closings()
 
     def q4(self):
-        self.cache()
+        self.closed_now = set()
+        self.trade_closed_now = set()
         self.drop_closed()
+        self.cache()
         self.joined_ends()
         self.keeping()
         self.trade_breaks()

@@ -18,6 +18,8 @@
 // need the new names fail by name instead of failing to compile. Everything else of the P5-04 tests uses names
 // older than P5-04 (and fails on the 0.25.0 library where it tests new behaviour).
 
+#define UNMAPPED_P504_API 1  // integrated (phase 2)
+
 #include <cstdint>
 #include <tuple>
 #include <utility>
