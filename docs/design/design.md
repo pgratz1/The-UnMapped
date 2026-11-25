@@ -777,6 +777,14 @@ Every named NPC in a settlement has a record, generated from the settlement's si
 
 The individual layer is a bell-shaped spread around the settlement's baseline, with its width set per race in data. A goblin player in an elven town meets mostly cold receptions, a few people openly hostile and a few willing to deal fairly. Earned reputation can in time outweigh race.
 
+**The range of receptions.** A cold reception is what a player meets among a people who are enemies of their own, such as a goblin among elves. It is one end of a range:
+
+- **Own kind and friends.** People are warm to a player of their own race or of a friendly one. Elves are quite welcoming to an elf or a faerie.
+- **Neither friend nor enemy.** The reception follows the host race's general manner toward outsiders, a value set per race in data. Dwarves are somewhat suspicious of all outsiders; humans are relatively gregarious.
+- **Enemies.** Usually cold, and hostile only with a fresh cause as described under Player race.
+
+Which peoples count as friends and enemies comes from the world's race relations, so it can differ between worlds.
+
 **Memory of the player.** An NPC remembers their dealings with the player: what was said, trades, favours, slights, tasks given and how they ended. The memory is kept in the save file, moves that NPC's disposition, and goes into their fact sheet, so a person the player has dealt with for a long time becomes distinct from their neighbours.
 
 **Quest givers.** Between one in five and one in ten named NPCs has a task for the player who talks to them; the share is a tuning value. A task grows out of the NPC's role and the world around them, and its target is a real place or people in the world file. A blacksmith might need mithril for an important weapon and send the player to the nearest dwarven hold that mines it. Relations between the peoples involved, the road there and what lives along it all come from history, so the same kind of task plays differently in each world.
