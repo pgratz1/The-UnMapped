@@ -153,6 +153,9 @@ FLAGS = dict(
     # P5-03a (generator 0.25.0)
     p503a=True,         # P5-03a 3 to 8: long peace, common enemies, credit and contributions by sign, meetings by
                         # word, graded settlers, the expulsion gap, A1; the undead threshold by world population (6)
+    # P5-04 (generator 0.26.0)
+    alliances=False,    # P5-04 6, 7: alliances, trade, mines and arms; the replay is not written (phase 1): a history
+                        # replayed at 0.26.0 refuses (history_stage), rows of 0.26.0 worlds are read as they are
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -164,7 +167,9 @@ FLAGS_022 = ("rename",)
 FLAGS_023 = ("monsters", "flare_claim")
 FLAGS_024 = ("relations",)
 FLAGS_025 = ("p503a",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
+FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7 (not written in phase 1)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
+            "0.26.0")
 
 
 
@@ -177,6 +182,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_026:
+        return i >= 10
     if k in FLAGS_025:
         return i >= 9
     if k in FLAGS_024:
@@ -202,7 +209,7 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0") or k not in pp.FLAGS_018)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0") or k not in pp.FLAGS_018)
             for k in pp.FLAGS}
 
 
@@ -254,6 +261,11 @@ CAMP_FIELD = {(0, 0): "good_good", (0, 1): "good_neutral", (0, 2): "good_evil", 
 BIOME_KEYS = {1: "ocean", 2: "lake", 3: "temperate_forest", 4: "grassland", 5: "marsh", 6: "highland_moor",
               7: "alpine", 8: "blighted_waste", 9: "heath", 10: "steppe", 11: "wet_woodland", 12: "fen"}
 COVER_BIOMES = ("temperate_forest", "wet_woodland", "fen", "marsh")
+
+
+def BATTLES():
+    """P5-04 11.1: the battle kinds set (allied_battle where the catalogue has it)."""
+    return (K["battle"], K["battle_at_pass"]) + ((K["allied_battle"],) if "allied_battle" in K else ())
 
 
 def fatal(msg):
@@ -2251,6 +2263,9 @@ KNOWN_EXTINCT_018 = ()   # r10 20.20 closed it (stress-1, -12, -14 were the case
 
 
 def history_stage(dat, inp, extra_draw=False, conflict=True):
+    if FLAGS.get("alliances"):
+        raise NotImplementedError("P5-04 (0.26.0): the alliances replay is not in this reference yet "
+                                  "(p5_04_alliances_reference.REPLAY_TODO); use --version 0.25.0")
     """3.3 history_stage with peoples and conflict installed (0.16.0); conflict=False is the
     peoples-only configuration (p3_peoples_reference.history_stage at 0.16.0)."""
     msg = pp.entry_checks(dat, inp)
@@ -2384,7 +2399,7 @@ def war_events(res, d, idx=None):
     row = [r for r in res["relation"] if r[4] == "war" and r[7] == d]
     out = set()
     for b in kids.get(d, []):
-        if kind[b] not in (K["battle"], K["battle_at_pass"]):
+        if kind[b] not in BATTLES():
             continue
         out.add(b)
         for sg in kids.get(b, []):
@@ -3149,7 +3164,7 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     # r7 7.3 item 4: with loss_winner <= loss_loser the victors never lose more than the defeated
     if FLAGS["loss"] and w.ct["loss_winner_permille"] <= w.ct["loss_loser_permille"]:
         for e in res["event"]:
-            if e[3] in (K["battle"], K["battle_at_pass"]):
+            if e[3] in BATTLES():
                 c.true("%s r7 e%d the victors lose no more than the defeated" % (label, e[0]),
                        vals[e[0]][1] <= vals[e[0]][2])
     # 3 falls
@@ -3163,14 +3178,14 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             sg = ev[cs[0]]
             ok = sg[6] == e[6] and sg[1] == e[1] and vals[sg[0]][1] == 1 and role(sg[0], 1) == role(e[0], 1)
             bc = causes.get(sg[0], [])
-            ok = ok and len(bc) == 1 and kind[bc[0]] in (K["battle"], K["battle_at_pass"]) and \
+            ok = ok and len(bc) == 1 and kind[bc[0]] in BATTLES() and \
                 ev[bc[0]][1] == e[1] and role(bc[0], 1) == role(sg[0], 1)
         c.true(lab + " caused by a fallen siege after a won battle", ok)
     for e in res["event"]:
         if e[3] == K["siege"]:
             bc = causes.get(e[0], [])
             c.true("%s inv 3 siege e%d after a battle won by its attacker" % (label, e[0]),
-                   len(bc) == 1 and kind[bc[0]] in (K["battle"], K["battle_at_pass"]) and
+                   len(bc) == 1 and kind[bc[0]] in BATTLES() and
                    role(bc[0], 1) == role(e[0], 1) and ev[bc[0]][1] == e[1])
     # 4 ends
     for e in res["event"]:
@@ -3377,9 +3392,9 @@ def check_invariants_r9(c, res, inp, w, label):
                 continue
             if x[3] == K["siege"]:
                 c.true(lab + " hidden: never besieged (e%d)" % x[0], x[6] != h)
-            if x[5] != e[5] or x[3] not in (K["battle"], K["battle_at_pass"], K["war_declared"]) + CLAIMS:
+            if x[5] != e[5] or x[3] not in BATTLES() + (K["war_declared"],) + CLAIMS:
                 continue
-            against = (y in role(x[0], 1) + role(x[0], 2)) if x[3] in (K["battle"], K["battle_at_pass"]) else \
+            against = (y in role(x[0], 1) + role(x[0], 2)) if x[3] in BATTLES() else \
                 role(x[0], 2) == [y]
             if not against:
                 continue
@@ -3525,7 +3540,7 @@ def replay_r17(res, dat=None):
             W, L = role(eid, 1)[0], role(eid, 2)[0]
             if d is not None:
                 A, g = role(d, 1)[0], ev[d][5]
-                bs = [b_ for b_ in kids.get(d, []) if kind[b_] in (K["battle"], K["battle_at_pass"])]
+                bs = [b_ for b_ in kids.get(d, []) if kind[b_] in BATTLES()]
                 lbw = [p_[4] for p_ in parts[max(bs)] if p_[2] == 1][0] if bs else None
                 held = holder(g, y, eid) == W
                 clear = not mine_in(L, g)
@@ -3708,7 +3723,7 @@ def check_invariants_r22(c, res, inp, w, label):
         vals.setdefault(e, {})[seq] = v
     kind = {e[0]: e[3] for e in res["event"]}
     if not pdr.conflict_check_messages(w.ct):   # (21) whenever conflict_toll_spread holds
-        bad = [e for e, k in kind.items() if k in (K["battle"], K["battle_at_pass"]) and vals[e][1] > vals[e][2]]
+        bad = [e for e, k in kind.items() if k in BATTLES() and vals[e][1] > vals[e][2]]
         c.eq("%s r22 (21) winner_dead <= loser_dead" % label, bad, [])
     sp = w.ct.get("toll_spread_permille", 0)
     c.true("%s r22 24.5 every factor in [1000 - s, 1000 + s]" % label,
@@ -3771,13 +3786,13 @@ def r22_facts(res):
         k = kind[e[0]]
         if k in CLAIMS and any(kind[x] in CLAIMS for x in causes.get(e[0], [])):
             fresh[0 if k == K["claim"] else 1] += 1
-        if k in (K["battle"], K["battle_at_pass"]):
+        if k in BATTLES():
             key = (role(e[0], 1)[0], role(e[0], 2)[0], vals[e[0]][1], vals[e[0]][2])
             repeats += key in seen
             seen.add(key)
     mixed = 0
     for e, text in zip(res["event"], sentences(res, res["_inputs"])):
-        if kind[e[0]] in (K["battle"], K["battle_at_pass"]):
+        if kind[e[0]] in BATTLES():
             toll = text.split("; ", 1)[1] if "; " in text else text
             words = any((" %s " % wd) in (" " + toll + " ") for wd in pe.NUMBER_WORDS[1:])
             digits = any(ch.isdigit() for ch in toll)
@@ -3964,7 +3979,7 @@ def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, v
         if e[3] != K["search_abandoned"]:
             continue
         d = war_of_end.get(e[0])
-        fought = [b for b in kids.get(d, []) if kind[b] in (K["battle"], K["battle_at_pass"]) and ev[b][5] == e[5]]
+        fought = [b for b in kids.get(d, []) if kind[b] in BATTLES() and ev[b][5] == e[5]]
         c.eq("%s r14 21.7 item 2 e%d no battle of its war in the searched region" % (label, e[0]), fought, [])
         c.eq("%s r14 21.7 item 3 e%d salience" % (label, e[0]), e[7],
              base35 if first35 else t["search_repeat_salience"])
@@ -4022,7 +4037,7 @@ def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, v
 def last_battle_winner(res, d, idx):
     """The winner of the war of d's most recent battle (by id), or None."""
     kind, _ev, _causes, kids, parts = idx
-    bs = [b for b in kids.get(d, []) if kind[b] in (K["battle"], K["battle_at_pass"])]
+    bs = [b for b in kids.get(d, []) if kind[b] in BATTLES()]
     if not bs:
         return None
     return [p_[4] for p_ in parts[max(bs)] if p_[2] == 1][0]
@@ -4095,7 +4110,7 @@ def check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, v
         if k == K["refuge_held"]:   # 20.22: caused by a battle its attacker won; never followed by a fall
             cs = causes.get(e[0], [])
             c.true("%s r10 20.22 e%d refuge_held after a battle won by its attacker" % (label, e[0]),
-                   len(cs) == 1 and kind[cs[0]] in (K["battle"], K["battle_at_pass"]) and
+                   len(cs) == 1 and kind[cs[0]] in BATTLES() and
                    role(cs[0], 1) == role(e[0], 1) and ev[cs[0]][1] == e[1])
             c.true("%s r10 20.22 e%d no fall follows a refuge_held" % (label, e[0]),
                    not any(kind[x] in (K["sacked"], K["settlement_captured"], K["refugees_settled"])
@@ -4113,10 +4128,10 @@ def check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, v
     unfound = {(x[0], x[1], x[2]) for x in w.search_log if not x[4]}
     war_of_battle = {}
     for e in res["event"]:
-        if e[3] in (K["battle"], K["battle_at_pass"]):
+        if e[3] in BATTLES():
             war_of_battle[e[0]] = causes[e[0]][0]
     for e in res["event"]:
-        if e[3] in (K["battle"], K["battle_at_pass"]):
+        if e[3] in BATTLES():
             c.true("%s r10 20.19 (11) e%d battle in a year the search found nothing" % (label, e[0]),
                    (e[1], war_of_battle[e[0]], e[5]) not in unfound)
         if e[3] == K["siege"]:

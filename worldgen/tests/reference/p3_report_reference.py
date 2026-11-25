@@ -79,6 +79,7 @@ sys.path.insert(0, _HERE)
 import p3_chronology_reference as pchr  # noqa: E402
 import p3_conflict_reference as pcr  # noqa: E402
 import p3_engine_reference as pe  # noqa: E402
+import p5_04_alliances_reference as p504  # noqa: E402
 
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-07-report.txt")
@@ -95,7 +96,9 @@ DEFAULT_INPUTS_025 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.25.0 histories (P5-03a phase 2: build-inputs)
 DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
                                   "report-inputs")
-GENERATOR_VERSION = "0.25.0"
+DEFAULT_INPUTS_026 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-04-int",
+                                  "report-inputs")   # 0.26.0 histories (P5-04 phase 2: build-inputs)
+GENERATOR_VERSION = "0.26.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
@@ -103,6 +106,7 @@ V3 = True   # P3-07 r21 26 (format v3, generator 0.22.0); V3 implies V2's rules
 V4 = True   # P5-02 12 (format v4, generator 0.23.0, schema 9); V4 implies V3's rules
 V5 = True   # P5-03 17 (format v5, generator 0.24.0, schema 10); V5 implies V4's rules
 V6 = True   # P5-03a 9 (format v6, generator 0.25.0, schema 10); V6 implies V5's rules
+V7 = True   # P5-04 10 (format v7, generator 0.26.0, schema 11); V7 implies V6's rules
 # P5-03a 9.5: a constant of digest.hpp (the first settlement_mixed events of distinct race pairs in the summary set)
 SUMMARY_MIXED_MAX = 3
 # P5-03a 9.3: the ruins listed at summary when there are more than SUMMARY_RUINS_MAX (5 oldest, 5 largest, 5 latest)
@@ -229,23 +233,24 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, V4, V5, V6, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0"):
+    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")
-    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0")
-    V4 = v in ("0.23.0", "0.24.0", "0.25.0")
-    V5 = v in ("0.24.0", "0.25.0")
-    V6 = v == "0.25.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0")
+    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0")
+    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0")
+    V5 = v in ("0.24.0", "0.25.0", "0.26.0")
+    V6 = v in ("0.25.0", "0.26.0")
+    V7 = v == "0.26.0"
+    DEFAULT_INPUTS = DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.25.0")
+use_version("0.26.0")
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -420,6 +425,12 @@ class World:
             self.site = {x[0]: x for x in t["site"]}
             self.mkind = {k[0]: k for k in t["monster_kind"]}
             self.beast = {b[0]: b for b in t["beast"]}
+        # P5-04 10.4: a war row whose since_event is an ally_joined_war is an ally's row, not a war; the war logic of
+        # the report reads `war_rows` / `res_wars` (relation without them), the [alliances] block every row
+        self.joined = set()
+        if V7:
+            aj = self.K["ally_joined_war"]
+            self.joined = {r[7] for r in t["relation"] if r[4] == "war" and r[7] in self.ev and self.ev[r[7]][3] == aj}
         self.inp = Inputs(self)
         self.view = pe.view_from_rows(self.res, [(r[0], r[1]) for r in t["region"]], t["race"], t["god"])
         self._bind()
@@ -652,9 +663,9 @@ def is_islet(region):
     return region[RC["cells"]] - region[RC["lake_cells"]] < ISLET_MAX_DRY_CELLS
 
 
-W_KINDS = ("war_declared", "battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held",
+W_KINDS = ("war_declared", "battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held",
            "peace", "war_won", "truce")
-EW_KINDS = ("battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held", "peace", "war_won",
+EW_KINDS = ("battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held", "peace", "war_won",
             "truce", "search_abandoned", "region_ceded", "settlements_ceded", "tribute", "capital_moved",
             "refugees_settled", "civ_conquered")
 OWN_ROLES = ("founder", "attacker", "winner", "conqueror", "to", "payee", "claimant", "searcher")
@@ -706,7 +717,7 @@ class Frames:
     def __init__(self, w):
         self.w = w
         self.war = war_of(w)
-        battles = kset(w, ("battle", "battle_at_pass"))
+        battles = kset(w, ("battle", "battle_at_pass", "allied_battle"))   # P5-04 11.1
         self.last_battle = {}
         for e in w.t["event"]:
             d = self.war[e[0]]
@@ -749,6 +760,17 @@ class Frames:
             cs = sorted(c for c in w.causes.get(eid, []) if w.ev[c][3] in self.falls)
             if cs:
                 out.add(cs[0])
+        if V7:   # P5-04 10.3: the companions of alliances
+            K, k = w.K, w.ev[eid][3]
+            calls = kset(w, ("ally_joined_war", "ally_refused", "alliance_betrayed"))
+            ends = kset(w, ("peace", "war_won", "truce", "civ_conquered"))
+            spoils = kset(w, ("spoils_shared", "spoils_withheld"))
+            if k == K["war_declared"]:
+                out |= {x for x in self.kids.get(eid, []) if w.ev[x][3] in calls}
+            if k in ends:
+                out |= {x for x in self.kids.get(eid, []) if w.ev[x][3] in spoils}
+            if k == K["alliance_betrayed"]:
+                out |= {c for c in w.causes.get(eid, []) if w.ev[c][3] == K["war_declared"]}
         return out
 
 
@@ -761,7 +783,8 @@ def summary24(w, fr, candidates_only=False, budget=None):
     """24.3: (T, the summary set); budget B of 12.9 (default SUMMARY_BUDGET)."""
     B = SUMMARY_BUDGET if budget is None else budget
     ev = w.ev
-    excl_kinds = kset(w, ("claim", "claim_settlements", "battle", "battle_at_pass", "plague_spread", "quiet_stretch"))
+    excl_kinds = kset(w, ("claim", "claim_settlements", "battle", "battle_at_pass", "allied_battle", "plague_spread",
+                          "quiet_stretch"))
     quiet = w.K["quiet_stretch"]
     cands = [e for e in w.t["event"] if e[7] >= SUMMARY_MIN_SALIENCE and e[3] not in excl_kinds and
              e[0] not in fr.excluded]
@@ -944,7 +967,7 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+    o = ["# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
          "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
@@ -989,6 +1012,8 @@ def outside_lines(w, d, level):
         post += site_lines(w, level)
     if V5:   # P5-03 17.2: after [sites]
         post += peoples_lines(w, level)
+    if V7:   # P5-04 10.2: after [peoples], before [stats]
+        post += p504.alliances_block(alliance_world(w), level)
     post.append("[stats]")
     post += ["%s = %s" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
     return o, post
@@ -1091,7 +1116,7 @@ def civ_block(w, d, c, level):
         o.append("  settlements: %d founded, %d held at the end, %d ruined" % (d.founded[cid], d.held_settlements[cid],
                                                                              d.ruined[cid]))
     rel = [x for x in w.t["relation"] if (x[0] == CIV and x[1] == cid) or (x[2] == CIV and x[3] == cid)]
-    wars = [x for x in rel if x[4] == "war"]
+    wars = [x for x in rel if x[4] == "war" and x[7] not in w.joined]
     nd = sum(1 for x in wars if x[0] == CIV and x[1] == cid)
     nf = sum(1 for x in wars if x[2] == CIV and x[3] == cid)
     out = {"won": 0, "lost": 0, "drawn": 0, "open": 0}
@@ -1115,8 +1140,9 @@ def civ_block(w, d, c, level):
                 else:
                     last = x[5] if x[6] == x[5] else x[6] - 1
                     o.append("    %s: %s, %s, %d-%d, e%d to e%d" % (x[4], a_ref, b_ref, x[5], last, x[7], x[8]))
-    else:
-        o += adversary_lines(w, cid, rel)
+    else:   # P5-04 10.4 (reading R18): an ally's war rows, alliances and trades are not adversaries
+        o += adversary_lines(w, cid, [x for x in rel if not (x[4] == "war" and x[7] in w.joined)
+                                      and not (V7 and x[4] in ("alliance", "trade"))])
     if not short:
         o.append("  events: %d" % len(w.civ_events.get(cid, [])))
     if c[8] is None:
@@ -1135,6 +1161,8 @@ def civ_block(w, d, c, level):
     for x in ms:
         e = w.ev[x]
         o.append("    %s e%d %s: %s" % (span(e), x, w.kind_key[e[3]], with_note(w.sentence(x), note(w, x, cid))))
+    if V7:   # P5-04 10.3: appended at the end of the block
+        o += p504.civ_alliance_lines(alliance_world(w), cid, level)
     return o
 
 
@@ -1285,7 +1313,7 @@ def present_lists(w, level="full"):
         o.append("  s%d %s in %s: %s, population %d, founded %d by flight from %s, e%d%s" % (
             s[0], s[1], w.ref(REGION, s[4]), w.ref(CIV, s[8]) if s[8] else "no owner", s[11], s[6],
             w.ref(SETTLEMENT, origin[0]), s[7], suffix))
-    open_wars = sorted((r for r in t["relation"] if r[4] == "war" and r[6] is None),
+    open_wars = sorted((r for r in t["relation"] if r[4] == "war" and r[6] is None and r[7] not in w.joined),
                        key=lambda r: (r[5], r[0], r[1], r[2], r[3]))
     o.append("open wars: %d" % len(open_wars))
     for r in open_wars:
@@ -1512,10 +1540,12 @@ def site_lines(w, level):
     ss = w.t["site"]
     o = ["[sites]", "sites: %d; open %d; lairs %d, outposts %d" % (
         len(ss), sum(1 for x in ss if x[13] == 0), sum(1 for x in ss if x[2] == 1), sum(1 for x in ss if x[2] == 2))]
+    if V7:   # P5-04 10.6
+        o[1] += ", mines %d" % sum(1 for x in ss if x[2] == 3)
     if level != "full":
         return o
     for x in ss:
-        line = "  si%d %s: %s in %s at %d %d, since %d e%d" % (x[0], x[1], "lair" if x[2] == 1 else "outpost",
+        line = "  si%d %s: %s in %s at %d %d, since %d e%d" % (x[0], x[1], {1: "lair", 2: "outpost", 3: "mine"}[x[2]],
                                                               w.ref(REGION, x[3]), x[4], x[5], x[9], x[10])
         if x[7]:
             line += ", of %s" % w.ref(CIV, x[7])
@@ -1684,7 +1714,7 @@ def stats(w, d):
                 longest = max(longest, run)
         o.append(("share_over_%d_years" % k, longest))
     rel = t["relation"]
-    wars = [r for r in rel if r[4] == "war"]
+    wars = [r for r in rel if r[4] == "war" and r[7] not in w.joined]   # P5-04 10.4
     o += [("relations", len(rel)), ("relations_open", sum(1 for r in rel if r[6] is None)), ("wars", len(wars)),
           ("wars_open", sum(1 for r in wars if r[6] is None))]
     civ_race = {c[0]: c[2] for c in civs}
@@ -1757,7 +1787,20 @@ def stats(w, d):
         if V6:   # P5-03a 9.6, appended
             for k in ("peoples_met_by_word", "dispositions_warmed"):
                 o.append((k, st5[k]))
+    if V7:   # P5-04 10.5, appended (full only: SUMMARY_STATS unchanged)
+        o += p504.stats(alliance_world(w))
     return o
+
+
+def alliance_world(w):
+    """The P5-04 row model of this world (every relation row, joined war rows included)."""
+    if getattr(w, "_aw", None) is None:
+        t = dict(w.t)
+        t.setdefault("site", [])
+        t.setdefault("region_name", [])
+        t.setdefault("region_border", [])
+        w._aw = p504.AW(dict(w.meta, history_end_year=str(w.E)), t)
+    return w._aw
 
 
 def _res_owned(w):
@@ -1765,6 +1808,8 @@ def _res_owned(w):
     shares, which are computed here instead)."""
     r = dict(w.res)
     r["settlement"] = [s for s in w.t["settlement"] if s[8] or not standing(s[10])]
+    if w.joined:   # P5-04 10.4: an ally's war rows are in no war count
+        r["relation"] = [x for x in w.res["relation"] if not (x[4] == "war" and x[7] in w.joined)]
     return r
 
 
@@ -1779,10 +1824,11 @@ FIXTURE_NAMES_V3 = FIXTURE_NAMES_V2 + ("h12-v3",)   # r21 26.8 item 9: H12 holds
 FIXTURE_NAMES_V4 = FIXTURE_NAMES_V3 + ("h13-v4",)   # P5-02 19.1 item 15: H13 holds the v4 cases
 FIXTURE_NAMES_V5 = FIXTURE_NAMES_V4 + ("h14-v5",)   # P5-03 24.1 item 11: H14 holds the v5 cases
 FIXTURE_NAMES_V6 = FIXTURE_NAMES_V5 + ("h15-v6",)   # P5-03a 14 item 11: H15 holds the v6 cases
+FIXTURE_NAMES_V7 = FIXTURE_NAMES_V6 + ("h16-alliances",)   # P5-04 18.1 item 16
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -1894,7 +1940,7 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "10" if V5 else "9" if V4 else "8" if V3 else "7",
+            "param.races": m["races"], "schema_version": "11" if V7 else "10" if V5 else "9" if V4 else "8" if V3 else "7",
             "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows
@@ -2076,7 +2122,7 @@ def summary_violations(w, fr, shown):
             bad.append("e%d: a claim or plague_spread is shown" % x)
         # r21 26.5 item 1 (part 4): a battle shown as the cause of a shown renaming
         renamed_cause = V3 and any(w.ev[y][3] == w.K["region_renamed"] and x in w.causes.get(y, []) for y in shown)
-        if k in kset(w, ("battle", "battle_at_pass")) and fr.last_battle.get(d) != x and not renamed_cause:
+        if k in kset(w, ("battle", "battle_at_pass", "allied_battle")) and fr.last_battle.get(d) != x and not renamed_cause:
             bad.append("e%d: a battle that is not its war's last is shown" % x)
     for e in w.t["event"]:
         if e[3] == K["quiet_stretch"] and e[0] not in shown:

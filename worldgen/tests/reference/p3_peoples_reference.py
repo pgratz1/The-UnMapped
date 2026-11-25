@@ -130,7 +130,8 @@ FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
 FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0")   # 0.21.0, 0.22.0: no peoples rule
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
+            "0.26.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -314,7 +315,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43, 55, 62, 78)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
