@@ -65,9 +65,10 @@ T3_DIR = os.path.join(REPO, "worldgen", "tests", "data", "browser")
 T3_NAME = "t3-browser"
 INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
 INPUTS_024 = tl.INPUTS_P5_03
-INPUTS = tl.INPUTS_P5_03A   # 0.25.0 (phase 2); --version 0.24.0 or 0.23.0 serves the committed file of that version
+INPUTS_025 = tl.INPUTS_P5_03A
+INPUTS = tl.INPUTS_P5_04   # 0.26.0 (phase 2); --version 0.25.0, 0.24.0 or 0.23.0 serves the committed file of that version
 SCRATCH = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-05-a-tests", "fixtures-ref")
-GENERATOR_VERSION = "0.25.0"   # P5-03a: no kind is added, the groups are those of 0.24.0 (reading B13)
+GENERATOR_VERSION = "0.26.0"   # P5-04 11.2: group alliances = 7, ALL_GROUPS 0xFF (0.25.0: the groups of 0.24.0)
 WORLD_CASES = tl.WORLD_CASES
 SLOW_CASES = tuple(n for n in WORLD_CASES if n.endswith("-1024"))
 
@@ -140,22 +141,29 @@ GROUP_KEYS_024 = dict(GROUP_KEYS)
 GROUP_KEYS_024.update({5: GROUP_KEYS[5] + ("settlement_fled",),
                        6: ("peoples_met", "disposition_turned", "refugees_arrived", "settlement_mixed",
                            "standing_changed", "people_expelled")})
-GROUP_VERSION = "0.24.0"
+# P5-04 11.2 (0.26.0): kinds 63 to 70, 72 to 76 and 78 in the new group `alliances` = 7; 71 allied_battle in `war`;
+# 77 mine_opened in `settlements`; ALL_GROUPS 0xFF.
+GROUP_KEYS_026 = dict(GROUP_KEYS_024)
+GROUP_KEYS_026.update({1: GROUP_KEYS_024[1] + ("mine_opened",), 2: GROUP_KEYS_024[2] + ("allied_battle",),
+                       7: ("alliance_formed", "alliance_renewed", "alliance_lapsed", "alliance_broken",
+                           "alliance_betrayed", "ally_joined_war", "ally_refused", "ally_withdrew", "trade_opened",
+                           "trade_broken", "spoils_shared", "spoils_withheld", "alliance_spurned", "arms_sold")})
+GROUP_VERSION = "0.26.0"
 
 
 def use_groups(v):
     global GROUP_KEYS, GROUP_OF, ALL_GROUPS, GROUP_VERSION, GROUP_WORDS
     GROUP_VERSION = v
-    GROUP_KEYS = GROUP_KEYS_024 if v == "0.24.0" else GROUP_KEYS_023
-    GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters") + (("peoples",) if v == "0.24.0"
-                                                                                       else ())
+    GROUP_KEYS = GROUP_KEYS_026 if v == "0.26.0" else GROUP_KEYS_024 if v == "0.24.0" else GROUP_KEYS_023
+    GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters") + (
+        ("peoples", "alliances") if v == "0.26.0" else ("peoples",) if v == "0.24.0" else ())
     GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
-    ALL_GROUPS = 0x7F if v == "0.24.0" else 0x3F
-    n = 62 if v == "0.24.0" else 55
+    ALL_GROUPS = 0xFF if v == "0.26.0" else 0x7F if v == "0.24.0" else 0x3F
+    n = 78 if v == "0.26.0" else 62 if v == "0.24.0" else 55
     assert sum(len(x) for x in GROUP_KEYS.values()) == n and len(GROUP_OF) == n
 
 
-use_groups("0.24.0")
+use_groups("0.26.0")
 
 
 def event_group(key):
@@ -1087,8 +1095,13 @@ def main(argv):
             prr.use_version("0.24.0")
             tl.RULES = "p5-03"
             INPUTS, GENERATOR_VERSION = INPUTS_024, "0.24.0"
-        elif v != "0.25.0":
-            raise SystemExit("--version: 0.23.0, 0.24.0 or 0.25.0")
+        elif v == "0.25.0":
+            prr.use_version("0.25.0")
+            tl.RULES = "p5-03a"
+            use_groups("0.24.0")
+            INPUTS, GENERATOR_VERSION = INPUTS_025, "0.25.0"
+        elif v != "0.26.0":
+            raise SystemExit("--version: 0.23.0, 0.24.0, 0.25.0 or 0.26.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":

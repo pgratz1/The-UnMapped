@@ -75,8 +75,14 @@ INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "ou
 INPUTS_024 = tl.INPUTS_P5_03
 # P5-03a (0.25.0, the default): no marker rule changes; the world cases are the 0.25.0 report inputs (phase 2);
 # `--version 0.24.0` serves the committed P5-03 file.
-INPUTS = tl.INPUTS_P5_03A
-GENERATOR_VERSION = "0.25.0"
+INPUTS_025 = tl.INPUTS_P5_03A
+# P5-04 (0.26.0, the default; P4-04 r3 pointer): the mine marker (11.3: entry type 6, glyph 19, one entry per kind 3
+# site existing at Y, offset one glyph cell to the upper right) and allied_battle as a battle (11.1). The glyph's
+# pixels are not given by the spec (reading K1): the entries and their dump lines are here, the drawn mine glyph is
+# not, so `golden` at 0.26.0 refuses a world with a mine until the glyph is ruled.
+INPUTS = tl.INPUTS_P5_04
+GENERATOR_VERSION = "0.26.0"
+MINE_GLYPH = 19   # 16 + site kind 3
 # Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
 # halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
 # (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
@@ -107,8 +113,12 @@ def use_version(v):
         GENERATOR_VERSION, INPUTS = "0.24.0", INPUTS_024
         tl.RULES = "p5-03"
         prr.use_version("0.24.0")
-    elif v != "0.25.0":
-        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0 or 0.25.0")
+    elif v == "0.25.0":
+        GENERATOR_VERSION, INPUTS = "0.25.0", INPUTS_025
+        tl.RULES = "p5-03a"
+        prr.use_version("0.25.0")
+    elif v != "0.26.0":
+        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0, 0.25.0 or 0.26.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """
@@ -160,7 +170,8 @@ SYMBOL_WORD = {PLAIN: "plain", PLAGUE: "plague", BATTLE: "battle", SIEGE: "siege
 SYMBOL_COLOUR = {SACK: (200, 0, 200), SIEGE: (255, 150, 0), BATTLE: (230, 30, 30), PLAGUE: (0, 190, 120),
                  PLAIN: (255, 255, 255)}
 SYMBOL_KEYS = {b"sacked": SACK, b"settlement_captured": SACK, b"siege": SIEGE, b"refuge_held": SIEGE,
-               b"battle": BATTLE, b"battle_at_pass": BATTLE, b"plague": PLAGUE, b"plague_outbreak": PLAGUE,
+               b"battle": BATTLE, b"battle_at_pass": BATTLE, b"allied_battle": BATTLE, b"plague": PLAGUE,
+               b"plague_outbreak": PLAGUE,
                b"plague_spread": PLAGUE}
 
 
@@ -311,8 +322,12 @@ class World:
     def markers(self, y, faded=True, events=True, passes=True):
         if not 0 <= y <= self.E:
             raise ValueError("year %d outside 0 to %d" % (y, self.E))
-        return {"year": y, "settlements": self.settlement_entries(y, faded),
-                "places": self.places(y) if events else [], "passes": list(self.passes) if passes else []}
+        m = {"year": y, "settlements": self.settlement_entries(y, faded),
+             "places": self.places(y) if events else [], "passes": list(self.passes) if passes else []}
+        if GENERATOR_VERSION == "0.26.0":   # P5-04 11.3: the kind 3 sites existing at Y (half-open), ascending id
+            m["sites"] = [dict(site=x[0], x=x[4], y=x[5], kind=x[2], glyph=16 + x[2], founder=x[7], since=x[9])
+                          for x in self.h.sites if x[2] == 3 and x[9] <= y and (x[11] is None or y < x[11])]
+        return m
 
 
 def marker_dump(m):
@@ -325,6 +340,8 @@ def marker_dump(m):
         out.append("place %d %d %s %s" % (x, y, SYMBOL_WORD[sym], " ".join(str(e) for e in evs)))
     for pid, x, y, kind in m["passes"]:
         out.append("pass %d %d %d %d" % (pid, x, y, kind))
+    for x in m.get("sites", ()):   # P5-04 11.3 (reading K2: after the passes)
+        out.append("site %d %d %d %d %d" % (x["site"], x["x"], x["y"], x["kind"], x["glyph"]))
     return ("\n".join(out) + "\n").encode("ascii")
 
 
@@ -491,6 +508,8 @@ def draw_list(m, colours):
         return colours[s["owner"] - 1] if s["owner"] else NO_OWNER
     out += [(s["x"], s["y"], (9, False, False), FADED) for s in ss if s["type"] == "faded"]
     out += [(s["x"], s["y"], (8, False, False), None) for s in ss if s["type"] == "ruin"]
+    if m.get("sites"):   # P5-04 11.3: between ruins and standing settlements; the glyph is not specified (K1)
+        raise NotImplementedError("P5-04 11.3: the mine glyph's pixels are not in the spec (reading K1)")
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and not s["capital"]]
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and s["capital"]]
     return out
