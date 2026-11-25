@@ -593,9 +593,17 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         const std::string& k = r[4].bytes;
         CHECK(at(r, 0) == 3);
         CHECK(at(r, 2) == 3);
-        CHECK((k == "enmity" || k == "war" || k == "peace"));
+        // P5-04 9.1 (0.26.0): the alliance and trade rows are checked by P5-04's invariants
+        CHECK((k == "enmity" || k == "war" || k == "peace" || k == "alliance" || k == "trade"));
+        if (k == "alliance" || k == "trade") continue;
         const std::int64_t a = at(r, 1), b = at(r, 3), sk = x.kind(at(r, 7));
         const std::int64_t uk = is_null(r[6]) ? 0 : x.kind(at(r, 8));
+        if (k == "war" && sk == k_ally_joined_war) {
+            // P5-04 7.6, 9.1: a joined row (the ally as a, the enemy as b), closed by the ally's withdrawal, the
+            // war's end or a side's ending event (P5-04's invariants check it)
+            spans[{std::min(a, b), std::max(a, b)}].push_back({at(r, 5), is_null(r[6]) ? INF : at(r, 6)});
+            continue;
+        }
         if (k == "enmity") {
             CHECK(a < b);
             CHECK(enmity.insert({a, b}).second);
@@ -628,8 +636,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             war_row[at(r, 7)] = &r;
         } else {
             CHECK(a < b);
-            CHECK((sk == k_peace || sk == k_truce || sk == k_war_won || sk == k_search_abandoned));
-            if (uk != 0) CHECK((uk == k_war_declared || uk == 18 || uk == k_civ_conquered));
+            // P5-04 7.9, 7.10: an ally's peace opens with its withdrawal (70) or the war's end; a join (68) closes one
+            CHECK((sk == k_peace || sk == k_truce || sk == k_war_won || sk == k_search_abandoned || sk == 70));
+            if (uk != 0) CHECK((uk == k_war_declared || uk == 18 || uk == k_civ_conquered || uk == k_ally_joined_war));
         }
         if (k != "enmity") {
             spans[{std::min(a, b), std::max(a, b)}].push_back({at(r, 5), is_null(r[6]) ? INF : at(r, 6)});
@@ -700,7 +709,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK(x.year(s) == at(e, 1));
             CHECK(x.values.at(s).at(1) == 1);
             const std::int64_t b = x.causes.at(s).at(0);
-            CHECK((x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass));
+            CHECK(is_battle_kind(x.kind(b)));   // P5-04 11.1: an allied battle too
             CHECK(x.role1(b, 1) == x.role1(s, 1));
             CHECK(x.year(b) == at(e, 1));
         }
@@ -991,7 +1000,7 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
                 if (at(o, 5) != at(e, 5)) continue;
                 const std::int64_t ok = at(o, 3);
                 bool against = false;
-                if (ok == k_battle || ok == k_battle_at_pass) {
+                if (is_battle_kind(ok)) {   // P5-04 11.1
                     against = x.role1(at(o, 0), 1) == founder || x.role1(at(o, 0), 2) == founder;
                 } else if (is_claim(ok) || ok == k_war_declared) {
                     against = x.role1(at(o, 0), 2) == founder;
@@ -1047,7 +1056,7 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
 inline std::int64_t last_battle_winner(const Index& x, std::int64_t d) {
     std::int64_t last = 0;
     for (const std::int64_t b : x.kids(d)) {
-        if ((x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass) && b > last) last = b;
+        if (is_battle_kind(x.kind(b)) && b > last) last = b;
     }
     return last == 0 ? 0 : x.role1(last, 1);
 }
@@ -1068,7 +1077,10 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
     const std::int64_t spread = conflict_int_or(content, "toll_spread_permille", 0);   // r22 24.5; absent: off
     std::map<std::int64_t, std::int64_t> war_of_end;
     for (const Row& r : t.relation) {
-        if (r[4].bytes == "war" && !is_null(r[6])) war_of_end[at(r, 8)] = at(r, 7);
+        // P5-04 10.4: the principal war rows only (an ally's joined row closes with the same end)
+        if (r[4].bytes == "war" && !is_null(r[6]) && x.kind(at(r, 7)) != k_ally_joined_war) {
+            war_of_end[at(r, 8)] = at(r, 7);
+        }
     }
     for (const Row& e : t.event) {
         const std::int64_t id = at(e, 0), k = at(e, 3);
@@ -1119,7 +1131,7 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
             CHECK((x.role1(id, 1) == x.role1(d, 1) || x.role1(id, 1) == x.role1(d, 2)));
             CHECK(x.values.at(id).at(1) == at(e, 1) - x.year(d));
             for (const std::int64_t b : x.kids(d)) {
-                if (x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass) {
+                if (is_battle_kind(x.kind(b))) {
                     CHECK_MESSAGE(x.year(b) != at(e, 1), "battle e" << b << " in the year its war was given up");
                 }
             }
@@ -1127,7 +1139,7 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
         if (k == k_refuge_held) {
             REQUIRE(x.causes.at(id).size() == 1U);
             const std::int64_t b = x.causes.at(id)[0];
-            CHECK((x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass));
+            CHECK(is_battle_kind(x.kind(b)));   // P5-04 11.1: an allied battle too
             CHECK(x.role1(b, 1) == x.role1(id, 1));
             CHECK(x.year(b) == at(e, 1));
             CHECK((x.values.at(id).at(1) == 1 || x.values.at(id).at(1) == 2));
@@ -1218,7 +1230,10 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
     }
     std::map<std::int64_t, std::int64_t> war_of_end;
     for (const Row& r : t.relation) {
-        if (r[4].bytes == "war" && !is_null(r[6])) war_of_end[at(r, 8)] = at(r, 7);
+        // P5-04 10.4: the principal war rows only (an ally's joined row closes with the same end)
+        if (r[4].bytes == "war" && !is_null(r[6]) && x.kind(at(r, 7)) != k_ally_joined_war) {
+            war_of_end[at(r, 8)] = at(r, 7);
+        }
     }
     auto holds = [&t](std::int64_t g, std::int64_t civ, std::int64_t y) {
         for (const Row& rc : t.region_control) {
@@ -1253,7 +1268,7 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
             const auto it = war_of_end.find(id);
             if (it != war_of_end.end()) {
                 for (const std::int64_t b : x.kids(it->second)) {
-                    if ((x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass) && at(*x.ev.at(b), 5) == at(e, 5)) {
+                    if (is_battle_kind(x.kind(b)) && at(*x.ev.at(b), 5) == at(e, 5)) {
                         out.push_back("21.7 item 2 e" + std::to_string(id) + ": its war fought battle e" +
                                       std::to_string(b) + " in the searched region");
                     }
@@ -1327,7 +1342,10 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
     }
     std::map<std::int64_t, std::int64_t> war_of_end;
     for (const Row& r : t.relation) {
-        if (r[4].bytes == "war" && !is_null(r[6])) war_of_end[at(r, 8)] = at(r, 7);
+        // P5-04 10.4: the principal war rows only (an ally's joined row closes with the same end)
+        if (r[4].bytes == "war" && !is_null(r[6]) && x.kind(at(r, 7)) != k_ally_joined_war) {
+            war_of_end[at(r, 8)] = at(r, 7);
+        }
     }
     // the owner of g in year y: the region_control row of g covering y with the largest from_year (and event),
     // rows opened in y by an event after `before` left out; 0 if none
@@ -1402,7 +1420,7 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
                 const std::int64_t d = it->second, A = x.role1(d, 1), g = at(*x.ev.at(d), 5);
                 const std::int64_t W = x.role1(id, 1), L = x.role1(id, 2);
                 bool battles = false;
-                for (const std::int64_t b : x.kids(d)) battles = battles || x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass;
+                for (const std::int64_t b : x.kids(d)) battles = battles || is_battle_kind(x.kind(b));
                 const bool held = holder(g, y, id) == W, clear = mine_in(L, g).empty();
                 if (last_battle_winner(x, d) == L && !(W == A && held && clear)) {
                     out.problems.push_back("(8) e" + std::to_string(id) + ": the loser c" + std::to_string(L) +
@@ -1676,8 +1694,33 @@ inline std::string open_claims_line(const Tables& t) {
         if (is_null(c[8])) alive.insert(at(c, 0));
     }
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> last;
+    // P5-04 7.6, 7.9, 7.10 (0.26.0): a join, a withdrawal and a war's end drop the claims of an ally and its enemy;
+    // 6.3, 6.4 (lead ruling): an alliance_formed drops the pair's claims both ways (the reference's
+    // open_claims_from_rows)
+    std::map<std::int64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> joined_by_end;
+    for (const Row& r : t.relation) {
+        if (r[4].bytes == "war" && !is_null(r[6]) && x.kind(at(r, 7)) == k_ally_joined_war) {
+            joined_by_end[at(r, 8)].push_back({at(r, 1), at(r, 3)});
+        }
+    }
+    const auto drop = [&last](std::int64_t p, std::int64_t q) {
+        last.erase(std::make_pair(p, q));
+        last.erase(std::make_pair(q, p));
+    };
     for (const Row& e : t.event) {
         const std::int64_t id = at(e, 0), k = at(e, 3);
+        if (k == k_ally_joined_war || k == 70) {   // ally_joined_war, ally_withdrew: roles ally (1), enemy (3)
+            drop(x.role1(id, 1), x.role1(id, 3));
+        }
+        if (k == k_peace || k == k_truce || k == k_war_won || k == k_search_abandoned) {
+            const auto it = joined_by_end.find(id);
+            if (it != joined_by_end.end()) {
+                for (const auto& [p, q] : it->second) drop(p, q);
+            }
+        }
+        if (k == 63) {   // alliance_formed: ally_a (1), ally_b (2)
+            drop(x.role1(id, 1), x.role1(id, 2));
+        }
         const std::int64_t a = x.role1(id, 1), b = x.role1(id, 2);
         if (is_claim(k)) {
             last[std::make_pair(a, b)] = id;
@@ -1747,7 +1790,7 @@ inline std::string r22_counts(const Tables& t) {
         }
         dropped += k == k_claim_dropped ? 1 : 0;
         hidden += k == k_refuge_hidden ? 1 : 0;
-        if (k == k_battle || k == k_battle_at_pass) {
+        if (is_battle_kind(k)) {   // P5-04 11.1
             const auto& v = x.values.at(id);
             const auto key = std::make_tuple(x.role1(id, 1), x.role1(id, 2), v.at(1), v.at(2));
             repeats += seen.count(key) != 0U ? 1 : 0;

@@ -397,7 +397,8 @@ class Browser:
         o.append([lit("  settlements: %d founded, %d held at the end, %d ruined, %d faded" % (
             d.founded[cid], d.held_settlements[cid], d.ruined_only[cid], d.faded[cid]))])
         rel = [x for x in w.t["relation"] if (x[0] == CIV and x[1] == cid) or (x[2] == CIV and x[3] == cid)]
-        wars = [x for x in rel if x[4] == "war"]
+        joined = getattr(w, "joined", set())   # P5-04 10.4: an ally's war rows are not wars (prr.civ_block)
+        wars = [x for x in rel if x[4] == "war" and x[7] not in joined]
         nd = sum(1 for x in wars if x[0] == CIV and x[1] == cid)
         nf = sum(1 for x in wars if x[2] == CIV and x[3] == cid)
         out = {"won": 0, "lost": 0, "drawn": 0, "open": 0}
@@ -425,8 +426,9 @@ class Browser:
                     else:
                         last = x[5] if x[6] == x[5] else x[6] - 1
                         o.append(head + [lit(", %d-%d, " % (x[5], last)), evs(x[7]), lit(" to "), evs(x[8])])
-        else:
-            o += self.adversary_lines(cid, rel)
+        else:   # P5-04 10.4 (reading R18): an ally's war rows, alliances and trades are not adversaries
+            o += self.adversary_lines(cid, [x for x in rel if not (x[4] == "war" and x[7] in joined)
+                                            and not (prr.V7 and x[4] in ("alliance", "trade"))])
         if not short:
             o.append([lit("  events: %d" % len(w.civ_events.get(cid, [])))])
         if c[8] is None:
@@ -449,6 +451,13 @@ class Browser:
             if nt:
                 line += [lit(" ("), txt(nt), lit(")")]
             o.append(line)
+        if prr.V7:   # P5-04 10.3: the allies lines at the end of the block (the report's text, plain segments)
+            for t_ in prr.p504.civ_alliance_lines(prr.alliance_world(w), cid, level):
+                if t_.startswith("    c"):
+                    z = int(t_[5:t_.index(" ", 5)])
+                    o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
+                else:
+                    o.append([lit(t_)])
         return o
 
     def adversary_lines(self, cid, rel):

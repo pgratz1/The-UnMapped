@@ -209,8 +209,9 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 8U);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
-    const wd::Definition& chrono = history->definitions[0];
+    REQUIRE(history->definitions.size() == 9U);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    CHECK(history->definitions[0].id == "alliances");   // P5-04 4.2: ids in byte order
+    const wd::Definition& chrono = history->definitions[1];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
     for (std::size_t f = 0; f < 3; ++f) {
@@ -389,7 +390,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 8U);  // relations.toml from 0.24.0 (P5-03 4.2),
+    CHECK(directory_from_disk(data, "history").entries.size() == 9U);  // alliances.toml from 0.26.0 (P5-04 4.2),
+                                                                         // relations.toml from 0.24.0 (P5-03 4.2),
                                                                          // conflict.toml from 0.16.0 (P3-06 12.1),
                                                                          // renaming.toml from 0.22.0 (P5-12 4),
                                                                          // monsters.toml from 0.23.0 (P5-02 4.3)

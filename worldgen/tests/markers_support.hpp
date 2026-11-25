@@ -115,6 +115,10 @@ inline std::string marker_dump(const wi::YearMarkers& m) {
     for (const wi::PassMarker& p : m.passes) {
         out += "pass " + num(p.pass) + " " + num(p.x) + " " + num(p.y) + " " + num(p.kind) + "\n";
     }
+    // P5-04 11.3 (reading K2 of the reference: after the passes): `site <id> <x> <y> <kind> <glyph>`, glyph 16 + kind
+    for (const wi::SiteMarker& x : m.sites) {
+        out += "site " + num(x.site) + " " + num(x.x) + " " + num(x.y) + " " + num(x.kind) + " " + num(16 + x.kind) + "\n";
+    }
     return out;
 }
 

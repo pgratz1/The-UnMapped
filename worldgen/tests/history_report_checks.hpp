@@ -103,12 +103,13 @@ public:
             }
             return out;
         };
-        W_ = ids({"war_declared", "battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held",
+        // P5-04 11.1: allied_battle is a battle kind wherever P3-07 names battle and battle_at_pass
+        W_ = ids({"war_declared", "battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held",
                   "peace", "war_won", "truce"});
-        EW_ = ids({"battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held", "peace",
+        EW_ = ids({"battle", "battle_at_pass", "allied_battle", "siege", "sacked", "settlement_captured", "refuge_held", "peace",
                    "war_won", "truce", "search_abandoned", "region_ceded", "settlements_ceded", "tribute",
                    "capital_moved", "refugees_settled", "civ_conquered"});
-        battles_ = ids({"battle", "battle_at_pass"});
+        battles_ = ids({"battle", "battle_at_pass", "allied_battle"});
         renamed_ = ids({"region_renamed"});
         falls_ = ids({"sacked", "settlement_captured"});
         conseq_ = ids({"capital_moved", "refugees_settled", "civ_conquered"});
@@ -117,9 +118,14 @@ public:
         quiet_ = ids({"quiet_stretch"});
         const auto* decl = cat.find("war_declared");
         const auto* search = cat.find("search_abandoned");
-        // the war rows: since_event -> (closed, until_event)
+        const auto* joined = cat.find("ally_joined_war");
+        // the war rows: since_event -> (closed, until_event); P5-04 10.4: an ally's joined row is not a war
         for (const auto& row : rows_of(r, "relation")) {
             if (row[4].bytes != "war") continue;
+            if (joined != nullptr && view_.event(row[7].integer) != nullptr &&
+                view_.event(row[7].integer)->row.kind == joined->id) {
+                continue;
+            }
             const std::int64_t since_event = row[7].integer, until_event = row[8].integer;
             const bool closed = row[6].type != db::ValueType::null;
             rows_[since_event] = closed ? until_event : 0;
