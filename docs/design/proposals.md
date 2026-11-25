@@ -1389,3 +1389,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the three viewer specs left eighteen choices open for Paul to judge in the running viewer (marker size by kind, one ring per event place, no markers without history, hidden refuges shown, markers on by default; the browser in a right-hand pane, follow on the filtered list, one level for list and block, highlight by dimming, the glyph changes, a click selects; quiet years at ten times the speed, playback of the browser's list, scrubbing pauses, the ticker over the map, the defaults, the two-row year bar, AVI recording).
 - Decision (Paul, 2026-11-24, after using the viewer on seed 42 at generator 0.24.0): "the viewer works great, no concerns with it." The phase is approved and every interim choice stands as built. The lead's lean towards a ticker strip below the map is dropped. Recording on Windows remains untried.
 
+### Paul's answers of 2026-11-24 to the open questions
+
+- Section: 13 (phase P5); `docs/questions-for-paul.md`, where each row has his words.
+- Problem: 28 questions were open across the specs of P5-01, P5-02, P5-03, P5-03a, P5-04, P5-12 and P4-06, most of them rulings the lead had taken on a recommendation.
+- Decision (Paul, 2026-11-24):
+  - Scope of the rest of P5 (Q-P5-00-1): "take the recommendation except for mountain depths since we have the mines in this stage already." So: P5-06 figures with minimal casters, P5-07 mountain depths, P5-08 pantheon with cults, P5-11 artifacts; P5-05 roads to P6; P5-09 spell invention and P5-10 factions deferred.
+  - P5-04's kept readings (a realm with an open mine is itself stronger; a share of spoils is counted in people; one withheld share can end an already cool alliance): agreed.
+  - P5-03a: the three relaxed targets (population 205,000; 16 turns; 23% before 4500) accepted; peace alone can bring friendship, meeting by word, the undead threshold by population, milestones as a count, one expulsion per realm in 60 years, the summary bound by L(C): agreed. On peoples alone on a land mass: "down the road we need to deal with these situations. I think people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into." (open as Q-SEA-1.)
+  - P5-03: realms read disposition, expulsions, flight for fear, the `civs4` bound of 1,150, one stage: agreed. Abandoned ruins: "I'd like these ruins to stay through till the end of simulation since we want to explore those in the later game." (Whether sacked ruins should also stay is open as Q-RUINS-1.) Lairs on former settlements, 62 and 66 worlds against 65: "Sounds fine." Whether relations move enough: "lets see what the critic says" (P5-03a's review).
+  - P5-12: about one region in twelve renamed, the wider doubled-suffix rule, English forms only: agreed.
+  - Calamities in large-world summaries (P5-01): "We should record these if the impact is significant." The lead takes it into the next stage that changes the report.
+  - Weak names (`Thassie`, `fag` anywhere, dwarven `din`): "Leave them in."
+  - Movie recording on Windows: not a concern for now; "we can come back and fix it if its broken."
+

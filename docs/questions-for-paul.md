@@ -1,10 +1,10 @@
 # Questions for Paul
 
-A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-24 (generator 0.24.0 on main; P5-03a and P5-04 specs on branches).
+A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-24 (generator 0.24.0 on main; P5-03a, P5-04 and P5-06 specs on branches).
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 28, decided 158, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 2, decided 192, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -14,84 +14,111 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 ### Blocking
 
-The lead is waiting on this one to start the next stage:
+None. (2026-11-24: Paul answered every open question of this file; his answers are in section 2.)
 
-- **Q-P5-00-1**: the scope of the rest of P5 (group A below).
-
-All other open questions are non-blocking: each has an interim choice that the build already follows. Q-P5-03-8 (the lairs bound) decides whether P5-03 validation passes M4.
-
-### A. P5 as a whole (P5-00 overview)
+### A. Follow-ups from Paul's answers of 2026-11-24
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P5-00-1 **blocking** | Which of the remaining P5 stages to build, and which to defer to P6? Stages left: P5-05 roads, P5-06 figures, P5-07 mountain depths, P5-08 pantheon, P5-09 casters and spells, P5-10 cults and factions, P5-11 artifacts. With P5-04's mines now in, is P5-07 wanted after all? Also, the optional hill-dwarf stage after P5-07 (decided as "none inside P5's stages, optional if wanted"). | Lead's proposal (session of 2026-11-24): keep P5-06 figures, P5-08 pantheon and P5-11 artifacts; defer P5-05 roads to P6 and P5-07 mountain depths; fold minimal casters into figures (P5-09) and cults into the pantheon (P5-10). Decision pending, so no later stage is started. | Lead, session of 2026-11-24; [P5-00 3.1, 9.3](specs/p5-00-history-depth-overview.md); P5-04 spec 6.14 (branch `origin/p5/04-spec`) | |
+| Q-SEA-1 | Peoples alone on a land mass (24 pairs in 4 of 100 worlds) never meet anyone. Paul: "people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into." Which stage takes ships and contact by sea? | Lead's proposal: with roads (P5-05, deferred to P6) as one "roads and ships" stage, since both change which lands can reach each other by year and so need the same recalibration of expansion and war. Until then such a race is reported in `[peoples]` as having met no one. Alternative: a small stage of its own after P5-07. | Q-P5-03a-10 (section 2); P5-03a spec 17.1 | |
+| Q-RUINS-1 | Paul wants ruins to stay to the end of the simulation, to explore in the game. Ruins left by abandonment (overrun, plague, famine, left, fled) already never fade. Should ruins left by a sack (burned) also never fade? Today a sacked ruin fades after `ruin_fade_years`, and a default world ends with a median of about 19 ruins standing and a few faded. | Lead's proposal: yes, keep every ruin, with the report's summary listing at most 15 (as since P5-03a) and the viewer's "Faded ruins" switch reused for ruins older than a stated age. It changes world bytes, so it rides with the next generator stage. Alternative: sacked ruins keep fading (a burned village leaves little to explore). | Q-P5-03-3 (section 2); P5-03 spec 11, P3-05 (fading) | |
 
-### B. P5-04 alliances and trade (spec on branch `origin/p5/04-spec`, not merged)
+Work the lead took from the answers (not questions): record a famine or plague in a large world's summary when its impact is significant (Q-P5-01-1), in the next stage that changes the report; recording a movie on Windows stays untested until a Windows machine is at hand (Q-P4-06-7).
+
+---
+
+
+## 2. Decided
+
+### Answered by Paul on 2026-11-24 (in this file, and for group H in the session)
+
+Paul's words are in the `Answer` column. Recorded in `proposals.md` as "Paul's answers of 2026-11-24 to the open questions".
+
+#### A. P5 as a whole (P5-00 overview)
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-00-1 | Which of the remaining P5 stages to build, and which to defer to P6? Stages left: P5-05 roads, P5-06 figures, P5-07 mountain depths, P5-08 pantheon, P5-09 casters and spells, P5-10 cults and factions, P5-11 artifacts. With P5-04's mines now in, is P5-07 wanted after all? Also, the optional hill-dwarf stage after P5-07 (decided as "none inside P5's stages, optional if wanted"). | Lead's proposal (session of 2026-11-24): keep P5-06 figures, P5-08 pantheon and P5-11 artifacts; defer P5-05 roads to P6 and P5-07 mountain depths; fold minimal casters into figures (P5-09) and cults into the pantheon (P5-10). Decision pending, so no later stage is started. | Lead, session of 2026-11-24; [P5-00 3.1, 9.3](specs/p5-00-history-depth-overview.md); P5-04 spec 6.14 (branch `origin/p5/04-spec`) | I say we take the recommendation except for mountain depths since we have the mines in this stage already. |
+
+#### B. P5-04 alliances and trade (spec on branch `origin/p5/04-spec`, not merged)
 
 Paul decided the seven questions of this spec on 2026-11-24 (section 2). These are readings the lead kept afterwards, listed in the spec as L2, L3 and L5.
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P5-04-1 | Is a realm with an open mine itself 5% stronger in war (`forge_strength_permille`), besides the arms its buyers gain? | Kept: "Dwarves are great forgers" should show in the dwarves' own wars; calibrated against check MC3. | Lead, session of 2026-11-24; `docs/specs/p5-04-alliances-trade.md` section 24, L5 (branch `origin/p5/04-spec`) | |
-| Q-P5-04-2 | A share of spoils is counted in people and nobody moves (as a tribute's people do). Is that enough until wealth exists? | Kept until wealth: the event's `share` is a number; no population moves to the ally. | Lead, session of 2026-11-24; same spec, section 24, L3 | |
-| Q-P5-04-3 | Should one withheld share be able to end an alliance that is already cool? | Kept ("the last straw reads true"): no rule ends an alliance at one withheld share, but its chill can take an alliance near -350 below the break line, and the break is then written as spurned. Strict alternative: ignore the latest withheld share in the cooling test, at the cost of one more rule. | Lead, session of 2026-11-24; same spec, section 24, L2 | |
+| Q-P5-04-1 | Is a realm with an open mine itself 5% stronger in war (`forge_strength_permille`), besides the arms its buyers gain? | Kept: "Dwarves are great forgers" should show in the dwarves' own wars; calibrated against check MC3. | Lead, session of 2026-11-24; `docs/specs/p5-04-alliances-trade.md` section 24, L5 (branch `origin/p5/04-spec`) | Agreed with recommendation |
+| Q-P5-04-2 | A share of spoils is counted in people and nobody moves (as a tribute's people do). Is that enough until wealth exists? | Kept until wealth: the event's `share` is a number; no population moves to the ally. | Lead, session of 2026-11-24; same spec, section 24, L3 | Agreed with recommendation |
+| Q-P5-04-3 | Should one withheld share be able to end an alliance that is already cool? | Kept ("the last straw reads true"): no rule ends an alliance at one withheld share, but its chill can take an alliance near -350 below the break line, and the break is then written as spurned. Strict alternative: ignore the latest withheld share in the cooling test, at the cost of one more rule. | Lead, session of 2026-11-24; same spec, section 24, L2 | Agreed with recommendation |
 
-### C. P5-03a relations follow-ups (spec r2 on branch `origin/p5/03a-spec-r2`, not merged)
-
+#### C. P5-03a relations follow-ups (spec r2 on branch `origin/p5/03a-spec-r2`, not merged)
+ 
 The spec's section 17 says all six questions were decided by the lead "as r1 recommended". No decision by Paul was found for any of them. The first three rows are targets the lead relaxed.
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P5-03a-1 | Target: population at the end. Accept 205,000 in place of 214,500? | The lead restated it to 205,000; measured 211,977, so the new target is met. | Lead, session of 2026-11-24; P5-03a spec 11 (branch `origin/p5/03a-spec-r2`) | |
-| Q-P5-03a-2 | Target: most disposition turns in one world, 16 against 15. Accept? | Relaxed by the lead from 15 to 16. | Lead, session of 2026-11-24; same spec, 11 | |
-| Q-P5-03a-3 | Target: share of turns before year 4500, 23% against 25%. Accept? | Relaxed by the lead from 25% to 23%. | Lead, session of 2026-11-24; same spec, 11 | |
-| Q-P5-03a-4 | Can peace alone bring a pair of peoples to friendship (goodwill builds after 100 years without war between neighbours, capped at 300)? | Yes, cap 300 as shipped, tuned so that friendship has a median of 3 and hatred of 4 per world. Paul's direction of 2026-11-24 was "friendlier relations more often". | P5-03a spec 17 item 1, 3.2 (branch `origin/p5/03a-spec-r2`); proposals entry "P5-03a relations follow-ups (readings)" on the same branch | |
-| Q-P5-03a-5 | Do peoples within three borders but across closed borders (no walkable crossing, no pass) meet "by word"? | Yes, after five borders and 150 years (calibrated), 4.2. | Same spec, 17 item 2 | |
-| Q-P5-03a-6 | The undead threshold: scale it by the world's population? | Yes (section 6). | Same spec, 17 item 3 | |
-| Q-P5-03a-7 | Summary report milestones given as a count (plus quiet stretches) instead of a list? | Yes (9.2). | Same spec, 17 item 4 | |
-| Q-P5-03a-8 | At most one expulsion per realm in 60 years? | Yes (5.3). | Same spec, 17 item 5 | |
-| Q-P5-03a-9 | The 800-line summary limit (T18's maximum) applies only to worlds of 16 realms or fewer (restated as the length bound L(C) of P5-02 12.9). Accept? | Yes. | Same spec, 17 item 6; lead, session of 2026-11-24 | |
-| Q-P5-03a-10 | Races alone on a land mass never meet anyone (24 pairs in 4 of 100 worlds). Add meeting by sea later? | Not now: reported in `[peoples]`, not counted by the checks RR1 and RR3; sea contact waits for a later stage. | Same spec, 17.1; lead, session of 2026-11-24 | |
+| Q-P5-03a-1 | Target: population at the end. Accept 205,000 in place of 214,500? | The lead restated it to 205,000; measured 211,977, so the new target is met. | Lead, session of 2026-11-24; P5-03a spec 11 (branch `origin/p5/03a-spec-r2`) | Agreed with recommendation |
+| Q-P5-03a-2 | Target: most disposition turns in one world, 16 against 15. Accept? | Relaxed by the lead from 15 to 16. | Lead, session of 2026-11-24; same spec, 11 | Agreed with recommendation |
+| Q-P5-03a-3 | Target: share of turns before year 4500, 23% against 25%. Accept? | Relaxed by the lead from 25% to 23%. | Lead, session of 2026-11-24; same spec, 11 | Agreed with recommendation |
+| Q-P5-03a-4 | Can peace alone bring a pair of peoples to friendship (goodwill builds after 100 years without war between neighbours, capped at 300)? | Yes, cap 300 as shipped, tuned so that friendship has a median of 3 and hatred of 4 per world. Paul's direction of 2026-11-24 was "friendlier relations more often". | P5-03a spec 17 item 1, 3.2 (branch `origin/p5/03a-spec-r2`); proposals entry "P5-03a relations follow-ups (readings)" on the same branch | Keep as recommended |
+| Q-P5-03a-5 | Do peoples within three borders but across closed borders (no walkable crossing, no pass) meet "by word"? | Yes, after five borders and 150 years (calibrated), 4.2. | Same spec, 17 item 2 | Agreed with recommendation |
+| Q-P5-03a-6 | The undead threshold: scale it by the world's population? | Yes (section 6). | Same spec, 17 item 3 | Agreed with recommendation |
+| Q-P5-03a-7 | Summary report milestones given as a count (plus quiet stretches) instead of a list? | Yes (9.2). | Same spec, 17 item 4 | Agreed with recommendation |
+| Q-P5-03a-8 | At most one expulsion per realm in 60 years? | Yes (5.3). | Same spec, 17 item 5 | Agreed with recommendation |
+| Q-P5-03a-9 | The 800-line summary limit (T18's maximum) applies only to worlds of 16 realms or fewer (restated as the length bound L(C) of P5-02 12.9). Accept? | Yes. | Same spec, 17 item 6; lead, session of 2026-11-24 | Agreed with recommendation |
+| Q-P5-03a-10 | Races alone on a land mass never meet anyone (24 pairs in 4 of 100 worlds). Add meeting by sea later? | Not now: reported in `[peoples]`, not counted by the checks RR1 and RR3; sea contact waits for a later stage. | Same spec, 17.1; lead, session of 2026-11-24 | OK, down the road we need to deal with these situations. I think people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into. |
 
-### D. P5-03 race relations and P5-02 monsters ([P5-03 section 28](specs/p5-03-race-relations.md))
+#### D. P5-03 race relations and P5-02 monsters ([P5-03 section 28](specs/p5-03-race-relations.md))
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P5-03-1 | Do realms read their peoples' disposition when they choose a quarrel? This is what lets old wars leave grudges that shape later choices, and it moves P3's approved war balance. | Yes, with check C1 (wars within +-10%; calibrated values give +8.5%). Built so, taken on recommendation. Alternative: record only. | [P5-03 28 item 1](specs/p5-03-race-relations.md); proposals "race relations ... P5-03 (readings and scope)" | |
-| Q-P5-03-2 | Expulsions: may a ruling people in hatred with a minority drive it out (at most half a settlement)? | Yes, the darkest outcome of standing and the strongest reason for a refugee. Built so, taken on recommendation. Alternative: standing only. | [P5-03 28 item 2](specs/p5-03-race-relations.md) | |
-| Q-P5-03-3 | Do abandoned ruins left standing (overrun, plague, famine, left, fled) never fade? | Never (`ghost_fade_years` 0), and no ruin fades while an open lair holds it; burned ruins fade as before. Taken on recommendation. Alternative: a long fade (4,000 years). | [P5-03 28 item 3](specs/p5-03-race-relations.md); proposals "P5-02's follow-ups in P5-03 (readings)" | |
-| Q-P5-03-4 | Do settlers flee a place a monster keeps raiding (a small place flees after two raids in 50 years), and are hunts called sooner after repeated raids? | Yes (hunts sooner, flight for fear; tribute to a monster waits for wealth). Built so; no choice was needed beyond confirming. | [P5-03 28 item 4](specs/p5-03-race-relations.md); same proposals entry | |
-| Q-P5-03-5 | The `civs4` summary length. Paul's bound was "about 1,100"; measured median 1,112. Accept the lead's restatement to at most 1,150? | The lead's ruling in r2 (21 T18). Alternative: no `[peoples]` lines at summary in worlds of more than 16 realms. | [P5-03 28 item 5](specs/p5-03-race-relations.md); decided earlier: [P5-02](specs/p5-02-beasts-monsters.md) 23 item 4 | |
-| Q-P5-03-6 | One stage or two (P5-02a first, then P5-03)? | Built as one stage. No decision found; nothing depends on it now. | [P5-03 28 item 6](specs/p5-03-race-relations.md) | |
-| Q-P5-03-7 | Do race relations now move enough? With the calibrated memory a default world has a median of one change of band between peoples; most pairs keep the feeling their camps give them. Should dispositions move more (larger memory, smaller `band_margin`, stances nearer the bands)? | Shipped values. To be judged after the world critic's review of P5-03a. This is also the question P5-03a answers. | [P5-03 28 item 7](specs/p5-03-race-relations.md); P5-03a spec 17.1 (branch); lead, session of 2026-11-24 | |
-| Q-P5-03-8 | M4: a lair on a former settlement open at the end. Paul's bound (2026-11-23) is 65 of 100 worlds; two samples of 100 gave 62 and 66. Is the bound met, or keep it and calibrate further, or lower it? | No decision found. Validation figure pending. | [P5-03 28 item 8](specs/p5-03-race-relations.md); proposals "Paul's wish of 2026-11-23" (the 65 bound); lead, session of 2026-11-24 | |
+| Q-P5-03-1 | Do realms read their peoples' disposition when they choose a quarrel? This is what lets old wars leave grudges that shape later choices, and it moves P3's approved war balance. | Yes, with check C1 (wars within +-10%; calibrated values give +8.5%). Built so, taken on recommendation. Alternative: record only. | [P5-03 28 item 1](specs/p5-03-race-relations.md); proposals "race relations ... P5-03 (readings and scope)" | Agreed |
+| Q-P5-03-2 | Expulsions: may a ruling people in hatred with a minority drive it out (at most half a settlement)? | Yes, the darkest outcome of standing and the strongest reason for a refugee. Built so, taken on recommendation. Alternative: standing only. | [P5-03 28 item 2](specs/p5-03-race-relations.md) | Agreed with recommendation |
+| Q-P5-03-3 | Do abandoned ruins left standing (overrun, plague, famine, left, fled) never fade? | Never (`ghost_fade_years` 0), and no ruin fades while an open lair holds it; burned ruins fade as before. Taken on recommendation. Alternative: a long fade (4,000 years). | [P5-03 28 item 3](specs/p5-03-race-relations.md); proposals "P5-02's follow-ups in P5-03 (readings)" | I'd like these ruins to stay through till the end of simulation since we want to explore those in the later game. |
+| Q-P5-03-4 | Do settlers flee a place a monster keeps raiding (a small place flees after two raids in 50 years), and are hunts called sooner after repeated raids? | Yes (hunts sooner, flight for fear; tribute to a monster waits for wealth). Built so; no choice was needed beyond confirming. | [P5-03 28 item 4](specs/p5-03-race-relations.md); same proposals entry | Agreed with recommendation |
+| Q-P5-03-5 | The `civs4` summary length. Paul's bound was "about 1,100"; measured median 1,112. Accept the lead's restatement to at most 1,150? | The lead's ruling in r2 (21 T18). Alternative: no `[peoples]` lines at summary in worlds of more than 16 realms. | [P5-03 28 item 5](specs/p5-03-race-relations.md); decided earlier: [P5-02](specs/p5-02-beasts-monsters.md) 23 item 4 | Agreed with recommendation |
+| Q-P5-03-6 | One stage or two (P5-02a first, then P5-03)? | Built as one stage. No decision found; nothing depends on it now. | [P5-03 28 item 6](specs/p5-03-race-relations.md) | Agreed with recommendation |
+| Q-P5-03-7 | Do race relations now move enough? With the calibrated memory a default world has a median of one change of band between peoples; most pairs keep the feeling their camps give them. Should dispositions move more (larger memory, smaller `band_margin`, stances nearer the bands)? | Shipped values. To be judged after the world critic's review of P5-03a. This is also the question P5-03a answers. | [P5-03 28 item 7](specs/p5-03-race-relations.md); P5-03a spec 17.1 (branch); lead, session of 2026-11-24 | Agreed, lets see what the critic says |
+| Q-P5-03-8 | M4: a lair on a former settlement open at the end. Paul's bound (2026-11-23) is 65 of 100 worlds; two samples of 100 gave 62 and 66. Is the bound met, or keep it and calibrate further, or lower it? | No decision found. Validation figure pending. | [P5-03 28 item 8](specs/p5-03-race-relations.md); proposals "Paul's wish of 2026-11-23" (the 65 bound); lead, session of 2026-11-24 | Sounds fine |
 
-### E. P5-12 regions renamed by history ([spec section 17](specs/p5-12-renamed-regions.md))
+#### E. P5-12 regions renamed by history ([spec section 17](specs/p5-12-renamed-regions.md))
 
 The proposals entry is still marked "Status: open"; the spec was merged on its interim choices. No decision found.
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P5-12-1 | How many renamed regions? | About one region in twelve at 1024 (median 4 of 49), capped at 15%, a second name only after 300 years and for a weightier deed. Alternatives: more (median 5) or fewer (`world_max_permille` 100). | [P5-12 17 item 1](specs/p5-12-renamed-regions.md) | |
-| Q-P5-12-2 | The wider rule against doubled suffixes in names (also removes `Wentton`-type names and redraws `Pinegrove` and `Wanegrass`). | As specified. Alternative: the critic's two rules exactly, which leaves 21 `-ntton` names and keeps `Pinegrove`. | [P5-12 17 item 2](specs/p5-12-renamed-regions.md) | |
-| Q-P5-12-3 | Renamed regions in English forms only? | English only, with the namer's culture recorded so per-culture forms (a dwarven `The Halls of ...`) can be added as data later. | [P5-12 17 item 3](specs/p5-12-renamed-regions.md) | |
+| Q-P5-12-1 | How many renamed regions? | About one region in twelve at 1024 (median 4 of 49), capped at 15%, a second name only after 300 years and for a weightier deed. Alternatives: more (median 5) or fewer (`world_max_permille` 100). | [P5-12 17 item 1](specs/p5-12-renamed-regions.md) | Agreed with recommendation |
+| Q-P5-12-2 | The wider rule against doubled suffixes in names (also removes `Wentton`-type names and redraws `Pinegrove` and `Wanegrass`). | As specified. Alternative: the critic's two rules exactly, which leaves 21 `-ntton` names and keeps `Pinegrove`. | [P5-12 17 item 2](specs/p5-12-renamed-regions.md) | Agreed with recommendation |
+| Q-P5-12-3 | Renamed regions in English forms only? | English only, with the namer's culture recorded so per-culture forms (a dwarven `The Halls of ...`) can be added as data later. | [P5-12 17 item 3](specs/p5-12-renamed-regions.md) | Agreed with recommendation |
 
-### F. Report and names leftovers
-
-| # | Question | Recommendation / what the build does now | Source | Answer |
-| --- | --- | --- | --- | --- |
-| Q-P5-01-1 | Should a large world's summary keep a famine or a plague? At `civs4` and 2048 the summaries show almost no calamities (median 0.0%). | Not changed. Called "a report question for the critic and Paul". No decision found. | [P5-01 spec](specs/p5-01-followups.md) 12 and [P5-12 spec](specs/p5-12-renamed-regions.md) 18 | |
-| Q-NAMES-1 | Weak or unfortunate names: elven `Thassie` and others (`Whomoutwia`, `Kaaghdam`, `Tirkbumm`); `fag` anywhere for faerie names (`Shyfaglae`); dwarven coda `din` (`didin`). Filter them? | Not filtered; a names change if wanted, "with Paul". No decision found. | [P5-12 18 (G7)](specs/p5-12-renamed-regions.md); [P3-11 critic](reviews/p3-11-followups-world-critic.md) suggestions 1 and 7 | |
-
-### G. P4 viewer
+#### F. Report and names leftovers
 
 | # | Question | Recommendation / what the build does now | Source | Answer |
 | --- | --- | --- | --- | --- |
-| Q-P4-06-7 | Confirm the documented movie-recording command once on Windows (no CI job records). | Documented command at 1600x900; confirmed on Linux only. The review of 2026-11-24 approved the viewer but said recording on Windows remains untried. | [P4-06 14 item 7](specs/p4-06-history-movie.md); proposals "Paul's review of P4 Viewer v1" | |
+| Q-P5-01-1 | Should a large world's summary keep a famine or a plague? At `civs4` and 2048 the summaries show almost no calamities (median 0.0%). | Not changed. Called "a report question for the critic and Paul". No decision found. | [P5-01 spec](specs/p5-01-followups.md) 12 and [P5-12 spec](specs/p5-12-renamed-regions.md) 18 | We should record these if the impact is significant |
+| Q-NAMES-1 | Weak or unfortunate names: elven `Thassie` and others (`Whomoutwia`, `Kaaghdam`, `Tirkbumm`); `fag` anywhere for faerie names (`Shyfaglae`); dwarven coda `din` (`didin`). Filter them? | Not filtered; a names change if wanted, "with Paul". No decision found. | [P5-12 18 (G7)](specs/p5-12-renamed-regions.md); [P3-11 critic](reviews/p3-11-followups-world-critic.md) suggestions 1 and 7 | Leave them in |
 
----
+#### G. P4 viewer
 
-## 2. Decided
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P4-06-7 | Confirm the documented movie-recording command once on Windows (no CI job records). | Documented command at 1600x900; confirmed on Linux only. The review of 2026-11-24 approved the viewer but said recording on Windows remains untried. | [P4-06 14 item 7](specs/p4-06-history-movie.md); proposals "Paul's review of P4 Viewer v1" | I'm not super concerned about windows support, I don't have a windows box setup right now to test it, we can come back and fix it if its broken |
+
+
+#### H. P5-06 figures (spec r2 on branch `p5/06-spec`, approved 2026-11-24; answered in the session)
+
+The spec's "Plan for approval" is its first section, readable alone. Nothing is implemented yet; the interim choice is what the spec specifies.
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-06-1 | Scope: A (rulers only), B (rulers, generals, heroes) or C (B with minimal casters: towers and libraries, named books, rare blights; about a quarter more work)? | C, since the scope decision of 2026-11-24 folds minimal casters into figures; B if the stage should be smaller (casters would then wait with the deferred P5-09). | [P5-06 22 item 1](specs/p5-06-figures.md) (branch `p5/06-spec`) || Paul, 2026-11-24: C ("Option C"); minimal casters in this stage. |
+| Q-P5-06-2 | Which rulers are named? By deed (founders; the ruler under whom a realm declared war, broke faith, gave or kept spoils, or fell; the rivals of a disputed succession; the ruler at the end): about 55 a world, the rest of each line counted. Or every reign that begins in an active phase: about 360 a world, most of them goblin chiefs. | By deed. | Same spec, 22 item 2, 6.4 || Paul, 2026-11-24: By deed, as recommended. |
+| Q-P5-06-3 | Regnal numbers ("Aldric II")? Names are unique in a world, so this needs an exception to the name registry. | No regnal numbers now. | Same spec, 22 item 3 || Paul, 2026-11-24: Changed: humans and dwarves sometimes carry regnal numbers, the other races not (spec r2 6.14). |
+| Q-P5-06-4 | Rulers' tempers (steady, warlike, peaceable, grasping, just) lean by race, with each race's average quarrelling kept as now? Or the same mix for every race? | By race, average kept. | Same spec, 22 item 4, 4.1, 7.2 || Paul, 2026-11-24: By race, average kept, as recommended. |
+| Q-P5-06-5 | The last ruler of a conquered realm: falls with the realm, or flees into exile (another heir in exile for P6)? | Falls with the realm (exiles come from disputed successions). | Same spec, 22 item 5, 6.4 rule 4 || Paul, 2026-11-24: Falls with the realm, as recommended. |
+| Q-P5-06-6 | Epithets earned by deeds and kept with the name in every sentence ("Grishnak the Conqueror", "Maela Dragonslayer"), each used by at most two figures of a world? | Yes. | Same spec, 22 item 6, 6.10 || Paul, 2026-11-24: Changed: the cap of two applies to ordinary deeds; a substantial deed gives its epithet to any number (spec r2 6.10). |
+| Q-P5-06-7 | Births are never events (a figure enters the record by an office or a deed; its birth year is on its row)? | Yes; a birth worth telling can come with P5-08's champions. | Same spec, 22 item 7 || Paul, 2026-11-24: Yes, as recommended. |
+| Q-P5-06-8 | Summary length: one `rulers:` line per realm and a `[figures]` block of at most nine lines add about 20 lines to a default summary. Accept a default median bound of 645 (your bound of 2026-11-22 is 700)? | Yes. | Same spec, 22 item 8, 10.6 || Paul, 2026-11-24: Yes, 645, as recommended. |
+
 
 Evidence is cited in each row: a `Decision (Paul, ...)` line or a "Paul's decision" entry in `docs/design/proposals.md` ("props"), or a spec revision note.
 
