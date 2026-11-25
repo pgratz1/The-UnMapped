@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 0, decided 196, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 1, decided 196, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,7 +16,13 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None.
 
-No open questions. (2026-11-25: Paul answered the two rows on monsters and lairs and on spoils; they are in section 2.)
+### Not blocking
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-04a-1 | Spoils, the target that goes with your rule of 2026-11-25. P5-04's plan aimed at an alliance spurned over spoils in a fifth to three fifths of worlds (SP2: 20% to 60%). Under your rule (a first kept share sours; a second, or one large, ends the alliance) most kept shares only sour, so a spurning becomes rarer: about 15 to 25 worlds in 100 by the spec writer's estimate (at 0.26.0 it was 28, nearly one per kept share). Restate SP2 to 10% to 35% of worlds (at most 6% of ended alliances), or tune toward 20% by making more kept shares "large"? | Recommended: restate to 10% to 35%; tuning toward 20 worlds would make keeping the spoils the usual end of an allied war again. The build carries the restated bound. | [P5-04a 15.1](specs/p5-04a-relations-alliances-followups.md) (branch `p5/04a-spec`) | |
+
+(2026-11-25: Paul answered the two rows on monsters and lairs and on spoils; they are in section 2.)
 
 Work the lead took from the answers (not questions): record a famine or plague in a large world's summary when its impact is significant (Q-P5-01-1), in the next stage that changes the report; recording a movie on Windows stays untested until a Windows machine is at hand (Q-P4-06-7).
 
