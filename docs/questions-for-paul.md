@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 2, decided 192, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 0, decided 194, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,12 +16,7 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None. (2026-11-24: Paul answered every open question of this file; his answers are in section 2.)
 
-### A. Follow-ups from Paul's answers of 2026-11-24
-
-| # | Question | Recommendation / what the build does now | Source | Answer |
-| --- | --- | --- | --- | --- |
-| Q-SEA-1 | Peoples alone on a land mass (24 pairs in 4 of 100 worlds) never meet anyone. Paul: "people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into." Which stage takes ships and contact by sea? | Lead's proposal: with roads (P5-05, deferred to P6) as one "roads and ships" stage, since both change which lands can reach each other by year and so need the same recalibration of expansion and war. Until then such a race is reported in `[peoples]` as having met no one. Alternative: a small stage of its own after P5-07. | Q-P5-03a-10 (section 2); P5-03a spec 17.1 | |
-| Q-RUINS-1 | Paul wants ruins to stay to the end of the simulation, to explore in the game. Ruins left by abandonment (overrun, plague, famine, left, fled) already never fade. Should ruins left by a sack (burned) also never fade? Today a sacked ruin fades after `ruin_fade_years`, and a default world ends with a median of about 19 ruins standing and a few faded. | Lead's proposal: yes, keep every ruin, with the report's summary listing at most 15 (as since P5-03a) and the viewer's "Faded ruins" switch reused for ruins older than a stated age. It changes world bytes, so it rides with the next generator stage. Alternative: sacked ruins keep fading (a burned village leaves little to explore). | Q-P5-03-3 (section 2); P5-03 spec 11, P3-05 (fading) | |
+No open questions. (2026-11-24: Paul answered the two follow-ups; they are in section 2.)
 
 Work the lead took from the answers (not questions): record a famine or plague in a large world's summary when its impact is significant (Q-P5-01-1), in the next stage that changes the report; recording a movie on Windows stays untested until a Windows machine is at hand (Q-P4-06-7).
 
@@ -121,6 +116,13 @@ The spec's "Plan for approval" is its first section, readable alone. Nothing is 
 
 
 Evidence is cited in each row: a `Decision (Paul, ...)` line or a "Paul's decision" entry in `docs/design/proposals.md` ("props"), or a spec revision note.
+
+#### I. Follow-ups from the answers above
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-SEA-1 | Peoples alone on a land mass (24 pairs in 4 of 100 worlds) never meet anyone. Paul: "people disconnected like this could thrive and eventually build ships to come to the land but I don't know what stage we want to build that into." Which stage takes ships and contact by sea? | Lead's proposal: with roads (P5-05, deferred to P6) as one "roads and ships" stage, since both change which lands can reach each other by year and so need the same recalibration of expansion and war. Until then such a race is reported in `[peoples]` as having met no one. Alternative: a small stage of its own after P5-07. | Q-P5-03a-10 (section 2); P5-03a spec 17.1 | Agreed (2026-11-24): "roads and ships in P6". |
+| Q-RUINS-1 | Paul wants ruins to stay to the end of the simulation, to explore in the game. Ruins left by abandonment (overrun, plague, famine, left, fled) already never fade. Should ruins left by a sack (burned) also never fade? Today a sacked ruin fades after `ruin_fade_years`, and a default world ends with a median of about 19 ruins standing and a few faded. | Lead's proposal: yes, keep every ruin, with the report's summary listing at most 15 (as since P5-03a) and the viewer's "Faded ruins" switch reused for ruins older than a stated age. It changes world bytes, so it rides with the next generator stage. Alternative: sacked ruins keep fading (a burned village leaves little to explore). | Q-P5-03-3 (section 2); P5-03 spec 11, P3-05 (fading) | Agreed (2026-11-24): keep every ruin. The lead schedules it with P5-06, the next generator stage not yet in implementation, since more standing ruins move the lair and undead figures. |
 
 ### P5-04 alliances and trade (spec on branch `origin/p5/04-spec`)
 

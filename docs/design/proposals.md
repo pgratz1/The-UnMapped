@@ -1402,4 +1402,4 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Calamities in large-world summaries (P5-01): "We should record these if the impact is significant." The lead takes it into the next stage that changes the report.
   - Weak names (`Thassie`, `fag` anywhere, dwarven `din`): "Leave them in."
   - Movie recording on Windows: not a concern for now; "we can come back and fix it if its broken."
-
+  - Follow-ups (Paul, 2026-11-24, later the same day): "Agree with both proposals, roads and ships in P6." Contact by sea for peoples alone on a land mass is built with roads in one P6 stage; every ruin, sacked ones included, stays to the end of the history (scheduled with P5-06).
