@@ -225,3 +225,29 @@ dump the first differing event or site row of seed 9 on both sides.
 Entries that fail now: `worldgen-tests-renaming`, `-conflict`, `-monsters` (seed 9 only) and `worldgen-tests-other`,
 `worldgen-cli-tests-other` (world-file hashes only: `cli_golden_test`, `cli_p1_generate_test`, `db_determinism_test`,
 `stages_pipeline_test`). Every other entry passes, the partition checks included.
+
+### Slow suite (`ctest -L slow -j 5`, 21 entries, about 30 minutes with the fast build running beside it)
+
+18 of 21 entries passed at 7572662; three failed, for these reasons:
+
+- `worldgen-tests-slow-engine`: the same-step colony cession witness moved (seed 12 has none at 0.28.0). Of the 1024
+  turbulent seeds 0 to 39, seeds 18, 20 and 29 have one (a scan of the C++ worlds' history tables, criterion of
+  `history_balance_golden_test.cpp`); both tests (`conflict_engineer_test.cpp`, `history_balance_golden_test.cpp`) now
+  use seed 18 (region_ceded e598 of region 11 in 4631, colony e596). Both pass.
+- `worldgen-tests-slow-history-report`: `P3-07 r17 24.11 item 8`: the full milestone lists of the seed 0 pair at
+  1024 are now the battles e116 of 2950 and e118 of 2953 (c1) and the declarations e114 and e163 (c2); the report text
+  of the world equals the reference (`p3_report_reference.py compare`). Fixed; the case passes.
+- `worldgen-tests-slow-alliances`: **listed, not fixed.** `P5-04 18.2: the invariants of 13 and AL9 at 1024, seeds 0 to
+  19` and `P5-04a 16 item 13: the invariants at 1024, seeds 0 to 19` both fail on seed 14 with
+  `14: two arms sales on one trade`. `generate --map-size 1024 --seed 14` gives a world whose history tables equal the
+  reference's replay (`cmp_world028.py`: every table equal, conflict invariants 0 failures), and the reference's own
+  `p5_04_alliances_reference.py check-world` fails the same invariant:
+  `FAIL: seed14.db invariant 14: two arms sales on trade e163: got False, want True`. So engine and reference agree on
+  a history that breaks P5-04 13 item 14 ("at most one `arms_sold` per opened trade"); the rule in 6.13 keeps an
+  ordered (seller, buyer) set, so a trade whose seller and buyer swap (a mine opens on the other side) can sell twice.
+  Whether the engine or the invariant is to move is the lead's call.
+
+After the fixes the slow suite's only failing entry is `worldgen-tests-slow-alliances` (seed 14, above). `worldgen-tests-slow-relations`,
+`-figures`, `-conflict`, `-timeline`, `-markers`, `-browser`, `-renaming`, `-monsters`, the other `-slow-` entries and the
+CLI slow entries pass, the new `alliances-slow`, `relations-slow` and `figures-slow` cases of P5-04a included (except
+the seed 14 invariant).

@@ -225,8 +225,11 @@ TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milest
     // more. The House of Nife (c1) holds its two victories over the Baskeeb Mob in the Holt of Yews (the battles
     // e114 of 2944 and e117 of 2951), the Baskeeb Mob (c2) its two declarations of war over the Holt of Yews (e113
     // of 2943, e163 of 3317); text confirmed with p3_report_reference.py compare on the 0.27.0 inputs.
-    CHECK(std::find(a.begin(), a.end(), "    2944 e114 battle") != a.end());
-    CHECK(std::find(a.begin(), a.end(), "    2951 e117 battle") != a.end());
+    // P5-04a (generator 0.28.0, integration): the House of Nife (c1) holds the battles e116 of 2950 and e118 of 2953, the
+    // Baskeeb Mob (c2) its declarations e114 of 2943 and e163 of 3317 (the full report of the world seed-0-1024; the
+    // reference's text of it, p3_report_reference.py compare)
+    CHECK(std::find(a.begin(), a.end(), "    2950 e116 battle") != a.end());
+    CHECK(std::find(a.begin(), a.end(), "    2953 e118 battle") != a.end());
     std::int64_t declarations = 0;
     for (const std::string& x : b) declarations += x.find(" war_declared") != std::string::npos ? 1 : 0;
     CHECK(declarations == 2);
