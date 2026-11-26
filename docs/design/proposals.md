@@ -1474,3 +1474,16 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision (Paul, 2026-11-25): keep it as it is. "It will be interesting to see if dwarven weapons and the roads will make any difference in that."
 - For later stages: no target on the spread between races. Validation of the stage that adds roads (P6) and of any change to arms reports this table again, against these figures, so the effect can be seen.
 - Status: decided
+
+### The design doc of 2026-11-25 read against the build (lead)
+
+- Section: 5, 7, 9, 12, 13 (the changes of 2026-11-25: factions between P5 and P6, guilds, townspeople, rulers and their quest lines, style layers and site plans, land marked by history).
+- Answer to the open question of section 12, "Rulers in the figures stage": yes. P5-06 (spec r3, generator 0.27.0, in validation) records a table `figure` and `ruled` relations between figures and realms, and at the end of history names the ruler of every living realm (`reigned_at_end`); two 1024 worlds checked (seeds 42 and 2026: 9 of 9 and 6 of 6 living realms have a ruler named at the end). One limit to know: a realm's reigns are counted, but a ruler becomes a recorded figure only by a deed (the founder, a ruler who declares a war, betrays an ally, shares or withholds spoils, is disputed, or reigns at the end), so a realm with 27 to 188 reigns has two or three recorded rulers (target FG2: median 3 to 8 per realm). The present ruler therefore has a founder and a few notable predecessors in the chronicle, not a full line. If quest lines need each ruler's immediate predecessor or family, that is a change to P5-06's naming rule, best taken in the factions stage or a follow-up.
+- What the new sections ask of stages not yet specified:
+  - Factions stage (after P5-11, before P6): tables for guilds and chapters, founding events citing a figure, spread along `trade` and `alliance` relations; goblin and orc counterparts of the company of arms and the college; thieves and assassins shared. It reads generals and casters of P5-06, so those need enough of both in every world (FG3 generals median 16, FG7 casters about 6 in a default world: enough).
+  - P6: site plans (footprint, walls, gates, districts, roads, the ruler's seat as a landmark of the capital) stored in the world file; the four style layers need, per settlement and site, the founding race, the race shares, later holders, how it ended and the years, all of which the world file holds since schema 10.
+  - Land marked by history needs a place and a year on every battle, sack, plague, famine, raid and renaming: all present. A battle has a region but no cell; if battlefields are to be placed on the ground, P6 must derive a cell for each (a keyed draw within the region near the goal), which is a derivation, not a change to history.
+  - Per-race data for receptions (manner toward outsiders, the width of the individual spread) and the attack-on-sight window are runtime tuning; nothing in the generator.
+- Nothing in the design changes of 2026-11-25 conflicts with what is built through 0.26.0 or with P5-06 and P5-04a as specified.
+- Status: for Paul's design conversation (the limit on recorded rulers).
+
