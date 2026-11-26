@@ -118,3 +118,46 @@ them `worldgen-tests-depths`). Run whole, `worldgen-tests` fails 274 of 1,845 ca
 Also the test notes' list ("Existing tests whose expected values change"): the references' default `use_version`
 moves to 0.29.0 with the goldens; the C++ copies of P5-02 invariant 3 and P3-06 invariant 3 leave the deep kinds out
 of the world cap and accept a `hold_lost` as a flight's cause.
+
+## Part 2: stale expected values of the older tests, goldens re-recorded (generator 0.29.0)
+
+Test writer (Sonnet), 2026-11-26, `p5/07-int`. No file under `worldgen/src`, `tools/worldgen-cli/src`, `game/data` changed.
+Determinism lint clean (22 snippets, 190 C++ files, 0 findings).
+
+**Results.** Fast suite `ctest --preset linux-gcc-release`: 49 of 52 entries pass. Slow suite: 21 of 22 pass.
+
+**Fixed (test side).** `p3_01_history_data.hpp` rebuilt from `game/data` by a script (races with `delving_permille`, `forge_depth_permille`,
+the 16 `deep_*` fields, renaming rule `deep`, templates of kinds 93 to 99, monsters ymrach, ysgarth, zhakul); the fixture roots `data/geo*/races`;
+the old-listing helpers (`p5_06_figures_data.hpp files_027`, `with_p506_templates`); versions 0.29.0, schema 13 ("reads 13"), 107 streams (the nine
+`hist.deep.*` last), 99 kinds (test kind now 100), report header v10, the 14 stat keys appended at the end of `[stats]`, the `race_delves_one_way`
+check and the optional last race field, browser groups of 93 to 99, H19 in `hrtest::fixture_names()`, the v10 milestone rule (one per kind) in the
+expected blocks, `soured eN` in H18's trade lines, region names renamed by the world's history (r19, render tests), invariants of P5-02/P5-03 that
+now see `deep_woken` and `hold_lost` (ending 2), deep lairs outside the one-lair-per-region test, one beast bold on geo-seed-0-512, a new witness for
+the same-step colony cession (1024 turbulent seed 3: region_ceded e1018, region 26, 5234; seeds 12 and 26 also have one).
+
+**Goldens re-recorded** (each by its reference, `--inputs` = `~/.cache/the-unmapped/out/p5-02-tests/inputs` for geography, `RI` =
+`~/.cache/the-unmapped/out/p507-int/report-inputs` for the 13 report worlds, made by `p3_report_reference.py --version 0.29.0 build-inputs` from
+0.29.0 C++ worlds):
+`p3_data_reference.py golden --version 0.29.0`; `p3_engine`, `p3_peoples`, `p3_conflict`, `p5_12_renaming`, `p5_02_monsters`, `p5_03_relations`
+`_reference.py golden --version 0.29.0 --inputs $I`; `p3_report`, `p4_markers`, `p4_browser` `_reference.py --version 0.29.0 golden --inputs $RI`;
+`p4_timeline`, `p5_04_alliances`, `p5_06_figures` `_reference.py golden --inputs $RI` (they follow `p3_report_reference`, whose default is now 0.29.0).
+`p3-02-names.txt` and `p5-07-depths.txt` unchanged.
+
+**Reference edits (version constants and the new report rules, no replay logic).** `p3_report_reference.py`: default 0.29.0, fixture meta
+schema 13, `DEFAULT_INPUTS_029`. `p4_timeline_reference.py`: fixture meta from `prr.GENERATOR_VERSION` and schema. `p4_markers_reference.py`: `v027()` includes
+0.29.0. `p4_browser_reference.py`: the one-per-kind milestone rule of 10 item 6 and the `allies:` lines as tagged segments (12 item 4), both as
+`p3_report_reference` and the engine already have them.
+
+**Left failing.**
+1. World-file hash goldens (validation records them): `worldgen-tests-other` (`db_determinism`, `stages_pipeline`), `worldgen-cli-tests-other`
+   (`cli_golden`, `cli_p1_generate`).
+2. `worldgen-tests-relations-golden`, `P5-03 23`: fixture `relations-small-6`, table `race_relation` or `settlement_race` (table hash
+   a59dc63b... against the reference's 359b18fa...). Every other case of the file passes. Engine against reference on a deep path
+   (aid credit under relations-small's large memories?); **not diagnosed, not patched: for the lead**.
+3. `worldgen-tests-slow-history-report`, `P3-07 14.4`: `seed-0-1024` summary hash. The history tables agree (`p3_conflict_reference.py check-world`:
+   2080 checks, 0 failures), but the report text differs (`p3_report_reference.py compare`): e422 `monster_slain_by_hero` prints the noun clause
+   ("..., a host of eyeless things from under the stone, ...") in C++ and not in the reference (first-mention rule for the deep monster m13, kind ysgarth).
+   **A report-text disagreement; for the lead** (which side follows P5-02 12.x's first-mention rule is not settled here).
+4. Known and left: H15 v6 milestone fact, three grant-chance units of `p5_04_alliances_reference.py units`, `p4_browser_reference.py check` T3.
+
+Rounds used: 8 build-and-test rounds, one full slow run, one rerun of the two slow entries that changed.

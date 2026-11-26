@@ -111,7 +111,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 18, a colony founded in the step of a cession passes to the winner") {
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 3, a colony founded in the step of a cession passes to the winner") {
     // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration; the first
     // round's 1024 seed 36 case, e310, no longer occurs with the second round's rules, and no 1024 default world
     // of seeds 0 to 160 has one): the reference (p3_conflict_reference.py check-world, table for table on this
@@ -137,11 +137,11 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 18, a colony founded 
     // to 30, seed 12 has two (region_ceded e1986 of region 9 in 5108, colony e1984, s127; e2403 of region 9 in 5308,
     // colony e2401, s134) and seed 24 one (e1356 of region 14 in 5109, colony e1354, s95) (C++ worlds, searched by
     // this test's rule).
-    static dbtest::TempDir dir("balance-golden-1024-turbulent-18");
+    static dbtest::TempDir dir("balance-golden-1024-turbulent-3");
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const std::string path = dir.file("turbulent-18-1024.db");
-    REQUIRE(worldgen::generate_world(chrono_test::world_params(18, 1024, hp, shipped()), shipped(), path,
+    const std::string path = dir.file("turbulent-3-1024.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(3, 1024, hp, shipped()), shipped(), path,
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     const db::WorldReader r = open_world(path);
@@ -180,7 +180,7 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 18, a colony founded 
     CHECK(found >= 1);  // 0.21.0: e751 (s122, region 10, 4331); 0.23.0 seed 5: e1048 (s112, region 34, 4410);
                         // 0.24.0 seed 34: e148 (s36, region 36, 2611); 0.25.0 seed 4: e173 (s50, region 24, 3030)
                         // 0.26.0 seed 1: e648 (s70, region 28, 3816); 0.27.0 seed 12: e1986 (s127, region 9,
-                        // 5108), e2403 (s134, region 9, 5308); 0.28.0 seed 18: e598 (s?, region 11, 4631)
+                        // 5108), e2403 (s134, region 9, 5308); 0.28.0 seed 18: e598 (s?, region 11, 4631); 0.29.0 seed 3: e1018 (s105, region 26, 5234)
     MESSAGE("same-step colony cessions found: " << found);
     // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
     CHECK(cession_violations(t) == std::vector<std::string>{});

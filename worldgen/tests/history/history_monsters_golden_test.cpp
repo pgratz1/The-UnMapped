@@ -286,9 +286,18 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
         marks.insert(at(s, 10));
         if (at(s, 12) != 0) marks.insert(at(s, 12));
     }
+    // P5-07 6.4 "Caps": a deep horror's lair is no one of the one-lair-per-region test (the deep lies under the wild)
+    std::set<std::int64_t> deep_kinds, deep_lairs;
+    for (const Row& kd : t.monster_kind) {
+        if (at(kd, 5) == 3) deep_kinds.insert(at(kd, 0));
+    }
+    for (const Row& m : t.monster) {
+        if (deep_kinds.count(at(m, 2)) != 0U) deep_lairs.insert(at(m, 3));
+    }
     for (const std::int64_t e : marks) {
         std::set<std::int64_t> regions;
         for (const Row& s : t.site) {
+            if (deep_lairs.count(at(s, 0)) != 0U) continue;
             if (at(s, 2) == 1 && at(s, 10) <= e && (at(s, 12) == 0 || e < at(s, 12)) &&
                 !regions.insert(at(s, 3)).second) {
                 out.push_back("3: two open lairs in a region at e" + std::to_string(e));
