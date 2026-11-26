@@ -1,0 +1,28 @@
+# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.zhakul]
+name = "Zhakul"
+noun = "a fire that walks in the roots of the world"
+grouped = false
+wake = "deep"
+biomes = []
+wake_rate = 150
+naming_culture = "dwarven"
+name_forms = ["{root} the Unquenched", "{root} Flame-Under-Stone", "{root}"]
+lair_forms = ["The Burning Deep of {root}", "{root}'s Furnace"]
+might = 7000
+range_hops = 1
+raid_permille = 40
+toll_min_permille = 50
+toll_max_permille = 150
+kill_max = 500
+overruns = []
+overrun_permille = 400
+active_years = 30
+rewake_ppm = 1000
+lifespan_years = 0
+max_alive = 1
+flare = false
+hoard_permille = 20
+raid_phrases = ["came up burning beneath", "set the deep halls aflame under", "fell in fire upon"]
+slayer_epithet = "Flamebreaker"

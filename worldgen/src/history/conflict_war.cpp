@@ -306,16 +306,22 @@ void ConflictSubsystem::siege(StepContext& ctx, std::size_t i, std::int64_t x, s
 std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_plan(const StepContext& ctx, std::int64_t x,
                                                                        std::int64_t y, std::int64_t t) const {
     const State& state = ctx.state();
-    const PeoplesView& view = peoples_.view();
-    const PeoplesGeo& g = peoples_.geo();
-    const std::int64_t race = state.civ(y).race;
-    const std::int64_t from = state.settlement(t).region;
     const std::int64_t p = state.settlement(t).population;
     const std::int64_t survivors = p - floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
+    const std::vector<std::int64_t> px = presence(ctx, x);
+    return flight_destination(ctx, state.civ(y).race, state.settlement(t).region, px, survivors);
+}
+
+std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_destination(const StepContext& ctx,
+                                                                              std::int64_t race, std::int64_t from,
+                                                                              std::span<const std::int64_t> threat,
+                                                                              std::int64_t survivors) const {
+    const State& state = ctx.state();
+    const PeoplesView& view = peoples_.view();
+    const PeoplesGeo& g = peoples_.geo();
     // P3-06 r14 21.3 (audit A1): a copy of the row, since view.hops(r) below
     // may fill other rows of the lazily filled cache.
     const std::vector<std::int64_t> from_t = view.hops(from);
-    const std::vector<std::int64_t> px = presence(ctx, x);
     const std::int64_t far = tuning_.march_hops + 1;
     // (-h_x(D), -sigma(D, r_y), D) ascending.
     std::vector<std::tuple<std::int64_t, std::int64_t, std::int64_t>> order;
@@ -327,7 +333,7 @@ std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_plan(const St
             continue;
         }
         std::int64_t h = far;
-        for (const std::int64_t r : px) {
+        for (const std::int64_t r : threat) {
             const std::int64_t k = view.hops(r)[static_cast<std::size_t>(d - 1)];
             if (k >= 0) {
                 h = std::min(h, k);
@@ -347,33 +353,45 @@ std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_plan(const St
     return std::nullopt;
 }
 
-void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, std::int64_t y, std::int64_t t,
-                             std::int64_t siege_event, const Flight& plan) {
+std::optional<DeepFlightPlan> ConflictSubsystem::deep_flight_plan(const StepContext& ctx, std::int64_t civ,
+                                                                 std::int64_t t, std::int64_t survivors,
+                                                                 std::int64_t threat_region) const {
+    if (tuning_.refuge_flight != 1 || tuning_.last_refuge != 1) {
+        return std::nullopt;
+    }
+    const State& state = ctx.state();
+    const std::array<std::int64_t, 1> threat{threat_region};
+    const std::optional<Flight> f =
+        flight_destination(ctx, state.civ(civ).race, state.settlement(t).region, threat, survivors);
+    if (!f || f->people < peoples_.tuning().abandon_min) {
+        return std::nullopt;
+    }
+    DeepFlightPlan plan;
+    plan.civ = civ;
+    plan.settlement = t;
+    plan.region = f->region;
+    plan.survivors = survivors;
+    plan.n = f->people;
+    plan.site = f->site;
+    return plan;
+}
+
+void ConflictSubsystem::deep_flight(StepContext& ctx, const DeepFlightPlan& plan, std::int64_t cause) {
     State& state = ctx.state();
-    if (!standing(state.settlement(t)) || state.settlement(t).owner_civ != y) {
-        fail("history: conflict: flight from settlement " + int_text(t) + ", which is not standing");
+    if (!standing(state.settlement(plan.settlement)) || state.settlement(plan.settlement).owner_civ != plan.civ) {
+        fail("history: conflict: flight from settlement " + int_text(plan.settlement) + ", which is not standing");
     }
-    const std::int64_t region = state.settlement(t).region;
+    const std::int64_t race = state.civ(plan.civ).race;
+    const std::int64_t p = state.settlement(plan.settlement).population;
+    const std::int64_t n = std::min(p, checked_mul(2, peoples_.view().capacity(plan.region, race)));
+    (void)settle_refuge(ctx, plan.civ, plan.settlement, Flight{plan.region, plan.site, n}, n, cause);
+}
+
+std::int64_t ConflictSubsystem::settle_refuge(StepContext& ctx, std::int64_t y, std::int64_t t, const Flight& plan,
+                                              std::int64_t n, std::int64_t cause) {
+    State& state = ctx.state();
     const std::int64_t race = state.civ(y).race;
-    // 1. The sack (no sack draw: a refuge that falls is always sacked).
-    const std::int64_t p = state.settlement(t).population;
-    {
-        ConflictWar& war = wars_[i];  // r10 20.15 item 1
-        war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], p);
-        war.plunder[side(war, x)] = checked_add(war.plunder[side(war, x)], p);  // P5-04 7.15
-    }
-    const std::int64_t dead = floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
-    state.set_population(t, p - dead);
-    EventSpec e = point_event(ctx, "sacked", region, t);
-    e.participants = {civ_role("attacker", x), civ_role("defender", y)};
-    e.values = {dead, p - dead};
-    e.causes = {siege_event};
-    if (state.civ(y).capital == t) {
-        e.salience = tuning_.capital_sacked_salience;
-    }
-    const std::int64_t sack = ctx.append(e);
     // 2. The refuge. Ids only from here: found_settlement grows the list.
-    const std::int64_t n = std::min(p - dead, checked_mul(2, peoples_.view().capacity(plan.region, race)));
     const std::int64_t h = settlement_count(state) + 1;
     std::string name = peoples_.settlement_name(ctx, race, h);
     const SettlementKind kind = peoples_.view().founding_kind(race, plan.region, plan.site, n);
@@ -382,7 +400,7 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
                       Participant{"founder", EntityType::civilization, y},
                       Participant{"origin", EntityType::settlement, t}};
     f.values = {n};
-    f.causes = {sack};
+    f.causes = {cause};
     const std::int64_t settled = ctx.append(f);
     if (state.found_settlement(plan.site.x, plan.site.y, plan.region, y, kind, n, std::move(name), settled) != h) {
         fail("history: conflict: the settlement id is not the expected one");
@@ -411,7 +429,38 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     peoples_.lie_low(y, h, until);
     // 3. The ruin of t; its destination is h, which is full when n was capped.
     state.set_population(t, state.settlement(t).population - n);
-    peoples_.ruin(ctx, t, sack);
+    peoples_.ruin(ctx, t, cause);
+    return settled;
+}
+
+void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, std::int64_t y, std::int64_t t,
+                             std::int64_t siege_event, const Flight& plan) {
+    State& state = ctx.state();
+    if (!standing(state.settlement(t)) || state.settlement(t).owner_civ != y) {
+        fail("history: conflict: flight from settlement " + int_text(t) + ", which is not standing");
+    }
+    const std::int64_t region = state.settlement(t).region;
+    const std::int64_t race = state.civ(y).race;
+    // 1. The sack (no sack draw: a refuge that falls is always sacked).
+    const std::int64_t p = state.settlement(t).population;
+    {
+        ConflictWar& war = wars_[i];  // r10 20.15 item 1
+        war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], p);
+        war.plunder[side(war, x)] = checked_add(war.plunder[side(war, x)], p);  // P5-04 7.15
+    }
+    const std::int64_t dead = floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
+    state.set_population(t, p - dead);
+    EventSpec e = point_event(ctx, "sacked", region, t);
+    e.participants = {civ_role("attacker", x), civ_role("defender", y)};
+    e.values = {dead, p - dead};
+    e.causes = {siege_event};
+    if (state.civ(y).capital == t) {
+        e.salience = tuning_.capital_sacked_salience;
+    }
+    const std::int64_t sack = ctx.append(e);
+    // 2 and 3 (P5-07 7.3: shared with the deep's flight).
+    const std::int64_t n = std::min(p - dead, checked_mul(2, peoples_.view().capacity(plan.region, race)));
+    const std::int64_t settled = settle_refuge(ctx, y, t, plan, n, sack);
     // 4. The war.
     {
         ConflictWar& war = wars_[i];

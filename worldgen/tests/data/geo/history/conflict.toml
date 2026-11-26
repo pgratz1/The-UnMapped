@@ -68,3 +68,5 @@ trade_strength_permille = 50
 trade_strength_max = 3
 forge_strength_permille = 50
 arms_strength_permille = 100
+# P5-07 4.3 (generator 0.29.0): per depth level of the deepest open mine.
+forge_depth_permille = 15

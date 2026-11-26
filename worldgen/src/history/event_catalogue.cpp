@@ -340,6 +340,22 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{90, "tower_founded", true, 1, 2, fig_civ_site(), {"library"}, 0, {}});
     c.kinds.push_back(KindDef{91, "book_written", true, 1, 0, fig_civ_site(), {}, 0, {}});
     c.kinds.push_back(KindDef{92, "blight", true, 1, 0, fig_civ_site(), {"dead"}, 0, {}});
+    // P5-07 8.1 (generator 0.29.0): kinds 93 to 96, the mountain depths.
+    const auto site_role = [](std::int64_t seq, std::string_view name, std::int64_t lo = 1, std::int64_t hi = 1) {
+        return role(seq, name, EntityType::site, lo, hi);
+    };
+    const auto mon = [](std::int64_t seq) { return role(seq, "monster", EntityType::monster, 1, 1); };
+    c.kinds.push_back(KindDef{93, "delving_deepened", true, 1, 1, {civ(1, "civilization"), site_role(2, "site")},
+                              {"depth", "telling"}, 0, {}});
+    c.kinds.push_back(KindDef{94, "deep_woken", true, 1, 1,
+                              {mon(1), civ(2, "civilization"), site_role(3, "site"), site_role(4, "lair")},
+                              {"depth", "telling"}, 0, {}});
+    c.kinds.push_back(KindDef{95, "deep_sealed", true, 1, 1,
+                              {civ(1, "civilization"), mon(2), site_role(3, "site"), site_role(4, "lair")},
+                              {"telling"}, 0, {}});
+    c.kinds.push_back(KindDef{96, "hold_lost", true, 1, 1,
+                              {mon(1), civ(2, "civilization"), site_role(3, "lair"), site_role(4, "site", 0, 1)},
+                              {"dead", "survivors", "telling"}, 0, {}});
     return c;
 }
 
@@ -1664,7 +1680,7 @@ std::int64_t settlement_ending_code(std::string_view ruin_kind, std::span<const 
     if (ruin_kind == "sacked") {
         return 1;
     }
-    if (ruin_kind == "settlement_overrun") {
+    if (ruin_kind == "settlement_overrun" || ruin_kind == "hold_lost") {  // P5-07 6.6
         return 2;
     }
     if (ruin_kind == "settlement_abandoned" || ruin_kind == "settlement_abandoned_to") {
@@ -2188,7 +2204,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (!is_display_name(r.name)) return at + "name is not a name";
         if (!is_noun(r.noun)) return at + "noun is not a noun";
         if (r.grouped != 0 && r.grouped != 1) return at + "grouped " + int_text(r.grouped) + " is not 0 or 1";
-        if (r.wake != 1 && r.wake != 2) return at + "wake " + int_text(r.wake) + " is not 1 or 2";
+        if (r.wake < 1 || r.wake > 3) return at + "wake " + int_text(r.wake) + " not 1 to 3";  // P5-07 9
         if (r.might < 1 || r.might > 10000000) return at + "might " + int_text(r.might) + " outside 1 to 10000000";
         if (!is_phrase_list(r.raid_phrases)) return at + "raid_phrases is not a phrase list";  // P5-03 16.4
     }
@@ -2254,7 +2270,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
         const std::string_view ok = kind_key(r.origin_event);
         const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
-                                ok == "outpost_built" || ok == "mine_opened" || ok == "tower_founded") &&
+                                ok == "deep_woken" || ok == "outpost_built" || ok == "mine_opened" || ok == "tower_founded") &&
                                year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
         if (!origin_ok) {
             return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
@@ -2294,7 +2310,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             return at + "lair_site " + int_text(r.lair_site) + " is not a lair of this monster";
         }
         const std::string_view bk = kind_key(r.born_event);
-        if (!((bk == "monster_appeared" || bk == "undead_rose") && year_of(r.born_event) == r.born &&
+        if (!((bk == "monster_appeared" || bk == "undead_rose" || bk == "deep_woken") && year_of(r.born_event) == r.born &&
               participant(r.born_event, "monster") == r.id)) {
             return at + "born_event " + int_text(r.born_event) + " is not the appearance of this monster in year " +
                    int_text(r.born);
@@ -2359,7 +2375,8 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
     }
     for (const db::EventRow& e : t.events) {
         const std::string_view k = kind_key(e.id);
-        if ((k == "monster_appeared" || k == "undead_rose" || k == "settlement_overrun" || k == "outpost_built") &&
+        if ((k == "monster_appeared" || k == "undead_rose" || k == "settlement_overrun" || k == "deep_woken" ||
+             k == "outpost_built") &&
             origin_of[static_cast<std::size_t>(e.id)] != 1) {
             return "corrupt table 'event': row " + int_text(e.id) + ": " + std::string(k) + " without its site row";
         }

@@ -105,6 +105,8 @@ struct ConflictTuning {
     std::int64_t allied_strain_permille = 250, ally_deterrence_permille = 300, ally_effort_permille = 1000;
     std::int64_t trade_strength_permille = 50, trade_strength_max = 3;
     std::int64_t forge_strength_permille = 50, arms_strength_permille = 100;
+    // P5-07 4.3 (generator 0.29.0): per depth level of the deepest open mine.
+    std::int64_t forge_depth_permille = 0;
 };
 
 // The loaded definition. FatalError "history: tuning: the content has no
@@ -298,6 +300,9 @@ public:
     [[nodiscard]] virtual std::int64_t trade_partners(std::int64_t c) const = 0;           // open trades of c
     [[nodiscard]] virtual bool forged(std::int64_t c) const = 0;                           // c has an open mine
     [[nodiscard]] virtual bool arms(std::int64_t c) const = 0;                             // c buys arms
+    // P5-07 7.1: the largest depth (0 to 3) of c's open mines, sealed ones
+    // included; 0 when c has none.
+    [[nodiscard]] virtual std::int64_t forge_depth(std::int64_t c) const = 0;
     // P5-04a 9.2: when c buys arms, the arms_sold event of the smallest-id
     // seller with an open trade with c whose pair has had a sale; else 0.
     [[nodiscard]] virtual std::int64_t arms_event(std::int64_t c) const = 0;
@@ -362,6 +367,14 @@ struct ConflictWar {
     std::int64_t tribute_people = 0, tribute_event = 0;
 };
 
+// P5-07 7.3: the flight of a race's last refuge taken by the deep: the
+// civilization, its settlement t, the destination region and site, the
+// survivors of the take and the n who flee.
+struct DeepFlightPlan {
+    std::int64_t civ = 0, settlement = 0, region = 0, survivors = 0, n = 0;
+    SiteCell site;
+};
+
 class ConflictSubsystem final : public Subsystem, public TensionSource {
 public:
     using Pair = std::pair<std::int64_t, std::int64_t>;
@@ -387,6 +400,16 @@ public:
     // P5-04 7.1: alliances, trade and arms (set once by the stage; nullptr:
     // none, as at 0.25.0).
     void set_alliances(const AllianceView* view) noexcept { alliances_ = view; }
+    // P5-07 7.3: the flight procedure of P3-06 20.1 items 2 and 3 shared with
+    // the deep. The plan is pure (no draw): none unless refuge_flight and
+    // last_refuge are 1, a destination exists (h(D) = min(hops from
+    // threat_region, march_hops + 1)) and n >= abandon_min. The flight writes
+    // refugees_settled caused by `cause`, founds the hidden refuge, lies low
+    // and ruins the settlement with `cause` as its ruin event.
+    [[nodiscard]] std::optional<DeepFlightPlan> deep_flight_plan(const StepContext& context, std::int64_t civ,
+                                                                 std::int64_t settlement, std::int64_t survivors,
+                                                                 std::int64_t threat_region) const;
+    void deep_flight(StepContext& context, const DeepFlightPlan& plan, std::int64_t cause);
     // P5-06 7.1: the figures (set once by the stage; nullptr: none, as at 0.26.0).
     void set_figures(const FigureView* view) noexcept { figures_ = view; }
 
@@ -537,6 +560,15 @@ private:
                                                         std::span<const FrontEntry> front) const;
     [[nodiscard]] std::optional<Flight> flight_plan(const StepContext& context, std::int64_t x, std::int64_t y,
                                                     std::int64_t t) const;
+    // P5-07 7.3: 20.1's destination for `race` fleeing region `from` with h(D)
+    // the hops from the nearest of `threat` (march_hops + 1 at most), and n.
+    [[nodiscard]] std::optional<Flight> flight_destination(const StepContext& context, std::int64_t race,
+                                                           std::int64_t from, std::span<const std::int64_t> threat,
+                                                           std::int64_t survivors) const;
+    // 20.1 items 2 and 3 (the refuge and the ruin), with `cause` as the
+    // refugees_settled's cause and the ruin event; returns refugees_settled.
+    std::int64_t settle_refuge(StepContext& context, std::int64_t civ, std::int64_t settlement, const Flight& plan,
+                               std::int64_t n, std::int64_t cause);
     [[nodiscard]] Cost cost_plan(const StepContext& context, std::int64_t winner, std::int64_t loser) const;
     [[nodiscard]] bool attacking(std::int64_t a) const;
     [[nodiscard]] std::int64_t target_key_value(const StepContext& context, std::int64_t race,

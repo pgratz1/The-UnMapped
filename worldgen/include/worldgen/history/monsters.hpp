@@ -35,6 +35,8 @@
 
 namespace worldgen::history {
 
+class ConflictSubsystem;  // P5-07 7.3: the flight seam
+
 // The bounds of P5-02 5.
 inline constexpr std::int64_t MAX_BEAST_COUNT = 1000000;
 inline constexpr std::int64_t MAX_MONSTERS = 100000;
@@ -71,7 +73,7 @@ struct MonsterKindDef {
     std::string name;
     std::string noun;
     bool grouped = false;
-    std::int64_t wake = 1;  // 1 wild, 2 dead
+    std::int64_t wake = 1;  // 1 wild, 2 dead, 3 deep (P5-07 4.1)
     std::vector<HabitatWeight> biomes;
     std::int64_t wake_rate = 0;
     std::string naming_culture;
@@ -127,6 +129,14 @@ struct MonstersTuning {
     // P5-06 25.3 (generator 0.27.0): the region count above which the
     // population term shrinks; 0 (a hand-made tuning) leaves it out.
     std::int64_t undead_regions_ref = 0;
+    // P5-07 4.2 (generator 0.29.0): the mountain depths. The defaults of a
+    // hand-made tuning are inert (no mine deepens, none wakes); the rest are
+    // the shipped starting values.
+    std::array<std::int64_t, 3> deep_years{150, 500, 1000};
+    std::int64_t deep_delve_permille = 0;
+    std::array<std::int64_t, 3> deep_wake_ppm{0, 0, 0};
+    std::int64_t deep_gate_levy_permille = 1000, deep_seal_max_permille = 800, deep_toll_permille = 400;
+    std::int64_t deep_takes_max = 2, deep_reach_hops = 1;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -151,6 +161,12 @@ struct MonstersStats {
     std::int64_t overruns = 0;
     std::int64_t outposts = 0;
     std::int64_t fled = 0;  // P5-03 9.4
+    // P5-07 (the mountain depths).
+    std::int64_t deepened = 0;
+    std::int64_t deep_woken = 0;
+    std::int64_t deep_sealed = 0;
+    std::int64_t holds_lost = 0;
+    std::int64_t deep_flights = 0;
 };
 
 class MonstersSubsystem final : public Subsystem, public TensionSource, public WildView, public MonsterNames {
@@ -178,6 +194,14 @@ public:
     void set_region_names(const RenamingSubsystem* renaming) noexcept { renaming_ = renaming; }
     // P5-06 7.1, 7.7: the figures (set once by the stage; nullptr: no hero).
     void set_figures(const FigureView* figures) noexcept { figures_ = figures; }
+    // P5-07 5, 7.3: the conflict subsystem for the deep's flight (set once by
+    // the stage; nullptr: a last refuge taken by the deep has no plan).
+    void set_conflict(ConflictSubsystem* conflict) noexcept { conflict_ = conflict; }
+    // P5-07 7.1: the depth (0 to 3) of a mine; 0 for an unknown site or a
+    // site of another kind.
+    [[nodiscard]] std::int64_t mine_depth(std::int64_t site) const;
+    // P5-07 7.2: the wake of a kind index (1 wild, 2 dead, 3 deep).
+    [[nodiscard]] std::int64_t kind_wake(std::size_t kind) const { return kinds_[kind].wake; }
     // P5-06 3: const reads for the figures: the kind index of a monster
     // (into kinds()), the kinds, and P5-02 6.6.1's height cell of a region
     // (cells of standing settlements and open sites taken), none when no
@@ -263,6 +287,12 @@ private:
         std::optional<std::int64_t> died;
         std::int64_t death_event = 0;
         std::int64_t slayer = 0;
+        // P5-07 5: a deep horror's waking realm (0 for other kinds), the holds
+        // it took (the first included), whether it was sealed, its deep_woken.
+        std::int64_t waking_realm = 0;
+        std::int64_t takes = 0;
+        bool sealed = false;
+        std::int64_t deep_event = 0;
     };
     struct Site {
         std::int64_t id = 0;
@@ -274,6 +304,12 @@ private:
         std::optional<std::int64_t> ended_year;
         std::int64_t ending_event = 0, ending = 0;
         std::int64_t hostile_year = 0;
+        // P5-07 5: a mine's depth (0 to 3), its last delving_deepened (0
+        // none), whether it woke a horror and whether it is sealed.
+        std::int64_t depth = 0;
+        std::int64_t deepen_event = 0;
+        bool woken = false;
+        bool sealed = false;
     };
     struct WindowEntry {
         std::int64_t year = 0;
@@ -315,6 +351,21 @@ private:
                                          std::int64_t region, std::int64_t settlement, std::string& root);
     void hunts(StepContext& context, std::int64_t monster);
     void deaths_of_age_quiet(StepContext& context);
+    // P5-07 6.2 to 6.7 (monsters_deep.cpp).
+    void deepen(StepContext& context);
+    void deep_waking(StepContext& context);
+    // 6.6: take(m, t, cause); false (and nothing written) when t is its
+    // race's last refuge and the flight has no plan.
+    bool deep_take(StepContext& context, std::int64_t monster, std::int64_t settlement, std::int64_t cause);
+    // 6.7: after a raid of a deep horror on t.
+    void deep_after_raid(StepContext& context, std::int64_t monster, std::int64_t settlement, std::int64_t raid_event);
+    // 6.5: the gate's odds for a hold of `people` of civilization c against kind k.
+    [[nodiscard]] std::int64_t gate_odds(const StepContext& context, std::int64_t civ, std::int64_t people,
+                                         std::size_t kind) const;
+    [[nodiscard]] std::int64_t prowess_of(std::int64_t race) const;
+    [[nodiscard]] std::int64_t mining_of(std::int64_t race) const;
+    // 6.6 item 2: whether t is its race's last refuge.
+    [[nodiscard]] bool deep_last_refuge(const StepContext& context, std::int64_t settlement) const;
     // 6.6.
     void outposts_left(StepContext& context);
     void outposts_raised(StepContext& context);
@@ -336,7 +387,10 @@ private:
     std::vector<BeastDef> beasts_;
     std::vector<MonsterKindDef> kinds_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 16> keys_{};  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear; P5-06: hero_fall
+    std::array<std::uint64_t, 16> keys_{};
+    std::array<std::uint64_t, 5> deep_keys_{};  // P5-07 3: hist.deep.delve, wake, kind, gate, take
+    std::vector<std::pair<std::int64_t, std::int64_t>> mining_;  // (race id, mining_permille), ascending
+    ConflictSubsystem* conflict_ = nullptr;      // P5-07 7.3  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear; P5-06: hero_fall
     std::int64_t pressure_ = 1000;  // M
     std::int64_t threshold_ = 0;    // T_d
     std::int64_t region_count_ = 0;

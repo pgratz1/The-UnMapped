@@ -469,8 +469,10 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
-        } else if (k == "spoils_shared" || k == "spoils_withheld") {
-            const std::int64_t c = ctx.event_participant(e, "principal");
+        } else if (k == "spoils_shared" || k == "spoils_withheld" || k == "deep_woken" || k == "deep_sealed") {
+            // P5-07 6.9: a waking and a sealing name their ruler (role civilization).
+            const std::int64_t c = ctx.event_participant(e, k == "deep_woken" || k == "deep_sealed" ? "civilization"
+                                                                                                     : "principal");
             if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);

@@ -1024,6 +1024,15 @@ void RelationsSubsystem::credit(std::int64_t a, std::int64_t b, std::int64_t uni
     }
 }
 
+void RelationsSubsystem::credit_units(std::int64_t a, std::int64_t b, std::int64_t units) {
+    Pair* p = a != b ? pair_of(a, b) : nullptr;
+    if (p == nullptr || !p->met) {
+        return;
+    }
+    p->memory = std::clamp(checked_add(p->memory, checked_mul(units, 1000)), checked_mul(tuning_.memory_min, 1000),
+                           checked_mul(tuning_.memory_max, 1000));
+}
+
 // P5-03a 3.3, a monster: raid or overrun e of monster m on a realm of race r.
 void RelationsSubsystem::monster_foe(const StepContext& ctx, std::int64_t e) {
     const std::int64_t m = ctx.event_participant(e, "monster");

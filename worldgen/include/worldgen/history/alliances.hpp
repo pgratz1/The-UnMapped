@@ -109,6 +109,7 @@ public:
     [[nodiscard]] std::span<const std::int64_t> allies(std::int64_t c) const override;
     [[nodiscard]] std::int64_t trade_partners(std::int64_t c) const override;
     [[nodiscard]] bool forged(std::int64_t c) const override;
+    [[nodiscard]] std::int64_t forge_depth(std::int64_t c) const override;  // P5-07 7.1
     [[nodiscard]] bool arms(std::int64_t c) const override;
     [[nodiscard]] std::int64_t arms_event(std::int64_t c) const override;  // P5-04a 9.2
 

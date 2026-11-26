@@ -247,6 +247,17 @@ bool AlliancesSubsystem::forged(std::int64_t c) const {
     return is_seller(c);
 }
 
+std::int64_t AlliancesSubsystem::forge_depth(std::int64_t c) const {
+    if (sites_ == nullptr) {
+        return 0;
+    }
+    std::int64_t d = 0;
+    for (auto it = mines_.lower_bound(Pair{c, 0}); it != mines_.end() && it->first.first == c; ++it) {
+        d = std::max(d, sites_->mine_depth(it->second.site));
+    }
+    return d;
+}
+
 std::int64_t AlliancesSubsystem::arms_event(std::int64_t c) const {
     if (!arms(c)) {
         return 0;
@@ -1007,7 +1018,8 @@ void AlliancesSubsystem::renewals(StepContext& ctx) {
         a.next_due = checked_add(due, tuning_.term_years);
         if (notable.empty() || !quiet_ok(ctx, p.first)) {
             // A renewal with nothing new (or without a quiet step's budget) writes nothing.
-            relations_.credit(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory, a.renew_event);
+            // P5-07 7.5: no event of this step to cite; units only.
+            relations_.credit_units(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory);
             ++stats_.renewed_quietly;
             continue;
         }

@@ -259,6 +259,23 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.overrun_people_ref = r.get_int("overrun_people_ref");
     t.undead_dead_permille = r.get_int("undead_dead_permille");
     t.undead_regions_ref = r.get_int("undead_regions_ref");  // P5-06 25.3
+    // P5-07 4.2.
+    const auto three = [&r](std::string_view field) {
+        std::array<std::int64_t, 3> out{};
+        const std::vector<data::Value>& a = r.get_array(field);
+        for (std::size_t i = 0; i < out.size() && i < a.size(); ++i) {
+            out[i] = a[i].as_int();
+        }
+        return out;
+    };
+    t.deep_years = three("deep_years");
+    t.deep_delve_permille = r.get_int("deep_delve_permille");
+    t.deep_wake_ppm = three("deep_wake_ppm");
+    t.deep_gate_levy_permille = r.get_int("deep_gate_levy_permille");
+    t.deep_seal_max_permille = r.get_int("deep_seal_max_permille");
+    t.deep_toll_permille = r.get_int("deep_toll_permille");
+    t.deep_takes_max = r.get_int("deep_takes_max");
+    t.deep_reach_hops = r.get_int("deep_reach_hops");
     return t;
 }
 
@@ -301,7 +318,8 @@ std::vector<MonsterKindDef> monster_kind_defs_from(const data::ContentSet& conte
         k.name = r.get_string("name");
         k.noun = r.get_string("noun");
         k.grouped = r.get_bool("grouped");
-        k.wake = r.get_string("wake") == "dead" ? 2 : 1;
+        const std::string& wake = r.get_string("wake");
+        k.wake = wake == "dead" ? 2 : (wake == "deep" ? 3 : 1);  // P5-07 4.1
         k.biomes = habitat_list(r, "biomes");
         k.wake_rate = r.get_int("wake_rate");
         k.naming_culture = r.get_string("naming_culture");
@@ -376,6 +394,13 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
         keys_[i] = stream_key(in.seed, STREAM_NAMES[i]);
     }
     name_key_ = stream_key(in.seed, streams::hist_names_monster);
+    // P5-07 3.
+    const std::array<std::string_view, 5> deep_streams = {streams::hist_deep_delve, streams::hist_deep_wake,
+                                                          streams::hist_deep_kind, streams::hist_deep_gate,
+                                                          streams::hist_deep_take};
+    for (std::size_t i = 0; i < deep_streams.size(); ++i) {
+        deep_keys_[i] = stream_key(in.seed, deep_streams[i]);
+    }
     switch (in.params.monster_pressure) {
         case data::MonsterPressure::low: pressure_ = tuning_.pressure_low; break;
         case data::MonsterPressure::normal: pressure_ = tuning_.pressure_normal; break;
@@ -474,6 +499,10 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
     for (const db::RaceRow& r : in.races) {
         const data::Definition* d = content.find(data::RACE_KIND, r.key);
         prowess_.emplace_back(r.id, d != nullptr ? d->record.get_int("prowess_permille") : 1000);
+        // P5-07 6.2: mining_permille (P5-04 4.1); absent: 0, no mine deepens.
+        mining_.emplace_back(r.id, d != nullptr && d->record.find("mining_permille") != nullptr
+                                       ? d->record.get_int("mining_permille")
+                                       : 0);
     }
     // 9.1: the naming of each kind's culture with its name forms, and of each culture.
     for (const MonsterKindDef& k : kinds_) {
@@ -511,6 +540,8 @@ void MonstersSubsystem::run(StepContext& ctx) {
             read_log(ctx);
             beasts_bold(ctx);
             monsters_year(ctx);
+            deepen(ctx);       // P5-07 6.1
+            deep_waking(ctx);  // at most one waking; not a creation
             if (!rise(ctx)) {
                 (void)wild_appearance(ctx);
             }
@@ -526,6 +557,7 @@ void MonstersSubsystem::run(StepContext& ctx) {
             deaths_of_age_quiet(ctx);
             (void)wild_appearance(ctx);
             outposts_left(ctx);
+            deepen(ctx);  // P5-07 6.1
             break;
         default: break;
     }
@@ -801,8 +833,10 @@ void MonstersSubsystem::beasts_bold(StepContext& ctx) {
 
 std::int64_t MonstersSubsystem::living() const {
     std::int64_t n = 0;
-    for (const Monster& m : monsters_) {
-        n += (m.status == MonsterStatus::awake || m.status == MonsterStatus::asleep) ? 1 : 0;
+    for (const Monster& m : monsters_) {  // P5-07 7.2: the deep kinds are outside the world cap
+        n += (kinds_[m.kind].wake != 3 && (m.status == MonsterStatus::awake || m.status == MonsterStatus::asleep))
+                 ? 1
+                 : 0;
     }
     return n;
 }
@@ -1049,8 +1083,8 @@ void MonstersSubsystem::monsters_year(StepContext& ctx) {
     const std::int64_t y = ctx.year();
     for (std::int64_t id = 1; id <= n; ++id) {
         const Monster& m = monster(id);
-        if (m.status == MonsterStatus::slain || m.status == MonsterStatus::died) {
-            continue;
+        if (m.status == MonsterStatus::slain || m.status == MonsterStatus::died || m.sealed) {
+            continue;  // P5-07 6.5: a sealed horror never wakes, raids or is hunted
         }
         const MonsterKindDef& def = kinds_[m.kind];
         // 1. Age.
@@ -1232,7 +1266,11 @@ void MonstersSubsystem::raid(StepContext& ctx, std::int64_t id) {
     }
     raids.erase(raids.begin(), raids.begin() + static_cast<std::ptrdiff_t>(drop));
     ++stats_.raids;
-    overrun(ctx, id, target, ev);
+    if (def.wake == 3) {
+        deep_after_raid(ctx, id, target, ev);  // P5-07 6.7: a take in place of the overrun
+    } else {
+        overrun(ctx, id, target, ev);
+    }
     // P5-03 9.4: a place still standing may be left for fear.
     const Settlement& after = state.settlement(target);
     if (standing(after)) {

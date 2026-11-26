@@ -127,6 +127,9 @@ public:
     // the pair has met: M += units x 1000, clamped to its bounds, and the
     // event is kept as a contribution of the sign of units (none for 0).
     void credit(std::int64_t race_a, std::int64_t race_b, std::int64_t units, std::int64_t event);
+    // P5-07 7.5 (audit A1 of P5-04a): M += units x 1000, clamped, as credit,
+    // but no contribution is kept (a quiet renewal has no event of its own).
+    void credit_units(std::int64_t race_a, std::int64_t race_b, std::int64_t units);
 
     // 6.7: the rows of race_relation and settlement_race of year E - 1,
     // called by the stage once the engine has run. Idempotent.

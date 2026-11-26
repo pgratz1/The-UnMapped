@@ -1,0 +1,28 @@
+# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.ymrach]
+name = "Ymrach"
+noun = "a wyrm of the lightless deep"
+grouped = false
+wake = "deep"
+biomes = []
+wake_rate = 500
+naming_culture = "dwarven"
+name_forms = ["{root} the Deep-Coiled", "{root} Stonegnawer", "{root}"]
+lair_forms = ["The Coils of {root}", "{root}'s Delving"]
+might = 4000
+range_hops = 1
+raid_permille = 60
+toll_min_permille = 30
+toll_max_permille = 100
+kill_max = 300
+overruns = []
+overrun_permille = 300
+active_years = 60
+rewake_ppm = 2000
+lifespan_years = 0
+max_alive = 2
+flare = false
+hoard_permille = 10
+raid_phrases = ["came up out of the stone beneath", "burrowed into the halls of", "fell upon"]
+slayer_epithet = "Deepbane"

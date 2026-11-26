@@ -166,8 +166,14 @@ inline constexpr std::string_view hist_names_book = "hist.names.book";
 inline constexpr std::string_view hist_monsters_hero_fall = "hist.monsters.hero_fall";
 // P5-04a 2 (generator 0.28.0): the 98th stream, the soured renewal draw.
 inline constexpr std::string_view hist_alliances_renew = "hist.alliances.renew";
+// P5-07 3 (generator 0.29.0): the five streams of the mountain depths.
+inline constexpr std::string_view hist_deep_delve = "hist.deep.delve";
+inline constexpr std::string_view hist_deep_wake = "hist.deep.wake";
+inline constexpr std::string_view hist_deep_kind = "hist.deep.kind";
+inline constexpr std::string_view hist_deep_gate = "hist.deep.gate";
+inline constexpr std::string_view hist_deep_take = "hist.deep.take";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 98> all_stream_names = {
+inline constexpr std::array<std::string_view, 103> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -266,6 +272,11 @@ inline constexpr std::array<std::string_view, 98> all_stream_names = {
     hist_names_book,
     hist_monsters_hero_fall,
     hist_alliances_renew,
+    hist_deep_delve,
+    hist_deep_wake,
+    hist_deep_kind,
+    hist_deep_gate,
+    hist_deep_take,
 };
 
 }  // namespace worldgen::streams

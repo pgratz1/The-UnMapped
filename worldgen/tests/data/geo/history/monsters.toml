@@ -43,3 +43,12 @@ overrun_people_ref = 3000
 undead_dead_permille = 28
 # P5-06 25.3 (generator 0.27.0).
 undead_regions_ref = 64
+# P5-07 4.2 (generator 0.29.0): the mountain depths.
+deep_years = [150, 500, 1000]
+deep_delve_permille = 10
+deep_wake_ppm = [0, 150, 600]
+deep_gate_levy_permille = 1000
+deep_seal_max_permille = 800
+deep_toll_permille = 400
+deep_takes_max = 2
+deep_reach_hops = 1

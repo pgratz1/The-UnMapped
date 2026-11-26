@@ -237,6 +237,7 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.trade_strength_max = r.get_int("trade_strength_max");
     t.forge_strength_permille = r.get_int("forge_strength_permille");
     t.arms_strength_permille = r.get_int("arms_strength_permille");
+    t.forge_depth_permille = r.get_int("forge_depth_permille");  // P5-07 4.3
     return t;
 }
 
@@ -323,6 +324,7 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.trade_strength_max, 0, 16), "trade_strength_max");
     field_in(in(t.forge_strength_permille, 0, 1000), "forge_strength_permille");
     field_in(in(t.arms_strength_permille, 0, 1000), "arms_strength_permille");
+    field_in(in(t.forge_depth_permille, 0, 1000), "forge_depth_permille");
     if (t.claim_strain > t.declare_min) {
         fail("history: tuning: claim_strain must not be above declare_min");
     }
@@ -785,7 +787,13 @@ std::int64_t ConflictSubsystem::strengthened(std::int64_t civ, std::int64_t f) c
     }
     const std::int64_t partners = std::min(alliances_->trade_partners(civ), tuning_.trade_strength_max);
     f = floor_div(checked_mul(f, checked_add(1000, checked_mul(tuning_.trade_strength_permille, partners))), 1000);
-    f = floor_div(checked_mul(f, 1000 + (alliances_->forged(civ) ? tuning_.forge_strength_permille : 0)), 1000);
+    // P5-07 6.3: the forge grows with the depth of the deepest open mine.
+    const std::int64_t forge =
+        alliances_->forged(civ)
+            ? checked_add(tuning_.forge_strength_permille,
+                          checked_mul(tuning_.forge_depth_permille, alliances_->forge_depth(civ)))
+            : 0;
+    f = floor_div(checked_mul(f, checked_add(1000, forge)), 1000);
     f = floor_div(checked_mul(f, 1000 + (alliances_->arms(civ) ? tuning_.arms_strength_permille : 0)), 1000);
     return f;
 }

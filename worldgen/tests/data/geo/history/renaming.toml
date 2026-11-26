@@ -103,3 +103,18 @@ weight = 75
 name_role = "monster"
 namer_role = "civilization"
 forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"]
+
+# P5-07 4.4 (generator 0.29.0): a hold lost to the deep.
+[[history.renaming.rules]]
+key = "deep"
+kinds = ["hold_lost"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 700
+weight = 85
+name_role = "monster"
+namer_role = "civilization"
+forms = ["The Deeps of {name}", "{name}'s Dark", "The Lost {noun}", "The Sunken {noun}"]

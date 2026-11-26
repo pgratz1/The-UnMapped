@@ -96,6 +96,7 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     conflict.set_figures(&figures);
     peoples.set_figures(&figures);
     monsters.set_figures(&figures);
+    monsters.set_conflict(&conflict);  // P5-07 7.3: the flight seam
     alliances.set_figures(&figures);
     figures.set_sites(&monsters);
     figures.set_conflict(&conflict);

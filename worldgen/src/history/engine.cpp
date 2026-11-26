@@ -304,7 +304,7 @@ public:
         if (key == "sacked") {
             return 1;
         }
-        if (key == "settlement_overrun") {
+        if (key == "settlement_overrun" || key == "hold_lost") {  // P5-07 6.6
             return 2;
         }
         if (key == "settlement_abandoned" || key == "settlement_abandoned_to") {

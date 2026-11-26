@@ -1,0 +1,28 @@
+# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.ysgarth]
+name = "Ysgarth"
+noun = "a host of eyeless things from under the stone"
+grouped = true
+wake = "deep"
+biomes = []
+wake_rate = 350
+naming_culture = "dwarven"
+name_forms = ["The Eyeless of {root}", "The Swarm Beneath {root}"]
+lair_forms = ["The Warrens of {root}", "The Nest of {root}"]
+might = 2500
+range_hops = 1
+raid_permille = 100
+toll_min_permille = 20
+toll_max_permille = 80
+kill_max = 150
+overruns = []
+overrun_permille = 200
+active_years = 100
+rewake_ppm = 3000
+lifespan_years = 0
+max_alive = 2
+flare = false
+hoard_permille = 2
+raid_phrases = ["swarmed out of the dark upon", "crept up the deep ways into", "fell upon"]
+slayer_epithet = "the Lightbearer"

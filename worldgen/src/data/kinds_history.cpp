@@ -753,6 +753,7 @@ Schema history_conflict_schema() {
         i("trade_strength_max", 0, 16),
         i("forge_strength_permille", 0, 1000),
         i("arms_strength_permille", 0, 1000),
+        i("forge_depth_permille", 0, 1000),  // P5-07 4.3
     };
     std::vector<Check> checks{
         Check{"conflict_declare",
@@ -1232,6 +1233,14 @@ std::optional<std::string> check_monster_wild_habitat(const Record& r) {
     return std::string("a wild monster needs a biome with a weight above 0");
 }
 
+// P5-07 4.1: a deep kind wakes only from a mine, so it has no biomes.
+std::optional<std::string> check_monster_deep_biomes(const Record& r) {
+    if (r.get_string("wake") == "deep" && !r.get_array("biomes").empty()) {
+        return std::string("a deep monster has no biomes");
+    }
+    return std::nullopt;
+}
+
 std::optional<std::string> check_monster_toll_ordered(const Record& r) {
     if (r.get_int("toll_min_permille") > r.get_int("toll_max_permille")) {
         return "toll_min_permille " + int_text(r.get_int("toll_min_permille")) + " is above toll_max_permille " +
@@ -1359,7 +1368,7 @@ Schema monster_schema() {
         Field::required("name", Type::string(32, display_name_grammar())),
         Field::required("noun", Type::string(48, monster_noun_grammar())),
         Field::required("grouped", Type::boolean()),
-        Field::required("wake", Type::enumeration({"wild", "dead"})),
+        Field::required("wake", Type::enumeration({"wild", "dead", "deep"})),  // P5-07 4.1: deep
         Field::required("biomes", Type::array(Type::record(habitat_entry_schema()), 0, 16)),
         i("wake_rate", 0, 10000000),
         Field::required("naming_culture", Type::string(32)),
@@ -1387,6 +1396,7 @@ Schema monster_schema() {
     std::vector<Check> checks{
         Check{"monster_biomes", [](const Record& r) { return check_habitat_repeats(r, "biomes"); }},
         Check{"monster_wild_habitat", [](const Record& r) { return check_monster_wild_habitat(r); }},
+        Check{"monster_deep_biomes", [](const Record& r) { return check_monster_deep_biomes(r); }},  // P5-07 4.1
         Check{"monster_toll_ordered", [](const Record& r) { return check_monster_toll_ordered(r); }},
         Check{"monster_overruns_unique", [](const Record& r) { return check_monster_overruns_unique(r); }},
         Check{"monster_bare_form_last", [](const Record& r) { return check_monster_bare_form_last(r); }},
@@ -1454,6 +1464,15 @@ Schema history_monsters_schema() {
         i("overrun_people_ref", 1, 1000000),
         i("undead_dead_permille", 0, 1000),  // P5-03a 10.2
         i("undead_regions_ref", 0, 100000),  // P5-06 25.3 (generator 0.27.0)
+        // P5-07 4.2 (generator 0.29.0): the mountain depths.
+        Field::required("deep_years", Type::array(Type::integer(1, 100000), 3, 3)),
+        i("deep_delve_permille", 0, 1000),
+        Field::required("deep_wake_ppm", Type::array(Type::integer(0, 1000000), 3, 3)),
+        i("deep_gate_levy_permille", 0, 4000),
+        i("deep_seal_max_permille", 0, 1000),
+        i("deep_toll_permille", 0, 1000),
+        i("deep_takes_max", 0, 16),
+        i("deep_reach_hops", 0, 4),
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
@@ -1461,6 +1480,17 @@ Schema history_monsters_schema() {
                   if (r.get_int("bold_off_permille") > r.get_int("bold_on_permille")) {
                       return "bold_off_permille " + int_text(r.get_int("bold_off_permille")) +
                              " is above bold_on_permille " + int_text(r.get_int("bold_on_permille"));
+                  }
+                  return std::nullopt;
+              }},
+        Check{"monsters_deep_years_ordered",  // P5-07 4.2
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::vector<Value>& y = r.get_array("deep_years");
+                  for (std::size_t j = 1; j < y.size(); ++j) {
+                      if (y[j].as_int() <= y[j - 1].as_int()) {
+                          return "deep_years[" + uint_text(j) + "] " + int_text(y[j].as_int()) +
+                                 " is not above deep_years[" + uint_text(j - 1) + "] " + int_text(y[j - 1].as_int());
+                      }
                   }
                   return std::nullopt;
               }},
