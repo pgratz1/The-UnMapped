@@ -95,7 +95,7 @@ TEST_CASE("P3-01 r16 5.4: each problem of renaming_rules, with its text") {
     for (const Case& c : cases) {
         CAPTURE(c.what);
         wh::RenamingTuning t = shipped_tuning();
-        REQUIRE(t.rules.size() == 7U);   // P5-02 9.3: rule 7 ravage
+        REQUIRE(t.rules.size() == 8U);   // P5-02 9.3: rule 7 ravage
         REQUIRE(t.rules[c.rule].key == c.key);
         c.edit(t.rules[c.rule]);
         CHECK(problem_with(t) == std::optional<std::string>(msg(c.key, c.problem)));

@@ -305,15 +305,17 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     REQUIRE(race.schema.fields().size() == history_data::race_fields().size());
     for (std::size_t i = 0; i < race.schema.fields().size(); ++i) {
         CHECK(race.schema.fields()[i].name == history_data::race_fields()[i]);
-        CHECK(race.schema.fields()[i].is_required());  // "all required" (P3-01 3)
+        // "all required" (P3-01 3); P5-07 4.1: delving_permille, the last field, is optional (absent = 0)
+        CHECK(race.schema.fields()[i].is_required() == (race.schema.fields()[i].name != "delving_permille"));
     }
     // Per-definition checks and kind-level checks, in the order of P3-01 3.
-    REQUIRE(race.schema.checks().size() == 5U);
-    CHECK(race.schema.checks()[0].name == "race_generation_below_lifespan");
-    CHECK(race.schema.checks()[1].name == "race_site_weights_positive");
-    CHECK(race.schema.checks()[2].name == "race_biomes_unique");
-    CHECK(race.schema.checks()[3].name == "race_settlement_kinds_unique");
-    CHECK(race.schema.checks()[4].name == "race_temper_weights");   // P5-06 4.1
+    REQUIRE(race.schema.checks().size() == 6U);
+    CHECK(race.schema.checks()[0].name == "race_delves_one_way");   // P5-07 r2 4.5
+    CHECK(race.schema.checks()[1].name == "race_generation_below_lifespan");
+    CHECK(race.schema.checks()[2].name == "race_site_weights_positive");
+    CHECK(race.schema.checks()[3].name == "race_biomes_unique");
+    CHECK(race.schema.checks()[4].name == "race_settlement_kinds_unique");
+    CHECK(race.schema.checks()[5].name == "race_temper_weights");   // P5-06 4.1
     REQUIRE(race.kind_checks.size() == 3U);
     CHECK(race.kind_checks[0].name == "race_order_unique");
     CHECK(race.kind_checks[1].name == "race_order_dense");
@@ -975,6 +977,7 @@ TEST_CASE("P3-01 3: array lengths of biomes (0 to 16) and settlement_kinds (1 to
 TEST_CASE("P3-01 3: every race field is required and no other key is accepted") {
     for (const std::string_view field : history_data::race_fields()) {
         CAPTURE(std::string(field));
+        if (field == "delving_permille") continue;   // P5-07 4.1: the one optional field (absent = 0)
         // Remove the line (or the block) that starts with "<field> = ".
         std::string text(history_data::ORC_TOML);  // order 6: see the range test
         const std::size_t at = text.find("\n" + std::string(field) + " = ") + 1;

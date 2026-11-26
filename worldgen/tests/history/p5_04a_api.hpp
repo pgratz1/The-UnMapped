@@ -5,7 +5,7 @@
 // the 0.28.0 engine on.
 //
 // The P5-04a tests are written from the spec before the implementation (on 0.27.0). The spec fixes every name the
-// tests reach (field names, value keys, kinds, messages, the header `# worldgen history v9`, the constant
+// tests reach (field names, value keys, kinds, messages, the header `# worldgen history v10`, the constant
 // SUMMARY_MILESTONE_SALIENCE of digest.hpp), so no library call is guessed here; what waits is behaviour: a 0.27.0
 // world has none of the new values, and the 0.27.0 loader refuses the new fields.
 //
@@ -27,11 +27,11 @@ namespace p504a_api {
 
 namespace wd = worldgen::data;
 
-inline constexpr const char* GENERATOR_SPEC = "0.28.0";            // header
-inline constexpr std::int64_t SCHEMA_SPEC = 12;                    // header: no schema change
-inline constexpr std::int64_t STREAMS_SPEC = 98;                   // 2: hist.alliances.renew, the 98th
-inline constexpr std::int64_t KINDS_SPEC = 92;                     // no kind added
-inline constexpr const char* REPORT_HEADER_SPEC = "# worldgen history v9";   // 12.1
+inline constexpr const char* GENERATOR_SPEC = "0.29.0";            // header
+inline constexpr std::int64_t SCHEMA_SPEC = 13;                    // header (13 at 0.29.0)
+inline constexpr std::int64_t STREAMS_SPEC = 107;                   // 2: hist.alliances.renew, the 98th
+inline constexpr std::int64_t KINDS_SPEC = 99;                     // no kind added
+inline constexpr const char* REPORT_HEADER_SPEC = "# worldgen history v10";   // 12.1
 inline constexpr std::int64_t SUMMARY_MILESTONE_SALIENCE_SPEC = 40;           // 12.2 (digest.hpp)
 
 #if defined(UNMAPPED_P504A_API)

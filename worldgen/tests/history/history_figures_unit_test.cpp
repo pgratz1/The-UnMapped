@@ -322,7 +322,7 @@ TEST_CASE("P5-06 11.4: the library's glyph upper left of its town, a mine's uppe
 
 // --- the library (from integration on) ----------------------------------------------------------------------
 
-TEST_CASE("P5-06 9.4, 3, 8.1: generator 0.28.0, schema 12") {
+TEST_CASE("P5-06 9.4, 3, 8.1: generator 0.29.0, schema 13") {
     P506_REQUIRE_INTEGRATED();
     CHECK(worldgen::GENERATOR_VERSION == std::string_view(p506api::GENERATOR_SPEC));
     CHECK(static_cast<std::int64_t>(worldgen::db::SCHEMA_VERSION) == p506api::SCHEMA_SPEC);

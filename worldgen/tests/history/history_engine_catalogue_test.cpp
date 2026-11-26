@@ -322,8 +322,8 @@ TEST_CASE("P3-04 8.5 r1: HistoryView::load refuses corrupt history tables with a
     const std::vector<Case> cases = {
         {"template with a problem", "UPDATE event_kind SET template = '{race' WHERE id = 1;", "event_kind"},
         {"template of a role the kind lacks", "UPDATE event_kind SET template = '{ruler}' WHERE id = 2;", "event_kind"},
-        {"role row of a missing kind", "INSERT INTO event_kind_role VALUES (99, 1, 'x', 1, 1, 1);", ""},
-        {"event of a missing kind", "UPDATE event SET kind = 99 WHERE id = 1;", ""},
+        {"role row of a missing kind", "INSERT INTO event_kind_role VALUES (100, 1, 'x', 1, 1, 1);", ""},
+        {"event of a missing kind", "UPDATE event SET kind = 100 WHERE id = 1;", ""},
         {"participant of a missing civilization", "UPDATE event_participant SET entity_id = 99 WHERE event = 2 AND seq = 1;", ""},
         {"participant role seq not of the kind", "UPDATE event_participant SET role = 7 WHERE event = 1 AND seq = 2;", ""},
         {"participant entity type not of the role", "UPDATE event_participant SET entity_type = 3 WHERE event = 1 AND seq = 1;", ""},

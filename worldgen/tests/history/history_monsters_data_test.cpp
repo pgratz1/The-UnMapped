@@ -177,6 +177,12 @@ const std::vector<Monster>& monsters() {
         {"wyvern", "Wyvern", "a brood of wyverns", true, "wild", {{"alpine", 700}, {"heath", 500}, {"highland_moor", 600}},
          50, "goblin", {"The {root} Brood", "The Brood of {root}", "The Screamers of {root}"}, {"The Eyrie of {root}", "{root}'s Crag"}, 600, 2,
          120, 20, 80, 50, {"hamlet"}, 1000, 60, 2500, 2000, 2, false, 0},
+        {"ymrach", "Ymrach", "a wyrm of the lightless deep", false, "deep", {}, 500, "dwarven",
+         {"{root} the Deep-Coiled", "{root} Stonegnawer", "{root}"}, {"The Coils of {root}", "{root}'s Delving"}, 4000, 1, 60, 30, 100, 300, {}, 600, 60, 2000, 0, 2, false, 10},
+        {"ysgarth", "Ysgarth", "a host of eyeless things from under the stone", true, "deep", {}, 350, "dwarven",
+         {"The Eyeless of {root}", "The Swarm Beneath {root}"}, {"The Warrens of {root}", "The Nest of {root}"}, 2500, 1, 100, 20, 80, 150, {}, 400, 100, 3000, 0, 2, false, 2},
+        {"zhakul", "Zhakul", "a fire that walks in the roots of the world", false, "deep", {}, 150, "dwarven",
+         {"{root} the Unquenched", "{root} Flame-Under-Stone", "{root}"}, {"The Burning Deep of {root}", "{root}'s Furnace"}, 7000, 1, 40, 50, 150, 500, {}, 800, 30, 1000, 0, 1, false, 20},
     };
     return v;
 }
@@ -318,8 +324,9 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
     // pressure first; r1 4.3: prey_*; P5-03 9.4: 8; P5-03a 10.2: undead_dead_permille last
-    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U + 1U);
-    CHECK(t.name_at(t.size() - 1U) == "undead_regions_ref");
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U + 1U + 16U);   // P5-07 4.2: sixteen deep_* fields last
+    CHECK(t.name_at(t.size() - 17U) == "undead_regions_ref");
+    CHECK(t.name_at(t.size() - 1U) == "deep_aid_memory");
     CHECK(t.get_int("undead_dead_permille") == 28);
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();
@@ -654,7 +661,7 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& r = definition(*l.content, "history", "renaming").record;
     const std::vector<wd::Value>& rules = r.value_at(5).as_array();
-    REQUIRE(rules.size() == 7U);
+    REQUIRE(rules.size() == 8U);
     const wd::Record& seven = rules[6].as_record();
     CHECK(seven.get_string("key") == "ravage");
     CHECK(strings(seven.value_at(1)) == std::vector<std::string>{"settlement_overrun"});
@@ -688,9 +695,9 @@ TEST_CASE("P5-02 9.3, 21.2: renaming rule 7 ravage, the forms of rules 2 to 5, {
     // the report entries: kind 43's cause words (21.2) and the twelve entries of 10.2
     const wd::Record& rep = definition(*l.content, "history", "report").record;
     const std::vector<wd::Value>& ev = rep.value_at(0).as_array();
-    REQUIRE(ev.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
+    REQUIRE(ev.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     CHECK(has(ev[42].as_record().get_string("template"),
-              "became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }"));
+              "became_city=the rise of a realm's seat,settlement_overrun=the ravage,hold_lost=the fall of a hold to the deep|After |, }"));
     const std::vector<std::pair<std::string_view, std::int64_t>> want = {
         {"monster_appeared", 45}, {"undead_rose", 50},       {"monster_woke", 25},        {"monster_slept", 10},
         {"monster_raid", 15},     {"settlement_overrun", 50}, {"monster_slain", 55},       {"monster_driven_off", 30},

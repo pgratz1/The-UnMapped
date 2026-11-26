@@ -57,7 +57,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-04 8.1: the compiled catalogue holds kinds 63 to 78 as the table states, after the 62 of 0.25.0") {
     const h::EventCatalogue& cat = h::compiled_event_catalogue();
-    REQUIRE(cat.kinds.size() == 92U);
+    REQUIRE(cat.kinds.size() == 99U);
     for (std::size_t i = 0; i < cat.kinds.size(); ++i) CHECK(cat.kinds[i].id == static_cast<std::int64_t>(i) + 1);
     CHECK(cat.kinds[61].key == "people_expelled");
     for (const K& k : spec_kinds()) {

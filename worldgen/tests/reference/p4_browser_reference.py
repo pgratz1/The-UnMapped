@@ -475,8 +475,15 @@ class Browser:
         if prr.V9 and level == "summary":   # P5-04a 12.2 (report v9): the count of own events of salience >= 40, top three
             mv = prr.milestones_v9(w, cid)
             o.append([lit("  milestones: %d" % len(mv))])
-            ms = [] if len(w.t["civilization"]) > prr.SUMMARY_LINES_CIVS else sorted(
-                sorted(mv, key=lambda x: (-w.ev[x][7], x))[:prr.SUMMARY_MILESTONES_V9])
+            ranked = sorted(mv, key=lambda x: (-w.ev[x][7], x))
+            if prr.V10:   # P5-07 10 item 6 (critic F2): at most one per kind, as p3_report_reference does
+                seen, one = set(), []
+                for x in ranked:
+                    if w.ev[x][3] not in seen:
+                        seen.add(w.ev[x][3])
+                        one.append(x)
+                ranked = one
+            ms = [] if len(w.t["civilization"]) > prr.SUMMARY_LINES_CIVS else sorted(ranked[:prr.SUMMARY_MILESTONES_V9])
         elif prr.V6 and level == "summary":   # P5-03a 9.2 (report v6): the full list's count, then its quiet stretches
             full_ms = prr.milestones(w, cid, prr.MILESTONES)
             o.append([lit("  milestones: %d" % len(full_ms))])
@@ -494,7 +501,25 @@ class Browser:
             for t_ in (prr.p504.civ_alliance_lines_v9 if prr.V9 else prr.p504.civ_alliance_lines)(prr.alliance_world(w), cid, level):
                 if t_.startswith("    c"):
                     z = int(t_[5:t_.index(" ", 5)])
-                    o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
+                    if prr.V10:   # P5-07 12 item 4: the ally's "c<id> <name>" is a tagged segment (a link)
+                        o.append([lit("    "), ("tg", "c%d %s" % (z, w.civ[z][1]), CIV, z), lit(t_[t_.index(": "):])])
+                    else:
+                        o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
+                elif prr.V10 and t_.startswith("  allies: ") and "; at the end: " in t_:
+                    # P5-07 12 item 4: the allies at the end are tagged segments "c<id> <name>", each a link
+                    head, tail = t_.split("; at the end: ", 1)
+                    segs = [lit(head + "; at the end: ")]
+                    parts = []
+                    for piece in tail.split(", "):
+                        if piece.startswith("c") and piece[1:piece.find(" ")].isdigit():
+                            parts.append(piece)
+                        else:
+                            parts[-1] += ", " + piece
+                    for k_, part in enumerate(parts):
+                        if k_:
+                            segs.append(lit(", "))
+                        segs.append(("tg", part, CIV, int(part[1:part.find(" ")])))
+                    o.append(segs)
                 else:
                     o.append([lit(t_)])
         if prr.V8 and (level == "full" or len(w.t["civilization"]) <= prr.SUMMARY_LINES_CIVS):
@@ -558,7 +583,7 @@ class Browser:
 
     def seg_report(self, s):
         k, text, t, i = s
-        if k in ("lit", "text"):
+        if k in ("lit", "text", "tg"):
             return text
         if k == "ent":
             n = self.w.name(t, i)
@@ -576,6 +601,9 @@ class Browser:
         text, links = "", []
         for k, s, t, i in line:
             if k in ("lit", "text"):
+                text += s
+            elif k == "tg":   # P5-07 12 item 4 (SegmentKind tagged): "<tag> <name>", a link over the whole text
+                links.append((len(text), len(s), t, i, 0))
                 text += s
             elif k == "ent":
                 n = self.w.name(t, i)

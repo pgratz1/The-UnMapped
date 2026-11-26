@@ -1834,13 +1834,13 @@ geo-seed-0-512 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b9
 geo-seed-0-512 table civilization 6243303abf0d14d1e346d27c630b9f2b25e1188a13d9fdc0064739006130dfe1
 geo-seed-0-512 table event af86b88ed34461dcf3ba9cf8747a4e30c5e05426840249efad7452181e5097ef
 geo-seed-0-512 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-geo-seed-0-512 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-geo-seed-0-512 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-geo-seed-0-512 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+geo-seed-0-512 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+geo-seed-0-512 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+geo-seed-0-512 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 geo-seed-0-512 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 geo-seed-0-512 table event_value 09a90746ccc3f4412d081a7d9b0d9ddd32c7f62a16351a5ceaac76b621214b99
 geo-seed-0-512 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-geo-seed-0-512 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+geo-seed-0-512 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 geo-seed-0-512 table phase 4b6ddb1fe0ca7d674d692194bb5c2aa2416372decdda68d1d2f3a768e92f0811
 geo-seed-0-512 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-0-512 table region_control 760bf531b4a66f5f7aec453f23f10e162a7f3367e999e46cac85d23c85437e08
@@ -1950,6 +1950,13 @@ geo-seed-0-512 report events_hero_slain = 0
 geo-seed-0-512 report events_tower_founded = 0
 geo-seed-0-512 report events_book_written = 0
 geo-seed-0-512 report events_blight = 0
+geo-seed-0-512 report events_delving_deepened = 0
+geo-seed-0-512 report events_deep_woken = 0
+geo-seed-0-512 report events_deep_sealed = 0
+geo-seed-0-512 report events_hold_lost = 0
+geo-seed-0-512 report events_ally_aided_hold = 0
+geo-seed-0-512 report events_warren_delved = 0
+geo-seed-0-512 report events_warren_sealed = 0
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 6
@@ -1959,7 +1966,7 @@ geo-seed-0-512 report census_rows = 6
 geo-seed-0-512 report relations = 0
 geo-seed-0-512 report region_names = 0
 geo-seed-0-512 report beasts = 5
-geo-seed-0-512 report monster_kinds = 6
+geo-seed-0-512 report monster_kinds = 9
 geo-seed-0-512 report beast_populations = 0
 geo-seed-0-512 report monsters = 0
 geo-seed-0-512 report sites = 0
@@ -2022,13 +2029,13 @@ geo-seed-42-512 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b
 geo-seed-42-512 table civilization c62a8f26a0bb10e6ccd47efb636f9d3dadca04644e605bd9263ed48511c02f86
 geo-seed-42-512 table event ff6f02c14246597c50a5d95d78da151b9e28c04c9576dbe50380d4a2b378b1fa
 geo-seed-42-512 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-geo-seed-42-512 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-geo-seed-42-512 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-geo-seed-42-512 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+geo-seed-42-512 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+geo-seed-42-512 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+geo-seed-42-512 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 geo-seed-42-512 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 geo-seed-42-512 table event_value c7934c333f66d68a17ea56106a785f642c85982d43060555dcf7014fe3a6150e
 geo-seed-42-512 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-geo-seed-42-512 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+geo-seed-42-512 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 geo-seed-42-512 table phase 27c3b4bf3488bce2f624f7038a3b8291663f16fcf40359295d2c60846aba8c45
 geo-seed-42-512 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-42-512 table region_control 4229b08fa999ff74c164267c802d0342380fb3b8dc1f5c28ab68b8cbb0a149f9
@@ -2138,6 +2145,13 @@ geo-seed-42-512 report events_hero_slain = 0
 geo-seed-42-512 report events_tower_founded = 0
 geo-seed-42-512 report events_book_written = 0
 geo-seed-42-512 report events_blight = 0
+geo-seed-42-512 report events_delving_deepened = 0
+geo-seed-42-512 report events_deep_woken = 0
+geo-seed-42-512 report events_deep_sealed = 0
+geo-seed-42-512 report events_hold_lost = 0
+geo-seed-42-512 report events_ally_aided_hold = 0
+geo-seed-42-512 report events_warren_delved = 0
+geo-seed-42-512 report events_warren_sealed = 0
 geo-seed-42-512 report civilizations = 6
 geo-seed-42-512 report civilizations_alive = 6
 geo-seed-42-512 report settlements = 6
@@ -2147,7 +2161,7 @@ geo-seed-42-512 report census_rows = 6
 geo-seed-42-512 report relations = 0
 geo-seed-42-512 report region_names = 0
 geo-seed-42-512 report beasts = 5
-geo-seed-42-512 report monster_kinds = 6
+geo-seed-42-512 report monster_kinds = 9
 geo-seed-42-512 report beast_populations = 0
 geo-seed-42-512 report monsters = 0
 geo-seed-42-512 report sites = 0
@@ -2210,13 +2224,13 @@ geo-phrase-512 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b9
 geo-phrase-512 table civilization 9cb336e652fa5752f09412bae5b21734283b9e937dc18e4aadb5cfaa31f2dd58
 geo-phrase-512 table event 36ffa9592398d786f839af006d2c1944b0222d981d96dd40853d8f7df59e76a5
 geo-phrase-512 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-geo-phrase-512 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-geo-phrase-512 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-geo-phrase-512 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+geo-phrase-512 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+geo-phrase-512 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+geo-phrase-512 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 geo-phrase-512 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 geo-phrase-512 table event_value 7166e30a622aecaff4758b3d26bcd5c365ec10cfbf517c820373ade6b504311e
 geo-phrase-512 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-geo-phrase-512 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+geo-phrase-512 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 geo-phrase-512 table phase b89a4c83e44ffcedc4b4243618454731094cff9af729ae296d2c8d62ab2f64f7
 geo-phrase-512 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-phrase-512 table region_control 78468d7a41000e04528cf8be7eece29462b969726517be2ad344bea69796bca3
@@ -2326,6 +2340,13 @@ geo-phrase-512 report events_hero_slain = 0
 geo-phrase-512 report events_tower_founded = 0
 geo-phrase-512 report events_book_written = 0
 geo-phrase-512 report events_blight = 0
+geo-phrase-512 report events_delving_deepened = 0
+geo-phrase-512 report events_deep_woken = 0
+geo-phrase-512 report events_deep_sealed = 0
+geo-phrase-512 report events_hold_lost = 0
+geo-phrase-512 report events_ally_aided_hold = 0
+geo-phrase-512 report events_warren_delved = 0
+geo-phrase-512 report events_warren_sealed = 0
 geo-phrase-512 report civilizations = 6
 geo-phrase-512 report civilizations_alive = 6
 geo-phrase-512 report settlements = 6
@@ -2335,7 +2356,7 @@ geo-phrase-512 report census_rows = 6
 geo-phrase-512 report relations = 0
 geo-phrase-512 report region_names = 0
 geo-phrase-512 report beasts = 5
-geo-phrase-512 report monster_kinds = 6
+geo-phrase-512 report monster_kinds = 9
 geo-phrase-512 report beast_populations = 0
 geo-phrase-512 report monsters = 0
 geo-phrase-512 report sites = 0
@@ -2398,13 +2419,13 @@ geo-seed-1-1024 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b
 geo-seed-1-1024 table civilization e78d1ce9d50bbfda0962f3bd529219b000cf5594d4c02822e53fe903a4ccca78
 geo-seed-1-1024 table event 12c9d88374b17ef400a61490ea3ebc08f21e885e710aad74317998b0dd222cc6
 geo-seed-1-1024 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-geo-seed-1-1024 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-geo-seed-1-1024 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-geo-seed-1-1024 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+geo-seed-1-1024 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+geo-seed-1-1024 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+geo-seed-1-1024 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 geo-seed-1-1024 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 geo-seed-1-1024 table event_value dc80cd5ac3fc2e9430a2d1e9cb4d72987a9fef735f02cd415fc0b7e0d62eb6bd
 geo-seed-1-1024 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-geo-seed-1-1024 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+geo-seed-1-1024 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 geo-seed-1-1024 table phase fe7fdfd891cf7bd746be4604f4d65812f73b28558f34665905558d9c335bf68e
 geo-seed-1-1024 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-1-1024 table region_control 8f72d7d57b52536c08d04d018af7a17d0d4bf32ce378819a2a0725df26348652
@@ -2514,6 +2535,13 @@ geo-seed-1-1024 report events_hero_slain = 0
 geo-seed-1-1024 report events_tower_founded = 0
 geo-seed-1-1024 report events_book_written = 0
 geo-seed-1-1024 report events_blight = 0
+geo-seed-1-1024 report events_delving_deepened = 0
+geo-seed-1-1024 report events_deep_woken = 0
+geo-seed-1-1024 report events_deep_sealed = 0
+geo-seed-1-1024 report events_hold_lost = 0
+geo-seed-1-1024 report events_ally_aided_hold = 0
+geo-seed-1-1024 report events_warren_delved = 0
+geo-seed-1-1024 report events_warren_sealed = 0
 geo-seed-1-1024 report civilizations = 6
 geo-seed-1-1024 report civilizations_alive = 6
 geo-seed-1-1024 report settlements = 6
@@ -2523,7 +2551,7 @@ geo-seed-1-1024 report census_rows = 6
 geo-seed-1-1024 report relations = 0
 geo-seed-1-1024 report region_names = 0
 geo-seed-1-1024 report beasts = 5
-geo-seed-1-1024 report monster_kinds = 6
+geo-seed-1-1024 report monster_kinds = 9
 geo-seed-1-1024 report beast_populations = 0
 geo-seed-1-1024 report monsters = 0
 geo-seed-1-1024 report sites = 0
@@ -2586,13 +2614,13 @@ hist-span-2000-512 table beast_population f0a0278e4372459cca6159cd5e71cfee638302
 hist-span-2000-512 table civilization 1c6ca063cc8e9bda8ac9228aa364b78d1fcc905691ff62778b00139fbde8b3d9
 hist-span-2000-512 table event fe5b41d19f275b1684cd41df5b4c28366bc3937ce04e2b3f9ac2d45c0b8ccbaa
 hist-span-2000-512 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-hist-span-2000-512 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-hist-span-2000-512 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-hist-span-2000-512 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+hist-span-2000-512 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+hist-span-2000-512 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+hist-span-2000-512 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 hist-span-2000-512 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 hist-span-2000-512 table event_value 95e5ff7a10f949961d683de2e85b0f506be691b17318680bcac5a6586813c12f
 hist-span-2000-512 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-span-2000-512 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+hist-span-2000-512 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 hist-span-2000-512 table phase 8df726c90b5ffc8e3825579642ffeb68c7503543fd7017d09a8a3f47114468c6
 hist-span-2000-512 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-span-2000-512 table region_control 9bcbc4fdec96ea688314b4c8915e88d49af420c32d07df110799e39240eac999
@@ -2702,6 +2730,13 @@ hist-span-2000-512 report events_hero_slain = 0
 hist-span-2000-512 report events_tower_founded = 0
 hist-span-2000-512 report events_book_written = 0
 hist-span-2000-512 report events_blight = 0
+hist-span-2000-512 report events_delving_deepened = 0
+hist-span-2000-512 report events_deep_woken = 0
+hist-span-2000-512 report events_deep_sealed = 0
+hist-span-2000-512 report events_hold_lost = 0
+hist-span-2000-512 report events_ally_aided_hold = 0
+hist-span-2000-512 report events_warren_delved = 0
+hist-span-2000-512 report events_warren_sealed = 0
 hist-span-2000-512 report civilizations = 6
 hist-span-2000-512 report civilizations_alive = 6
 hist-span-2000-512 report settlements = 6
@@ -2711,7 +2746,7 @@ hist-span-2000-512 report census_rows = 6
 hist-span-2000-512 report relations = 0
 hist-span-2000-512 report region_names = 0
 hist-span-2000-512 report beasts = 5
-hist-span-2000-512 report monster_kinds = 6
+hist-span-2000-512 report monster_kinds = 9
 hist-span-2000-512 report beast_populations = 0
 hist-span-2000-512 report monsters = 0
 hist-span-2000-512 report sites = 0
@@ -2774,13 +2809,13 @@ hist-races-elf-orc-1024 table beast_population f0a0278e4372459cca6159cd5e71cfee6
 hist-races-elf-orc-1024 table civilization 985ee17f384da9e83986aebb48eb7d0652fb5eb7e5cb60e49053c9ffefbd02fb
 hist-races-elf-orc-1024 table event 8a159eb48c4e6e710db577614e85f84ba76496a4462428cd4557e0905fb9f78c
 hist-races-elf-orc-1024 table event_cause d6cc5f9faf6085dd4a3fbc702286b167d0d6e5cea87f0033ac112815db81a6c9
-hist-races-elf-orc-1024 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-hist-races-elf-orc-1024 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-hist-races-elf-orc-1024 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+hist-races-elf-orc-1024 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+hist-races-elf-orc-1024 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+hist-races-elf-orc-1024 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 hist-races-elf-orc-1024 table event_participant eccbdf1fe43ac9a7a3b55380947f9d65d83ad44f3fe38070cfb3a4c630d9dbd1
 hist-races-elf-orc-1024 table event_value 972d5d9df5f59850b28ac8b96689a28e98ddadb7a10fad1cf1c3ce6d68612f11
 hist-races-elf-orc-1024 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-races-elf-orc-1024 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+hist-races-elf-orc-1024 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 hist-races-elf-orc-1024 table phase 59641304b7aee2aebd2313f6602ec7fdce6b261b3223a7027557593f9ebde85f
 hist-races-elf-orc-1024 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-races-elf-orc-1024 table region_control 4df0c53f3279cff3cdb280ec1ccc0a308b8412932d29624ba5f008ec860e42f2
@@ -2890,6 +2925,13 @@ hist-races-elf-orc-1024 report events_hero_slain = 0
 hist-races-elf-orc-1024 report events_tower_founded = 0
 hist-races-elf-orc-1024 report events_book_written = 0
 hist-races-elf-orc-1024 report events_blight = 0
+hist-races-elf-orc-1024 report events_delving_deepened = 0
+hist-races-elf-orc-1024 report events_deep_woken = 0
+hist-races-elf-orc-1024 report events_deep_sealed = 0
+hist-races-elf-orc-1024 report events_hold_lost = 0
+hist-races-elf-orc-1024 report events_ally_aided_hold = 0
+hist-races-elf-orc-1024 report events_warren_delved = 0
+hist-races-elf-orc-1024 report events_warren_sealed = 0
 hist-races-elf-orc-1024 report civilizations = 2
 hist-races-elf-orc-1024 report civilizations_alive = 2
 hist-races-elf-orc-1024 report settlements = 2
@@ -2899,7 +2941,7 @@ hist-races-elf-orc-1024 report census_rows = 2
 hist-races-elf-orc-1024 report relations = 0
 hist-races-elf-orc-1024 report region_names = 0
 hist-races-elf-orc-1024 report beasts = 5
-hist-races-elf-orc-1024 report monster_kinds = 6
+hist-races-elf-orc-1024 report monster_kinds = 9
 hist-races-elf-orc-1024 report beast_populations = 0
 hist-races-elf-orc-1024 report monsters = 0
 hist-races-elf-orc-1024 report sites = 0
@@ -2942,13 +2984,13 @@ hist-dense-1024 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b
 hist-dense-1024 table civilization af9f9d1a30712e89e3e74cc958dffd3a664095bd504284e8f5b93fee74a030dc
 hist-dense-1024 table event b1bf73a896dc0a76c9c6f9a34a24e54aa1819c44fe08218e1b05e43a2a168fc4
 hist-dense-1024 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-hist-dense-1024 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-hist-dense-1024 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-hist-dense-1024 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+hist-dense-1024 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+hist-dense-1024 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+hist-dense-1024 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 hist-dense-1024 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 hist-dense-1024 table event_value 477a74824f71169e631d017d4790cdca69cc3c7b6f1ac4bde1b7791e67197273
 hist-dense-1024 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-dense-1024 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+hist-dense-1024 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 hist-dense-1024 table phase 338846fafa18ea9bf1aa4feb60089ee15c9bb486449bbac4c573fde1d4028903
 hist-dense-1024 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-dense-1024 table region_control ca0f5ac54a4c2293ee68447e351fa00a820f7b776f05b0289f4ec6bd111d5770
@@ -3058,6 +3100,13 @@ hist-dense-1024 report events_hero_slain = 0
 hist-dense-1024 report events_tower_founded = 0
 hist-dense-1024 report events_book_written = 0
 hist-dense-1024 report events_blight = 0
+hist-dense-1024 report events_delving_deepened = 0
+hist-dense-1024 report events_deep_woken = 0
+hist-dense-1024 report events_deep_sealed = 0
+hist-dense-1024 report events_hold_lost = 0
+hist-dense-1024 report events_ally_aided_hold = 0
+hist-dense-1024 report events_warren_delved = 0
+hist-dense-1024 report events_warren_sealed = 0
 hist-dense-1024 report civilizations = 6
 hist-dense-1024 report civilizations_alive = 6
 hist-dense-1024 report settlements = 6
@@ -3067,7 +3116,7 @@ hist-dense-1024 report census_rows = 6
 hist-dense-1024 report relations = 0
 hist-dense-1024 report region_names = 0
 hist-dense-1024 report beasts = 5
-hist-dense-1024 report monster_kinds = 6
+hist-dense-1024 report monster_kinds = 9
 hist-dense-1024 report beast_populations = 0
 hist-dense-1024 report monsters = 0
 hist-dense-1024 report sites = 0
@@ -3130,13 +3179,13 @@ example-42-1024 table beast_population f0a0278e4372459cca6159cd5e71cfee638302a7b
 example-42-1024 table civilization 33d6896d790a691cf14e22124779509d7614d0dee052c754f27e020c301f2dbd
 example-42-1024 table event 25b820e7e9f250ef1eeda7eb2f8483380f6c1a413cf906a2c9d2ad14d0fed123
 example-42-1024 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
-example-42-1024 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-example-42-1024 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-example-42-1024 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+example-42-1024 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+example-42-1024 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+example-42-1024 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 example-42-1024 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
 example-42-1024 table event_value c7934c333f66d68a17ea56106a785f642c85982d43060555dcf7014fe3a6150e
 example-42-1024 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-example-42-1024 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+example-42-1024 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 example-42-1024 table phase 27c3b4bf3488bce2f624f7038a3b8291663f16fcf40359295d2c60846aba8c45
 example-42-1024 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 example-42-1024 table region_control ad87d512a14e4812d6a8d50d222b09ba81fb9188f2fff220ab55de667db62580
@@ -3246,6 +3295,13 @@ example-42-1024 report events_hero_slain = 0
 example-42-1024 report events_tower_founded = 0
 example-42-1024 report events_book_written = 0
 example-42-1024 report events_blight = 0
+example-42-1024 report events_delving_deepened = 0
+example-42-1024 report events_deep_woken = 0
+example-42-1024 report events_deep_sealed = 0
+example-42-1024 report events_hold_lost = 0
+example-42-1024 report events_ally_aided_hold = 0
+example-42-1024 report events_warren_delved = 0
+example-42-1024 report events_warren_sealed = 0
 example-42-1024 report civilizations = 6
 example-42-1024 report civilizations_alive = 6
 example-42-1024 report settlements = 6
@@ -3255,7 +3311,7 @@ example-42-1024 report census_rows = 6
 example-42-1024 report relations = 0
 example-42-1024 report region_names = 0
 example-42-1024 report beasts = 5
-example-42-1024 report monster_kinds = 6
+example-42-1024 report monster_kinds = 9
 example-42-1024 report beast_populations = 0
 example-42-1024 report monsters = 0
 example-42-1024 report sites = 0
@@ -3318,13 +3374,13 @@ example-42-1024-ft500 table beast_population f0a0278e4372459cca6159cd5e71cfee638
 example-42-1024-ft500 table civilization c1442c62c468e4a01b8378fab33ddf1f33dd711f7261a5c406ea8bad08ce61aa
 example-42-1024-ft500 table event b473dbaad24b02edee866d04b4f011a9a4292bcc7241f1d04b94d3adec555d40
 example-42-1024-ft500 table event_cause c098757088ec702eb7baa330b808ee2a5594aff2e54b4874dd9b12c659315f2e
-example-42-1024-ft500 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-example-42-1024-ft500 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-example-42-1024-ft500 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+example-42-1024-ft500 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+example-42-1024-ft500 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+example-42-1024-ft500 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 example-42-1024-ft500 table event_participant 5df9b4312feb99681b2645668ef0650c644613dbb1c9810d94e9546012d76047
 example-42-1024-ft500 table event_value fd1cbb988a67fd11d4c04d6e7eb29a77bc753ecf050d1adfa4c2c36d6133b472
 example-42-1024-ft500 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-example-42-1024-ft500 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+example-42-1024-ft500 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 example-42-1024-ft500 table phase ef67922dc166f4153572d78d876ea8e2e448921629c44e5a1462fbbbadf9e21d
 example-42-1024-ft500 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 example-42-1024-ft500 table region_control 00873556fc0154561b608e0bce352a57343a69ff1f404a7a5da33646473d28c0
@@ -3434,6 +3490,13 @@ example-42-1024-ft500 report events_hero_slain = 0
 example-42-1024-ft500 report events_tower_founded = 0
 example-42-1024-ft500 report events_book_written = 0
 example-42-1024-ft500 report events_blight = 0
+example-42-1024-ft500 report events_delving_deepened = 0
+example-42-1024-ft500 report events_deep_woken = 0
+example-42-1024-ft500 report events_deep_sealed = 0
+example-42-1024-ft500 report events_hold_lost = 0
+example-42-1024-ft500 report events_ally_aided_hold = 0
+example-42-1024-ft500 report events_warren_delved = 0
+example-42-1024-ft500 report events_warren_sealed = 0
 example-42-1024-ft500 report civilizations = 6
 example-42-1024-ft500 report civilizations_alive = 6
 example-42-1024-ft500 report settlements = 6
@@ -3443,7 +3506,7 @@ example-42-1024-ft500 report census_rows = 6
 example-42-1024-ft500 report relations = 0
 example-42-1024-ft500 report region_names = 0
 example-42-1024-ft500 report beasts = 5
-example-42-1024-ft500 report monster_kinds = 6
+example-42-1024-ft500 report monster_kinds = 9
 example-42-1024-ft500 report beast_populations = 0
 example-42-1024-ft500 report monsters = 0
 example-42-1024-ft500 report sites = 0
@@ -3513,13 +3576,13 @@ example-42-1024-ft1 table beast_population f0a0278e4372459cca6159cd5e71cfee63830
 example-42-1024-ft1 table civilization aad8f2321068ba8ab1204d16a218b8bd4f4885f864ee7e8bb0ba1504734ac7a5
 example-42-1024-ft1 table event 4b3e10b56df11a1af35d063d872dbfe2cf1ae7ef4719cc12186dfa175f9499e9
 example-42-1024-ft1 table event_cause c7072f87feada9d6c6d4491fcb1701c565a4dafdb739104f45b8781a6fcd5ed5
-example-42-1024-ft1 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
-example-42-1024-ft1 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
-example-42-1024-ft1 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
+example-42-1024-ft1 table event_kind 2743b8f1f7574431da0b769a2d8dc056305d94c08edecc8526977e15d187a775
+example-42-1024-ft1 table event_kind_role 5fbdb4e88d83fa43636dc66a50a9e4d1cd2cc4105df282cff5575b307ca15d26
+example-42-1024-ft1 table event_kind_value 2b7a9d2a8005474ac68e27a5d344c1cd040b6d7746622d15fc12e8eeeda5de1f
 example-42-1024-ft1 table event_participant b9a9dfe6e4ca4cad6f36ded7e0081dcfe751bc1203eaaa23ca49db5ff7ebfe0b
 example-42-1024-ft1 table event_value 7cd72ca980ad76983e2894fcbc428053f77b6fca2e41765731529e623edea421
 example-42-1024-ft1 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-example-42-1024-ft1 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
+example-42-1024-ft1 table monster_kind 6c288b23227411fc6e3ce7e04d40c6b988aba209d3748eda7dc554066510dec4
 example-42-1024-ft1 table phase 34791cf48fad9fc99b3d5a5c8bce4f19ede80fcc36564ff3c0075d400c9b9b32
 example-42-1024-ft1 table race_relation f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 example-42-1024-ft1 table region_control 0874a404732f9c9f41a81054371b51f97ebf1948073ae9b9b56aa75f8f119beb
@@ -3629,6 +3692,13 @@ example-42-1024-ft1 report events_hero_slain = 0
 example-42-1024-ft1 report events_tower_founded = 0
 example-42-1024-ft1 report events_book_written = 0
 example-42-1024-ft1 report events_blight = 0
+example-42-1024-ft1 report events_delving_deepened = 0
+example-42-1024-ft1 report events_deep_woken = 0
+example-42-1024-ft1 report events_deep_sealed = 0
+example-42-1024-ft1 report events_hold_lost = 0
+example-42-1024-ft1 report events_ally_aided_hold = 0
+example-42-1024-ft1 report events_warren_delved = 0
+example-42-1024-ft1 report events_warren_sealed = 0
 example-42-1024-ft1 report civilizations = 6
 example-42-1024-ft1 report civilizations_alive = 6
 example-42-1024-ft1 report settlements = 6
@@ -3638,7 +3708,7 @@ example-42-1024-ft1 report census_rows = 6
 example-42-1024-ft1 report relations = 0
 example-42-1024-ft1 report region_names = 0
 example-42-1024-ft1 report beasts = 5
-example-42-1024-ft1 report monster_kinds = 6
+example-42-1024-ft1 report monster_kinds = 9
 example-42-1024-ft1 report beast_populations = 0
 example-42-1024-ft1 report monsters = 0
 example-42-1024-ft1 report sites = 0
@@ -3945,3 +4015,10 @@ report_events event kind 'hero_slain' has no entry
 report_events event kind 'tower_founded' has no entry
 report_events event kind 'book_written' has no entry
 report_events event kind 'blight' has no entry
+report_events event kind 'delving_deepened' has no entry
+report_events event kind 'deep_woken' has no entry
+report_events event kind 'deep_sealed' has no entry
+report_events event kind 'hold_lost' has no entry
+report_events event kind 'ally_aided_hold' has no entry
+report_events event kind 'warren_delved' has no entry
+report_events event kind 'warren_sealed' has no entry

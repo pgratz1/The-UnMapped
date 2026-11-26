@@ -38,6 +38,8 @@ stances = [{ race = "faerie", value = 200 }]
 origin_allies = ["faerie"]
 ally_join_permille = 700
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 450, warlike = 100, peaceable = 250, grasping = 50, just = 150 }
 general_permille = 500
 hero_permille = 100

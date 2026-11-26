@@ -39,6 +39,8 @@ stances = [{ race = "dwarf", value = -100 }]
 origin_allies = []
 ally_join_permille = 400
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 300
 temper_weights = { steady = 300, warlike = 300, peaceable = 50, grasping = 300, just = 50 }
 general_permille = 250
 hero_permille = 40

@@ -196,7 +196,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                                      {2, 0, 0, 2, 1, 1, 0, 80},
                                      {3, 0, 0, 3, 1, 1, 1, 40},
                                      {4, 50, 499, 38, 2, 0, 0, 20},
-                                     {5, 150, 150, 93, 2, 0, 0, 10},  // the test kind: 79 from 0.26.0 (P5-04 8.1), 63 from 0.24.0 (56 at 0.23.0, 44 at 0.22.0)
+                                     {5, 150, 150, 100, 2, 0, 0, 10},  // the test kind: 79 from 0.26.0 (P5-04 8.1), 63 from 0.24.0 (56 at 0.23.0, 44 at 0.22.0)
                                      {6, 500, 500, 5, 3, 0, 0, 50},
                                      {7, 517, 999, 38, 4, 0, 0, 20},
                                      {8, 1000, 1000, 1, 5, 1, 0, 100},
@@ -221,8 +221,8 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                      {8, 1, 1, 1, 2}, {8, 2, 2, 2, 2}, {9, 1, 1, 3, 2}, {9, 2, 2, 1, 2}, {10, 1, 1, 4, 2},
                      {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {11, 2, 1, 3, 2}, {13, 1, 1, 3, 1}, {13, 2, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
-    REQUIRE(t.event_kind.size() == 93U);  // 78 kinds from 0.26.0 (P5-04 8.1); 62 kinds from 0.24.0 (P5-03 8.1); 55 kinds from 0.23.0 (P5-02 10.1); 43 kinds from 0.22.0 (P3-04 r21 23.2; 42 from 0.21.0), then the test kind
-    CHECK(t.event_kind[92][1].bytes == "test_change");   // P5-04 8.1: kind 79 (63 at 0.24.0, 56 at 0.23.0)
+    REQUIRE(t.event_kind.size() == 100U);  // 78 kinds from 0.26.0 (P5-04 8.1); 62 kinds from 0.24.0 (P5-03 8.1); 55 kinds from 0.23.0 (P5-02 10.1); 43 kinds from 0.22.0 (P3-04 r21 23.2; 42 from 0.21.0), then the test kind
+    CHECK(t.event_kind[99][1].bytes == "test_change");   // P5-04 8.1: kind 79 (63 at 0.24.0, 56 at 0.23.0)
 }
 
 TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet step leaves one stretch per quiet row") {
@@ -248,7 +248,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet s
     }
     CHECK(vals == std::vector<std::int64_t>{1800, 1});
     // The charged events are separate events dated inside the stretch (36 of the 72 quiet steps).
-    CHECK(rows_where_kind(t, 93).size() == 36U);  // the test kind, 79 from 0.26.0, 63 from 0.24.0 (56 at 0.23.0, 44 at 0.22.0)
+    CHECK(rows_where_kind(t, 100).size() == 36U);  // the test kind, 79 from 0.26.0, 63 from 0.24.0 (56 at 0.23.0, 44 at 0.22.0)
 }
 
 TEST_CASE("P3-04 r12 20.1, 20.6 item 1: a civilization ended in a quiet step stays a participant of its row's stretch") {

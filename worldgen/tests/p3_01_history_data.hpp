@@ -122,6 +122,8 @@ stances = [{ race = "faerie", value = 200 }]
 origin_allies = ["faerie"]
 ally_join_permille = 700
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 450, warlike = 100, peaceable = 250, grasping = 50, just = 150 }
 general_permille = 500
 hero_permille = 100
@@ -169,6 +171,8 @@ stances = [{ race = "dwarf", value = -100 }]
 origin_allies = []
 ally_join_permille = 400
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 300
 temper_weights = { steady = 300, warlike = 300, peaceable = 50, grasping = 300, just = 50 }
 general_permille = 250
 hero_permille = 40
@@ -215,6 +219,8 @@ stances = [{ race = "goblin", value = -100 }]
 origin_allies = []
 ally_join_permille = 800
 mining_permille = 1000
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 450, warlike = 150, peaceable = 100, grasping = 200, just = 100 }
 general_permille = 500
 hero_permille = 120
@@ -263,6 +269,8 @@ stances = [{ race = "elf", value = 200 }]
 origin_allies = ["elf"]
 ally_join_permille = 150
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 400, warlike = 50, peaceable = 350, grasping = 50, just = 150 }
 general_permille = 150
 hero_permille = 60
@@ -310,6 +318,8 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 400, warlike = 175, peaceable = 175, grasping = 125, just = 125 }
 general_permille = 450
 hero_permille = 150
@@ -358,6 +368,8 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 250, warlike = 500, peaceable = 50, grasping = 150, just = 50 }
 general_permille = 400
 hero_permille = 80
@@ -523,7 +535,7 @@ events = [
   { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}." },
   { kind = "settlement_abandoned", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,battle_led=war,blight=blight,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
   { kind = "capital_moved", salience = 50, template = "The seat of {civilization} moved to {settlement}." },
-  { kind = "civ_ended", salience = 85, template = "{civilization}{civilization:under} came to an end." },
+  { kind = "civ_ended", salience = 85, template = "{@causes:hold_lost=the loss of its last hold to the deep|After |, }{civilization}{civilization:under} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
   { kind = "claim", salience = 35, template = "{claimant} laid claim to {@region}, held by {holder}." },
   { kind = "war_declared", salience = 70, template = "{attacker}{attacker:under} declared war on {defender} over {@region}." },
@@ -548,7 +560,7 @@ events = [
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
-  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}." },
+  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage,hold_lost=the fall of a hold to the deep|After |, }{@region_former} became known as {@region}." },
   { kind = "monster_appeared", salience = 45, template = "{monster}, {monster:kind}, made {monster:its} lair in {@region}." },
   { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,battle_led=the slaughter,sacked=the sack|After |, }{monster} rose from {monster:its} graves{monster:where}." },
   { kind = "monster_woke", salience = 25, template = "{monster} woke again in {@region}." },
@@ -564,7 +576,7 @@ events = [
   { kind = "settlement_fled", salience = 45, template = "For fear of {monster}, the people of {@settlement} left their homes." },
   { kind = "peoples_met", salience = 25, template = "The {race_a:plural} {sealed?first had word of|first met} the {race_b:plural} in {@region}{band?, and hated them from the first|, and were wary of them|, and were glad of them}." },
   { kind = "disposition_turned", salience = 55, template = "{@causes:war_won=the wars,peace=the wars,truce=the wars,civ_conquered=the conquests,sacked=the sacks,settlement_captured=the conquests,people_expelled=the expulsions,refugees_arrived=years of shelter given,war_declared=wars against a common enemy,monster_raid=the raids of a common foe,settlement_overrun=the raids of a common foe,peoples_met=long years of peace,disposition_turned=long years apart|After |, }the {race_a:plural} and the {race_b:plural} {change?came to hate one another|put aside their hatred of one another|grew wary of one another|became friends}." },
-  { kind = "refugees_arrived", salience = 25, template = "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the expulsion,settlement_abandoned=the abandonment of their home,settlement_abandoned_to=the abandonment of their home,plague=the plague,plague_outbreak=the plague,plague_spread=the plague,famine=the famine,settlement_fled=their flight,region_ceded=the cession,settlements_ceded=the cession|After |, }{people} {race:plural} from {origin} found shelter in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their own kin of} {civilization}." },
+  { kind = "refugees_arrived", salience = 25, template = "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the expulsion,settlement_abandoned=the abandonment of their home,settlement_abandoned_to=the abandonment of their home,plague=the plague,plague_outbreak=the plague,plague_spread=the plague,famine=the famine,settlement_fled=their flight,region_ceded=the cession,settlements_ceded=the cession,hold_lost=the fall of their hold|After |, }{people} {race:plural} from {origin} found shelter in {settlement}{standing?, held as subjects by|, tolerated by|, welcomed by|, among their own kin of} {civilization}." },
   { kind = "settlement_mixed", salience = 25, template = "{@causes:settlement_captured=the conquest,settlements_ceded=the cession,region_ceded=the cession,sacked=the sack,settlement_overrun=the ravage,refugees_arrived=the coming of refugees,refugees_settled=the flight,settlement_abandoned_to=the abandonment of a neighbour|After |, }in {settlement} the {ruling:plural} {standing?ruled over|tolerated|lived as equals with} the {race:plural}{majority?, who outnumbered them|}." },
   { kind = "standing_changed", salience = 15, template = "In {settlement}, {civilization} {standing?held the|tolerated the|accepted the} {race:plural}{standing? as subjects|| as equals}." },
   { kind = "people_expelled", salience = 40, template = "Hating the {race:plural}, {civilization} drove them out of {settlement}, where it had {standing?held them as subjects|tolerated them|tolerated them} for {years} {years?year|years}; {people} left." },
@@ -574,7 +586,7 @@ events = [
   { kind = "alliance_broken", salience = 40, template = "{@causes:ally_refused=a call to arms refused|After |, }the alliance of {ally_a} and {ally_b} was broken{reason?, their friendship having cooled|}." },
   { kind = "alliance_betrayed", salience = 65, template = "{motive?Grasping for more|Its friendship long cooled|Seeing its ally weak|Coveting its ally's land}, {betrayer}{betrayer:under} broke an alliance of {years} {years?year|years} with {betrayed}." },
   { kind = "ally_joined_war", salience = 40, template = "{ally} {side?joined the war of|came to the defence of} {partner} against {enemy}." },
-  { kind = "ally_refused", salience = 30, template = "{motive?Loath to send its people to war|Weary of war|With a war of its own to fight|Fearing the strength of the foe|Grown cold toward its ally|Grasping for its own gain|Nursing a claim on its ally's land|Remembering the spoils kept from it}, {ally}{ally:under} would not take up arms for {partner} against {enemy}{count?|, and its ally did not forget it|}." },
+  { kind = "ally_refused", salience = 30, template = "{motive?Loath to send its people to war|Weary of war|With a war of its own to fight|Fearing the strength of the foe|Grown cold toward its ally|Hoping to profit by its ally's losses|Nursing a claim on its ally's land|Remembering the spoils kept from it}, {ally}{ally:under} would not take up arms for {partner} against {enemy}{count?|, and its ally did not forget it|}." },
   { kind = "ally_withdrew", salience = 25, template = "Bled white, {ally} left the war of {partner} against {enemy}." },
   { kind = "allied_battle", salience = 35, template = "{@causes:arms_sold=new-bought arms|With |, }{winner}{winner_ally:with} defeated {loser}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "trade_opened", salience = 20, template = "{@causes:peace=the peace,war_won=the war,truce=the truce,peoples_met=the first meeting of their peoples|After |, }{partner_a} and {partner_b} opened trade." },
@@ -599,6 +611,14 @@ events = [
   { kind = "tower_founded", salience = 40, template = "{figure} of {civilization} {library?founded|raised} {site} in {@region}." },
   { kind = "book_written", salience = 30, template = "{figure} wrote {@book} at {site}." },
   { kind = "blight", salience = 50, template = "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} died." },
+  # P5-07 8.2 (generator 0.29.0): kinds 93 to 96.
+  { kind = "delving_deepened", salience = 15, template = "{telling?Following a rich seam, |Year upon year, |By hammer and lamp, }{civilization} delved {site} {depth?deeper|below the reach of daylight|into the roots of the mountain|into the oldest dark beneath the world}." },
+  { kind = "deep_woken", salience = 60, template = "{telling?Delving too deep beneath |In the deepest halls under |Where the last seam ran out beneath |Burrowing ever deeper under |Digging after grubs and glitter beneath |In the stinking deep tunnels of }{@settlement}, {civilization}{civilization:under}{telling? woke | woke | broke into the old dark and woke | woke | blundered into the old dark and woke | woke }{monster}, {monster:kind}." },
+  { kind = "deep_sealed", salience = 50, template = "{telling?|Holding the gate at great cost, |With stone and rune, }{civilization}{civilization:under}{telling? sealed | walled | shut }{monster}{telling? in the deeps of | up beneath | away below }{site}{telling?||, and the deep ways were closed}." },
+  { kind = "hold_lost", salience = 70, template = "{@causes:monster_raid=the raids|After |, }{monster}{telling? came up out of the deep and took | rose from below and overran | broke out of the deeps into | boiled up out of the burrows into | came up the goblins' own tunnels into | rose under the warrens of }{@settlement} of {civilization}; {dead?no one died|one died|# died}{survivors?, and none escaped|, and one escaped|, and # fled}." },
+  { kind = "ally_aided_hold", salience = 40, template = "{telling?Answering its ally's call, |Bound by old oaths, |Unbidden, }{ally}{ally:under}{telling? sent warriors from | marched out of | hurried its people from }{origin} to stand with {partner} at the gate of {@settlement} against {monster}." },
+  { kind = "warren_delved", salience = 15, template = "{telling?Ever greedy for the dark, |Squabbling and scraping, |Grub by grub and stone by stone, }{civilization} dug the warrens of {@settlement} {depth?deeper|below the reach of daylight|down among the mountain's roots|into the oldest dark beneath the world}." },
+  { kind = "warren_sealed", salience = 50, template = "{telling?|Shrieking and stabbing in the dark, |With rockfall and fire, }{civilization}{civilization:under}{telling? caved in the tunnels over | blocked the deep ways against | buried }{monster}{telling? beneath | under | deep below }{@settlement}{telling?||, and no goblin went that way again}." },
 ]
 )";
 
@@ -709,6 +729,21 @@ weight = 75
 name_role = "monster"
 namer_role = "civilization"
 forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"]
+
+# P5-07 4.4 (generator 0.29.0): a hold lost to the deep.
+[[history.renaming.rules]]
+key = "deep"
+kinds = ["hold_lost"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 700
+weight = 85
+name_role = "monster"
+namer_role = "civilization"
+forms = ["The Deeps of {name}", "{name}'s Dark", "The Lost {noun}", "The Sunken {noun}"]
 )";
 
 
@@ -761,6 +796,24 @@ overrun_people_ref = 3000
 undead_dead_permille = 28
 # P5-06 25.3 (generator 0.27.0).
 undead_regions_ref = 64
+# P5-07 4.2 (generator 0.29.0): the mountain depths.
+deep_years = [250, 1000, 2500]
+deep_delve_permille = 6
+deep_wake_ppm = [0, 350, 1400]
+deep_gate_levy_permille = 1000
+deep_seal_max_permille = 800
+deep_toll_permille = 400
+deep_takes_max = 3
+deep_reach_hops = 2
+# P5-07 r2 4.2: goblin deep warrens (6.10) and allies' aid at the gate (6.11).
+deep_warren_population_min = 3200
+deep_warren_ore_min = 500
+deep_warren_wake_permille = 200
+deep_aid_permille = 500
+deep_aid_hops = 2
+deep_aid_levy_permille = 500
+deep_aid_max = 2
+deep_aid_memory = 30
 )";
 
 inline constexpr std::string_view BEAST_BEAR_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
@@ -987,6 +1040,96 @@ raid_phrases = ["stooped on", "swept down on", "came screaming down on"]
 slayer_epithet = "Wyrmbane"
 )";
 
+inline constexpr std::string_view MONSTER_YMRACH_TOML = R"(# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.ymrach]
+name = "Ymrach"
+noun = "a wyrm of the lightless deep"
+grouped = false
+wake = "deep"
+biomes = []
+wake_rate = 500
+naming_culture = "dwarven"
+name_forms = ["{root} the Deep-Coiled", "{root} Stonegnawer", "{root}"]
+lair_forms = ["The Coils of {root}", "{root}'s Delving"]
+might = 4000
+range_hops = 1
+raid_permille = 60
+toll_min_permille = 30
+toll_max_permille = 100
+kill_max = 300
+overruns = []
+overrun_permille = 600
+active_years = 60
+rewake_ppm = 2000
+lifespan_years = 0
+max_alive = 2
+flare = false
+hoard_permille = 10
+raid_phrases = ["came up out of the stone beneath", "burrowed into the halls of", "fell upon"]
+slayer_epithet = "Deepbane"
+)";
+
+inline constexpr std::string_view MONSTER_YSGARTH_TOML = R"(# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.ysgarth]
+name = "Ysgarth"
+noun = "a host of eyeless things from under the stone"
+grouped = true
+wake = "deep"
+biomes = []
+wake_rate = 350
+naming_culture = "dwarven"
+name_forms = ["The Eyeless of {root}", "The Swarm Beneath {root}"]
+lair_forms = ["The Warrens of {root}", "The Nest of {root}"]
+might = 2500
+range_hops = 1
+raid_permille = 100
+toll_min_permille = 20
+toll_max_permille = 80
+kill_max = 150
+overruns = []
+overrun_permille = 400
+active_years = 100
+rewake_ppm = 3000
+lifespan_years = 0
+max_alive = 2
+flare = false
+hoard_permille = 2
+raid_phrases = ["swarmed out of the dark upon", "crept up the deep ways into", "fell upon"]
+slayer_epithet = "the Lightbearer"
+)";
+
+inline constexpr std::string_view MONSTER_ZHAKUL_TOML = R"(# Monster kind (spec P5-07 4.1): a deep horror, woken only from a mine. Generator 0.29.0.
+# Its id sorts after wyvern so that the six earlier kinds keep their ids.
+[monster.zhakul]
+name = "Zhakul"
+noun = "a fire that walks in the roots of the world"
+grouped = false
+wake = "deep"
+biomes = []
+wake_rate = 150
+naming_culture = "dwarven"
+name_forms = ["{root} the Unquenched", "{root} Flame-Under-Stone", "{root}"]
+lair_forms = ["The Burning Deep of {root}", "{root}'s Furnace"]
+might = 7000
+range_hops = 1
+raid_permille = 40
+toll_min_permille = 50
+toll_max_permille = 150
+kill_max = 500
+overruns = []
+overrun_permille = 800
+active_years = 30
+rewake_ppm = 1000
+lifespan_years = 0
+max_alive = 1
+flare = false
+hoard_permille = 20
+raid_phrases = ["came up burning beneath", "set the deep halls aflame under", "fell in fire upon"]
+slayer_epithet = "Flamebreaker"
+)";
+
 // The files of the two kinds as "<directory>/<file name>" -> text.
 inline const std::vector<std::pair<std::string, std::string_view>>& monster_files() {
     static const std::vector<std::pair<std::string, std::string_view>> v = {
@@ -1001,6 +1144,9 @@ inline const std::vector<std::pair<std::string, std::string_view>>& monster_file
         {"monsters/troll.toml", MONSTER_TROLL_TOML},
         {"monsters/undead.toml", MONSTER_UNDEAD_TOML},
         {"monsters/wyvern.toml", MONSTER_WYVERN_TOML},
+        {"monsters/ymrach.toml", MONSTER_YMRACH_TOML},
+        {"monsters/ysgarth.toml", MONSTER_YSGARTH_TOML},
+        {"monsters/zhakul.toml", MONSTER_ZHAKUL_TOML},
     };
     return v;
 }
@@ -1122,6 +1268,8 @@ trade_strength_permille = 50
 trade_strength_max = 3
 forge_strength_permille = 50
 arms_strength_permille = 100
+# P5-07 4.3 (generator 0.29.0): per depth level of the deepest open mine.
+forge_depth_permille = 15
 )";
 
 // --- history.peoples (P3-05 12.1, the listing; generator 0.15.0). The
@@ -1544,7 +1692,8 @@ inline const std::vector<std::string_view>& race_fields() {
         "awakening_population",                    // P3-01 r14 3.7 (P3-11, generator 0.20.0)
         "settlement_kinds", "culture", "stances",    // stances: P5-03 4.1 (generator 0.24.0)
         "origin_allies", "ally_join_permille", "mining_permille",   // P5-04 4.1 (generator 0.26.0)
-        "temper_weights", "general_permille", "hero_permille", "magic_permille"};   // P5-06 (generator 0.27.0)
+        "temper_weights", "general_permille", "hero_permille", "magic_permille",   // P5-06 (generator 0.27.0)
+        "delving_permille"};   // P5-07 4.1 (generator 0.29.0): the last field, optional (absent = 0)
     return v;
 }
 // P3-01 r8 (1): record race_cell_weights.

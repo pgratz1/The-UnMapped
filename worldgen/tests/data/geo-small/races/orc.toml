@@ -40,6 +40,8 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+# P5-07 r2 4.5: the pace of deep warren delving (a race delves mines or warrens, not both).
+delving_permille = 0
 temper_weights = { steady = 250, warlike = 500, peaceable = 50, grasping = 150, just = 50 }
 general_permille = 400
 hero_permille = 80

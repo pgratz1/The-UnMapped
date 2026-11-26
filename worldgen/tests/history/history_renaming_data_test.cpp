@@ -96,6 +96,9 @@ const std::vector<Rule>& shipped_rules() {
         // P5-02 9.3: rule 7
         {"ravage", {"settlement_overrun"}, {}, 1, 1, 0, false, 600, 75, "monster", "civilization",
          {"The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name}'s Waste"}},   // P5-03 12.3
+        // P5-07 8.3: rule 8, a lost hold
+        {"deep", {"hold_lost"}, {}, 1, 1, 0, false, 700, 85, "monster", "civilization",
+         {"The Deeps of {name}", "{name}'s Dark", "The Lost {noun}", "The Sunken {noun}"}},
     };
     return v;
 }
@@ -337,14 +340,14 @@ TEST_CASE("P3-02 r19 16.2: human forbidden gains ass (appended); P3-04 r21 23.2:
     for (const wd::Definition& d : h->definitions) {
         if (d.id != "report") continue;
         const std::vector<wd::Value>& ev = d.record.get("events").as_array();
-        REQUIRE(ev.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.2
+        REQUIRE(ev.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.2
         const wd::Record& last = ev[42].as_record();   // kind 43; kinds 44 to 55 follow (P5-02 10.2)
         CHECK(last.get_string("kind") == "region_renamed");
         CHECK(last.get_int("salience") == 60);
         CHECK(last.get_string("template") ==   // P5-02 21.2: a realm's seat, the ravage
               "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
               "slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the "
-              "ravage|After |, }{@region_former} became known as {@region}.");
+              "ravage,hold_lost=the fall of a hold to the deep|After |, }{@region_former} became known as {@region}.");
     }
 }
 

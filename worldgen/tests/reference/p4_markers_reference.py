@@ -96,7 +96,7 @@ OLD_RUIN_YEARS = 1500   # P5-06 25.1 (e)
 
 
 def v027():
-    return GENERATOR_VERSION in ("0.27.0", "0.28.0")
+    return GENERATOR_VERSION in ("0.27.0", "0.28.0", "0.29.0")
 
 
 def site_kinds():

@@ -30,7 +30,7 @@ std::string roles_text(const eng::KindDef& k) {
 
 const char* const KIND43_TEMPLATE =
     "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
-    "slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, "
+    "slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage,hold_lost=the fall of a hold to the deep|After |, "
     "}{@region_former} became known as "
     "{@region}.";
 
@@ -40,7 +40,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 r21 23.2: kind 43 region_renamed in the compiled and the shipped catalogue") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.1
+    REQUIRE(c.kinds.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;   // P5-02 10.1
     const auto& k = c.kinds[42];
     CHECK(k.id == 43);
     CHECK(k.key == "region_renamed");

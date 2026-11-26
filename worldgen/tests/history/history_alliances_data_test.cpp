@@ -228,11 +228,12 @@ TEST_CASE("P5-04 4.1: the race fields after stances, shipped values, ranges and 
     for (const p504data::RaceFields& rf : p504data::race_fields()) {
         CAPTURE(std::string(rf.race));
         const wd::Record& r = record_of(*l.content, "race", std::string(rf.race).c_str());
-        REQUIRE(r.size() >= 8U);
-        CHECK(r.name_at(r.size() - 8U) == "stances");
-        CHECK(r.name_at(r.size() - 7U) == "origin_allies");
-        CHECK(r.name_at(r.size() - 6U) == "ally_join_permille");
-        CHECK(r.name_at(r.size() - 5U) == "mining_permille");
+        REQUIRE(r.size() >= 9U);
+        CHECK(r.name_at(r.size() - 9U) == "stances");
+        CHECK(r.name_at(r.size() - 8U) == "origin_allies");
+        CHECK(r.name_at(r.size() - 7U) == "ally_join_permille");
+        CHECK(r.name_at(r.size() - 6U) == "mining_permille");
+        CHECK(r.name_at(r.size() - 1U) == "delving_permille");   // P5-07 4.1 (0.29.0): the last field
         CHECK(r.get_int("ally_join_permille") == rf.join);
         CHECK(r.get_int("mining_permille") == rf.mining);
         const std::string path = "races/" + std::string(rf.race) + ".toml";
@@ -244,7 +245,10 @@ TEST_CASE("P5-04 4.1: the race fields after stances, shipped values, ranges and 
             const std::int64_t v = std::string(n) == "mining_permille" ? rf.mining : rf.join;
             CHECK_FALSE(load(edited(path, line(n, v), line(n, -1))).ok());
             CHECK_FALSE(load(edited(path, line(n, v), line(n, 1001))).ok());
-            CHECK(load(edited(path, line(n, v), line(n, 1000))).ok());
+            // P5-07 r2 4.5: a race that delves warrens (delving_permille > 0) may not mine (race_delves_one_way)
+            if (!(std::string(n) == "mining_permille" && rf.race == "goblin")) {
+                CHECK(load(edited(path, line(n, v), line(n, 1000))).ok());
+            }
             CHECK(load(edited(path, line(n, v), line(n, 0))).ok());
         }
     }
@@ -288,12 +292,12 @@ TEST_CASE("P5-04 4.3: history.conflict: seven fields after capital_captured_sali
     const std::size_t n = p504data::conflict_fields().size();
     REQUIRE(n == 7U);
     REQUIRE(r.size() > n);
-    CHECK(r.name_at(r.size() - n - 1U) == "capital_captured_salience");
+    CHECK(r.name_at(r.size() - n - 2U) == "capital_captured_salience");   // P5-07 4.3: forge_depth_permille closes the record
     for (std::size_t i = 0; i < n; ++i) {
         const p504data::Field& f = p504data::conflict_fields()[i];
         const std::string name(f.name);
         CAPTURE(name);
-        CHECK(r.name_at(r.size() - n + i) == f.name);
+        CHECK(r.name_at(r.size() - n - 1U + i) == f.name);
         CHECK(r.get_int(name) == f.shipped);
         CHECK_FALSE(load(without(CO, name)).ok());
         CHECK_FALSE(load(edited(CO, line(name, f.shipped), line(name, f.lo - 1))).ok());
@@ -335,9 +339,9 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     const Load l = load(p504data::files_026());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
-          "38476882cb4aa967d4cfd4da62042553307ab73da44cd1393b40c2f5c5a997a7");   // p3-01-data.txt game/data at 0.28.0 (P5-04a, p3_data_reference.py golden --version 0.28.0)
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.28.0");   // P5-06
-    CHECK(worldgen::db::SCHEMA_VERSION == 12);
+          "5581fd52962688495270ba4181991fb8d7a4d66dfd6e620b779e314e43818709");   // p3-01-data.txt game/data at 0.28.0 (P5-04a, p3_data_reference.py golden --version 0.28.0)
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.29.0");   // P5-06
+    CHECK(worldgen::db::SCHEMA_VERSION == 13);
 }
 
 TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold the 0.26.0 data") {

@@ -55,6 +55,7 @@ inline bool is_cede(std::int64_t k) { return k == k_region_ceded || k == k_settl
 inline constexpr std::int64_t k_claim_dropped = 41, k_refuge_hidden = 42;
 // P5-02 10.1 (generator 0.23.0): the monsters' appearance (a flare-up's trigger, 7.4) and the overrun (a ruin, 6.4.3).
 inline constexpr std::int64_t k_monster_appeared = 44, k_settlement_overrun = 49;
+inline constexpr std::int64_t k_hold_lost = 96;   // P5-07 8.1: a warren lost to the deep ruins its settlement (ending 2)
 // P5-04 8.1, 11.1 (generator 0.26.0): an ally's join (its war row is the ally's, not a war: 10.4) and the allied
 // battle, a battle kind wherever the statistics read battles (the reference's BATTLES()).
 inline constexpr std::int64_t k_ally_joined_war = 68, k_allied_battle = 71;
@@ -753,7 +754,8 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     for (const Row& s : t.settlement) {
         if (at(s, 10) == ruined) {
             CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_settlement_abandoned_to ||
-                   x.kind(at(s, 13)) == k_sacked || x.kind(at(s, 13)) == k_settlement_overrun));   // P5-02 6.4.3
+                   x.kind(at(s, 13)) == k_sacked || x.kind(at(s, 13)) == k_settlement_overrun ||
+                   x.kind(at(s, 13)) == k_hold_lost));   // P5-02 6.4.3; P5-07 6.6
         }
     }
     // 5 territory
@@ -921,7 +923,7 @@ inline std::vector<std::string> cession_violations(const Tables& t) {
         } else if (k == k_settlement_captured) {
             owner[at(e, 6)] = x.role1(eid, 1);
         } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to ||
-                   k == k_settlement_overrun) {   // P5-02 6.4.3: an overrun ruins its settlement
+                   k == k_settlement_overrun || (k == k_hold_lost && at(e, 6) != 0)) {   // P5-02 6.4.3: an overrun ruins its settlement; P5-07 a lost warren
             owner[at(e, 6)] = 0;
             standing[at(e, 6)] = false;
         } else if (is_cede(k)) {
@@ -1484,7 +1486,7 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
         } else if (k == k_settlement_captured) {
             owner[at(e, 6)] = x.role1(id, 1);
         } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to ||
-                   k == k_settlement_overrun) {   // P5-02 6.4.3: an overrun ruins its settlement
+                   k == k_settlement_overrun || (k == k_hold_lost && at(e, 6) != 0)) {   // P5-02 6.4.3: an overrun ruins its settlement; P5-07 a lost warren
             owner[at(e, 6)] = 0;
             standing[at(e, 6)] = false;
         } else if (k == k_capital_moved) {

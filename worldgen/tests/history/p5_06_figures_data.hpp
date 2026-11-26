@@ -1310,6 +1310,14 @@ R"p506(  { kind = "battle_led", salience = 35, template = "{@causes:arms_sold=ne
   { kind = "blight", salience = 50, template = "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} died." },
 ]
 )p506");
+    f.erase("history/report.toml");   // P5-07 8.2: the shipped report has the entries of kinds 93 to 99 (the 0.27.0 text lacks them)
+    // P5-07 4.2, 4.3 (generator 0.29.0): the fields appended after the 0.28.0 values, as shipped
+    f["history/conflict.toml"] += "\nforge_depth_permille = 15\n";
+    f["history/monsters.toml"] += "\ndeep_years = [250, 1000, 2500]\ndeep_delve_permille = 6\ndeep_wake_ppm = [0, 350, 1400]\n"
+                                  "deep_gate_levy_permille = 1000\ndeep_seal_max_permille = 800\ndeep_toll_permille = 400\n"
+                                  "deep_takes_max = 3\ndeep_reach_hops = 2\ndeep_warren_population_min = 3200\n"
+                                  "deep_warren_ore_min = 500\ndeep_warren_wake_permille = 200\ndeep_aid_permille = 500\n"
+                                  "deep_aid_hops = 2\ndeep_aid_levy_permille = 500\ndeep_aid_max = 2\ndeep_aid_memory = 30\n";
     return f;
 }
 

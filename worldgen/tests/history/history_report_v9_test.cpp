@@ -170,14 +170,14 @@ TEST_CASE("P5-04a 12.3, 12.5, 6.3, 11 item 9: H18's [alliances] and trade lines 
     for (const std::string& l : std::vector<std::string>{
              "  c1 The House of Aelin and c2 The Court of Onsae: 50-E, by origin, e7; renewed 12",
              "  c3 The Hold of Durn and c5 The Kingdom of Cear: 480-E, against c4 The Gub Horde, e33; renewed 10; joined "
-             "1, refused 1; spoils 0 granted, 1 withheld",
+             "1, refused 1; spoils 0 granted, 1 withheld; soured e42",
              "  c6 The Skreegg Horde and c7 The Urarz Horde: 650-820, in friendship, e44; renewed 1; joined 0, refused "
              "2; broken e54",
              "  c1 The House of Aelin and c4 The Gub Horde: 700-850, against c6 The Skreegg Horde, e47; lapsed e56",
              "  c4 The Gub Horde and c7 The Urarz Horde: 900-1310, in fear of c3 The Hold of Durn, e57; renewed 2; "
              "joined 1, refused 0; spoils 0 granted, 1 withheld; spurned e80",
              "  c1 The House of Aelin and c5 The Kingdom of Cear: 1100-1250, after trade, e64; joined 1, refused 0; "
-             "spoils 0 granted, 1 withheld; spurned e73",
+             "spoils 0 granted, 1 withheld; soured e70; spurned e73",
              "  c4 The Gub Horde and c6 The Skreegg Horde: 1400-1600, in friendship, e81; renewed 1; betrayed e87",
              "  c3 The Hold of Durn and c5 The Kingdom of Cear: 400-E, e27; arms from c3",
              "  c1 The House of Aelin and c5 The Kingdom of Cear: 410-E, e28",

@@ -78,15 +78,15 @@ std::string event_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history-report") {
 
-TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v9` (P5-03a 9.1) at both levels") {
+TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v10` (P5-03a 9.1) at both levels") {
     // the spec names no library constant for the header: the text is checked
     for (const std::string& t : {summary(), full()}) {
         const std::vector<std::string> lines = hrtest::lines_of(t);
         REQUIRE(!lines.empty());
-        CHECK(lines[0] == "# worldgen history v9");   // P5-03a 9.1
+        CHECK(lines[0] == "# worldgen history v10");   // P5-03a 9.1
     }
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v9");
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v9");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v10");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v10");
 }
 
 TEST_CASE("P3-07 r19 25.13 item 2: at most two calamity candidates per phase (25.2)") {
@@ -157,7 +157,6 @@ TEST_CASE("P3-07 r19 25.13 item 5: an ended realm in short at summary, unchanged
               // P5-04a 12.2 (v9): the count of its own events of salience 40 or more, and the weightiest three
               "  milestones: 2",
               "    0 e11 settlement_founded: Esk founded Eskby in Esk Heath.",
-              "    600 e28 settlement_founded: Esk founded Eskmere in Esk Heath.",
                "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7): in every block
     const std::vector<std::string> f5 = civ_block(full(), 5);
     CHECK(contains_line(f5, "  home: Esk Heath (rg7), grassland"));

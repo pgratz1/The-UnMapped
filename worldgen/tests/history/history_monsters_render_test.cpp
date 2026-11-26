@@ -196,7 +196,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-02 10.1: kinds 44 to 55 appended in the table's order, their uses, roles and values") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
+    REQUIRE(c.kinds.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     struct K {
         std::int64_t id;
         const char* key;
@@ -364,7 +364,7 @@ TEST_CASE("P5-02 11.4: each damaged monster row is refused with its message") {
     const std::string m1 = n(s.m0 + 1), m3 = n(s.m0 + 3);
     const std::string Y = n(s.year);
     const std::string head = "corrupt table 'monster': row ";
-    refused("monster-kind", "UPDATE monster SET kind = 7 WHERE id = " + m1 + ";", head + m1 + ": unknown kind 7");
+    refused("monster-kind", "UPDATE monster SET kind = 10 WHERE id = " + m1 + ";", head + m1 + ": unknown kind 10");
     refused("monster-name", "UPDATE monster SET name = '' WHERE id = " + m1 + ";", head + m1 + ": name is not a name");
     refused("monster-lair", "UPDATE monster SET lair_site = " + n(s.s0 + 4) + " WHERE id = " + m1 + ";",
             head + m1 + ": lair_site " + n(s.s0 + 4) + " is not a lair of this monster");
@@ -406,7 +406,7 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
             "corrupt table 'monster_kind': row 4: might 0 outside 1 to 10000000");
     for (const auto& [label, sql] : std::vector<std::pair<std::string, std::string>>{
              {"kind-grouped", "UPDATE monster_kind SET grouped = 2 WHERE id = 4;"},
-             {"kind-wake", "UPDATE monster_kind SET wake = 3 WHERE id = 4;"}}) {
+             {"kind-wake", "UPDATE monster_kind SET wake = 4 WHERE id = 4;"}}) {
         CAPTURE(label);
         const auto e = eng::view_error(open_world(corrupt(label, sql)));
         REQUIRE(e.has_value());

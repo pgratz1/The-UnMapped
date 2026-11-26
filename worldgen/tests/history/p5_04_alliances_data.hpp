@@ -253,6 +253,14 @@ inline std::string with_p506_templates(std::string t) {
     rep("{civilization} came to an end.", "{civilization}{civilization:under} came to an end.");
     // P5-04a 9.2 / 14.4 (0.28.0): a battle sentence (kinds 21 and 22) starts with the arms_sold clause
     if (t.rfind("{winner} defeated {loser} ", 0) == 0) t.insert(0, "{@causes:arms_sold=new-bought arms|With |, }");
+    // P5-07 8.2 (0.29.0): hold_lost causes on three templates, the end of a realm and the refused call's wording
+    if (t == "{civilization}{civilization:under} came to an end.")
+        t.insert(0, "{@causes:hold_lost=the loss of its last hold to the deep|After |, }");
+    if (t.find("{@region_former} became known as") != std::string::npos)
+        rep(",settlement_overrun=the ravage|", ",settlement_overrun=the ravage,hold_lost=the fall of a hold to the deep|");
+    if (t.find("found shelter in {settlement}") != std::string::npos)
+        rep(",settlements_ceded=the cession|", ",settlements_ceded=the cession,hold_lost=the fall of their hold|");
+    rep("Grasping for its own gain", "Hoping to profit by its ally's losses");
     return t;
 }
 

@@ -21,105 +21,134 @@
 #   kinds_seen <key>,...    over the monsters-small fixtures: the monster kinds that appeared
 #   events_seen <key>,...   over the monsters-small fixtures: the event kinds of 44-55 written at least once
 world geo-seed-0-512 0 512 6000 all normal auto normal normal
-geo-seed-0-512 table beast_population 152 82f80c485fbbb309516192d37302f469e6c31bb1483fe6a1d05b0b5973e3a2d0
-geo-seed-0-512 table monster 5 da8c5d9da0db4b04d8719516fce24722b6375661bde94599798401a2b3c9a868
-geo-seed-0-512 table site 16 3d87003e9161adcecf2d3ca32b0e489ea7fb7cd434bbf3e6013789467185d702
-geo-seed-0-512 ending 5c94ec860d781c71ce92297d2d89a19a3a6150ab247b0dd264e9b4205f364f37
-geo-seed-0-512 M monsters 5 alive 2 slain 2 died 1 raids 21 killed 1593 overruns 3 risen 3 lair_settlement_open 2
-geo-seed-0-512 G ghost 4 endings 0:28,1:1,2:3,3:1,4:3 standing 28 population 48596 shunned 2
-geo-seed-0-512 S outposts 3 ended 0 bold 2 monster_flares 0
+geo-seed-0-512 table beast_population 163 0fcd1d1137f653d2e820a8570d3318e14765fc1c8c5de009ba8ef60545f050b3
+geo-seed-0-512 table monster 3 db64ff0249dfce1263dcd63c79608f57f4dbd8b9d01d0baba8db2fbcbaff02bb
+geo-seed-0-512 table site 14 e7c37ffa723e9c91c6c284c3f78ceafff9e3b51310bc6ecba7f7d1ca3a8a8da3
+geo-seed-0-512 ending b54b945ea017f6ca751823147ff0579e3cef8c51c6641e342282a14be3e47fd4
+geo-seed-0-512 M monsters 3 alive 2 slain 0 died 1 raids 17 killed 668 overruns 1 risen 1 lair_settlement_open 1
+geo-seed-0-512 G ghost 3 endings 0:31,1:2,2:1,3:1,4:2 standing 31 population 46220 shunned 1
+geo-seed-0-512 S outposts 5 ended 2 bold 1 monster_flares 0
 geo-seed-0-512 m1 giant 4 born 76 e5 died 4065 hoard 0 | Gurngrain Cliffbreaker | lair The Hall of Gurngrain
-geo-seed-0-512 m2 troll 3 born 3790 e51 died 4213 hoard 45 | Zirk the Grey | lair Zirk's Hollow
-geo-seed-0-512 m3 undead 2 born 5578 e191 died - hoard 0 | The Dead of the Steep Heights | lair The Barrows of the Steep Heights
-geo-seed-0-512 m4 undead 3 born 5614 e198 died 5962 hoard 0 | The Restless of East Steppe | lair The Howes of East Steppe
-geo-seed-0-512 m5 undead 1 born 5979 e342 died - hoard 0 | The Dead of West Wood | lair The Howes of West Wood
+geo-seed-0-512 m2 troll 2 born 3790 e51 died - hoard 60 | Zirk the Grey | lair Zirk's Hollow
+geo-seed-0-512 m3 undead 2 born 5580 e204 died - hoard 0 | The Restless of the Steep Heights | lair The Howes of the Steep Heights
 geo-seed-0-512 si1 lair rg12 265 372 s0 c0 m1 76 e5 4065 2 | The Hall of Gurngrain
 geo-seed-0-512 si2 outpost rg7 116 218 s0 c1 m0 2162 e21 - 0 | The Star-Tower of Saerigle
 geo-seed-0-512 si3 outpost rg6 254 245 s13 c3 m0 3266 e44 - 0 | The Mines of Kidinkorn
-geo-seed-0-512 si4 lair rg10 251 249 s0 c0 m2 3790 e51 4213 1 | Zirk's Hollow
-geo-seed-0-512 si5 outpost rg7 101 195 s0 c1 m0 5011 e110 - 0 | The Star-Tower of Carithae
-geo-seed-0-512 si6 outpost rg1 293 50 s0 c4 m0 5575 e190 - 0 | The Thorn-Tower of Siati
-geo-seed-0-512 si7 lair rg11 342 269 s0 c0 m3 5578 e191 5833 3 | The Howes of the Steep Heights
-geo-seed-0-512 si8 lair rg8 367 249 s0 c0 m4 5614 e198 5939 3 | The Barrows of East Steppe
-geo-seed-0-512 si9 outpost rg9 250 249 s0 c6 m0 5663 e217 - 0 | Zuughbag Stockade
-geo-seed-0-512 si10 lair rg13 318 414 s6 c0 m3 5833 e257 - 0 | The Barrows of the Steep Heights
-geo-seed-0-512 si11 outpost rg13 274 386 s0 c2 m0 5878 e296 - 0 | Sleetchnog Stockade
-geo-seed-0-512 si12 lair rg8 454 197 s35 c0 m4 5939 e312 5962 1 | The Howes of East Steppe
-geo-seed-0-512 si13 outpost rg7 117 218 s0 c1 m0 5956 e326 - 0 | The Spire of Illo
-geo-seed-0-512 si14 lair rg9 249 249 s0 c0 m5 5979 e342 5983 3 | The Barrows of West Wood
-geo-seed-0-512 si15 lair rg9 149 210 s31 c0 m5 5983 e344 - 0 | The Howes of West Wood
-geo-seed-0-512 si16 outpost rg7 121 234 s0 c1 m0 5986 e348 - 0 | The Star-Tower of Glasla
+geo-seed-0-512 si4 lair rg10 251 249 s0 c0 m2 3790 e51 - 0 | Zirk's Hollow
+geo-seed-0-512 si5 outpost rg7 101 195 s0 c1 m0 5011 e126 - 0 | The Star-Tower of Moelies
+geo-seed-0-512 si6 outpost rg11 342 269 s0 c2 m0 5574 e201 5580 4 | Griz Lookout
+geo-seed-0-512 si7 outpost rg1 293 50 s0 c4 m0 5575 e202 - 0 | Wae's Moonspire
+geo-seed-0-512 si8 lair rg11 342 270 s0 c0 m3 5580 e204 5833 3 | The Barrows of the Steep Heights
+geo-seed-0-512 si9 outpost rg9 250 249 s0 c6 m0 5663 e235 5726 4 | Zuughbag Stockade
+geo-seed-0-512 si10 lair rg13 318 414 s6 c0 m3 5833 e286 - 0 | The Howes of the Steep Heights
+geo-seed-0-512 si11 outpost rg4 386 202 s0 c5 m0 5866 e316 - 0 | Edol Watch
+geo-seed-0-512 si12 outpost rg13 274 386 s0 c2 m0 5878 e322 - 0 | Skark Stockade
+geo-seed-0-512 si13 outpost rg7 117 218 s0 c1 m0 5975 e362 - 0 | The Spire of Illo
+geo-seed-0-512 si14 outpost rg7 121 234 s0 c1 m0 5986 e367 - 0 | The Star-Tower of Olrae
 world geo-seed-42-512 42 512 6000 all normal auto normal normal
-geo-seed-42-512 table beast_population 285 1e2038f087040fd87df69e5189282509729185a582912209a299002b568d6f9e
-geo-seed-42-512 table monster 2 a0427edbd8152e1f7c547b9cd03575e68dfa4ed98571399f7fbaf8f1792914c0
-geo-seed-42-512 table site 18 77c480e71f45f9bbb1839b13b7452a471de0299df97b33e1f509abe3b5dbf7ce
-geo-seed-42-512 ending ebd59094c6f5f83449214e912980017c3c430a534211f95609cdf7c97e01dddb
-geo-seed-42-512 M monsters 2 alive 0 slain 2 died 0 raids 19 killed 867 overruns 2 risen 1 lair_settlement_open 0
-geo-seed-42-512 G ghost 8 endings 0:37,1:5,2:2,3:6,4:2 standing 37 population 69829 shunned 0
-geo-seed-42-512 S outposts 6 ended 5 bold 0 monster_flares 0
-geo-seed-42-512 m1 troll 3 born 2074 e35 died 5750 hoard 27 | Gogg Stonehide | lair The Den of Gogg
-geo-seed-42-512 m2 undead 3 born 2915 e153 died 5100 hoard 0 | The Host of Central Downs | lair The Barrows of Central Downs
-geo-seed-42-512 si1 lair rg5 213 184 s0 c0 m1 2074 e35 5730 3 | Gogg's Hollow
+geo-seed-42-512 table beast_population 328 200658c83e368d88725892fd92e7bbe7c76e7ca41f6f1f50b752e29da94aaede
+geo-seed-42-512 table monster 7 465ad7ee2d546c45966056b0b95030ab317a4dcf7eccceda5cb6238542a2e6c9
+geo-seed-42-512 table site 36 92352a39b8fb8ae7d05f39272da052c42c15d5dcec8e28481a2bbacd3029e5d4
+geo-seed-42-512 ending bcf0f06fb1c4edb94a32530c48439078dc0b9e900badb20380241dbfaf0785a5
+geo-seed-42-512 M monsters 7 alive 4 slain 3 died 0 raids 39 killed 3065 overruns 4 risen 4 lair_settlement_open 4
+geo-seed-42-512 G ghost 5 endings 0:36,1:13,2:8,3:3,4:2,6:1 standing 36 population 56015 shunned 4
+geo-seed-42-512 S outposts 13 ended 7 bold 1 monster_flares 0
+geo-seed-42-512 m1 troll 3 born 2074 e35 died 4870 hoard 37 | Gogg Stonehide | lair Gogg's Hollow
+geo-seed-42-512 m2 undead 3 born 2915 e154 died 3267 hoard 0 | The Host of Niskreerk | lair The Barrows of Niskreerk
+geo-seed-42-512 m3 undead 2 born 3898 e285 died - hoard 0 | The Host of the Fallen Wood | lair The Howes of the Fallen Wood
+geo-seed-42-512 m4 undead 2 born 4995 e535 died - hoard 0 | The Restless of Leper's Debt | lair The Barrows of Leper's Debt
+geo-seed-42-512 m5 ymrach 2 born 5626 e743 died - hoard 110 | Khirn the Deep-Coiled | lair The Coils of Khirn
+geo-seed-42-512 m6 undead 3 born 5683 e819 died 5995 hoard 0 | The Restless of the Plain of Shades | lair The Howes of the Plain of Shades
+geo-seed-42-512 m7 ymrach 2 born 5824 e947 died - hoard 10 | Gurinbai Stonegnawer | lair The Coils of Gurinbai
+geo-seed-42-512 si1 lair rg5 213 184 s0 c0 m1 2074 e35 4870 1 | Gogg's Hollow
 geo-seed-42-512 si2 outpost rg11 415 266 s0 c1 m0 2329 e69 2549 6 | The Spire of Vaennma
 geo-seed-42-512 si3 outpost rg11 414 265 s0 c1 m0 2339 e74 - 0 | Aeithaer's White Tower
-geo-seed-42-512 si4 outpost rg9 264 254 s0 c1 m0 2899 e130 5373 4 | The Spire of Raeglaend
-geo-seed-42-512 si5 outpost rg5 211 185 s0 c3 m0 2900 e131 - 0 | Drix Stockade
-geo-seed-42-512 si6 outpost rg8 187 196 s0 c3 m0 2901 e135 3272 4 | Nuzz Stockade
-geo-seed-42-512 si7 lair rg9 263 255 s0 c0 m2 2915 e153 2921 3 | The Howes of Central Downs
-geo-seed-42-512 si8 lair rg8 164 279 s22 c0 m2 2921 e159 5100 1 | The Barrows of Central Downs
-geo-seed-42-512 si9 outpost rg2 196 171 s26 c4 m0 3252 e179 - 0 | The Mines of Naimthairk
-geo-seed-42-512 si10 outpost rg14 215 393 s0 c5 m0 4247 e249 - 0 | The Thorn-Tower of Sietwie
-geo-seed-42-512 si11 outpost rg11 430 272 s0 c1 m0 4270 e254 - 0 | Ithoco's White Tower
-geo-seed-42-512 si12 outpost rg4 369 186 s0 c6 m0 4985 e355 - 0 | Ashold's Tower
-geo-seed-42-512 si13 outpost rg7 165 196 s0 c2 m0 5213 e414 5414 6 | The Spire of Laethir
-geo-seed-42-512 si14 outpost rg14 217 409 s0 c5 m0 5245 e428 - 0 | Aewhae's Moonspire
-geo-seed-42-512 si15 outpost rg10 205 388 s0 c7 m0 5633 e536 5637 4 | Groz'azush Stockade
-geo-seed-42-512 si16 outpost rg2 187 187 s0 c4 m0 5680 e568 - 0 | Toud's Delving-Spire
-geo-seed-42-512 si17 lair rg5 290 184 s12 c0 m1 5730 e585 5750 1 | The Den of Gogg
-geo-seed-42-512 si18 outpost rg11 382 328 s0 c1 m0 5742 e594 - 0 | Gliefon's White Tower
+geo-seed-42-512 si4 outpost rg9 264 254 s0 c1 m0 2899 e131 2908 4 | The Spire of Raeglaend
+geo-seed-42-512 si5 outpost rg5 211 185 s0 c3 m0 2900 e132 3124 6 | Drix Stockade
+geo-seed-42-512 si6 outpost rg8 187 196 s0 c3 m0 2901 e134 5637 4 | Nuzz Stockade
+geo-seed-42-512 si7 lair rg9 318 273 s15 c0 m2 2915 e154 2921 3 | The Howes of Niskreerk
+geo-seed-42-512 si8 lair rg8 164 279 s22 c0 m2 2921 e164 3267 1 | The Barrows of Niskreerk
+geo-seed-42-512 si9 outpost rg2 196 171 s27 c4 m0 3252 e191 3420 4 | The Mines of Grairnmod Hold
+geo-seed-42-512 si10 outpost rg7 165 196 s0 c2 m0 3273 e199 - 0 | Erin Watch
+geo-seed-42-512 si11 outpost rg3 123 176 s0 c3 m0 3417 e223 5097 4 | Slink Stockade
+geo-seed-42-512 si12 outpost rg10 228 365 s29 c4 m0 3742 e248 5824 4 | The Delvings of Khord
+geo-seed-42-512 si13 lair rg7 164 195 s0 c0 m3 3898 e285 3900 3 | The Barrows of the Fallen Wood
+geo-seed-42-512 si14 lair rg7 82 206 s6 c0 m3 3900 e287 - 0 | The Howes of the Fallen Wood
+geo-seed-42-512 si15 outpost rg13 201 416 s32 c4 m0 4192 e302 4302 4 | The Mines of Khilikhi
+geo-seed-42-512 si16 outpost rg14 215 393 s0 c5 m0 4247 e312 4421 4 | Litosk's Moonspire
+geo-seed-42-512 si17 outpost rg11 415 266 s0 c1 m0 4255 e322 - 0 | The Spire of Ithaeie
+geo-seed-42-512 si18 outpost rg11 430 272 s0 c1 m0 4270 e334 - 0 | Vamoll's White Tower
+geo-seed-42-512 si19 outpost rg4 369 186 s0 c7 m0 4989 e534 - 0 | The Tower of Alard
+geo-seed-42-512 si20 lair rg14 215 394 s0 c0 m4 4995 e535 4998 3 | The Howes of Leper's Debt
+geo-seed-42-512 si21 lair rg12 333 385 s24 c0 m4 4998 e539 - 0 | The Barrows of Leper's Debt
+geo-seed-42-512 si22 outpost rg6 416 265 s0 c5 m0 5067 e572 - 0 | Vouwhae Watch
+geo-seed-42-512 si23 outpost rg14 215 393 s0 c5 m0 5075 e576 - 0 | The Thorn of Glaefia
+geo-seed-42-512 si24 outpost rg4 408 172 s0 c7 m0 5448 e670 - 0 | Asheard's Tower
+geo-seed-42-512 si25 outpost rg1 241 152 s0 c8 m0 5460 e681 5793 4 | Skuggdrit Lookout
+geo-seed-42-512 si26 outpost rg2 165 97 s50 c4 m0 5469 e696 5741 4 | The Delvings of Drax-Gork Pit
+geo-seed-42-512 si27 lair rg8 194 258 s16 c0 m5 5626 e743 - 0 | The Coils of Khirn
+geo-seed-42-512 si28 outpost rg4 368 186 s0 c7 m0 5650 e792 5870 6 | Daldcis Watch
+geo-seed-42-512 si29 outpost rg10 205 388 s0 c4 m0 5680 e818 - 0 | Drourku's Delving-Spire
+geo-seed-42-512 si30 lair rg4 447 156 s0 c0 m6 5683 e819 5978 3 | The Barrows of the Plain of Shades
+geo-seed-42-512 si31 outpost rg11 382 328 s0 c1 m0 5742 e853 - 0 | Thielie's White Tower
+geo-seed-42-512 si32 outpost rg12 326 344 s0 c3 m0 5749 e867 - 0 | Zogg-Gnozz Lookout
+geo-seed-42-512 si33 outpost rg5 213 184 s0 c3 m0 5756 e880 - 0 | Krib Stockade
+geo-seed-42-512 si34 lair rg10 228 365 s29 c0 m7 5824 e947 - 0 | The Coils of Gurinbai
+geo-seed-42-512 si35 outpost rg10 202 384 s35 c4 m0 5834 e960 - 0 | The Mines of Grirnbra
+geo-seed-42-512 si36 lair rg4 397 129 s46 c0 m6 5978 e1114 5995 1 | The Howes of the Plain of Shades
 world geo-phrase-512 15629206466951235176 512 6000 all normal auto normal normal
-geo-phrase-512 table beast_population 240 dd2deeb197d5c165fb411935ab96bfd1a56e0fd55ab7b30e7989392cb9a5c8c1
-geo-phrase-512 table monster 1 e78f741ae80e706d6b375a0b64f87a503d437e73653fadfcc3c294e9a27332f1
-geo-phrase-512 table site 10 5d54d373ad68e705c203f7887b5829ab8046d78dcf0381573b4c3ccd4795f427
-geo-phrase-512 ending f14abd209b3bd5fdd02125ff2660c12b647fa0b94e1720e7f2d487f899c12384
-geo-phrase-512 M monsters 1 alive 1 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-geo-phrase-512 G ghost 2 endings 0:36,1:3,4:2 standing 36 population 72529 shunned 0
-geo-phrase-512 S outposts 1 ended 1 bold 0 monster_flares 1
+geo-phrase-512 table beast_population 212 1324e8a08215832850bfb37d366864e70c829591f3c08dbaf0547d10d5553ee8
+geo-phrase-512 table monster 4 2988fdbaa2c0cef4e3474e899a1c10e2431e211692d47828748625850c4b1e46
+geo-phrase-512 table site 19 ffd98841224b555137db215c308d60e44aca406ba2e2e2eaa638fdad45e74ab8
+geo-phrase-512 ending 372816d31f34b15933bdc15aa26edb0abab042116c9ba34204302f3451914769
+geo-phrase-512 M monsters 4 alive 3 slain 1 died 0 raids 11 killed 1037 overruns 1 risen 2 lair_settlement_open 1
+geo-phrase-512 G ghost 2 endings 0:38,2:1,3:1,4:1 standing 38 population 68984 shunned 1
+geo-phrase-512 S outposts 7 ended 4 bold 0 monster_flares 1
 geo-phrase-512 m1 dragon 2 born 1975 e13 died - hoard 0 | Aerae the Old | lair The Lair of Aerae
+geo-phrase-512 m2 undead 3 born 4325 e180 died 5224 hoard 0 | The Dead of Southeast Fells | lair The Barrows of Southeast Fells
+geo-phrase-512 m3 undead 2 born 5680 e403 died - hoard 0 | The Dead of the Wolds of Scythes | lair The Howes of the Wolds of Scythes
+geo-phrase-512 m4 ysgarth 2 born 5926 e495 died - hoard 0 | The Swarm Beneath Tairknodin | lair The Warrens of Tairknodin
 geo-phrase-512 si1 lair rg8 295 269 s0 c0 m1 1975 e13 - 0 | The Lair of Aerae
 geo-phrase-512 si2 outpost rg9 80 246 s0 c1 m0 2000 e15 - 0 | Olros' White Tower
 geo-phrase-512 si3 outpost rg8 296 268 s17 c4 m0 3337 e89 - 0 | The Mines of Drondgound
-geo-phrase-512 si4 outpost rg13 317 366 s19 c4 m0 3977 e111 - 0 | The Delvings of Dramnarn
-geo-phrase-512 si5 outpost rg8 296 269 s0 c4 m0 4010 e119 4226 6 | The Tower of Nainthrod
-geo-phrase-512 si6 outpost rg9 76 228 s0 c1 m0 4031 e126 - 0 | Elela's White Tower
-geo-phrase-512 si7 outpost rg8 296 269 s0 c4 m0 4285 e153 - 0 | The Rune-Tower of Douk
-geo-phrase-512 si8 outpost rg9 101 260 s0 c1 m0 4965 e189 - 0 | Sitholl's White Tower
-geo-phrase-512 si9 outpost rg6 356 167 s0 c5 m0 5042 e205 - 0 | The Thorn-Tower of Iefli
-geo-phrase-512 si10 outpost rg6 368 206 s0 c5 m0 5748 e351 - 0 | The Thorn-Tower of Seetyglee
+geo-phrase-512 si4 outpost rg13 317 366 s19 c4 m0 3977 e112 4007 4 | The Delvings of Dramnarn
+geo-phrase-512 si5 outpost rg9 76 228 s0 c1 m0 4031 e131 - 0 | The Star-Tower of Veithae
+geo-phrase-512 si6 outpost rg8 296 269 s0 c4 m0 4285 e166 - 0 | Goukna's Delving-Spire
+geo-phrase-512 si7 outpost rg8 296 270 s0 c4 m0 4318 e176 4526 6 | Tharndrim Watch
+geo-phrase-512 si8 lair rg13 325 312 s0 c0 m2 4325 e180 5224 1 | The Barrows of Southeast Fells
+geo-phrase-512 si9 outpost rg6 356 167 s0 c5 m0 5042 e234 - 0 | The Thorn-Tower of Twyi
+geo-phrase-512 si10 outpost rg2 307 54 s0 c3 m0 5046 e238 - 0 | Zisnurk Stockade
+geo-phrase-512 si11 outpost rg10 309 282 s0 c2 m0 5220 e289 5436 6 | Snikgeek Stockade
+geo-phrase-512 si12 outpost rg13 325 312 s0 c2 m0 5487 e329 5940 4 | Sneegg Lookout
+geo-phrase-512 si13 outpost rg8 296 270 s0 c4 m0 5665 e385 5865 6 | Tholimou Watch
+geo-phrase-512 si14 outpost rg7 277 233 s0 c2 m0 5673 e396 - 0 | Beesnax Lookout
+geo-phrase-512 si15 lair rg12 183 362 s0 c0 m3 5680 e403 5740 3 | The Barrows of the Wolds of Scythes
+geo-phrase-512 si16 lair rg9 65 219 s18 c0 m3 5740 e425 - 0 | The Howes of the Wolds of Scythes
+geo-phrase-512 si17 outpost rg6 368 206 s0 c5 m0 5748 e427 - 0 | Twawian's Moonspire
+geo-phrase-512 si18 lair rg8 296 268 s0 c0 m4 5926 e495 - 0 | The Warrens of Tairknodin
+geo-phrase-512 si19 outpost rg9 80 245 s0 c1 m0 5998 e522 - 0 | Elathaend Watch
 world geo-seed-1-1024 1 1024 6000 all normal auto normal normal
-geo-seed-1-1024 table beast_population 1226 6c09fdbcd3dd4ea1bca7b3b267273ff23f62302310f7ff599953ffce1a61f4b2
-geo-seed-1-1024 table monster 7 70ec5b5084c60f4b2591084cfc3885cd2d825561fe67c5e773909fb928b072fc
-geo-seed-1-1024 table site 44 99c1571ecc7029bef8860e80d502a80997b5096f1848e9c7fa2e78853bb9192c
-geo-seed-1-1024 ending 4dd1eb1b2d29f653a3a94a79440e8a831a6494ac363c27a2b89ae1ffa21ba907
-geo-seed-1-1024 M monsters 7 alive 1 slain 5 died 1 raids 73 killed 4177 overruns 6 risen 3 lair_settlement_open 1
-geo-seed-1-1024 G ghost 1 endings 0:83,1:22,2:6,3:1,6:7 standing 83 population 182578 shunned 1
-geo-seed-1-1024 S outposts 18 ended 10 bold 7 monster_flares 0
+geo-seed-1-1024 table beast_population 1256 5c5de5d0316079e155d71cb059833903a1ba6629d815726010cc6f0a56bfcaee
+geo-seed-1-1024 table monster 5 b89f6fe7db7aaed5714cd45a73edaee3aa28d1cbb2a033241d73ebd5b622a11b
+geo-seed-1-1024 table site 43 02ad8f9d3024b079e47d753c861af7bb1dd50eb3987b4e9f05d2a30243d89b89
+geo-seed-1-1024 ending 7b095356651e21bde9c4889c71bdc4b1a9b4ffac9714a5befababc2ffcae01e2
+geo-seed-1-1024 M monsters 5 alive 0 slain 4 died 1 raids 43 killed 2125 overruns 4 risen 1 lair_settlement_open 0
+geo-seed-1-1024 G ghost 0 endings 0:93,1:16,2:4,6:3 standing 93 population 177927 shunned 0
+geo-seed-1-1024 S outposts 22 ended 14 bold 8 monster_flares 0
 geo-seed-1-1024 m1 troll 3 born 975 e13 died 2133 hoard 7 | Zug the Grey | lair Zug's Hollow
 geo-seed-1-1024 m2 troll 3 born 2871 e116 died 3428 hoard 3 | Mossback Nux-Nink | lair The Den of Nux-Nink
 geo-seed-1-1024 m3 ogre 4 born 3196 e133 died 5184 hoard 0 | Og'zuld the Fat | lair Og'zuld's Larder
-geo-seed-1-1024 m4 undead 3 born 3229 e148 died 5909 hoard 0 | The Dead of Ryefurrow Vale | lair The Howes of Ryefurrow Vale
+geo-seed-1-1024 m4 undead 3 born 3229 e148 died 5964 hoard 0 | The Dead of Ryefurrow Vale | lair The Howes of Ryefurrow Vale
 geo-seed-1-1024 m5 troll 3 born 3841 e359 died 4078 hoard 49 | Greegg-Kut | lair The Den of Greegg-Kut
-geo-seed-1-1024 m6 undead 2 born 4873 e681 died - hoard 0 | The Host of Fernhurst | lair The Howes of Fernhurst
-geo-seed-1-1024 m7 undead 3 born 4989 e768 died 5060 hoard 0 | The Dead of Central Downs | lair The Barrows of Central Downs
 geo-seed-1-1024 si1 outpost rg15 334 372 s0 c1 m0 112 e5 - 0 | The Star-Tower of Femaeth
 geo-seed-1-1024 si2 lair rg26 438 624 s0 c0 m1 975 e13 2102 3 | The Den of Zug
 geo-seed-1-1024 si3 lair rg18 303 430 s9 c0 m1 2102 e37 2133 1 | Zug's Hollow
 geo-seed-1-1024 si4 outpost rg13 548 393 s0 c3 m0 2546 e83 2556 4 | Drork Stockade
 geo-seed-1-1024 si5 lair rg41 773 812 s0 c0 m2 2871 e116 3342 3 | Nux-Nink's Hollow
 geo-seed-1-1024 si6 lair rg11 830 355 s0 c0 m3 3196 e133 5184 2 | Og'zuld's Larder
-geo-seed-1-1024 si7 outpost rg17 415 465 s0 c1 m0 3225 e146 - 0 | Maemieth Watch
+geo-seed-1-1024 si7 outpost rg17 415 465 s0 c1 m0 3225 e146 4679 4 | Maemieth Watch
 geo-seed-1-1024 si8 lair rg13 622 354 s0 c0 m4 3229 e148 3234 3 | The Barrows of Ryefurrow Vale
-geo-seed-1-1024 si9 lair rg13 526 356 s30 c0 m4 3234 e157 5909 1 | The Howes of Ryefurrow Vale
+geo-seed-1-1024 si9 lair rg13 526 356 s30 c0 m4 3234 e157 5964 1 | The Howes of Ryefurrow Vale
 geo-seed-1-1024 si10 lair rg39 706 703 s45 c0 m2 3342 e191 3428 1 | The Den of Nux-Nink
 geo-seed-1-1024 si11 outpost rg49 663 835 s46 c5 m0 3368 e210 3525 4 | The Mines of Girin
 geo-seed-1-1024 si12 outpost rg15 432 426 s0 c1 m0 3464 e270 - 0 | The Star-Tower of Glaelath
@@ -129,46 +158,50 @@ geo-seed-1-1024 si15 outpost rg52 735 840 s54 c5 m0 3841 e360 3995 4 | The Mines
 geo-seed-1-1024 si16 outpost rg42 513 684 s0 c4 m0 3992 e385 4194 6 | Sneez-Geeb Stockade
 geo-seed-1-1024 si17 lair rg45 398 801 s24 c0 m5 3993 e387 4078 1 | The Den of Greegg-Kut
 geo-seed-1-1024 si18 outpost rg55 671 876 s71 c5 m0 4317 e521 - 0 | The Delvings of Kark
-geo-seed-1-1024 si19 outpost rg28 735 536 s0 c3 m0 4355 e530 5156 4 | Gnizeeb Lookout
-geo-seed-1-1024 si20 outpost rg49 629 807 s75 c5 m0 4403 e556 - 0 | The Delvings of Harkhid Deep
-geo-seed-1-1024 si21 outpost rg15 458 387 s0 c1 m0 4455 e567 - 0 | The Star-Tower of Asithie
-geo-seed-1-1024 si22 outpost rg42 666 735 s57 c5 m0 4544 e597 5124 4 | The Delvings of Kanox Pit
-geo-seed-1-1024 si23 outpost rg52 737 884 s80 c5 m0 4653 e636 - 0 | The Mines of Barin Deep
-geo-seed-1-1024 si24 outpost rg9 603 302 s0 c1 m0 4865 e672 - 0 | Ieglaes Watch
-geo-seed-1-1024 si25 lair rg28 687 543 s0 c0 m6 4873 e681 4899 3 | The Barrows of Fernhurst
-geo-seed-1-1024 si26 outpost rg33 732 561 s0 c4 m0 4896 e694 4903 4 | Bozz Stockade
-geo-seed-1-1024 si27 lair rg28 746 554 s84 c0 m6 4899 e697 - 0 | The Howes of Fernhurst
-geo-seed-1-1024 si28 outpost rg39 662 680 s0 c8 m0 4901 e701 5965 5 | Skozz-Dronk Stockade
-geo-seed-1-1024 si29 outpost rg42 513 684 s0 c5 m0 4973 e740 5124 4 | Dodtik Watch
-geo-seed-1-1024 si30 lair rg34 471 653 s0 c0 m7 4989 e768 4993 3 | The Howes of Central Downs
-geo-seed-1-1024 si31 lair rg39 676 690 s79 c0 m7 4993 e775 5060 1 | The Barrows of Central Downs
-geo-seed-1-1024 si32 outpost rg22 559 495 s0 c3 m0 4998 e787 5156 4 | Bux Stockade
-geo-seed-1-1024 si33 outpost rg34 472 654 s0 c5 m0 5052 e842 5124 4 | The Tower of Niringid
-geo-seed-1-1024 si34 outpost rg29 655 590 s0 c4 m0 5063 e861 - 0 | Kislat Stockade
-geo-seed-1-1024 si35 outpost rg42 565 675 s53 c10 m0 5143 e926 - 0 | The Mines of Skirk-Bab
-geo-seed-1-1024 si36 outpost rg25 762 535 s0 c7 m0 5600 e1056 - 0 | Lia's Moonspire
-geo-seed-1-1024 si37 outpost rg33 732 561 s0 c8 m0 5631 e1115 5645 4 | Skok Lookout
-geo-seed-1-1024 si38 outpost rg15 383 394 s0 c1 m0 5677 e1150 - 0 | The Star-Tower of Nacaen
-geo-seed-1-1024 si39 outpost rg39 662 681 s0 c8 m0 5822 e1279 5965 5 | Grinok's Bone-Tower
-geo-seed-1-1024 si40 outpost rg20 257 510 s0 c9 m0 5830 e1291 - 0 | Sear Watch
-geo-seed-1-1024 si41 outpost rg33 732 561 s0 c10 m0 5901 e1397 - 0 | The Tower of Drin
-geo-seed-1-1024 si42 outpost rg50 409 812 s0 c2 m0 5950 e1431 - 0 | Beekig Stockade
-geo-seed-1-1024 si43 outpost rg51 476 807 s0 c5 m0 5959 e1435 - 0 | The Tower of Mour
-geo-seed-1-1024 si44 outpost rg45 446 715 s0 c2 m0 5962 e1438 - 0 | Zodrutch Stockade
+geo-seed-1-1024 si19 outpost rg28 735 536 s0 c3 m0 4355 e530 5209 6 | Gnizeeb Lookout
+geo-seed-1-1024 si20 outpost rg49 629 807 s75 c5 m0 4403 e551 4582 4 | The Delvings of Harkhid Deep
+geo-seed-1-1024 si21 outpost rg15 458 387 s0 c1 m0 4455 e562 - 0 | The Star-Tower of Glevieth
+geo-seed-1-1024 si22 outpost rg52 737 884 s78 c5 m0 4528 e599 4582 4 | The Delvings of Haili Hold
+geo-seed-1-1024 si23 outpost rg49 609 832 s79 c5 m0 4601 e624 5470 4 | The Mines of Khandi
+geo-seed-1-1024 si24 outpost rg34 471 653 s0 c3 m0 4611 e633 4874 6 | Snozkrug Stockade
+geo-seed-1-1024 si25 outpost rg39 662 680 s0 c4 m0 4612 e636 4874 6 | Skreek Stockade
+geo-seed-1-1024 si26 outpost rg52 771 826 s0 c4 m0 4665 e659 5796 4 | Bozz Stockade
+geo-seed-1-1024 si27 outpost rg17 415 465 s0 c1 m0 4874 e736 - 0 | Filaese Watch
+geo-seed-1-1024 si28 outpost rg39 662 680 s0 c4 m0 4986 e819 5209 6 | Skozz-Dronk Stockade
+geo-seed-1-1024 si29 outpost rg42 513 684 s0 c3 m0 4990 e824 5693 6 | Zaz Stockade
+geo-seed-1-1024 si30 outpost rg24 455 555 s0 c3 m0 5461 e928 - 0 | Zag Lookout
+geo-seed-1-1024 si31 outpost rg55 635 884 s0 c5 m0 5463 e932 - 0 | Tudnurn Watch
+geo-seed-1-1024 si32 outpost rg39 662 680 s0 c4 m0 5476 e958 5494 4 | Bux Stockade
+geo-seed-1-1024 si33 outpost rg16 878 464 s0 c7 m0 5600 e1023 - 0 | The Thorn-Tower of Limeely
+geo-seed-1-1024 si34 outpost rg15 383 394 s0 c1 m0 5677 e1059 - 0 | Isaell's White Tower
+geo-seed-1-1024 si35 outpost rg22 559 495 s0 c3 m0 5700 e1089 - 0 | Dreek Stockade
+geo-seed-1-1024 si36 outpost rg15 335 372 s0 c1 m0 5702 e1092 5902 6 | Alor Watch
+geo-seed-1-1024 si37 outpost rg20 223 465 s87 c8 m0 5822 e1195 - 0 | The Library of Teardmord
+geo-seed-1-1024 si38 outpost rg25 762 535 s0 c7 m0 5950 e1267 5978 4 | The Thorn of Lallshy
+geo-seed-1-1024 si39 outpost rg25 762 535 s0 c4 m0 5986 e1308 - 0 | Drogg-Slox Stockade
+geo-seed-1-1024 si40 outpost rg33 732 561 s0 c4 m0 5991 e1320 - 0 | Kuz-Gnutch Lookout
+geo-seed-1-1024 si41 outpost rg18 351 515 s0 c1 m0 5992 e1322 - 0 | The Spire of Fesier
+geo-seed-1-1024 si42 outpost rg27 352 586 s0 c9 m0 5992 e1323 5994 4 | Oz'azaald Stockade
+geo-seed-1-1024 si43 outpost rg50 409 812 s0 c2 m0 5995 e1339 - 0 | Keebog Stockade
 world hist-span-2000-512 7 512 2000 all normal auto normal normal
-hist-span-2000-512 table beast_population 218 bb21966c95513dc731438fcb582e6d2a7cbeb7bb395cf76e59bd65b0d580809e
-hist-span-2000-512 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-hist-span-2000-512 table site 6 088ac8f9793cbaf8991842380e8493f7bf40c8bb55ce0137310e97455732247d
-hist-span-2000-512 ending 58bf7cdeecf75a18548d860d7161fefbd9f5ade333d7e62fe9e45bc51882a709
-hist-span-2000-512 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-hist-span-2000-512 G ghost 0 endings 0:33,1:1 standing 33 population 48618 shunned 0
-hist-span-2000-512 S outposts 3 ended 1 bold 0 monster_flares 0
+hist-span-2000-512 table beast_population 220 3fa896ee71e97d49ff81dfef6349b084564b6e6badfc11334e1ea68afa311a93
+hist-span-2000-512 table monster 1 a42cc740b846bc5cd4918848af9f2ba4935ca0da9437efaa35b7e3ea2f28953f
+hist-span-2000-512 table site 10 cd45aa26d0493023a8d0e9bb58d4d0121d5eb662fba7acd7737254c2fbb8fa6e
+hist-span-2000-512 ending 2b37f1b1e582b6dede8f03f699496f534ffbf824f3a3c41752ed60517cbce013
+hist-span-2000-512 M monsters 1 alive 1 slain 0 died 0 raids 5 killed 478 overruns 1 risen 1 lair_settlement_open 1
+hist-span-2000-512 G ghost 1 endings 0:31,1:2,2:1,3:1 standing 31 population 47310 shunned 1
+hist-span-2000-512 S outposts 5 ended 2 bold 0 monster_flares 0
+hist-span-2000-512 m1 undead 1 born 1918 e215 died - hoard 0 | The Restless of the Shaw of the Hunt | lair The Barrows of the Shaw of the Hunt
 hist-span-2000-512 si1 outpost rg3 188 188 s0 c1 m0 718 e21 1091 5 | The Star-Tower of Nallsie
 hist-span-2000-512 si2 outpost rg5 219 268 s0 c3 m0 1090 e43 1314 6 | Skeerk Stockade
 hist-span-2000-512 si3 outpost rg8 194 249 s10 c4 m0 1132 e65 - 0 | The Mines of Harinhimm
-hist-span-2000-512 si4 outpost rg7 184 209 s0 c3 m0 1445 e114 - 0 | Slog-Gronk Stockade
-hist-span-2000-512 si5 outpost rg11 134 307 s0 c2 m0 1454 e116 - 0 | Isvies Watch
-hist-span-2000-512 si6 outpost rg11 134 308 s0 c2 m0 1978 e219 - 0 | Acond's White Tower
+hist-span-2000-512 si4 outpost rg5 219 268 s0 c3 m0 1420 e105 - 0 | Slog-Gronk Stockade
+hist-span-2000-512 si5 outpost rg8 237 279 s0 c4 m0 1421 e106 1634 6 | The Tower of Nour
+hist-span-2000-512 si6 outpost rg7 184 209 s0 c3 m0 1445 e120 - 0 | Keeskrak Stockade
+hist-span-2000-512 si7 outpost rg11 134 307 s0 c2 m0 1454 e125 - 0 | The Spire of Norri
+hist-span-2000-512 si8 lair rg7 184 208 s0 c0 m1 1918 e215 1923 3 | The Howes of the Shaw of the Hunt
+hist-span-2000-512 si9 lair rg7 117 225 s6 c0 m1 1923 e220 - 0 | The Barrows of the Shaw of the Hunt
+hist-span-2000-512 si10 outpost rg11 134 308 s0 c2 m0 1978 e236 - 0 | Aiefi's White Tower
 world hist-races-elf-orc-1024 3 1024 6000 elf,orc normal auto normal normal
 hist-races-elf-orc-1024 table beast_population 319 e8536ba8aaaff1e06d2d3eb73398b4aa3dbc6b65cb6a2f57b737c10d508170c4
 hist-races-elf-orc-1024 table monster 5 ab8538244328a2a5f4b0864abb89f38f0c43f0a5a1797ba3967e53555d0c2c73
@@ -190,80 +223,66 @@ hist-races-elf-orc-1024 si5 lair rg33 662 675 s0 c0 m4 5902 e179 5913 3 | The Ho
 hist-races-elf-orc-1024 si6 lair rg28 645 570 s46 c0 m4 5913 e188 - 0 | The Barrows of Wormcombe Weald
 hist-races-elf-orc-1024 si7 lair rg9 742 335 s0 c0 m5 5947 e208 5984 1 | The Barrows of Pitchthorn Forest II
 world hist-dense-1024 11 1024 6000 all dense auto normal normal
-hist-dense-1024 table beast_population 669 436712f692289d554f381815b8c726900154f14d382810ba6d36f44b3cb07e64
-hist-dense-1024 table monster 12 5d78620f463c241919d8a081b01a597517198d6c5db3396c6d619bd617a3b64c
-hist-dense-1024 table site 40 9ba80046ef24bee9fb893eaefe250cacebb9d4123e8b9cfb762abdd9d1cb4b52
-hist-dense-1024 ending 433a3632bdc6db7160701f9ce02830fc35160e0ceac47c81663dee6efa0767b4
-hist-dense-1024 M monsters 12 alive 3 slain 7 died 2 raids 82 killed 4872 overruns 7 risen 4 lair_settlement_open 2
-hist-dense-1024 G ghost 4 endings 0:71,1:12,2:7,3:3,4:1,6:6 standing 71 population 254638 shunned 2
-hist-dense-1024 S outposts 10 ended 6 bold 5 monster_flares 0
+hist-dense-1024 table beast_population 634 4521665ed2d179b72995a059cda0149596ba3a9986dd83ea293cb55f334ddca3
+hist-dense-1024 table monster 8 72694841c9edaa0e4515bb37fda1ba25ed12f0eb87ad37e3196351a46237969c
+hist-dense-1024 table site 30 1331ea7bcf38b21b367d9897ce01f683d387e1d8d6262885070186a55db437d3
+hist-dense-1024 ending 396d6a20f80be73a83720351722b972ba7815a9194ec9a7084b003a7aeb5d0fd
+hist-dense-1024 M monsters 8 alive 0 slain 6 died 2 raids 44 killed 2537 overruns 2 risen 0 lair_settlement_open 0
+hist-dense-1024 G ghost 4 endings 0:81,1:7,2:2,3:3,4:1,6:4 standing 81 population 231511 shunned 0
+hist-dense-1024 S outposts 8 ended 4 bold 8 monster_flares 0
 hist-dense-1024 m1 troll 3 born 975 e8 died 4366 hoard 0 | Drub | lair Drub's Hollow
 hist-dense-1024 m2 troll 4 born 1200 e9 died 5200 hoard 0 | Mossback Snag | lair The Den of Snag
 hist-dense-1024 m3 ogre 3 born 1475 e13 died 2111 hoard 12 | Gruukazug the Glutton | lair The Pit of Gruukazug
 hist-dense-1024 m4 ogre 4 born 2420 e63 died 4416 hoard 0 | Uug'dom | lair The Pit of Uug'dom
 hist-dense-1024 m5 wyvern 3 born 2870 e76 died 3335 hoard 0 | The Brood of Keeb | lair The Eyrie of Keeb
-hist-dense-1024 m6 troll 3 born 3070 e82 died 5652 hoard 138 | Skruzz-Gruz of the Fells | lair Skruzz-Gruz's Hollow
-hist-dense-1024 m7 troll 2 born 5157 e505 died - hoard 50 | Grutch Stonehide | lair Grutch's Hollow
-hist-dense-1024 m8 ogre 3 born 5481 e579 died 5859 hoard 43 | Uruuzdosh | lair The Pit of Uruuzdosh
-hist-dense-1024 m9 undead 1 born 5708 e771 died - hoard 0 | The Restless of Skat | lair The Howes of Skat
-hist-dense-1024 m10 undead 3 born 5899 e936 died 5921 hoard 0 | The Restless of the Weeping Downs | lair The Howes of the Weeping Downs
-hist-dense-1024 m11 undead 3 born 5980 e1024 died 5994 hoard 0 | The Host of the Rout of Rird | lair The Howes of the Rout of Rird
-hist-dense-1024 m12 undead 1 born 5997 e1034 died - hoard 0 | The Dead of the Weeping Downs | lair The Howes of the Weeping Downs II
+hist-dense-1024 m6 troll 3 born 3070 e82 died 5666 hoard 264 | Skruzz-Gruz of the Fells | lair The Den of Skruzz-Gruz
+hist-dense-1024 m7 troll 3 born 5157 e402 died 5245 hoard 59 | Grutch Stonehide | lair The Den of Grutch
+hist-dense-1024 m8 ogre 3 born 5481 e482 died 5636 hoard 6 | Uruuzdosh | lair Uruuzdosh's Larder
 hist-dense-1024 si1 lair rg17 625 360 s0 c0 m1 975 e8 4353 3 | The Den of Drub
 hist-dense-1024 si2 lair rg2 579 94 s0 c0 m2 1200 e9 5200 2 | The Den of Snag
 hist-dense-1024 si3 lair rg19 343 449 s0 c0 m3 1475 e13 2111 1 | The Pit of Gruukazug
-hist-dense-1024 si4 outpost rg39 671 715 s0 c2 m0 2317 e54 - 0 | Krot-Sneezz's Bone-Tower
+hist-dense-1024 si4 outpost rg39 671 715 s0 c2 m0 2317 e54 5723 4 | Krot-Sneezz's Bone-Tower
 hist-dense-1024 si5 lair rg44 665 718 s0 c0 m4 2420 e63 4416 2 | The Pit of Uug'dom
 hist-dense-1024 si6 lair rg46 666 719 s0 c0 m5 2870 e76 3335 1 | The Eyrie of Keeb
-hist-dense-1024 si7 lair rg12 624 359 s0 c0 m6 3070 e82 5640 3 | The Den of Skruzz-Gruz
+hist-dense-1024 si7 lair rg12 624 359 s0 c0 m6 3070 e82 5666 1 | The Den of Skruzz-Gruz
 hist-dense-1024 si8 outpost rg4 525 162 s21 c3 m0 3297 e89 - 0 | The Delvings of Gadbrairin Deep
 hist-dense-1024 si9 outpost rg15 292 382 s0 c1 m0 3426 e111 - 0 | The Star-Tower of Gliethinn
-hist-dense-1024 si10 outpost rg5 556 126 s32 c3 m0 4237 e174 - 0 | The Delvings of Nuntark
-hist-dense-1024 si11 outpost rg42 452 660 s0 c4 m0 4296 e186 4883 4 | The Thorn-Tower of Twiaiaae
-hist-dense-1024 si12 lair rg26 607 585 s35 c0 m1 4353 e208 4366 1 | Drub's Hollow
-hist-dense-1024 si13 outpost rg37 819 661 s0 c2 m0 4446 e243 4468 4 | Zog-Nug Stockade
-hist-dense-1024 si14 outpost rg27 667 712 s0 c2 m0 4481 e286 4691 6 | Slaz-Nork Lookout
-hist-dense-1024 si15 outpost rg15 262 413 s0 c1 m0 4855 e369 - 0 | Maesal's White Tower
-hist-dense-1024 si16 outpost rg39 706 712 s0 c2 m0 5035 e426 - 0 | The Smoke-Tower of Beegg
-hist-dense-1024 si17 lair rg8 469 280 s0 c0 m7 5157 e505 5168 3 | The Den of Grutch
-hist-dense-1024 si18 lair rg10 301 256 s59 c0 m7 5168 e509 - 0 | Grutch's Hollow
-hist-dense-1024 si19 lair rg22 648 424 s0 c0 m8 5481 e579 5683 3 | Uruuzdosh's Larder
-hist-dense-1024 si20 outpost rg27 667 712 s0 c2 m0 5615 e605 5893 6 | Skrit Stockade
-hist-dense-1024 si21 outpost rg44 665 718 s0 c2 m0 5625 e631 5893 6 | Slitch-Snaz Stockade
-hist-dense-1024 si22 lair rg14 343 331 s83 c0 m6 5640 e657 5652 1 | Skruzz-Gruz's Hollow
-hist-dense-1024 si23 outpost rg20 677 421 s0 c6 m0 5656 e697 5665 5 | Geetch Stockade
-hist-dense-1024 si24 lair rg26 534 541 s85 c0 m8 5683 e739 5859 1 | The Pit of Uruuzdosh
-hist-dense-1024 si25 outpost rg14 497 310 s0 c9 m0 5689 e749 - 0 | Kruukh Stockade
-hist-dense-1024 si26 lair rg20 782 455 s38 c0 m9 5708 e771 5721 3 | The Barrows of Skat
-hist-dense-1024 si27 outpost rg35 550 648 s58 c8 m0 5714 e773 - 0 | The Library of Hildror
-hist-dense-1024 si28 lair rg22 667 453 s86 c0 m9 5721 e780 - 0 | The Howes of Skat
-hist-dense-1024 si29 outpost rg26 621 490 s0 c9 m0 5848 e865 - 0 | Aaz'shoz Stockade
-hist-dense-1024 si30 outpost rg15 291 385 s0 c1 m0 5853 e872 - 0 | The Spire of Ennson
-hist-dense-1024 si31 outpost rg32 535 557 s0 c8 m0 5856 e881 - 0 | Tent Watch
-hist-dense-1024 si32 outpost rg15 220 310 s0 c1 m0 5874 e901 - 0 | The Star-Tower of Laersae
-hist-dense-1024 si33 outpost rg38 327 680 s0 c4 m0 5876 e903 - 0 | Flillglae's Moonspire
-hist-dense-1024 si34 lair rg18 387 459 s0 c0 m10 5899 e936 5905 3 | The Barrows of the Weeping Downs
-hist-dense-1024 si35 lair rg18 365 457 s98 c0 m10 5905 e943 5921 1 | The Howes of the Weeping Downs
-hist-dense-1024 si36 outpost rg35 532 685 s0 c8 m0 5914 e959 - 0 | The Tower of Heald
-hist-dense-1024 si37 outpost rg11 235 249 s0 c1 m0 5934 e980 5935 4 | The Spire of Ceme
-hist-dense-1024 si38 lair rg23 405 557 s0 c0 m11 5980 e1024 5993 3 | The Barrows of the Rout of Rird
-hist-dense-1024 si39 lair rg18 458 390 s100 c0 m11 5993 e1030 5994 1 | The Howes of the Rout of Rird
-hist-dense-1024 si40 lair rg18 387 459 s0 c0 m12 5997 e1034 - 0 | The Howes of the Weeping Downs II
+hist-dense-1024 si10 outpost rg5 556 126 s32 c3 m0 4237 e175 - 0 | The Delvings of Nuntark
+hist-dense-1024 si11 outpost rg42 452 660 s0 c4 m0 4296 e185 - 0 | The Thorn-Tower of Tiwily
+hist-dense-1024 si12 lair rg26 607 585 s35 c0 m1 4353 e207 4366 1 | Drub's Hollow
+hist-dense-1024 si13 outpost rg37 819 661 s0 c2 m0 4446 e235 4666 6 | Zog-Nug Stockade
+hist-dense-1024 si14 outpost rg42 414 741 s0 c4 m0 4475 e254 - 0 | The Thorn-Tower of Yfaesh
+hist-dense-1024 si15 outpost rg39 706 712 s0 c2 m0 5035 e350 5723 4 | The Smoke-Tower of Gokoz
+hist-dense-1024 si16 lair rg8 469 280 s0 c0 m7 5157 e402 5168 3 | Grutch's Hollow
+hist-dense-1024 si17 lair rg8 399 245 s56 c0 m7 5168 e411 5245 1 | The Den of Grutch
+hist-dense-1024 si18 lair rg22 648 424 s0 c0 m8 5481 e482 5636 1 | Uruuzdosh's Larder
+hist-dense-1024 si19 outpost rg30 482 528 s0 c9 m0 5681 e602 - 0 | Zuz Lookout
+hist-dense-1024 si20 outpost rg15 291 385 s0 c1 m0 5697 e623 - 0 | Laevomo Watch
+hist-dense-1024 si21 outpost rg14 497 310 s0 c8 m0 5702 e626 5814 4 | Shozdoz Stockade
+hist-dense-1024 si22 outpost rg14 496 310 s0 c8 m0 5714 e641 5814 4 | Aal'duu's War-Spire
+hist-dense-1024 si23 outpost rg34 781 571 s0 c6 m0 5717 e645 5922 6 | Geetch Stockade
+hist-dense-1024 si24 outpost rg8 469 280 s0 c5 m0 5822 e747 - 0 | The Thorn-Tower of Wieshowa
+hist-dense-1024 si25 outpost rg44 665 718 s0 c9 m0 5841 e761 5848 4 | Geet Stockade
+hist-dense-1024 si26 outpost rg27 667 712 s0 c6 m0 5846 e768 - 0 | Snukskit Stockade
+hist-dense-1024 si27 outpost rg20 677 421 s0 c10 m0 5863 e797 - 0 | The Smoke-Tower of Grikix
+hist-dense-1024 si28 outpost rg15 262 413 s0 c1 m0 5874 e806 - 0 | The Star-Tower of Asae
+hist-dense-1024 si29 outpost rg42 441 708 s0 c4 m0 5876 e808 - 0 | The Thorn-Tower of Ytwiefo
+hist-dense-1024 si30 outpost rg45 806 728 s0 c6 m0 5966 e901 - 0 | Drizz Stockade
 world hist-conflict-42-1024 42 1024 6000 all normal auto normal normal
-hist-conflict-42-1024 table beast_population 705 761da1bb3b6b89628f1cbe0277053a00bb627468d572f4bd43c6bd3fe0a092bf
-hist-conflict-42-1024 table monster 7 bb12a53651b3b050b77603d603db4ba35c2d811dac5581d9166ba58f376162c0
-hist-conflict-42-1024 table site 30 ff6e6c6055c39c83512c751c83b4c1015befa9bee82cde6bf2164e8809319a78
-hist-conflict-42-1024 ending caf6b2e5914fe1222794d34de1efbf8958e176bde7d318af55e4041155f8623a
-hist-conflict-42-1024 M monsters 7 alive 3 slain 3 died 1 raids 50 killed 2167 overruns 4 risen 1 lair_settlement_open 2
-hist-conflict-42-1024 G ghost 1 endings 0:85,1:9,2:4,3:1,6:7 standing 85 population 243734 shunned 2
-hist-conflict-42-1024 S outposts 9 ended 3 bold 7 monster_flares 1
+hist-conflict-42-1024 table beast_population 576 0b30065d8f8ef67959acce1461c17210b70b0ffd3fe8b7483a6f0cf158f4f3c7
+hist-conflict-42-1024 table monster 7 84ed74f2920edef774311dd55642e80fd4024071eef8d1325c03e3d9cd7ac8fd
+hist-conflict-42-1024 table site 28 c26870d71544cdf4117deff7eda816c68ef9886b309f5f53446b3d6b46a7c5d5
+hist-conflict-42-1024 ending d8bb092369e7fbcf808d780c2d94097d6e67a58a3f04e5031a25391b643e6355
+hist-conflict-42-1024 M monsters 7 alive 1 slain 5 died 1 raids 49 killed 1949 overruns 4 risen 1 lair_settlement_open 0
+hist-conflict-42-1024 G ghost 0 endings 0:80,1:8,2:4,6:8 standing 80 population 215093 shunned 0
+hist-conflict-42-1024 S outposts 7 ended 1 bold 3 monster_flares 1
 hist-conflict-42-1024 m1 dragon 2 born 325 e11 died - hoard 57 | Vifae the Gold-Eyed | lair Vifae's Deep
-hist-conflict-42-1024 m2 troll 3 born 750 e16 died 3334 hoard 116 | Neezz the Grey | lair The Den of Neezz
+hist-conflict-42-1024 m2 troll 3 born 750 e16 died 3334 hoard 114 | Neezz the Grey | lair The Den of Neezz
 hist-conflict-42-1024 m3 wyvern 3 born 875 e19 died 2100 hoard 0 | The Brood of Sneenkzat | lair The Eyrie of Sneenkzat
 hist-conflict-42-1024 m4 troll 3 born 2074 e39 died 2965 hoard 5 | Gneerk Stonehide | lair The Den of Gneerk
-hist-conflict-42-1024 m5 troll 2 born 2112 e53 died - hoard 9 | Gnizzeezz | lair Gnizzeezz's Hollow
-hist-conflict-42-1024 m6 ogre 4 born 2979 e162 died 4979 hoard 73 | Azaldkosh the Glutton | lair Azaldkosh's Larder
-hist-conflict-42-1024 m7 undead 1 born 5964 e982 died - hoard 0 | The Restless of the Rises of Hares | lair The Howes of the Rises of Hares
+hist-conflict-42-1024 m5 troll 3 born 2112 e53 died 5912 hoard 19 | Gnizzeezz | lair Gnizzeezz's Hollow
+hist-conflict-42-1024 m6 ogre 4 born 2979 e163 died 4979 hoard 73 | Azaldkosh the Glutton | lair The Pit of Azaldkosh
+hist-conflict-42-1024 m7 undead 3 born 5873 e717 died 5901 hoard 0 | The Dead of the Downs of the Slain | lair The Howes of the Downs of the Slain
 hist-conflict-42-1024 si1 lair rg38 407 816 s0 c0 m1 325 e11 - 0 | Vifae's Deep
 hist-conflict-42-1024 si2 lair rg15 328 358 s0 c0 m2 750 e16 2074 3 | Neezz's Hollow
 hist-conflict-42-1024 si3 lair rg19 243 382 s0 c0 m3 875 e19 2100 1 | The Eyrie of Sneenkzat
@@ -272,195 +291,201 @@ hist-conflict-42-1024 si5 lair rg5 373 372 s0 c0 m4 2074 e39 2955 3 | Gneerk's H
 hist-conflict-42-1024 si6 lair rg34 623 683 s0 c0 m5 2112 e53 5877 3 | The Den of Gnizzeezz
 hist-conflict-42-1024 si7 outpost rg27 252 530 s0 c1 m0 2381 e108 - 0 | The Star-Tower of Aeithaer
 hist-conflict-42-1024 si8 outpost rg50 723 855 s0 c2 m0 2390 e110 - 0 | Ceithand's White Tower
-hist-conflict-42-1024 si9 lair rg23 429 562 s30 c0 m4 2955 e151 2965 1 | The Den of Gneerk
-hist-conflict-42-1024 si10 lair rg25 533 525 s0 c0 m6 2979 e162 4979 2 | Azaldkosh's Larder
-hist-conflict-42-1024 si11 outpost rg44 513 704 s40 c4 m0 3256 e194 - 0 | The Mines of Kingrouli
-hist-conflict-42-1024 si12 outpost rg15 328 358 s0 c5 m0 3318 e232 - 0 | Nodnund's Delving-Spire
-hist-conflict-42-1024 si13 outpost rg36 497 610 s0 c3 m0 3424 e261 3642 6 | Zeex Lookout
-hist-conflict-42-1024 si14 outpost rg27 253 531 s0 c1 m0 4045 e295 - 0 | The Spire of Olthonn
-hist-conflict-42-1024 si15 outpost rg27 217 499 s0 c1 m0 4270 e329 - 0 | Vioth's White Tower
-hist-conflict-42-1024 si16 outpost rg31 367 628 s0 c3 m0 4544 e377 - 0 | Grazzsnak Stockade
-hist-conflict-42-1024 si17 outpost rg10 815 337 s0 c8 m0 4982 e423 - 0 | The Tower of Wedbur
-hist-conflict-42-1024 si18 outpost rg26 838 539 s0 c6 m0 4985 e427 - 0 | Wovyn's Moonspire
-hist-conflict-42-1024 si19 outpost rg41 439 751 s0 c3 m0 5075 e468 5519 6 | Kukbag Lookout
-hist-conflict-42-1024 si20 outpost rg44 513 704 s40 c4 m0 5680 e702 - 0 | The Rune-Halls of Drungumm
-hist-conflict-42-1024 si21 outpost rg10 808 251 s56 c8 m0 5694 e713 - 0 | The Library of Asheambis
-hist-conflict-42-1024 si22 outpost rg4 312 279 s0 c9 m0 5704 e722 - 0 | Roldsard Watch
-hist-conflict-42-1024 si23 outpost rg44 409 815 s0 c4 m0 5723 e754 - 0 | Bralita Watch
-hist-conflict-42-1024 si24 outpost rg28 552 560 s0 c12 m0 5727 e768 5971 4 | Skrogag Lookout
-hist-conflict-42-1024 si25 outpost rg27 221 530 s0 c1 m0 5742 e775 - 0 | Nothitho's White Tower
-hist-conflict-42-1024 si26 outpost rg8 235 369 s0 c11 m0 5811 e826 - 0 | The Watch of Ugaak
-hist-conflict-42-1024 si27 lair rg26 757 536 s54 c0 m5 5877 e875 - 0 | Gnizzeezz's Hollow
-hist-conflict-42-1024 si28 outpost rg32 513 526 s0 c12 m0 5961 e977 - 0 | Gnotskrigg Lookout
-hist-conflict-42-1024 si29 lair rg3 313 278 s0 c0 m7 5964 e982 5975 3 | The Barrows of the Rises of Hares
-hist-conflict-42-1024 si30 lair rg3 304 183 s95 c0 m7 5975 e1004 - 0 | The Howes of the Rises of Hares
+hist-conflict-42-1024 si9 lair rg23 429 562 s30 c0 m4 2955 e154 2965 1 | The Den of Gneerk
+hist-conflict-42-1024 si10 outpost rg27 253 531 s0 c1 m0 2956 e157 - 0 | Erin Watch
+hist-conflict-42-1024 si11 outpost rg31 367 628 s0 c3 m0 2957 e158 - 0 | Slink Stockade
+hist-conflict-42-1024 si12 lair rg25 533 525 s0 c0 m6 2979 e163 4979 2 | The Pit of Azaldkosh
+hist-conflict-42-1024 si13 outpost rg44 513 704 s40 c4 m0 3256 e196 3420 5 | The Mines of Kingrouli
+hist-conflict-42-1024 si14 outpost rg15 328 358 s0 c5 m0 3318 e239 - 0 | Grilitarn's Delving-Spire
+hist-conflict-42-1024 si15 outpost rg15 250 376 s0 c5 m0 4024 e301 - 0 | The Rune-Tower of Nouk
+hist-conflict-42-1024 si16 outpost rg27 217 499 s0 c1 m0 4270 e323 - 0 | Ilier's White Tower
+hist-conflict-42-1024 si17 outpost rg22 313 375 s0 c3 m0 4312 e335 4392 4 | Ziz Stockade
+hist-conflict-42-1024 si18 outpost rg10 815 337 s0 c8 m0 4982 e394 - 0 | The Tower of Wedbur
+hist-conflict-42-1024 si19 outpost rg26 838 539 s0 c6 m0 4985 e398 - 0 | The Thorn-Tower of Wovyn
+hist-conflict-42-1024 si20 outpost rg10 808 251 s56 c8 m0 5694 e600 - 0 | The Library of Eded
+hist-conflict-42-1024 si21 outpost rg4 312 279 s0 c9 m0 5704 e610 - 0 | Sunt Tower
+hist-conflict-42-1024 si22 outpost rg27 221 530 s0 c1 m0 5742 e630 - 0 | Elesiefae's White Tower
+hist-conflict-42-1024 si23 outpost rg8 235 369 s0 c11 m0 5856 e698 - 0 | Uruul Stockade
+hist-conflict-42-1024 si24 lair rg3 313 278 s0 c0 m7 5873 e717 5890 3 | The Barrows of the Downs of the Slain
+hist-conflict-42-1024 si25 lair rg26 774 612 s59 c0 m5 5877 e720 5912 1 | Gnizzeezz's Hollow
+hist-conflict-42-1024 si26 lair rg3 330 235 s91 c0 m7 5890 e740 5901 1 | The Howes of the Downs of the Slain
+hist-conflict-42-1024 si27 outpost rg2 545 162 s0 c8 m0 5904 e758 - 0 | Hird Tower
+hist-conflict-42-1024 si28 outpost rg7 642 299 s0 c8 m0 5905 e762 - 0 | Daldcis Watch
 world hist-conflict-turbulent-512 42 512 6000 all normal auto turbulent normal
-hist-conflict-turbulent-512 table beast_population 397 f823b9b4cbc4fd57d88876d135e01692ce58a0025cca0339648c0abe72c5a0c5
-hist-conflict-turbulent-512 table monster 6 0979a21f70ed7d63ea70cdc2d607710db96452530e703ed078eb71afa9f60f66
-hist-conflict-turbulent-512 table site 38 e33084cc98c60dfb0456cfe53e1bba25f5a117beb7fffa7b4d6bcd672522a553
-hist-conflict-turbulent-512 ending 1049cd016f8213f83099b0e3bc836f95c00b774f9d2655a8194b2a0191315fc3
-hist-conflict-turbulent-512 M monsters 6 alive 2 slain 4 died 0 raids 48 killed 2440 overruns 6 risen 5 lair_settlement_open 2
-hist-conflict-turbulent-512 G ghost 8 endings 0:30,1:26,2:6,3:3,4:5,6:2 standing 30 population 49581 shunned 2
-hist-conflict-turbulent-512 S outposts 13 ended 7 bold 0 monster_flares 0
-hist-conflict-turbulent-512 m1 troll 3 born 2074 e35 died 3290 hoard 52 | Gogg Stonehide | lair The Den of Gogg
-hist-conflict-turbulent-512 m2 undead 3 born 4105 e348 died 4301 hoard 0 | The Restless of Gull's Portion | lair The Howes of Gull's Portion
-hist-conflict-turbulent-512 m3 undead 3 born 4339 e420 died 4440 hoard 0 | The Host of Seredale Tangle | lair The Howes of Seredale Tangle
-hist-conflict-turbulent-512 m4 undead 2 born 5648 e975 died - hoard 0 | The Dead of Geexdronk Pit | lair The Barrows of Geexdronk Pit
-hist-conflict-turbulent-512 m5 undead 3 born 5770 e1126 died 5934 hoard 0 | The Host of Gudbrain's Fall | lair The Barrows of Gudbrain's Fall
-hist-conflict-turbulent-512 m6 undead 1 born 5974 e1283 died - hoard 0 | The Host of Gruz-Keegg | lair The Howes of Gruz-Keegg
+hist-conflict-turbulent-512 table beast_population 414 3fe4fc955caa868a08b5676acc204877b1af7e33cff17c64d450519fe03a9402
+hist-conflict-turbulent-512 table monster 5 8bb429649caeac7c3694213cc58c946d25b4608b532e571b9b2abb9e61db15fa
+hist-conflict-turbulent-512 table site 34 ab8ec9bbdd5007a6ae28f035a82f31c9e0eb326ac80df23a830f5a411d46ad26
+hist-conflict-turbulent-512 ending aa0cdbac346bc4f7b840fe670a4c842191a6bcd2e944377f0622b7c664a996d3
+hist-conflict-turbulent-512 M monsters 5 alive 4 slain 1 died 0 raids 22 killed 979 overruns 4 risen 3 lair_settlement_open 4
+hist-conflict-turbulent-512 G ghost 11 endings 0:35,1:18,2:5,3:5,4:6,6:2 standing 35 population 56539 shunned 4
+hist-conflict-turbulent-512 S outposts 14 ended 8 bold 0 monster_flares 0
+hist-conflict-turbulent-512 m1 troll 3 born 2074 e35 died 3290 hoard 49 | Gogg Stonehide | lair The Den of Gogg
+hist-conflict-turbulent-512 m2 ysgarth 2 born 5780 e1119 died - hoard 0 | The Swarm Beneath Kindhaidin | lair The Warrens of Kindhaidin
+hist-conflict-turbulent-512 m3 undead 2 born 5802 e1164 died - hoard 0 | The Restless of Central Downs | lair The Howes of Central Downs
+hist-conflict-turbulent-512 m4 undead 2 born 5825 e1212 died - hoard 0 | The Restless of the Tainted Barrows | lair The Howes of the Tainted Barrows
+hist-conflict-turbulent-512 m5 undead 2 born 5834 e1245 died - hoard 0 | The Dead of Blackstrand Wolds | lair The Howes of Blackstrand Wolds
 hist-conflict-turbulent-512 si1 lair rg5 213 184 s0 c0 m1 2074 e35 3172 3 | Gogg's Hollow
 hist-conflict-turbulent-512 si2 outpost rg7 165 196 s0 c2 m0 2279 e66 - 0 | Rielaeva's White Tower
-hist-conflict-turbulent-512 si3 outpost rg11 415 266 s0 c1 m0 3124 e153 5444 6 | Aelithie Watch
-hist-conflict-turbulent-512 si4 lair rg8 164 279 s29 c0 m1 3172 e186 3290 1 | The Den of Gogg
-hist-conflict-turbulent-512 si5 outpost rg2 196 171 s33 c4 m0 3252 e199 3419 4 | The Mines of Gudbrain
-hist-conflict-turbulent-512 si6 outpost rg7 164 195 s0 c2 m0 3352 e239 - 0 | Sethei Watch
-hist-conflict-turbulent-512 si7 outpost rg3 123 176 s0 c3 m0 3355 e241 4392 4 | Nuxskrab Stockade
-hist-conflict-turbulent-512 si8 outpost rg9 264 254 s0 c3 m0 3692 e287 5244 4 | Gnutchsnob Stockade
-hist-conflict-turbulent-512 si9 outpost rg10 228 365 s34 c4 m0 3719 e301 - 0 | The Mines of Gouringi
-hist-conflict-turbulent-512 si10 lair rg11 414 265 s0 c0 m2 4105 e348 4112 3 | The Barrows of Gull's Portion
-hist-conflict-turbulent-512 si11 lair rg11 403 338 s8 c0 m2 4112 e350 4301 1 | The Howes of Gull's Portion
-hist-conflict-turbulent-512 si12 outpost rg14 215 393 s0 c5 m0 4247 e368 4431 4 | The Thorn-Tower of Litosk
-hist-conflict-turbulent-512 si13 outpost rg11 414 265 s0 c1 m0 4270 e372 - 0 | The Star-Tower of Thonaethae
-hist-conflict-turbulent-512 si14 lair rg7 165 197 s0 c0 m3 4339 e420 4363 3 | The Barrows of Seredale Tangle
-hist-conflict-turbulent-512 si15 lair rg7 82 206 s6 c0 m3 4363 e430 4440 1 | The Howes of Seredale Tangle
-hist-conflict-turbulent-512 si16 outpost rg13 200 417 s40 c4 m0 4393 e455 - 0 | The Delvings of Kingrouli
-hist-conflict-turbulent-512 si17 outpost rg14 208 393 s0 c5 m0 4430 e467 4431 4 | The Thorn of Wiewhawi
-hist-conflict-turbulent-512 si18 outpost rg2 187 187 s0 c6 m0 4580 e510 - 0 | Slatskazz Lookout
-hist-conflict-turbulent-512 si19 outpost rg11 430 272 s0 c1 m0 4617 e534 - 0 | The Star-Tower of Fisie
-hist-conflict-turbulent-512 si20 outpost rg6 416 265 s0 c8 m0 4982 e635 5250 4 | Heam's Tower
-hist-conflict-turbulent-512 si21 outpost rg14 217 409 s0 c5 m0 5245 e795 - 0 | Soun's Moonspire
-hist-conflict-turbulent-512 si22 outpost rg9 354 296 s27 c4 m0 5256 e809 5976 4 | The Delvings of Druk
-hist-conflict-turbulent-512 si23 outpost rg5 213 184 s0 c3 m0 5606 e859 - 0 | Krusnik Lookout
-hist-conflict-turbulent-512 si24 outpost rg1 241 152 s0 c3 m0 5614 e874 5618 4 | Skrogag Lookout
-hist-conflict-turbulent-512 si25 lair rg4 383 174 s57 c0 m4 5648 e975 5655 3 | The Howes of Geexdronk Pit
-hist-conflict-turbulent-512 si26 lair rg6 359 201 s62 c0 m4 5655 e981 - 0 | The Barrows of Geexdronk Pit
-hist-conflict-turbulent-512 si27 outpost rg10 205 388 s0 c4 m0 5680 e1018 - 0 | The Rune-Tower of Khomm
-hist-conflict-turbulent-512 si28 outpost rg8 187 196 s0 c8 m0 5694 e1045 - 0 | The Tower of Steas
-hist-conflict-turbulent-512 si29 outpost rg11 382 328 s0 c1 m0 5742 e1079 - 0 | Nino's White Tower
-hist-conflict-turbulent-512 si30 outpost rg9 264 254 s0 c4 m0 5751 e1095 5976 4 | Grourhain Watch
-hist-conflict-turbulent-512 si31 outpost rg1 241 152 s0 c4 m0 5753 e1097 5934 4 | The Tower of Bordma
-hist-conflict-turbulent-512 si32 outpost rg11 415 266 s0 c1 m0 5756 e1100 - 0 | Othcaer Watch
-hist-conflict-turbulent-512 si33 lair rg2 187 186 s0 c0 m5 5770 e1126 5779 3 | The Howes of Gudbrain's Fall
-hist-conflict-turbulent-512 si34 lair rg1 273 126 s45 c0 m5 5779 e1128 5934 1 | The Barrows of Gudbrain's Fall
-hist-conflict-turbulent-512 si35 outpost rg6 416 265 s0 c10 m0 5836 e1162 - 0 | The Watch of Kraak
-hist-conflict-turbulent-512 si36 outpost rg8 185 197 s0 c8 m0 5935 e1244 - 0 | Aler Watch
-hist-conflict-turbulent-512 si37 lair rg5 352 166 s17 c0 m6 5974 e1283 5980 3 | The Barrows of Gruz-Keegg
-hist-conflict-turbulent-512 si38 lair rg8 236 221 s66 c0 m6 5980 e1312 - 0 | The Howes of Gruz-Keegg
+hist-conflict-turbulent-512 si3 outpost rg11 415 266 s0 c1 m0 3124 e169 - 0 | Aelithie Watch
+hist-conflict-turbulent-512 si4 lair rg8 164 279 s29 c0 m1 3172 e209 3290 1 | The Den of Gogg
+hist-conflict-turbulent-512 si5 outpost rg2 196 171 s33 c4 m0 3252 e224 3425 4 | The Mines of Gudbrain
+hist-conflict-turbulent-512 si6 outpost rg3 123 176 s0 c3 m0 3417 e296 4392 4 | Nuzz Stockade
+hist-conflict-turbulent-512 si7 outpost rg5 213 184 s0 c3 m0 3422 e298 3642 6 | Nuxskrab Stockade
+hist-conflict-turbulent-512 si8 outpost rg9 264 254 s0 c3 m0 3692 e326 5536 4 | Gnutchsnob Stockade
+hist-conflict-turbulent-512 si9 outpost rg7 164 195 s0 c2 m0 3698 e334 - 0 | Elacaend Watch
+hist-conflict-turbulent-512 si10 outpost rg10 228 365 s34 c4 m0 3741 e350 5780 4 | The Delvings of Gouringi
+hist-conflict-turbulent-512 si11 outpost rg13 201 416 s35 c4 m0 4192 e398 - 0 | The Mines of Grirnbra
+hist-conflict-turbulent-512 si12 outpost rg14 215 393 s0 c5 m0 4247 e415 - 0 | The Thorn-Tower of Iwae
+hist-conflict-turbulent-512 si13 outpost rg12 326 344 s0 c1 m0 4248 e416 4249 4 | The Spire of Laethir
+hist-conflict-turbulent-512 si14 outpost rg11 414 265 s0 c1 m0 4270 e433 - 0 | Elienann's White Tower
+hist-conflict-turbulent-512 si15 outpost rg12 326 344 s0 c3 m0 4572 e518 5522 4 | Zinkdrunk Lookout
+hist-conflict-turbulent-512 si16 outpost rg11 430 272 s0 c1 m0 4617 e535 - 0 | Randfi's White Tower
+hist-conflict-turbulent-512 si17 outpost rg4 369 186 s0 c7 m0 4989 e609 5152 4 | The Tower of Eded
+hist-conflict-turbulent-512 si18 outpost rg1 241 152 s0 c6 m0 5162 e704 5169 4 | Slatskazz Lookout
+hist-conflict-turbulent-512 si19 outpost rg1 241 152 s0 c3 m0 5531 e792 5705 4 | Kukbag Lookout
+hist-conflict-turbulent-512 si20 outpost rg5 213 184 s0 c3 m0 5557 e867 - 0 | Gneex Stockade
+hist-conflict-turbulent-512 si21 outpost rg6 416 265 s0 c7 m0 5631 e957 - 0 | Sunt Tower
+hist-conflict-turbulent-512 si22 outpost rg10 205 388 s0 c4 m0 5680 e1021 5963 4 | The Rune-Tower of Tair
+hist-conflict-turbulent-512 si23 outpost rg9 264 254 s0 c10 m0 5706 e1058 - 0 | Krusnik Lookout
+hist-conflict-turbulent-512 si24 outpost rg11 382 328 s0 c1 m0 5742 e1096 - 0 | Vecilo's White Tower
+hist-conflict-turbulent-512 si25 lair rg10 228 365 s34 c0 m2 5780 e1119 - 0 | The Warrens of Kindhaidin
+hist-conflict-turbulent-512 si26 outpost rg10 202 384 s39 c4 m0 5795 e1154 5963 4 | The Delvings of Drand
+hist-conflict-turbulent-512 si27 lair rg9 263 255 s0 c0 m3 5802 e1164 5809 3 | The Barrows of Central Downs
+hist-conflict-turbulent-512 si28 lair rg8 235 222 s70 c0 m3 5809 e1172 - 0 | The Howes of Central Downs
+hist-conflict-turbulent-512 si29 lair rg5 211 185 s0 c0 m4 5825 e1212 5839 3 | The Barrows of the Tainted Barrows
+hist-conflict-turbulent-512 si30 lair rg1 241 152 s0 c0 m5 5834 e1245 5851 3 | The Barrows of Blackstrand Wolds
+hist-conflict-turbulent-512 si31 lair rg5 325 184 s21 c0 m4 5839 e1263 - 0 | The Howes of the Tainted Barrows
+hist-conflict-turbulent-512 si32 outpost rg1 240 151 s0 c7 m0 5850 e1292 5892 4 | Sesger Tower
+hist-conflict-turbulent-512 si33 lair rg1 302 140 s50 c0 m5 5851 e1294 - 0 | The Howes of Blackstrand Wolds
+hist-conflict-turbulent-512 si34 outpost rg10 205 388 s0 c12 m0 5987 e1475 - 0 | Skizik Stockade
 world hist-conflict-civs4-512 42 512 6000 all normal 4 normal normal
-hist-conflict-civs4-512 table beast_population 455 be8c45f32176261a16f75a693b3d4bd5cb1ec30a461c5db87082f9dc865650d1
-hist-conflict-civs4-512 table monster 3 041caa81a9633ae060cd6e61e94359abe5a1129c4d3b2ed6db70f4c0b8df9c95
-hist-conflict-civs4-512 table site 26 96daff73173b695d7d38a18cd73ebb926b52effe627e94e21e02bb7b55377ad9
-hist-conflict-civs4-512 ending 5b0c620479ffeac5f35e503b266e21f6c5d3c48f7d7ab8db82533b36de06db5b
-hist-conflict-civs4-512 M monsters 3 alive 2 slain 1 died 0 raids 15 killed 643 overruns 1 risen 2 lair_settlement_open 2
-hist-conflict-civs4-512 G ghost 7 endings 0:32,1:37,2:1,3:4,4:3 standing 32 population 64342 shunned 2
-hist-conflict-civs4-512 S outposts 15 ended 7 bold 3 monster_flares 0
-hist-conflict-civs4-512 m1 troll 3 born 2074 e38 died 3839 hoard 34 | Gogg Stonehide | lair Gogg's Hollow
-hist-conflict-civs4-512 m2 undead 2 born 5687 e1098 died - hoard 0 | The Host of West Wood | lair The Howes of West Wood
-hist-conflict-civs4-512 m3 undead 1 born 5959 e1272 died - hoard 0 | The Dead of Hudrorstead | lair The Howes of Hudrorstead
-hist-conflict-civs4-512 si1 lair rg5 213 184 s0 c0 m1 2074 e38 3839 1 | Gogg's Hollow
+hist-conflict-civs4-512 table beast_population 420 5f59dc8bc3ae9af38e0fcc58f1a6f5ecab0a0a4e6f8a93bd40a0ce1774d208ff
+hist-conflict-civs4-512 table monster 6 11e744a20c0b8e77462e78291dbb0d452604ca43bcc5b958fc6697dd58b5df13
+hist-conflict-civs4-512 table site 39 f63396baa3574c28a894c7888f0e7d5f5a7f440c63450b8e732be9dea2f1a57e
+hist-conflict-civs4-512 ending aec967c883a8f3f51c444fcc1eeb4775f3400354a5f495de008b5cfba9f66978
+hist-conflict-civs4-512 M monsters 6 alive 1 slain 5 died 0 raids 34 killed 1778 overruns 6 risen 5 lair_settlement_open 1
+hist-conflict-civs4-512 G ghost 5 endings 0:39,1:19,2:6,3:3,4:2,6:2 standing 39 population 69563 shunned 1
+hist-conflict-civs4-512 S outposts 17 ended 8 bold 2 monster_flares 0
+hist-conflict-civs4-512 m1 troll 3 born 2074 e38 died 5750 hoard 30 | Gogg Stonehide | lair The Den of Gogg
+hist-conflict-civs4-512 m2 undead 3 born 4434 e627 died 4520 hoard 0 | The Dead of Blackstrand Wolds | lair The Howes of Blackstrand Wolds
+hist-conflict-civs4-512 m3 undead 2 born 4444 e641 died - hoard 0 | The Host of Leper's Debt | lair The Barrows of Leper's Debt
+hist-conflict-civs4-512 m4 undead 3 born 5174 e897 died 5630 hoard 0 | The Restless of the Plain of Shades | lair The Howes of the Plain of Shades
+hist-conflict-civs4-512 m5 undead 3 born 5749 e1166 died 5931 hoard 0 | The Dead of Tourdbaim's Grave | lair The Barrows of Tourdbaim's Grave
+hist-conflict-civs4-512 m6 undead 3 born 5945 e1307 died 5965 hoard 0 | The Host of Coldlow | lair The Howes of Coldlow
+hist-conflict-civs4-512 si1 lair rg5 213 184 s0 c0 m1 2074 e38 5741 3 | Gogg's Hollow
 hist-conflict-civs4-512 si2 outpost rg11 415 266 s0 c1 m0 2329 e77 - 0 | The Spire of Vaennma
-hist-conflict-civs4-512 si3 outpost rg8 187 196 s0 c3 m0 2329 e78 5097 4 | Dreezz Lookout
+hist-conflict-civs4-512 si3 outpost rg8 187 196 s0 c3 m0 2329 e78 4392 4 | Dreezz Lookout
 hist-conflict-civs4-512 si4 outpost rg11 414 265 s0 c1 m0 2339 e83 - 0 | Nethgle's White Tower
-hist-conflict-civs4-512 si5 outpost rg13 206 392 s0 c4 m0 2860 e189 3074 6 | Drix Stockade
-hist-conflict-civs4-512 si6 outpost rg7 165 196 s0 c2 m0 2862 e195 - 0 | Sethei Watch
-hist-conflict-civs4-512 si7 outpost rg12 326 344 s0 c1 m0 3276 e300 - 0 | Eliesaes Watch
-hist-conflict-civs4-512 si8 outpost rg2 196 171 s40 c5 m0 3295 e314 - 0 | The Delvings of Kingrouli
-hist-conflict-civs4-512 si9 outpost rg2 187 187 s0 c5 m0 3318 e323 - 0 | Nouk's Delving-Spire
-hist-conflict-civs4-512 si10 outpost rg3 123 176 s0 c3 m0 3417 e342 4392 4 | Grakrab Lookout
-hist-conflict-civs4-512 si11 outpost rg14 215 393 s0 c4 m0 3816 e429 3825 4 | Slink Stockade
-hist-conflict-civs4-512 si12 outpost rg11 430 272 s0 c1 m0 4270 e512 - 0 | The Star-Tower of Aelaenn
-hist-conflict-civs4-512 si13 outpost rg13 206 392 s0 c4 m0 4364 e550 4593 6 | Zeex Lookout
-hist-conflict-civs4-512 si14 outpost rg2 187 186 s0 c5 m0 4869 e645 - 0 | The Tower of Khaindnair
-hist-conflict-civs4-512 si15 outpost rg14 215 393 s0 c3 m0 4873 e656 5637 4 | Zinkdrunk Lookout
-hist-conflict-civs4-512 si16 outpost rg3 123 176 s0 c8 m0 4982 e732 5931 5 | Drak-Dreegg's Bone-Tower
-hist-conflict-civs4-512 si17 outpost rg13 206 392 s0 c4 m0 4984 e737 4996 5 | Ziz Stockade
-hist-conflict-civs4-512 si18 outpost rg1 241 152 s0 c7 m0 4989 e752 - 0 | Laesy's Moonspire
-hist-conflict-civs4-512 si19 outpost rg8 187 196 s0 c3 m0 5627 e1018 - 0 | Kukbag Lookout
-hist-conflict-civs4-512 si20 lair rg8 185 197 s0 c0 m2 5687 e1098 5702 3 | The Barrows of West Wood
-hist-conflict-civs4-512 si21 lair rg14 292 351 s50 c0 m2 5702 e1103 - 0 | The Howes of West Wood
-hist-conflict-civs4-512 si22 outpost rg11 382 328 s0 c1 m0 5742 e1118 - 0 | Vieonn's White Tower
-hist-conflict-civs4-512 si23 outpost rg5 213 184 s0 c3 m0 5920 e1225 - 0 | Krusnik Lookout
-hist-conflict-civs4-512 si24 outpost rg4 369 186 s0 c9 m0 5924 e1228 - 0 | Edanros Tower
-hist-conflict-civs4-512 si25 outpost rg14 215 393 s0 c12 m0 5932 e1247 - 0 | Skuggdrit Lookout
-hist-conflict-civs4-512 si26 lair rg4 433 126 s66 c0 m3 5959 e1272 - 0 | The Howes of Hudrorstead
+hist-conflict-civs4-512 si5 outpost rg13 206 392 s0 c4 m0 2860 e192 3074 6 | Drix Stockade
+hist-conflict-civs4-512 si6 outpost rg7 165 196 s0 c2 m0 2862 e193 - 0 | Sethei Watch
+hist-conflict-civs4-512 si7 outpost rg12 326 344 s0 c1 m0 2868 e207 - 0 | Eliesaes Watch
+hist-conflict-civs4-512 si8 outpost rg2 196 171 s43 c5 m0 3295 e303 - 0 | The Delvings of Nirnthrurn Deep
+hist-conflict-civs4-512 si9 outpost rg2 187 187 s0 c5 m0 3318 e312 - 0 | Grortuli's Delving-Spire
+hist-conflict-civs4-512 si10 outpost rg2 187 186 s0 c5 m0 3425 e350 - 0 | The Tower of Grurn
+hist-conflict-civs4-512 si11 outpost rg3 123 176 s0 c4 m0 3432 e356 3596 4 | Slink Stockade
+hist-conflict-civs4-512 si12 outpost rg7 164 195 s0 c2 m0 3634 e435 - 0 | The Star-Tower of Felasae
+hist-conflict-civs4-512 si13 outpost rg6 416 265 s0 c3 m0 3637 e439 5618 4 | Zeex Lookout
+hist-conflict-civs4-512 si14 outpost rg11 430 272 s0 c1 m0 4270 e528 - 0 | Fosvi's White Tower
+hist-conflict-civs4-512 si15 outpost rg1 241 152 s0 c8 m0 4270 e529 - 0 | Tiesygla's Moonspire
+hist-conflict-civs4-512 si16 outpost rg13 206 392 s0 c4 m0 4364 e557 5394 6 | Grazzsnak Stockade
+hist-conflict-civs4-512 si17 outpost rg1 240 151 s0 c8 m0 4419 e617 - 0 | The Thorn of Wiewhawi
+hist-conflict-civs4-512 si18 lair rg1 239 150 s0 c0 m2 4434 e627 4455 3 | The Barrows of Blackstrand Wolds
+hist-conflict-civs4-512 si19 lair rg14 215 394 s0 c0 m3 4444 e641 4446 3 | The Howes of Leper's Debt
+hist-conflict-civs4-512 si20 lair rg8 194 258 s18 c0 m3 4446 e644 - 0 | The Barrows of Leper's Debt
+hist-conflict-civs4-512 si21 outpost rg8 187 196 s0 c9 m0 4446 e645 - 0 | Krig Lookout
+hist-conflict-civs4-512 si22 lair rg1 302 140 s55 c0 m2 4455 e652 4520 1 | The Howes of Blackstrand Wolds
+hist-conflict-civs4-512 si23 outpost rg5 211 185 s0 c3 m0 4964 e756 - 0 | Krusnik Lookout
+hist-conflict-civs4-512 si24 outpost rg1 257 155 s0 c8 m0 4982 e786 - 0 | Foth's Moonspire
+hist-conflict-civs4-512 si25 outpost rg14 215 393 s0 c11 m0 5161 e880 5394 6 | Brur Tower
+hist-conflict-civs4-512 si26 lair rg4 447 156 s0 c0 m4 5174 e897 5184 3 | The Barrows of the Plain of Shades
+hist-conflict-civs4-512 si27 lair rg6 390 221 s51 c0 m4 5184 e925 5630 1 | The Howes of the Plain of Shades
+hist-conflict-civs4-512 si28 outpost rg9 264 254 s0 c12 m0 5188 e936 - 0 | Gnotskrigg Lookout
+hist-conflict-civs4-512 si29 outpost rg1 245 136 s0 c8 m0 5694 e1119 - 0 | The Thorn-Tower of Whianflo
+hist-conflict-civs4-512 si30 outpost rg6 416 265 s0 c10 m0 5728 e1137 5737 4 | Hald Tower
+hist-conflict-civs4-512 si31 lair rg1 338 137 s63 c0 m1 5741 e1159 5750 1 | The Den of Gogg
+hist-conflict-civs4-512 si32 outpost rg11 382 328 s0 c1 m0 5742 e1162 - 0 | The Star-Tower of Ifae
+hist-conflict-civs4-512 si33 lair rg6 416 265 s0 c0 m5 5749 e1166 5877 3 | The Howes of Tourdbaim's Grave
+hist-conflict-civs4-512 si34 lair rg11 390 308 s9 c0 m5 5877 e1237 5931 1 | The Barrows of Tourdbaim's Grave
+hist-conflict-civs4-512 si35 outpost rg3 123 176 s0 c13 m0 5887 e1249 - 0 | The Watch of Kraak
+hist-conflict-civs4-512 si36 outpost rg6 416 265 s0 c9 m0 5888 e1250 5955 4 | Gnugg Stockade
+hist-conflict-civs4-512 si37 lair rg10 205 388 s0 c0 m6 5945 e1307 5949 3 | The Barrows of Coldlow
+hist-conflict-civs4-512 si38 lair rg13 139 391 s13 c0 m6 5949 e1326 5965 1 | The Howes of Coldlow
+hist-conflict-civs4-512 si39 outpost rg13 133 424 s69 c5 m0 5979 e1348 - 0 | The Mines of Gneerkkit
 world hist-conflict-flight 1 512 6000 all normal auto normal normal
-hist-conflict-flight table beast_population 411 aae60d0cb323abf639e388731f2d5e00dd4f86fdfa4e651b1f644a71c0d829ad
-hist-conflict-flight table monster 7 86953079bac95adcc52c120563c548ded5f598a424cd4ec8860c84436cb624b9
-hist-conflict-flight table site 35 054e1bfe103d7ec1539ae1e4afbf8969e033ea2df980692ac07a24d9cf724c6c
-hist-conflict-flight ending 4c5f4cceb657fb702545d11a9c98e0b452d55146081992fc379eb167202983ab
-hist-conflict-flight M monsters 7 alive 2 slain 5 died 0 raids 68 killed 7056 overruns 7 risen 7 lair_settlement_open 2
-hist-conflict-flight G ghost 3 endings 0:35,1:18,2:7,3:2,4:1,6:3 standing 35 population 69684 shunned 2
-hist-conflict-flight S outposts 14 ended 8 bold 0 monster_flares 0
-hist-conflict-flight m1 undead 3 born 2367 e72 died 5639 hoard 0 | The Dead of Geerk-Drub Pit | lair The Barrows of Geerk-Drub Pit
-hist-conflict-flight m2 undead 3 born 3040 e128 died 4679 hoard 0 | The Restless of the Fallen Downs | lair The Howes of the Fallen Downs
-hist-conflict-flight m3 undead 3 born 5000 e776 died 5054 hoard 0 | The Dead of Druzz | lair The Barrows of Druzz
-hist-conflict-flight m4 undead 3 born 5061 e839 died 5148 hoard 0 | The Host of the Fallen Downs | lair The Howes of the Fallen Downs III
-hist-conflict-flight m5 undead 3 born 5152 e918 died 5600 hoard 0 | The Dead of Southwest Steppe | lair The Barrows of Southwest Steppe
-hist-conflict-flight m6 undead 2 born 5832 e1148 died - hoard 0 | The Dead of Thornspring Barrows | lair The Howes of Thornspring Barrows
-hist-conflict-flight m7 undead 2 born 5928 e1217 died - hoard 0 | The Host of the Windswept Vale | lair The Howes of the Windswept Vale
-hist-conflict-flight si1 outpost rg1 361 134 s0 c1 m0 112 e5 4503 4 | The Star-Tower of Femaeth
-hist-conflict-flight si2 outpost rg6 371 275 s0 c1 m0 2346 e46 - 0 | The Spire of Rievos
+hist-conflict-flight table beast_population 393 551c2b684a587954022d0466e927ed8093df2396d1aa2eeb3dc858274583607d
+hist-conflict-flight table monster 6 a59911cf532aadcca81f9d6d9af5822597539e0d11fa51134228582f9d32aaa6
+hist-conflict-flight table site 34 3bdb9cd868ed1489d6799dbb18af35b371f9b8b193eb04d4dc8e1dc5b2937d2e
+hist-conflict-flight ending c290f13c3b7fdc6c4356b282dfd4ff84382e3f4504fd904bbdfa98ed22130537
+hist-conflict-flight M monsters 6 alive 2 slain 4 died 0 raids 67 killed 8867 overruns 6 risen 6 lair_settlement_open 2
+hist-conflict-flight G ghost 4 endings 0:29,1:23,2:6,3:2,4:2,6:2 standing 29 population 72171 shunned 2
+hist-conflict-flight S outposts 16 ended 10 bold 0 monster_flares 0
+hist-conflict-flight m1 undead 3 born 2367 e72 died 4287 hoard 0 | The Dead of Geerk-Drub Pit | lair The Barrows of Geerk-Drub Pit
+hist-conflict-flight m2 undead 3 born 3040 e128 died 4994 hoard 0 | The Restless of the Fallen Downs | lair The Howes of the Fallen Downs
+hist-conflict-flight m3 undead 3 born 4288 e463 died 4396 hoard 0 | The Host of Sabletree Barrows | lair The Howes of Sabletree Barrows
+hist-conflict-flight m4 undead 3 born 4725 e677 died 5964 hoard 0 | The Host of Poacher's Tangle | lair The Barrows of Poacher's Tangle
+hist-conflict-flight m5 undead 2 born 5064 e858 died - hoard 0 | The Dead of Central Downs | lair The Howes of Central Downs
+hist-conflict-flight m6 undead 1 born 5974 e1224 died - hoard 0 | The Restless of Sabletree Barrows | lair The Howes of Sabletree Barrows III
+hist-conflict-flight si1 outpost rg1 361 134 s0 c1 m0 112 e5 - 0 | The Star-Tower of Femaeth
+hist-conflict-flight si2 outpost rg6 371 275 s0 c1 m0 2346 e46 4686 4 | The Spire of Rievos
 hist-conflict-flight si3 outpost rg7 217 325 s0 c3 m0 2347 e47 2355 4 | Kubagg Lookout
 hist-conflict-flight si4 outpost rg1 361 135 s0 c1 m0 2351 e53 3616 6 | Maessa Watch
 hist-conflict-flight si5 lair rg2 339 166 s7 c0 m1 2367 e72 2374 3 | The Howes of Geerk-Drub Pit
-hist-conflict-flight si6 lair rg1 397 165 s4 c0 m1 2374 e74 5639 1 | The Barrows of Geerk-Drub Pit
+hist-conflict-flight si6 lair rg1 397 165 s4 c0 m1 2374 e74 4287 1 | The Barrows of Geerk-Drub Pit
 hist-conflict-flight si7 lair rg2 377 223 s0 c0 m2 3040 e128 3073 3 | The Barrows of the Fallen Downs
-hist-conflict-flight si8 lair rg4 213 177 s19 c0 m2 3073 e134 4679 1 | The Howes of the Fallen Downs
+hist-conflict-flight si8 lair rg4 213 177 s19 c0 m2 3073 e134 4994 1 | The Howes of the Fallen Downs
 hist-conflict-flight si9 outpost rg4 281 174 s0 c3 m0 3383 e197 4453 6 | Gnutch Stockade
 hist-conflict-flight si10 outpost rg7 217 325 s0 c3 m0 3393 e202 3904 4 | Krikkrix Stockade
-hist-conflict-flight si11 outpost rg1 441 135 s0 c1 m0 3464 e232 4503 4 | Fithle's White Tower
-hist-conflict-flight si12 outpost rg5 210 316 s0 c1 m0 3871 e300 4226 4 | The Spire of Aeglara
+hist-conflict-flight si11 outpost rg1 441 135 s0 c1 m0 3464 e232 - 0 | Fithle's White Tower
+hist-conflict-flight si12 outpost rg5 210 316 s0 c1 m0 3871 e300 4225 4 | The Spire of Aeglara
 hist-conflict-flight si13 outpost rg9 383 420 s36 c4 m0 3878 e312 - 0 | The Mines of Taidinkhai
-hist-conflict-flight si14 outpost rg9 383 419 s0 c4 m0 4225 e405 - 0 | The Tower of Throukdak
-hist-conflict-flight si15 outpost rg7 217 325 s0 c6 m0 4228 e417 - 0 | Skug Lookout
-hist-conflict-flight si16 outpost rg2 288 178 s0 c3 m0 4237 e425 5538 4 | Sneez-Geeb Stockade
-hist-conflict-flight si17 outpost rg1 421 136 s0 c1 m0 4455 e546 4503 4 | Indglenn's White Tower
-hist-conflict-flight si18 outpost rg1 361 135 s0 c1 m0 4492 e576 4503 4 | The Spire of Isithas
-hist-conflict-flight si19 outpost rg4 281 174 s0 c3 m0 4662 e627 4878 6 | Gnizeeb Lookout
-hist-conflict-flight si20 outpost rg11 216 326 s0 c5 m0 4972 e718 - 0 | Skugskreeb Stockade
-hist-conflict-flight si21 outpost rg10 203 329 s0 c8 m0 4975 e726 - 0 | Aluld Tower
-hist-conflict-flight si22 lair rg11 242 464 s30 c0 m3 5000 e776 5029 3 | The Howes of Druzz
-hist-conflict-flight si23 lair rg9 347 366 s46 c0 m3 5029 e815 5054 1 | The Barrows of Druzz
-hist-conflict-flight si24 lair rg2 377 223 s0 c0 m4 5061 e839 5074 3 | The Howes of the Fallen Downs II
-hist-conflict-flight si25 lair rg6 437 221 s48 c0 m4 5074 e844 5148 1 | The Howes of the Fallen Downs III
-hist-conflict-flight si26 outpost rg5 210 316 s0 c6 m0 5112 e863 - 0 | Bozz Stockade
-hist-conflict-flight si27 lair rg10 204 330 s0 c0 m5 5152 e918 5535 3 | The Howes of Southwest Steppe
-hist-conflict-flight si28 lair rg10 192 393 s56 c0 m5 5535 e951 5600 1 | The Barrows of Southwest Steppe
-hist-conflict-flight si29 outpost rg3 155 196 s0 c7 m0 5554 e994 - 0 | The Thorn-Tower of Myglia
-hist-conflict-flight si30 outpost rg6 371 274 s0 c1 m0 5677 e1090 - 0 | The Star-Tower of Soithil
-hist-conflict-flight si31 outpost rg10 204 330 s0 c8 m0 5822 e1138 - 0 | Gack's Tower
-hist-conflict-flight si32 lair rg4 213 189 s0 c0 m6 5832 e1148 5846 3 | The Barrows of Thornspring Barrows
-hist-conflict-flight si33 lair rg4 257 201 s20 c0 m6 5846 e1159 - 0 | The Howes of Thornspring Barrows
-hist-conflict-flight si34 lair rg11 216 327 s0 c0 m7 5928 e1217 5945 3 | The Barrows of the Windswept Vale
-hist-conflict-flight si35 lair rg10 160 340 s65 c0 m7 5945 e1228 - 0 | The Howes of the Windswept Vale
+hist-conflict-flight si14 outpost rg9 383 419 s0 c4 m0 4225 e410 4578 6 | The Tower of Throukdak
+hist-conflict-flight si15 outpost rg7 217 325 s0 c6 m0 4228 e417 4928 6 | Skug Lookout
+hist-conflict-flight si16 outpost rg2 288 178 s0 c3 m0 4237 e433 - 0 | Sneez-Geeb Stockade
+hist-conflict-flight si17 lair rg5 210 316 s0 c0 m3 4288 e463 4395 3 | The Barrows of Sabletree Barrows
+hist-conflict-flight si18 outpost rg5 211 317 s0 c6 m0 4359 e511 4753 4 | Zank Stockade
+hist-conflict-flight si19 lair rg8 168 310 s43 c0 m3 4395 e572 4396 1 | The Howes of Sabletree Barrows
+hist-conflict-flight si20 outpost rg6 371 275 s0 c3 m0 4723 e670 - 0 | Skugskreeb Stockade
+hist-conflict-flight si21 lair rg1 451 131 s0 c0 m4 4725 e677 4726 3 | The Howes of Poacher's Tangle
+hist-conflict-flight si22 lair rg1 417 193 s5 c0 m4 4726 e681 5964 1 | The Barrows of Poacher's Tangle
+hist-conflict-flight si23 outpost rg11 216 326 s0 c5 m0 4952 e728 - 0 | Burk Stockade
+hist-conflict-flight si24 outpost rg9 383 419 s0 c4 m0 4965 e756 - 0 | The Tower of Thoun
+hist-conflict-flight si25 outpost rg3 155 196 s0 c7 m0 4993 e801 - 0 | Aefouth Watch
+hist-conflict-flight si26 outpost rg7 217 325 s0 c6 m0 5051 e844 - 0 | Bozz Stockade
+hist-conflict-flight si27 lair rg7 218 325 s0 c0 m5 5064 e858 5074 3 | The Barrows of Central Downs
+hist-conflict-flight si28 lair rg9 347 366 s47 c0 m5 5074 e868 - 0 | The Howes of Central Downs
+hist-conflict-flight si29 outpost rg3 154 197 s0 c7 m0 5600 e981 - 0 | The Thorn-Tower of Waglaen
+hist-conflict-flight si30 outpost rg10 203 329 s0 c8 m0 5650 e1008 5918 6 | Ashol Tower
+hist-conflict-flight si31 outpost rg1 421 136 s0 c1 m0 5677 e1028 - 0 | The Star-Tower of Ithinaen
+hist-conflict-flight si32 outpost rg10 204 330 s0 c8 m0 5822 e1141 - 0 | Weam's Tower
+hist-conflict-flight si33 lair rg5 210 316 s0 c0 m6 5974 e1224 5996 3 | The Howes of Sabletree Barrows II
+hist-conflict-flight si34 lair rg4 279 136 s63 c0 m6 5996 e1232 - 0 | The Howes of Sabletree Barrows III
 world hist-conflict-73-1024 73 1024 6000 all normal auto normal normal
-hist-conflict-73-1024 table beast_population 1362 77d63ec3c52fa77750ad476743dd47c21faa5328d771f5f5992c552a0854c4c1
-hist-conflict-73-1024 table monster 13 aed76add3ffffdb707d363a3668620aee6a5bfcd44bbff827b025278d8d57985
-hist-conflict-73-1024 table site 67 072d7de8d48ee32df9efc2709577105852e4bb547c16b1a9f62f5179ac18a001
-hist-conflict-73-1024 ending 6af9ad9e1710a66a5c77d7ec65fa3b4ab28b53514047aae4c8a705f9edaada23
-hist-conflict-73-1024 M monsters 13 alive 2 slain 7 died 4 raids 50 killed 4264 overruns 6 risen 7 lair_settlement_open 0
-hist-conflict-73-1024 G ghost 5 endings 0:94,1:49,2:6,3:3,4:2,6:2 standing 94 population 212132 shunned 0
-hist-conflict-73-1024 S outposts 42 ended 33 bold 5 monster_flares 1
+hist-conflict-73-1024 table beast_population 1259 1b3f159ca57d90051d5a99eb653c41ba823ba397a94b7bc3817baca147ad06e1
+hist-conflict-73-1024 table monster 12 8e66f6e3b9f4ffb9de34459a857a50ecc3c72b083b5b17af64330fd6e391e3e8
+hist-conflict-73-1024 table site 56 69cff62a5fc55eb6751ee0fc4af432199fdccafe895fe20d4c5e162d963f97a1
+hist-conflict-73-1024 ending ae4778e29080f026755c0229e6f03d53ed7bd466f192c3ec247208134c2f160e
+hist-conflict-73-1024 M monsters 12 alive 1 slain 7 died 4 raids 59 killed 5684 overruns 5 risen 6 lair_settlement_open 1
+hist-conflict-73-1024 G ghost 3 endings 0:100,1:51,2:5,3:2,4:1,6:3 standing 100 population 205431 shunned 1
+hist-conflict-73-1024 S outposts 31 ended 24 bold 5 monster_flares 1
 hist-conflict-73-1024 m1 giant 4 born 725 e16 died 4721 hoard 0 | Tukbamm Cliffbreaker | lair Tukbamm's Seat
 hist-conflict-73-1024 m2 ogre 4 born 1700 e30 died 3700 hoard 0 | Ukh'kuuz Bonebreaker | lair Ukh'kuuz's Larder
 hist-conflict-73-1024 m3 ogre 3 born 2047 e46 died 2102 hoard 8 | Gruggrog | lair Gruggrog's Larder
 hist-conflict-73-1024 m4 wyvern 4 born 3116 e280 died 5116 hoard 0 | The Screamers of Sleegg | lair Sleegg's Crag
 hist-conflict-73-1024 m5 wyvern 4 born 3291 e299 died 5278 hoard 0 | The Brood of Zeegat | lair The Eyrie of Zeegat
-hist-conflict-73-1024 m6 undead 3 born 4406 e865 died 4443 hoard 0 | The Host of the Downs of the Slain | lair The Howes of the Downs of the Slain
-hist-conflict-73-1024 m7 troll 2 born 4646 e956 died - hoard 23 | Old Drig-Nozz | lair Drig-Nozz's Hollow
-hist-conflict-73-1024 m8 undead 3 born 4848 e1164 died 5085 hoard 0 | The Dead of the Rout of Ielasie | lair The Howes of the Rout of Ielasie
-hist-conflict-73-1024 m9 undead 3 born 5036 e1372 died 5077 hoard 0 | The Dead of Zeegg-Kork Hole | lair The Barrows of Zeegg-Kork Hole
-hist-conflict-73-1024 m10 undead 3 born 5652 e1833 died 5718 hoard 0 | The Restless of Grikoz Hole | lair The Barrows of Grikoz Hole
-hist-conflict-73-1024 m11 undead 2 born 5788 e2032 died - hoard 0 | The Restless of the Forsaken Steppe | lair The Howes of the Forsaken Steppe
-hist-conflict-73-1024 m12 undead 3 born 5819 e2092 died 5859 hoard 0 | The Dead of the Crooked Wolds | lair The Howes of the Crooked Wolds
-hist-conflict-73-1024 m13 undead 3 born 5954 e2357 died 5988 hoard 0 | The Restless of Meancarbury | lair The Howes of Meancarbury
+hist-conflict-73-1024 m6 troll 3 born 4646 e989 died 5924 hoard 64 | Mossback Zaggnitch | lair Zaggnitch's Hollow
+hist-conflict-73-1024 m7 undead 3 born 5106 e1355 died 5948 hoard 0 | The Host of the Torn Vale | lair The Barrows of the Torn Vale
+hist-conflict-73-1024 m8 undead 3 born 5114 e1376 died 5252 hoard 0 | The Dead of Sleezzsnux | lair The Howes of Sleezzsnux
+hist-conflict-73-1024 m9 undead 3 born 5133 e1430 died 5173 hoard 0 | The Host of Zeegg-Kork Hole | lair The Barrows of Zeegg-Kork Hole
+hist-conflict-73-1024 m10 undead 3 born 5141 e1443 died 5251 hoard 0 | The Host of Greezznizz Pit | lair The Barrows of Greezznizz Pit
+hist-conflict-73-1024 m11 undead 3 born 5621 e1642 died 5701 hoard 0 | The Dead of the Torn Vale | lair The Howes of the Torn Vale II
+hist-conflict-73-1024 m12 undead 1 born 5963 e2234 died - hoard 0 | The Dead of the Rout of Sneez | lair The Barrows of the Rout of Sneez
 hist-conflict-73-1024 si1 lair rg37 248 564 s0 c0 m1 725 e16 4721 2 | Tukbamm's Seat
 hist-conflict-73-1024 si2 lair rg49 659 776 s0 c0 m2 1700 e30 3700 2 | Ukh'kuuz's Larder
 hist-conflict-73-1024 si3 lair rg36 487 561 s0 c0 m3 2047 e46 2102 1 | Gruggrog's Larder
-hist-conflict-73-1024 si4 outpost rg11 358 361 s0 c1 m0 2963 e224 5836 4 | The Spire of Glimer
+hist-conflict-73-1024 si4 outpost rg11 358 361 s0 c1 m0 2963 e224 4396 6 | The Spire of Glimer
 hist-conflict-73-1024 si5 lair rg10 791 274 s0 c0 m4 3116 e280 5116 2 | Sleegg's Crag
 hist-conflict-73-1024 si6 lair rg44 240 617 s0 c0 m5 3291 e299 5278 2 | The Eyrie of Zeegat
-hist-conflict-73-1024 si7 outpost rg28 463 460 s0 c3 m0 3373 e324 4987 4 | Druzz Lookout
+hist-conflict-73-1024 si7 outpost rg28 463 460 s0 c3 m0 3373 e324 4210 4 | Druzz Lookout
 hist-conflict-73-1024 si8 outpost rg25 706 458 s0 c4 m0 3375 e326 3610 6 | Nukrug Lookout
 hist-conflict-73-1024 si9 outpost rg32 782 522 s0 c4 m0 3378 e327 3635 6 | Neek-Nurk Stockade
 hist-conflict-73-1024 si10 outpost rg33 580 497 s0 c1 m0 3379 e328 3387 4 | The Spire of Londni
@@ -468,80 +493,69 @@ hist-conflict-73-1024 si11 outpost rg8 600 327 s0 c6 m0 3429 e386 3435 4 | Gnadr
 hist-conflict-73-1024 si12 outpost rg5 656 176 s0 c6 m0 3433 e390 4356 4 | Snuzsnab Stockade
 hist-conflict-73-1024 si13 outpost rg18 432 451 s0 c6 m0 3438 e398 3439 4 | Gunut Stockade
 hist-conflict-73-1024 si14 outpost rg13 789 340 s74 c5 m0 3446 e411 - 0 | The Delvings of Thombarin
-hist-conflict-73-1024 si15 outpost rg18 432 451 s0 c1 m0 3660 e473 4178 4 | The Spire of Elaglethe
-hist-conflict-73-1024 si16 outpost rg7 737 239 s90 c5 m0 3885 e579 4883 4 | The Delvings of Buktud
-hist-conflict-73-1024 si17 outpost rg23 312 499 s0 c3 m0 4163 e619 4987 4 | Skrig-Drugg Lookout
-hist-conflict-73-1024 si18 outpost rg32 782 522 s0 c4 m0 4166 e634 4366 6 | Kuggozz Lookout
-hist-conflict-73-1024 si19 outpost rg7 756 260 s0 c5 m0 4168 e649 4883 4 | The Tower of Thour
-hist-conflict-73-1024 si20 outpost rg13 774 276 s0 c5 m0 4169 e650 - 0 | Moukhorn Watch
-hist-conflict-73-1024 si21 outpost rg8 600 327 s0 c6 m0 4169 e651 4356 4 | Skreeb-Zazz Lookout
-hist-conflict-73-1024 si22 outpost rg45 653 738 s0 c4 m0 4261 e756 - 0 | Gnagsluzz Lookout
-hist-conflict-73-1024 si23 lair rg25 653 445 s0 c0 m6 4406 e865 4421 3 | The Barrows of the Downs of the Slain
-hist-conflict-73-1024 si24 outpost rg13 780 278 s0 c5 m0 4409 e868 - 0 | The Rune-Tower of Thrammda
-hist-conflict-73-1024 si25 lair rg27 576 458 s80 c0 m6 4421 e882 4443 1 | The Howes of the Downs of the Slain
-hist-conflict-73-1024 si26 outpost rg9 523 313 s0 c1 m0 4431 e894 - 0 | Cagloth Watch
-hist-conflict-73-1024 si27 lair rg1 760 260 s0 c0 m7 4646 e956 - 0 | Drig-Nozz's Hollow
-hist-conflict-73-1024 si28 outpost rg19 601 331 s0 c6 m0 4674 e963 5171 4 | Skigritch Lookout
-hist-conflict-73-1024 si29 outpost rg5 656 176 s0 c8 m0 4677 e965 4690 4 | Greezz Lookout
-hist-conflict-73-1024 si30 outpost rg17 531 334 s0 c8 m0 4686 e981 4867 4 | Krizdrunk Stockade
-hist-conflict-73-1024 si31 outpost rg27 566 461 s0 c6 m0 4705 e1010 4921 6 | Sneeskik Stockade
-hist-conflict-73-1024 si32 lair rg18 431 456 s0 c0 m8 4848 e1164 4888 3 | The Barrows of the Rout of Ielasie
-hist-conflict-73-1024 si33 lair rg11 331 355 s116 c0 m8 4888 e1237 5085 1 | The Howes of the Rout of Ielasie
-hist-conflict-73-1024 si34 lair rg23 382 418 s42 c0 m9 5036 e1372 5045 3 | The Howes of Zeegg-Kork Hole
-hist-conflict-73-1024 si35 outpost rg39 378 622 s0 c3 m0 5036 e1373 5328 6 | Gnonk Lookout
-hist-conflict-73-1024 si36 outpost rg46 578 677 s0 c3 m0 5038 e1376 5253 6 | Krub Stockade
-hist-conflict-73-1024 si37 lair rg28 474 432 s71 c0 m9 5045 e1393 5077 1 | The Barrows of Zeegg-Kork Hole
-hist-conflict-73-1024 si38 outpost rg27 566 461 s0 c6 m0 5064 e1434 5328 6 | Gnidritch Stockade
-hist-conflict-73-1024 si39 outpost rg33 580 497 s0 c4 m0 5067 e1439 5328 6 | Snak-Zob Lookout
-hist-conflict-73-1024 si40 outpost rg48 765 750 s0 c7 m0 5153 e1536 - 0 | The Thorn-Tower of Fashtee
-hist-conflict-73-1024 si41 outpost rg8 600 327 s0 c8 m0 5164 e1546 5850 5 | Geeg Lookout
-hist-conflict-73-1024 si42 outpost rg18 432 451 s0 c4 m0 5495 e1621 5504 4 | Krox Lookout
-hist-conflict-73-1024 si43 outpost rg48 765 751 s0 c7 m0 5496 e1628 - 0 | The Thorn of Lish
-hist-conflict-73-1024 si44 outpost rg42 803 616 s0 c7 m0 5499 e1636 5738 4 | The Thorn of Gloflovi
-hist-conflict-73-1024 si45 outpost rg28 463 460 s0 c4 m0 5524 e1665 5803 4 | Skodreeg Lookout
-hist-conflict-73-1024 si46 outpost rg46 578 677 s0 c3 m0 5525 e1668 5727 6 | Noskox Lookout
-hist-conflict-73-1024 si47 outpost rg14 775 346 s0 c6 m0 5559 e1692 5597 4 | Gneebeez Lookout
-hist-conflict-73-1024 si48 outpost rg19 601 331 s0 c3 m0 5568 e1708 - 0 | Gnozbaz Stockade
-hist-conflict-73-1024 si49 outpost rg5 656 176 s0 c6 m0 5574 e1716 5580 4 | Gneet Lookout
-hist-conflict-73-1024 si50 outpost rg27 566 461 s0 c6 m0 5583 e1744 5796 6 | Geeb Stockade
-hist-conflict-73-1024 si51 lair rg8 614 300 s131 c0 m10 5652 e1833 5705 3 | The Howes of Grikoz Hole
-hist-conflict-73-1024 si52 lair rg9 406 258 s7 c0 m10 5705 e1874 5718 1 | The Barrows of Grikoz Hole
-hist-conflict-73-1024 si53 outpost rg23 312 499 s0 c10 m0 5753 e1958 - 0 | The Watch of Ugog'uraald
-hist-conflict-73-1024 si54 outpost rg12 230 405 s0 c10 m0 5755 e1967 - 0 | The Watch of Thokh
-hist-conflict-73-1024 si55 outpost rg46 578 677 s0 c3 m0 5767 e1993 5998 6 | Sneekab Lookout
-hist-conflict-73-1024 si56 lair rg28 550 463 s0 c0 m11 5788 e2032 - 0 | The Howes of the Forsaken Steppe
-hist-conflict-73-1024 si57 lair rg49 659 776 s0 c0 m12 5819 e2092 5847 3 | The Barrows of the Crooked Wolds
-hist-conflict-73-1024 si58 outpost rg48 723 761 s0 c7 m0 5830 e2103 - 0 | The Thorn-Tower of Miell
-hist-conflict-73-1024 si59 outpost rg2 568 205 s0 c1 m0 5843 e2159 5858 4 | The Spire of Ellelienn
-hist-conflict-73-1024 si60 lair rg46 532 695 s20 c0 m12 5847 e2172 5859 1 | The Howes of the Crooked Wolds
-hist-conflict-73-1024 si61 outpost rg20 141 502 s0 c9 m0 5847 e2174 - 0 | Derhord Watch
-hist-conflict-73-1024 si62 outpost rg42 803 616 s0 c6 m0 5853 e2204 - 0 | Drox Lookout
-hist-conflict-73-1024 si63 outpost rg27 566 461 s0 c6 m0 5855 e2217 5894 4 | Nuzgnab Stockade
-hist-conflict-73-1024 si64 outpost rg9 522 314 s0 c1 m0 5868 e2254 - 0 | Ielaer's White Tower
-hist-conflict-73-1024 si65 lair rg20 112 444 s136 c0 m13 5954 e2357 5980 3 | The Barrows of Meancarbury
-hist-conflict-73-1024 si66 outpost rg33 580 497 s0 c4 m0 5961 e2377 5966 4 | Kub Lookout
-hist-conflict-73-1024 si67 lair rg12 231 364 s151 c0 m13 5980 e2395 5988 1 | The Howes of Meancarbury
+hist-conflict-73-1024 si15 outpost rg18 432 451 s0 c1 m0 3660 e473 5877 4 | The Spire of Elaglethe
+hist-conflict-73-1024 si16 outpost rg7 737 239 s90 c5 m0 3885 e580 4696 4 | The Delvings of Buktud
+hist-conflict-73-1024 si17 outpost rg23 312 499 s0 c3 m0 4163 e617 4183 4 | Skrig-Drugg Lookout
+hist-conflict-73-1024 si18 outpost rg32 782 522 s0 c4 m0 4166 e626 4444 6 | Kuggozz Lookout
+hist-conflict-73-1024 si19 outpost rg7 756 260 s0 c5 m0 4168 e638 4696 4 | The Tower of Thour
+hist-conflict-73-1024 si20 outpost rg13 774 276 s0 c5 m0 4169 e643 - 0 | Moukhorn Watch
+hist-conflict-73-1024 si21 outpost rg8 600 327 s0 c6 m0 4169 e644 4356 4 | Skreeb-Zazz Lookout
+hist-conflict-73-1024 si22 outpost rg39 378 622 s0 c3 m0 4238 e770 4471 6 | Gnagsluzz Lookout
+hist-conflict-73-1024 si23 outpost rg25 706 458 s0 c3 m0 4244 e783 4444 6 | Skoz-Krutch Lookout
+hist-conflict-73-1024 si24 outpost rg33 580 497 s0 c4 m0 4342 e864 4571 6 | Sliz-Krot Stockade
+hist-conflict-73-1024 si25 outpost rg13 780 278 s0 c5 m0 4409 e936 - 0 | The Rune-Tower of Thruringim
+hist-conflict-73-1024 si26 lair rg1 760 260 s0 c0 m6 4646 e989 5888 3 | The Den of Zaggnitch
+hist-conflict-73-1024 si27 outpost rg5 656 176 s0 c8 m0 4677 e1001 4699 4 | Dribank Lookout
+hist-conflict-73-1024 si28 outpost rg27 566 461 s0 c6 m0 4688 e1025 5900 6 | Skigritch Lookout
+hist-conflict-73-1024 si29 outpost rg8 600 327 s0 c8 m0 4691 e1031 - 0 | Greezz Lookout
+hist-conflict-73-1024 si30 outpost rg25 706 458 s0 c3 m0 4692 e1037 4721 4 | Krizdrunk Stockade
+hist-conflict-73-1024 si31 outpost rg15 816 292 s0 c6 m0 4700 e1076 5720 4 | Sneeskik Stockade
+hist-conflict-73-1024 si32 outpost rg28 463 460 s0 c4 m0 4715 e1110 - 0 | Skazz-Kreeg Stockade
+hist-conflict-73-1024 si33 outpost rg32 782 522 s0 c4 m0 4719 e1126 - 0 | Gnuzz Lookout
+hist-conflict-73-1024 si34 outpost rg2 568 205 s0 c1 m0 5042 e1236 - 0 | Lathonn Watch
+hist-conflict-73-1024 si35 outpost rg14 775 346 s0 c3 m0 5073 e1321 5119 4 | Gnonk Lookout
+hist-conflict-73-1024 si36 outpost rg46 578 677 s0 c3 m0 5104 e1354 5119 4 | Krub Stockade
+hist-conflict-73-1024 si37 lair rg33 593 565 s0 c0 m7 5106 e1355 5111 3 | The Howes of the Torn Vale
+hist-conflict-73-1024 si38 lair rg25 673 436 s17 c0 m7 5111 e1370 5948 1 | The Barrows of the Torn Vale
+hist-conflict-73-1024 si39 lair rg31 360 564 s117 c0 m8 5114 e1376 5252 1 | The Howes of Sleezzsnux
+hist-conflict-73-1024 si40 lair rg23 382 418 s42 c0 m9 5133 e1430 5138 3 | The Howes of Zeegg-Kork Hole
+hist-conflict-73-1024 si41 lair rg18 452 393 s51 c0 m9 5138 e1435 5173 1 | The Barrows of Zeegg-Kork Hole
+hist-conflict-73-1024 si42 lair rg14 644 277 s87 c0 m10 5141 e1443 5251 1 | The Barrows of Greezznizz Pit
+hist-conflict-73-1024 si43 outpost rg29 901 473 s0 c7 m0 5153 e1455 5680 4 | Fashtee's Moonspire
+hist-conflict-73-1024 si44 outpost rg20 141 502 s0 c9 m0 5233 e1514 - 0 | Alusgal's Tower
+hist-conflict-73-1024 si45 lair rg33 593 565 s0 c0 m11 5621 e1642 5624 3 | The Barrows of the Torn Vale II
+hist-conflict-73-1024 si46 lair rg33 580 522 s85 c0 m11 5624 e1657 5701 1 | The Howes of the Torn Vale II
+hist-conflict-73-1024 si47 outpost rg39 378 622 s0 c3 m0 5667 e1770 5724 5 | Gneebeez Lookout
+hist-conflict-73-1024 si48 outpost rg34 809 619 s0 c7 m0 5830 e1968 - 0 | Gliallsa's Moonspire
+hist-conflict-73-1024 si49 outpost rg9 523 313 s0 c1 m0 5868 e2018 - 0 | The Star-Tower of Lothce
+hist-conflict-73-1024 si50 lair rg5 601 226 s98 c0 m6 5888 e2082 5924 1 | Zaggnitch's Hollow
+hist-conflict-73-1024 si51 outpost rg29 893 523 s124 c5 m0 5897 e2107 - 0 | The Mines of Saemoush
+hist-conflict-73-1024 si52 outpost rg15 816 292 s0 c11 m0 5901 e2120 - 0 | Slitzog Stockade
+hist-conflict-73-1024 si53 outpost rg14 775 346 s0 c6 m0 5919 e2161 5959 4 | Skroxneezz Lookout
+hist-conflict-73-1024 si54 lair rg14 775 346 s0 c0 m12 5963 e2234 5982 3 | The Howes of the Rout of Sneez
+hist-conflict-73-1024 si55 lair rg14 647 359 s161 c0 m12 5982 e2244 - 0 | The Barrows of the Rout of Sneez
+hist-conflict-73-1024 si56 outpost rg11 358 361 s0 c1 m0 5996 e2256 - 0 | The Spire of Saelenn
 world p5-monsters-high-1024 7 1024 6000 all normal auto normal high
-p5-monsters-high-1024 table beast_population 684 87b76c8558cf189fb6ff8ec0de48014efd0a9d7483bb67e3ed4e864146d788fc
-p5-monsters-high-1024 table monster 13 1409e4435909e9064ab962e1135ec1a562e733bdd8672884d22ae339cf6567fa
-p5-monsters-high-1024 table site 38 30a054db51c12943a916fb65480d7482628c1397f199e4029562c828447d4e33
-p5-monsters-high-1024 ending c10763d3d9d7e972f5eec10d143ea4971972fbfde87613a76ef3bc1682fac010
-p5-monsters-high-1024 M monsters 13 alive 3 slain 7 died 3 raids 118 killed 11917 overruns 7 risen 5 lair_settlement_open 2
-p5-monsters-high-1024 G ghost 6 endings 0:62,1:4,2:7,3:3,4:3,6:8 standing 62 population 196712 shunned 2
-p5-monsters-high-1024 S outposts 6 ended 3 bold 6 monster_flares 0
+p5-monsters-high-1024 table beast_population 669 859c051027bf0624226ca23958cf0c1c97986a8eca1e453e3281607f63f50c2c
+p5-monsters-high-1024 table monster 13 fe2c724f5d9d6ebce8625365b64567dd3687c0addced0a953495e14b58fe5ee7
+p5-monsters-high-1024 table site 37 ef3e687575edba947d924ebc11646bc69c4d68a8e4f3f6e08e733cd3754065bb
+p5-monsters-high-1024 ending 9276947015a0596211db83e862f96e38590891193bc7d7d1da2d8e34b1850d2f
+p5-monsters-high-1024 M monsters 13 alive 1 slain 9 died 3 raids 93 killed 4301 overruns 6 risen 4 lair_settlement_open 0
+p5-monsters-high-1024 G ghost 8 endings 0:82,1:4,2:6,3:5,4:3,6:8 standing 82 population 178297 shunned 0
+p5-monsters-high-1024 S outposts 5 ended 1 bold 5 monster_flares 0
 p5-monsters-high-1024 m1 troll 4 born 275 e16 died 4275 hoard 0 | Sneeskriz Stonehide | lair Sneeskriz's Hollow
 p5-monsters-high-1024 m2 ogre 3 born 800 e20 died 2361 hoard 18 | Duurk'gro the Gaunt | lair Duurk'gro's Larder
 p5-monsters-high-1024 m3 wyvern 4 born 2149 e69 died 4140 hoard 0 | The Brood of Dribgreegg | lair Dribgreegg's Crag
-p5-monsters-high-1024 m4 undead 3 born 2351 e116 died 3428 hoard 0 | The Dead of Guzz Pit | lair The Howes of Guzz Pit
+p5-monsters-high-1024 m4 undead 3 born 2351 e116 died 4971 hoard 0 | The Dead of Guzz Pit | lair The Howes of Guzz Pit
 p5-monsters-high-1024 m5 wyvern 3 born 2357 e122 died 2367 hoard 0 | The Screamers of Grax | lair The Eyrie of Grax
 p5-monsters-high-1024 m6 wyvern 4 born 2390 e144 died 4376 hoard 0 | The Girk-Gneerk Brood | lair Girk-Gneerk's Crag
-p5-monsters-high-1024 m7 undead 3 born 3013 e189 died 4983 hoard 0 | The Dead of Duurk'gro's Waste | lair The Howes of Duurk'gro's Waste
-p5-monsters-high-1024 m8 troll 3 born 3065 e202 died 3348 hoard 25 | Old Snunark | lair Snunark's Hollow
-p5-monsters-high-1024 m9 troll 3 born 3665 e326 died 4241 hoard 86 | Zeezz | lair Zeezz's Hollow
-p5-monsters-high-1024 m10 troll 3 born 5677 e564 died 5713 hoard 115 | Gnoskitch the Grey | lair The Den of Gnoskitch
-p5-monsters-high-1024 m11 undead 1 born 5816 e675 died - hoard 0 | The Host of the Forsaken Wood | lair The Barrows of the Forsaken Wood
-p5-monsters-high-1024 m12 undead 2 born 5825 e690 died - hoard 0 | The Dead of the Steppe of the Slain | lair The Howes of the Steppe of the Slain
-p5-monsters-high-1024 m13 undead 2 born 5884 e729 died - hoard 0 | The Host of the Blind Wilds | lair The Barrows of the Blind Wilds
+p5-monsters-high-1024 m7 undead 3 born 3013 e187 died 4987 hoard 0 | The Dead of Duurk'gro's Waste | lair The Howes of Duurk'gro's Waste
+p5-monsters-high-1024 m8 troll 3 born 3065 e200 died 3348 hoard 48 | Old Snunark | lair The Den of Snunark
+p5-monsters-high-1024 m9 undead 3 born 3387 e260 died 3432 hoard 0 | The Host of Tansydown | lair The Barrows of Tansydown
+p5-monsters-high-1024 m10 undead 3 born 3440 e296 died 4262 hoard 0 | The Host of Southwest Steppe | lair The Howes of Southwest Steppe
+p5-monsters-high-1024 m11 troll 3 born 3665 e327 died 4234 hoard 18 | Drob-Neezz of the Fells | lair Drob-Neezz's Hollow
+p5-monsters-high-1024 m12 ysgarth 2 born 4999 e519 died - hoard 0 | The Eyeless of Thurn | lair The Nest of Thurn
+p5-monsters-high-1024 m13 troll 3 born 5677 e628 died 5704 hoard 20 | Buskiz | lair The Den of Buskiz
 p5-monsters-high-1024 si1 outpost rg16 521 445 s0 c1 m0 148 e10 - 0 | The Star-Tower of Glielienn
 p5-monsters-high-1024 si2 lair rg32 877 505 s0 c0 m1 275 e16 4275 2 | Sneeskriz's Hollow
 p5-monsters-high-1024 si3 lair rg35 439 564 s0 c0 m2 800 e20 2193 3 | The Pit of Duurk'gro
@@ -549,44 +563,43 @@ p5-monsters-high-1024 si4 lair rg22 871 374 s0 c0 m3 2149 e69 4140 2 | Dribgreeg
 p5-monsters-high-1024 si5 lair rg31 227 600 s15 c0 m2 2193 e77 2361 1 | Duurk'gro's Larder
 p5-monsters-high-1024 si6 lair rg43 398 754 s13 c0 m4 2351 e116 2374 3 | The Barrows of Guzz Pit
 p5-monsters-high-1024 si7 lair rg33 579 556 s0 c0 m5 2357 e122 2367 1 | The Eyrie of Grax
-p5-monsters-high-1024 si8 lair rg43 444 770 s19 c0 m4 2374 e136 3428 1 | The Howes of Guzz Pit
+p5-monsters-high-1024 si8 lair rg43 444 770 s19 c0 m4 2374 e136 4971 1 | The Howes of Guzz Pit
 p5-monsters-high-1024 si9 lair rg27 521 607 s0 c0 m6 2390 e144 4376 2 | Girk-Gneerk's Crag
-p5-monsters-high-1024 si10 outpost rg16 514 414 s0 c1 m0 2990 e173 - 0 | Siecond's White Tower
-p5-monsters-high-1024 si11 outpost rg39 336 662 s0 c3 m0 2995 e178 5955 6 | Slirk Lookout
-p5-monsters-high-1024 si12 lair rg31 213 539 s0 c0 m7 3013 e189 3022 3 | The Barrows of Duurk'gro's Waste
-p5-monsters-high-1024 si13 lair rg28 246 461 s5 c0 m7 3022 e192 4983 1 | The Howes of Duurk'gro's Waste
-p5-monsters-high-1024 si14 lair rg25 438 530 s0 c0 m8 3065 e202 3348 3 | The Den of Snunark
-p5-monsters-high-1024 si15 outpost rg25 373 401 s33 c5 m0 3346 e224 - 0 | The Mines of Gronbum
-p5-monsters-high-1024 si16 lair rg31 299 491 s31 c0 m8 3348 e227 3348 1 | Snunark's Hollow
-p5-monsters-high-1024 si17 outpost rg28 255 482 s0 c2 m0 3363 e242 - 0 | Faeras Watch
-p5-monsters-high-1024 si18 outpost rg18 871 372 s32 c4 m0 3366 e246 - 0 | The Delvings of Murdgak
-p5-monsters-high-1024 si19 outpost rg16 555 440 s0 c1 m0 3408 e274 - 0 | Rieland's White Tower
-p5-monsters-high-1024 si20 outpost rg23 203 374 s0 c3 m0 3593 e307 - 0 | Gnok Stockade
-p5-monsters-high-1024 si21 lair rg13 376 372 s0 c0 m9 3665 e326 4241 1 | Zeezz's Hollow
-p5-monsters-high-1024 si22 outpost rg22 875 434 s43 c4 m0 4281 e381 - 0 | The Delvings of Gindgorin
-p5-monsters-high-1024 si23 outpost rg16 597 439 s0 c1 m0 4336 e404 - 0 | The Star-Tower of Cemeitho
-p5-monsters-high-1024 si24 outpost rg18 871 373 s0 c4 m0 4363 e417 - 0 | The Rune-Tower of Khoumm
-p5-monsters-high-1024 si25 outpost rg19 405 398 s49 c5 m0 4376 e424 - 0 | The Mines of Nondtu Hold
-p5-monsters-high-1024 si26 outpost rg21 341 403 s48 c5 m0 4376 e425 - 0 | The Delvings of Gurngu
-p5-monsters-high-1024 si27 outpost rg15 902 385 s50 c4 m0 4501 e434 - 0 | The Mines of Kharinkha Deep
-p5-monsters-high-1024 si28 outpost rg1 749 206 s0 c6 m0 4949 e461 - 0 | The Thorn-Tower of Lawoi
-p5-monsters-high-1024 si29 outpost rg31 313 585 s0 c2 m0 4974 e478 5756 4 | The Spire of Ielill
-p5-monsters-high-1024 si30 lair rg11 558 313 s0 c0 m10 5677 e564 5686 3 | Gnoskitch's Hollow
-p5-monsters-high-1024 si31 lair rg8 493 204 s66 c0 m10 5686 e570 5713 1 | The Den of Gnoskitch
-p5-monsters-high-1024 si32 outpost rg42 601 736 s0 c7 m0 5793 e640 - 0 | Beas Watch
-p5-monsters-high-1024 si33 outpost rg46 456 722 s0 c7 m0 5800 e658 5970 4 | Ashick Tower
-p5-monsters-high-1024 si34 lair rg8 479 261 s0 c0 m11 5816 e675 5820 3 | The Howes of the Forsaken Wood
-p5-monsters-high-1024 si35 lair rg8 526 210 s83 c0 m11 5820 e685 - 0 | The Barrows of the Forsaken Wood
-p5-monsters-high-1024 si36 lair rg42 555 796 s0 c0 m12 5825 e690 5855 3 | The Barrows of the Steppe of the Slain
-p5-monsters-high-1024 si37 lair rg36 634 657 s82 c0 m12 5855 e704 - 0 | The Howes of the Steppe of the Slain
-p5-monsters-high-1024 si38 lair rg46 456 723 s0 c0 m13 5884 e729 - 0 | The Barrows of the Blind Wilds
+p5-monsters-high-1024 si10 outpost rg16 514 414 s0 c1 m0 2990 e175 - 0 | Iellinn's White Tower
+p5-monsters-high-1024 si11 outpost rg39 336 662 s0 c3 m0 2995 e178 3019 4 | Slirk Lookout
+p5-monsters-high-1024 si12 lair rg31 213 539 s0 c0 m7 3013 e187 3019 3 | The Barrows of Duurk'gro's Waste
+p5-monsters-high-1024 si13 lair rg31 315 601 s22 c0 m7 3019 e189 4987 1 | The Howes of Duurk'gro's Waste
+p5-monsters-high-1024 si14 lair rg25 438 530 s0 c0 m8 3065 e200 3348 1 | The Den of Snunark
+p5-monsters-high-1024 si15 outpost rg25 373 401 s30 c5 m0 3346 e218 - 0 | The Mines of Gaimbo Hold
+p5-monsters-high-1024 si16 outpost rg18 871 372 s29 c4 m0 3366 e233 - 0 | The Delvings of Maili
+p5-monsters-high-1024 si17 lair rg39 257 739 s0 c0 m9 3387 e260 3389 3 | The Howes of Tansydown
+p5-monsters-high-1024 si18 lair rg39 259 693 s21 c0 m9 3389 e263 3432 1 | The Barrows of Tansydown
+p5-monsters-high-1024 si19 outpost rg16 555 440 s0 c1 m0 3408 e282 - 0 | Lieglal's White Tower
+p5-monsters-high-1024 si20 lair rg35 439 564 s0 c0 m10 3440 e296 3443 3 | The Barrows of Southwest Steppe
+p5-monsters-high-1024 si21 lair rg35 382 558 s25 c0 m10 3443 e299 4262 1 | The Howes of Southwest Steppe
+p5-monsters-high-1024 si22 lair rg13 376 372 s0 c0 m11 3665 e327 4234 1 | Drob-Neezz's Hollow
+p5-monsters-high-1024 si23 outpost rg22 875 434 s42 c4 m0 4281 e392 - 0 | The Mines of Hairnbodin Hold
+p5-monsters-high-1024 si24 outpost rg16 597 439 s0 c1 m0 4336 e414 - 0 | Elleli's White Tower
+p5-monsters-high-1024 si25 outpost rg15 902 385 s45 c4 m0 4339 e416 - 0 | The Mines of Nodinkair
+p5-monsters-high-1024 si26 outpost rg18 871 373 s0 c4 m0 4363 e425 - 0 | The Rune-Tower of Hinkhond
+p5-monsters-high-1024 si27 outpost rg21 341 403 s48 c5 m0 4376 e433 - 0 | The Mines of Gurngu
+p5-monsters-high-1024 si28 outpost rg19 405 398 s49 c5 m0 4426 e440 - 0 | The Delvings of Nondtu Hold
+p5-monsters-high-1024 si29 outpost rg1 749 206 s0 c6 m0 4949 e491 - 0 | Sieglo's Moonspire
+p5-monsters-high-1024 si30 lair rg25 373 401 s0 c0 m12 4999 e519 - 0 | The Nest of Thurn
+p5-monsters-high-1024 si31 lair rg11 558 313 s0 c0 m13 5677 e628 5679 3 | Buskiz's Hollow
+p5-monsters-high-1024 si32 lair rg11 575 250 s12 c0 m13 5679 e630 5704 1 | The Den of Buskiz
+p5-monsters-high-1024 si33 outpost rg44 203 745 s0 c3 m0 5723 e666 - 0 | Sleez-Dreex Stockade
+p5-monsters-high-1024 si34 outpost rg43 454 715 s0 c8 m0 5727 e672 - 0 | Uld'buurz Stockade
+p5-monsters-high-1024 si35 outpost rg41 715 689 s0 c7 m0 5867 e736 - 0 | Gard Watch
+p5-monsters-high-1024 si36 outpost rg35 439 564 s0 c2 m0 5881 e766 - 0 | The Spire of Ithaerann
+p5-monsters-high-1024 si37 outpost rg36 609 677 s102 c5 m0 5890 e775 - 0 | The Mines of Thukh'zom
 fixture monsters-small-0 0 2000 all auto normal monsters-small
 monsters-small-0 table beast_population 94 098f708c9d9eabc81370e706b93bab410c8bef74600f6fe94536ee7901cb8b02
-monsters-small-0 table monster 11 7ba149b28ca197bd7c206c2ac4a5db538c58c1591f21f45d9be9828d575e8a70
-monsters-small-0 table site 18 a47a6c310bf9124e0d5df6a4d3c2c9dab891a08c34d65b787cc374828fb2c3e2
+monsters-small-0 table monster 11 d638f7b26b94a62b7493bd12f13bd10b227a5840d5ca11f1b663759201d08174
+monsters-small-0 table site 18 bfeb4216d0f6a7512e65c62006c84b2caecaa3a4b5a34521554336d9f350ee16
 monsters-small-0 ending b65822284102ee41498107253b84045d54db8f9b9a31855567ef07e4ef9c5940
 monsters-small-0 M monsters 11 alive 11 slain 0 died 0 raids 79 killed 2422 overruns 4 risen 0 lair_settlement_open 4
-monsters-small-0 G ghost 0 endings 0:8,1:3,2:4,6:2 standing 8 population 8028 shunned 4
+monsters-small-0 G ghost 0 endings 0:8,1:3,2:4,6:2 standing 8 population 8024 shunned 4
 monsters-small-0 S outposts 0 ended 0 bold 0 monster_flares 1
 monsters-small-0 m1 wyvern 2 born 1 e5 died - hoard 0 | The Nog-Nak Brood | lair The Eyrie of Nog-Nak
 monsters-small-0 m2 wyvern 1 born 13 e7 died - hoard 0 | The Brood of Zirk | lair Zirk's Crag
@@ -597,7 +610,7 @@ monsters-small-0 m6 troll 2 born 49 e25 died - hoard 0 | Mossback Neezz | lair T
 monsters-small-0 m7 dragon 2 born 50 e26 died - hoard 14 | Vaenoithae the Red | lair The Lair of Vaenoithae
 monsters-small-0 m8 ogre 2 born 77 e29 died - hoard 4 | Grurk the Gaunt | lair Grurk's Larder
 monsters-small-0 m9 ogre 2 born 92 e35 died - hoard 0 | Azaal | lair The Pit of Azaal
-monsters-small-0 m10 giant 2 born 1441 e177 died - hoard 123 | Brourdkard | lair Brourdkard's Seat
+monsters-small-0 m10 giant 2 born 1441 e178 died - hoard 123 | Brourdkard | lair Brourdkard's Seat
 monsters-small-0 m11 giant 1 born 1974 e390 died - hoard 4 | Bromkha the Tall | lair Bromkha's Seat
 monsters-small-0 si1 lair rg18 88 123 s0 c0 m1 1 e5 - 0 | The Eyrie of Nog-Nak
 monsters-small-0 si2 lair rg25 161 173 s0 c0 m2 13 e7 1957 3 | The Eyrie of Zirk
@@ -611,8 +624,8 @@ monsters-small-0 si9 lair rg3 88 26 s0 c0 m9 92 e35 - 0 | The Pit of Azaal
 monsters-small-0 si10 lair rg23 107 180 s4 c0 m4 1010 e95 - 0 | Greeb's Hollow
 monsters-small-0 si11 lair rg14 155 76 s5 c0 m5 1118 e147 - 0 | The Den of Zunk
 monsters-small-0 si12 outpost rg5 161 7 s7 c3 m0 1138 e155 - 0 | The Delvings of Khaili Hold
-monsters-small-0 si13 lair rg24 127 155 s0 c0 m10 1441 e177 - 0 | Brourdkard's Seat
-monsters-small-0 si14 outpost rg15 189 77 s0 c4 m0 1677 e204 - 0 | Twiensha's Moonspire
+monsters-small-0 si13 lair rg24 127 155 s0 c0 m10 1441 e178 - 0 | Brourdkard's Seat
+monsters-small-0 si14 outpost rg15 189 77 s0 c4 m0 1677 e206 - 0 | Wae's Moonspire
 monsters-small-0 si15 outpost rg10 190 68 s10 c3 m0 1718 e217 1854 4 | The Mines of Nodin
 monsters-small-0 si16 lair rg25 164 186 s13 c0 m2 1957 e370 - 0 | Zirk's Crag
 monsters-small-0 si17 lair rg4 139 7 s0 c0 m11 1974 e390 1975 3 | The Hall of Bromkha
@@ -794,26 +807,27 @@ monsters-small-5 si30 lair rg16 70 191 s0 c0 m28 4850 e442 - 0 | Drunkkig's Holl
 monsters-small-5 si31 outpost rg2 111 13 s0 c8 m0 5167 e500 5172 5 | Dreegozz Stockade
 monsters-small-5 si32 lair rg10 26 103 s0 c0 m29 5741 e647 - 0 | The Pit of Uruughzaag
 fixture monsters-small-6 6 2000 all 4 normal monsters-small
-monsters-small-6 table beast_population 119 0b75f35dba8daad6b826d46a1fad323d6c8d73c4856e9d598dd724ad1ab8c6f4
-monsters-small-6 table monster 13 c22d3796c81104460c0f2c2ba1e92dbfdacadcd2b6bbe606535c52efe4af4d2d
-monsters-small-6 table site 21 7641afbdcd4679c9f7da8fcadc0b1adb53f2adf1fae67e7198335fc39bcfa012
-monsters-small-6 ending 9ba2e5d00ff369e0364455062fd572bc0a72424510ad461e2d5715fbe8619b04
-monsters-small-6 M monsters 13 alive 11 slain 2 died 0 raids 104 killed 2515 overruns 2 risen 0 lair_settlement_open 2
-monsters-small-6 G ghost 2 endings 0:13,1:5,2:2,3:1,4:1 standing 13 population 12598 shunned 2
-monsters-small-6 S outposts 1 ended 0 bold 0 monster_flares 0
+monsters-small-6 table beast_population 123 fb17c3676c634032a37f1a73e9b156ef9650a8ca2c6b459edd73b4518b967e02
+monsters-small-6 table monster 14 a19d00b00c7f29444f6f8487cf99ad9721fb61aaa2eb5fc7b8951f509df42660
+monsters-small-6 table site 24 70592fabe44d9c6475b95bc3d4f5ebcb339666542619abb7c785b92b5fdc08b1
+monsters-small-6 ending 940173757cbdd8ded0f6f0fcefc263e44df2c37cfecb14c19a7c9d7170c62456
+monsters-small-6 M monsters 14 alive 12 slain 2 died 0 raids 108 killed 3128 overruns 2 risen 1 lair_settlement_open 3
+monsters-small-6 G ghost 2 endings 0:12,1:7,2:2,3:1,4:1 standing 12 population 12758 shunned 3
+monsters-small-6 S outposts 3 ended 1 bold 0 monster_flares 0
 monsters-small-6 m1 giant 2 born 10 e5 died - hoard 29 | Girndrai | lair Girndrai's Seat
 monsters-small-6 m2 troll 3 born 12 e6 died 1915 hoard 39 | Old Gritch | lair Gritch's Hollow
 monsters-small-6 m3 wyvern 2 born 14 e7 died - hoard 0 | The Brood of Drut | lair Drut's Crag
 monsters-small-6 m4 ogre 2 born 16 e8 died - hoard 0 | Ok'uruuk the Glutton | lair Ok'uruuk's Larder
 monsters-small-6 m5 giant 2 born 18 e9 died - hoard 12 | Khammhourd the Grey | lair The Hall of Khammhourd
-monsters-small-6 m6 troll 2 born 20 e10 died - hoard 21 | Guxzazz of the Fells | lair Guxzazz's Hollow
+monsters-small-6 m6 troll 2 born 20 e10 died - hoard 25 | Guxzazz of the Fells | lair Guxzazz's Hollow
 monsters-small-6 m7 wyvern 2 born 22 e12 died - hoard 0 | The Screamers of Gnizz-Gruz | lair The Eyrie of Gnizz-Gruz
 monsters-small-6 m8 troll 2 born 26 e13 died - hoard 5 | Drix-Skeenk Stonehide | lair Drix-Skeenk's Hollow
 monsters-small-6 m9 dragon 2 born 35 e16 died - hoard 11 | Elaver the Gold-Eyed | lair The Lair of Elaver
 monsters-small-6 m10 ogre 3 born 150 e27 died 1685 hoard 22 | Ok'kum the Fat | lair Ok'kum's Larder
 monsters-small-6 m11 ogre 2 born 175 e28 died - hoard 10 | Kogthoz the Hungering | lair The Pit of Kogthoz
-monsters-small-6 m12 ogre 2 born 1714 e585 died - hoard 19 | Grugh | lair Grugh's Larder
-monsters-small-6 m13 troll 1 born 1994 e761 died - hoard 4 | Mossback Skruzzdruz | lair The Den of Skruzzdruz
+monsters-small-6 m12 ogre 2 born 1714 e583 died - hoard 19 | Grugh | lair The Pit of Grugh
+monsters-small-6 m13 undead 1 born 1851 e682 died - hoard 0 | The Host of Kreek | lair The Howes of Kreek
+monsters-small-6 m14 troll 1 born 1994 e819 died - hoard 4 | Mossback Skrat | lair Skrat's Hollow
 monsters-small-6 si1 lair rg22 59 187 s0 c0 m1 10 e5 965 3 | The Hall of Girndrai
 monsters-small-6 si2 lair rg4 41 44 s0 c0 m2 12 e6 1915 1 | Gritch's Hollow
 monsters-small-6 si3 lair rg15 146 101 s0 c0 m3 14 e7 - 0 | Drut's Crag
@@ -832,17 +846,20 @@ monsters-small-6 si15 outpost rg16 40 135 s14 c7 m0 1110 e185 1327 5 | The Mines
 monsters-small-6 si16 outpost rg7 68 51 s16 c9 m0 1125 e211 - 0 | The Delvings of Thid Deep
 monsters-small-6 si17 outpost rg9 166 63 s0 c6 m0 1135 e220 - 0 | Hinbairin's Delving-Spire
 monsters-small-6 si18 outpost rg9 169 69 s13 c6 m0 1151 e238 - 0 | The Delvings of Handnurd
-monsters-small-6 si19 outpost rg21 187 149 s0 c11 m0 1483 e475 - 0 | Glitomae Watch
-monsters-small-6 si20 lair rg10 51 94 s0 c0 m12 1714 e585 - 0 | Grugh's Larder
-monsters-small-6 si21 lair rg22 59 187 s0 c0 m13 1994 e761 - 0 | The Den of Skruzzdruz
+monsters-small-6 si19 outpost rg21 187 149 s0 c11 m0 1483 e479 - 0 | Glitomae Watch
+monsters-small-6 si20 outpost rg3 182 13 s0 c3 m0 1686 e574 1850 5 | Zugok Stockade
+monsters-small-6 si21 lair rg10 51 94 s0 c0 m12 1714 e583 - 0 | The Pit of Grugh
+monsters-small-6 si22 outpost rg2 107 7 s0 c12 m0 1760 e628 - 0 | Skakutch Lookout
+monsters-small-6 si23 lair rg3 184 5 s6 c0 m13 1851 e682 - 0 | The Howes of Kreek
+monsters-small-6 si24 lair rg22 59 187 s0 c0 m14 1994 e819 - 0 | Skrat's Hollow
 fixture monsters-small-7 7 6000 all 4 turbulent monsters-small
-monsters-small-7 table beast_population 152 7901450817930d482f4e6acecb7eaba19fcd39936d5b9035eaf9b293dd4ace70
-monsters-small-7 table monster 30 57e1ef4b5fc91c1f7a133fc7d5ff3b73c8e6e48b5eaf91748c86e65a69db688d
-monsters-small-7 table site 60 1cb992570de03d3e4a507e8d6225dd37ce4e3c3482d93e643ae146be2a3664ee
-monsters-small-7 ending db7fc27741018ef6dcca4f0a4f921950b142c789471f8ce54bc55369fcaa92ef
-monsters-small-7 M monsters 30 alive 11 slain 6 died 13 raids 268 killed 8565 overruns 5 risen 1 lair_settlement_open 1
-monsters-small-7 G ghost 0 endings 0:10,1:9,2:5,6:7 standing 10 population 14961 shunned 1
-monsters-small-7 S outposts 8 ended 5 bold 0 monster_flares 3
+monsters-small-7 table beast_population 144 e224d9d938293c4b34b9ac6070a6c54f365fa72413eef1b06835dc3d3a5045ff
+monsters-small-7 table monster 31 d9713c8565c9b855163b33b95b30de0dcbb6378338ce6061847b0e2c3a990671
+monsters-small-7 table site 62 32507b57ab32ee5756e8f91d12889d5da9f3f362e1743a4bcbd132d9f376032d
+monsters-small-7 ending 87ecdd2c0697c90fc8daf4dcb3ba7e0622122e6ba1b38ba866e4d453d3919cab
+monsters-small-7 M monsters 31 alive 11 slain 7 died 13 raids 227 killed 7263 overruns 5 risen 1 lair_settlement_open 2
+monsters-small-7 G ghost 0 endings 0:11,1:9,2:5,6:6 standing 11 population 10422 shunned 2
+monsters-small-7 S outposts 10 ended 8 bold 0 monster_flares 3
 monsters-small-7 m1 wyvern 4 born 8 e7 died 2000 hoard 0 | The Brood of Sneeskriz | lair Sneeskriz's Crag
 monsters-small-7 m2 dragon 2 born 16 e9 died - hoard 0 | Laglatho the Red | lair The Lair of Laglatho
 monsters-small-7 m3 ogre 4 born 48 e14 died 2025 hoard 0 | Kul the Glutton | lair The Pit of Kul
@@ -852,27 +869,28 @@ monsters-small-7 m6 troll 4 born 66 e21 died 4065 hoard 0 | Girk-Gneerk the Grey
 monsters-small-7 m7 troll 4 born 122 e32 died 4115 hoard 9 | Old Skeekskink | lair Skeekskink's Hollow
 monsters-small-7 m8 wyvern 4 born 150 e35 died 2150 hoard 0 | The Snunark Brood | lair The Eyrie of Snunark
 monsters-small-7 m9 troll 3 born 175 e38 died 2075 hoard 2 | Zeezz | lair The Den of Zeezz
-monsters-small-7 m10 giant 4 born 900 e44 died 4876 hoard 122 | Gurinkir Stonehand | lair The Hall of Gurinkir
+monsters-small-7 m10 giant 4 born 900 e44 died 4876 hoard 5 | Gurinkir Stonehand | lair Gurinkir's Seat
 monsters-small-7 m11 wyvern 4 born 2000 e63 died 3990 hoard 0 | The Screamers of Drob-Neezz | lair The Eyrie of Drob-Neezz
 monsters-small-7 m12 ogre 4 born 2025 e65 died 4015 hoard 6 | Dark'muurz the Fat | lair Dark'muurz's Larder
 monsters-small-7 m13 ogre 4 born 2050 e68 died 4040 hoard 10 | Ghush | lair The Pit of Ghush
 monsters-small-7 m14 ogre 4 born 2081 e102 died 4065 hoard 3 | Zaakhshul | lair Zaakhshul's Larder
 monsters-small-7 m15 troll 3 born 2110 e149 died 2293 hoard 12 | Kig of the Fells | lair The Den of Kig
 monsters-small-7 m16 wyvern 3 born 2156 e203 died 2162 hoard 0 | The Brood of Skiksnutch | lair Skiksnutch's Crag
-monsters-small-7 m17 giant 2 born 2240 e239 died - hoard 126 | Grargrond Cliffbreaker | lair The Hall of Grargrond
-monsters-small-7 m18 troll 2 born 2315 e253 died - hoard 29 | Zaskrink Stonehide | lair Zaskrink's Hollow
+monsters-small-7 m17 giant 3 born 2240 e239 died 5773 hoard 113 | Grargrond Cliffbreaker | lair The Hall of Grargrond
+monsters-small-7 m18 troll 2 born 2315 e253 died - hoard 12 | Zaskrink Stonehide | lair The Den of Zaskrink
 monsters-small-7 m19 wyvern 4 born 2465 e256 died 4451 hoard 0 | The Drozz-Kazz Brood | lair The Eyrie of Drozz-Kazz
 monsters-small-7 m20 wyvern 2 born 4015 e565 died - hoard 0 | The Brood of Zizzsloz | lair The Eyrie of Zizzsloz
-monsters-small-7 m21 ogre 2 born 4040 e567 died - hoard 64 | Tha'azol | lair Tha'azol's Larder
-monsters-small-7 m22 troll 3 born 4065 e571 died 4973 hoard 15 | Mossback Dribiz | lair The Den of Dribiz
-monsters-small-7 m23 ogre 2 born 4090 e573 died - hoard 0 | Ugakkom Bonebreaker | lair Ugakkom's Larder
-monsters-small-7 m24 ogre 2 born 4115 e576 died - hoard 15 | Kuurk | lair Kuurk's Larder
-monsters-small-7 m25 troll 2 born 4140 e577 died - hoard 16 | Zabdrazz | lair Zabdrazz's Hollow
-monsters-small-7 m26 wyvern 3 born 4451 e739 died 5993 hoard 0 | The Screamers of Krignok | lair Krignok's Crag
-monsters-small-7 m27 giant 3 born 4876 e939 died 5856 hoard 99 | Bourndri the Tall | lair Bourndri's Seat
-monsters-small-7 m28 troll 2 born 5012 e1137 died - hoard 0 | Drobsnob | lair Drobsnob's Hollow
-monsters-small-7 m29 undead 2 born 5851 e1578 died - hoard 0 | The Restless of Synthetic 1 | lair The Barrows of Synthetic 1
-monsters-small-7 m30 giant 1 born 5975 e1772 died - hoard 10 | Nimm | lair Nimm's Seat
+monsters-small-7 m21 ogre 2 born 4040 e567 died - hoard 0 | Tha'azol | lair Tha'azol's Larder
+monsters-small-7 m22 troll 3 born 4065 e572 died 4926 hoard 8 | Mossback Dribiz | lair The Den of Dribiz
+monsters-small-7 m23 ogre 2 born 4090 e574 died - hoard 0 | Ugakkom Bonebreaker | lair Ugakkom's Larder
+monsters-small-7 m24 ogre 2 born 4115 e577 died - hoard 8 | Kuurk | lair Kuurk's Larder
+monsters-small-7 m25 troll 2 born 4140 e578 died - hoard 5 | Zabdrazz | lair The Den of Zabdrazz
+monsters-small-7 m26 wyvern 3 born 4451 e909 died 5961 hoard 0 | The Screamers of Krignok | lair Krignok's Crag
+monsters-small-7 m27 giant 3 born 4876 e1028 died 5854 hoard 35 | Bourndri the Tall | lair The Hall of Bourndri
+monsters-small-7 m28 troll 2 born 5012 e1100 died - hoard 65 | Drobsnob | lair The Den of Drobsnob
+monsters-small-7 m29 undead 2 born 5711 e1349 died - hoard 0 | The Restless of the End of Sneerk-Grik | lair The Barrows of the End of Sneerk-Grik
+monsters-small-7 m30 giant 1 born 5975 e1776 died - hoard 11 | Nimm | lair The Hall of Nimm
+monsters-small-7 m31 giant 1 born 5988 e1785 died - hoard 4 | Broumno | lair The Hall of Broumno
 monsters-small-7 si1 lair rg3 75 36 s0 c0 m1 8 e7 2000 2 | Sneeskriz's Crag
 monsters-small-7 si2 lair rg14 137 148 s0 c0 m2 16 e9 - 0 | The Lair of Laglatho
 monsters-small-7 si3 lair rg16 156 175 s0 c0 m3 48 e14 2025 2 | The Pit of Kul
@@ -883,7 +901,7 @@ monsters-small-7 si7 lair rg12 108 140 s0 c0 m7 122 e32 4115 2 | Skeekskink's Ho
 monsters-small-7 si8 outpost rg7 70 92 s0 c1 m0 148 e34 - 0 | The Star-Tower of Allithos
 monsters-small-7 si9 lair rg7 29 96 s0 c0 m8 150 e35 927 3 | Snunark's Crag
 monsters-small-7 si10 lair rg9 86 99 s0 c0 m9 175 e38 2075 1 | The Den of Zeezz
-monsters-small-7 si11 lair rg6 113 57 s0 c0 m10 900 e44 4634 3 | Gurinkir's Seat
+monsters-small-7 si11 lair rg6 113 57 s0 c0 m10 900 e44 4876 2 | Gurinkir's Seat
 monsters-small-7 si12 lair rg7 69 92 s2 c0 m8 927 e47 2150 2 | The Eyrie of Snunark
 monsters-small-7 si13 lair rg3 75 36 s0 c0 m11 2000 e63 3990 2 | The Eyrie of Drob-Neezz
 monsters-small-7 si14 lair rg4 181 33 s0 c0 m12 2025 e65 4015 2 | Dark'muurz's Larder
@@ -894,57 +912,59 @@ monsters-small-7 si18 lair rg9 86 99 s0 c0 m15 2110 e149 2168 3 | Kig's Hollow
 monsters-small-7 si19 outpost rg7 22 75 s0 c1 m0 2139 e194 2390 6 | Misi Watch
 monsters-small-7 si20 lair rg16 156 175 s0 c0 m16 2156 e203 2162 1 | Skiksnutch's Crag
 monsters-small-7 si21 lair rg7 34 95 s7 c0 m15 2168 e209 2293 1 | The Den of Kig
-monsters-small-7 si22 lair rg13 48 152 s0 c0 m17 2240 e239 - 0 | The Hall of Grargrond
-monsters-small-7 si23 lair rg11 26 126 s0 c0 m18 2315 e253 - 0 | Zaskrink's Hollow
+monsters-small-7 si22 lair rg13 48 152 s0 c0 m17 2240 e239 5773 1 | The Hall of Grargrond
+monsters-small-7 si23 lair rg11 26 126 s0 c0 m18 2315 e253 5861 3 | Zaskrink's Hollow
 monsters-small-7 si24 lair rg16 156 175 s0 c0 m19 2465 e256 4451 2 | The Eyrie of Drozz-Kazz
-monsters-small-7 si25 outpost rg5 28 48 s13 c6 m0 3345 e288 - 0 | The Mines of Drourkgad Deep
+monsters-small-7 si25 outpost rg5 28 48 s13 c6 m0 3345 e288 5377 5 | The Mines of Drourkgad Deep
 monsters-small-7 si26 outpost rg2 173 9 s14 c7 m0 3365 e324 3404 5 | The Delvings of Koulithra Hold
-monsters-small-7 si27 outpost rg10 128 117 s15 c8 m0 3378 e330 - 0 | The Mines of Bonbad
+monsters-small-7 si27 outpost rg10 128 117 s15 c8 m0 3378 e330 4168 5 | The Mines of Bonbad
 monsters-small-7 si28 outpost rg15 42 189 s12 c5 m0 3383 e333 - 0 | The Delvings of Thondtou Hold
 monsters-small-7 si29 outpost rg16 125 177 s0 c9 m0 3403 e358 3413 5 | Gnidrok Stockade
 monsters-small-7 si30 outpost rg7 22 75 s0 c1 m0 3408 e367 - 0 | Siriene's White Tower
 monsters-small-7 si31 outpost rg14 129 155 s0 c3 m0 3412 e383 3690 6 | Sleegrugg Lookout
-monsters-small-7 si32 outpost rg5 12 66 s0 c6 m0 3478 e457 - 0 | Tirn's Delving-Spire
+monsters-small-7 si32 outpost rg5 12 66 s0 c6 m0 3478 e457 5377 5 | Tirn's Delving-Spire
 monsters-small-7 si33 lair rg7 29 96 s0 c0 m20 4015 e565 - 0 | The Eyrie of Zizzsloz
 monsters-small-7 si34 lair rg15 68 173 s0 c0 m21 4040 e567 - 0 | Tha'azol's Larder
-monsters-small-7 si35 lair rg9 86 99 s0 c0 m22 4065 e571 4973 1 | The Den of Dribiz
-monsters-small-7 si36 lair rg3 75 36 s0 c0 m23 4090 e573 - 0 | Ugakkom's Larder
-monsters-small-7 si37 outpost rg6 175 49 s16 c6 m0 4090 e574 4268 4 | The Mines of Dondkun Hold
-monsters-small-7 si38 lair rg5 43 71 s0 c0 m24 4115 e576 - 0 | Kuurk's Larder
-monsters-small-7 si39 lair rg1 70 17 s0 c0 m25 4140 e577 5184 3 | The Den of Zabdrazz
-monsters-small-7 si40 outpost rg7 63 95 s0 c1 m0 4185 e614 - 0 | Rivofae's White Tower
-monsters-small-7 si41 outpost rg7 51 82 s0 c1 m0 4336 e705 - 0 | Virel's White Tower
-monsters-small-7 si42 outpost rg3 80 25 s21 c6 m0 4401 e735 4662 4 | The Delvings of Momm Hold
-monsters-small-7 si43 lair rg16 156 175 s0 c0 m26 4451 e739 5993 1 | Krignok's Crag
-monsters-small-7 si44 lair rg6 125 50 s24 c0 m10 4634 e834 4876 2 | The Hall of Gurinkir
-monsters-small-7 si45 outpost rg11 92 142 s0 c11 m0 4708 e865 - 0 | Saflae's Moonspire
-monsters-small-7 si46 lair rg12 108 140 s0 c0 m27 4876 e939 4920 3 | The Hall of Bourndri
-monsters-small-7 si47 outpost rg13 10 164 s0 c3 m0 4902 e950 - 0 | Grark Stockade
-monsters-small-7 si48 lair rg10 154 98 s22 c0 m27 4920 e988 5856 1 | Bourndri's Seat
-monsters-small-7 si49 outpost rg2 153 11 s0 c16 m0 4961 e1038 4993 5 | The Tower of Cosweald
-monsters-small-7 si50 outpost rg15 65 178 s0 c5 m0 4968 e1057 - 0 | The Tower of Gradbrarin
-monsters-small-7 si51 lair rg6 113 57 s0 c0 m28 5012 e1137 - 0 | Drobsnob's Hollow
-monsters-small-7 si52 outpost rg2 138 9 s26 c6 m0 5014 e1138 5112 4 | The Delvings of Moddoldham
-monsters-small-7 si53 lair rg2 138 9 s26 c0 m25 5184 e1207 - 0 | Zabdrazz's Hollow
-monsters-small-7 si54 outpost rg11 23 137 s0 c11 m0 5338 e1248 - 0 | Gliwhaeth Watch
-monsters-small-7 si55 outpost rg11 61 121 s0 c11 m0 5667 e1328 - 0 | The Thorn-Tower of Flitwou
-monsters-small-7 si56 outpost rg16 178 172 s29 c21 m0 5802 e1445 5958 5 | The Delvings of Ul'kruz Camp
-monsters-small-7 si57 lair rg1 70 17 s0 c0 m29 5851 e1578 - 0 | The Barrows of Synthetic 1
-monsters-small-7 si58 outpost rg1 28 17 s0 c19 m0 5853 e1589 - 0 | Thakhzug's War-Spire
-monsters-small-7 si59 outpost rg3 23 47 s0 c22 m0 5854 e1602 5945 5 | The Tower of Kairingai
-monsters-small-7 si60 lair rg12 108 140 s0 c0 m30 5975 e1772 - 0 | Nimm's Seat
+monsters-small-7 si35 lair rg9 86 99 s0 c0 m22 4065 e572 4926 1 | The Den of Dribiz
+monsters-small-7 si36 lair rg3 75 36 s0 c0 m23 4090 e574 - 0 | Ugakkom's Larder
+monsters-small-7 si37 outpost rg6 175 49 s16 c6 m0 4090 e575 4350 4 | The Mines of Dondkun Hold
+monsters-small-7 si38 lair rg5 43 71 s0 c0 m24 4115 e577 - 0 | Kuurk's Larder
+monsters-small-7 si39 lair rg1 70 17 s0 c0 m25 4140 e578 - 0 | The Den of Zabdrazz
+monsters-small-7 si40 outpost rg7 63 95 s0 c1 m0 4185 e612 - 0 | Sondsa's White Tower
+monsters-small-7 si41 outpost rg11 92 142 s0 c11 m0 4444 e906 - 0 | The Thorn-Tower of Whawhysk
+monsters-small-7 si42 lair rg16 156 175 s0 c0 m26 4451 e909 5961 1 | Krignok's Crag
+monsters-small-7 si43 outpost rg6 181 61 s0 c13 m0 4526 e932 4776 6 | Mungrord Watch
+monsters-small-7 si44 outpost rg7 51 82 s0 c1 m0 4548 e970 - 0 | Fiegland's White Tower
+monsters-small-7 si45 outpost rg5 20 61 s0 c6 m0 4573 e991 4776 6 | Dodmu Watch
+monsters-small-7 si46 outpost rg10 189 98 s23 c12 m0 4851 e1024 - 0 | The Delvings of Groukbak
+monsters-small-7 si47 lair rg12 108 140 s0 c0 m27 4876 e1028 4920 3 | Bourndri's Seat
+monsters-small-7 si48 lair rg10 154 98 s24 c0 m27 4920 e1040 5854 1 | The Hall of Bourndri
+monsters-small-7 si49 lair rg6 113 57 s0 c0 m28 5012 e1100 - 0 | The Den of Drobsnob
+monsters-small-7 si50 outpost rg4 153 24 s0 c14 m0 5078 e1125 5639 4 | The Tower of Brard
+monsters-small-7 si51 outpost rg6 143 55 s27 c13 m0 5157 e1139 - 0 | The Mines of Dradinbron Hold
+monsters-small-7 si52 outpost rg11 23 137 s0 c11 m0 5667 e1267 - 0 | The Thorn-Tower of Shaeth
+monsters-small-7 si53 outpost rg5 12 66 s0 c15 m0 5704 e1314 5705 5 | Krarz Stockade
+monsters-small-7 si54 outpost rg15 65 178 s0 c5 m0 5706 e1331 5907 6 | The Tower of Bili
+monsters-small-7 si55 lair rg2 117 0 s0 c0 m29 5711 e1349 5800 3 | The Howes of the End of Sneerk-Grik
+monsters-small-7 si56 outpost rg5 8 55 s28 c13 m0 5740 e1376 5759 4 | The Delvings of Bog Fort
+monsters-small-7 si57 lair rg2 117 23 s29 c0 m29 5800 e1465 - 0 | The Barrows of the End of Sneerk-Grik
+monsters-small-7 si58 outpost rg6 181 61 s0 c13 m0 5850 e1540 - 0 | The Tower of Tuntho
+monsters-small-7 si59 lair rg11 46 129 s17 c0 m18 5861 e1603 - 0 | The Den of Zaskrink
+monsters-small-7 si60 outpost rg5 12 66 s0 c18 m0 5942 e1713 - 0 | The Watch of Azog
+monsters-small-7 si61 lair rg12 108 140 s0 c0 m30 5975 e1776 - 0 | The Hall of Nimm
+monsters-small-7 si62 lair rg13 48 152 s0 c0 m31 5988 e1785 - 0 | The Hall of Broumno
 fixture monsters-small-9 9 6000 all auto normal monsters-small
 monsters-small-9 table beast_population 68 2cf0cee264af316dee3cfc3f0297696cc21a46b812d0161b3f1cd16c28567c47
 monsters-small-9 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-monsters-small-9 table site 4 90334c1e1db90158347f2d45fe9e45926eb9216c271e42a2bf6c4b0400204d98
+monsters-small-9 table site 4 0ba8fe2e8924ff6d469e8cb2c7d11aece5959e73c01e68137027dcafca650886
 monsters-small-9 ending 3cc8c964ff1a7a68f17c44d940d176bcd338dca127de8593bc4970034bc85a03
 monsters-small-9 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-monsters-small-9 G ghost 1 endings 0:8,4:1 standing 8 population 4354 shunned 0
+monsters-small-9 G ghost 1 endings 0:8,4:1 standing 8 population 4382 shunned 0
 monsters-small-9 S outposts 0 ended 0 bold 0 monster_flares 0
 monsters-small-9 si1 outpost rg17 74 76 s0 c1 m0 33 e5 - 0 | The Star-Tower of Elerglae
 monsters-small-9 si2 outpost rg37 46 178 s4 c3 m0 3354 e104 - 0 | The Delvings of Kourn Hold
-monsters-small-9 si3 outpost rg17 69 92 s0 c4 m0 5671 e358 - 0 | Fiegly's Moonspire
-monsters-small-9 si4 outpost rg31 12 161 s0 c5 m0 5769 e382 - 0 | Ashear's Tower
+monsters-small-9 si3 outpost rg17 69 92 s0 c4 m0 5671 e367 - 0 | Shavaesk's Moonspire
+monsters-small-9 si4 outpost rg31 12 161 s0 c5 m0 5769 e385 - 0 | Ashear's Tower
 fixture monsters-small-12 12 2000 goblin,human,orc 4 normal monsters-small
 monsters-small-12 table beast_population 238 3d9af5ccba575add4cbbf78cddc485ce98af7f7ff3471af57d3700c7b4e02e26
 monsters-small-12 table monster 7 48e17f9e297595dcb022ae26494c21f1e639016be67ada9e9221169893c49771
@@ -1049,13 +1069,13 @@ monsters-small-13 si33 outpost rg16 41 144 s0 c10 m0 4956 e1294 - 0 | The Smoke-
 monsters-small-13 si34 lair rg13 83 107 s0 c0 m27 5063 e1421 - 0 | Skriz's Crag
 monsters-small-13 si35 lair rg4 146 39 s0 c0 m28 5231 e1505 - 0 | The Hall of Thain
 fixture monsters-small-14 14 2000 all 4 calm monsters-small
-monsters-small-14 table beast_population 151 22e23c4cda9ad2f0787ad12d467b3a8e76a8baac68288e3dafe55edf8e29fd6d
-monsters-small-14 table monster 16 515e0116940057c6258eddc01d80f4bd30c61b47e8867ad4c4d4e0d23a620bbe
-monsters-small-14 table site 34 e4181c43fbecb785e1ead53e6f1c0a80072414fc67a73b5dc24049baf1659611
-monsters-small-14 ending 4a055a67fd5c7b98b6255b0144753ec881e2b720d03dd81e383e697a9d493007
-monsters-small-14 M monsters 16 alive 12 slain 4 died 0 raids 102 killed 3667 overruns 4 risen 1 lair_settlement_open 4
-monsters-small-14 G ghost 0 endings 0:19,1:6,2:4,6:2 standing 19 population 25222 shunned 4
-monsters-small-14 S outposts 8 ended 5 bold 0 monster_flares 1
+monsters-small-14 table beast_population 152 0c687526d9d46868a04ffa8906b7b8b4008c15c86673aa462c6f46c09b132ce9
+monsters-small-14 table monster 15 31fa1bf21bca7373d4a6581d3fff3946191a91ed4bab9fa3dd212834e0e7324c
+monsters-small-14 table site 33 5edfb15377f661e2b210af9fe5e8d1b902ce0646747f808d244126813905afca
+monsters-small-14 ending f0c0c28326ad8c7e7c9f7b962eb498753e79cd5a7e7657cd485aac9cb3f8c4d5
+monsters-small-14 M monsters 15 alive 11 slain 4 died 0 raids 99 killed 3496 overruns 3 risen 0 lair_settlement_open 3
+monsters-small-14 G ghost 0 endings 0:22,1:4,2:3,6:2 standing 22 population 25516 shunned 3
+monsters-small-14 S outposts 9 ended 5 bold 0 monster_flares 1
 monsters-small-14 m1 wyvern 1 born 8 e5 died - hoard 0 | The Brood of Zog-Neenk | lair The Eyrie of Zog-Neenk
 monsters-small-14 m2 dragon 2 born 9 e6 died - hoard 0 | Masofae the Gold-Eyed | lair Masofae's Deep
 monsters-small-14 m3 giant 2 born 16 e7 died - hoard 40 | Munhomm Cliffbreaker | lair Munhomm's Seat
@@ -1070,8 +1090,7 @@ monsters-small-14 m11 wyvern 3 born 922 e203 died 1709 hoard 0 | The Screamers o
 monsters-small-14 m12 troll 3 born 1106 e452 died 1421 hoard 119 | Gnikuzz Stonehide | lair Gnikuzz's Hollow
 monsters-small-14 m13 troll 2 born 1317 e747 died - hoard 30 | Kutch-Gnozz of the Fells | lair The Den of Kutch-Gnozz
 monsters-small-14 m14 troll 2 born 1527 e900 died - hoard 36 | Zeegg the Grey | lair The Den of Zeegg
-monsters-small-14 m15 wyvern 2 born 1794 e1157 died - hoard 0 | The Grazut Brood | lair Grazut's Crag
-monsters-small-14 m16 undead 2 born 1887 e1240 died - hoard 0 | The Restless of the End of Gox-Greezz | lair The Howes of the End of Gox-Greezz
+monsters-small-14 m15 wyvern 2 born 1794 e1155 died - hoard 0 | The Grazut Brood | lair Grazut's Crag
 monsters-small-14 si1 lair rg1 24 55 s0 c0 m1 8 e5 - 0 | The Eyrie of Zog-Neenk
 monsters-small-14 si2 lair rg13 116 158 s0 c0 m2 9 e6 - 0 | Masofae's Deep
 monsters-small-14 si3 lair rg9 29 121 s0 c0 m3 16 e7 - 0 | Munhomm's Seat
@@ -1101,22 +1120,21 @@ monsters-small-14 si26 outpost rg9 25 129 s27 c8 m0 1497 e870 - 0 | The Delvings
 monsters-small-14 si27 lair rg7 149 60 s0 c0 m14 1527 e900 1682 3 | Zeegg's Hollow
 monsters-small-14 si28 outpost rg9 8 166 s0 c8 m0 1583 e948 - 0 | Duli Watch
 monsters-small-14 si29 lair rg7 168 28 s30 c0 m14 1682 e1017 - 0 | The Den of Zeegg
-monsters-small-14 si30 lair rg10 41 159 s0 c0 m15 1794 e1157 - 0 | Grazut's Crag
-monsters-small-14 si31 outpost rg3 78 38 s0 c4 m0 1865 e1181 - 0 | Gunogg's Bone-Tower
-monsters-small-14 si32 lair rg15 167 165 s0 c0 m16 1887 e1240 1895 3 | The Barrows of the End of Gox-Greezz
-monsters-small-14 si33 lair rg16 188 134 s14 c0 m16 1895 e1247 - 0 | The Howes of the End of Gox-Greezz
-monsters-small-14 si34 outpost rg10 43 169 s0 c12 m0 1921 e1305 - 0 | Lianmo's Moonspire
+monsters-small-14 si30 lair rg10 41 159 s0 c0 m15 1794 e1155 - 0 | Grazut's Crag
+monsters-small-14 si31 outpost rg3 78 38 s0 c4 m0 1865 e1182 - 0 | Kratch's Bone-Tower
+monsters-small-14 si32 outpost rg1 23 40 s0 c16 m0 1870 e1209 - 0 | Keeskrigg Lookout
+monsters-small-14 si33 outpost rg10 43 169 s0 c12 m0 1921 e1326 - 0 | Whieglyll's Moonspire
 fixture zero-0 0 2000 all auto normal zero
 zero-0 table beast_population 31 747c9df6b568ccdd45b90a062c4ac7ce6e796cdcf8d1226223c918ec917d1057
 zero-0 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-zero-0 table site 3 7cc8a6736e7bb2f99eb3bd1a3ddc8f1456e2063a2dd1c0134316b79ed124018b
-zero-0 ending 7d4f69f249153f455e8011f429f967f1948fbbdf31eec155fa0206a5b536d4a0
+zero-0 table site 3 10790637061ff9d3333cee94747bc0627f864286c78038182d88749d749eece3
+zero-0 ending 7ed32721cd691971df28d391f313332bc85ed1b449dbbe8346a4dd52954d89c3
 zero-0 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
-zero-0 G ghost 0 endings 0:14,1:2 standing 14 population 9625 shunned 0
+zero-0 G ghost 0 endings 0:15,1:1 standing 15 population 9626 shunned 0
 zero-0 S outposts 0 ended 0 bold 0 monster_flares 0
 zero-0 si1 outpost rg5 161 7 s5 c3 m0 1138 e25 - 0 | The Mines of Gromka
-zero-0 si2 outpost rg15 189 77 s0 c4 m0 1677 e65 - 0 | Waewian's Moonspire
-zero-0 si3 outpost rg10 190 66 s10 c3 m0 1793 e72 - 0 | The Mines of Nodin
+zero-0 si2 outpost rg15 189 77 s0 c4 m0 1677 e66 - 0 | Waewian's Moonspire
+zero-0 si3 outpost rg10 190 66 s10 c3 m0 1793 e73 - 0 | The Mines of Nodin
 fixture zero-1 1 6000 all auto turbulent zero
 zero-1 table beast_population 4 f50f2c117f31ada6f12b3fe384a1426af2e0c90bbc2871157a4cdc4b978a0a49
 zero-1 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448

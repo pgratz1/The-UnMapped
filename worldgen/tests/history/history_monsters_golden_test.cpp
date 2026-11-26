@@ -246,7 +246,7 @@ std::map<std::int64_t, std::int64_t> derived_endings(const Tables& t) {
         std::int64_t e = 5;
         if (k == "sacked") {
             e = 1;
-        } else if (k == "settlement_overrun") {
+        } else if (k == "settlement_overrun" || k == "hold_lost") {   // P5-07 6.6: a lost hold is ending 2
             e = 2;
         } else if (k == "settlement_abandoned" || k == "settlement_abandoned_to") {
             bool plague = false, famine = false, fled = false;
@@ -308,7 +308,7 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
         std::int64_t appearances = 0, overruns = 0, slain = 0, died = 0;
         for (const Row* e : events_of_monster[id]) {
             const std::int64_t kd = at(*e, 3);
-            if (kd == k.at("monster_appeared") || kd == k.at("undead_rose")) {
+            if (kd == k.at("monster_appeared") || kd == k.at("undead_rose") || (k.count("deep_woken") != 0U && kd == k.at("deep_woken"))) {
                 ++appearances;
                 if (at(*e, 0) != at(m, 5)) out.push_back("4: monster " + std::to_string(id) + " appears twice");
             }
@@ -547,7 +547,7 @@ TEST_CASE("P5-02 6.2.3: beasts_bold on geo-seed-0-512: settlement, owner, beast,
         CHECK(menace[beast] > 0);   // P5-03 13: drawn by B x menace, so a species of menace 0 is never chosen
         CHECK(dead >= 0);
     }
-    CHECK(n == 2);   // 0.28.0: two (p3-06-conflict.txt, geo-seed-0-512 events_beasts_bold = 2); one at 0.24.0 to 0.27.0
+    CHECK(n == 1);   // 0.29.0: one (p3-06-conflict.txt, geo-seed-0-512 events_beasts_bold = 1); two at 0.28.0; one at 0.24.0 to 0.27.0
 }
 
 // 19.2 resume (P3-04 16.3 item 21): a world generated --until chronology and resumed through the history stage

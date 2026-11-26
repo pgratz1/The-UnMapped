@@ -187,6 +187,10 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
         {EventGroup::figures,
          {"came_to_rule", "figure_died", "succession_disputed", "exiled", "reigned_at_end", "general_appointed",
           "fell_in_battle", "hero_rose", "hero_slain", "tower_founded", "book_written"}},
+        // P5-07 11.1 (kinds 93 to 99; ALL_GROUPS unchanged)
+        {EventGroup::settlements, {"delving_deepened", "warren_delved"}},
+        {EventGroup::monsters, {"deep_woken", "deep_sealed", "hold_lost", "warren_sealed"}},
+        {EventGroup::alliances, {"ally_aided_hold"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {
@@ -196,14 +200,14 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 92U);   // P5-04 8.1; P5-06 11.3: fourteen more
+    CHECK(n == 99U);   // P5-04 8.1; P5-06 11.3: fourteen more; P5-07 8.1: seven more
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() == 92U);
+    REQUIRE(kinds.size() == 99U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
         CHECK(brapi::event_group(k.key) != EventGroup::other);
-        CHECK((brapi::event_group(k.key) == EventGroup::monsters) == ((k.id >= 44 && k.id <= 56) || k.key == "monster_slain_by_hero"));   // P5-06 11.3
+        CHECK((brapi::event_group(k.key) == EventGroup::monsters) == ((k.id >= 44 && k.id <= 56) || k.key == "monster_slain_by_hero" || (k.id >= 94 && k.id <= 96) || k.id == 99));   // P5-06 11.3; P5-07 11.1
     }
     for (const std::string_view k : {std::string_view(""), std::string_view("warx"), std::string_view("Battle"),
                                      std::string_view("battle "), std::string_view("unknown_key"),

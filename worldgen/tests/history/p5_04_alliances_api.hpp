@@ -45,7 +45,7 @@ inline constexpr std::int64_t SUMMARY_ALLIANCES_MAX_SPEC = 10;   // 10.2
 inline constexpr std::uint32_t ALL_GROUPS_SPEC = 0x1FF;           // 11.2
 inline constexpr std::uint8_t GROUP_ALLIANCES = 7;                // 11.2
 inline constexpr std::uint8_t MINE_GLYPH = 19;                    // 11.3: 16 + site kind 3
-inline constexpr std::int64_t SCHEMA_SPEC = 12;                   // 9.2
+inline constexpr std::int64_t SCHEMA_SPEC = 13;                   // 9.2 (13 at 0.29.0)
 
 inline ins::EventGroup alliances_group() { return static_cast<ins::EventGroup>(GROUP_ALLIANCES); }
 

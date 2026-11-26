@@ -117,14 +117,14 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
     const std::string s = summary("h1-war-and-ruin");
     const std::vector<std::string> lines = hrtest::lines_of(s);
     REQUIRE(lines.size() > 3U);
-    CHECK(lines[0] == "# worldgen history v9");   // r19 25.1; v6 since P5-03a 9.1
+    CHECK(lines[0] == "# worldgen history v10");   // r19 25.1; v6 since P5-03a 9.1
     CHECK(lines[1] == "level = summary");
     CHECK(lines[2] == "[settings]");
     CHECK(block(s, "[settings]") == std::vector<std::string>{
                                         "seed = 101", "seed_phrase =", "map_size = 512", "history_span = 3000",
                                         "history_detail = normal", "races = elf,goblin", "civs_per_race = auto",
                                         "event_intensity = normal", "monster_pressure = normal",
-                                        "divine_activity = normal", "divine_script =", "generator_version = 0.28.0"});
+                                        "divine_activity = normal", "divine_script =", "generator_version = 0.29.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
               "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "
@@ -213,7 +213,7 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               // P5-04a 12.2 (v9): the count of the full list, then the shown deeds
               "  milestones: 2",
               "    1500 e9 settlement_founded: The Skib Horde founded Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor.",
-              "    1510 e12 settlement_founded: The Skib Horde founded Redwall in Gr\\xC3\\xA9y \\\\ Moor.",
+              // P5-07 10 item 6 (v10): at most one shown per kind (e12 is a second founding)
               "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7)
     // the same realm at full keeps 24.5's block (eight milestones)
     const std::vector<std::string> c2_full = civ_block(full("h1-war-and-ruin"), 2);
@@ -242,7 +242,6 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  fate: alive in 3000: 1 region, 1 settlement, population 1000",
               "  milestones: 2",   // P5-04a 12.2 (v9)
               "    1500 e11 settlement_founded: Gutrot Clans founded Ghashpit in the Ashen Fields.",
-              "    1600 e13 settlement_founded: Gutrot Clans founded Mossgate in Low Marsh.",
                "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7)
     // the upland rule of 6.6 (4 x walk_cells < cells): Stone Teeth, 300 of 2000
     CHECK(contains_line(block(s, "[present]"), "regions: 6; held 4, free 2"));

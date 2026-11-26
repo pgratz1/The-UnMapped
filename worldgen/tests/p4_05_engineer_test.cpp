@@ -156,7 +156,7 @@ TEST_CASE("P4-05 engineer: kind groups") {
         CHECK_MESSAGE(g != hb::EventGroup::other, k.key);
         // P5-02 kinds: the monsters group of section 9 (lead's ruling at the P4-05 integration); P5-03 (lead ruling
         // 4): kind 56 in monsters, kinds 57 to 62 in the group peoples
-        CHECK_MESSAGE((g == hb::EventGroup::monsters) == ((k.id >= 44 && k.id <= 56) || k.id == 88), k.key);   // P5-06 11.3: 88 in monsters
+        CHECK_MESSAGE((g == hb::EventGroup::monsters) == ((k.id >= 44 && k.id <= 56) || k.id == 88 || (k.id >= 94 && k.id <= 96) || k.id == 99), k.key);   // P5-06 11.3: 88 in monsters; P5-07 11.1: 94 to 96 and 99
         CHECK_MESSAGE((g == hb::EventGroup::peoples) == (k.id >= 57 && k.id <= 62), k.key);   // P5-04: 63 on, 11.2
     }
     CHECK(hb::event_group("") == hb::EventGroup::other);

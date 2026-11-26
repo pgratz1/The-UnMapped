@@ -214,7 +214,9 @@ NoteWorld note_world(const std::string& file, const std::vector<NEv>& evs) {
         "UPDATE settlement SET name = 'Nutskrank' WHERE id = 2;"
         "UPDATE settlement SET name = 'The Grey Fort' WHERE id = 3;"
         "UPDATE region SET name = 'East Wood' WHERE id = 1;"
-        "UPDATE region SET name = 'Woodward''s Shaw' WHERE id = 2;";
+        "UPDATE region SET name = 'Woodward''s Shaw' WHERE id = 2;"
+        "UPDATE region_name SET name = 'East Wood' WHERE region = 1;"
+        "UPDATE region_name SET name = 'Woodward''s Shaw' WHERE region = 2;";   // P5-07 (0.29.0): the world's later names would show instead
     NoteWorld out;
     for (const NEv& e : evs) {
         REQUIRE(kid.count(e.kind) == 1U);

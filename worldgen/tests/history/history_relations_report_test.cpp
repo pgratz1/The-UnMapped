@@ -258,14 +258,14 @@ Counts counts() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v9` at both levels; H14 equals the reference's") {
+TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v10` at both levels; H14 equals the reference's") {
     if (!fixture_present()) {
         MESSAGE("h14-v5.toml absent: skipped (written with the reference)");
         return;
     }
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v9");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v10");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         const auto& g = hrtest::golden();
         const auto it = g.find(H14);
@@ -422,8 +422,8 @@ TEST_CASE("P5-03a 9.1, 9.4: H15 header and [peoples] at both levels (by word, fr
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full, H15));
     REQUIRE_FALSE(s.empty());
     REQUIRE_FALSE(f.empty());
-    CHECK(s.front() == "# worldgen history v9");
-    CHECK(f.front() == "# worldgen history v9");
+    CHECK(s.front() == "# worldgen history v10");
+    CHECK(f.front() == "# worldgen history v10");
     CHECK(between(s, "[peoples]", "[alliances]") ==   // P5-04 10.2: [alliances] after [peoples]
           std::vector<std::string>{
               "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
@@ -460,7 +460,7 @@ TEST_CASE("P5-03a 9.2: H15 milestones as a count with the quiet stretch at summa
               "  milestones: 23",
               "    395 e34 war_declared: The Krurz Horde declared war on the House of Aelin over Fiev Wood.",
               "    400 e35 settlement_captured: The Krurz Horde took Fievos from the House of Aelin; 40 died.",
-              "    1290 e50 war_declared: The Krurz Horde declared war on the Hold of Kazad over Duld Hills.",
+              "    410 e40 peace: The House of Aelin sued the Krurz Horde for peace after 15 years of war.",   // P5-07 10 item 6: one per kind
               "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3; P5-06 10.3
     std::int64_t full_heads = 0, summary_heads = 0;
     for (const std::string& l : hrtest::lines_of(f)) full_heads += l == "  milestones:" ? 1 : 0;

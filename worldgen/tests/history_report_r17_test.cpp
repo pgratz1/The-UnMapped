@@ -173,8 +173,9 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     CHECK(contains_line(c1, "  milestones: 16"));
     CHECK(sub_lines(c1, "  milestones:") ==
           std::vector<std::string>{
+              // P5-07 10 item 6 (v10): at most one per kind, the first in rank order (the declaration e15, a sack e17)
+              "    300 e15 war_declared: Alird declared war on Brannock over Bran Downs. (Claimed the same year.)",
               "    305 e17 sacked: Alird sacked Branmoor of Brannock; 100 died and 0 fled.",
-              "    306 e18 sacked: Alird sacked Branlea of Brannock; 100 died and 0 fled.",
               "    1210 e33 civ_conquered: Dunmark fell to Alird."});
     CHECK(sub_lines(civ_block(full("h9-realms"), 1), "  milestones:") ==
           std::vector<std::string>{

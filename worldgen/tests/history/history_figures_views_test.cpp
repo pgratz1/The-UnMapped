@@ -70,7 +70,7 @@ TEST_CASE("P5-06 10.1, 10.2, 10.4, 10.5: report v8: header, [figures], [sites] w
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string text = hrtest::report_of(r, level);
         CAPTURE(level == HistoryLevel::full);
-        CHECK(starts(text, "# worldgen history v9"));
+        CHECK(starts(text, "# worldgen history v10"));
         const auto fb = block(text, "[figures]");
         REQUIRE_FALSE(fb.empty());
         std::map<std::int64_t, std::int64_t> by_role;

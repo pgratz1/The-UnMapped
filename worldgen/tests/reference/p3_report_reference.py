@@ -102,7 +102,9 @@ DEFAULT_INPUTS_027 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.27.0 histories (P5-06 phase 2: build-inputs)
 DEFAULT_INPUTS_028 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p504a-int",
                                   "report-inputs")   # 0.28.0 histories (P5-04a integration: build-inputs)
-GENERATOR_VERSION = "0.28.0"
+DEFAULT_INPUTS_029 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p507-int",
+                                  "report-inputs")   # 0.29.0 histories (P5-07 integration part 2: build-inputs)
+GENERATOR_VERSION = "0.29.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
@@ -263,13 +265,13 @@ def use_version(v):
     V9 = v in ("0.28.0", "0.29.0")
     V10 = v == "0.29.0"
     p504.V10 = V10
-    DEFAULT_INPUTS = DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    DEFAULT_INPUTS = DEFAULT_INPUTS_029 if V10 else DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.28.0")   # P5-04a integration: 0.28.0 by default (--version 0.27.0 serves the committed 0.27.0 file)
+use_version("0.29.0")   # P5-07 integration part 2: 0.29.0 by default (--version 0.28.0 serves the 0.28.0 text)
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -2517,7 +2519,7 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "12" if V8 else "11" if V7 else "10" if V5 else "9" if V4 else "8" if V3 else "7",
+            "param.races": m["races"], "schema_version": "13" if V10 else "12" if V8 else "11" if V7 else "10" if V5 else "9" if V4 else "8" if V3 else "7",
             "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows
