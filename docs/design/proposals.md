@@ -1557,3 +1557,10 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision (Paul, 2026-11-25): "Agreed, accept it as the average of the two samples". The bound is: at least 65 on the average of the two samples of 100 default worlds, neither sample below 60. The bound of 85 worlds with a living monster at the end is unchanged (92 and 93 measured).
 - Status: decided. P5-04a holds both as guard targets.
 
+### How often the deep takes a hold and a realm (Paul, 2026-11-26)
+
+- Section: 5 (the mountain peoples), 12.
+- Question (Q-P5-07-1): how often may a whole realm fall to a horror of the deep?
+- Decision (Paul, 2026-11-26): "I agree that should be rare 8% sounds right, but an individual city/mine/delving could fall more often than that". A whole dwarven realm ends by the deep in at most 8% of dwarven realms; a single hold falls more often. The P5-07 spec's targets carry both: a hold lost in 15 to 40 of 100 default worlds (DP4), a waking in 25 to 55 (DP2), a realm ended in at most 8% of dwarven realms and at least once in 200 worlds (DP5).
+- Status: decided.
+
