@@ -367,7 +367,7 @@ Phase P3 was approved on November 22, 2026, and phase P5 builds on it in twelve 
 11. Factions.
 12. Artifacts.
 
-**Scope as revised on November 24, 2026.** Merged so far: the follow-ups, renamed regions, beasts and monsters, race relations with mixed settlements and migrations, and alliances with trade, mines and arms. Wealth as a number was left out, since no rule needed one. Still to come in phase P5: figures with minimal casters, the mountain depths (deepening the mines already built), the pantheon with cults, and artifacts, with small follow-up stages between them and vassalage after figures. Roads move to phase P6, where one stage also builds contact by sea for peoples alone on a land mass. Spell invention and factions are deferred beyond phase P5.
+**Scope as revised on November 24, 2026.** Merged so far: the follow-ups, renamed regions, beasts and monsters, race relations with mixed settlements and migrations, and alliances with trade, mines and arms. Wealth as a number was left out, since no rule needed one. Still to come in phase P5: figures with minimal casters, the mountain depths (deepening the mines already built), the pantheon with cults, and artifacts, with small follow-up stages between them and vassalage after figures. Roads move to phase P6, where one stage also builds contact by sea for peoples alone on a land mass. Spell invention is deferred beyond phase P5. Factions, with the guilds, are a stage of their own between phases P5 and P6 (Paul, November 25): it runs after figures and the rest of P5 are in place and before P6 derives anything from the finished history.
 
 Decisions that shape these stages:
 
@@ -383,7 +383,7 @@ Decisions that shape these stages:
 - **Event rules** stay code with their numbers in TOML.
 - **Budget.** A default world still generates in under 60 seconds at the end of phase P5.
 - **Exit check.** Every race, god camp and monster kind is a participant in at least one event, and a bloc of allies and vassals is held to the same runaway bound as a single realm.
-- **Guilds are founded in history.** The factions stage, deferred beyond phase P5 on November 24 and so still to be scheduled, founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
+- **Guilds are founded in history.** The factions stage, which runs between phases P5 and P6, founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
 
 **What the first P5 stages settled** (Paul's decisions of November 23 to 25, 2026)
 
@@ -1096,7 +1096,7 @@ Still open:
 - [x] **Peoples alone on a land mass.** Decided: they can thrive and in time reach other lands by ship. Contact by sea is built with roads in one stage of phase P6.
 - [x] **Withheld spoils.** Decided: a first withheld share sours an alliance and a second ends it.
 - [x] **Balance between the races.** Decided: kept as it is, and watched when roads and arms change.
-- [ ] **When guilds enter history.** Guilds are founded by the factions stage, which was deferred beyond phase P5 before guilds were designed. It must run before the world is frozen. Pull it back into phase P5, or schedule it as its own stage before phase P6?
+- [x] **When guilds enter history.** Decided: the factions stage, which founds the guilds, is a stage of its own between phases P5 and P6.
 - [ ] **Rulers in the figures stage.** The ruler quest lines of section 9 need each realm's line of rulers. Confirm that the figures spec records it.
 - [ ] **Movie recording on Windows.** Untried; to be fixed if it proves broken.
 
