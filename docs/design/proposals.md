@@ -1564,3 +1564,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision (Paul, 2026-11-26): "I agree that should be rare 8% sounds right, but an individual city/mine/delving could fall more often than that". A whole dwarven realm ends by the deep in at most 8% of dwarven realms; a single hold falls more often. The P5-07 spec's targets carry both: a hold lost in 15 to 40 of 100 default worlds (DP4), a waking in 25 to 55 (DP2), a realm ended in at most 8% of dwarven realms and at least once in 200 worlds (DP5).
 - Status: decided.
 
+### The deep: seals, the horrors, allies and other delvers (Paul, 2026-11-26)
+
+- Section: 5 (the mountain peoples), 9 (quests), 12.
+- Decisions (Paul, 2026-11-26, answers to Q-P5-07-2 to 4):
+  - A sealed horror: "Agreed the PC may choose to go there and open it or may be told to go into the sealed place by a quest but otherwise it should stay sealed". In generated history a seal holds to the end; at runtime the player may open it by choice or be sent there by a quest. The record (the sealing event, the horror asleep, its lair under the hold) serves both.
+  - The three horrors (Ymrach, Ysgarth, Zhakul): "Love it, sounds great". They ship as named.
+  - Allies and the deep: "I think they might yes." An ally may answer a deep horror. The spec's r1 said no; r2 adds a rule.
+  - Other delvers: "I was thinking that maybe other races that delve, like goblins might also run into these things but less frequently". Goblins delve and may wake a horror, less often than dwarves. The spec's r1 had dwarves only; r2 adds it.
+- Work: P5-07's spec goes to r2 with the two additions before integration; the engine and calibration follow.
+- Status: decided. For the design doc: section 5 (the deep is not the dwarves' alone; allies may come to a hold's aid against a horror) and section 9 (a sealed horror as a quest place).
+
