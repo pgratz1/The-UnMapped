@@ -8,7 +8,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 ![The world viewer playing the history of one human realm of a generated world: territory by year, settlements and ruins, wars and plagues, and the events as sentences](docs/images/viewer-history-movie.gif)
 
-*The world viewer playing the four centuries of one realm's generated history (the Ghuughzuz Horde, seed 42, generator 0.27.0): territory by year, settlements and ruins as markers, and each event as a sentence. Every name, border and war comes from the seed.*
+*The world viewer playing the four centuries of one realm's generated history (the Ghuughzuz Horde, seed 42, generator 0.28.0): territory by year, settlements and ruins as markers, and each event as a sentence. Every name, border and war comes from the seed.*
 
 ## Contents
 
@@ -50,7 +50,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 | | |
 | --- | --- |
-| **Current phase** | P4 Viewer v1 and P5 History depth, started 2026-11-22 in parallel. Of P4, the stages P4-01 (the timeline in the library: who holds which region in any year, civilization colours, and `render --composite territory [--year Y]`) and P4-02 (the layer catalogue and region names in the library, used by the viewer) are merged; the history view (P4-03) merged on 2026-11-23: the viewer reads a world's history, opens on a territory view at the present, and a year bar (buttons, slider and keys) steps through the years, to the next event or the next change of holder; each realm has a fixed colour by race, borders are black only between different holders, and pointing at the map says who holds the land and since when. The colour follow-ups (P4-03a) merged the same day, from the world critic's review: an olive fourth goblin shade, darker pale shades, borders in free land drawn as a darker line of the land's colour in place of black, and the hover text names a region as it was called in the year shown. Settlement and place markers (P4-04) merged on 2026-11-23: one marker per settlement that exists in the year shown, shaped by kind (hamlet to city, fortress), filled with its owner's colour, with marks for capitals, declining settlements, ruins and passes, and a coloured ring where a battle, siege, sack or plague happened that year; `worldgen-cli render --year Y --markers` draws the same overlay on any view, and in the viewer the markers sit above every view, scale with zoom and say on hover what a place is and how a ruin ended. The browser of civilizations and events (P4-05) merged on 2026-11-23: a right pane lists the civilizations and a filtered list of events (by civilization or place, six kind groups, year range); selecting a civilization shows its block of the history report with names as links and highlights its land, selecting an event jumps to its year, marks its place and shows participants, causes and effects, and with Follow on the year bar steps through the filtered list; names can be searched and a click on the map selects what is under it. The map is drawn as tiles so that a year change redraws in 21 ms where it took 170 ms, markers draw at double size at the fitted zoom, ruins are bolder and plague rings green. The history movie (P4-06) merged on 2026-11-24: Play runs the year bar through the browser's current list of events (a whole history, one civilization's story or only the wars) at 1 to 500 years per second, quiet years pass ten times faster and no year with an event is skipped; a ticker shows each year's sentences and a ring flashes at each event's place; `--play FROM TO --quit-at-end` under Godot's Movie Maker mode records a movie whose frames are the same on every run. With it every stage of P4 is merged; Paul reviewed the running viewer and approved the phase on 2026-11-24. Of P5, the first stage (P5-01, carried-over follow-ups) merged on 2026-11-23 (generator 0.21.0), from the world-critic reviews of the history report and Paul's decisions: a war is fought over the land it was declared for, orcs go to war within a few decades of awakening, grim region names are rarer, a battle's dead are counted once, and the history report (format v2) is shorter and lists open wars and standing claims; a default world has about 25 wars and 680 events. Regions renamed by history (P5-12) merged on 2026-11-23 (generator 0.22.0, schema 8): a region keeps its geographic name until history gives it another, after a conquest, the sack of a capital, a great slaughter or a plague ("After the slaughter, the Grove of Wrecks became known as the Red Wood"); about four regions in a default world are renamed, the report and the timeline use the name in force at the time, doubled human name endings are gone, and the name filter also applies where the parts of a region name join. Beasts and monsters (P5-02) merged on 2026-11-23 (generator 0.23.0, schema 9): five kinds of beast live in the regions that suit them, and six kinds of monster (dragon, ogre, undead host and others) wake, take a lair, raid the settlements around it, preferring small ones, and are hunted, slain or die out; a monster can overrun a settlement and lair in its ruin, and settlements now also end by plague, famine or being left, so a default world has about three overrun places and three ghost towns to explore, about eight monsters and twelve watchtower outposts; a ravaged region can take a name from its monster, and the history report (format v4) lists monsters and sites. Race relations, mixed settlements and migrations (P5-03) merged on 2026-11-24 (generator 0.24.0, schema 10): each pair of races that has met holds a disposition (hatred, wariness or friendship) that starts from the races' natures and moves with what their realms do to each other (wars, conquests, sackings, shelter given), and realms weigh it when they choose a quarrel; a settlement records the peoples living in it, so refugees and conquest make mixed towns (about eight in a default world), and a hated minority can be expelled; settlers flee a place a monster keeps raiding, bold beasts trouble the villages near them, a monster's raids follow on from its earlier ones, and a ruin left by flight, plague or famine stays on the map; the history report (format v5) has a `[peoples]` block. Its follow-ups (P5-03a) merged on 2026-11-25 (generator 0.25.0; history report format v6): peoples now also grow friendlier, through a century of peace between neighbours, a shared enemy or shelter given to refugees, so about a third of the changes of disposition are toward friendship where almost none were; peoples shut in by a closed pass can meet by word carried through others; settlers of another people join a town in varying numbers; the undead rise where many have died and through the whole history rather than mostly in its last centuries; and the summary is shorter (about 550 lines for a default world). Alliances, trade, mines and arms (P5-04) merged on 2026-11-25 (generator 0.26.0, schema 11; history report format v7): realms form alliances, in friendship, against a common enemy or after trade, renew them, let them lapse, break or betray them; an ally called to a war joins, refuses or withdraws, fights in its partner's battles and is owed a share of the spoils, and a withheld share ends the alliance; elves and faeries begin allied; no bloc of allies may hold more than seven tenths of the land; realms open trade with neighbours; dwarves open mines, which are places on the map, and sell arms; a default world has about 14 alliances, of which nine stand at the end, an ally in a quarter of its wars, 15 trade links and two mines; the history report has an `[alliances]` block, and the viewer shows mines as markers and lists alliance events as their own group. P5-06 figures (generator 0.27.0, schema 12, history report format v8) merged on 2026-11-25: history now has named people. Each realm has a line of rulers with regnal numbers and epithets, whose temper bends the realm's wars; a succession can be disputed and the loser exiled to another realm; generals are appointed, lead battles and fall in them; heroes rise against monsters and slay them or are slain; casters found towers, which are places on the map (a library beside a settlement or a tower in the wild), and write books. A default world has about 77 figures. No ruin fades any more: ruins older than 1,500 years are drawn as old ruins. A realm's summary now lists its major calamities. Monsters were recalibrated so that a living monster stands at the end in 92 of 100 default worlds. The history report has a `[figures]` block, and the viewer has a Figures tab and tower markers. Targets narrowly missed and left for the follow-up stage are listed in `docs/reviews/p5-06-figures-validation.md`. P3 History core, started 2026-11-19 and reviewed and approved by Paul on 2026-11-22: the overview and the first three stage specs are approved. History data and settings (P3-01) merged on 2026-11-19 (generator 0.12.0): the six races, their cultures and the history tuning are data files, and `generate` accepts the world-creation settings (history span, detail, races present and others), which do not change a world yet. Names (P3-02) merged the same day (no world change): a library that builds names for gods, civilizations and settlements from each culture's syllables, unique across a world, and the keyed random draws every history decision uses. Chronology (P3-03) merged on 2026-11-19 (generator 0.13.0, schema 6): a world now records which races are present, the year each awakens, the ages between, and a named creator god for each race. All seven stage specs are approved. The simulation engine (P3-04) merged on 2026-11-19 (generator 0.14.0, schema 7): the history stage divides the span into simulated phases and quiet intervals and writes an event log with causes, civilizations, settlements and region control; Peoples (P3-05) merged on 2026-11-20 (generator 0.15.0): each race founds civilizations in the lands that suit it, settlements grow from hamlets to cities, peoples colonise within reach of their capitals, famine and plague strike in active phases, realms split by secession and failing settlements are abandoned; a default world has about ten civilizations, ninety settlements and 550 events. Expansion and conflict (P3-06) merged on 2026-11-20 (generator 0.16.0): civilizations claim neighbouring land and go to war over it, with battles, sieges, sacked and captured settlements, truces and ceded regions; a default world has about 24 wars and 820 events, and most ruins are now made by war. Names and peoples follow-ups (P3-08) merged on 2026-11-20 (generator 0.17.0), from the world-critic reviews and Paul's decisions: regions have names without numerals drawn from word lists ("the Wood of Stags"), generated names pass a filter, faeries live in forest, dwarves found fortresses on high, ore-rich ground, and the event log is quieter (a default world has about 650 events). Conflict balance (P3-09) merged on 2026-11-20 (generator 0.18.0), from the world-critic review of conflict and Paul's decisions: a people's last refuge can flee into hiding instead of being destroyed, a lost war costs the loser land or tribute, the winner of the last battle never loses the war, faeries are hard to find rather than strong in battle, and no race goes extinct in 375 test worlds; a default world has about 23 wars and 730 events. Wording, site and conflict follow-ups (P3-10) merged on 2026-11-21 (generator 0.19.0), from two world-critic reviews and Paul's decisions: the log names plague outbreaks and quiet stretches of at least fifty years and says why wars and migrations happen, each land type has one plain compass name, faeries live inland and dwarves on high ground, an attacker wins a war only by holding its goal with no defender left standing in it, orcs awaken with a quarrel and stay hidden for a shorter time, and the long test suites now run in continuous integration; a default world has about 23 wars and 680 events. Orc arrival, wording and name follow-ups (P3-11) merged on 2026-11-22 (generator 0.20.0), from the second world-critic review of P3-10 and Paul's decision on faerie names: orcs awaken in numbers and send out their first colony at once, so they act within about a decade of awakening where they used to wait two centuries, and the last age is the most violent; claims and ceded footholds name the towns at stake; faerie names lose their `p` and `b` sounds, no name in any culture repeats a syllable twice in a row, and counts from one to nine are written as words; a default world has about 25 wars and 680 events. The history report (P3-07) merged on 2026-11-22 (no world change): `worldgen-cli report --history` prints a world's history as text, at a summary level of the most notable events or in full; its text is identical on every compiler and platform, like the world itself. P0 Foundation, P1 Geography (reviewed and approved by Paul on 2026-11-19) and P2 Godot bring-up and viewer v0 are complete |
+| **Current phase** | P4 Viewer v1 and P5 History depth, started 2026-11-22 in parallel. Of P4, the stages P4-01 (the timeline in the library: who holds which region in any year, civilization colours, and `render --composite territory [--year Y]`) and P4-02 (the layer catalogue and region names in the library, used by the viewer) are merged; the history view (P4-03) merged on 2026-11-23: the viewer reads a world's history, opens on a territory view at the present, and a year bar (buttons, slider and keys) steps through the years, to the next event or the next change of holder; each realm has a fixed colour by race, borders are black only between different holders, and pointing at the map says who holds the land and since when. The colour follow-ups (P4-03a) merged the same day, from the world critic's review: an olive fourth goblin shade, darker pale shades, borders in free land drawn as a darker line of the land's colour in place of black, and the hover text names a region as it was called in the year shown. Settlement and place markers (P4-04) merged on 2026-11-23: one marker per settlement that exists in the year shown, shaped by kind (hamlet to city, fortress), filled with its owner's colour, with marks for capitals, declining settlements, ruins and passes, and a coloured ring where a battle, siege, sack or plague happened that year; `worldgen-cli render --year Y --markers` draws the same overlay on any view, and in the viewer the markers sit above every view, scale with zoom and say on hover what a place is and how a ruin ended. The browser of civilizations and events (P4-05) merged on 2026-11-23: a right pane lists the civilizations and a filtered list of events (by civilization or place, six kind groups, year range); selecting a civilization shows its block of the history report with names as links and highlights its land, selecting an event jumps to its year, marks its place and shows participants, causes and effects, and with Follow on the year bar steps through the filtered list; names can be searched and a click on the map selects what is under it. The map is drawn as tiles so that a year change redraws in 21 ms where it took 170 ms, markers draw at double size at the fitted zoom, ruins are bolder and plague rings green. The history movie (P4-06) merged on 2026-11-24: Play runs the year bar through the browser's current list of events (a whole history, one civilization's story or only the wars) at 1 to 500 years per second, quiet years pass ten times faster and no year with an event is skipped; a ticker shows each year's sentences and a ring flashes at each event's place; `--play FROM TO --quit-at-end` under Godot's Movie Maker mode records a movie whose frames are the same on every run. With it every stage of P4 is merged; Paul reviewed the running viewer and approved the phase on 2026-11-24. Of P5, the first stage (P5-01, carried-over follow-ups) merged on 2026-11-23 (generator 0.21.0), from the world-critic reviews of the history report and Paul's decisions: a war is fought over the land it was declared for, orcs go to war within a few decades of awakening, grim region names are rarer, a battle's dead are counted once, and the history report (format v2) is shorter and lists open wars and standing claims; a default world has about 25 wars and 680 events. Regions renamed by history (P5-12) merged on 2026-11-23 (generator 0.22.0, schema 8): a region keeps its geographic name until history gives it another, after a conquest, the sack of a capital, a great slaughter or a plague ("After the slaughter, the Grove of Wrecks became known as the Red Wood"); about four regions in a default world are renamed, the report and the timeline use the name in force at the time, doubled human name endings are gone, and the name filter also applies where the parts of a region name join. Beasts and monsters (P5-02) merged on 2026-11-23 (generator 0.23.0, schema 9): five kinds of beast live in the regions that suit them, and six kinds of monster (dragon, ogre, undead host and others) wake, take a lair, raid the settlements around it, preferring small ones, and are hunted, slain or die out; a monster can overrun a settlement and lair in its ruin, and settlements now also end by plague, famine or being left, so a default world has about three overrun places and three ghost towns to explore, about eight monsters and twelve watchtower outposts; a ravaged region can take a name from its monster, and the history report (format v4) lists monsters and sites. Race relations, mixed settlements and migrations (P5-03) merged on 2026-11-24 (generator 0.24.0, schema 10): each pair of races that has met holds a disposition (hatred, wariness or friendship) that starts from the races' natures and moves with what their realms do to each other (wars, conquests, sackings, shelter given), and realms weigh it when they choose a quarrel; a settlement records the peoples living in it, so refugees and conquest make mixed towns (about eight in a default world), and a hated minority can be expelled; settlers flee a place a monster keeps raiding, bold beasts trouble the villages near them, a monster's raids follow on from its earlier ones, and a ruin left by flight, plague or famine stays on the map; the history report (format v5) has a `[peoples]` block. Its follow-ups (P5-03a) merged on 2026-11-25 (generator 0.25.0; history report format v6): peoples now also grow friendlier, through a century of peace between neighbours, a shared enemy or shelter given to refugees, so about a third of the changes of disposition are toward friendship where almost none were; peoples shut in by a closed pass can meet by word carried through others; settlers of another people join a town in varying numbers; the undead rise where many have died and through the whole history rather than mostly in its last centuries; and the summary is shorter (about 550 lines for a default world). Alliances, trade, mines and arms (P5-04) merged on 2026-11-25 (generator 0.26.0, schema 11; history report format v7): realms form alliances, in friendship, against a common enemy or after trade, renew them, let them lapse, break or betray them; an ally called to a war joins, refuses or withdraws, fights in its partner's battles and is owed a share of the spoils, and a withheld share ends the alliance; elves and faeries begin allied; no bloc of allies may hold more than seven tenths of the land; realms open trade with neighbours; dwarves open mines, which are places on the map, and sell arms; a default world has about 14 alliances, of which nine stand at the end, an ally in a quarter of its wars, 15 trade links and two mines; the history report has an `[alliances]` block, and the viewer shows mines as markers and lists alliance events as their own group. P5-06 figures (generator 0.27.0, schema 12, history report format v8) merged on 2026-11-25: history now has named people. Each realm has a line of rulers with regnal numbers and epithets, whose temper bends the realm's wars; a succession can be disputed and the loser exiled to another realm; generals are appointed, lead battles and fall in them; heroes rise against monsters and slay them or are slain; casters found towers, which are places on the map (a library beside a settlement or a tower in the wild), and write books. A default world has about 77 figures. No ruin fades any more: ruins older than 1,500 years are drawn as old ruins. A realm's summary now lists its major calamities. Monsters were recalibrated so that a living monster stands at the end in 92 of 100 default worlds. The history report has a `[figures]` block, and the viewer has a Figures tab and tower markers. Targets narrowly missed and left for the follow-up stage are listed in `docs/reviews/p5-06-figures-validation.md`. P5-04a relations and alliances follow-ups (generator 0.28.0, history report format v9) merged on 2026-11-26: it answers the world critic's notes on alliances and figures. An ally that refuses a call to arms now has a motive (fear of the foe, weariness of war, a grasping ruler and others), and some refusals are excused; a betrayal states its motive. A first withheld share of spoils sours an alliance and a second, or a large one, ends it. Renewals are written only when something happened in the term. A battle won with newly bought dwarven arms says so. Two peoples who put aside a hatred do not turn again for centuries, and a people settled for 800 years is expelled only soon after a fresh turn to hatred. Wizard towers are kept apart and end with their settlement or realm. The report's summary names a ruler, a hero, a caster and a general for each world and lists living monsters first. In a default world calls to arms are now joined more often than refused (917 joined against 782 refused over 100 worlds), a living monster stands at the end in 94 of 100 worlds, and about three in ten of the monsters slain fall to a hero. P3 History core, started 2026-11-19 and reviewed and approved by Paul on 2026-11-22: the overview and the first three stage specs are approved. History data and settings (P3-01) merged on 2026-11-19 (generator 0.12.0): the six races, their cultures and the history tuning are data files, and `generate` accepts the world-creation settings (history span, detail, races present and others), which do not change a world yet. Names (P3-02) merged the same day (no world change): a library that builds names for gods, civilizations and settlements from each culture's syllables, unique across a world, and the keyed random draws every history decision uses. Chronology (P3-03) merged on 2026-11-19 (generator 0.13.0, schema 6): a world now records which races are present, the year each awakens, the ages between, and a named creator god for each race. All seven stage specs are approved. The simulation engine (P3-04) merged on 2026-11-19 (generator 0.14.0, schema 7): the history stage divides the span into simulated phases and quiet intervals and writes an event log with causes, civilizations, settlements and region control; Peoples (P3-05) merged on 2026-11-20 (generator 0.15.0): each race founds civilizations in the lands that suit it, settlements grow from hamlets to cities, peoples colonise within reach of their capitals, famine and plague strike in active phases, realms split by secession and failing settlements are abandoned; a default world has about ten civilizations, ninety settlements and 550 events. Expansion and conflict (P3-06) merged on 2026-11-20 (generator 0.16.0): civilizations claim neighbouring land and go to war over it, with battles, sieges, sacked and captured settlements, truces and ceded regions; a default world has about 24 wars and 820 events, and most ruins are now made by war. Names and peoples follow-ups (P3-08) merged on 2026-11-20 (generator 0.17.0), from the world-critic reviews and Paul's decisions: regions have names without numerals drawn from word lists ("the Wood of Stags"), generated names pass a filter, faeries live in forest, dwarves found fortresses on high, ore-rich ground, and the event log is quieter (a default world has about 650 events). Conflict balance (P3-09) merged on 2026-11-20 (generator 0.18.0), from the world-critic review of conflict and Paul's decisions: a people's last refuge can flee into hiding instead of being destroyed, a lost war costs the loser land or tribute, the winner of the last battle never loses the war, faeries are hard to find rather than strong in battle, and no race goes extinct in 375 test worlds; a default world has about 23 wars and 730 events. Wording, site and conflict follow-ups (P3-10) merged on 2026-11-21 (generator 0.19.0), from two world-critic reviews and Paul's decisions: the log names plague outbreaks and quiet stretches of at least fifty years and says why wars and migrations happen, each land type has one plain compass name, faeries live inland and dwarves on high ground, an attacker wins a war only by holding its goal with no defender left standing in it, orcs awaken with a quarrel and stay hidden for a shorter time, and the long test suites now run in continuous integration; a default world has about 23 wars and 680 events. Orc arrival, wording and name follow-ups (P3-11) merged on 2026-11-22 (generator 0.20.0), from the second world-critic review of P3-10 and Paul's decision on faerie names: orcs awaken in numbers and send out their first colony at once, so they act within about a decade of awakening where they used to wait two centuries, and the last age is the most violent; claims and ceded footholds name the towns at stake; faerie names lose their `p` and `b` sounds, no name in any culture repeats a syllable twice in a row, and counts from one to nine are written as words; a default world has about 25 wars and 680 events. The history report (P3-07) merged on 2026-11-22 (no world change): `worldgen-cli report --history` prints a world's history as text, at a summary level of the most notable events or in full; its text is identical on every compiler and platform, like the world itself. P0 Foundation, P1 Geography (reviewed and approved by Paul on 2026-11-19) and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P6 Derivation and polish, after P4 and P5 |
 | **Current milestone** | Milestone 0, Geography generator: met and approved by Paul on 2026-11-19. Now working towards milestone 1, History generator |
 | **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. A variety revision merged the same day (generator 0.9.0, schema 4; Paul's decisions of 2026-11-17): heath, steppe, wet woodland along large rivers and fens on wet lowland bring the count to nine natural biomes, each world draws its own temperature offset of up to 2 °C either way (stored in the world file), and the coastal forest ring is thinner. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-04b-biome-variety-critic.md`) notes two follow-ups, a visible heath stripe on some worlds and blocky fen patches on the largest maps. Resources and habitability merged on 2026-11-18 (generator 0.10.0, schema still 4): six score layers (fertility, ore, timber, fresh water, forage and habitability, each 0 to 255 and absolute, so a harsh world reads as harsh) and a layer of walkable areas, for the history simulation to place homelands, farms, mines and settlements. Habitability weighs farmland most, then wild food, timber and ore, and treats fresh water as a necessity. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-05-resources-critic.md`) led to a tuning revision before the merge and records the remaining limits. Regions, the last geography stage, merged on 2026-11-19 (generator 0.11.0, schema 5): land is divided into named regions of about 2 km² each, roughly 13, 50 and 200 per map, with borders on ridge crests and large rivers, upland regions of their own for wide massifs, and placeholder names such as "Northwest Steppe II" until history renames them. Three new tables give the history simulation each region's summary (area, biomes, mean resource scores, walkable ground, reachable ore) and each border's length, lowest crossing, river and pass. A world-critic review (`docs/reviews/p1-06-regions-critic.md`) led to a revision before the merge (each pass belongs to one border; mountain and lake regions get fitting names). Validated on 271 worlds (`docs/reviews/p1-06-regions-validation.md`): a default world takes about 9 seconds and 6.5 MB. The viewer gained a regions view, a legend and a description of the cell under the mouse. Paul reviewed and approved the geography phase on 2026-11-19 and accepted the world critic's recommendations, among them the default map size (1024) as the reference size for history. P3 History core started the same day with its overview spec: the shared model of years, ages, peoples and the event log that the history stages build on. |
@@ -91,7 +91,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | **In progress** since 2026-11-19: overview and all seven stage specs approved; history data and settings (generator 0.12.0), names, and chronology (generator 0.13.0, schema 6) merged (2026-11-19); simulation engine (generator 0.14.0, schema 7) merged (2026-11-19); peoples (generator 0.15.0) merged (2026-11-20); conflict (generator 0.16.0) and the names and peoples follow-ups (generator 0.17.0) merged (2026-11-20); conflict balance (generator 0.18.0) merged (2026-11-20); wording, site and conflict follow-ups (generator 0.19.0) merged (2026-11-21); orc arrival, wording and name follow-ups (generator 0.20.0) merged (2026-11-22); the history report merged (2026-11-22). **Done** 2026-11-22, reviewed and approved by Paul |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | **Done** 2026-11-24, reviewed and approved by Paul: the timeline, layer catalogue, history view, markers, browser of civilizations and events, and the history movie (P4-01 to P4-06) |
-| **P5 History depth** | God interventions, beast populations, named monsters, figures and factions, race relations, casters and spellbooks | P3 | **In progress** since 2026-11-22: P5-01 (generator 0.21.0) and P5-12 regions renamed by history (generator 0.22.0, schema 8) merged (2026-11-23); P5-02 beasts and monsters (generator 0.23.0, schema 9) merged (2026-11-23); P5-03 race relations, mixed settlements and migrations (generator 0.24.0, schema 10) merged (2026-11-24); P5-03a relations follow-ups (generator 0.25.0) merged (2026-11-25); P5-04 alliances, trade, mines and arms (generator 0.26.0, schema 11) merged (2026-11-25); P5-06 figures (generator 0.27.0, schema 12) merged (2026-11-25); next: P5-04a relations and alliances follow-ups (spec approved), then mountain depths, the pantheon with cults and artifacts; a factions stage (guilds founded in history) follows P5 before P6 |
+| **P5 History depth** | God interventions, beast populations, named monsters, figures and factions, race relations, casters and spellbooks | P3 | **In progress** since 2026-11-22: P5-01 (generator 0.21.0) and P5-12 regions renamed by history (generator 0.22.0, schema 8) merged (2026-11-23); P5-02 beasts and monsters (generator 0.23.0, schema 9) merged (2026-11-23); P5-03 race relations, mixed settlements and migrations (generator 0.24.0, schema 10) merged (2026-11-24); P5-03a relations follow-ups (generator 0.25.0) merged (2026-11-25); P5-04 alliances, trade, mines and arms (generator 0.26.0, schema 11) merged (2026-11-25); P5-06 figures (generator 0.27.0, schema 12) merged (2026-11-25); P5-04a relations and alliances follow-ups (generator 0.28.0) merged (2026-11-26); next: P5-07 mountain depths, then the pantheon with cults and artifacts; a factions stage (guilds founded in history) follows P5 before P6 |
 | **P6 Derivation and polish** | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings on the command line; 3D heightmap preview | P4, P5 | Not started |
 
 ```
@@ -131,7 +131,7 @@ Around them: about 300 automated test cases, 2,201 golden vectors for the core p
 
 ## What works today
 
-`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction and temperature offset, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell. Since generator 0.13.0 it also holds the first history tables: the races present, the year each awakens, the ages between, and a named creator god for each race. Since 0.14.0 it also holds a history: phases, an event log with causes, civilizations, settlements with their populations, and which civilization holds each region; since 0.15.0 that history is of peoples growing, colonising, suffering famine and plague, and splitting; since 0.16.0 they also press claims on each other's land and fight wars, with battles, sieges, sacked and captured settlements, truces and ceded regions; since 0.18.0 wars end with a winner, tribute or a truce, and a people driven from its last home can flee into hiding; since 0.19.0 the log also records plague outbreaks and long quiet stretches, and gives the cause of wars and migrations; since 0.20.0 the orcs act from their first years, and claims and cessions of single towns name them; since 0.21.0 a war is fought over the land it was declared for; since 0.22.0 (schema 8) history can rename a region, and the table `region_name` records each name with the year it began; since 0.23.0 (schema 9) beasts and named monsters live in it, with their lairs and raids; since 0.24.0 (schema 10) the races hold dispositions toward each other and settlements record the peoples living in them; since 0.25.0 those dispositions also warm, through long peace, a common enemy and shelter given; since 0.26.0 (schema 11) realms hold alliances and trade links, and dwarven mines are sites; since 0.27.0 (schema 12) it records named figures (rulers, claimants, generals, heroes and casters) and the books casters write, wizard towers are sites, and no ruin fades. `report --history` prints that history as a readable text.
+`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction and temperature offset, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell. Since generator 0.13.0 it also holds the first history tables: the races present, the year each awakens, the ages between, and a named creator god for each race. Since 0.14.0 it also holds a history: phases, an event log with causes, civilizations, settlements with their populations, and which civilization holds each region; since 0.15.0 that history is of peoples growing, colonising, suffering famine and plague, and splitting; since 0.16.0 they also press claims on each other's land and fight wars, with battles, sieges, sacked and captured settlements, truces and ceded regions; since 0.18.0 wars end with a winner, tribute or a truce, and a people driven from its last home can flee into hiding; since 0.19.0 the log also records plague outbreaks and long quiet stretches, and gives the cause of wars and migrations; since 0.20.0 the orcs act from their first years, and claims and cessions of single towns name them; since 0.21.0 a war is fought over the land it was declared for; since 0.22.0 (schema 8) history can rename a region, and the table `region_name` records each name with the year it began; since 0.23.0 (schema 9) beasts and named monsters live in it, with their lairs and raids; since 0.24.0 (schema 10) the races hold dispositions toward each other and settlements record the peoples living in them; since 0.25.0 those dispositions also warm, through long peace, a common enemy and shelter given; since 0.26.0 (schema 11) realms hold alliances and trade links, and dwarven mines are sites; since 0.27.0 (schema 12) it records named figures (rulers, claimants, generals, heroes and casters) and the books casters write, wizard towers are sites, and no ruin fades; since 0.28.0 an ally that refuses a call or betrays an alliance has a stated motive, and a withheld share of spoils sours an alliance before it ends one. `report --history` prints that history as a readable text.
 
 ```
 $ worldgen-cli generate --seed-phrase "The Unmapped"
@@ -140,9 +140,9 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = f3300c304c22204d826c178f64affab2adc4d4a7b959b284fd1a15ef3357d1ac
+content_hash = 38476882cb4aa967d4cfd4da62042553307ab73da44cd1393b40c2f5c5a997a7
 format = the-unmapped-world
-generator_version = 0.27.0
+generator_version = 0.28.0
 history_end_year = 6000
 param.civs_per_race = auto
 param.divine_activity = normal
@@ -160,40 +160,40 @@ stages = elevation,hydrology,climate,biomes,resources,regions,chronology,history
 [tables]
 age = 6
 beast = 5
-beast_population = 681
+beast_population = 604
 biome = 12
-book = 5
+book = 8
 civilization = 11
 climate = 1
 culture = 6
-event = 1066
-event_cause = 954
+event = 898
+event_cause = 699
 event_kind = 92
 event_kind_role = 211
-event_kind_value = 87
-event_participant = 2406
-event_value = 1558
-figure = 74
+event_kind_value = 97
+event_participant = 1971
+event_value = 1340
+figure = 64
 god = 6
 layer = 19
 meta = 17
 monster = 8
 monster_kind = 6
 pass = 3
-phase = 24
+phase = 22
 race = 6
 race_biome = 48
-race_relation = 64
+race_relation = 56
 region = 51
 region_biome = 255
 region_border = 126
-region_control = 49
-region_name = 6
-relation = 184
+region_control = 41
+region_name = 4
+relation = 163
 settlement = 100
-settlement_census = 1441
-settlement_race = 210
-site = 31
+settlement_census = 1306
+settlement_race = 138
+site = 23
 [layers]
 elevation i16 1024x1024 codec=1 bytes=1175180 min=-2306 max=19803
 water u8 1024x1024 codec=1 bytes=34948 min=0 max=3
@@ -282,143 +282,143 @@ gods = 6
 [history]
 end_year = 6000
 phases_opening = 6
-phases_quiet = 11
-phases_flare = 6
+phases_quiet = 10
+phases_flare = 5
 phases_final = 1
-simulated_years = 1412
-simulated_permille = 235
-events = 1066
+simulated_years = 1362
+simulated_permille = 227
+events = 898
 events_awakening = 6
 events_civ_founded = 8
 events_settlement_founded = 8
 events_quiet_era = 0
-events_flare_up = 6
-events_colony_founded = 92
-events_became_village = 19
-events_became_town = 70
-events_became_city = 3
-events_settlement_dwindled = 11
-events_famine = 42
+events_flare_up = 5
+events_colony_founded = 90
+events_became_village = 22
+events_became_town = 61
+events_became_city = 0
+events_settlement_dwindled = 5
+events_famine = 46
 events_plague = 0
-events_plague_spread = 63
+events_plague_spread = 67
 events_succession_crisis = 20
 events_civ_seceded = 3
 events_settlement_abandoned = 0
 events_capital_moved = 5
 events_civ_ended = 0
 events_ruin_faded = 0
-events_claim = 45
-events_war_declared = 21
-events_battle = 25
+events_claim = 31
+events_war_declared = 17
+events_battle = 29
 events_battle_at_pass = 0
-events_siege = 37
-events_sacked = 7
-events_settlement_captured = 18
-events_peace = 7
-events_truce = 5
-events_region_ceded = 8
-events_civ_conquered = 1
-events_settlement_abandoned_to = 3
-events_refugees_settled = 0
-events_tribute = 4
-events_war_won = 7
+events_siege = 26
+events_sacked = 6
+events_settlement_captured = 11
+events_peace = 3
+events_truce = 4
+events_region_ceded = 4
+events_civ_conquered = 0
+events_settlement_abandoned_to = 4
+events_refugees_settled = 2
+events_tribute = 5
+events_war_won = 9
 events_search_abandoned = 1
 events_refuge_held = 0
-events_plague_outbreak = 95
-events_quiet_stretch = 10
-events_claim_settlements = 3
+events_plague_outbreak = 83
+events_quiet_stretch = 9
+events_claim_settlements = 0
 events_settlements_ceded = 0
-events_claim_dropped = 0
-events_refuge_hidden = 0
-events_region_renamed = 6
+events_claim_dropped = 1
+events_refuge_hidden = 2
+events_region_renamed = 4
 events_monster_appeared = 7
 events_undead_rose = 1
-events_monster_woke = 3
-events_monster_slept = 8
-events_monster_raid = 9
-events_settlement_overrun = 0
-events_monster_slain = 3
-events_monster_driven_off = 0
-events_monster_died = 3
-events_beasts_bold = 1
-events_outpost_built = 17
-events_outpost_abandoned = 12
-events_settlement_fled = 1
-events_peoples_met = 15
-events_disposition_turned = 4
-events_refugees_arrived = 5
-events_settlement_mixed = 18
+events_monster_woke = 4
+events_monster_slept = 10
+events_monster_raid = 29
+events_settlement_overrun = 1
+events_monster_slain = 1
+events_monster_driven_off = 1
+events_monster_died = 4
+events_beasts_bold = 2
+events_outpost_built = 8
+events_outpost_abandoned = 7
+events_settlement_fled = 2
+events_peoples_met = 14
+events_disposition_turned = 5
+events_refugees_arrived = 2
+events_settlement_mixed = 4
 events_standing_changed = 0
-events_people_expelled = 4
-events_alliance_formed = 21
-events_alliance_renewed = 54
-events_alliance_lapsed = 2
-events_alliance_broken = 1
-events_alliance_betrayed = 2
+events_people_expelled = 0
+events_alliance_formed = 15
+events_alliance_renewed = 19
+events_alliance_lapsed = 1
+events_alliance_broken = 0
+events_alliance_betrayed = 1
 events_ally_joined_war = 4
-events_ally_refused = 6
+events_ally_refused = 3
 events_ally_withdrew = 1
-events_allied_battle = 22
-events_trade_opened = 22
-events_trade_broken = 7
-events_spoils_shared = 1
-events_spoils_withheld = 1
-events_alliance_spurned = 1
+events_allied_battle = 6
+events_trade_opened = 19
+events_trade_broken = 5
+events_spoils_shared = 2
+events_spoils_withheld = 0
+events_alliance_spurned = 0
 events_mine_opened = 1
 events_arms_sold = 2
 events_came_to_rule = 8
-events_figure_died = 60
-events_succession_disputed = 8
-events_exiled = 5
-events_reigned_at_end = 9
-events_general_appointed = 12
-events_battle_led = 32
-events_fell_in_battle = 2
+events_figure_died = 53
+events_succession_disputed = 9
+events_exiled = 6
+events_reigned_at_end = 11
+events_general_appointed = 5
+events_battle_led = 14
+events_fell_in_battle = 0
 events_hero_rose = 1
 events_monster_slain_by_hero = 0
 events_hero_slain = 0
 events_tower_founded = 5
-events_book_written = 5
-events_blight = 1
+events_book_written = 8
+events_blight = 0
 civilizations = 11
-civilizations_alive = 10
+civilizations_alive = 11
 settlements = 100
-settlements_standing = 90
-regions_held = 30
-census_rows = 1441
-relations = 184
-region_names = 6
+settlements_standing = 89
+regions_held = 26
+census_rows = 1306
+relations = 163
+region_names = 4
 beasts = 5
 monster_kinds = 6
-beast_populations = 681
+beast_populations = 604
 monsters = 8
-sites = 31
-race_relations = 64
-settlement_races = 210
-figures = 74
-books = 5
-population = 219489
-population_elf = 7952
-population_goblin = 121427
-population_dwarf = 9892
-population_faerie = 8035
-population_human = 70734
-population_orc = 1449
-settlements_standing_elf = 5
-settlements_standing_goblin = 52
+sites = 23
+race_relations = 56
+settlement_races = 138
+figures = 64
+books = 8
+population = 170983
+population_elf = 5358
+population_goblin = 133853
+population_dwarf = 10754
+population_faerie = 7373
+population_human = 4365
+population_orc = 9280
+settlements_standing_elf = 4
+settlements_standing_goblin = 64
 settlements_standing_dwarf = 4
 settlements_standing_faerie = 11
-settlements_standing_human = 17
-settlements_standing_orc = 1
-regions_held_elf = 2
+settlements_standing_human = 1
+settlements_standing_orc = 5
+regions_held_elf = 1
 regions_held_goblin = 16
 regions_held_dwarf = 1
 regions_held_faerie = 5
-regions_held_human = 5
-regions_held_orc = 1
+regions_held_human = 1
+regions_held_orc = 2
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-b21d57fb9012147677cbae825ccc8a7c102b5f6971f3c567b763f27c8cab4f4e
+4766b0254dfa896b1efae22c8eedef4732976822ae525e34ef127297c5afa811
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
@@ -428,7 +428,7 @@ The history of the same world, as a readable report (`--level full` lists every 
 
 ```
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --history
-# worldgen history v8
+# worldgen history v9
 level = summary
 ...
 [ages]
@@ -439,9 +439,9 @@ a4 The Age of Faeries: 4226-5035, 810 years; Faeries (ra4) made by Sofosh (g4, g
 a5 The Age of Humans: 5036-5637, 602 years; Humans (ra5) made by Birdsten (g5, neutral); 2 civilizations founded: 1 at the awakening, 1 by secession
 a6 The Age of Orcs: 5638-5999, 362 years; Orcs (ra6) made by Uul'duk (g6, evil); 3 civilizations founded: 1 at the awakening, 2 by secession
 [chronicle]
-threshold = 41
-events = 1066
-shown = 245
+threshold = 26
+events = 898
+shown = 246
 == a1 The Age of Elves: 0-2093
 -- p1 opening: 0-149, 150 years; trigger e1; 8 events
 ...
@@ -451,102 +451,100 @@ c1 The Realm of Lecier
   home: Stagbarrow Tangle (rg34), temperate_forest
   founded: 0 in The Age of Elves (a1), e2
   capital: Vaenies (s1)
-  peak regions: 3, 3981-4270
-  peak population: 16929 in 3981
-  settlements: 7 founded, 5 held at the end, 2 ruined
-  wars: 0 declared, 11 defended; won 3, lost 5, drawn 3, open 0
-  adversaries: 13
-    The Warrens of Skruz-Snugg (c2): 5 wars, won 2, lost 1, drawn 2, open 0, 2498-4846; now at peace
-    The Gnokkirk Horde (c3): 6 wars, won 1, lost 4, drawn 1, open 0, 2494-4810; now at peace
-  events: 205
-  fate: alive in 6000: 2 regions, 5 settlements, population 7952
-  milestones: 8
+  peak regions: 2, 1675-2497
+  peak population: 8769 in 3093
+  settlements: 5 founded, 4 held at the end, 0 ruined
+  wars: 0 declared, 7 defended; won 1, lost 3, drawn 3, open 0
+  adversaries: 10
+    The Warrens of Skruz-Snugg (c2): 4 wars, won 1, lost 1, drawn 2, open 0, 2498-4011; now at peace
+    The Gnokkirk Horde (c3): 3 wars, won 0, lost 2, drawn 1, open 0, 2494-3418; now at peace
+  events: 118
+  fate: alive in 6000: 1 region, 4 settlements, population 5358
+  milestones: 3
 ...
 [present]
 year: 6000
-civilizations alive: 10 of 11
+civilizations alive: 11 of 11
 ...
-c9 The Warband of Kal: 1 region, 1 settlement, population 1449
-c11 The Bink-Zark Mob: 1 region, 4 settlements, population 9953
-regions: 51; held 30, free 21
-settlements: 100; thriving 77, declining 13, ruined 10
-settlement kinds: hamlet 0, village 26, town 64, city 2, fortress 8
-largest settlement: Moldham (s85), population 12138
-ruins: 10
-  s5 Arvies in Yewholt (rg39): ruined 3424, e252 sacked by The Gnokkirk Horde (c3); last held by The Realm of Lecier (c1)
-  s19 Snunkskink Hole in Hound's Wolds (rg25): ruined 3114, e159 sacked by The Warrens of Skruz-Snugg (c2); last held by The Realm of Lecier (c1)
-  s21 Snirksneex in Brandgap Plains (rg18): ruined 5833, e881 sacked by The Warrens of Skruz-Snugg (c2); last held by The Skrab Mob (c8)
-  s34 Gnuskrot Hole in The Mute Steppe (rg30): ruined 5766, e833 abandoned after plague, survivors to Skrink-Snib (s17); last held by The Gnokkirk Horde (c3)
-  s37 Guggsnag Hole in The Mute Steppe (rg30): ruined 5981, e1020 sacked by The Gnokkirk Horde (c3); last held by The Warrens of Skruz-Snugg (c2)
-  s45 Keet-Skrib Hole in Hound's Wolds (rg25): ruined 4257, e382 sacked by The Gnokkirk Horde (c3); last held by The Realm of Lecier (c1)
-  s50 Nonkskiz in Ragsike Leas (rg42): ruined 3367, e214 abandoned for fear of The Brood of Geex-Snix (m4), survivors to Nog (s48); last held by The Gnokkirk Horde (c3)
-  s57 Samael in Yewholt (rg39): ruined 3958, e295 sacked by The Gnokkirk Horde (c3); last held by The Realm of Lecier (c1)
-  s71 Twaess in Knight's Weir (rg41): ruined 5819, e866 abandoned after plague, survivors to Lyfoshi (s67); last held by The Miaflie Court (c6)
-  s96 Ghaashuurk in Drover's Fall (rg35): ruined 5914, e956 sacked by The Duchy of Rudgor (c7); last held by The Warband of Kal (c9)
-hidden refuges: 0 of 0 founded by flight
+c10 The Warrens of Beenkgnazz: 1 region, 3 settlements, population 4522
+c11 The Bink-Zark Mob: 1 region, 3 settlements, population 8007
+regions: 51; held 26, free 25
+settlements: 100; thriving 78, declining 11, ruined 11
+settlement kinds: hamlet 0, village 34, town 58, city 0, fortress 8
+largest settlement: Gnix (s7), population 7884
+ruins: 11
+  s19 Snunkskink Hole in Hound's Wolds (rg25): ruined 3120, e166 sacked by The Warrens of Skruz-Snugg (c2); last held by The Realm of Lecier (c1)
+  s34 Gnuskrot Hole in The Rout of Skruz-Snugg (rg30): ruined 5992, e882 sacked by The Gnokkirk Horde (c3); last held by The Warrens of Skruz-Snugg (c2)
+  s48 Nog in Yewholt (rg39): ruined 4026, e296 abandoned after famine, survivors to Arvies (s5); last held by The Gnokkirk Horde (c3)
+  s50 Nonkskiz in Ragsike Leas (rg42): ruined 3367, e220 abandoned for fear of The Brood of Geex-Snix (m4), survivors to Gasluzz Hole (s20); last held by The Gnokkirk Horde (c3)
+  s68 Sotwee Glade in Briarbrake (rg13): ruined 5735, e639 abandoned after plague, survivors to Lallsae (s75); last held by The Liemouvie Ring (c5)
+  s71 Dulromford in Whinfurrow Leas (rg40): ruined 5216, e442 sacked by The Gnokkirk Horde (c3); last held by The Duchy of Rudgor (c7)
+  s85 Moldham in The Fallen Downs (rg27): ruined 5941, e808 sacked by The Warrens of Skruz-Snugg (c2); last held by The Duchy of Rudgor (c7)
+  s87 Gearham in The Fallen Downs (rg27): ruined 5945, e821 sacked by The Warrens of Skruz-Snugg (c2); last held by The Duchy of Rudgor (c7)
+  s90 Edurdwick in The Fallen Downs (rg27): ruined 5948, e834 sacked by The Warrens of Skruz-Snugg (c2); last held by The Duchy of Rudgor (c7)
+  s95 Osh'duush in The Forsaken Steppe (rg26): ruined 5919, e783 abandoned for fear of The Host of Wayfarer's Steppes (m7), survivors to Boz'uguum (s88); last held by The Warband of Kal (c9)
+  s96 Ghaashuurk in The Forsaken Steppe (rg26): ruined 5821, e715 overrun by The Host of Wayfarer's Steppes (m7); last held by The Warband of Kal (c9)
+hidden refuges: 1 of 2 founded by flight
+  s98 Weckham in Northwest Steppe (rg9): The Duchy of Rudgor (c7), population 4365, founded 5948 by flight from Edurdwick (s90), e835
 open wars: 0
-standing claims: 9
-  e560 5128 The Realm of Lecier (c1) on The Gnokkirk Horde (c3): Hound's Wolds (rg25)
-  e679 5638 The Warband of Kal (c9) on The Gnokkirk Horde (c3): The Steppe of the Slain (rg24)
-  e815 5724 The Warrens of Skruz-Snugg (c2) on The Duchy of Rudgor (c7): Beenkgnazz's Grave (rg32), for Slibuk Pit (s40)
-  e966 5934 The Skrab Mob (c8) on The Duchy of Rudgor (c7): The Plain of Exiles (rg27)
-  e970 5938 The Skrab Mob (c8) on The Gnokkirk Horde (c3): Gnarlmark (rg33)
-  e986 5958 The Gnokkirk Horde (c3) on The Skrab Mob (c8): Gauntbank Plains (rg26)
-  e998 5973 The Warband of Kal (c9) on The Duchy of Rudgor (c7): Drover's Fall (rg35), for Uroshazoz Fort (s89), Uraak (s90)
-  e1037 5985 The Gnokkirk Horde (c3) on The Bink-Zark Mob (c11): The Steppe of the Slain (rg24)
-  e1051 5990 The Gnokkirk Horde (c3) on The Duchy of Rudgor (c7): Beenkgnazz's Grave (rg32)
-renamed regions: 6
-  rg24: The Steppe of the Slain since 5712, e803 after e802 allied_battle; formerly Wayfarer's Steppes
-  rg32: The Downs of the Slain since 5675, e736 after e732 battle; formerly The Reaped Barrows
-  rg32: Beenkgnazz's Grave since 5984, e1034 after e1033 civ_conquered; formerly The Downs of the Slain
-  rg40: The Rudgor Reach since 5311, e642 after e638 became_city; formerly Whinfurrow Leas
-  rg40: Edearbury's Grave since 5814, e860 after e858 plague_outbreak; formerly The Rudgor Reach
-  rg48: The Pale Wood since 5977, e1000 after e999 plague_outbreak; formerly The Sleeping Weald
+standing claims: 5
+  e273 3777 The Realm of Lecier (c1) on The Gnokkirk Horde (c3): Yewholt (rg39)
+  e515 5638 The Warband of Kal (c9) on The Warrens of Skruz-Snugg (c2): Brandgap Plains (rg18)
+  e785 5926 The Skrab Mob (c8) on The Duchy of Rudgor (c7): The Fallen Downs (rg27)
+  e813 5943 The Realm of Lecier (c1) on The Warrens of Skruz-Snugg (c2): Hound's Wolds (rg25)
+  e864 5985 The Gnokkirk Horde (c3) on The Bink-Zark Mob (c11): The Bloody Steppe (rg24)
+renamed regions: 4
+  rg24: The Bloody Steppe since 5713, e626 after e624 battle; formerly Wayfarer's Steppes
+  rg26: The Forsaken Steppe since 5821, e716 after e715 settlement_overrun; formerly Gauntbank Plains
+  rg27: The Fallen Downs since 5941, e810 after e808 sacked; formerly The Plain of Exiles
+  rg30: The Rout of Skruz-Snugg since 5992, e885 after e880 battle; formerly The Mute Steppe
 [monsters]
-monsters: 8; awake 0, asleep 2, slain 3, died 3
-  m8 Azal the Gaunt: Ogre, asleep, lair The Pit of Azal (si29) in Bierhorn (rg20), since 5841 e884, raids 1, killed 47, hoard 5
+monsters: 8; awake 0, asleep 3, slain 1, died 4
+  m8 Azal the Gaunt: Ogre, asleep, lair The Pit of Azal (si23) in Bierhorn (rg20), since 5841 e727, raids 1, killed 47, hoard 5
   m5 Ithaenelae the Pale: Dragon, asleep, lair Ithaenelae's Deep (si5) in North Peaks (rg14), since 2538 e97, raids 0, killed 0, hoard 0
-  m4 The Brood of Geex-Snix: Wyvern, slain by The Gnokkirk Horde (c3), lair The Eyrie of Geex-Snix (si4) in Miller's Portion (rg28), since 1493 e18, raids 2, killed 34, hoard 0, ended 3367 e215
-  m7 The Restless of the Downs of the Slain: Undead, slain by The Duchy of Rudgor (c7), lair The Howes of the Downs of the Slain (si25) in Beenkgnazz's Grave (rg32), since 5681 e753, raids 2, killed 456, hoard 0, ended 5735 e822
+  m7 The Host of Wayfarer's Steppes: Undead, asleep, lair The Barrows of Wayfarer's Steppes (si22) in The Forsaken Steppe (rg26), since 5708 e620, raids 21, killed 1997, hoard 0
+  m4 The Brood of Geex-Snix: Wyvern, died, lair The Eyrie of Geex-Snix (si4) in Miller's Portion (rg28), since 1493 e18, raids 3, killed 146, hoard 0, ended 3477 e258
   and 4 more
 [sites]
-sites: 31; open 13; lairs 8, outposts 17, mines 1, towers 5
+sites: 23; open 9; lairs 9, outposts 8, mines 1, towers 5
 [peoples]
-pairs: 15; met 15; hatred 4, wariness 7, friendship 4
-  Elves and Humans: friendship 297, met 5036 e504, turned 5611 e673 from wariness
-  Goblins and Humans: wariness -3, met 5036 e505, turned 5984 e1035 from friendship
-  Dwarves and Faeries: friendship 342, met 4226 e362, turned 5051 e516 from wariness
-mixed: 8 settlements at E; refugees: 5 arrivals, 2744 people; expelled: 4 times, 2244 people
+pairs: 15; met 14; hatred 5, wariness 5, friendship 4
+  Elves and Goblins: hatred -536, met 2094 e31, turned 5774 e671 from wariness
+  Elves and Humans: friendship 265, met 5036 e380, turned 5711 e622 from wariness
+  Goblins and Humans: hatred -587, met 5036 e381, turned 5948 e840 from wariness
+  Dwarves and Faeries: friendship 344, met 4226 e316, turned 5051 e392 from wariness
+  never met: Elves and Dwarves
+mixed: 2 settlements at E; refugees: 2 arrivals, 962 people; expelled: 0 times, 0 people
 [alliances]
-alliances: 21 formed, 12 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 2 betrayed, 3 with a realm
-  c2 The Warrens of Skruz-Snugg and c3 The Gnokkirk Horde: 2512-5049, against a common enemy against c1, e87; renewed 16; joined 1, refused 0; spoils 1 granted, 0 withheld; betrayed e512
-  c1 The Realm of Lecier and c5 The Liemouvie Ring: 4226-E, by origin, e356
-  c1 The Realm of Lecier and c6 The Miaflie Court: 4226-E, by origin, e357
-  c5 The Liemouvie Ring and c6 The Miaflie Court: 4235-E, in friendship, e367; renewed 11
-  c4 The Hold of Girinnam and c6 The Miaflie Court: 5056-E, after trade, e520; renewed 6
-  c4 The Hold of Girinnam and c5 The Liemouvie Ring: 5071-E, after trade, e534; renewed 6
-  c2 The Warrens of Skruz-Snugg and c8 The Skrab Mob: 5226-5825, in friendship, e600; renewed 4; joined 1, refused 0; betrayed e870
-  c3 The Gnokkirk Horde and c9 The Warband of Kal: 5646-E, in friendship, e694; renewed 2; joined 0, refused 1
-  c1 The Realm of Lecier and c7 The Duchy of Rudgor: 5648-5948, after trade, e695; renewed 1; joined 2, refused 0; spoils 0 granted, 1 withheld; spurned e981
-  c3 The Gnokkirk Horde and c7 The Duchy of Rudgor: 5662-E, against a common enemy against c8, e718; renewed 2; joined 0, refused 1
-  and 5 more
-calls to arms: 4 joined (2 in defence, 2 in attack), 6 refused, 1 withdrew; wars with an ally: 4 of 21
-spoils: 2 owed, 1 granted, 1 withheld; 80 people owed, 70 granted
-largest bloc: 352 permille, c8 with c2, c3 in 5260
-trade: 22 opened, 12 standing at E; broken 7 (war 7, cooled 0, out of reach 0); arms sold 2
+alliances: 15 formed, 13 standing at E; ended: 1 lapsed, 0 broken, 0 spurned, 1 betrayed, 0 with a realm
+  c2 The Warrens of Skruz-Snugg and c3 The Gnokkirk Horde: 2512-5241, against c1 The Realm of Lecier, e87; renewed 18; betrayed e466
+  c1 The Realm of Lecier and c5 The Liemouvie Ring: 4226-E, by origin, e311; renewed 11; joined 1, refused 0
+  c1 The Realm of Lecier and c6 The Miaflie Court: 4226-E, by origin, e312; renewed 11
+  c5 The Liemouvie Ring and c6 The Miaflie Court: 4235-E, in friendship, e320; renewed 11
+  c4 The Hold of Girinnam and c6 The Miaflie Court: 5056-E, after trade, e394; renewed 6
+  c4 The Hold of Girinnam and c5 The Liemouvie Ring: 5071-E, after trade, e400; renewed 6
+  c2 The Warrens of Skruz-Snugg and c8 The Skrab Mob: 5226-E, in friendship, e457; renewed 5; joined 2, refused 2; spoils 2 granted, 0 withheld
+  c3 The Gnokkirk Horde and c9 The Warband of Kal: 5646-E, in friendship, e529; renewed 2
+  c2 The Warrens of Skruz-Snugg and c9 The Warband of Kal: 5665-E, in friendship, e548; renewed 2
+  c1 The Realm of Lecier and c7 The Duchy of Rudgor: 5711-E, against c2 The Warrens of Skruz-Snugg, e621; renewed 1; joined 1, refused 1
+  and 4 more
+calls to arms: 4 joined (2 in defence, 2 in attack), 3 refused, 1 withdrew; wars with an ally: 4 of 17
+spoils: 2 owed, 2 granted, 0 withheld; 491 people owed, 491 granted
+largest bloc: 332 permille, c9 with c2, c3 in 5680
+trade: 19 opened, 14 standing at E; broken 5 (war 4, cooled 1, out of reach 0); arms sold 2
 [figures]
-figures: 74; rulers 52, claimants 5, generals 11, heroes 1, casters 5; alive at the end 11
-  f32 Aithievo: general of The Realm of Lecier (c1), Elven, 4480-5001; 8 battles led, 4 won; died 5001 e498
-  f24 Andrind: general of The Realm of Lecier (c1), Elven, 3612-4177; 5 battles led, 3 won; died 4177 e349
-  f39 Kreekeeg: general of The Gnokkirk Horde (c3), Goblin, 5030-5066; 4 battles led, 3 won; died 5066 e530
-  f43 Snat the Unbeaten: general of The Gnokkirk Horde (c3), Goblin, 5199-5240; 4 battles led, 4 won; died 5240 e613
-  f15 Visie: general of The Realm of Lecier (c1), Elven, 3109-3777; 3 battles led, 1 won; died 3777 e279
-  f21 Nimes: general of The Realm of Lecier (c1), Elven, 3705-4426; 3 battles led, 1 won; died 4426 e433
-  and 68 more
-books: 5
+figures: 64; rulers 48, claimants 6, generals 4, heroes 1, casters 5; alive at the end 11
+  f9 Innres: general of The Realm of Lecier (c1), Elven, 2868-3652; 7 battles led, 3 won; died 3652 e268
+  f23 Vyi the Learned: caster of The Liemouvie Ring (c5), Faerie, 4851-5186; 3 books; died 5186 e430
+  f39 Sysae the Learned: caster of The Liemouvie Ring (c5), Faerie, 5577-5933; 3 books; died 5933 e794
+  f41 Cild: general of The Duchy of Rudgor (c7), Human, 5735-5804; 4 battles led, 1 won; died 5804 e694
+  f48 Kroskax: ruler of The Warrens of Skruz-Snugg (c2), Goblin, 5929-5962, reigned 5940-5962 (steady); 1 won; died 5962 e848
+  f44 Kronk: hero of The Warrens of Skruz-Snugg (c2), Goblin, 5869-5900; died 5900 e767
+  and 58 more
+books: 8
 ```
 
-The summary of this world is 625 lines: the ages, a chronicle of the 245 most notable of its 1066 events with every war's declaration, deciding battle and ending, a block per civilization with its wars and adversaries, and the present day with its ruins, refuges, open wars and standing claims.
+The summary of this world is 631 lines: the ages, a chronicle of the 246 most notable of its 898 events with every war's declaration, deciding battle and ending, a block per civilization with its wars and adversaries, and the present day with its ruins, refuges, open wars and standing claims.
 
 That hash is the same on every supported compiler and platform, and with any number of threads. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered map, about 16 km across with peaks near 2,000 m, three passes, four lakes and about 200 river sources:
 

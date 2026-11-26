@@ -1,6 +1,6 @@
 # Questions for Paul
 
-A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-25 (generator 0.27.0 on main with P5-06 figures; the P5-04a spec on a branch).
+A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put to Paul, as of 2026-11-25 (generator 0.28.0 on main with P5-04a).
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
