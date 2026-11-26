@@ -1522,9 +1522,11 @@ def check_data(c):
     mo = h["monsters"]
     c.eq("4.2 fields after undead_regions_ref, in order (r2: sixteen)", list(mo)[-17:],
          ["undead_regions_ref"] + [n for n, *_ in pdr.MONSTERS_NEW_029])
-    c.eq("4.2 r2 starts", {n: mo[n] for n, *_ in pdr.MONSTERS_NEW_029[8:]},
-         dict(deep_warren_population_min=600, deep_warren_ore_min=1, deep_warren_wake_permille=200,
-              deep_aid_permille=500, deep_aid_hops=2, deep_aid_levy_permille=500, deep_aid_max=2, deep_aid_memory=30))
+    # integration: the shipped values are calibrated (15.2; docs/reviews/p5-07-calibration.md), so the units check the
+    # ranges of 4.2 on the file; the replay and check-world read every value from the files
+    c.eq("4.2 shipped values inside 4.2's ranges",
+         [n for n, ty, lo, hi, _start in pdr.MONSTERS_NEW_029
+          if not all(lo <= v <= hi for v in (mo[n] if ty == "arr3" else [mo[n]]))], [])
     races = dict(dat["race"])
     c.eq("4.5 delving_permille as shipped", {k: races[k]["delving_permille"] for k in sorted(races)},
          {k: pdr.DELVING_029[k] for k in sorted(races)})
