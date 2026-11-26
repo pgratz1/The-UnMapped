@@ -8,7 +8,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 ![The world viewer playing the history of one human realm of a generated world: territory by year, settlements and ruins, wars and plagues, and the events as sentences](docs/images/viewer-history-movie.gif)
 
-*The world viewer playing the five centuries of one realm's generated history (the Kritch-Gux Horde, seed 42, generator 0.26.0): territory by year, settlements and ruins as markers, and each event as a sentence. Every name, border and war comes from the seed.*
+*The world viewer playing the four centuries of one realm's generated history (the Ghuughzuz Horde, seed 42, generator 0.27.0): territory by year, settlements and ruins as markers, and each event as a sentence. Every name, border and war comes from the seed.*
 
 ## Contents
 
