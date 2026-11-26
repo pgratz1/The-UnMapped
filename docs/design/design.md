@@ -820,6 +820,18 @@ With no model, a rule-based writer builds each arc from the same quest forms wit
 
 **Guild work.** Besides its quest line, a guild offers randomized jobs by rank. They use the same quest forms bound to the current state of the world, and the same generator as the townspeople's tasks.
 
+### Rulers and their realms
+
+Every realm standing at the end of history has a living ruler the player can meet.
+
+- **Rulers are figures.** The figures stage of phase P5 records each realm's line of rulers, so the present ruler has predecessors, a succession and a place in the chronicle.
+- **Seats.** The ruler holds court in a seat at the realm's capital, built in that race's kit under the style layers of section 7: a castle, a tower, a hall or whatever that people builds. The seat is a landmark of the capital's site plan. Lesser holdings of the realm, such as border towers and forts, follow the same kit.
+- **Audience.** Reaching the ruler takes standing with the realm. Disposition, deeds and guild rank all count, and a player of an enemy people has the hardest road.
+
+**The ruler's quest line.** Each realm has one quest line given by its ruler, written once per world by the same process as the guild quest lines above (dossier, structured plan, validation, lore file, and a rule-based writer when there is no model). Its dossier is the realm's own history: settlements lost and who holds them now, old enemies and grudges, claims never won, allies, and things of value left behind. An elven realm that has lost several towns might ask the player to drive out the monsters that took one of its cities and bring back what was left there.
+
+The world file stays frozen during play. What the player changes through these quests, such as a ruin cleared and resettled, is recorded in the save file.
+
 ### Local LLM dialogue
 
 NPC conversation is driven by game facts and phrased by a small language model running on the player's machine. The game decides what an NPC knows and what a conversation can change; the model supplies the wording and personality.
