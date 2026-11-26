@@ -123,7 +123,7 @@ No aided gate falls too rarely: A+B aided 14 held, 8 fell; unaided 27 held, 32 f
 - Aided gate that held (seed 85): `5663 e864 ally_aided_hold/40: Unbidden, the Hold of Khard hurried its people from Drorin Hold to stand with the Hold of Khairthain at the gate of Brourkou Hold against Khark the Deep-Coiled.` then `e865 deep_sealed/50: The Hold of Khairthain sealed Khark the Deep-Coiled in the deeps of the Mines of Brourkou Hold.`
 - Aided gate that fell (seed 85, 5795): `e1011 ally_aided_hold/40: Unbidden, the Duchy of Edas hurried its people from Bedterford to stand with the Hold of Khairthain at the gate of Thark Hold against Dairngound Flame-Under-Stone.` then `e1012 hold_lost/70: Dairngound Flame-Under-Stone rose from below and overran Thark Hold of the Hold of Khairthain; 1,487 died, and 2,231 fled.`
 - Warren sealed with aid (seed 5): `5311 e1085 warren_sealed/50: With rockfall and fire, the Slatch Horde under Bazz buried Dundnidin the Deep-Coiled deep below Gozzbeerk, and no goblin went that way again.`
-- Seals in a summary: salience 50 never reaches one. No `deep_sealed` or `warren_sealed` line appears in any of the 200 default summaries (salience 60 and above do: wakings and holds lost are in the full chronicle only for seeds shown; seals are full-chronicle only).
+- Seals do reach summaries (17 `deep_sealed` lines in the 200 default summaries; no `warren_sealed` seen there): `5649 e417 deep_sealed/50: Clan Durgarin under Nurn sealed the Swarm Beneath Dairinbra in the deeps of the Mines of Kirnha.` and `5143 e222 deep_sealed/50: Holding the gate at great cost, Clan Nindtu under Thrornnou II walled the Eyeless of Khomdouli up beneath the Mines of Grorin.`
 
 ### Suspected defects
 
