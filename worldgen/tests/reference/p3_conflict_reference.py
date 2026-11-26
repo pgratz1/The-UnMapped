@@ -161,6 +161,11 @@ FLAGS = dict(
                         # FigureView read by conflict, peoples, monsters and alliances; battle_led; schema 12
     riders=True,        # P5-06 25.3 (the two undead rules) and 7.8 (P5-02's site loops test kinds 1 and 2); 25.1 is the
                         # peoples flag nofade
+    # P5-04a (generator 0.28.0)
+    p504a=False,        # P5-04a 3 to 11, 21: spoils kept and soured, refusals and betrayals with motives, renewals on a
+                        # chain, the arms cause of a battle won (9.2), has_claim / claim_event / last_war_end (2), the
+                        # turns' change and cool-down, long-held expulsions, towers apart and ended, hero_rose quiet;
+                        # off until use_version("0.28.0") (the 0.27.0 worlds and goldens are the default)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -174,8 +179,9 @@ FLAGS_024 = ("relations",)
 FLAGS_025 = ("p503a",)
 FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7
 FLAGS_027 = ("figures", "riders")   # P5-06 (generator 0.27.0)
+FLAGS_028 = ("p504a",)               # P5-04a (generator 0.28.0)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0")
+            "0.26.0", "0.27.0", "0.28.0")
 
 
 
@@ -188,6 +194,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_028:
+        return i >= 12
     if k in FLAGS_027:
         return i >= 11
     if k in FLAGS_026:
@@ -744,6 +752,7 @@ class World(pp.World):
         self.claim = {}            # (a, b) -> (event, region)
         self.grudge = {}           # (min, max) -> grudge
         self.last_peace = {}       # (min, max) -> (year, event)
+        self.cited_arms = set()    # P5-04a 9.2: the arms_sold events a battle won has cited
         self.wars = []             # in declaration order
         self.enmity_opened = set()
         self.seen = set()
@@ -1506,6 +1515,30 @@ class World(pp.World):
         self.claim.pop((a, b), None)
         self.claim.pop((b, a), None)
 
+    # --- P5-04a 2: conflict's const reads for the alliances (amends P5-04 7.13)
+    def has_claim(self, a, b):
+        """An open claim of a against b."""
+        return (a, b) in self.claim
+
+    def claim_event(self, a, b):
+        return self.claim[(a, b)][0] if (a, b) in self.claim else 0
+
+    def last_war_end(self, c):
+        """The largest (year, event) of last_peace(c, b) over every b != c ascending; (0, 0) none."""
+        best = (0, 0)
+        for (x, y), v in sorted(self.last_peace.items()):
+            if c in (x, y) and x != y and v > best:
+                best = v
+        return best
+
+    def arms_cause(self, W):
+        """P5-04a 9.2: the arms_sold event a battle won by W cites (0 none): AllianceView::arms_event(W) when not
+        yet cited."""
+        if not FLAGS["p504a"] or self.alliances is None:
+            return 0
+        a = self.alliances.arms_event(W)
+        return a if a and a not in self.cited_arms else 0
+
     def zero_strain(self, a, b):
         self.strain.pop((a, b), None)
         self.strain.pop((b, a), None)
@@ -2097,6 +2130,10 @@ class World(pp.World):
             p = self.battle_p(A, D, dv)
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
+        arms_c = self.arms_cause(W)          # P5-04a 9.2: the first battle won after a sale cites it
+        bcauses = tuple(sorted({w, arms_c})) if arms_c else (w,)
+        if arms_c:
+            self.cited_arms.add(arms_c)
         dead_w, dead_l = self.battle_tolls(FW, FL, w)
         some_ally = allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1]))
         if gx is not None and (gx[0] or gy[0]):
@@ -2108,7 +2145,7 @@ class World(pp.World):
                             tuple(("loser_ally", CIV, z) for z, f in fl[1] if f > 0) +
                             ((("winner_general", FIGURE, gw[0]),) if gw[0] else ()) +
                             ((("loser_general", FIGURE, gl[0]),) if gl[0] else ()),
-                            values=(dead_w, dead_l, pass_id), causes=(w,))
+                            values=(dead_w, dead_l, pass_id), causes=bcauses)
             if some_ally:
                 self.allied_casualties(W, dead_w, fw, e, war)
                 self.allied_casualties(L, dead_l, fl, e, war)
@@ -2118,15 +2155,15 @@ class World(pp.World):
                             participants=(("winner", CIV, W), ("loser", CIV, L)) +
                             tuple(("winner_ally", CIV, z) for z, f in fw[1] if f > 0) +
                             tuple(("loser_ally", CIV, z) for z, f in fl[1] if f > 0),
-                            values=(dead_w, dead_l, pass_id), causes=(w,))
+                            values=(dead_w, dead_l, pass_id), causes=bcauses)
             self.allied_casualties(W, dead_w, fw, e, war)
             self.allied_casualties(L, dead_l, fl, e, war)
         elif pass_id:
             e = self.append("battle_at_pass", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
-                            values=(dead_w, dead_l, pass_id), causes=(w,))
+                            values=(dead_w, dead_l, pass_id), causes=bcauses)
         else:
             e = self.append("battle", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
-                            values=(dead_w, dead_l), causes=(w,))
+                            values=(dead_w, dead_l), causes=bcauses)
         if not some_ally:
             self.casualties(W, dead_w, e, war)
             self.casualties(L, dead_l, e, war)
@@ -3547,8 +3584,11 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
                    kind[cs[0]] in (K["peace"], K["war_won"]))
         if key in ("battle", "battle_at_pass", "allied_battle", "battle_led"):
             cs = causes.get(e[0], [])
-            c.true("%s 11 e%d caused by its declaration" % (label, e[0]), len(cs) == 1 and
-                   kind[cs[0]] == K["war_declared"])
+            # P5-04a 9.2: a battle also cites at most one arms_sold (the first battle its winner won after a sale)
+            decl = [x for x in cs if kind[x] == K["war_declared"]]
+            arms = [x for x in cs if KEY_OF[kind[x]] == "arms_sold"]
+            c.true("%s 11 e%d caused by its declaration" % (label, e[0]), len(decl) == 1 and len(arms) <= 1 and
+                   len(cs) == 1 + len(arms) and (not arms or FLAGS["p504a"]))
         if key in ("claim", "claim_settlements"):
             cs = causes.get(e[0], [])
             # 8.3 item 4: a colony of the same step is no claim cause, unless it is the region's

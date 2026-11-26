@@ -409,6 +409,10 @@ KINDS_027 = (
     kind_def(92, "blight", 1, 1, 0, (_F1("figure"), _C1("civilization"), ("site", SITE, 1, 1)), ("dead",)),
 )
 COMPILED_027 = COMPILED_026 + KINDS_027
+# P5-04a 14.4 (generator 0.28.0): ten values appended to seven kinds, in seq order; no kind added, no role changed.
+VALUES_028 = {58: ("change",), 63: ("term", "band"), 67: ("motive", "years"), 69: ("motive", "count"),
+              75: ("grievance",), 76: ("years",), 87: ("quiet",)}
+COMPILED_028 = tuple(dict(k, values=list(k["values"]) + list(VALUES_028.get(k["id"], ()))) for k in COMPILED_027)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -467,12 +471,16 @@ RENDER_R26 = True
 #   RENDER_R27      7.9 the display name of entity type 6 (the figure's display name), the form `under`, the
 #                   placeholder {@book}; schema 12 (9.4: tables figure and book, site kind 4).
 RENDER_R27 = False
+# P5-04a (generator 0.28.0):
+#   RENDER_R28      8.5: the choice of 2 to 8 words (word i for value i below n - 1, the last for every other value),
+#                   `choice of <n> words at byte <b>` above 8; the monster form {m:died} (10 item 5).
+RENDER_R28 = False
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0")
+            "0.26.0", "0.27.0", "0.28.0")
 
 
 def at_least(v):
@@ -488,14 +496,14 @@ def use_version(v):
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
-    global RENDER_R26, RENDER_R27
+    global RENDER_R26, RENDER_R27, RENDER_R28
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
                 "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026,
-                "0.27.0": COMPILED_027}[v]
+                "0.27.0": COMPILED_027, "0.28.0": COMPILED_028}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -507,6 +515,7 @@ def use_version(v):
     RENDER_R25 = i >= VERSIONS.index("0.25.0")
     RENDER_R26 = i >= VERSIONS.index("0.26.0")
     RENDER_R27 = i >= VERSIONS.index("0.27.0")
+    RENDER_R28 = i >= VERSIONS.index("0.28.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
@@ -557,7 +566,8 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where", "with", "against", "under")   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
+FORMS = ("name", "plural", "adjective", "all", "kind", "raid", "its", "aside", "where", "with", "against", "under",
+         "died")   # died: P5-04a 10 item 5 (0.28.0)   # kind: P5-02 10.3 (0.23.0); raid: P5-03 9.5
 
 
 def _is_word(w):
@@ -661,7 +671,7 @@ def clause_digits(kind, templ, ev):
         if "?" in body:
             v, rest = body.split("?", 1)
             ws = rest.split("|")
-            if len(ws) in (3, 4):
+            if len(ws) in (3, 4) or (RENDER_R28 and 3 <= len(ws) <= 8):
                 x = ev["values"][val_seq[v]]
                 w = ws[min(x, len(ws) - 1)] if 0 <= x else ws[-1]
                 nums[k] += [x] * w.count("#")
@@ -673,6 +683,22 @@ def clause_digits(kind, templ, ev):
 
 
 MONSTER_FORMS_025 = ("its", "aside", "where")   # P5-03a 7.1
+MONSTER_FORMS_028 = ("died",)                    # P5-04a 10 item 5
+
+
+def choice_word(ws, x):
+    """P3-04 8.4 as amended (P5-03 8.2, P5-04a 8.5): two words: w0 for 1, w1 otherwise; three words: w0 for 0, w1
+    for 1, w2 otherwise; n >= 4 words: word i for value i (0 <= i < n - 1), the last word for every other value
+    (negative included)."""
+    n = len(ws)
+    if n == 2:
+        return ws[0] if x == 1 else ws[1]
+    return ws[x] if 0 <= x < n - 1 else ws[n - 1]
+
+
+def died_phrase(wake):
+    """P5-04a 10 item 5: {m:died}."""
+    return "crumbled to dust at last" if wake == "dead" else "died of great age"
 
 
 def placeholder_problem(kind, body, at):
@@ -703,7 +729,10 @@ def placeholder_problem(kind, body, at):
     if "?" in body:
         v, rest = body.split("?", 1)
         bars = rest.count("|")
-        if v not in values or not (bars == 1 or (bars == 2 and RENDER_R10) or (bars == 3 and RENDER_R24)):
+        if RENDER_R28 and v in values and bars + 1 > 8 and all(_is_word(w) for w in rest.split("|")):
+            return "choice of %d words at byte %d" % (bars + 1, at)   # P5-04a 8.5
+        if v not in values or not (bars == 1 or (bars == 2 and RENDER_R10) or (bars == 3 and RENDER_R24) or
+                                   (RENDER_R28 and 1 <= bars <= 7)):
             return unknown
         if not all(_is_word(w) for w in rest.split("|")):
             return unknown
@@ -714,7 +743,8 @@ def placeholder_problem(kind, body, at):
         role, form = body.split(":", 1)
         if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23) or (
                 form == "raid" and not RENDER_R24) or (form in MONSTER_FORMS_025 and not RENDER_R25) or (
-                form in ("with", "against") and not RENDER_R26) or (form == "under" and not RENDER_R27):
+                form in ("with", "against") and not RENDER_R26) or (form == "under" and not RENDER_R27) or (
+                form in MONSTER_FORMS_028 and not RENDER_R28):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
@@ -723,7 +753,7 @@ def placeholder_problem(kind, body, at):
             return "form 'kind' needs a monster role at byte %d" % at
         if form == "raid" and r["type"] != MONSTER:   # P5-03 9.5
             return "form 'raid' needs a monster role at byte %d" % at
-        if form in MONSTER_FORMS_025 and r["type"] != MONSTER:   # P5-03a 7.1
+        if form in MONSTER_FORMS_025 + MONSTER_FORMS_028 and r["type"] != MONSTER:   # P5-03a 7.1, P5-04a 10.5
             return "form '%s' needs a monster role at byte %d" % (form, at)
         if form == "under" and r["type"] not in (6, CIV):   # P5-06 7.9
             return "form 'under' needs a figure or civilization role at byte %d" % at
@@ -922,7 +952,9 @@ def render(view, eid, links=None):
             v, rest = body.split("?", 1)
             ws = rest.split("|")
             x = ev["values"][val_seq[v]]
-            if len(ws) == 4:   # P5-03 8.2: w0 for 0, w1 for 1, w2 for 2, w3 otherwise
+            if RENDER_R28:   # P5-04a 8.5: 2 to 8 words
+                out.append(choice_word(ws, x).replace("#", fmt_value(x, dg)))
+            elif len(ws) == 4:   # P5-03 8.2: w0 for 0, w1 for 1, w2 for 2, w3 otherwise
                 out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2] if x == 2 else ws[3])
                            .replace("#", fmt_value(x, dg)))
             elif len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
@@ -981,6 +1013,9 @@ def render(view, eid, links=None):
                 mk = view["monster_kind"](x)
                 if mk["wake"] != "dead":
                     out.append(", " + mk["noun"] + ",")
+            elif form == "died":   # P5-04a 10 item 5: by the kind's wake; no link
+                t, x = ps[0]
+                out.append(died_phrase(view["monster_kind"](x)["wake"]))
             elif form == "where":
                 # P5-03a 7.1: " in " + the event region as {@region}; empty for a dead kind whose stored name ends
                 # with " of " + R (R the region's name in force at the event's year, a leading "The " as "the ")
