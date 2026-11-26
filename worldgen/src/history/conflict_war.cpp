@@ -192,6 +192,15 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         e.values.push_back(pass_id);
     }
     e.causes = {w0.declared};
+    // P5-04a 9.2: the first battle a buyer of arms wins after a sale cites it.
+    if (alliances_ != nullptr) {
+        const std::int64_t arms = alliances_->arms_event(winner);
+        if (arms != 0 && arms_cited_.count(arms) == 0) {
+            e.causes.push_back(arms);
+            std::stable_sort(e.causes.begin(), e.causes.end());
+            arms_cited_.insert(arms);
+        }
+    }
     const std::int64_t ev = ctx.append(e);
     // P5-04 7.7: a side's dead split over its allies in ascending id by
     // force (floor), the rest to the principal; winners first.

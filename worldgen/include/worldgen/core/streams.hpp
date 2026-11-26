@@ -164,8 +164,10 @@ inline constexpr std::string_view hist_figures_tower_name = "hist.figures.tower_
 inline constexpr std::string_view hist_names_person = "hist.names.person";
 inline constexpr std::string_view hist_names_book = "hist.names.book";
 inline constexpr std::string_view hist_monsters_hero_fall = "hist.monsters.hero_fall";
+// P5-04a 2 (generator 0.28.0): the 98th stream, the soured renewal draw.
+inline constexpr std::string_view hist_alliances_renew = "hist.alliances.renew";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 97> all_stream_names = {
+inline constexpr std::array<std::string_view, 98> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -263,6 +265,7 @@ inline constexpr std::array<std::string_view, 97> all_stream_names = {
     hist_names_person,
     hist_names_book,
     hist_monsters_hero_fall,
+    hist_alliances_renew,
 };
 
 }  // namespace worldgen::streams

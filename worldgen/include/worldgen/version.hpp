@@ -54,8 +54,10 @@ namespace worldgen {
 // of kinds 57, 60 and 62); 0.25.0 until P5-04 (alliances, trade, mines and
 // arms, kinds 63 to 78, schema 11); 0.26.0 until P5-06 (figures: rulers,
 // generals, heroes and casters, kinds 79 to 92, schema 12 with tables figure
-// and book; every ruin stays); now 0.27.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.27.0";
+// and book; every ruin stays); 0.27.0 until P5-04a (relations and alliances
+// follow-ups: spoils that sour, refusals and betrayals with a motive, notable
+// renewals, the turn cool-down, towers apart and ended); now 0.28.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.28.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

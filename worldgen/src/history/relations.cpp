@@ -132,6 +132,9 @@ RelationsTuning relations_tuning_from(const data::ContentSet& content) {
     t.meet_sealed_years = r.get_int("meet_sealed_years");
     t.conquest_settlers_span_permille = r.get_int("conquest_settlers_span_permille");
     t.expel_gap_years = r.get_int("expel_gap_years");
+    t.turn_cooldown_years = r.get_int("turn_cooldown_years");
+    t.expel_settled_years = r.get_int("expel_settled_years");
+    t.expel_fresh_years = r.get_int("expel_fresh_years");
     return t;
 }
 
@@ -900,6 +903,14 @@ void RelationsSubsystem::expulsions(StepContext& ctx) {
                 band_of(p.ruling, e.race) != Band::hatred || e.share > tuning_.expel_share_max) {
                 continue;
             }
+            // P5-04a 8: a long-settled entry only after a fresh turn into hatred (before the draw).
+            if (ctx.year() - e.since_year >= tuning_.expel_settled_years) {
+                const Pair* held = pair_of(p.ruling, e.race);
+                const std::int64_t hatred = held != nullptr ? held->hatred_event : 0;
+                if (hatred == 0 || ctx.event_year(hatred) < ctx.year() - tuning_.expel_fresh_years) {
+                    continue;
+                }
+            }
             const std::int64_t people = floor_div(checked_mul(pop, e.share), 1000);
             if (people < tuning_.migrate_min ||
                 !chance_pm(ctx.draw(expel_key_, word(id), word(e.race), 0), tuning_.expel_permille)) {
@@ -1053,8 +1064,15 @@ void RelationsSubsystem::war_foes(const StepContext& ctx) {
         if (ra == 0 || rb == 0 || ra == rb) {
             continue;
         }
-        civ_foes_[{key.a_id, rb}] = Seen{y, rel.event};
-        civ_foes_[{key.b_id, ra}] = Seen{y, rel.event};
+        // P5-03a audit A2: at war with several realms of one race, the larger opening event.
+        for (const auto& k : {std::pair<std::int64_t, std::int64_t>{key.a_id, rb}, std::pair<std::int64_t, std::int64_t>{key.b_id, ra}}) {
+            const auto found = civ_foes_.find(k);
+            if (found != civ_foes_.end() && found->second.year == y) {
+                found->second.event = std::max(found->second.event, rel.event);
+            } else {
+                civ_foes_[k] = Seen{y, rel.event};
+            }
+        }
         if (Pair* p = pair_of(ra, rb)) {
             at_war_pairs_[static_cast<std::size_t>(p - pairs_.data())] = 1;
         }
@@ -1265,20 +1283,31 @@ void RelationsSubsystem::turns(StepContext& ctx) {
         if (next == p.band) {
             continue;
         }
+        const bool warmer = static_cast<std::int64_t>(next) > static_cast<std::int64_t>(p.band);
+        // P5-04a 7.2: no turn within turn_cooldown_years of the last unless a
+        // fresh contribution of the turn's direction.
+        if (p.turn_event != 0 && ctx.year() - p.turn_year < tuning_.turn_cooldown_years &&
+            (warmer ? p.warmer : p.colder).empty()) {
+            continue;
+        }
         if (ctx.step() == Step::q4 && ctx.quiet_events_left(0) <= 0) {
             continue;  // it waits
         }
         // P5-03a 3.5: a warmer turn cites the warmer contributions (else the
         // meeting), a colder one the colder (else the last turn, else the
         // meeting).
-        const bool warmer = static_cast<std::int64_t>(next) > static_cast<std::int64_t>(p.band);
         std::vector<std::int64_t> causes = warmer ? p.warmer : p.colder;
         if (causes.empty()) {
             causes = {warmer ? p.met_event : (p.turn_event != 0 ? p.turn_event : p.met_event)};
         }
         EventSpec ev = point_event(ctx, "disposition_turned", 0, 0);
         ev.participants = {Participant{"race_a", EntityType::race, p.a}, Participant{"race_b", EntityType::race, p.b}};
-        ev.values = {d, static_cast<std::int64_t>(next)};
+        // P5-04a 7.1: 0 into hatred, 1 a thaw, 2 a decline, 3 into friendship.
+        const std::int64_t change = next == Band::hatred       ? 0
+                                    : next == Band::friendship ? 3
+                                    : p.band == Band::hatred   ? 1
+                                                               : 2;
+        ev.values = {d, static_cast<std::int64_t>(next), change};
         ev.causes = causes_of(std::move(causes));
         const std::int64_t at = ctx.append(ev);
         Pair& w = pairs_[i];
@@ -1351,7 +1380,7 @@ void RelationsSubsystem::meetings(StepContext& ctx) {
             (civ.race == a ? xs : ys).push_back(c);
         }
         if (xs.empty() || ys.empty()) {
-            pairs_[i].word_since = 0;  // P5-03a 4.2: no key
+            pairs_[i].word_since = -1;  // P5-03a 4.2: no key (P5-04a 11 item 7: -1 unset)
             continue;
         }
         // The smallest key on a graph given by its hops lists.
@@ -1393,10 +1422,10 @@ void RelationsSubsystem::meetings(StepContext& ctx) {
                     [this, &ctx](std::int64_t r) -> const std::vector<std::int64_t>& { return border_hops(ctx.geo(), r); });
             }
             if (!word_key || std::get<0>(*word_key) > tuning_.meet_sealed_hops) {
-                pairs_[i].word_since = 0;
+                pairs_[i].word_since = -1;
                 continue;
             }
-            if (pairs_[i].word_since == 0) {
+            if (pairs_[i].word_since < 0) {
                 pairs_[i].word_since = ctx.year();
             }
             if (ctx.year() - pairs_[i].word_since < tuning_.meet_sealed_years) {

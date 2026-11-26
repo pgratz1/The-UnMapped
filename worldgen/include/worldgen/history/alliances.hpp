@@ -55,6 +55,14 @@ struct AlliancesTuning {
     std::int64_t mine_permille = 20, mine_ore_min = 1, mine_settlement_min = 200;
     std::int64_t arms_trade_permille = 2000;
     std::vector<std::string> mine_forms{"The Mines of {settlement}", "The Delvings of {settlement}"};
+    // P5-04a 14.1 (generator 0.28.0). The defaults of a hand-made tuning keep
+    // 0.26.0's meaning (no large share, no soured draw, no factor below 1000).
+    std::int64_t spoils_large_share = 1000000, spoils_large_part_permille = 1001;
+    std::int64_t soured_renew_permille = 1000, soured_join_permille = 1000;
+    std::int64_t weary_years = 0, join_weary_permille = 1000, join_busy_permille = 0;
+    std::int64_t join_fear_floor = 0, join_warmth_floor = 0, grasping_join_permille = 1000;
+    std::int64_t join_claim_permille = 1000, excused_memory = 0, refuse_grudge = 0;
+    std::int64_t betray_cooled_disposition = 0, betray_weak_permille = 0;
 
     friend bool operator==(const AlliancesTuning&, const AlliancesTuning&) = default;
 };
@@ -71,6 +79,8 @@ struct AlliancesStats {
     std::int64_t formed = 0, origin = 0, renewed = 0, lapsed = 0, broken = 0, spurned = 0, betrayed = 0;
     std::int64_t joined = 0, refused = 0, owed = 0, granted = 0, withheld = 0;
     std::int64_t trades = 0, trades_broken = 0, mines = 0, arms = 0;
+    // P5-04a: soured alliances, spurnings at once, excused refusals, quiet renewals.
+    std::int64_t soured = 0, spurned_at_once = 0, excused = 0, renewed_quietly = 0;
 };
 
 class AlliancesSubsystem final : public Subsystem, public AllianceView {
@@ -100,6 +110,7 @@ public:
     [[nodiscard]] std::int64_t trade_partners(std::int64_t c) const override;
     [[nodiscard]] bool forged(std::int64_t c) const override;
     [[nodiscard]] bool arms(std::int64_t c) const override;
+    [[nodiscard]] std::int64_t arms_event(std::int64_t c) const override;  // P5-04a 9.2
 
     // Inspection (tests).
     [[nodiscard]] const AlliancesTuning& tuning() const noexcept { return tuning_; }
@@ -111,10 +122,22 @@ private:
         std::int64_t formed_year = 0, formed_event = 0;
         std::int64_t basis = 0, foe = 0;
         bool origin = false;
-        std::int64_t renew_year = 0, renew_event = 0;  // the formation at first
-        std::int64_t refusals = 0;
-        // 6.11: the withheld shares of the current term.
-        std::int64_t withheld = 0, withheld_event = 0, withheld_region = 0, withheld_ally = 0;
+        // P5-04a 6.1, 6.2: the last written renewal (the formation at first),
+        // the next due year of the renewal chain, and the latest joint war
+        // and granted share between the pair (0 none).
+        std::int64_t renew_year = 0, renew_event = 0;
+        std::int64_t next_due = 0;
+        std::int64_t fought_event = 0, shared_event = 0;
+        std::int64_t refusals = 0;  // P5-04a 4.3: counted refusals only
+        // P5-04a 3.2: withheld shares over the alliance's life and the soured
+        // record (the first withholding: its event, year, region and the
+        // wronged ally; event 0 none) with its two flags.
+        std::int64_t withheld = 0;
+        std::int64_t soured_event = 0, soured_year = 0, soured_region = 0, soured_ally = 0;
+        bool renewal_due = false, call_due = false;
+        // P5-04a 3.4: a spurning at once that waits for a quiet step's budget
+        // (the spoils_withheld event, its year, region and the wronged ally).
+        std::int64_t pending_event = 0, pending_year = 0, pending_region = 0, pending_ally = 0;
     };
     struct Trade {
         std::int64_t opened_year = 0, opened_event = 0, next_credit = 0;
@@ -183,7 +206,14 @@ private:
     void cooling(StepContext& context);
     void blocs(StepContext& context);
     void renewals(StepContext& context);
-    void spurn(StepContext& context, const Pair& p, std::int64_t reason);
+    // P5-04a 3.4 to 3.6: alliance_spurned of `p` by the wronged ally over the
+    // share `share_event` (year, region), with reason and years.
+    void spurn(StepContext& context, const Pair& p, std::int64_t reason, std::int64_t ally, std::int64_t share_event,
+               std::int64_t share_year, std::int64_t region);
+    void pending_spurns(StepContext& context);
+    void on_withheld(StepContext& context, std::int64_t principal, std::int64_t ally, std::int64_t event,
+                     std::int64_t region, std::int64_t year, bool large);
+    [[nodiscard]] std::int64_t formation_band(const StepContext& context, std::int64_t x, std::int64_t y) const;
     void origin_alliances(StepContext& context);
     void formations(StepContext& context);
     void trade_breaks(StepContext& context);
@@ -202,7 +232,7 @@ private:
     const FigureView* figures_ = nullptr;  // P5-06 7.1
     AlliancesTuning tuning_;
     bool prepared_ = false;
-    std::uint64_t form_key_ = 0, join_key_ = 0, trade_key_ = 0, spoils_key_ = 0, mine_key_ = 0;
+    std::uint64_t form_key_ = 0, join_key_ = 0, trade_key_ = 0, spoils_key_ = 0, mine_key_ = 0, renew_key_ = 0;
     std::vector<RaceData> races_;  // ascending race id
     std::vector<std::int64_t> ore_reach_;  // per region, index id - 1
 
@@ -213,7 +243,7 @@ private:
     std::map<std::int64_t, std::int64_t> spoils_given_;  // per war: the shares given so far (6.11)
     std::map<Pair, Mine> mines_;                         // (civilization, region)
     std::set<std::int64_t> mined_;                       // settlements that ever had a mine
-    std::set<Pair> arms_sold_;                           // (seller, buyer)
+    std::map<Pair, std::int64_t> arms_sold_;             // (seller, buyer) -> its arms_sold event
     std::set<std::pair<Pair, bool>> closed_now_;         // ruling A9: (pair, alliance) closed in this year
     std::int64_t closed_year_ = -1;                      // the year closed_now_ holds (audit A3)
     std::vector<Declaration> declarations_;              // every war_declared read, ascending id

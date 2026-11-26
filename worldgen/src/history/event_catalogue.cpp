@@ -248,7 +248,7 @@ EventCatalogue build_compiled() {
         return std::vector<RoleDef>{role(1, "race_a", EntityType::race, 1, 1), role(2, "race_b", EntityType::race, 1, 1)};
     };
     c.kinds.push_back(KindDef{57, "peoples_met", true, 1, 0, two_races(), {"disposition", "band", "sealed"}, 0, {}});
-    c.kinds.push_back(KindDef{58, "disposition_turned", true, 0, 0, two_races(), {"disposition", "band"}, 0, {}});
+    c.kinds.push_back(KindDef{58, "disposition_turned", true, 0, 0, two_races(), {"disposition", "band", "change"}, 0, {}});
     c.kinds.push_back(KindDef{59, "refugees_arrived", true, 1, 1,
                               {role(1, "settlement", EntityType::settlement, 1, 1),
                                role(2, "civilization", EntityType::civilization, 1, 1),
@@ -282,13 +282,13 @@ EventCatalogue build_compiled() {
     };
     const auto call = [&civ] { return std::vector<RoleDef>{civ(1, "ally"), civ(2, "partner"), civ(3, "enemy")}; };
     const auto spoils = [&civ] { return std::vector<RoleDef>{civ(1, "principal"), civ(2, "ally"), civ(3, "enemy")}; };
-    c.kinds.push_back(KindDef{63, "alliance_formed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
+    c.kinds.push_back(KindDef{63, "alliance_formed", true, 0, 0, pair_foe(), {"basis", "term", "band"}, 0, {}});
     c.kinds.push_back(KindDef{64, "alliance_renewed", true, 0, 0, pair_foe(), {"basis"}, 0, {}});
     c.kinds.push_back(KindDef{65, "alliance_lapsed", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
     c.kinds.push_back(KindDef{66, "alliance_broken", true, 0, 0, pair_of("ally_a", "ally_b"), {"reason"}, 0, {}});
-    c.kinds.push_back(KindDef{67, "alliance_betrayed", true, 0, 0, pair_of("betrayer", "betrayed"), {}, 0, {}});
+    c.kinds.push_back(KindDef{67, "alliance_betrayed", true, 0, 0, pair_of("betrayer", "betrayed"), {"motive", "years"}, 0, {}});
     c.kinds.push_back(KindDef{68, "ally_joined_war", true, 0, 0, call(), {"side"}, 0, {}});
-    c.kinds.push_back(KindDef{69, "ally_refused", true, 0, 0, call(), {}, 0, {}});
+    c.kinds.push_back(KindDef{69, "ally_refused", true, 0, 0, call(), {"motive", "count"}, 0, {}});
     c.kinds.push_back(KindDef{70, "ally_withdrew", true, 0, 0, call(), {}, 0, {}});
     c.kinds.push_back(KindDef{71, "allied_battle", true, 1, 0,
                               {civ(1, "winner"), civ(2, "loser"), civ(3, "winner_ally", 0, 16),
@@ -297,8 +297,8 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{72, "trade_opened", true, 0, 0, pair_of("partner_a", "partner_b"), {}, 0, {}});
     c.kinds.push_back(KindDef{73, "trade_broken", true, 0, 0, pair_of("partner_a", "partner_b"), {"reason"}, 0, {}});
     c.kinds.push_back(KindDef{74, "spoils_shared", true, 1, 0, spoils(), {"share"}, 0, {}});
-    c.kinds.push_back(KindDef{75, "spoils_withheld", true, 1, 0, spoils(), {"share"}, 0, {}});
-    c.kinds.push_back(KindDef{76, "alliance_spurned", true, 1, 0, pair_of("ally", "principal"), {"reason"}, 0, {}});
+    c.kinds.push_back(KindDef{75, "spoils_withheld", true, 1, 0, spoils(), {"share", "grievance"}, 0, {}});
+    c.kinds.push_back(KindDef{76, "alliance_spurned", true, 1, 0, pair_of("ally", "principal"), {"reason", "years"}, 0, {}});
     c.kinds.push_back(KindDef{77, "mine_opened", true, 1, 1,
                               {civ(1, "civilization"), role(2, "site", EntityType::site, 1, 1)}, {}, 0, {}});
     c.kinds.push_back(KindDef{78, "arms_sold", true, 0, 0,
@@ -417,6 +417,9 @@ struct Token {
     // every other value; word_other holds w3, word_two w2).
     bool four = false;
     std::string word_two;
+    // P5-04a 8.5: with five to eight words, every word in order (word i for
+    // value i, 0 <= i < n - 1, the last word otherwise); empty below five.
+    std::vector<std::string> words_n;
     // r12 20.2, {@causes:key=cword,...|before|after}: (kind key, cword) in
     // template order; the two words in word_one (before) and word_other (after).
     std::vector<std::pair<std::string, std::string>> cause_words;
@@ -426,6 +429,16 @@ struct Parsed {
     std::vector<Token> tokens;
     std::optional<std::string> problem;
 };
+
+// The word of a choice of three or more words for value v (r10, P5-03 8.2,
+// P5-04a 8.5).
+const std::string& choice_word(const Token& t, std::int64_t v) {
+    if (!t.words_n.empty()) {
+        const auto n = static_cast<std::int64_t>(t.words_n.size());
+        return v >= 0 && v < n - 1 ? t.words_n[static_cast<std::size_t>(v)] : t.words_n.back();
+    }
+    return v == 0 ? t.word_zero : v == 1 ? t.word_one : (t.four && v == 2) ? t.word_two : t.word_other;
+}
 
 bool is_word(std::string_view w) noexcept {
     return w.find_first_of("{}|?") == std::string_view::npos;
@@ -535,8 +548,9 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if (const std::size_t q = body.find('?'); q != std::string_view::npos) {
         const std::string_view name = body.substr(0, q);
         const std::string_view rest = body.substr(q + 1);
-        // Two words w1|w2, (r10) three words w0|w1|w2 or (P5-03 8.2) four
-        // words w0|w1|w2|w3; more bars are unknown.
+        // Two words w1|w2, (r10) three words w0|w1|w2, (P5-03 8.2) four
+        // words w0|w1|w2|w3 or (P5-04a 8.5) five to eight; more bars are
+        // unknown.
         std::vector<std::string_view> words;
         std::size_t from = 0;
         while (true) {
@@ -547,7 +561,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             }
             from = bar + 1;
         }
-        if (words.size() < 2U || words.size() > 4U || kind.value_seq(name) == 0) {
+        if (words.size() < 2U || words.size() > 8U || kind.value_seq(name) == 0) {
             return unknown;
         }
         for (const std::string_view w : words) {
@@ -557,7 +571,17 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
         }
         out.type = TokenType::choice;
         out.text = std::string(name);
-        if (words.size() == 4U) {
+        if (words.size() >= 5U) {
+            out.three = true;
+            out.four = true;
+            for (const std::string_view w : words) {
+                out.words_n.emplace_back(w);
+            }
+            out.word_zero = std::string(words[0]);
+            out.word_one = std::string(words[1]);
+            out.word_two = std::string(words[2]);
+            out.word_other = std::string(words.back());
+        } else if (words.size() == 4U) {
             out.three = true;  // the three-word rules (w0, w1, '#') hold
             out.four = true;
             out.word_zero = std::string(words[0]);
@@ -1923,7 +1947,7 @@ std::optional<std::string> alliance_tables_problem(const MonsterTables& t, const
         } else if ((k == "alliance_lapsed" || k == "alliance_broken" || k == "alliance_spurned") &&
                    v.seq == kind->value_seq("reason")) {
             key = "reason";
-            hi = 1;
+            hi = k == "alliance_spurned" ? 2 : 1;  // P5-04a 3.6: 2 at once
         } else if (k == "trade_broken" && v.seq == kind->value_seq("reason")) {
             key = "reason";
             hi = 2;
@@ -2837,10 +2861,7 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
             v = value_of(t.text);
         } else if (t.type == TokenType::choice && t.three) {
             v = value_of(t.text);
-            const std::string& word = v == 0                ? t.word_zero
-                                      : v == 1            ? t.word_one
-                                      : (t.four && v == 2) ? t.word_two
-                                                           : t.word_other;
+            const std::string& word = choice_word(t, v);
             is_number = word.find('#') != std::string::npos;
         }
         if (is_number && (v < 1 || v > 9)) {
@@ -2922,10 +2943,7 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                 }
                 // r10: w0 for 0, w1 for 1, w2 otherwise; '#' is the value.
                 // P5-03 8.2: with four words, w2 for 2 and w3 otherwise.
-                const std::string& word = v == 0                ? t.word_zero
-                                          : v == 1            ? t.word_one
-                                          : (t.four && v == 2) ? t.word_two
-                                                               : t.word_other;
+                const std::string& word = choice_word(t, v);
                 for (const char c : word) {
                     if (c == '#') {
                         out += number_text(ti, v);  // r17 21.1, r19 22.1

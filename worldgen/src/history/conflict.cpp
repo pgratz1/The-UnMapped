@@ -812,6 +812,21 @@ std::optional<std::pair<std::int64_t, std::int64_t>> ConflictSubsystem::last_pea
     return std::pair(it->second.year, it->second.event);
 }
 
+std::int64_t ConflictSubsystem::claim_event(std::int64_t a, std::int64_t b) const {
+    const auto it = claims_.find(Pair{a, b});
+    return it == claims_.end() ? 0 : it->second.event;
+}
+
+std::pair<std::int64_t, std::int64_t> ConflictSubsystem::last_war_end(std::int64_t c) const {
+    std::pair<std::int64_t, std::int64_t> best{0, 0};
+    for (const auto& [p, peace] : last_peace_) {  // ascending pair
+        if ((p.first == c || p.second == c) && p.first != p.second) {
+            best = std::max(best, std::pair<std::int64_t, std::int64_t>{peace.year, peace.event});
+        }
+    }
+    return best;
+}
+
 bool ConflictSubsystem::reaches(const StepContext& ctx, std::int64_t x, std::int64_t y) const {
     return !live_front(ctx, x, y).empty();
 }

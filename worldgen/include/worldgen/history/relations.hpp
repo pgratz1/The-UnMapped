@@ -50,6 +50,8 @@ struct RelationsTuning {
     std::int64_t foe_years = 100, foe_war_memory = 0, foe_monster_memory = 0;
     std::int64_t meet_sealed_hops = -1, meet_sealed_years = 300;
     std::int64_t conquest_settlers_span_permille = 0, expel_gap_years = 0;
+    // P5-04a 14.2 (generator 0.28.0); the defaults are inert.
+    std::int64_t turn_cooldown_years = 0, expel_settled_years = 100000, expel_fresh_years = 0;
 
     friend bool operator==(const RelationsTuning&, const RelationsTuning&) = default;
 };
@@ -164,7 +166,7 @@ private:
         // P5-03a 3.5: the last at most 8 contributions of each sign.
         std::vector<std::int64_t> warmer, colder;
         std::int64_t strife_year = 0;  // P5-03a 3.2
-        std::int64_t word_since = 0;   // P5-03a 4.2
+        std::int64_t word_since = -1;  // P5-03a 4.2; -1 unset (P5-04a 11 item 7)
     };
     struct Entry {
         std::int64_t race = 0;

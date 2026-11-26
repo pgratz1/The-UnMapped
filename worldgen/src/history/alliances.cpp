@@ -114,6 +114,21 @@ AlliancesTuning alliances_tuning_from(const data::ContentSet& content) {
     for (const data::Value& v : r.get_array("mine_forms")) {
         t.mine_forms.push_back(v.as_string());
     }
+    t.spoils_large_share = r.get_int("spoils_large_share");
+    t.spoils_large_part_permille = r.get_int("spoils_large_part_permille");
+    t.soured_renew_permille = r.get_int("soured_renew_permille");
+    t.soured_join_permille = r.get_int("soured_join_permille");
+    t.weary_years = r.get_int("weary_years");
+    t.join_weary_permille = r.get_int("join_weary_permille");
+    t.join_busy_permille = r.get_int("join_busy_permille");
+    t.join_fear_floor = r.get_int("join_fear_floor");
+    t.join_warmth_floor = r.get_int("join_warmth_floor");
+    t.grasping_join_permille = r.get_int("grasping_join_permille");
+    t.join_claim_permille = r.get_int("join_claim_permille");
+    t.excused_memory = r.get_int("excused_memory");
+    t.refuse_grudge = r.get_int("refuse_grudge");
+    t.betray_cooled_disposition = r.get_int("betray_cooled_disposition");
+    t.betray_weak_permille = r.get_int("betray_weak_permille");
     return t;
 }
 
@@ -146,6 +161,7 @@ void AlliancesSubsystem::prepare(const StepContext& ctx) {
     trade_key_ = stream_key(in.seed, streams::hist_alliances_trade);
     spoils_key_ = stream_key(in.seed, streams::hist_alliances_spoils);
     mine_key_ = stream_key(in.seed, streams::hist_alliances_mine);
+    renew_key_ = stream_key(in.seed, streams::hist_alliances_renew);
     for (const db::RaceRow& row : in.races) {
         const data::Definition* d = ctx.content().find(data::RACE_KIND, row.key);
         if (d == nullptr) {
@@ -229,6 +245,26 @@ bool AlliancesSubsystem::is_seller(std::int64_t c) const {
 
 bool AlliancesSubsystem::forged(std::int64_t c) const {
     return is_seller(c);
+}
+
+std::int64_t AlliancesSubsystem::arms_event(std::int64_t c) const {
+    if (!arms(c)) {
+        return 0;
+    }
+    std::int64_t seller = 0;
+    std::int64_t event = 0;
+    for (const auto& [p, t] : trades_) {  // ascending pair
+        (void)t;
+        const std::int64_t s = p.first == c ? p.second : (p.second == c ? p.first : 0);
+        if (s == 0 || !is_seller(s) || (seller != 0 && s > seller)) {
+            continue;
+        }
+        if (const auto it = arms_sold_.find(Pair{s, c}); it != arms_sold_.end()) {
+            seller = s;
+            event = it->second;
+        }
+    }
+    return event;
 }
 
 bool AlliancesSubsystem::arms(std::int64_t c) const {
@@ -497,6 +533,7 @@ void AlliancesSubsystem::open_alliance(StepContext& ctx, std::int64_t x, std::in
     a.formed_event = event;
     a.renew_year = ctx.year();
     a.renew_event = event;
+    a.next_due = checked_add(ctx.year(), tuning_.term_years);  // P5-04a 6.1: d_1
     alliances_[ordered(x, y)] = a;
     rebuild_allies();
     relations_.credit(race_of(ctx, x), race_of(ctx, y), tuning_.ally_memory, event);
@@ -571,6 +608,7 @@ void AlliancesSubsystem::run(StepContext& ctx) {
     switch (ctx.step()) {
         case Step::t2:
             build_cache(ctx);
+            pending_spurns(ctx);
             read_log(ctx);
             cooling(ctx);
             blocs(ctx);
@@ -590,6 +628,7 @@ void AlliancesSubsystem::run(StepContext& ctx) {
             break;
         case Step::q4:
             build_cache(ctx);
+            pending_spurns(ctx);
             read_log(ctx);  // no declaration happens in a quiet step; the cursor only moves
             joined_ends(ctx);
             cooling(ctx);
@@ -644,8 +683,19 @@ void AlliancesSubsystem::betrayal(StepContext& ctx, const Declaration& w) {
     if (it == alliances_.end()) {
         return;
     }
+    // P5-04a 5: the motive, the first that holds.
+    std::int64_t motive = 3;
+    if (figures_ != nullptr && figures_->temper(w.attacker) == 3) {
+        motive = 0;
+    } else if (d(ctx, w.attacker, w.defender) < tuning_.betray_cooled_disposition) {
+        motive = 1;
+    } else if (checked_mul(conflict_.force(ctx, w.defender), 1000) <
+               checked_mul(tuning_.betray_weak_permille, conflict_.force(ctx, w.attacker))) {
+        motive = 2;
+    }
     EventSpec e = point_event(ctx, "alliance_betrayed", 0, 0);
     e.participants = {civ_role("betrayer", w.attacker), civ_role("betrayed", w.defender)};
+    e.values = {motive, ctx.year() - it->second.formed_year};
     e.causes = sorted_unique({w.event, it->second.renew_event});
     const std::int64_t ev = ctx.append(e);
     close_alliance(ctx, p, ev);
@@ -657,6 +707,7 @@ void AlliancesSubsystem::betrayal(StepContext& ctx, const Declaration& w) {
 void AlliancesSubsystem::calls(StepContext& ctx, const Declaration& w) {
     const State& state = ctx.state();
     const ConflictTuning& ct = conflict_.tuning();
+    const std::int64_t year = ctx.year();
     for (std::int64_t side = 0; side <= 1; ++side) {
         const std::int64_t partner = side == 0 ? w.defender : w.attacker;
         const std::int64_t enemy = side == 0 ? w.attacker : w.defender;
@@ -676,21 +727,51 @@ void AlliancesSubsystem::calls(StepContext& ctx, const Declaration& w) {
                 continue;
             }
             const std::int64_t join = race(race_of(ctx, z)).join;
+            // P5-04a 4.2: the factors f0 to f7 (f3, f4, f6 and f7 for a defence call only).
+            const std::pair<std::int64_t, std::int64_t> war_end = conflict_.last_war_end(z);
+            std::array<std::int64_t, 8> f{};
+            f.fill(1000);
+            f[0] = join;
+            if (war_end.second != 0 && war_end.first >= year - tuning_.weary_years) {
+                f[1] = tuning_.join_weary_permille;
+            }
+            f[2] = std::max<std::int64_t>(0, 1000 - checked_mul(tuning_.join_busy_permille, conflict_.open_wars_of(z)));
+            if (figures_ != nullptr && figures_->temper(z) == 3) {
+                f[5] = tuning_.grasping_join_permille;
+            }
+            const bool soured_call = side == 0 && al->second.call_due && al->second.soured_ally == z;
             std::int64_t p = 0;
             if (side == 0) {
                 const std::int64_t sigma = std::min<std::int64_t>(
                     1000, floor_div(checked_mul(checked_add(conflict_.force(ctx, z), conflict_.force(ctx, partner)), 1000),
                                     std::max<std::int64_t>(1, conflict_.force(ctx, enemy))));
-                p = floor_div(checked_mul(tuning_.defend_permille, join), 1000);
-                p = floor_div(checked_mul(p, warmth(ctx, z, partner)), 1000);
-                p = floor_div(checked_mul(p, sigma), 1000);
+                f[3] = tuning_.join_fear_floor + floor_div(checked_mul(1000 - tuning_.join_fear_floor, sigma), 1000);
+                f[4] = tuning_.join_warmth_floor +
+                       floor_div(checked_mul(1000 - tuning_.join_warmth_floor, warmth(ctx, z, partner)), 1000);
+                if (conflict_.has_claim(z, partner)) {
+                    f[6] = tuning_.join_claim_permille;
+                }
+                if (soured_call) {
+                    f[7] = tuning_.soured_join_permille;
+                }
+                p = tuning_.defend_permille;
+                for (const std::int64_t fk : f) {
+                    p = floor_div(checked_mul(p, fk), 1000);
+                }
             } else {
                 const std::int64_t h = std::min<std::int64_t>(1000, floor_div(checked_mul(-dz, 1000), tuning_.hostility_full));
                 p = floor_div(checked_mul(tuning_.attack_permille, join), 1000);
                 p = floor_div(checked_mul(p, h), 1000);
+                for (const std::size_t k : {std::size_t{1}, std::size_t{2}, std::size_t{5}}) {
+                    p = floor_div(checked_mul(p, f[k]), 1000);
+                }
+            }
+            if (soured_call) {
+                alliances_.at(ordered(z, partner)).call_due = false;  // 3.5: cleared after the call
             }
             const std::int64_t renewal = al->second.renew_event;
             const bool origin = al->second.origin;
+            const std::int64_t soured_share = al->second.soured_event;
             if (chance_pm(ctx.draw(join_key_, word(w.event), word(z), 0), p)) {
                 EventSpec e = point_event(ctx, "ally_joined_war", 0, 0);
                 e.participants = {civ_role("ally", z), civ_role("partner", partner), civ_role("enemy", enemy)};
@@ -700,21 +781,47 @@ void AlliancesSubsystem::calls(StepContext& ctx, const Declaration& w) {
                 conflict_.join_war(ctx, w.event, z, side, ev);
                 joined_.push_back(Joined{w.event, z, partner, enemy, ev, false, false});
                 relations_.credit(race_of(ctx, z), race_of(ctx, partner), tuning_.join_memory, ev);
+                alliances_.at(ordered(z, partner)).fought_event = ev;  // 6.2 item 1
                 ++stats_.joined;
                 continue;
             }
             if (side != 0 || origin) {
                 continue;  // an origin ally that stays out, and an attack call refused, write nothing
             }
+            // 4.2: the motive, the smallest factor below 1000 among codes 1 to 7 (the smaller code at a tie).
+            std::int64_t motive = 0;
+            for (std::size_t k = 1; k < f.size(); ++k) {
+                if (f[k] < 1000 && (motive == 0 || f[k] < f[static_cast<std::size_t>(motive)])) {
+                    motive = static_cast<std::int64_t>(k);
+                }
+            }
+            const bool excused = motive == 1 || motive == 2;
+            Alliance& a = alliances_.at(ordered(z, partner));
+            const std::int64_t count = excused ? 0 : a.refusals + 1;
+            std::vector<std::int64_t> causes{w.event, renewal};
+            if (motive == 1) {
+                causes.push_back(war_end.second);
+            } else if (motive == 6) {
+                causes.push_back(conflict_.claim_event(z, partner));
+            } else if (motive == 7) {
+                causes.push_back(soured_share);
+            }
             EventSpec e = point_event(ctx, "ally_refused", 0, 0);
             e.participants = {civ_role("ally", z), civ_role("partner", partner), civ_role("enemy", enemy)};
-            e.causes = sorted_unique({w.event, renewal});
+            e.values = {motive, count};
+            e.causes = sorted_unique(std::move(causes));
             const std::int64_t ev = ctx.append(e);
             ++stats_.refused;
+            if (excused) {
+                relations_.credit(race_of(ctx, z), race_of(ctx, partner), -tuning_.excused_memory, ev);
+                ++stats_.excused;
+                continue;
+            }
             relations_.credit(race_of(ctx, z), race_of(ctx, partner), -tuning_.refuse_memory, ev);
-            Alliance& a = alliances_.at(ordered(z, partner));
-            a.refusals += 1;
-            if (a.refusals >= tuning_.refusals_to_break) {
+            conflict_.add_grudge_seam(z, partner, tuning_.refuse_grudge);
+            Alliance& live = alliances_.at(ordered(z, partner));
+            live.refusals = count;
+            if (live.refusals >= tuning_.refusals_to_break) {
                 const Pair pr = ordered(z, partner);
                 const std::int64_t b = append_pair_event(ctx, "alliance_broken", pr, 0, {ev});
                 close_alliance(ctx, pr, b);
@@ -726,17 +833,67 @@ void AlliancesSubsystem::calls(StepContext& ctx, const Declaration& w) {
 
 // --- Keeping an alliance (6.7) ---------------------------------------------------------------------------
 
-void AlliancesSubsystem::spurn(StepContext& ctx, const Pair& p, std::int64_t reason) {
+void AlliancesSubsystem::spurn(StepContext& ctx, const Pair& p, std::int64_t reason, std::int64_t ally,
+                               std::int64_t share_event, std::int64_t share_year, std::int64_t region) {
     const Alliance a = alliances_.at(p);
-    const std::int64_t wronged = a.withheld_ally;
-    const std::int64_t other = wronged == p.first ? p.second : p.first;
-    EventSpec e = point_event(ctx, "alliance_spurned", a.withheld_region, 0);
-    e.participants = {civ_role("ally", wronged), civ_role("principal", other)};
-    e.values = {reason};
-    e.causes = sorted_unique({a.withheld_event, a.renew_event});
+    const std::int64_t other = ally == p.first ? p.second : p.first;
+    EventSpec e = point_event(ctx, "alliance_spurned", region, 0);
+    e.participants = {civ_role("ally", ally), civ_role("principal", other)};
+    e.values = {reason, ctx.year() - share_year};
+    e.causes = sorted_unique({share_event, a.renew_event});
     const std::int64_t ev = ctx.append(e);
     close_alliance(ctx, p, ev);
     ++stats_.spurned;
+    stats_.spurned_at_once += reason == 2 ? 1 : 0;
+}
+
+// P5-04a 3.4: a spurning at once that waited for a quiet step's budget.
+void AlliancesSubsystem::pending_spurns(StepContext& ctx) {
+    std::vector<Pair> keys;
+    for (const auto& [p, a] : alliances_) {
+        if (a.pending_event != 0) {
+            keys.push_back(p);
+        }
+    }
+    for (const Pair& p : keys) {
+        const auto it = alliances_.find(p);
+        if (it == alliances_.end() || !quiet_ok(ctx, it->second.pending_ally)) {
+            continue;
+        }
+        const Alliance a = it->second;
+        spurn(ctx, p, 2, a.pending_ally, a.pending_event, a.pending_year, a.pending_region);
+    }
+}
+
+// P5-04a 3.4: after a spoils_withheld `event` of principal to ally on an open
+// alliance not of origin (its grievance already decided by the caller).
+void AlliancesSubsystem::on_withheld(StepContext& ctx, std::int64_t principal, std::int64_t ally, std::int64_t event,
+                                     std::int64_t region, std::int64_t year, bool large) {
+    const Pair p = ordered(principal, ally);
+    Alliance& a = alliances_.at(p);
+    const bool at_once = large || checked_add(a.withheld, 1) >= tuning_.withheld_to_break;
+    a.withheld = checked_add(a.withheld, 1);
+    if (!at_once) {
+        // Reading: the soured record is the first withholding's; the flags are set at every souring.
+        if (a.soured_event == 0) {
+            a.soured_event = event;
+            a.soured_year = year;
+            a.soured_region = region;
+            a.soured_ally = ally;
+        }
+        a.renewal_due = true;
+        a.call_due = true;
+        ++stats_.soured;
+        return;
+    }
+    if (!quiet_ok(ctx, ally)) {
+        a.pending_event = event;
+        a.pending_year = year;
+        a.pending_region = region;
+        a.pending_ally = ally;
+        return;
+    }
+    spurn(ctx, p, 2, ally, event, year, region);
 }
 
 void AlliancesSubsystem::cooling(StepContext& ctx) {
@@ -747,11 +904,11 @@ void AlliancesSubsystem::cooling(StepContext& ctx) {
     }
     for (const Pair& p : keys) {
         const auto it = alliances_.find(p);
-        if (it == alliances_.end() || it->second.origin ||
+        if (it == alliances_.end() || it->second.origin || it->second.pending_event != 0 ||
             d(ctx, p.first, p.second) >= tuning_.ally_break_disposition) {
             continue;
         }
-        if (it->second.withheld == 0) {
+        if (it->second.soured_event == 0) {
             if (!quiet_ok(ctx, p.first)) {
                 continue;
             }
@@ -759,10 +916,11 @@ void AlliancesSubsystem::cooling(StepContext& ctx) {
             close_alliance(ctx, p, ev);
             ++stats_.broken;
         } else {
-            if (!quiet_ok(ctx, it->second.withheld_ally)) {
+            const Alliance a = it->second;
+            if (!quiet_ok(ctx, a.soured_ally)) {
                 continue;
             }
-            spurn(ctx, p, 1);
+            spurn(ctx, p, 1, a.soured_ally, a.soured_event, a.soured_year, a.soured_region);
         }
     }
 }
@@ -789,9 +947,9 @@ void AlliancesSubsystem::blocs(StepContext& ctx) {
     }
 }
 
+// P5-04a 6: the renewal chain, the soured renewal, notable renewals only.
 void AlliancesSubsystem::renewals(StepContext& ctx) {
     const std::int64_t year = ctx.year();
-    const std::int64_t last = ctx.step() == Step::q4 ? year + ctx.years() - 1 : year;
     std::vector<Pair> keys;
     for (const auto& [p, a] : alliances_) {
         (void)a;
@@ -799,47 +957,83 @@ void AlliancesSubsystem::renewals(StepContext& ctx) {
     }
     for (const Pair& p : keys) {
         const auto it = alliances_.find(p);
-        if (it == alliances_.end() || last < checked_add(it->second.renew_year, tuning_.term_years)) {
+        if (it == alliances_.end() || year < it->second.next_due || it->second.pending_event != 0) {
             continue;
         }
         Alliance& a = it->second;
+        const std::int64_t due = a.next_due;
         if (a.origin) {
-            a.renew_year = year;
-            a.withheld = 0;
+            a.next_due = checked_add(due, tuning_.term_years);
             continue;
         }
-        if (a.withheld >= tuning_.withheld_to_break) {
-            if (quiet_ok(ctx, a.withheld_ally)) {
-                spurn(ctx, p, 0);
+        if (a.renewal_due) {
+            // 3.5: the soured renewal.
+            if (!quiet_ok(ctx, a.soured_ally)) {
+                continue;  // it waits
             }
-            continue;
-        }
-        if (!quiet_ok(ctx, p.first)) {
-            continue;
+            if (!chance_pm(ctx.draw(renew_key_, word(p.first), word(p.second), word(due)),
+                           tuning_.soured_renew_permille)) {
+                const Alliance copy = a;
+                spurn(ctx, p, 0, copy.soured_ally, copy.soured_event, copy.soured_year, copy.soured_region);
+                continue;
+            }
+            a.renewal_due = false;
         }
         const Reasons r = reasons(ctx, p.first, p.second);
         if (!r.any()) {
+            if (!quiet_ok(ctx, p.first)) {
+                continue;  // the lapse waits
+            }
             const std::int64_t ev = append_pair_event(ctx, "alliance_lapsed", p, 0, {a.renew_event});
             close_alliance(ctx, p, ev);
             ++stats_.lapsed;
             continue;
         }
         const std::int64_t basis = r.enemy_event != 0 ? 1 : (r.fear_event != 0 ? 2 : (r.trade_event != 0 ? 4 : 3));
+        const std::int64_t foe = basis == 1 ? r.enemy : (basis == 2 ? r.fear : 0);
+        const std::int64_t basis_event =
+            basis == 1 ? r.enemy_event : (basis == 2 ? r.fear_event : (basis == 4 ? r.trade_event : r.friend_event));
+        // 6.2: notable since R (the formation or the last written renewal).
+        std::vector<std::int64_t> notable;
+        if (a.fought_event > a.renew_event) {
+            notable.push_back(a.fought_event);
+        }
+        if (a.shared_event > a.renew_event) {
+            notable.push_back(a.shared_event);
+        }
+        if (basis != a.basis) {
+            notable.push_back(basis_event);
+        }
+        a.next_due = checked_add(due, tuning_.term_years);
+        if (notable.empty() || !quiet_ok(ctx, p.first)) {
+            // A renewal with nothing new (or without a quiet step's budget) writes nothing.
+            relations_.credit(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory, a.renew_event);
+            ++stats_.renewed_quietly;
+            continue;
+        }
         EventSpec e = point_event(ctx, "alliance_renewed", 0, 0);
         e.participants = {civ_role("ally_a", p.first), civ_role("ally_b", p.second)};
-        if (basis == 1 || basis == 2) {
-            e.participants.push_back(civ_role("foe", basis == 1 ? r.enemy : r.fear));
+        if (foe != 0) {
+            e.participants.push_back(civ_role("foe", foe));
         }
         e.values = {basis};
-        e.causes = sorted_unique({r.enemy_event, r.fear_event, r.trade_event, r.friend_event, a.renew_event});
+        notable.push_back(a.renew_event);
+        e.causes = sorted_unique(std::move(notable));
         const std::int64_t ev = ctx.append(e);
         Alliance& live = alliances_.at(p);
         live.renew_year = year;
         live.renew_event = ev;
-        live.withheld = 0;
+        live.basis = basis;
+        live.foe = foe;
         relations_.credit(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory, ev);
         ++stats_.renewed;
     }
+}
+
+std::int64_t AlliancesSubsystem::formation_band(const StepContext& ctx, std::int64_t x, std::int64_t y) const {
+    const std::int64_t rx = race_of(ctx, x);
+    const std::int64_t ry = race_of(ctx, y);
+    return rx == ry ? 2 : relations_.band(rx, ry);  // P5-04a 10 item 4: 2 for one race
 }
 
 // --- Origin alliances and formations (6.3, 6.4) -------------------------------------------------------
@@ -868,7 +1062,7 @@ void AlliancesSubsystem::origin_alliances(StepContext& ctx) {
             }
             EventSpec e = point_event(ctx, "alliance_formed", 0, 0);
             e.participants = {civ_role("ally_a", x), civ_role("ally_b", y)};
-            e.values = {0};
+            e.values = {0, tuning_.term_years, formation_band(ctx, x, y)};
             e.causes = {ctx.state().civ(y).founding_event};
             const std::int64_t ev = ctx.append(e);
             Alliance a;
@@ -925,8 +1119,13 @@ void AlliancesSubsystem::formations(StepContext& ctx) {
             if (foe != 0) {
                 e.participants.push_back(civ_role("foe", foe));
             }
-            e.values = {basis};
-            e.causes = sorted_unique({r.enemy_event, r.fear_event, r.trade_event, r.friend_event});
+            e.values = {basis, tuning_.term_years, formation_band(ctx, x, y)};
+            // P5-04a 10 item 2: the cause of the basis reason only.
+            const std::int64_t basis_event = basis == 1   ? r.enemy_event
+                                             : basis == 2 ? r.fear_event
+                                             : basis == 4 ? r.trade_event
+                                                          : r.friend_event;
+            e.causes = sorted_unique({basis_event});
             const std::int64_t ev = ctx.append(e);
             Alliance a;
             a.basis = basis;
@@ -1069,8 +1268,10 @@ void AlliancesSubsystem::spoils(StepContext& ctx, Joined& j) {
     const std::string_view end_kind = s.end_event != 0 ? ctx.event_kind(s.end_event) : std::string_view{};
     // Spec 13 item 11: the end event's own winner is the principal; a
     // conquest of the enemy by a third realm owes nothing.
+    // P5-04a 11 item 1: a conquest owes only when the principal conquered the enemy itself.
     const bool cited = end_kind == "peace" || end_kind == "war_won" ||
-                       (end_kind == "civ_conquered" && ctx.event_participant(s.end_event, "conqueror") == s.winner);
+                       (end_kind == "civ_conquered" && ctx.event_participant(s.end_event, "conqueror") == s.winner &&
+                        ctx.event_participant(s.end_event, "civilization") == j.enemy);
     if (s.winner == 0 || s.winner != j.partner || (rec.closed_by != 1 && rec.closed_by != 3) || state.civ(j.ally).ended_year ||
         state.civ(s.winner).ended_year || rec.dead <= 0 || v <= 0 || !cited) {
         j.settled = true;
@@ -1100,26 +1301,37 @@ void AlliancesSubsystem::spoils(StepContext& ctx, Joined& j) {
     }
     g = clamp_i(g, tuning_.spoils_grant_min, tuning_.spoils_grant_max);
     const bool granted = chance_pm(ctx.draw(spoils_key_, word(j.war), word(j.ally), 0), g);
+    // P5-04a 3.3, 3.4: the grievance of a withheld share on an open alliance not of origin.
+    const auto open = alliances_.find(ordered(s.winner, j.ally));
+    const bool on_alliance = open != alliances_.end() && !open->second.origin;
+    const bool large = share >= tuning_.spoils_large_share || part >= tuning_.spoils_large_part_permille;
+    std::int64_t grievance = 0;
+    if (!granted && on_alliance) {
+        grievance = large || checked_add(open->second.withheld, 1) >= tuning_.withheld_to_break ? 2 : 1;
+    }
     EventSpec e = point_event(ctx, granted ? "spoils_shared" : "spoils_withheld", s.goal_region, 0);
     e.participants = {civ_role("principal", s.winner), civ_role("ally", j.ally), civ_role("enemy", s.loser)};
     e.values = {share};
+    if (!granted) {
+        e.values.push_back(grievance);
+    }
     e.causes = sorted_unique({s.end_event, j.event});
     const std::int64_t ev = ctx.append(e);
     spoils_given_[j.war] = checked_add(given, share);
     ++stats_.owed;
     if (granted) {
         relations_.credit(race_of(ctx, s.winner), race_of(ctx, j.ally), tuning_.share_memory, ev);
+        if (const auto it = alliances_.find(ordered(s.winner, j.ally)); it != alliances_.end()) {
+            it->second.shared_event = ev;  // 6.2 item 2
+        }
         ++stats_.granted;
     } else {
         relations_.credit(race_of(ctx, s.winner), race_of(ctx, j.ally), -tuning_.withheld_memory, ev);
         conflict_.add_grudge_seam(s.winner, j.ally, tuning_.withheld_grudge);
-        if (const auto it = alliances_.find(ordered(s.winner, j.ally)); it != alliances_.end()) {
-            it->second.withheld += 1;
-            it->second.withheld_event = ev;
-            it->second.withheld_region = s.goal_region;
-            it->second.withheld_ally = j.ally;
-        }
         ++stats_.withheld;
+        if (on_alliance) {
+            on_withheld(ctx, s.winner, j.ally, ev, s.goal_region, ctx.year(), large);
+        }
     }
     j.settled = true;
 }
@@ -1275,7 +1487,7 @@ void AlliancesSubsystem::arms_sales(StepContext& ctx) {
         e.participants = {civ_role("seller", s), civ_role("buyer", b), Participant{"site", EntityType::site, forge.site}};
         e.causes = sorted_unique({trades_.at(p).opened_event, forge.event});
         const std::int64_t ev = ctx.append(e);
-        arms_sold_.insert(Pair{s, b});
+        arms_sold_.emplace(Pair{s, b}, ev);
         relations_.credit(race_of(ctx, s), race_of(ctx, b), tuning_.trade_memory, ev);
         ++stats_.arms;
     }

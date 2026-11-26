@@ -298,6 +298,9 @@ public:
     [[nodiscard]] virtual std::int64_t trade_partners(std::int64_t c) const = 0;           // open trades of c
     [[nodiscard]] virtual bool forged(std::int64_t c) const = 0;                           // c has an open mine
     [[nodiscard]] virtual bool arms(std::int64_t c) const = 0;                             // c buys arms
+    // P5-04a 9.2: when c buys arms, the arms_sold event of the smallest-id
+    // seller with an open trade with c whose pair has had a sale; else 0.
+    [[nodiscard]] virtual std::int64_t arms_event(std::int64_t c) const = 0;
 };
 
 // P5-04 7.6: an ally that joined a war, in join order.
@@ -399,6 +402,11 @@ public:
     [[nodiscard]] std::int64_t share(const StepContext& context, std::int64_t civ) const;
     // The pair's last peace (year, event), or none.
     [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> last_peace(std::int64_t a, std::int64_t b) const;
+    // P5-04a 2: an open claim of a against b and its event (0 none); the
+    // largest (year, event) of last_peace(c, b) over every b != c, (0, 0) none.
+    [[nodiscard]] bool has_claim(std::int64_t a, std::int64_t b) const { return claims_.count(Pair{a, b}) != 0; }
+    [[nodiscard]] std::int64_t claim_event(std::int64_t a, std::int64_t b) const;
+    [[nodiscard]] std::pair<std::int64_t, std::int64_t> last_war_end(std::int64_t c) const;
     // 5.1's front(x, y) with front_hops(x, y) is not empty.
     [[nodiscard]] bool reaches(const StepContext& context, std::int64_t x, std::int64_t y) const;
     // 5.1's presence of civ as amended by r9 20.1 (hidden refuges), ascending
@@ -627,6 +635,7 @@ private:
     const DispositionView* dispositions_ = nullptr;  // P5-03 7.1
     const AllianceView* alliances_ = nullptr;        // P5-04 7.1
     const FigureView* figures_ = nullptr;            // P5-06 7.1
+    std::set<std::int64_t> arms_cited_;              // P5-04a 9.2: arms_sold events cited by a battle
 };
 
 }  // namespace worldgen::history

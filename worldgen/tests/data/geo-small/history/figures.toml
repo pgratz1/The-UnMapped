@@ -8,15 +8,15 @@ reign_span_permille = 1000
 accession_age_permille = 250
 accession_span_permille = 250
 temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
-temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
+temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 3000, just = 500 }
 temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
 short_reign_permille = 500
 short_reign_split_permille = 100
 exile_permille = 250
 exile_hops = 3
 general_scale_permille = 850
-skill_min = 500
-skill_max = 800
+skill_min = 600
+skill_max = 900
 career_permille = 300
 fall_loser_permille = 120
 fall_winner_permille = 25
@@ -43,7 +43,7 @@ epithets = [
   { role = "ruler", deed = "betrayals", min = 1, substantial = 1, text = "the Faithless" },
   { role = "ruler", deed = "realm_fell", min = 1, substantial = 0, text = "the Last" },
   { role = "ruler", deed = "wars_won", min = 2, substantial = 4, text = "the Victorious" },
-  { role = "ruler", deed = "reign_permille", min = 1300, substantial = 1450, text = "the Old" },
+  { role = "ruler", deed = "reign_permille", min = 1400, substantial = 1480, text = "the Old" },
   { role = "ruler", deed = "founded_years", min = 1, substantial = 3000, text = "the Founder" },
   { role = "general", deed = "battles_unbeaten", min = 3, substantial = 6, text = "the Unbeaten" },
   { role = "general", deed = "battles_won", min = 5, substantial = 10, text = "the Hammer" },
@@ -53,3 +53,6 @@ epithets = [
   { role = "caster", deed = "books", min = 3, substantial = 0, text = "the Learned" },
 ]
 epithet_repeat_max = 2
+# P5-04a 14.2a (generator 0.28.0), in this order.
+tower_spacing_permille = 30
+hero_return_years = 100

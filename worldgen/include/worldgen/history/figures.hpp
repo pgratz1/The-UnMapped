@@ -77,6 +77,8 @@ struct FiguresTuning {
     std::int64_t regnal_max = 9;
     std::vector<EpithetRule> epithets;
     std::int64_t epithet_repeat_max = 2;
+    // P5-04a 14.2a (generator 0.28.0); the defaults keep 0.27.0's meaning.
+    std::int64_t tower_spacing_permille = 0, hero_return_years = 100000;
 
     friend bool operator==(const FiguresTuning&, const FiguresTuning&) = default;
 };
@@ -122,6 +124,7 @@ public:
     [[nodiscard]] std::int64_t strain_permille(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t allied_strain_permille(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t spoils_permille(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t temper(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t split_bonus_permille(std::int64_t civ) const override;
     [[nodiscard]] General general_of(std::int64_t war, std::int64_t civ) const override;
     [[nodiscard]] Hero hero_of(std::int64_t civ) const override;

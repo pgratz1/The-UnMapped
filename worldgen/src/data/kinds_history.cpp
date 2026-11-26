@@ -1538,6 +1538,22 @@ Schema history_alliances_schema() {
         i("mine_settlement_min", 0, 1000000),
         i("arms_trade_permille", 0, 4000),
         Field::required("mine_forms", Type::array(Type::string(64), 1, 4)),
+        // P5-04a 14.1 (generator 0.28.0), appended in this order.
+        i("spoils_large_share", 1, 1000000),
+        i("spoils_large_part_permille", 0, 1001),
+        i("soured_renew_permille", 0, 1000),
+        i("soured_join_permille", 0, 1000),
+        i("weary_years", 0, 100000),
+        i("join_weary_permille", 0, 1000),
+        i("join_busy_permille", 0, 1000),
+        i("join_fear_floor", 0, 1000),
+        i("join_warmth_floor", 0, 1000),
+        i("grasping_join_permille", 0, 1000),
+        i("join_claim_permille", 0, 1000),
+        i("excused_memory", 0, 1000),
+        i("refuse_grudge", 0, 2000),
+        i("betray_cooled_disposition", -2000, 2000),
+        i("betray_weak_permille", 0, 1000),
     };
     const auto above = [](const Record& r, std::string_view a, std::string_view b,
                           std::string_view words) -> std::optional<std::string> {
@@ -1657,6 +1673,9 @@ Schema history_figures_schema() {
         i("regnal_max", 2, 39),
         Field::required("epithets", Type::array(Type::record(epithet), 0, 32)),
         i("epithet_repeat_max", 1, 100),
+        // P5-04a 14.2a (generator 0.28.0), appended in this order.
+        i("tower_spacing_permille", 0, 1000),
+        i("hero_return_years", 1, 100000),
     };
     std::vector<Check> checks{
         Check{"figures_skill_ordered",
@@ -1736,6 +1755,10 @@ Schema history_relations_schema() {
         i("meet_sealed_years", 0, 100000),
         i("conquest_settlers_span_permille", 0, 1000),
         i("expel_gap_years", 0, 100000),
+        // P5-04a 14.2 (generator 0.28.0), appended in this order.
+        i("turn_cooldown_years", 0, 100000),
+        i("expel_settled_years", 0, 100000),
+        i("expel_fresh_years", 0, 100000),
     };
     std::vector<Check> checks{
         Check{"relations_bands",

@@ -217,25 +217,25 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 55 | `outpost_abandoned` | 0 | 1 | 0 | 1: `civilization`, civilization, 1–1; 2: `site`, site, 1–1 | 1: `reason` | P5-02 |
 | 56 | `settlement_fled` | 1 | 1 | 1 | 1: `monster`, monster, 1–1; 2: `civilization`, civilization, 1–1 | — | P5-03 |
 | 57 | `peoples_met` | 1 | 1 | 0 | 1: `race_a`, race, 1–1; 2: `race_b`, race, 1–1 | 1: `disposition`; 2: `band`; 3: `sealed` | P5-03, P5-03a |
-| 58 | `disposition_turned` | 1 | 0 | 0 | 1: `race_a`, race, 1–1; 2: `race_b`, race, 1–1 | 1: `disposition`; 2: `band` | P5-03 |
+| 58 | `disposition_turned` | 1 | 0 | 0 | 1: `race_a`, race, 1–1; 2: `race_b`, race, 1–1 | 1: `disposition`; 2: `band`; 3: `change` (P5-04a) | P5-03 |
 | 59 | `refugees_arrived` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `origin`, settlement, 1–1; 4: `race`, race, 1–1 | 1: `people`; 2: `standing` | P5-03 |
 | 60 | `settlement_mixed` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `race`, race, 1–1; 4: `ruling`, race, 1–1 | 1: `share`; 2: `standing`; 3: `majority` | P5-03, P5-03a |
 | 61 | `standing_changed` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `race`, race, 1–1 | 1: `standing`; 2: `share` | P5-03 |
 | 62 | `people_expelled` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `race`, race, 1–1 | 1: `people`; 2: `standing`; 3: `years` | P5-03, P5-03a |
-| 63 | `alliance_formed` | 1 | 0 | 0 | 1: `ally_a`, civilization, 1–1; 2: `ally_b`, civilization, 1–1; 3: `foe`, civilization, 0–1 | 1: `basis` | P5-04 |
+| 63 | `alliance_formed` | 1 | 0 | 0 | 1: `ally_a`, civilization, 1–1; 2: `ally_b`, civilization, 1–1; 3: `foe`, civilization, 0–1 | 1: `basis`; 2: `term`, 3: `band` (P5-04a) | P5-04 |
 | 64 | `alliance_renewed` | 1 | 0 | 0 | 1: `ally_a`, civilization, 1–1; 2: `ally_b`, civilization, 1–1; 3: `foe`, civilization, 0–1 | 1: `basis` | P5-04 |
 | 65 | `alliance_lapsed` | 1 | 0 | 0 | 1: `ally_a`, civilization, 1–1; 2: `ally_b`, civilization, 1–1 | 1: `reason` | P5-04 |
 | 66 | `alliance_broken` | 1 | 0 | 0 | 1: `ally_a`, civilization, 1–1; 2: `ally_b`, civilization, 1–1 | 1: `reason` | P5-04 |
-| 67 | `alliance_betrayed` | 1 | 0 | 0 | 1: `betrayer`, civilization, 1–1; 2: `betrayed`, civilization, 1–1 | — | P5-04 |
+| 67 | `alliance_betrayed` | 1 | 0 | 0 | 1: `betrayer`, civilization, 1–1; 2: `betrayed`, civilization, 1–1 | 1: `motive`; 2: `years` (P5-04a) | P5-04 |
 | 68 | `ally_joined_war` | 1 | 0 | 0 | 1: `ally`, civilization, 1–1; 2: `partner`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | 1: `side` | P5-04 |
-| 69 | `ally_refused` | 1 | 0 | 0 | 1: `ally`, civilization, 1–1; 2: `partner`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | — | P5-04 |
+| 69 | `ally_refused` | 1 | 0 | 0 | 1: `ally`, civilization, 1–1; 2: `partner`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | 1: `motive`; 2: `count` (P5-04a) | P5-04 |
 | 70 | `ally_withdrew` | 1 | 0 | 0 | 1: `ally`, civilization, 1–1; 2: `partner`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | — | P5-04 |
 | 71 | `allied_battle` | 1 | 1 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1; 3: `winner_ally`, civilization, 0–16; 4: `loser_ally`, civilization, 0–16 | 1: `winner_dead`; 2: `loser_dead`; 3: `pass` | P5-04 |
 | 72 | `trade_opened` | 1 | 0 | 0 | 1: `partner_a`, civilization, 1–1; 2: `partner_b`, civilization, 1–1 | — | P5-04 |
 | 73 | `trade_broken` | 1 | 0 | 0 | 1: `partner_a`, civilization, 1–1; 2: `partner_b`, civilization, 1–1 | 1: `reason` | P5-04 |
 | 74 | `spoils_shared` | 1 | 1 | 0 | 1: `principal`, civilization, 1–1; 2: `ally`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | 1: `share` | P5-04 |
-| 75 | `spoils_withheld` | 1 | 1 | 0 | 1: `principal`, civilization, 1–1; 2: `ally`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | 1: `share` | P5-04 |
-| 76 | `alliance_spurned` | 1 | 1 | 0 | 1: `ally`, civilization, 1–1; 2: `principal`, civilization, 1–1 | 1: `reason` | P5-04 |
+| 75 | `spoils_withheld` | 1 | 1 | 0 | 1: `principal`, civilization, 1–1; 2: `ally`, civilization, 1–1; 3: `enemy`, civilization, 1–1 | 1: `share`; 2: `grievance` (P5-04a) | P5-04 |
+| 76 | `alliance_spurned` | 1 | 1 | 0 | 1: `ally`, civilization, 1–1; 2: `principal`, civilization, 1–1 | 1: `reason` (0 to 2 from P5-04a); 2: `years` (P5-04a) | P5-04 |
 | 77 | `mine_opened` | 1 | 1 | 1 | 1: `civilization`, civilization, 1–1; 2: `site`, site, 1–1 | — | P5-04 |
 | 78 | `arms_sold` | 1 | 0 | 0 | 1: `seller`, civilization, 1–1; 2: `buyer`, civilization, 1–1; 3: `site`, site, 1–1 | — | P5-04 |
 | 79 | `came_to_rule` | 1 | 1 | 0 | 1: `figure`, figure, 1–1; 2: `civilization`, civilization, 1–1 | — | P5-06 |

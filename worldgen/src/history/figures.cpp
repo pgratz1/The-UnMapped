@@ -171,6 +171,8 @@ FiguresTuning figures_tuning_from(const data::ContentSet& content) {
         t.epithets.push_back(std::move(rule));
     }
     t.epithet_repeat_max = r.get_int("epithet_repeat_max");
+    t.tower_spacing_permille = r.get_int("tower_spacing_permille");
+    t.hero_return_years = r.get_int("hero_return_years");
     return t;
 }
 
@@ -328,6 +330,11 @@ std::int64_t FiguresSubsystem::spoils_permille(std::int64_t civ) const {
     return l == nullptr ? 0 : tuning_.temper_spoils_permille[static_cast<std::size_t>(l->reign.temper)];
 }
 
+std::int64_t FiguresSubsystem::temper(std::int64_t civ) const {
+    const Line* l = line_if(civ);
+    return l == nullptr ? -1 : l->reign.temper;
+}
+
 std::int64_t FiguresSubsystem::split_bonus_permille(std::int64_t civ) const {
     const Line* l = line_if(civ);
     if (l == nullptr) {
@@ -435,6 +442,13 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             }
             if (line(c).has) {
                 tally_of(c).betrayals += 1;
+            }
+        } else if (k == "ally_refused" && ctx.event_value(e, "motive") == 5) {
+            // P5-04a 4.4: a grasping refusal names its ruler (the deed of 6.4 rule 3).
+            const std::int64_t c = ctx.event_participant(e, "ally");
+            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
+                const std::int64_t f = name_reign(ctx, c, e);
+                ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
         } else if (k == "spoils_shared" || k == "spoils_withheld") {
             const std::int64_t c = ctx.event_participant(e, "principal");
@@ -1084,7 +1098,14 @@ void FiguresSubsystem::vacancies(StepContext& ctx) {
 
 void FiguresSubsystem::on_battle_led(StepContext& ctx, std::int64_t b) {
     const std::vector<std::int64_t> causes = ctx.event_causes(b);
-    const std::int64_t w = causes.empty() ? 0 : causes.front();
+    // P5-04a 9.2: a battle may also cite an arms_sold; its war is the war_declared cause.
+    std::int64_t w = 0;
+    for (const std::int64_t c : causes) {
+        if (ctx.event_kind(c) == "war_declared") {
+            w = c;
+            break;
+        }
+    }
     const std::int64_t winner = ctx.event_participant(b, "winner");
     const std::int64_t loser = ctx.event_participant(b, "loser");
     for (std::size_t r = 0; r < 2; ++r) {

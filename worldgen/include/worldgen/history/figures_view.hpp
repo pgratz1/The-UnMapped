@@ -21,6 +21,12 @@ public:
     [[nodiscard]] virtual std::int64_t allied_strain_permille(std::int64_t civ) const = 0;
     // 7.3: added to the grant of a share of spoils (0 with no reign; may be negative).
     [[nodiscard]] virtual std::int64_t spoils_permille(std::int64_t civ) const = 0;
+    // P5-04a 2: the temper code of civ's current reign (0 steady, 1 warlike,
+    // 2 peaceable, 3 grasping, 4 just); -1 with no reign.
+    [[nodiscard]] virtual std::int64_t temper(std::int64_t civ) const {
+        (void)civ;
+        return -1;
+    }
     // 7.4: added to split_permille at a crisis of civ in the current year.
     [[nodiscard]] virtual std::int64_t split_bonus_permille(std::int64_t civ) const = 0;
     // 7.6: the serving general of civ in the war of declaration event `war`;
