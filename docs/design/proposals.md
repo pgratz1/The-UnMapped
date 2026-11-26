@@ -1561,3 +1561,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Ruling (lead): merge as measured. None of the misses makes a world read wrong (world critic: acceptable to merge, `docs/reviews/p5-06-figures-world-critic.md`), and the two targets Paul named are met or within sampling noise (a living monster at the end in 92 and 93 worlds against 85). The follow-up stage P5-04a, which changes world bytes anyway, takes them: raise the thresholds of `the Old` (the spec's 15.2 step 11; no per-world cap on substantial epithets is added, following Paul's "regardless of how many bear it"), retune the heroes' hunt and the quiet-step survival or restate those two bounds from what the worlds show, and take the world critic's F1 (towers never end; a new tower is founded on or beside a standing one) and F5 (the `[figures]` summary block lists only generals).
 - Question for Paul (Q-P5-06-1 of the questions file): whether 63 and 68 worlds with a lair on a former settlement meets the bound of 65, stated as an average of two samples. Not blocking.
 - Status: ruled by the lead; the lair bound is open with Paul.
+
+### P5-04a spec r2: lead rulings on its questions L-1 to L-8 (2026-11-25)
+
+- Section: 5 (figures, alliances), 12.
+- Context: the spec of P5-04a was refreshed against P5-06 as built (r2) and carries P5-06's narrow misses and the world critic's notes. It puts eight questions to the lead and none to Paul.
+- Rulings: L-1 a tower ending when its line of casters lapses is deferred (it needs a new ending code); a tower ends with its settlement or when its realm ends, by the existing codes. L-2 no schema version bump for tower endings: no table or column changes, the ending codes exist, and `schema.md` records that a site of kind `tower` may now carry them; the generator version bump covers the reader. L-3 `reign N` is dropped from the summary's ruler lines. L-4 monsters slain by heroes restated to at least 25%. L-5 figures alive through a quiet step restated to at least 15% overall, with 30% for elven and faerie figures as a reported figure only until first measured. L-6 the most figures in one world restated to 250. L-7 and L-8 retune as proposed (skill range 600 to 900; grasping allied strain 3000), within the guard targets.
+- Why restate rather than tune (L-4 to L-6): the bounds were estimates set before any world had figures; the worlds read well at the measured values (world critic), and tuning toward them risks the monster targets Paul named, which now pass.
+- Status: ruled by the lead.
+

@@ -1,6 +1,6 @@
 # P5-06 Figures
 
-Status: **r3, 2026-11-25: r2 brought in line with P5-04 as built (0.26.0), with Paul's two riders of 2026-11-24 and their recalibration.** r2 was approved by Paul on 2026-11-24 with the decisions of section 22 (scope C, the minimal casters in this stage; regnal numbers for humans and dwarves some of the time, 6.14; epithets of substantial deeds without the cap of two, 6.10; the other questions as recommended); r3 reopens none of them. r1 was the draft of the same day. The lead's rulings on r1's readings are in 23. Written by the spec writer on `p5/06-spec` (r1, r2 cut from `origin/p5/04-spec` at 32f7c09; r3 on the same branch after the merge of the P5-04 candidate, 52fd4f3: P5-04 r3 as built, generator 0.26.0, schema 11, report format v7). Phase P5 History depth, stage 06 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-06", with the minimal casters of "P5-09" folded in by Paul's scope decision of 2026-11-24, 24). Implemented after P5-04. Generator **0.27.0**, **schema 12**, history report format **v8**, event kinds **79 to 92** (final: 0.26.0's catalogue ends at 78, P5-04's 63 to 78 as r2 assumed).
+Status: **r4, 2026-11-25: as built and validated at generator 0.27.0** (section 26: shipped values, the lead's rulings G1 to G7 and later ones, measured targets and the misses carried to P5-04a; numbers and rules corrected in place where marked "r4"). r3 (2026-11-25) brought r2 in line with P5-04 as built (0.26.0), with Paul's two riders of 2026-11-24 and their recalibration. r2 was approved by Paul on 2026-11-24 with the decisions of section 22 (scope C, the minimal casters in this stage; regnal numbers for humans and dwarves some of the time, 6.14; epithets of substantial deeds without the cap of two, 6.10; the other questions as recommended); r3 reopens none of them. r1 was the draft of the same day. The lead's rulings on r1's readings are in 23. Written by the spec writer on `p5/06-spec` (r1, r2 cut from `origin/p5/04-spec` at 32f7c09; r3 on the same branch after the merge of the P5-04 candidate, 52fd4f3: P5-04 r3 as built, generator 0.26.0, schema 11, report format v7). Phase P5 History depth, stage 06 (`docs/specs/p5-00-history-depth-overview.md` 3.1 "P5-06", with the minimal casters of "P5-09" folded in by Paul's scope decision of 2026-11-24, 24). Implemented after P5-04. Generator **0.27.0**, **schema 12**, history report format **v8**, event kinds **79 to 92** (final: 0.26.0's catalogue ends at 78, P5-04's 63 to 78 as r2 assumed).
 
 **r3 changes** (details in the revision notes): (A) P5-04 as built: event ids final; 97 streams; browser group and site seam as built (`open_site` takes kinds 3 and 4, P5-02's loops test kinds 1 and 2); a library's glyph offset to the upper left, away from a mine's (11.4); a city seat with an open library raises its next caster's tower at the height (6.8); the realm reach for exiles defined directly (6.5); figures and alliances stated rule by rule (6.15); the cause-word kinds corrected to 10, 16, 31, 43, 45 (8.2); shard pattern `*history_figures_*`. (B) Paul's riders of 2026-11-24 (section 25): every ruin stays to E, sacked ones included (B1, 25.1); a famine or plague of significant impact is in the summary (B2, 25.2); the monster recalibration that goes with them, with two small undead rules for low pressure and large maps (B3, 25.3); T18's default bound 650. (C) Every keyed stream with its key (14); every reader check with its message (9.4); slow cases marked (18).
 
@@ -28,7 +28,7 @@ figures: 84; rulers 52, claimants 3, generals 17, heroes 6, casters 6; alive at 
 - *Regnal numbers*: a new human or dwarven ruler sometimes takes the name of an earlier recorded ruler of the same realm and bears its number (*"Balin II"*, *"Aldric III the Victorious"*); elves, faeries, goblins and orcs never do. The first bearer stays unnumbered; a number never changes once given.
 - *Epithets*: earned by deeds. An ordinary deed gives its epithet to at most two figures of a world; a substantial deed (a threshold per epithet in data: two realms conquered, a giant or a dragon slain, six battles won unbeaten) gives it whoever else bears it.
 - *Quiet ages*: reigns and lives are drawn at their start, so a quiet step advances a line without ticking each year; a named figure due to die in it dies at its start.
-- *Effects, bounded*: warlike rulers build strain 30% faster and peaceable ones 30% slower, scaled so each race's average is unchanged; grasping and just rulers move the chance of sharing spoils by 20 points and their strain toward allies ×2 and ×½; a general adds 10% to 30% to the side's odds; a hero adds to the hunt's chance and half again to its strength; a crisis after a short reign splits a realm 10 points more often.
+- *Effects, bounded*: warlike rulers build strain 30% faster and peaceable ones 30% slower, scaled so each race's average is unchanged; grasping and just rulers move the chance of sharing spoils by 20 points and their strain toward allies ×2 and ×½; a general adds 10% to 30% to the side's odds; a hero adds to the hunt's chance and half again to its strength; a crisis after a short reign splits a realm 10 points more often. (r4, as calibrated, 26.1: warlike rulers build strain at twice the base and peaceable ones build none, still normalized per race; spoils move by 40 points; a general adds 50% to 80% to the side's odds; a hero doubles the hunters' strength and adds 20 per mille to the hunt's yearly chance.)
 
 **Scope: C** (Paul, 2026-11-24): rulers, disputes and exiles (part A), generals and heroes (part B) and minimal casters (part C: one table `book`, site kind 4, three event kinds, a marker glyph), in one stage. Schema 12, generator 0.27.0, report v8.
 
@@ -158,7 +158,7 @@ Shipped: `person_forms` = `["{root}"]` in every culture (persons are named by th
 
 ### 4.4 Tuning `history.figures` (new fixed id of kind `history`; `game/data/history/figures.toml` and both fixture roots)
 
-All required, in this order. Starting values; the engineer calibrates them (15.2) and r4 (as built; r3 is the alignment with P5-04 and the riders) records the shipped ones.
+All required, in this order. The Start column holds r3's starting values; (r4) where calibration moved a value, the value shipped at 0.27.0 follows the arrow in bold (26.1). Every other value shipped as its start.
 
 | Field | Type | Start | Meaning |
 | --- | --- | --- | --- |
@@ -167,25 +167,25 @@ All required, in this order. Starting values; the engineer calibrates them (15.2
 | `reign_span_permille` | int(0, 4000) | 1000 | the span above it (6.3): reigns of 0.5 to 1.5 generations |
 | `accession_age_permille` | int(0, 1000) | 250 | the youngest age at accession, per mille of `lifespan_years` |
 | `accession_span_permille` | int(0, 1000) | 250 | the span above it |
-| `temper_strain_permille` | record {`steady`, `warlike`, `peaceable`, `grasping`, `just`} int(0, 4000) | 1000, 1300, 700, 1000, 1000 | strain rate factor by the attacker's temper, before the race normalization (7.2) |
+| `temper_strain_permille` | record {`steady`, `warlike`, `peaceable`, `grasping`, `just`} int(0, 4000) | 1000, 1300 → **2000**, 700 → **0**, 1000, 1000 | strain rate factor by the attacker's temper, before the race normalization (7.2) |
 | `temper_allied_permille` | record, int(0, 4000) | 1000, 1000, 1000, 2000, 500 | factor on strain toward an ally (P5-04 7.2) |
-| `temper_spoils_permille` | record, int(−1000, 1000) | 0, 0, 0, −200, 200 | added to the chance of granting a share of spoils (P5-04 6.11) |
+| `temper_spoils_permille` | record, int(−1000, 1000) | 0, 0, 0, −200 → **−400**, 200 → **400** | added to the chance of granting a share of spoils (P5-04 6.11) |
 | `short_reign_permille` | int(0, 4000) | 500 | a reign shorter than this per mille of `generation_years` is short (7.4) |
 | `short_reign_split_permille` | int(0, 1000) | 100 | added to `split_permille` at a crisis after a short reign |
 | `exile_permille` | int(0, 1000) | 250 | chance that a crisis that does not split exiles a named claimant (6.5) |
 | `exile_hops` | int(0, 8) | 3 | a host lies within this many open borders |
-| `general_scale_permille` | int(0, 1000) | 1000 | factor on every race's `general_permille`; 0: no generals |
-| `skill_min` | int(0, 1000) | 100 | a general's skill, per mille added to its side's odds |
-| `skill_max` | int(0, 1000) | 300 | |
+| `general_scale_permille` | int(0, 1000) | 1000 → **850** | factor on every race's `general_permille`; 0: no generals |
+| `skill_min` | int(0, 1000) | 100 → **500** | a general's skill, per mille added to its side's odds (r4: a drawn skill below 1 is raised to 1, 6.6) |
+| `skill_max` | int(0, 1000) | 300 → **800** | |
 | `career_permille` | int(0, 1000) | 300 | a general is named again only within this per mille of `lifespan_years` of the first command |
-| `fall_loser_permille` | int(0, 1000) | 150 | chance that a beaten general falls |
-| `fall_winner_permille` | int(0, 1000) | 30 | chance that a victorious general falls |
+| `fall_loser_permille` | int(0, 1000) | 150 → **120** | chance that a beaten general falls |
+| `fall_winner_permille` | int(0, 1000) | 30 → **25** | chance that a victorious general falls |
 | `general_age_permille`, `general_age_span_permille` | int(0, 1000) | 300, 300 | age at a first command, per mille of lifespan |
 | `hero_age_permille`, `hero_age_span_permille` | int(0, 1000) | 150, 200 | age at a hero's rise |
 | `life_min_permille`, `life_span_permille` | int(0, 4000) | 700, 500 | age at death of generals, heroes, claimants and casters, per mille of lifespan |
 | `hero_scale_permille` | int(0, 1000) | 1000 | factor on every race's `hero_permille`; 0: no heroes |
-| `hero_hunt_permille` | int(0, 1000) | 30 | added to a hunt's yearly chance while the realm has a hero (7.7) |
-| `hero_might_permille` | int(0, 4000) | 500 | added to the hunters' strength, per mille |
+| `hero_hunt_permille` | int(0, 1000) | 30 → **20** | added to a hunt's yearly chance while the realm has a hero (7.7) |
+| `hero_might_permille` | int(0, 4000) | 500 → **1000** | added to the hunters' strength, per mille |
 | `hero_fall_permille` | int(0, 1000) | 300 | chance that a failed hunt led by a hero kills the hero |
 | `caster_ppm` | int(0, 1000000) | 1500 | yearly chance per realm, in ppm, before `magic_permille` (6.8; part C); 0: no casters |
 | `caster_age_permille`, `caster_age_span_permille` | int(0, 1000) | 400, 300 | age at a caster's rise |
@@ -293,7 +293,7 @@ For a `succession_crisis` e of civilization c (P3-05 10.3, peoples in this T4), 
 
 1. **The reign ends** (unless it started in this year, 6.3): if named, its ruler dies (`figure_died`, `how` 1, the reign's death; 6.9); the new reign n + 1 starts at Y, unnamed so far.
 2. **Split** (σ exists, c' its new realm) and `name_rulers`: name the new reign of c (the winner, f_w) and the claimant f_c as the **first reign of c'** (reign 1 of c', start Y, its values drawn as 6.3 with (c', 1)); append **`succession_disputed`** (region and settlement of e; participants c `civilization`, f_w `ruler`, f_c `claimant`, c' `new_realm`; value `outcome` 1; causes e and σ, ascending); `ruled` (f_w, c) and `ruled` (f_c, c') open with it; open **`rival`** (f_w, f_c) with it (symmetric, smaller id first); if the dead ruler f_d of c was named: open **`parent`** (f_d, f_w) and (f_d, f_c) with it (f_d as a).
-3. **No split**, `name_rulers`, and `chance_pm(D(hist.figures.exile; e, c, 0), exile_permille)`: name f_w as in 2 and a claimant f_c (role 2 claimant, civilization c, race and culture of c; entry year Y; born and death by 6.9's life draws); append `succession_disputed` (participants c, f_w, f_c, no `new_realm`; value `outcome` 0; cause e); `ruled` (f_w, c), `rival`, and `parent` as in 2; then the **exile**: the host h = the civilization ≠ c, alive and visible, not at war with c (`at_war(c, h)` false), with hops(c, h) ≤ `exile_hops`, with the largest `disposition_of(c, h)`, then the smaller id; none: no host. (r3) **Reach** hops(c, h) is P5-04 6.2's definition, computed by this subsystem: the smallest `PeoplesView::hops(R_c)[R_h]` over R_c ∈ P(c), R_h ∈ P(h), P the presence of P3-06 5.1 (the regions a realm holds, live at T4); unreachable: out of reach. (As built, P5-04's breadth-first reach is private to `AlliancesSubsystem` and searches only to its own radius; the engineer may expose it as a const read when `exile_hops` ≤ that radius, since within it the distances are equal.) Alliances play no part in the choice of a host (6.15). Append **`exiled`** (region: h's capital's region, else e's region; participants f_c `figure`, c `civilization`, h `host` (0–1); value `hosted` 1 or 0; cause the `succession_disputed`); f_c's status 2 (in exile), its place the host's capital region (0 without a host).
+3. **No split**, `name_rulers`, and `chance_pm(D(hist.figures.exile; e, c, 0), exile_permille)`: name f_w as in 2 and a claimant f_c (role 2 claimant, civilization c, race and culture of c; entry year Y; born and death by 6.9's life draws); append `succession_disputed` (participants c, f_w, f_c, no `new_realm`; value `outcome` 0; cause e); `ruled` (f_w, c), `rival`, and `parent` as in 2; then the **exile**: the host h = the civilization ≠ c, alive and visible, not at war with c (`at_war(c, h)` false), with hops(c, h) ≤ `exile_hops`, with the largest `disposition_of(c, h)`, then the smaller id; none: no host. (r3) **Reach** hops(c, h) is P5-04 6.2's definition, computed by this subsystem: the smallest `PeoplesView::hops(R_c)[R_h]` over R_c ∈ P(c), R_h ∈ P(h), P the presence of P3-06 5.1 (the regions a realm holds, live at T4); unreachable: out of reach. (r4, as built, lead ruling) P is read from conflict's one definition, `ConflictSubsystem::presence_of(ctx, civ)` (P3-06 r9 20.1: a hidden fled refuge does not count), so a realm with an empty presence is never a host. (As built, P5-04's breadth-first reach is private to `AlliancesSubsystem` and searches only to its own radius; the engineer may expose it as a const read when `exile_hops` ≤ that radius, since within it the distances are equal.) Alliances play no part in the choice of a host (6.15). Append **`exiled`** (region: h's capital's region, else e's region; participants f_c `figure`, c `civilization`, h `host` (0–1); value `hosted` 1 or 0; cause the `succession_disputed`); f_c's status 2 (in exile), its place the host's capital region (0 without a host).
 4. Otherwise nothing is named: the new reign is unnamed; the crisis stays P3-05's.
 
 So every secession's realm has a named founder (the claimant), and a crisis names its people only when it splits the realm or drives a claimant out (about 2 splits and 3 or 4 exiles a default world). An exile lives on among the host, or in the wilds, and dies of age (`figure_died`, `how` 2).
@@ -302,13 +302,15 @@ So every secession's realm has a named founder (the claimant), and a crisis name
 
 **Named at a declaration** (T3, reading `war_declared` w with attacker a and defender b): record the war; for each side c ∈ {a, b} in that order, alive: v_c = 0 and the **appointment** below.
 
-**Appointment** of side c in war w: c names a general when `chance_pm(D(hist.figures.appoint; w, c, v_c), general_permille(r_c) × general_scale_permille div 1000)`. The general is, first, c's living general not serving another war whose first command is at most λ_c × `career_permille` div 1000 years before Y (the smallest id), else a new figure (role 3 general, race and culture of c, civilization c, entry year Y, ages by 6.9, `skill` = `skill_min` + pick(D(hist.figures.skill; f, 0, 0), `skill_max` − `skill_min` + 1), drawn once per figure). Append **`general_appointed`** (region w's goal region; participants f `figure`, c `civilization`, the other side `enemy`; value `again` 1 for a general named before, else 0; cause w); open **`served`** (a = f, type 6; b = c) with it; the war's general of c = f.
+**Appointment** of side c in war w: c names a general when `chance_pm(D(hist.figures.appoint; w, c, v_c), general_permille(r_c) × general_scale_permille div 1000)`. The general is, first, c's living general not serving another war whose first command is at most λ_c × `career_permille` div 1000 years before Y (the smallest id), else a new figure (role 3 general, race and culture of c, civilization c, entry year Y, ages by 6.9, `skill` = max(1, `skill_min` + pick(D(hist.figures.skill; f, 0, 0), `skill_max` − `skill_min` + 1)), drawn once per figure; r4, lead ruling G7: a skill is at least 1, so reader check F26 holds whatever `skill_min`). Append **`general_appointed`** (region w's goal region; participants f `figure`, c `civilization`, the other side `enemy`; value `again` 1 for a general named before, else 0; cause w); open **`served`** (a = f, type 6; b = c) with it; the war's general of c = f.
 
 **Vacancies** (T3, after the lines): for each known war w ascending that is open (`war_open`), each side c in the order (attacker, defender) whose general fell in it (6.6 below) and that has had no appointment since: v_c += 1 and the appointment draw. So a side whose general fell may name another the next year.
 
 **Battles** (T6, reading `battle_led` b; conflict writes it, 7.6): for each general participant f, its tallies (`battles won` or `battles lost`); then f falls if `chance_pm(D(hist.figures.fall; b, f, 0), fall_winner_permille` for the winner's general, `fall_loser_permille` for the loser's`)`: append **`fell_in_battle`** (region of b; participants f `figure`, its civilization `civilization`, the other side `enemy`; cause b); f's death (status 4, death region the battle's region; 6.9); `served` closes with it; the war's general of that side = 0 (a vacancy).
 
-**Standing down** (T6 and Q4, after the log): for each known war ascending that is no longer open, each side's serving general: `served` closes with `war_end_event(w)`; the war is dropped from the known wars once both sides are without a general.
+**Standing down** (T6 and Q4, after the log): for each known war ascending that is no longer open, each side's serving general: `served` closes with `war_end_event(w)`; the war is dropped from the known wars once both sides are without a general. (r4, lead ruling G6, as built) Only when `war_end_event(w)` = 0 (a war closed by a principal's end, with no ending event of its own) does `served` close with that principal's `ending_event`, the attacker's tested first; a war that ended by its own `peace`, `war_won`, `truce` or `search_abandoned` keeps that event even when a side ends later in the same step.
+
+**A general dead of age** (r4, lead ruling G3): a serving general's `figure_died` (6.9) closes `served` and leaves the side's general 0 **without a vacancy**: no later appointment is drawn for that side in that war (vacancies, above, follow only a fall in battle).
 
 A general leads only principals' armies (allies follow their partner's general, P5-04 7.7): generals are named only at a `war_declared`, for its attacker and defender, and never at an `ally_joined_war` (6.15). In a quiet step no general is named (no war is declared, P3-06 7.8) and every war ends, so every `served` row closes in the quiet step that ends its war.
 
@@ -319,6 +321,8 @@ A general leads only principals' armies (allies follow their partner's general, 
 **Hunts** are monsters' (P5-02 6.4.2, as amended in 7.7): while c has a hero, c hunts sooner and stronger, a successful hunt is the hero's (`monster_slain_by_hero`), and a failed one may kill the hero (`hero_slain`). This subsystem reads both in its T4 (6.2): a slaying adds to the hero's tallies; a `hero_slain` is the hero's death (status 5, death region the event's region), and c's hero = 0.
 
 A hero serves the realm for life against any monster that raids it; a realm has at most one living hero. Heroes rise only in ticks (raids are T4's, P5-02 6.4).
+
+(r4, as built) **A rise after the monster's end.** The rise is read in figures' T4, after monsters' T4 of the same year, so a raid of year Y may raise a hero after the raiding monster was slain or died later in that same T4: a `hero_rose` may follow its monster's death event in the same year (the sentence "After the raids of X …" still holds). Invariant 4 of `p5_02_monsters_reference.py` exempts a `hero_rose` of the monster's year of death (validation D1). **A hero slain in a step** (lead ruling G1): a `hero_slain` in monsters' T4 makes `hero_of(c)` give no hero for the rest of that T4 (monsters keeps the year's slain heroes), before figures applies the death.
 
 ### 6.8 Casters (part C; T3, Q4)
 
@@ -478,7 +482,7 @@ strain_pm(c)   = temper_strain_permille[τ(c)] × 1000 div max(1, mean_r)
 rate(a, b)     = rate(a, b) × strain_pm(a) div 1000            // after P5-04 7.2's allied factor, before the step's multiplication
 ```
 
-τ(c) is the temper of c's current reign (named or not). The normalization keeps each race's average rate as before: a warlike goblin chief quarrels more than an average goblin chief, and goblins as a whole no more than at 0.26.0 (shipped: goblin mean_r = 1075, warlike 1209, peaceable 651; elf mean_r = 955; orc 1135). Read live at conflict's T2 and Q4 (the reign at the step's start for this subsystem).
+τ(c) is the temper of c's current reign (named or not). The normalization keeps each race's average rate as before: a warlike goblin chief quarrels more than an average goblin chief, and goblins as a whole no more than at 0.26.0 (r3's starting values: goblin mean_r = 1075, warlike 1209, peaceable 651; elf mean_r = 955; orc 1135. (r4) Shipped, warlike 2000 and peaceable 0: goblin mean_r = 1250, warlike strain_pm 1600, peaceable 0; elf 850 (warlike 2352); dwarf 1050; human 1000; faerie 700; orc 1450 (warlike 1379). A peaceable ruler builds no strain of its own while it reigns). Read live at conflict's T2 and Q4 (the reign at the step's start for this subsystem).
 
 ### 7.3 Tempers in alliances (amends P5-04 7.2 and 6.11)
 
@@ -668,7 +672,7 @@ One row per `book_written`, ascending id: `title` (registered), `author` (a cast
 - The empty world gains two root pages (to be measured with the vendored SQLite, P3-04 9.6's method: expected 47 pages, 192512 bytes, if `sqlite_schema` still fits).
 - Entity type code 6 `figure` comes into use (no new code). `db::HISTORY_TABLES` unchanged; the new tables are read by name.
 - (r3, 25.1) `settlement.status` keeps its codes 1 to 4: code 4 `faded` stays valid for every reader and for hand-made fixtures, but the 0.27.0 generator writes no row with status 4 and no event of kind 19 `ruin_faded`. No DDL or code list changes for it; `schema.md` notes it at the `settlement` columns.
-- `report` (P3-04 11.1): `[tables]` gains `book`, `figure` in name order; `[history]` gains `figures` and `books` (rows) at the end of its row keys. `hash --detail`: one `table <name>` line each, in name order.
+- `report` (P3-04 11.1): `[tables]` gains `book`, `figure` in name order; `[history]` gains `figures = <n>` and `books = <n>` (rows) at the end of its row keys, (r4, as built) right after `settlement_races`. `hash --detail`: one `table <name>` line each, in name order.
 - `docs/specs/schema.md` (the engineer): the version line ("Current schema version: 12 (from generator 0.27.0, the P5-06 merge: tables `figure` and `book`, site kind 4 `tower`)"); the DDL; the columns and codes of 9.1 and 9.3; the relation kinds of 9.2; entity type 6 in use; the changelog row ("11 → 12 with generator 0.27.0: tables `figure` and `book` added after schema 11's last statement; `site.kind` gains code 4 `tower`; readers refuse version 11; the empty world grows by two pages; the event catalogue gains kinds 79 to 92; relation kinds `ruled`, `served`, `rival`, `parent`; templates may use the form `under` and `{@book}`. Proposals 'Schema 12: figures and books (P5-06)'"); section 6's catalogue rows.
 - Proposals entry "Schema 12: figures and books (P5-06)" (24).
 
@@ -738,7 +742,7 @@ One row per `book_written`, ascending id: `title` (registered), `author` (a cast
 | L4 | `ruled` closed: `until_event` is a's `death_event` of kind `figure_died`, or b's `ending_event` | `ruled until_event <e> does not end the reign` |
 | L5 | at most one `ruled` row of a civilization b in force at any event id e (`since_event` ≤ e and (`until_event` 0 or e ≤ `until_event`)), tested on the rows of b ordered by `since_event` | `two rulers of civilization <b> at event <e>` |
 | L6 | `served`: a is a figure of role 3 with `civ` = b; `since_event` a `general_appointed` with `figure` a and `civilization` b | `served since_event <e> is not a general_appointed of the pair` |
-| L7 | `served` closed: `until_event` is a `peace`, `war_won`, `truce`, `civ_conquered` or `civ_ended`, a `fell_in_battle` or `figure_died` naming a, or b's `ending_event` | `served until_event <e> does not end the command` |
+| L7 | `served` closed: `until_event` is a `peace`, `war_won`, `truce`, (r4, lead ruling G2) `search_abandoned` (conflict's `war_end_event` of a war ended unfound, P3-06 r10 20.17), `civ_conquered` or `civ_ended`, a `fell_in_battle` or `figure_died` naming a, or b's `ending_event` | `served until_event <e> does not end the command` |
 | L8 | `rival`: a < b; `since_event` a `succession_disputed` whose `ruler` and `claimant` are a and b, in either order (the claimant is of role 2, or of role 1 as the first ruler of the new realm) | `rival since_event <e> is not a succession_disputed of the pair` |
 | L8a | `rival` closed: `until_event` is the `death_event` of a or of b | `rival until_event <e> is not a death of the pair` |
 | L9 | `parent`: `since_event` a `succession_disputed` naming b as `ruler` or `claimant`; `until` NULL | `parent since_event <e> is not a succession_disputed of the child`; `parent with an end` |
@@ -778,7 +782,7 @@ Role words `ruler`, `claimant`, `general`, `hero`, `caster`; temper words `stead
 ### 10.3 `[civilizations]`, companions, chronicle
 
 - Appended at the end of each block (after P5-04's `allies:` line): `  rulers: <n> reigns, <k> recorded; first <figure ref>[; at the end <figure ref>]` (n = the last recorded ruler's `reign_no`; `at the end` for an alive realm); full: followed by `    <figure ref>: <office_from>-<end|E>, reign <n>, <temper word>` per recorded ruler, ascending reign. At summary the count line only, and not at all when the world has more than `SUMMARY_LINES_CIVS` civilizations.
-- **Companions** (amends P3-07 24.2): `succession_disputed` is a companion of the `succession_crisis` and the `civ_seceded` it cites; `exiled` of its `succession_disputed`; `fell_in_battle` of the battle it cites (shown only when the battle is shown, as a war's last).
+- **Companions** (amends P3-07 24.2): `succession_disputed` is a companion of the `succession_crisis` and the `civ_seceded` it cites; `exiled` of its `succession_disputed`; `fell_in_battle` of the battle it cites (shown with the battle when the battle is shown, as a war's last). (r4, as built) `fell_in_battle` (salience 30) also stays a summary candidate on its own, so a general's fall can be shown without its battle; `succession_disputed` and `exiled` enter the summary only as companions.
 - **Battles**: `battle_led` is a battle kind everywhere P3-07 names `battle`, `battle_at_pass` and `allied_battle` (11.1).
 - **Monsters**: `[monsters]`'s state `slain by <civ ref>` becomes `slain by <figure ref> of <civ ref>` when the death event is a `monster_slain_by_hero`; P5-03 10.1's stories take a slaying by a hero as the monster's `death_event` (unchanged rule).
 
@@ -913,7 +917,7 @@ At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. 
 | Target | Definition | Bound |
 | --- | --- | --- |
 | **FG1** | figures per world | median 60 to 120, max ≤ 200; rulers (role 1) ≥ 50% of figures |
-| **FG2** | recorded rulers per realm; reigns per realm | median 3 to 8; reigns reported by race (elves about 40, goblins about 260 over a whole history) |
+| **FG2** | recorded rulers per realm; reigns per realm | median 3 to 8; reigns reported by race (elves about 40, goblins about 260 over a whole history; r4, measured: goblin median 146 and 122, max 290 and 286; elf 41) |
 | **FG3** | generals | appointments in 25% to 50% of war sides; distinct generals median 6 to 20; `battles_led` 20% to 50% of all battles |
 | **FG4** | generals fallen | 5% to 25% of generals |
 | **FG5** | heroes | median 2 to 8; a hero in ≥ 80% of worlds with a monster raid; `monsters_slain_by_heroes` 30% to 70% of all slayings; heroes slain reported |
@@ -964,7 +968,7 @@ At 1024 defaults, seeds 0–99, unless stated; P5-00 8.2's other sweeps report. 
 11. FG11 by each epithet's `substantial` threshold (raised first for the epithet with the most bearers), then by `min`; an epithet that still has more bearers than the bound goes to the lead (22, lead item 2).
 12. T18 by saliences (8.2); (r3) CB1 and CB2 by the constants `SUMMARY_CALAMITY_MAJOR_PERMILLE` and `SUMMARY_CALAMITY_MAJOR_MAX` (25.2; code constants of P3-07 section 8, recorded in r4).
 
-C1, AL (AL1 included), RR, M, M4a, M4b, UD2, G2, T16 and T18 are checked after each step. Every value the engineer changes goes into r4 (as built), with the measured column.
+C1, AL (AL1 included), RR, M, M4a, M4b, UD2, G2, T16 and T18 are checked after each step. Every value the engineer changes goes into r4 (as built), with the measured column. (r4) The values are in 4.4 and 26.1, the measurements in 26.3; the starting values named in steps 5a and 5b (undead `wake_rate` 15000, `lifespan_years` 1000, `max_alive` 2; `living_permille` 100) shipped as 25000, 5000, 5 and 200.
 
 ## 16. Order of implementation and roles
 
@@ -1244,8 +1248,104 @@ a region qualifies when S(r) ≥ T × 1000 div max(1000, M)            // was: d
 
 Both rules change no draw and no key. Everything else of the rising (the window, the lair at a sacked ruin, the causes) is unchanged.
 
+## 26. As built and validated (r4)
+
+Generator 0.27.0, schema 12, report v8. Sources: `game/data/history/figures.toml`, `game/data/history/monsters.toml`, `game/data/monsters/*.toml`; `worldgen/src/history/figures.cpp`; the engineer's readings and calibration (`docs/design/proposals.md`, "History: figures, P5-06", items 1 to 16 and "Calibration"); `docs/reviews/p5-06-figures-audit.md`, `-validation.md`, `-world-critic.md`; the lead's ruling "P5-06 figures as validated" (proposals, 2026-11-25).
+
+### 26.1 Shipped values that differ from the starts
+
+| Where | Field | Start (r3) | Shipped |
+| --- | --- | --- | --- |
+| `history.figures` | `temper_strain_permille` warlike, peaceable | 1300, 700 | **2000, 0** (FX2 needs the full spread: 1.24 at 1800/200) |
+| | `temper_spoils_permille` grasping, just | −200, 200 | **−400, 400** |
+| | `general_scale_permille` | 1000 | **850** |
+| | `skill_min`, `skill_max` | 100, 300 | **500, 800** (FX1 was 49% at the starts) |
+| | `fall_loser_permille`, `fall_winner_permille` | 150, 30 | **120, 25** |
+| | `hero_hunt_permille`, `hero_might_permille` | 30, 500 | **20, 1000** |
+| `history.monsters` | `living_permille` | 100 | **200** |
+| | `overrun_people_ref` | 0.26.0's | **3000** |
+| | `undead_dead_permille` | 25 (P5-03a) | **28** |
+| | `undead_regions_ref` (new, 25.3) | 64 | 64 |
+| `monster` kinds | `rewake_ppm` dragon, giant, ogre, troll, wyvern | 0.26.0's | **700, 1000, 2000, 1500, 2500** (undead 3000) |
+| | `lifespan_years` giant, ogre, troll, wyvern, undead | 0.26.0's (undead 1000) | **4000, 2000, 4000, 2000, 5000** (dragon 0: never) |
+| | `overrun_permille` giant, ogre, troll, wyvern, undead | 0.26.0's | **1000** each (dragon 600) |
+| | undead `wake_rate`, `max_alive` | 15000, 2 | **25000, 5** |
+
+Every other field of 4.1 to 4.4 shipped as written there (race fields of 4.1, `regnal_permille` of 4.2, `slayer_epithet` of 4.3, the epithets list of 6.10 with `the Old` at `min` 1300 and `substantial` 1450). `epithet_substantial_max` (22, lead item 2) was not added. The summary constants of 25.2 shipped at their starts (`SUMMARY_CALAMITY_MAJOR_PERMILLE` 100, `SUMMARY_CALAMITY_MAJOR_MAX` 8); `SUMMARY_FIGURES_MAX` 6.
+
+### 26.2 Rulings and readings as built
+
+The lead's rulings of 2026-11-25 (G1 to G7) and the engineer's readings (proposals items 1 to 16) stand as built; the ones that change or sharpen this spec's text are corrected in place (marked r4):
+
+| Point | Rule as built | Where |
+| --- | --- | --- |
+| G1 | a hero slain in monsters' T4 is no hero for the rest of that T4 | 6.7 |
+| G2 | L7 accepts `search_abandoned` | 9.4 |
+| G3 | a general dead of age leaves the side's general 0 and opens no vacancy | 6.6 |
+| G6 | generals stand down with a principal's `ending_event` only when `war_end_event(w)` = 0 | 6.6 |
+| G7 | a skill is at least 1 (`max(1, …)`) | 6.6, 4.4 |
+| G4, G5 (numbering not checked) | a ruler named at a realm's end has its `ruled` row opened and closed by that event (6.4 rule 4); a split with `name_rulers` false still starts the new realm's reign 1 (6.5) | 6.4, 6.5 |
+| exile host | presence read through `ConflictSubsystem::presence_of`; a realm with no presence hosts no one | 6.5 |
+| timeline | `ruler_at`, `figures_alive`, `generals_of`, `figure_at` hold an open row at Y = E inclusive (already r3) | 12 |
+| world report | `[history]` prints `figures = N` and `books = N` after `settlement_races` | 9.4 |
+| summary | `fell_in_battle` is a candidate on its own as well as a companion | 10.3 |
+| hero after death | a `hero_rose` may follow its monster's death in the same year (rise in T4 after the year's hunts); the monsters reference's invariant 4 relaxed for it | 6.7 |
+| two-word choices | the four of 8.2 are shipped with the word for 1 first (the grammar's order), e.g. `{library?founded|raised}`; the sentences read as the samples | 8.2 (proposals item 1) |
+| `FigureView::Hero` | gains `fall_permille` (`hero_fall_permille`, applied by monsters' hunt) | 7.1, 7.7 |
+| split bonus | `split_bonus_permille(civ)` reads the year of the figures' last step (their T3); audit A3 asks for the crisis year | 7.4 |
+
+Audit advisories (none blocking): **A1** a secession read apart from its crisis would found a second line; **A2** book titles' numbered fallback has no length test; **A3** the split bonus's year. All three go to P5-04a 11 item 8.
+
+### 26.3 Measured (validation, default 1024, seeds 0–99 = A and 100–199 = B)
+
+| Target | Bound | A | B |
+| --- | --- | --- | --- |
+| FG1 figures median / max; rulers' share | 60–120 / ≤ 200; ≥ 50% | 77 / **226**; 65.5% | 79 / **208**; 66.6% |
+| FG2 rulers per realm | 3–8 | 3 | 3 |
+| FG3 sides with a general / generals / `battle_led` share | 25–50% / 6–20 / 20–50% | 28.1% / 16 / 44.8% | 27.2% / 15 / 44.4% |
+| FG4 generals fallen | 5–25% | 18.6% | 17.4% |
+| FG5 heroes / hero where raided / slain by heroes | 2–8 / ≥ 80% / 30–70% | 2 / 90% / **27.9%** | 2 / 88% / **27.8%** |
+| FG6 disputes per crisis / exiles | 10–40% / 1–4 | 35.9% / 3 | 36.3% / 3.5 |
+| FG7 casters / tower worlds / books / blights | 2–6 / ≥ 80% / 3–10 / ≤ 1 (max ≤ 3) | 6 / 99% / 8 / 0 (2) | 6 / 100% / 8 / 0 (2) |
+| FG8 age ratio / alive through a quiet step | ≥ 4 / ≥ 30% | 8.0 / **20.3%** | 7.5 / **20.2%** |
+| FG9 longest display name | ≤ 81 bytes | 27 | 27 |
+| FG10 regnal share | 10–30% | 14.0% | 15.9% |
+| FG11 worlds over the bound / with an epithet | 0 / 15–40% | 0 / 17.5% | **1 (`the Old`)** / 16.9% |
+| FX1 larger skill wins | 55–70% | 55.7% | **54.3%** |
+| FX2 warlike over peaceable | ≥ 1.3 | 1.41 | 1.44 |
+| FX3 shares just − grasping / grasping betrayals over reign share | ≥ 20 points / ≥ 1.5 | 52 / 1.53 | 56 / **1.27** |
+| FX5 split after short / long reign | short > long | 15.5% / 15.1% | 16.5% / 15.2% |
+| C1 wars median | 22–28 | 25 | 25 |
+| T16 | ≤ 2 per thousand | 1.19 | 1.68 |
+| G2 standing / population | ≥ 81 / ≥ 205,000 | 85.5 / 218,172 | 88 / 211,371 |
+| AL1 formed / standing / wars with an ally | 6–15 / ≥ 3 / 20–45% | 14.5 / 9.5 / 25.9% | 15 / 9 / 27.5% |
+| turns into friendship | ≥ 25% | 54% | 55% |
+| M4a living monster at E | ≥ 85 | 92 | 93 |
+| M4b lair on a former settlement | ≥ 65 | **63** | 68 |
+| M slain / overruns / towns share | ≤ 4 / 2–4 / ≤ 10% | 4 / 3 / 4.4% | 4 / 3 / 6.5% |
+| UD2 worlds with a rising / median; UD3 | 70–95 / ≤ 3; ≤ 50% | 77 / 2; 47.5% | 85 / 2; 45.6% |
+| RU1 faded rows | 0 | 0 | 0 |
+| CB1 major calamities / calamity share | 3–8 / ≤ 10% | 7 / 4.3% | 7 / 4.3% |
+| T18 summary median / max | ≤ 650 | 613.5 / 902 | 603.5 / 785 |
+| P figure per race with a realm | ≥ 95% | 100% | 100% |
+| timing (seed 0 1024) | ≤ +2 s | 25.6 s user, equal to 0.26.0 | |
+
+Other sweeps (validation 3): UD1 met (`low` 22 of 30, 2048 10 of 10); `civs4` T18 median 956, CB1 8; **UD3 at 512 60.7%** of 28 risings (bound ≤ 60%; 10 worlds); T16 3.07 (`low`), 2.36 (`high`), 22.7 (512) per thousand (default bound only); FX2 0.70 (`calm`), 1.08 (`civs4`), 1.29 (`low`). Not measured: FX4, CB2's comparison build.
+
+### 26.4 Misses and where they go
+
+The lead's ruling (proposals, "P5-06 figures as validated"): merge as measured; P5-04a takes the misses (its section 21): FG11 by `the Old`'s thresholds; FG5 and FG8 by a retune or a restated bound; FG1's maximum, FX1 on B and FX3's betrayal ratio likewise; the world critic's F1 (towers never end and pile up) and F5 (thin `[figures]` and `[monsters]` summaries); audit A1 to A3. M4b on A (63 against 65) is Paul's question Q-P5-06-1 (not blocking); P5-04a must not lower M4a or M4b. UD3 at 512 is reported again, not ruled.
+
+### 26.5 Not verified from the files
+
+- The 0.26.0 values of the monster fields marked "0.26.0's" in 26.1 (the calibration note names only the shipped values).
+- The numbering G4 and G5 (the code comments name G1, G6 and G7; the proposals list the seven rulings without numbers).
+- FG8's definition: validation measured "at least 25 years of a quiet phase inside the figure's life", which may not be the spec's "alive through at least one quiet step" (P5-04a 21.2 restates it).
+- The world critic's F5 note that living monsters come last in `[monsters]`: as built, the summary lists up to 2 living monsters first, then up to 2 ended ones; a third living monster falls into `and <x> more` (P5-04a 21.5 rules on it).
+
 ## Revision notes
 
 - r1 (2026-11-24): first draft, for Paul's approval.
 - r2 (2026-11-24): approved by Paul with his decisions (22). Scope C: part C folded into the numbered sections (the Rules heading, 8.1, 19). Regnal numbers for humans and dwarves (6.14; culture field `regnal_permille`, tuning `regnal_max`, stream `hist.figures.regnal`, column `figure.regnal`, reader checks, invariant 12, FG10, tests 18.1 item 17). Epithets with ordinary and substantial thresholds (6.10 rewritten: decided at E in closing order; deeds as measured values, `reign_long` and `founder` and `slew` replaced by `reign_permille`, `founded_years` and `slew_might`, r1's `reign_long` of two generations being unreachable; `epithets` gains `substantial`; check `figures_epithet_thresholds`; invariant 13, FG11, `[stats]` keys). The tower glyph's grid (11.4). FG9's display bound 73 → 81. Section 22 decided; 23 the lead's rulings; the `draw_at` note added to P3-04. Nothing else changed.
 - r3 (2026-11-25): no decision of r2 reopened. (A) P5-04 as built (0.26.0, 52fd4f3): event ids 79 to 92 final (8.1, 22); 97 streams, the list's name (3); conflict's and monsters' reads as built (3); the exile's reach defined here, P5-04's breadth-first reach being private to alliances (6.5); figures and alliances point by point (6.15, new); generals only at a `war_declared` (6.6); one library per city (6.8, L16); `open_site` kinds 3 and 4 with its message, P5-02's lair and `holds_site` tests from `kind != 3` to kinds 1 and 2 (7.8); the cause-word kinds 10, 16, 31, 43, 45 and `blight=blight` (8.2, 11.1); browser group as built (11.3); the library's glyph to the upper left of its city, the mine's to the upper right, a wild tower at its cell; the key row after `mine` with its colour; 25 glyphs in the dump (11.4); shard pattern and test file names (17); the `civs4` bound 1,050 (15.1). (B) Paul's riders (25, new; 2, 10.5, 10.6, 13 items 14 to 16, 15, 16, 17, 18, 21, 23 L12 to L15): every ruin stays (25.1); major calamities in the summary (25.2); two undead rules and the monster recalibration targets M4a, M4b, UD1 to UD3, RU1, CB1, CB2 (25.3, 15); T18's default bound 650. (C) Every new stream with its key (14); the reader checks as tables with their messages and where they run (9.4); default and slow cases (18). The schema text of 9.4 is unchanged; status 4 is kept and no longer written (9.4).
+- r4 (2026-11-25): as built and validated at 0.27.0; no rule of Paul's reopened. Section 26 (new): shipped values against the starts (26.1), rulings and readings as built (26.2), validation's measurements (26.3), the misses and their hand-over to P5-04a (26.4), points not verified (26.5). In place: the Plan's effects line (calibrated sizes); 4.4's changed values with arrows; 6.5 the host's presence through `presence_of`; 6.6 G7's `max(1, …)`, G6's stand-down rule and G3's no vacancy; 6.7 G1 and a rise after the monster's death; 7.2 the shipped `mean_r` values (a peaceable ruler builds no strain); 9.4 L7 with `search_abandoned` and the `[history]` lines' place; 10.3 `fell_in_battle` as a candidate on its own; 15.1 FG2's measured goblin reigns; 15.2 the shipped undead and `living_permille` values.
