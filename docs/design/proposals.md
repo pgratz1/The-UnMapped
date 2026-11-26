@@ -1583,3 +1583,18 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Rulings: AL7 (betrayals 16.8% and 16.3% of ended alliances against 15%; 23.1% before tuning) is accepted and restated to at most 18%. SP2 as a share of ended alliances (6.6% and 8.4% against 6%) is accepted as it trades against the share of large spoils; Paul's accepted form of SP2 (10% to 35% of worlds) is what validation checks. TW1 (towers ended 7% to 9% against 15%) is restated to at least 5%: the bound was an estimate and the caster-lapse ending is deferred (L-1). FG8 is measured as at 0.27.0 (at least 25 years of a quiet phase inside a life), bound at least 15%. `spoils_large_part_permille` stays at 401 (above the cap of 400, so the people threshold alone decides a large share); the spec records that. RR6 on seeds 100 to 199 (9 worlds against 5) and the turbulent set's refusals above joins are reported by validation and not tuned.
 - Status: ruled by the lead.
 
+### Schema 13: deep monsters (P5-07)
+
+- Section: 5 (the mountain peoples), 12 (living monsters), hard rule 7.
+- Problem: the deep horrors of the mountain depths need a `wake` value that the code list of schema 12 lacks.
+- Proposal: schema 12 to 13 with generator 0.29.0. `monster_kind.wake` gains 3 `deep`. No table or column changes and the empty world is unchanged; readers refuse 12. A mine's depth is derived from its `delving_deepened` events, not stored in a `site.depth` column. No new `site.ending` or `settlement.ending` code: a fallen hold's mine ends with 4 and a lost hold has settlement ending 2, told apart by its ruin event (`hold_lost`).
+- Status: approved by the lead with the spec (r1, 2026-11-26).
+
+### History: P5-07 mountain depths (readings and lead rulings, 2026-11-26)
+
+- Section: 5, 12.
+- Spec `docs/specs/p5-07-mountain-depths.md` r1 is approved by the lead; Paul's four questions (Q-P5-07-1 to 4 of the questions file) are not blocking and the build carries the recommendations: a whole realm falls to the deep rarely (at most 8% of dwarven realms, at least one fall in 200 worlds); a seal holds to the end of history and the record is enough for the runtime to let the player break it; the three horrors ship as Ymrach, Ysgarth and Zhakul (a rename is data only while their ids sort after `wyvern`); allies do not answer a deep horror.
+- Lead rulings on L-1 to L-7, all as the spec recommends: schema 13 for the one code; deep kinds stand outside the world cap and the one-lair-per-region test at a waking; the forge's depth adds 15 per level to conflict's force, set to 0 if the wars median or the allied-wars share move out of bounds; audit A1 of P5-04a is fixed by a credit that changes memory without a contribution; `settlement.ending` 2 for a lost hold; the `tagged` segment for `allies:` lines is taken if the viewer needs only the new kind; a deep flight without a sack event is accepted and P3-06's invariant 3 and the conflict reference widen.
+- Guard: the dwarves' median of regions held at the end (2 at 0.28.0) and standing settlements (82 on seeds 0 to 99 against the bound of 81) must not fall; calibration lowers the fall rates before any other target is traded.
+- Status: ruled by the lead.
+
