@@ -573,8 +573,8 @@ void MonstersSubsystem::open_site(const SiteSpec& spec) {
 }
 
 void MonstersSubsystem::end_site_seam(std::int64_t id, std::int64_t year, std::int64_t event, std::int64_t ending) {
-    if (site(id).kind != 3 || site(id).ended_year) {
-        fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine");
+    if ((site(id).kind != 3 && site(id).kind != 4) || site(id).ended_year) {  // P5-04a 21.4: towers too
+        fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine or tower");
     }
     end_site(id, year, event, ending);
 }
@@ -586,6 +586,17 @@ std::size_t MonstersSubsystem::monster_kind_of(std::int64_t id) const {
 std::optional<MonstersSubsystem::HeightCell> MonstersSubsystem::height_cell(const StepContext& ctx,
                                                                             std::int64_t region) const {
     const std::optional<Cell> c = wild_cell(ctx, region, true);
+    if (!c) {
+        return std::nullopt;
+    }
+    return HeightCell{c->x, c->y};
+}
+
+std::optional<MonstersSubsystem::HeightCell> MonstersSubsystem::height_cell(const StepContext& ctx,
+                                                                            std::int64_t region,
+                                                                            std::span<const HeightCell> avoid,
+                                                                            std::int64_t radius) const {
+    const std::optional<Cell> c = wild_cell(ctx, region, true, avoid, radius);
     if (!c) {
         return std::nullopt;
     }
@@ -1467,7 +1478,8 @@ void MonstersSubsystem::deaths_of_age_quiet(StepContext& ctx) {
 // --- Sites (6.6) ----------------------------------------------------------------------------------------
 
 std::optional<MonstersSubsystem::Cell> MonstersSubsystem::wild_cell(const StepContext& ctx, std::int64_t region,
-                                                                    bool height) const {
+                                                                    bool height, std::span<const HeightCell> avoid,
+                                                                    std::int64_t radius) const {
     const State& state = ctx.state();
     const std::int64_t n = map_size_;
     std::vector<std::uint32_t> taken;
@@ -1487,6 +1499,19 @@ std::optional<MonstersSubsystem::Cell> MonstersSubsystem::wild_cell(const StepCo
     for (const std::uint32_t c : land_cells_[static_cast<std::size_t>(region - 1)]) {  // row-major: y, then x
         if (std::binary_search(taken.begin(), taken.end(), c)) {
             continue;
+        }
+        if (radius > 0 && !avoid.empty()) {  // P5-04a 21.4: kept clear (Chebyshev distance <= radius)
+            const std::int64_t cx = static_cast<std::int64_t>(c) % n;
+            const std::int64_t cy = static_cast<std::int64_t>(c) / n;
+            bool near = false;
+            for (const HeightCell& a : avoid) {
+                const std::int64_t dx = cx > a.x ? cx - a.x : a.x - cx;
+                const std::int64_t dy = cy > a.y ? cy - a.y : a.y - cy;
+                near = near || std::max(dx, dy) <= radius;
+            }
+            if (near) {
+                continue;
+            }
         }
         if (!best) {
             best = c;

@@ -27,8 +27,9 @@ public:
         (void)civ;
         return -1;
     }
-    // 7.4: added to split_permille at a crisis of civ in the current year.
-    [[nodiscard]] virtual std::int64_t split_bonus_permille(std::int64_t civ) const = 0;
+    // 7.4: added to split_permille at a crisis of civ in year `year` (P5-04a
+    // 11 item 8, P5-06 audit A3: the crisis year, ctx.year() of peoples' step).
+    [[nodiscard]] virtual std::int64_t split_bonus_permille(std::int64_t civ, std::int64_t year) const = 0;
     // 7.6: the serving general of civ in the war of declaration event `war`;
     // figure 0: none (skill 0).
     struct General {

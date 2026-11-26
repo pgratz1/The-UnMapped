@@ -188,6 +188,11 @@ public:
         std::int64_t x = 0, y = 0;
     };
     [[nodiscard]] std::optional<HeightCell> height_cell(const StepContext& context, std::int64_t region) const;
+    // P5-04a 2, 21.4: the same height among the cells at Chebyshev distance
+    // above `radius` from every cell of `avoid` (none kept clear when avoid
+    // is empty or radius <= 0).
+    [[nodiscard]] std::optional<HeightCell> height_cell(const StepContext& context, std::int64_t region,
+                                                        std::span<const HeightCell> avoid, std::int64_t radius) const;
     // P5-03 11.2 (WildView): an open site of kind 1 or 2 stands on the
     // settlement (P5-04 6.12: a mine does not hold back a ruin's fading).
     [[nodiscard]] bool holds_site(std::int64_t settlement) const override;
@@ -201,7 +206,9 @@ public:
         std::int64_t origin_year = 0, origin_event = 0;
     };
     [[nodiscard]] std::int64_t next_site_id() const noexcept { return static_cast<std::int64_t>(sites_.size()) + 1; }
-    // FatalError unless spec.id == next_site_id() and spec.kind == 3.
+    // FatalError unless spec.id == next_site_id() and spec.kind is 3 or 4.
+    // end_site_seam: FatalError unless the site is an open mine or tower (kind
+    // 3 or 4, P5-04a 21.4).
     void open_site(const SiteSpec& spec);
     void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);
 
@@ -311,7 +318,8 @@ private:
     // 6.6.
     void outposts_left(StepContext& context);
     void outposts_raised(StepContext& context);
-    [[nodiscard]] std::optional<Cell> wild_cell(const StepContext& context, std::int64_t region, bool height) const;
+    [[nodiscard]] std::optional<Cell> wild_cell(const StepContext& context, std::int64_t region, bool height,
+                                                std::span<const HeightCell> avoid = {}, std::int64_t radius = 0) const;
     void end_site(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);
     // 9.
     [[nodiscard]] std::string lair_name(const StepContext& context, std::int64_t site, std::size_t kind,

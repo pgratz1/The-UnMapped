@@ -125,7 +125,7 @@ public:
     [[nodiscard]] std::int64_t allied_strain_permille(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t spoils_permille(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t temper(std::int64_t civ) const override;
-    [[nodiscard]] std::int64_t split_bonus_permille(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t split_bonus_permille(std::int64_t civ, std::int64_t year) const override;
     [[nodiscard]] General general_of(std::int64_t war, std::int64_t civ) const override;
     [[nodiscard]] Hero hero_of(std::int64_t civ) const override;
     [[nodiscard]] bool figure_exists(std::int64_t figure) const override;
@@ -196,6 +196,11 @@ private:
         std::string key;
         CultureNaming naming;
     };
+    // P5-04a 21.4: a site of kind 4 (tower or library), ascending site id.
+    struct TowerSite {
+        std::int64_t site = 0, civ = 0, settlement = 0, region = 0, x = 0, y = 0, origin_year = 0;
+        bool ended = false;
+    };
     struct BookState {
         std::int64_t id = 0;
         std::string title;
@@ -244,6 +249,9 @@ private:
     void stand_down(StepContext& context);
     // 6.8.
     void caster_rises(StepContext& context);
+    // P5-04a 21.4: the endings of open towers and libraries; whether a site is open.
+    void tower_endings(StepContext& context);
+    [[nodiscard]] bool tower_open(std::int64_t site) const;
     void books(StepContext& context);
     void blights(StepContext& context);
     // 6.12, 6.10.
@@ -273,6 +281,9 @@ private:
     std::vector<std::int64_t> caster_;             // per civilization: the living caster
     std::vector<BookState> books_;                 // index id - 1
     std::set<std::int64_t> libraries_;             // settlements with a library (6.8)
+    std::vector<TowerSite> towers_;                // P5-04a 21.4: kind 4 sites, ascending id
+    std::map<std::int64_t, std::int64_t> last_raid_year_;  // P5-04a 21.5 item 3: per monster
+    std::set<std::int64_t> pending_crises_;        // P5-04a 11 item 8 (A1): crises read without a secession
     stages::PlacenameData placenames_;             // tower names (P5-12 5.2)
     std::int64_t cursor_ = 1;
     bool ended_ = false;                           // 6.12 and 6.10 done

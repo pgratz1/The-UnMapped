@@ -330,7 +330,7 @@ EventCatalogue build_compiled() {
                               {fig(1, "figure"), civ(2, "civilization"), civ(3, "enemy")}, {}, 0, {}});
     c.kinds.push_back(KindDef{87, "hero_rose", true, 1, 1,
                               {fig(1, "figure"), civ(2, "civilization"), role(3, "monster", EntityType::monster, 1, 1)},
-                              {}, 0, {}});
+                              {"quiet"}, 0, {}});  // P5-04a 21.5 item 3
     c.kinds.push_back(KindDef{88, "monster_slain_by_hero", true, 1, 0,
                               {role(1, "monster", EntityType::monster, 1, 1), civ(2, "slayer"), fig(3, "hero")},
                               {"hunters"}, 0, {}});
@@ -403,7 +403,8 @@ enum class TokenType : std::uint8_t {
 
 // kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
 // under: P5-06 7.9.
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against, under };
+// died: P5-04a 10 item 5.
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against, under, died };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -561,7 +562,10 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             }
             from = bar + 1;
         }
-        if (words.size() < 2U || words.size() > 8U || kind.value_seq(name) == 0) {
+        if (words.size() > 8U) {  // P5-04a 8.5
+            return "choice of " + size_text(words.size()) + " words" + where;
+        }
+        if (words.size() < 2U || kind.value_seq(name) == 0) {
             return unknown;
         }
         for (const std::string_view w : words) {
@@ -636,6 +640,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::aside;
         } else if (*form == "where") {
             out.form = Form::where;
+        } else if (*form == "died") {  // P5-04a 10 item 5
+            out.form = Form::died;
         } else if (*form == "with") {  // P5-04 8.2
             out.form = Form::with;
         } else if (*form == "against") {
@@ -655,7 +661,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if (out.form == Form::raid && r->type != EntityType::monster) {
         return "form 'raid' needs a monster role" + where;
     }
-    if ((out.form == Form::its || out.form == Form::aside || out.form == Form::where) &&
+    if ((out.form == Form::its || out.form == Form::aside || out.form == Form::where || out.form == Form::died) &&
         r->type != EntityType::monster) {
         return "form '" + std::string(*form) + "' needs a monster role" + where;
     }
@@ -1307,6 +1313,7 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             ft.participants = participants;
             ft.values = values;
             ft.catalogue = &v.catalogue_;
+            ft.end_year = end_year;
             if (std::optional<std::string> why = figure_tables_problem(ft)) {
                 view_fail(*why);
             }
@@ -1856,6 +1863,9 @@ std::optional<std::string> relation_tables_problem(const MonsterTables& t, const
         } else if (k == "people_expelled" && v.seq == kind->value_seq("years")) {
             key = "years";
             hi = t.end_year - 1;  // reading: years >= 0, and no more than the history
+        } else if (k == "disposition_turned" && v.seq == kind->value_seq("change")) {  // P5-04a 14.4
+            key = "change";
+            hi = 3;
         } else {
             continue;
         }
@@ -1961,6 +1971,28 @@ std::optional<std::string> alliance_tables_problem(const MonsterTables& t, const
             key = "share";
             lo = 1;
             hi = std::numeric_limits<std::int64_t>::max();
+        } else if (k == "alliance_formed" && v.seq == kind->value_seq("term")) {  // P5-04a 14.4
+            key = "term";
+            lo = 1;
+            hi = std::numeric_limits<std::int64_t>::max();
+        } else if (k == "alliance_formed" && v.seq == kind->value_seq("band")) {
+            key = "band";
+            hi = 2;
+        } else if (k == "alliance_betrayed" && v.seq == kind->value_seq("motive")) {
+            key = "motive";
+            hi = 3;
+        } else if ((k == "alliance_betrayed" || k == "alliance_spurned") && v.seq == kind->value_seq("years")) {
+            key = "years";
+            hi = t.end_year - 1;
+        } else if (k == "ally_refused" && v.seq == kind->value_seq("motive")) {
+            key = "motive";
+            hi = 7;
+        } else if (k == "ally_refused" && v.seq == kind->value_seq("count")) {
+            key = "count";
+            hi = 100;
+        } else if (k == "spoils_withheld" && v.seq == kind->value_seq("grievance")) {
+            key = "grievance";
+            hi = 2;
         } else {
             continue;
         }
@@ -1970,10 +2002,55 @@ std::optional<std::string> alliance_tables_problem(const MonsterTables& t, const
                    (hi == std::numeric_limits<std::int64_t>::max() ? std::string("its maximum") : int_text(hi));
         }
     }
+    // P5-04a 14.4: the value of `key` of event e (values in primary-key
+    // order), -1 when absent.
+    const auto value_of = [&](std::int64_t e, std::string_view key) -> std::int64_t {
+        const KindDef* kd = t.catalogue->find(kind_key(e));
+        const std::int64_t seq = kd != nullptr ? kd->value_seq(key) : 0;
+        if (seq == 0) {
+            return -1;
+        }
+        const auto it = std::lower_bound(t.values.begin(), t.values.end(), std::make_pair(e, seq),
+                                         [](const db::EventValueRow& v, const std::pair<std::int64_t, std::int64_t>& x) {
+                                             return v.event != x.first ? v.event < x.first : v.seq < x.second;
+                                         });
+        return it != t.values.end() && it->event == e && it->seq == seq ? it->value : -1;
+    };
     for (const db::EventRow& e : t.events) {
         const std::string_view k = kind_key(e.id);
         if (k == "allied_battle" && participant(e.id, "winner_ally") == 0 && participant(e.id, "loser_ally") == 0) {
             return "corrupt table 'event': row " + int_text(e.id) + ": allied_battle without an ally";
+        }
+        if (k == "ally_refused" || k == "alliance_spurned") {
+            const std::string at = "corrupt table 'event': row " + int_text(e.id) + ": ";
+            const auto [c0, c1] = causes[static_cast<std::size_t>(e.id - 1)];
+            if (k == "ally_refused") {
+                const std::int64_t motive = value_of(e.id, "motive");
+                const std::int64_t count = value_of(e.id, "count");
+                if (count == 0 && motive != 1 && motive != 2) {
+                    return at + "excused refusal with motive " + int_text(motive);
+                }
+                bool share = false;
+                for (std::size_t i = c0; i < c1; ++i) {
+                    share = share || kind_key(t.causes[i].cause) == "spoils_withheld";
+                }
+                if (motive == 7 && !share) {
+                    return at + "refusal over spoils without its share";
+                }
+            } else if (value_of(e.id, "reason") == 2) {
+                // At once: a cited share of its year (or of `years` before,
+                // when it waited for a quiet budget) whose grievance is 2.
+                const std::int64_t years = std::max<std::int64_t>(0, value_of(e.id, "years"));
+                bool share = false;
+                for (std::size_t i = c0; i < c1; ++i) {
+                    const std::int64_t c = t.causes[i].cause;
+                    share = share || (kind_key(c) == "spoils_withheld" && value_of(c, "grievance") == 2 &&
+                                      t.events[static_cast<std::size_t>(c - 1)].year == e.year - years);
+                }
+                if (!share) {
+                    return at + "spurned at once without its share";
+                }
+            }
         }
         if (k != "spoils_shared" && k != "spoils_withheld") {
             continue;
@@ -2199,8 +2276,8 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.kind == 3 && r.ending != 0 && r.ending != 4 && r.ending != 5) {
             return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a mine";
         }
-        if (r.kind == 4 && r.ending != 0) {
-            return at + "ending " + int_text(r.ending) + " is not 0 for a tower";
+        if (r.kind == 4 && r.ending != 0 && r.ending != 4 && r.ending != 5) {  // P5-04a 21.4
+            return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a tower";
         }
     }
     // monster.
@@ -2666,6 +2743,8 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
         };
         if (is("figure_died", "how")) {
             hi = 2;
+        } else if (is("hero_rose", "quiet")) {  // P5-04a 14.4: range only
+            hi = t.end_year - 1;
         } else if (is("succession_disputed", "outcome") || is("exiled", "hosted") || is("general_appointed", "again") ||
                    is("tower_founded", "library")) {
             hi = 1;
@@ -2811,6 +2890,10 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
             out += k->grouped == 1 ? "their" : "its";
             return;
         }
+        if (form == Form::died) {  // P5-04a 10 item 5: wake 1 wild, 2 dead
+            out += k->wake == 2 ? "crumbled to dust at last" : "died of great age";
+            return;
+        }
         if (form == Form::aside) {
             if (k->wake != 2) {
                 out += ", ";
@@ -2918,8 +3001,9 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         fail(at + "no participant with role '" + t.text + "'");
                     }
                     const db::EventParticipantRow& p = *ps.front();
-                    if (t.form == Form::its || t.form == Form::aside || t.form == Form::where) {
-                        monster_form(p.entity_id, t.form);  // P5-03a 7.1
+                    if (t.form == Form::its || t.form == Form::aside || t.form == Form::where ||
+                        t.form == Form::died) {
+                        monster_form(p.entity_id, t.form);  // P5-03a 7.1, P5-04a 10 item 5
                     } else if (t.form == Form::name) {
                         append_name(name_of(p, t.form), static_cast<EntityType>(p.entity_type), p.entity_id);
                     } else if (t.form == Form::raid) {

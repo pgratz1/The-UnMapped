@@ -339,6 +339,7 @@ struct FigureTables {
     std::span<const db::EventParticipantRow> participants;
     std::span<const db::EventValueRow> values;
     const EventCatalogue* catalogue = nullptr;
+    std::int64_t end_year = 0;  // P5-04a 14.4: E, for hero_rose's quiet
 };
 [[nodiscard]] std::optional<std::string> figure_tables_problem(const FigureTables& t);
 

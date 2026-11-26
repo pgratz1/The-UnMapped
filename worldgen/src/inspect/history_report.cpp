@@ -1,6 +1,7 @@
-// The history report, format "# worldgen history v8" (spec P3-07 section 6
+// The history report, format "# worldgen history v9" (spec P3-07 section 6
 // with amendments 21 to 26; P5-02 12, generator 0.23.0; P5-03 17; P5-03a 9,
-// generator 0.25.0; P5-04 10, generator 0.26.0; P5-06 10, generator 0.27.0).
+// generator 0.25.0; P5-04 10, generator 0.26.0; P5-06 10, generator 0.27.0;
+// P5-04a 12 and 21.5, generator 0.28.0).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -205,8 +206,10 @@ std::vector<const db::FigureRow*> rulers_of(const history::HistoryTables& t, Id 
 }
 
 // P5-06 10.2: a figure's line of [figures], without its two leading spaces.
+// P5-04a 21.5 item 4 (L-3): `reign_number` false (the summary's [figures])
+// leaves out "reign <n>".
 BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, const history::HistoryDigest& d,
-                      const db::FigureRow& f) {
+                      const db::FigureRow& f, bool reign_number = true) {
     static const history::FigureDigest NO_DEEDS;
     const history::FigureDigest& g =
         f.id >= 1 && static_cast<std::uint64_t>(f.id) <= d.figures.size() ? d.figures[static_cast<std::size_t>(f.id - 1)]
@@ -219,8 +222,9 @@ BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, con
     l.push_back(adjective != nullptr ? txt(*adjective) : lit("?"));
     l.push_back(lit(", " + num(f.born) + "-" + (f.died ? num(*f.died) : std::string("E"))));
     if (f.role == 1) {
-        l.push_back(lit(", reigned " + num(f.office_from) + "-" + reign_end(t, f.id) + " (reign " + num(f.reign_no) +
-                        ", " + std::string(history::figure_temper_word(f.temper)) + ")"));
+        l.push_back(lit(", reigned " + num(f.office_from) + "-" + reign_end(t, f.id) + " (" +
+                        (reign_number ? "reign " + num(f.reign_no) + ", " : std::string()) +
+                        std::string(history::figure_temper_word(f.temper)) + ")"));
     }
     bool first = true;
     const auto deed = [&]() {
@@ -395,16 +399,16 @@ public:
             add({lit("  fate: ended in " + num(*c.ended_year) + ", "), event_ref(c.ending_event), lit(": "),
                  sentence_of(c.ending_event)});
         }
-        // P5-03a 9.2 (v6): at summary, the count of the full block's
-        // milestones, then the quiet stretches only.
+        // P5-04a 12.2 (v9): at summary, the true count of the realm's own
+        // weighty events and the three weightiest (none with more than
+        // SUMMARY_LINES_CIVS civilizations); full is unchanged.
         const bool summary = level_ == HistoryLevel::summary;
-        add({lit(summary ? "  milestones: " + num(static_cast<std::int64_t>(d.milestones.size())) : "  milestones:")});
-        for (const Id m : short_block ? d.milestones_ended : d.milestones) {
+        add({lit(summary ? "  milestones: " + num(d.milestones_count) : "  milestones:")});
+        const bool many = static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS;
+        static const std::vector<Id> NONE;
+        for (const Id m : !summary ? d.milestones : (many ? NONE : d.milestones_top)) {
             const HistoryView::Event& e = v_.events()[static_cast<std::size_t>(m - 1)];
             const history::KindDef& k = *v_.catalogue().find_id(e.row.kind);  // checked by HistoryView::load
-            if (summary && k.key != "quiet_stretch") {
-                continue;
-            }
             BlockLine l{lit("    " + event_span(e.row) + " "), event_ref(m), lit(" "), txt(k.key), lit(": "),
                         sentence_of(m)};
             const std::string n = history::history_note(v_, m, c.id);
@@ -458,10 +462,14 @@ private:
                 }
             }
             std::stable_sort(at_end.begin(), at_end.end());
+            // P5-04a 12.3: "c<id> <name>", as the full lines.
+            BlockLine l{lit(head)};
             for (std::size_t k = 0; k < at_end.size(); ++k) {
-                head += (k == 0 ? "; at the end: c" : ", c") + num(at_end[k]);
+                const db::CivilizationRow* o = find_civilization(t_, at_end[k]);
+                l.push_back(lit((k == 0 ? "; at the end: c" : ", c") + num(at_end[k]) + " "));
+                l.push_back(txt(o != nullptr ? o->name : std::string()));
             }
-            add({lit(head)});
+            add(std::move(l));
             return;
         }
         add({lit(head)});
@@ -553,7 +561,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V8));  // P5-06 10.1
+        line(std::string(HISTORY_REPORT_HEADER_V9));  // P5-04a 12.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -743,18 +751,85 @@ private:
                 }
                 line("-- p" + num(p.id) + " " + std::string(phase_word(p.kind)) + ": " + phase_tail(p));
                 // The events of a phase are consecutive ids (5.3).
+                std::vector<const HistoryView::Event*> listed;
                 while (next < all.size() && all[next].row.phase == p.id) {
                     if (shown(all[next].row.id)) {
-                        event_line(all[next]);
+                        listed.push_back(&all[next]);
                     }
                     ++next;
                 }
+                listed_lines(listed);
                 const std::int64_t hidden = phase_events_[static_cast<std::size_t>(p.id)] -
                                             phase_shown_[static_cast<std::size_t>(p.id)];
                 if (level_ == HistoryLevel::summary && hidden > 0) {
                     line("(" + pl(hidden, "more event") + " not shown)");
                 }
             }
+        }
+    }
+
+    // P5-04a 12.4: consecutive listed events of kind settlement_mixed or
+    // standing_changed of one year whose sentences are equal with the
+    // settlement's text replaced by a marker form a group of one line.
+    static constexpr char MARK = '\x01';
+    struct Grouped {
+        std::string key;   // the sentence with the settlement's text as MARK; empty: not groupable
+        std::string name;  // the settlement's text
+    };
+    [[nodiscard]] Grouped grouped(const HistoryView::Event& e) const {
+        const std::string& k = kind_of(e).key;
+        if (k != "settlement_mixed" && k != "standing_changed") {
+            return {};
+        }
+        const Id s = role_of(e, "settlement");
+        const history::LinkedText t = history::render_event_linked(v_, e.row.id);
+        for (const history::TextLink& l : t.links) {
+            if (l.type == static_cast<std::int64_t>(EntityType::settlement) && l.id == s) {
+                Grouped g;
+                g.name = t.text.substr(l.start, l.length);
+                g.key = t.text.substr(0, l.start) + MARK + t.text.substr(l.start + l.length);
+                return g;
+            }
+        }
+        return {};
+    }
+
+    void listed_lines(const std::vector<const HistoryView::Event*>& listed) {
+        std::size_t i = 0;
+        while (i < listed.size()) {
+            const HistoryView::Event& e = *listed[i];
+            const Grouped g = grouped(e);
+            std::size_t j = i + 1;
+            std::vector<std::string> names{g.name};
+            if (!g.key.empty()) {
+                while (j < listed.size() && listed[j]->row.kind == e.row.kind && listed[j]->row.year == e.row.year) {
+                    Grouped h = grouped(*listed[j]);
+                    if (h.key != g.key) {
+                        break;
+                    }
+                    names.push_back(std::move(h.name));
+                    ++j;
+                }
+            }
+            if (j - i < 2) {
+                event_line(e);
+                ++i;
+                continue;
+            }
+            std::string ids;
+            for (std::size_t x = i; x < j; ++x) {
+                ids += (x > i ? ", e" : "e") + num(listed[x]->row.id);
+            }
+            std::string joined;
+            for (std::size_t x = 0; x < names.size(); ++x) {
+                joined += x == 0 ? "" : (x + 1 == names.size() ? " and " : ", ");
+                joined += names[x];
+            }
+            const std::size_t at = g.key.find(MARK);
+            const std::string text = g.key.substr(0, at) + joined + g.key.substr(at + 1);
+            line(event_span(e.row) + " " + ids + " " + escape_history_text(kind_of(e).key) + "/" +
+                 num(e.row.salience) + ": " + escape_history_text(text));
+            i = j;
         }
     }
 
@@ -932,8 +1007,11 @@ private:
             std::stable_sort(shown.begin(), shown.end(), [](const db::MonsterRow* a, const db::MonsterRow* b) {
                 return a->hoard != b->hoard ? a->hoard > b->hoard : a->id < b->id;
             });
-            if (shown.size() > history::SUMMARY_MONSTER_LINES) {
-                shown.resize(history::SUMMARY_MONSTER_LINES);
+            // P5-04a 21.5 item 2: every living monster before any ended one,
+            // at most four lines in all.
+            constexpr std::size_t LINES = history::SUMMARY_MONSTER_LINES + history::SUMMARY_MONSTER_ENDED_LINES;
+            if (shown.size() > LINES) {
+                shown.resize(LINES);
             }
             // P5-03 10.2: then the ended notable monsters, by harm.
             std::vector<const db::MonsterRow*> ended;
@@ -949,8 +1027,9 @@ private:
                 const std::int64_t hb = d_.monster_harm[static_cast<std::size_t>(b->id - 1)];
                 return ha != hb ? ha > hb : a->id < b->id;
             });
-            if (ended.size() > history::SUMMARY_MONSTER_ENDED_LINES) {
-                ended.resize(history::SUMMARY_MONSTER_ENDED_LINES);
+            const std::size_t room = std::min(history::SUMMARY_MONSTER_ENDED_LINES, LINES - shown.size());
+            if (ended.size() > room) {
+                ended.resize(room);
             }
             shown.insert(shown.end(), ended.begin(), ended.end());
             more = static_cast<std::int64_t>(t_.monsters.size()) - static_cast<std::int64_t>(shown.size());
@@ -1470,7 +1549,7 @@ private:
         const bool counts_only = !full && static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS;
         const Id lapsed = kind_id("alliance_lapsed"), broken = kind_id("alliance_broken");
         const Id spurned = kind_id("alliance_spurned"), betrayed = kind_id("alliance_betrayed");
-        const Id formed = kind_id("alliance_formed"), renewed = kind_id("alliance_renewed");
+        const Id formed = kind_id("alliance_formed");
         const Id joined = kind_id("ally_joined_war"), refused = kind_id("ally_refused");
         const Id withdrew = kind_id("ally_withdrew"), shared = kind_id("spoils_shared");
         const Id withheld = kind_id("spoils_withheld"), declared = kind_id("war_declared");
@@ -1554,30 +1633,43 @@ private:
                     ++more;
                     continue;
                 }
-                std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
-                                (r->until ? num(*r->until) : std::string("E")) + ", " +
-                                std::string(alliance_basis_word(v_, r->since_event));
+                // P5-04a 12.3: the basis part names the foe of bases 1 and 2.
                 const HistoryView::Event& f = event(r->since_event);
-                if (const Id foe = role_of(f, "foe"); foe != 0) {
-                    l += " against c" + num(foe);
+                const Id foe = role_of(f, "foe");
+                const std::int64_t basis = value_of(f, "basis", -1);
+                std::string part = std::string(alliance_basis_word(v_, r->since_event));
+                if (basis == 1 && foe != 0) {
+                    part = "against " + civ_tag(foe);
+                } else if (basis == 2 && foe != 0) {
+                    part = "in fear of " + civ_tag(foe);
                 }
+                std::string l = "  " + civ_tag(r->a_id) + " and " + civ_tag(r->b_id) + ": " + num(r->since) + "-" +
+                                (r->until ? num(*r->until) : std::string("E")) + ", " + part;
                 l += ", e" + num(r->since_event);
                 std::int64_t k_renew = 0, k_join = 0, k_ref = 0, k_gr = 0, k_wh = 0;
                 const auto pair_is = [&](Id x, Id y) {
                     return (x == r->a_id && y == r->b_id) || (x == r->b_id && y == r->a_id);
                 };
                 const std::int64_t last = r->until ? *r->until : t_.end_year;
+                // P5-04a 6.3: every due year s + n * term the alliance stood at.
+                const std::int64_t term = value_of(f, "term", 0);
+                if (term >= 1 && last - 1 >= r->since) {
+                    k_renew = (last - 1 - r->since) / term;
+                }
                 for (const HistoryView::Event& e : v_.events()) {
+                    const Id k = e.row.kind;
+                    // P5-04a 11 item 9: the shares by id, after the formation and
+                    // before the closing event.
+                    if ((k == shared || k == withheld) && e.row.id > r->since_event &&
+                        (!r->until || e.row.id < r->until_event) &&
+                        pair_is(role_of(e, "principal"), role_of(e, "ally"))) {
+                        (k == shared ? k_gr : k_wh) += 1;
+                    }
                     if (e.row.year < r->since || e.row.year > last) {
                         continue;
                     }
-                    const Id k = e.row.kind;
-                    if (k == renewed && pair_is(role_of(e, "ally_a"), role_of(e, "ally_b"))) {
-                        ++k_renew;
-                    } else if ((k == joined || k == refused) && pair_is(role_of(e, "ally"), role_of(e, "partner"))) {
+                    if ((k == joined || k == refused) && pair_is(role_of(e, "ally"), role_of(e, "partner"))) {
                         (k == joined ? k_join : k_ref) += 1;
-                    } else if ((k == shared || k == withheld) && pair_is(role_of(e, "principal"), role_of(e, "ally"))) {
-                        (k == shared ? k_gr : k_wh) += 1;
                     }
                 }
                 if (k_renew > 0) {
@@ -1649,8 +1741,8 @@ private:
                     }
                 }
             }
-            if (r->until) {
-                l += "; broken e" + num(r->until_event);
+            if (r->until) {  // P5-04a 12.5
+                l += (event(r->until_event).row.kind == trade_broken ? "; broken e" : "; ended e") + num(r->until_event);
             }
             line(std::move(l));
         }
@@ -1684,18 +1776,10 @@ private:
             }
         }
         if (!full) {
-            // The figures of note, by (renown descending, id ascending).
-            std::stable_sort(shown.begin(), shown.end(), [this](const db::FigureRow* a, const db::FigureRow* b) {
-                const std::int64_t ra = d_.figures[static_cast<std::size_t>(a->id - 1)].renown;
-                const std::int64_t rb = d_.figures[static_cast<std::size_t>(b->id - 1)].renown;
-                return ra != rb ? ra > rb : a->id < b->id;
-            });
-            if (shown.size() > history::SUMMARY_FIGURES_MAX) {
-                shown.resize(history::SUMMARY_FIGURES_MAX);
-            }
+            shown = summary_figures();
         }
         for (const db::FigureRow* f : shown) {
-            line("  " + block_line_report_text(v_, figure_line(v_, t_, d_, *f)));
+            line("  " + block_line_report_text(v_, figure_line(v_, t_, d_, *f, full)));
         }
         if (const std::int64_t more = n - static_cast<std::int64_t>(shown.size()); more > 0) {
             line("  and " + num(more) + " more");
@@ -1708,6 +1792,59 @@ private:
             }
         }
         line(std::move(books));
+    }
+
+    // P5-04a 21.5 item 1: the reserved picks (ruler, hero, caster, general:
+    // the largest renown of the role; rulers then by the longer reign,
+    // casters by more books; then the smaller id), then the other figures of
+    // renown >= 1 by (renown descending, id ascending) up to
+    // SUMMARY_FIGURES_MAX; printed by (renown descending, id ascending).
+    [[nodiscard]] std::vector<const db::FigureRow*> summary_figures() const {
+        const auto renown = [this](const db::FigureRow* f) {
+            const auto i = static_cast<std::size_t>(f->id - 1);
+            return i < d_.figures.size() ? d_.figures[i].renown : 0;
+        };
+        const auto tie = [this](const db::FigureRow* f) -> std::int64_t {
+            if (f->role == 1) {
+                return (f->died ? *f->died : t_.end_year) - f->office_from;
+            }
+            const auto i = static_cast<std::size_t>(f->id - 1);
+            return f->role == 5 && i < d_.figures.size() ? d_.figures[i].books : 0;
+        };
+        std::vector<const db::FigureRow*> chosen;
+        for (const std::int64_t role : {std::int64_t{1}, std::int64_t{4}, std::int64_t{5}, std::int64_t{3}}) {
+            const db::FigureRow* best = nullptr;
+            for (const db::FigureRow& f : t_.figures) {  // ascending id: the smaller id keeps a tie
+                if (f.role != role) {
+                    continue;
+                }
+                if (best == nullptr || renown(&f) > renown(best) ||
+                    (renown(&f) == renown(best) && tie(&f) > tie(best))) {
+                    best = &f;
+                }
+            }
+            if (best != nullptr && chosen.size() < history::SUMMARY_FIGURES_MAX) {
+                chosen.push_back(best);
+            }
+        }
+        std::vector<const db::FigureRow*> rest;
+        for (const db::FigureRow& f : t_.figures) {
+            if (renown(&f) >= 1 && std::find(chosen.begin(), chosen.end(), &f) == chosen.end()) {
+                rest.push_back(&f);
+            }
+        }
+        const auto order = [&renown](const db::FigureRow* a, const db::FigureRow* b) {
+            return renown(a) != renown(b) ? renown(a) > renown(b) : a->id < b->id;
+        };
+        std::stable_sort(rest.begin(), rest.end(), order);
+        for (const db::FigureRow* f : rest) {
+            if (chosen.size() >= history::SUMMARY_FIGURES_MAX) {
+                break;
+            }
+            chosen.push_back(f);
+        }
+        std::stable_sort(chosen.begin(), chosen.end(), order);
+        return chosen;
     }
 
     void stats() {

@@ -38,6 +38,11 @@ inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800,
 
 inline constexpr std::size_t SUMMARY_CALAMITY_PER_PHASE = 2;  // 25.2
 inline constexpr std::size_t MILESTONES_ENDED = 4;            // 25.5
+// P5-04a 12.2 (format v9): the summary's milestones count the realm's own
+// events of at least this salience that are not quiet stretches, and show
+// the SUMMARY_MILESTONES_TOP weightiest of them.
+inline constexpr std::int64_t SUMMARY_MILESTONE_SALIENCE = 40;
+inline constexpr std::size_t SUMMARY_MILESTONES_TOP = 3;
 // P5-02 12.4 (format v4): the living monsters listed in [monsters] at summary.
 // P5-02 r1 12.9: the summary line limit L = SUMMARY_LINES_MAX +
 // SUMMARY_LINES_PER_CIV * max(0, C - SUMMARY_LINES_CIVS), and the least
@@ -174,6 +179,10 @@ struct CivilizationDigest {
     // r19 25.5: at most MILESTONES_ENDED of the same choice, for the summary
     // block of an ended civilization (empty for an alive one).
     std::vector<std::int64_t> milestones_ended;
+    // P5-04a 12.2: the count n of the summary's milestones line and its
+    // (at most) three events, ascending id.
+    std::int64_t milestones_count = 0;
+    std::vector<std::int64_t> milestones_top;
     std::vector<std::size_t> relations;    // indexes into HistoryTables::relations, in 6.6 order
     // r17 24.5: the civilization of the `from` role of a civ_seceded
     // founding event (0: not seceded); the wars line.

@@ -731,6 +731,7 @@ private:
             if (t_.civilizations[k].ended_year) {
                 c.milestones_ended = milestones(c, civ_events_[k], MILESTONES_ENDED);  // r19 25.5
             }
+            summary_milestones(c, civ_events_[k]);  // P5-04a 12.2
         }
         for (const db::SettlementRow& s : t_.settlements) {
             if (is_civ(s.founder_civ)) {
@@ -847,6 +848,28 @@ private:
         }
         std::stable_sort(chosen.begin(), chosen.end());
         return chosen;
+    }
+
+    // P5-04a 12.2: n = the realm's own events of salience >=
+    // SUMMARY_MILESTONE_SALIENCE that are not quiet stretches; the three of
+    // largest salience (then the smaller id), in ascending id.
+    void summary_milestones(CivilizationDigest& c, const std::vector<Id>& ids) const {
+        std::vector<Id> own_ids;
+        for (const Id e : ids) {
+            if (kind(e) != kinds_.quiet_stretch && salience(e) >= SUMMARY_MILESTONE_SALIENCE &&
+                own(c.id, events_[static_cast<std::size_t>(e - 1)])) {
+                own_ids.push_back(e);
+            }
+        }
+        c.milestones_count = static_cast<std::int64_t>(own_ids.size());
+        std::stable_sort(own_ids.begin(), own_ids.end(), [this](Id x, Id y) {
+            return salience(x) != salience(y) ? salience(x) > salience(y) : x < y;
+        });
+        if (own_ids.size() > SUMMARY_MILESTONES_TOP) {
+            own_ids.resize(SUMMARY_MILESTONES_TOP);
+        }
+        std::stable_sort(own_ids.begin(), own_ids.end());
+        c.milestones_top = std::move(own_ids);
     }
 
     // The participant of `role` (by key) of event `id`, or 0.
@@ -1592,6 +1615,68 @@ private:
         relations_stats();  // P5-03 17.4
         alliance_stats();   // P5-04 10.5
         figure_stats();     // P5-06 10.5
+        followup_stats();   // P5-04a 12.6
+    }
+
+    // P5-04a 12.6: appended at the end, in this order (full only).
+    void followup_stats() {
+        const Id formed = kind_id("alliance_formed"), renewed = kind_id("alliance_renewed");
+        const Id withheld = kind_id("spoils_withheld"), spurned = kind_id("alliance_spurned");
+        const Id refused = kind_id("ally_refused"), betrayed = kind_id("alliance_betrayed");
+        const Id turned = kind_id("disposition_turned"), arms = kind_id("arms_sold");
+        std::int64_t renewals = 0;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind != "alliance" || r.since_event < 1 || static_cast<std::size_t>(r.since_event) > events_.size() ||
+                kind(r.since_event) != formed) {
+                continue;
+            }
+            const std::int64_t term = value_of(events_[static_cast<std::size_t>(r.since_event - 1)], "term");
+            const std::int64_t end = r.until ? *r.until : t_.end_year;
+            if (term >= 1 && end - 1 >= r.since) {
+                renewals += (end - 1 - r.since) / term;
+            }
+        }
+        std::int64_t written = 0, soured = 0, at_once = 0, excused = 0, thawed = 0, with_arms = 0;
+        std::array<std::int64_t, 8> refusal{};
+        std::array<std::int64_t, 4> betrayal{};
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            written += k == renewed ? 1 : 0;
+            soured += (k == withheld && value_of(e, "grievance") == 1) ? 1 : 0;
+            at_once += (k == spurned && value_of(e, "reason") == 2) ? 1 : 0;
+            thawed += (k == turned && value_of(e, "change") == 1) ? 1 : 0;
+            if (k == refused) {
+                excused += value_of(e, "count") == 0 ? 1 : 0;
+                const std::int64_t m = value_of(e, "motive");
+                if (m >= 0 && m <= 7) {
+                    ++refusal[static_cast<std::size_t>(m)];
+                }
+            } else if (k == betrayed) {
+                const std::int64_t m = value_of(e, "motive");
+                if (m >= 0 && m <= 3) {
+                    ++betrayal[static_cast<std::size_t>(m)];
+                }
+            } else if (kinds_.battle_kind(k)) {
+                bool cites = false;
+                for (const Id c : e.causes) {
+                    cites = cites || kind(c) == arms;
+                }
+                with_arms += cites ? 1 : 0;
+            }
+        }
+        put("alliances_renewals", renewals);
+        put("alliances_renewals_written", written);
+        put("alliances_soured", soured);
+        put("alliances_spurned_at_once", at_once);
+        put("allies_refused_excused", excused);
+        for (std::size_t m = 0; m < refusal.size(); ++m) {
+            put("refusal_motive_" + std::string(1, static_cast<char>('0' + m)), refusal[m]);
+        }
+        for (std::size_t m = 0; m < betrayal.size(); ++m) {
+            put("betrayal_motive_" + std::string(1, static_cast<char>('0' + m)), betrayal[m]);
+        }
+        put("battles_with_arms", with_arms);
+        put("dispositions_thawed", thawed);
     }
 
     // --- Figures (P5-06 10.2) ---------------------------------------------

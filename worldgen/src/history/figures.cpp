@@ -335,16 +335,16 @@ std::int64_t FiguresSubsystem::temper(std::int64_t civ) const {
     return l == nullptr ? -1 : l->reign.temper;
 }
 
-std::int64_t FiguresSubsystem::split_bonus_permille(std::int64_t civ) const {
+std::int64_t FiguresSubsystem::split_bonus_permille(std::int64_t civ, std::int64_t year) const {
     const Line* l = line_if(civ);
     if (l == nullptr) {
         return 0;
     }
-    // 7.4: Y is the year of this subsystem's last step, its T3 of the year
-    // (peoples' crises are in T4).
+    // 7.4 with P5-04a 11 item 8 (P5-06 audit A3): the crisis year, passed by
+    // the caller, against the current reign's start.
     const std::int64_t short_years =
         floor_div(checked_mul(tuning_.short_reign_permille, race(l->race).generation), 1000);
-    return year_ - l->reign.start < short_years ? tuning_.short_reign_split_permille : 0;
+    return year - l->reign.start < short_years ? tuning_.short_reign_split_permille : 0;
 }
 
 FigureView::General FiguresSubsystem::general_of(std::int64_t war, std::int64_t civ) const {
@@ -381,6 +381,7 @@ void FiguresSubsystem::run(StepContext& ctx) {
     switch (ctx.step()) {
         case Step::t3:
             read_log(ctx);
+            tower_endings(ctx);  // P5-04a 21.4: after the log, before the rises
             lines_tick(ctx);
             deaths_of_age(ctx);
             vacancies(ctx);
@@ -391,6 +392,7 @@ void FiguresSubsystem::run(StepContext& ctx) {
         case Step::t4: read_log(ctx); break;
         case Step::t6:
             read_log(ctx);
+            tower_endings(ctx);
             stand_down(ctx);
             if (ctx.year() == end_year_ - 1 && !ended_) {
                 present(ctx);
@@ -400,6 +402,7 @@ void FiguresSubsystem::run(StepContext& ctx) {
             break;
         case Step::q4:
             read_log(ctx);
+            tower_endings(ctx);
             stand_down(ctx);
             lines_quiet(ctx);
             deaths_of_age(ctx);
@@ -430,7 +433,23 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             }
         } else if (k == "civ_seceded") {
             if (handled.count(e) == 0) {
-                on_founded(ctx, ctx.event_participant(e, "civilization"), e);  // a guard (6.2)
+                // P5-04a 11 item 8 (P5-06 audit A1): a secession citing a crisis
+                // read in an earlier range is that crisis's split, not a founding.
+                std::int64_t crisis = 0;
+                for (const std::int64_t c : ctx.event_causes(e)) {
+                    if (crisis == 0 && pending_crises_.count(c) != 0) {
+                        crisis = c;
+                    }
+                }
+                if (crisis != 0) {
+                    pending_crises_.erase(crisis);
+                    const std::int64_t c2 = ctx.event_participant(e, "civilization");
+                    if (c2 != 0) {
+                        start_reign(ctx, c2, 1, ctx.year());  // the new realm's first reign (6.5 item 2)
+                    }
+                } else {
+                    on_founded(ctx, ctx.event_participant(e, "civilization"), e);  // a guard (6.2)
+                }
             }
         } else if (k == "war_declared") {
             on_war_declared(ctx, e);
@@ -831,6 +850,9 @@ void FiguresSubsystem::on_crisis(StepContext& ctx, std::int64_t e, std::int64_t 
             }
         }
     }
+    if (sigma == 0) {
+        pending_crises_.insert(e);  // P5-04a 11 item 8 (A1): a later secession may cite it
+    }
     if (!line(c).has) {
         start_reign(ctx, c, 1, y);  // a guard
     }
@@ -1200,6 +1222,14 @@ void FiguresSubsystem::stand_down(StepContext& ctx) {
 void FiguresSubsystem::on_raid(StepContext& ctx, std::int64_t r) {
     const std::int64_t c = ctx.event_participant(r, "civilization");
     const std::int64_t m = ctx.event_participant(r, "monster");
+    // P5-04a 21.5 item 3: g = year(r) - year(p), p the raid of m with the
+    // largest id below r (the log is read in id order); 0 with no such raid.
+    const std::int64_t y_r = ctx.event_year(r);
+    std::int64_t g = 0;
+    if (const auto it = last_raid_year_.find(m); it != last_raid_year_.end()) {
+        g = y_r - it->second;
+    }
+    last_raid_year_[m] = y_r;
     if (c == 0 || !alive_visible(ctx, c) || hero_[static_cast<std::size_t>(c - 1)] != 0) {
         return;
     }
@@ -1214,6 +1244,7 @@ void FiguresSubsystem::on_raid(StepContext& ctx, std::int64_t r) {
     EventSpec e = point_event(ctx, "hero_rose", ctx.event_region(r), ctx.event_settlement(r));
     e.participants = {fig_role("figure", f), civ_role("civilization", c),
                       Participant{"monster", EntityType::monster, m}};
+    e.values = {g >= tuning_.hero_return_years ? g : 0};  // quiet
     e.causes = {r};
     figure(f).start_event = ctx.append(e);
     hero_[static_cast<std::size_t>(c - 1)] = f;
@@ -1245,9 +1276,20 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         std::int64_t x = seat.x;
         std::int64_t yc = seat.y;
         if (!library) {
-            const std::optional<MonstersSubsystem::HeightCell> cell = sites_->height_cell(ctx, seat.region);
+            // P5-04a 21.4: more than D cells (Chebyshev) from every kind 4
+            // site of c, open or ended, in site id order; D = 0: none kept clear.
+            const std::int64_t d = floor_div(checked_mul(tuning_.tower_spacing_permille, ctx.inputs().map_size), 1000);
+            std::vector<MonstersSubsystem::HeightCell> avoid;
+            if (d > 0) {
+                for (const TowerSite& ts : towers_) {
+                    if (ts.civ == c) {
+                        avoid.push_back(MonstersSubsystem::HeightCell{ts.x, ts.y});
+                    }
+                }
+            }
+            const std::optional<MonstersSubsystem::HeightCell> cell = sites_->height_cell(ctx, seat.region, avoid, d);
             if (!cell) {
-                continue;
+                continue;  // no free cell: no rise (the caster draw is made; no figure)
             }
             x = cell->x;
             yc = cell->y;
@@ -1305,6 +1347,7 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         spec.origin_year = ctx.year();
         spec.origin_event = ev;
         sites_->open_site(spec);
+        towers_.push_back(TowerSite{s, c, library ? t : 0, seat.region, x, yc, ctx.year(), false});
         if (library) {
             libraries_.insert(t);
         }
@@ -1317,6 +1360,56 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
     }
 }
 
+bool FiguresSubsystem::tower_open(std::int64_t site) const {
+    const auto it = std::lower_bound(towers_.begin(), towers_.end(), site,
+                                     [](const TowerSite& t, std::int64_t id) { return t.site < id; });
+    return it != towers_.end() && it->site == site && !it->ended;
+}
+
+// P5-04a 21.4: each open kind 4 site ascending by id ends, with no event of
+// its own, when its realm has ended (5) or when the realm lost the land (4):
+// a library's settlement is not standing or not the realm's, a tower's
+// region is not the realm's. The ended year is the ending event's year.
+void FiguresSubsystem::tower_endings(StepContext& ctx) {
+    if (sites_ == nullptr) {
+        return;
+    }
+    const State& state = ctx.state();
+    const std::size_t n = towers_.size();
+    for (std::size_t i = 0; i < n; ++i) {
+        const TowerSite ts = towers_[i];
+        if (ts.ended) {
+            continue;
+        }
+        std::int64_t ending = 0;
+        std::int64_t ev = 0;
+        const Civilization& civ = state.civ(ts.civ);
+        if (civ.ended_year) {
+            ending = 5;
+            ev = civ.ending_event;
+        } else if (ts.settlement != 0) {
+            const Settlement& t = state.settlement(ts.settlement);
+            if (!standing(t)) {
+                ending = 4;
+                ev = t.ruin_event;
+            } else if (t.owner_civ != ts.civ) {
+                ending = 4;
+                ev = t.owner_event;
+            }
+        } else if (state.region(ts.region).owner != ts.civ) {
+            ending = 4;
+            ev = state.region(ts.region).owner_event;
+        }
+        // Reading: an ending event older than the site (a tower raised in a
+        // region the realm did not own) waits for the next change of owner.
+        if (ending == 0 || ev == 0 || ctx.event_year(ev) < ts.origin_year) {
+            continue;
+        }
+        sites_->end_site_seam(ts.site, ctx.event_year(ev), ev, ending);
+        towers_[i].ended = true;
+    }
+}
+
 void FiguresSubsystem::books(StepContext& ctx) {
     const bool quiet = ctx.step() == Step::q4;
     const std::int64_t p =
@@ -1324,7 +1417,8 @@ void FiguresSubsystem::books(StepContext& ctx) {
     const auto n = static_cast<std::int64_t>(figures_.size());
     for (std::int64_t id = 1; id <= n; ++id) {
         const Figure& f = figure(id);
-        if (f.role != CASTER_ROLE || f.status != ALIVE || f.books >= tuning_.books_max || f.tower == 0) {
+        if (f.role != CASTER_ROLE || f.status != ALIVE || f.books >= tuning_.books_max || f.tower == 0 ||
+            !tower_open(f.tower)) {  // P5-04a 21.4: no book from an ended tower
             continue;
         }
         if (!chance_pm(ctx.draw(keys_[BOOK], word(id), 0, 0), p) || (quiet && ctx.quiet_events_left(f.civ) <= 0)) {
@@ -1383,8 +1477,8 @@ void FiguresSubsystem::blights(StepContext& ctx) {
     const auto n = static_cast<std::int64_t>(figures_.size());
     for (std::int64_t id = 1; id <= n; ++id) {
         const Figure f = figure(id);
-        if (f.role != CASTER_ROLE || f.status != ALIVE || f.blights > 0 || f.tower == 0) {
-            continue;
+        if (f.role != CASTER_ROLE || f.status != ALIVE || f.blights > 0 || f.tower == 0 || !tower_open(f.tower)) {
+            continue;  // P5-04a 21.4: no blight from an ended tower
         }
         if (!chance_ppm(ctx.draw(keys_[BLIGHT], word(id), 0, 0), tuning_.blight_ppm)) {
             continue;

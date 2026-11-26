@@ -1296,7 +1296,7 @@ PeoplesSubsystem::SplitPlan PeoplesSubsystem::plan_split(const StepContext& ctx,
         static_cast<std::int64_t>(held.size()) >= tuning_.split_min_regions &&
         chance_pm(ctx.draw(key(SPLIT), word(c), 0, 0),
                   std::min<std::int64_t>(1000, checked_add(tuning_.split_permille,
-                                                           figures_ != nullptr ? figures_->split_bonus_permille(c)
+                                                           figures_ != nullptr ? figures_->split_bonus_permille(c, ctx.year())
                                                                                : 0)))) {  // P5-06 7.4
         // Hop distances within c's held regions.
         const auto within = [&](std::int64_t from) {

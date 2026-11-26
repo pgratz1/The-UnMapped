@@ -692,6 +692,7 @@ private:
         ft.participants = participants;
         ft.values = values;
         ft.catalogue = &cat;
+        ft.end_year = e_;
         if (std::optional<std::string> why = figure_tables_problem(ft)) {
             throw Corrupt{*why};
         }
