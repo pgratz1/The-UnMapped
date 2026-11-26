@@ -24,6 +24,7 @@
 #include <string_view>
 #include <vector>
 
+#include "p5_04_alliances_data.hpp"
 #include "../p3_01_history_data.hpp"
 #include "../p3_01_history_support.hpp"
 #include "p3_04_engine_support.hpp"
@@ -259,9 +260,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -285,8 +286,8 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
             }
         }
         CHECK(cat.kinds[i + 19].salience == w.salience);
-        CHECK(cat.kinds[i + 19].templ == w.templ);
-        CHECK(eng::template_problem(cat.kinds[i + 19], w.templ) == std::nullopt);
+        CHECK(cat.kinds[i + 19].templ == p504data::with_p506_templates(w.templ));   // P5-06 8.2: {r:under}
+        CHECK(eng::template_problem(cat.kinds[i + 19], cat.kinds[i + 19].templ) == std::nullopt);
     }
     // the kinds of P3-04 and P3-05 are unchanged (a shipped kind is never edited, P3-04 8.2)
     CHECK(compiled.kinds[0].key == "awakening");
@@ -296,7 +297,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 82U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    REQUIRE(names.size() == 97U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -328,10 +329,18 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
     // P5-04 3 (generator 0.26.0): the five hist.alliances streams after hist.relations.settlers, in this order
     const std::vector<std::string_view> p504 = {"hist.alliances.form", "hist.alliances.join", "hist.alliances.trade",
                                                 "hist.alliances.spoils", "hist.alliances.mine"};
-    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() == names.size() - 1);
+    // P5-06 3 (generator 0.27.0): fifteen more after hist.alliances.mine, in this order
+    const std::vector<std::string_view> p506 = {
+        "hist.figures.reign", "hist.figures.regnal", "hist.figures.life", "hist.figures.appoint", "hist.figures.skill",
+        "hist.figures.fall", "hist.figures.exile", "hist.figures.hero", "hist.figures.caster", "hist.figures.book",
+        "hist.figures.blight", "hist.figures.tower_name", "hist.names.person", "hist.names.book",
+        "hist.monsters.hero_fall"};
+    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() + p506.size() == names.size() - 1);
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
     for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
     for (std::size_t i = 0; i < p504.size(); ++i) CHECK(names[at + 10 + p502.size() + p503.size() + i] == p504[i]);
+    for (std::size_t i = 0; i < p506.size(); ++i)
+        CHECK(names[at + 10 + p502.size() + p503.size() + p504.size() + i] == p506[i]);
 }
 
 }  // TEST_SUITE

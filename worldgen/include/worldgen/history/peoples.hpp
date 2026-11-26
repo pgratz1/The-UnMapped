@@ -24,6 +24,7 @@
 
 #include "worldgen/data/content.hpp"
 #include "worldgen/history/engine.hpp"
+#include "worldgen/history/figures_view.hpp"
 #include "worldgen/history/inputs.hpp"
 #include "worldgen/history/names.hpp"
 
@@ -72,7 +73,6 @@ struct PeoplesTuning {
     std::int64_t plague_spread_permille = 0, plague_spread_toll_permille = 0;
     std::int64_t crisis_per_generation_permille = 0, crisis_loss_permille = 0;
     std::int64_t split_min_settlements = 2, split_min_regions = 2, split_permille = 0;
-    std::int64_t ruin_fade_years = 1;
     std::int64_t colony_new_region_salience = 0, plague_small_salience = 0;
     std::int64_t plague_major_dead = 0, crisis_small_salience = 0;  // r6 (generator 0.17.0)
     // P5-02 4.5, 8.2 (generator 0.23.0): the ghost rule; 0 (a hand-made
@@ -81,7 +81,8 @@ struct PeoplesTuning {
     // P5-03 11.1, 11.2 (generator 0.24.0). The defaults of a hand-made
     // tuning leave 0.23.0's rules: any distance, no losses on the road.
     std::int64_t abandon_reach_hops = 16, abandon_loss_min_permille = 0, abandon_loss_max_permille = 0;
-    std::int64_t ghost_fade_years = 0;
+    // P5-06 25.1 (generator 0.27.0): ruin_fade_years and ghost_fade_years
+    // removed; no ruin fades.
 };
 
 // The loaded definition (validated by the loader). FatalError "history:
@@ -362,6 +363,8 @@ public:
     void set_wild(const WildView* wild) noexcept { wild_ = wild; }
     // P5-03 6.4.1: the people ledger, set once by the stage (nullptr: none).
     void set_ledger(PeopleLedger* ledger) noexcept { ledger_ = ledger; }
+    // P5-06 7.1, 7.4: the figures (set once by the stage; nullptr: none).
+    void set_figures(const FigureView* figures) noexcept { figures_ = figures; }
     [[nodiscard]] PeopleLedger* ledger() const noexcept { return ledger_; }
     // P5-03 9.4: 8.5's abandonment of a standing settlement with `cause` as
     // the blow (items 1 to 6, the decline start added when declining).
@@ -441,7 +444,6 @@ private:
     void change_kinds(StepContext& context);
     void foundings(StepContext& context);
     void pressures(StepContext& context);
-    void fade_ruins(StepContext& context);
 
     [[nodiscard]] std::int64_t share_now(const State& state, std::int64_t settlement) const;
     [[nodiscard]] std::vector<std::int64_t> shares(const State& state) const;  // index id - 1; 0 not standing
@@ -523,6 +525,7 @@ private:
     NameFilter filter_;  // P3-02 r5: the world's name filter
     std::array<std::uint64_t, 14> keys_{};  // P5-02: + hist.peoples.ghost; P5-03: + hist.peoples.abandon_loss
     const WildView* wild_ = nullptr;        // P5-02 7.1
+    const FigureView* figures_ = nullptr;  // P5-06 7.1
     PeopleLedger* ledger_ = nullptr;        // P5-03 6.4.1
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;

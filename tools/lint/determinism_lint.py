@@ -414,8 +414,14 @@ def _held_reference(code: str, m: re.Match) -> bool:
 # The P5-03 race relations audit added RelationsSubsystem's places_ (the
 # shares of each settlement, Place& through place(id)), which the people
 # ledger's calls moved( and displaced( grow through know_settlements(.
-_MEMBER_VECTORS = {"Monster": "monsters_", "Site": "sites_", "Place": "places_"}
-_MEMBER_ACCESSORS = {"monster": "monsters_", "site": "sites_", "place": "places_"}
+# The P5-06 figures audit added FiguresSubsystem's figures_ (Figure& through
+# figure(id), grown by new_figure( and every function of the file that calls
+# it) and lines_ (Line& through line(civ), which itself resizes lines_ when
+# civ is past its end, so any later line( call may move a held Line&).
+_MEMBER_VECTORS = {"Monster": "monsters_", "Site": "sites_", "Place": "places_", "Figure": "figures_",
+                   "Line": "lines_"}
+_MEMBER_ACCESSORS = {"monster": "monsters_", "site": "sites_", "place": "places_", "figure": "figures_",
+                     "line": "lines_"}
 _MEMBER_GROW = r"\s*(?:\.|->)\s*(?:push_back|emplace_back|emplace|insert|resize|assign|clear|erase|reserve)\s*\("
 _member_proxy_cache: dict = {}
 
@@ -462,7 +468,14 @@ def _member_held_reference(code: str, m: re.Match) -> bool:
     grow = re.compile(alt)
     end = _block_end(code, m.end())
     use = re.compile(r"\b" + re.escape(name) + r"\b")
-    for g in grow.finditer(code, m.end(), end):
+    # The declaration's own initializer does not count: line( both hands out
+    # the reference and may grow lines_ (P5-06 figures audit), but the
+    # reference is taken after that growth.
+    start = m.end()
+    if not m.group(0).rstrip().endswith(";"):  # the auto form already ends at its ;
+        stmt_end = code.find(";", m.end(), end)
+        start = stmt_end + 1 if stmt_end >= 0 else m.end()
+    for g in grow.finditer(code, start, end):
         close = _matching_paren(code, g.end() - 1)
         if close < 0 or close >= end:
             continue
@@ -874,11 +887,12 @@ RULES: tuple = (
     # vectors a subsystem owns (MonstersSubsystem::monsters_ and sites_).
     Rule(
         "history-member-held-reference",
-        "a local Monster& / Site& / Place& (or pointer), or an auto& / auto* whose initializer is a call of "
-        "monster(, site( or place( (nothing after it), that is used after a later call that grows the vector "
-        "it points into (monsters_, sites_ or places_ .push_back(, .emplace_back(, .insert(, .resize(, ..., or "
-        "a function of the same file that does so) in the same block",
-        "a reference or pointer into a subsystem's monster, site or place vector is used after the vector grows: the "
+        "a local Monster& / Site& / Place& / Figure& / Line& (or pointer), or an auto& / auto* whose initializer "
+        "is a call of monster(, site(, place(, figure( or line( (nothing after it), that is used after a later "
+        "call that grows the vector it points into (monsters_, sites_, places_, figures_ or lines_ .push_back(, "
+        ".emplace_back(, .insert(, .resize(, ..., or a function of the same file that does so) in the same block",
+        "a reference or pointer into a subsystem's monster, site, place, figure or line vector is used after the "
+        "vector grows: the "
         "append may reallocate it, and whether it does depends on the standard library's growth factor, so the "
         "use reads freed memory on one platform and not on another; re-fetch by id after the append, or copy "
         "the fields you need before it (P3-04 6.9, P5-02 6.7)",

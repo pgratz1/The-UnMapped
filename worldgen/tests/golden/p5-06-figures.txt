@@ -1,0 +1,502 @@
+# P5-06 figures golden vectors for generator 0.27.0 (schema 12), written by
+# worldgen/tests/reference/p5_06_figures_reference.py golden from world files of the reference chain.
+# <case> figure <n> <sha256 of the figure rows, P0-04 8's encoding, 19 columns>; <case> book <n> <sha256, 6 columns>
+# <case> rows <ruled|served|rival|parent> <n> <sha256 of the relation rows of the kind, 9 columns>
+# <case> events <n> <sha256 of the event rows of kinds 79 to 92>; participants, causes, values of those events
+# <case> sites tower <n> <sha256 of the kind 4 site rows>
+# <case> stat <key> <value>   (the FG counts of 15 and 10.5's [stats] keys that rows give)
+# <case> calamities <|G|> <the ids of G in rank order, or ->   (25.2; world cases)
+civs4-seed-0-1024 figure 228 ec91186e7976035535e8cc5effaf8356668b29cd49ff07aff4b402941a069726
+civs4-seed-0-1024 book 25 0ef3d7dedb45c1b0bebf8e77ccef9ccb6b7af46bc5e2df4d578a754815b5e9e3
+civs4-seed-0-1024 rows ruled 156 f54bb49ebc791d486a8d2d4999c92a32ec4a7c4e5a9057b682e38622b3c0ab82
+civs4-seed-0-1024 rows served 52 d119dc5d5c73ac30013185d3d9866a862d5e244c2bc2fdcd1435809927d6c125
+civs4-seed-0-1024 rows rival 15 1854741d87bda2469c3fffa3866ed7b64f5ac78cac2b393f30f0254945764d6d
+civs4-seed-0-1024 rows parent 6 2af0017aea0a909bb98f3f7fe71c98863573714308d4024d6d661e05ed1c7020
+civs4-seed-0-1024 events 479 aecaa5fc8a669349e888a3aaacb3015b95e3c5841b3d5fc34017e1a72354e9e4
+civs4-seed-0-1024 participants 29f328ed0564b8e88b6feeeadd1efab57f3628209a1467d4ec2ff88457e97625
+civs4-seed-0-1024 causes b350dda5be90d4c43e0072ec528be2f35535483686876be789d88c077d8f8cc2
+civs4-seed-0-1024 values a41f12e85f3106f13aa96f0d8e6d6a1e497307061c6ac6bf58f682bbedd8918b
+civs4-seed-0-1024 sites tower 15 758b52a795c3ee30af15be05d193652683d685c4c81b5f9549bd190ce3d871ab
+civs4-seed-0-1024 stat figures 228
+civs4-seed-0-1024 stat figures_rulers 156
+civs4-seed-0-1024 stat figures_claimants 7
+civs4-seed-0-1024 stat figures_generals 47
+civs4-seed-0-1024 stat figures_heroes 3
+civs4-seed-0-1024 stat figures_casters 15
+civs4-seed-0-1024 stat figures_alive 26
+civs4-seed-0-1024 stat figures_epithet 29
+civs4-seed-0-1024 stat epithet_bearers_max 6
+civs4-seed-0-1024 stat reigns 1886
+civs4-seed-0-1024 stat rulers_recorded 156
+civs4-seed-0-1024 stat rulers_by_deed 82
+civs4-seed-0-1024 stat rulers_regnal 1
+civs4-seed-0-1024 stat successions_disputed 15
+civs4-seed-0-1024 stat exiles 7
+civs4-seed-0-1024 stat generals_appointed 52
+civs4-seed-0-1024 stat battles_led 123
+civs4-seed-0-1024 stat generals_fallen 9
+civs4-seed-0-1024 stat heroes_risen 3
+civs4-seed-0-1024 stat monsters_slain_by_heroes 3
+civs4-seed-0-1024 stat heroes_slain 0
+civs4-seed-0-1024 stat towers 15
+civs4-seed-0-1024 stat books 25
+civs4-seed-0-1024 stat blights 1
+civs4-seed-0-1024 stat figure_age_median 38
+civs4-seed-0-1024 stat summary_major_calamities 8
+civs4-seed-0-1024 calamities 8 e1874 e601 e538 e2075 e126 e1411 e264 e2450
+civs4-seed-12-1024 figure 356 018d34d040462343fbea651b3fcdfe0aa8755d8d77cc5abed3eac6252ed89524
+civs4-seed-12-1024 book 17 b765a65719a03ac34e3fa2613d621933d58ef6e500be90e7237c8959de8d8ee3
+civs4-seed-12-1024 rows ruled 238 84005ffc6a4d029600f48f15c15ef5df9b513e3b99cad279b1b527919b57dc1e
+civs4-seed-12-1024 rows served 91 a501f29787f9e5f83fd11594de6e870e78866c7b37375c8692266753d3390be5
+civs4-seed-12-1024 rows rival 25 b1ff01c77801da2ee99993acc16533dddfad539909293fb29e14be1238c3e89f
+civs4-seed-12-1024 rows parent 6 5e0fac16a238ec6534bd17bc3a5e3044ac3cb02723af0de47cf6b7d296628b49
+civs4-seed-12-1024 events 770 1e13c58988ddde629f9ee610bf1b2b42912fcf06390d7ddfc88338bb43b8c85e
+civs4-seed-12-1024 participants 16f5894143fbb3aa92c91183ad21a111643dc1ce792a566f1b7804ab2513d177
+civs4-seed-12-1024 causes a03d9b88130068503770d2a9435c50ce0b3e260934bdb4f35555a19ab33594e5
+civs4-seed-12-1024 values 2baa3dfcb19aaa90b1e594dc05b7c8f8c01603122eacbdbc55469622a998cb1d
+civs4-seed-12-1024 sites tower 18 b180d3c7e4827b47e0a7b2aff36cd0d089ecbe699a08ebc4848ecdd5c9dc0086
+civs4-seed-12-1024 stat figures 356
+civs4-seed-12-1024 stat figures_rulers 238
+civs4-seed-12-1024 stat figures_claimants 16
+civs4-seed-12-1024 stat figures_generals 83
+civs4-seed-12-1024 stat figures_heroes 1
+civs4-seed-12-1024 stat figures_casters 18
+civs4-seed-12-1024 stat figures_alive 27
+civs4-seed-12-1024 stat figures_epithet 40
+civs4-seed-12-1024 stat epithet_bearers_max 10
+civs4-seed-12-1024 stat reigns 2435
+civs4-seed-12-1024 stat rulers_recorded 238
+civs4-seed-12-1024 stat rulers_by_deed 152
+civs4-seed-12-1024 stat rulers_regnal 2
+civs4-seed-12-1024 stat successions_disputed 25
+civs4-seed-12-1024 stat exiles 16
+civs4-seed-12-1024 stat generals_appointed 91
+civs4-seed-12-1024 stat battles_led 238
+civs4-seed-12-1024 stat generals_fallen 18
+civs4-seed-12-1024 stat heroes_risen 1
+civs4-seed-12-1024 stat monsters_slain_by_heroes 0
+civs4-seed-12-1024 stat heroes_slain 0
+civs4-seed-12-1024 stat towers 18
+civs4-seed-12-1024 stat books 17
+civs4-seed-12-1024 stat blights 0
+civs4-seed-12-1024 stat figure_age_median 35
+civs4-seed-12-1024 stat summary_major_calamities 8
+civs4-seed-12-1024 calamities 8 e4627 e2816 e4691 e2867 e3910 e4228 e3604 e161
+civs4-seed-3-1024 figure 241 518d5ca4c2fc4b89e6ba6fa925969eac2c7c7f3f86757e7c73b48c50f5c502e1
+civs4-seed-3-1024 book 23 115577680c058222a8fa5cf9adbf9c9ea547f234ca4561440828db50fb88ef62
+civs4-seed-3-1024 rows ruled 158 f3e065533b38fb3d79cb31b0a33fb3305ee9a1f694164b8c6523300d179ed866
+civs4-seed-3-1024 rows served 55 8aaedd046fb83ae74a6546b98f130316f9e1deab4ba73d5e368c5560a666b531
+civs4-seed-3-1024 rows rival 14 7b2f0bee064103d39724296ba21c9584a513df7f7925273ff9f89a030e17a7ca
+civs4-seed-3-1024 rows parent 2 1b6584ce01371cea1ebd77e5efea4efdb223a40668307909fd04e0debd01293a
+civs4-seed-3-1024 events 501 fa678309e4c90b692279481b75be1a5c2e83b0e58f6f84e043dbca5508a8a8fa
+civs4-seed-3-1024 participants 813de5f6526e40c6e942200b0c49635490d7e70cf8f9ae122dec9036bafe535d
+civs4-seed-3-1024 causes 014fa8c9b628d3462b3a0ddcceeed2e5271041a1f68f8fd1768a1c11b0bf5961
+civs4-seed-3-1024 values eed77c60dc6fe1a2e85db27826ec6367a57ceaf74a9d0ba4cc2189ed9a21109a
+civs4-seed-3-1024 sites tower 18 caf5c069bf3e3aee949a8053aad69fcab6f9b0c89497c7f84e0029bb2227a70f
+civs4-seed-3-1024 stat figures 241
+civs4-seed-3-1024 stat figures_rulers 158
+civs4-seed-3-1024 stat figures_claimants 10
+civs4-seed-3-1024 stat figures_generals 53
+civs4-seed-3-1024 stat figures_heroes 2
+civs4-seed-3-1024 stat figures_casters 18
+civs4-seed-3-1024 stat figures_alive 19
+civs4-seed-3-1024 stat figures_epithet 36
+civs4-seed-3-1024 stat epithet_bearers_max 11
+civs4-seed-3-1024 stat reigns 1753
+civs4-seed-3-1024 stat rulers_recorded 158
+civs4-seed-3-1024 stat rulers_by_deed 96
+civs4-seed-3-1024 stat rulers_regnal 6
+civs4-seed-3-1024 stat successions_disputed 14
+civs4-seed-3-1024 stat exiles 10
+civs4-seed-3-1024 stat generals_appointed 55
+civs4-seed-3-1024 stat battles_led 129
+civs4-seed-3-1024 stat generals_fallen 13
+civs4-seed-3-1024 stat heroes_risen 2
+civs4-seed-3-1024 stat monsters_slain_by_heroes 1
+civs4-seed-3-1024 stat heroes_slain 0
+civs4-seed-3-1024 stat towers 18
+civs4-seed-3-1024 stat books 23
+civs4-seed-3-1024 stat blights 0
+civs4-seed-3-1024 stat figure_age_median 35
+civs4-seed-3-1024 stat summary_major_calamities 8
+civs4-seed-3-1024 calamities 8 e1314 e2796 e695 e3277 e120 e125 e508 e1388
+civs4-seed-7-1024 figure 274 40e97e1c11b9b6f913199ee1ba9786c4571b6d8ddf9379acd0e0b64027ef6f20
+civs4-seed-7-1024 book 34 d237d2e67b759a088db6f4884b24184d44aa78e2c06949e77721c0f560af7e97
+civs4-seed-7-1024 rows ruled 183 ce9787def0c34cb61d023df2949309c3b082f51cd0d812717929981fd02f2aa7
+civs4-seed-7-1024 rows served 54 78ba8a4b370b352b12909d8a4b09c4af992c7b4686b3d593c2471a1f102aa143
+civs4-seed-7-1024 rows rival 21 46ba14484ba083491dd6e6fb0800d122f75696f6ab696a85d4ee6bc316cd19d0
+civs4-seed-7-1024 rows parent 4 c110ca06c1bcb5f43b49ef2223bb978bb925d65789ae7d42c81c3cc0bb74378a
+civs4-seed-7-1024 events 569 d2222a4032f25a96129caf2a58ac54f188a257c0038d25ae91a459d008a7bc82
+civs4-seed-7-1024 participants c0e0769589c3a6f9f0f43ae6d7a442c951fc256dd70490135b5042438d3a9e5b
+civs4-seed-7-1024 causes f8855d5f30d0b6425bc6378a46b995229fe733fba2547f7df7b28227547a4e7c
+civs4-seed-7-1024 values d35afdf71eae72a6860263ab59a117743ec60079d7c0922059c0f28150e11985
+civs4-seed-7-1024 sites tower 19 34c4085c490ec7ea0f5ef493f3c2c294fa691ac9ddd287c33fbd174e887adbc1
+civs4-seed-7-1024 stat figures 274
+civs4-seed-7-1024 stat figures_rulers 183
+civs4-seed-7-1024 stat figures_claimants 15
+civs4-seed-7-1024 stat figures_generals 51
+civs4-seed-7-1024 stat figures_heroes 6
+civs4-seed-7-1024 stat figures_casters 19
+civs4-seed-7-1024 stat figures_alive 24
+civs4-seed-7-1024 stat figures_epithet 28
+civs4-seed-7-1024 stat epithet_bearers_max 6
+civs4-seed-7-1024 stat reigns 1962
+civs4-seed-7-1024 stat rulers_recorded 183
+civs4-seed-7-1024 stat rulers_by_deed 105
+civs4-seed-7-1024 stat rulers_regnal 5
+civs4-seed-7-1024 stat successions_disputed 21
+civs4-seed-7-1024 stat exiles 15
+civs4-seed-7-1024 stat generals_appointed 54
+civs4-seed-7-1024 stat battles_led 135
+civs4-seed-7-1024 stat generals_fallen 11
+civs4-seed-7-1024 stat heroes_risen 6
+civs4-seed-7-1024 stat monsters_slain_by_heroes 3
+civs4-seed-7-1024 stat heroes_slain 1
+civs4-seed-7-1024 stat towers 19
+civs4-seed-7-1024 stat books 34
+civs4-seed-7-1024 stat blights 1
+civs4-seed-7-1024 stat figure_age_median 37
+civs4-seed-7-1024 stat summary_major_calamities 8
+civs4-seed-7-1024 calamities 8 e3325 e938 e157 e298 e1773 e2242 e3048 e1656
+geo-phrase-512 figure 36 0fabb523283ee5035753a13519f4965b4b3aa35bdb2d3216693d1ee95ebde5e9
+geo-phrase-512 book 7 2d24e8c731b85cecccebbcf2aa45ff4ecb84c16db37cbfce9d18cb5e3d13b936
+geo-phrase-512 rows ruled 26 1baa2a78e92cf12d45263317a4a6c52ddb75b693ff67d71a1234fb4a0c95479f
+geo-phrase-512 rows served 3 a8da2f275e7d33582bbcf6f2d5d794cfb65a90348b4958770371b7988a8493bf
+geo-phrase-512 rows rival 1 1d41be3027072b9d14bb6855ce3fdeff1fb6e7385e09f74090ad5689551937f7
+geo-phrase-512 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+geo-phrase-512 events 63 07a412d11b0048b629b7062e6c87a7add521e67b3ba9a0f0433be722fdb6eaa1
+geo-phrase-512 participants 655bd69607fc823f20afba4f21971e13eebc4ffa692805eff603659a8ce791ba
+geo-phrase-512 causes 2e925d3a26029a4ad3106beae39de81931b9e7f1c89f325fbf94d0e0902c703a
+geo-phrase-512 values f2afd345b6cbb08e6f85f2feef1eecf95b6df9d1b40fdeadfda2406a15808755
+geo-phrase-512 sites tower 6 60dfdd8a566932982c9142e176307927f1c7e56b31abac79e7ced3523d44cc46
+geo-phrase-512 stat figures 36
+geo-phrase-512 stat figures_rulers 26
+geo-phrase-512 stat figures_claimants 1
+geo-phrase-512 stat figures_generals 3
+geo-phrase-512 stat figures_heroes 0
+geo-phrase-512 stat figures_casters 6
+geo-phrase-512 stat figures_alive 7
+geo-phrase-512 stat figures_epithet 11
+geo-phrase-512 stat epithet_bearers_max 3
+geo-phrase-512 stat reigns 710
+geo-phrase-512 stat rulers_recorded 26
+geo-phrase-512 stat rulers_by_deed 11
+geo-phrase-512 stat rulers_regnal 1
+geo-phrase-512 stat successions_disputed 1
+geo-phrase-512 stat exiles 1
+geo-phrase-512 stat generals_appointed 3
+geo-phrase-512 stat battles_led 1
+geo-phrase-512 stat generals_fallen 0
+geo-phrase-512 stat heroes_risen 0
+geo-phrase-512 stat monsters_slain_by_heroes 0
+geo-phrase-512 stat heroes_slain 0
+geo-phrase-512 stat towers 6
+geo-phrase-512 stat books 7
+geo-phrase-512 stat blights 1
+geo-phrase-512 stat figure_age_median 36
+geo-phrase-512 stat summary_major_calamities 6
+geo-phrase-512 calamities 6 e98 e399 e446 e200 e386 e330
+geo-seed-0-512 figure 37 0c92714f390cbc4c965452099bfd1a787ba4dfb645641c34d0ecf84536d17a21
+geo-seed-0-512 book 5 0a946f9bbfacdf8c1975de9d6e0c5576b8b4fe26f5d599e4caeddbc68606b2af
+geo-seed-0-512 rows ruled 22 4bec9d6b39e469f658f5804bf0d54981028a18e0f5a833a06709d9e27574c204
+geo-seed-0-512 rows served 8 39e787ca3f42d6c7d1ca21503858536b419eff846b41d51b475c0461ddee8dde
+geo-seed-0-512 rows rival 1 437c52c3cdf42d21895ef0d0d42e958615f98fd625fad3b24d44240e5d3e7011
+geo-seed-0-512 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+geo-seed-0-512 events 86 19024a89d83251e9e399a96f63c0175183a988b93fdf44baa62ee883ec10fe8f
+geo-seed-0-512 participants 0fa917d5f454ade23600ae8a19d7d244a8db641fb3d438d162a084a18ff04722
+geo-seed-0-512 causes a1e95611feb04d6f94d4be21a51187e21b134feb4c47690d1023c630b4253f4f
+geo-seed-0-512 values 7ff2d498648a6c1d68d1448f988578f0dc9c4ad56335c25c2647288550998776
+geo-seed-0-512 sites tower 4 a81745c02124696c923b4192cfeccf22f4d6da43dc8c9dc27760c7bddfd611aa
+geo-seed-0-512 stat figures 37
+geo-seed-0-512 stat figures_rulers 22
+geo-seed-0-512 stat figures_claimants 1
+geo-seed-0-512 stat figures_generals 7
+geo-seed-0-512 stat figures_heroes 3
+geo-seed-0-512 stat figures_casters 4
+geo-seed-0-512 stat figures_alive 10
+geo-seed-0-512 stat figures_epithet 10
+geo-seed-0-512 stat epithet_bearers_max 3
+geo-seed-0-512 stat reigns 451
+geo-seed-0-512 stat rulers_recorded 22
+geo-seed-0-512 stat rulers_by_deed 10
+geo-seed-0-512 stat rulers_regnal 2
+geo-seed-0-512 stat successions_disputed 1
+geo-seed-0-512 stat exiles 1
+geo-seed-0-512 stat generals_appointed 8
+geo-seed-0-512 stat battles_led 24
+geo-seed-0-512 stat generals_fallen 2
+geo-seed-0-512 stat heroes_risen 3
+geo-seed-0-512 stat monsters_slain_by_heroes 2
+geo-seed-0-512 stat heroes_slain 0
+geo-seed-0-512 stat towers 4
+geo-seed-0-512 stat books 5
+geo-seed-0-512 stat blights 0
+geo-seed-0-512 stat figure_age_median 50
+geo-seed-0-512 stat summary_major_calamities 7
+geo-seed-0-512 calamities 7 e122 e343 e246 e242 e248 e102 e47
+geo-seed-1-1024 figure 109 37026212bb564874cdb750ab9e603ab573a885652b53d39e61a96a87925596bd
+geo-seed-1-1024 book 8 0cde770e8abf5a96b4951b66c3c83e9f2f2ba61c3e82cdb6666d33e884121255
+geo-seed-1-1024 rows ruled 74 421b4e42b84d8b6659e614ea8439ab5b2316050aa67aa149d5fd459a3a7db6f9
+geo-seed-1-1024 rows served 26 b39481eb041e2ab20150d01eb9bac8ca7eef63c2ccd0c34590c2d98772523faa
+geo-seed-1-1024 rows rival 12 d7fb4461e8993f4a41759f9d9b4b5c307d213a42feb00979f71b13abcf350682
+geo-seed-1-1024 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+geo-seed-1-1024 events 218 7d5ab90e967df9e883dfbdf1ccbf4b40dee531b585b62ceb7deca6090e118c51
+geo-seed-1-1024 participants 7f33351884d5c6ad8c111e5bb6eb5294c5f9df376afa5262d98262ba77f974e0
+geo-seed-1-1024 causes 597850987cebb008bf977e1accb1e01cbc4c99ad7822cdf9df891bc576447dfa
+geo-seed-1-1024 values 3566685af76fa8822fd4da2ec8a981c71432c70f370f79bab2154a52afba5f66
+geo-seed-1-1024 sites tower 4 dfffc2dfb11cdc82050b2886c6f45441e6109f980fc68cbc232ad8d8229aaff5
+geo-seed-1-1024 stat figures 109
+geo-seed-1-1024 stat figures_rulers 74
+geo-seed-1-1024 stat figures_claimants 6
+geo-seed-1-1024 stat figures_generals 25
+geo-seed-1-1024 stat figures_heroes 0
+geo-seed-1-1024 stat figures_casters 4
+geo-seed-1-1024 stat figures_alive 15
+geo-seed-1-1024 stat figures_epithet 17
+geo-seed-1-1024 stat epithet_bearers_max 5
+geo-seed-1-1024 stat reigns 1322
+geo-seed-1-1024 stat rulers_recorded 74
+geo-seed-1-1024 stat rulers_by_deed 38
+geo-seed-1-1024 stat rulers_regnal 0
+geo-seed-1-1024 stat successions_disputed 12
+geo-seed-1-1024 stat exiles 6
+geo-seed-1-1024 stat generals_appointed 26
+geo-seed-1-1024 stat battles_led 49
+geo-seed-1-1024 stat generals_fallen 7
+geo-seed-1-1024 stat heroes_risen 0
+geo-seed-1-1024 stat monsters_slain_by_heroes 0
+geo-seed-1-1024 stat heroes_slain 0
+geo-seed-1-1024 stat towers 4
+geo-seed-1-1024 stat books 8
+geo-seed-1-1024 stat blights 1
+geo-seed-1-1024 stat figure_age_median 33
+geo-seed-1-1024 stat summary_major_calamities 8
+geo-seed-1-1024 calamities 8 e510 e613 e48 e1602 e1200 e1290 e1576 e1372
+geo-seed-42-512 figure 57 a866f494bd7212b4ab788a30adfac0cbae435c9734e6f2eb44285b6806cec72e
+geo-seed-42-512 book 8 03ed5a16a6ca390d05fc1f615efd2c20f5e145d8ea21dd9a430f3d387c81da86
+geo-seed-42-512 rows ruled 39 2c521909b1658221c9ca27f9309fdfa7de46c7a9ad505a5d7a9513553bb42a0e
+geo-seed-42-512 rows served 10 e0392f5bd0957fd95d2fd79f8f4304c486c374bf1f25eca72b9e2f918968c224
+geo-seed-42-512 rows rival 3 9e5cd4127215dd1925008d1ea29ce7b14a9498dd9faabef461becb046c10f41b
+geo-seed-42-512 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+geo-seed-42-512 events 115 e821d282bd50a5bd74ae851c35e1a7902920e993d6053c2e157e1bb1b9ae0c10
+geo-seed-42-512 participants e3380291670a58574008bf8a22df6e9e7bb6183abd102c55448a0b17ef93c82f
+geo-seed-42-512 causes 6bd8957c3b3980f971d2141b570389148ed625a1bd6d3d6c1178fe63ec67ea18
+geo-seed-42-512 values 47d75ddd087e0a284942b4d2b1d8a275a83ce372eb76c0712a8a96cdd498b485
+geo-seed-42-512 sites tower 6 8d84c36f0a1b68dfc9740fd4bcfbaedb1c339e0b0edd886f97e14831102593eb
+geo-seed-42-512 stat figures 57
+geo-seed-42-512 stat figures_rulers 39
+geo-seed-42-512 stat figures_claimants 1
+geo-seed-42-512 stat figures_generals 10
+geo-seed-42-512 stat figures_heroes 1
+geo-seed-42-512 stat figures_casters 6
+geo-seed-42-512 stat figures_alive 10
+geo-seed-42-512 stat figures_epithet 16
+geo-seed-42-512 stat epithet_bearers_max 6
+geo-seed-42-512 stat reigns 529
+geo-seed-42-512 stat rulers_recorded 39
+geo-seed-42-512 stat rulers_by_deed 20
+geo-seed-42-512 stat rulers_regnal 0
+geo-seed-42-512 stat successions_disputed 3
+geo-seed-42-512 stat exiles 1
+geo-seed-42-512 stat generals_appointed 10
+geo-seed-42-512 stat battles_led 27
+geo-seed-42-512 stat generals_fallen 0
+geo-seed-42-512 stat heroes_risen 1
+geo-seed-42-512 stat monsters_slain_by_heroes 0
+geo-seed-42-512 stat heroes_slain 0
+geo-seed-42-512 stat towers 6
+geo-seed-42-512 stat books 8
+geo-seed-42-512 stat blights 0
+geo-seed-42-512 stat figure_age_median 39
+geo-seed-42-512 stat summary_major_calamities 6
+geo-seed-42-512 calamities 6 e770 e210 e795 e811 e702 e781
+hist-dense-1024 figure 73 bf59868c6badea6131b5961b74c2839d8cc33cc729ba8ea0fa9fc5d015f51639
+hist-dense-1024 book 8 b5cb9f819db4943833467cba2d0cd3adfb529e709f57ccd146a91c37e58637e3
+hist-dense-1024 rows ruled 48 674e655d9e6dbdadb1ae45bdb91b68c61f335524c4ca1d218476a71cd2c9765c
+hist-dense-1024 rows served 9 adde1fbe3b53dbe28cbe27a5fa3949b1c3afa3193d8ff8a7c5e1fa33ba2202bd
+hist-dense-1024 rows rival 9 a0607da4a667c76e765996c09336502c019cdcd126788d4fc3e831f11af48bbf
+hist-dense-1024 rows parent 4 bffcfdaf955a9bdf461c14fe57f557c5c9813b6922bd0f45d84b51b3a2ae32eb
+hist-dense-1024 events 133 6625b90f7905f3de343181ecabd9add83dc8742485103ca8752a29af9100e231
+hist-dense-1024 participants 74a8b002a3b3ed7a4e3441445651ec6a3993d1b3990d2adaebc0512be7630ad6
+hist-dense-1024 causes 87fdeac1784e9b041c87625b425638b2c4968ff41e90955e3caa76d2a77d7f40
+hist-dense-1024 values 369f19b571a17f80dc2050332e2d38b0db6396f308fdde225ac033f9c0afb8e2
+hist-dense-1024 sites tower 9 a20551c41647f23d2afdfea30f16ccd5528dc2634a46b218f233b2a02f68707d
+hist-dense-1024 stat figures 73
+hist-dense-1024 stat figures_rulers 48
+hist-dense-1024 stat figures_claimants 5
+hist-dense-1024 stat figures_generals 8
+hist-dense-1024 stat figures_heroes 3
+hist-dense-1024 stat figures_casters 9
+hist-dense-1024 stat figures_alive 12
+hist-dense-1024 stat figures_epithet 15
+hist-dense-1024 stat epithet_bearers_max 2
+hist-dense-1024 stat reigns 596
+hist-dense-1024 stat rulers_recorded 48
+hist-dense-1024 stat rulers_by_deed 17
+hist-dense-1024 stat rulers_regnal 1
+hist-dense-1024 stat successions_disputed 9
+hist-dense-1024 stat exiles 5
+hist-dense-1024 stat generals_appointed 9
+hist-dense-1024 stat battles_led 12
+hist-dense-1024 stat generals_fallen 2
+hist-dense-1024 stat heroes_risen 3
+hist-dense-1024 stat monsters_slain_by_heroes 1
+hist-dense-1024 stat heroes_slain 1
+hist-dense-1024 stat towers 9
+hist-dense-1024 stat books 8
+hist-dense-1024 stat blights 2
+hist-dense-1024 stat figure_age_median 37
+hist-dense-1024 stat summary_major_calamities 8
+hist-dense-1024 calamities 8 e196 e851 e416 e173 e392 e384 e178 e201
+hist-races-elf-orc-1024 figure 14 8687c79541ec4d21c6be319fd14158b5c2039a27256d6c0fe82e070bf919fd3e
+hist-races-elf-orc-1024 book 0 23d7f42b1cdc1f0d492ebd756ed0fe8003995dda554d99418d47a81813650207
+hist-races-elf-orc-1024 rows ruled 10 33ad17148cea54237a614dbdd2a5fd619068898d9b08344752a67173e486077d
+hist-races-elf-orc-1024 rows served 2 1fb8a94a5281c480c2cb3b5c5a3174a4b73040cd17628986d29cf4e36bfc3556
+hist-races-elf-orc-1024 rows rival 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+hist-races-elf-orc-1024 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+hist-races-elf-orc-1024 events 26 c4decdcf218062fbe4ad5032412ffb620815531fbaa3e4499b3a3743f5521526
+hist-races-elf-orc-1024 participants 509a43687e6fa16322657510297053190ce622226c72c6e89c8eac24e2da6202
+hist-races-elf-orc-1024 causes cc988222ea9f95bc104399e34d52ad58f49a3bf27e40ff4aeea3af9e4b2bc2d6
+hist-races-elf-orc-1024 values 72aba59dabf47d2c6e1e12d66cc266cd34ffc02242b926989cc08bfa485383a4
+hist-races-elf-orc-1024 sites tower 0 18d8d609947c6b82b9607704ae40d3317038e709238514de750b5c7411ba4c20
+hist-races-elf-orc-1024 stat figures 14
+hist-races-elf-orc-1024 stat figures_rulers 10
+hist-races-elf-orc-1024 stat figures_claimants 0
+hist-races-elf-orc-1024 stat figures_generals 2
+hist-races-elf-orc-1024 stat figures_heroes 2
+hist-races-elf-orc-1024 stat figures_casters 0
+hist-races-elf-orc-1024 stat figures_alive 5
+hist-races-elf-orc-1024 stat figures_epithet 4
+hist-races-elf-orc-1024 stat epithet_bearers_max 2
+hist-races-elf-orc-1024 stat reigns 105
+hist-races-elf-orc-1024 stat rulers_recorded 10
+hist-races-elf-orc-1024 stat rulers_by_deed 4
+hist-races-elf-orc-1024 stat rulers_regnal 0
+hist-races-elf-orc-1024 stat successions_disputed 0
+hist-races-elf-orc-1024 stat exiles 0
+hist-races-elf-orc-1024 stat generals_appointed 2
+hist-races-elf-orc-1024 stat battles_led 5
+hist-races-elf-orc-1024 stat generals_fallen 0
+hist-races-elf-orc-1024 stat heroes_risen 2
+hist-races-elf-orc-1024 stat monsters_slain_by_heroes 2
+hist-races-elf-orc-1024 stat heroes_slain 0
+hist-races-elf-orc-1024 stat towers 0
+hist-races-elf-orc-1024 stat books 0
+hist-races-elf-orc-1024 stat blights 0
+hist-races-elf-orc-1024 stat figure_age_median 39
+hist-races-elf-orc-1024 stat summary_major_calamities 0
+hist-races-elf-orc-1024 calamities 0 -
+hist-span-2000-512 figure 29 23a8da208fab9515fddd0407a857da75dff855f0a0564deb6c55c16aa0025e5b
+hist-span-2000-512 book 6 3b8d5e9556a91c12a0fd5b102e66cb8cf956bb01fc4fea2c917f37a765e29bb5
+hist-span-2000-512 rows ruled 20 1002b840a1dbf1c450c43808cfa9697fc84685a852948579d39b99085bd8e196
+hist-span-2000-512 rows served 6 a9eaf58b778a4db98d472eb3df9d818be3c3ae7e23c7f8958d7c2a8ca361a500
+hist-span-2000-512 rows rival 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+hist-span-2000-512 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+hist-span-2000-512 events 59 7035d4a2a38a3ef1dcb7e796f91bd1056458174f52120d1dc25defbf21bfa8fd
+hist-span-2000-512 participants f421bc4ed965569e78729f8408e0b825ee2a91bdf3fe92fd6d8c8fe59f765ed1
+hist-span-2000-512 causes 2f670b86405b5f5a2b8a997df4d992dfcaa4dd51f0f09d0fa915763ed26b8e38
+hist-span-2000-512 values 0bcccc7de24b7ca28d356587889aa991c8bd87e6fe77adbdd449c2cd98d7a40e
+hist-span-2000-512 sites tower 3 46bf1b87936f1c6d7d826be71efc442e30bdb279f1ab83e7b3e38e23c2699506
+hist-span-2000-512 stat figures 29
+hist-span-2000-512 stat figures_rulers 20
+hist-span-2000-512 stat figures_claimants 0
+hist-span-2000-512 stat figures_generals 6
+hist-span-2000-512 stat figures_heroes 0
+hist-span-2000-512 stat figures_casters 3
+hist-span-2000-512 stat figures_alive 10
+hist-span-2000-512 stat figures_epithet 6
+hist-span-2000-512 stat epithet_bearers_max 2
+hist-span-2000-512 stat reigns 161
+hist-span-2000-512 stat rulers_recorded 20
+hist-span-2000-512 stat rulers_by_deed 6
+hist-span-2000-512 stat rulers_regnal 1
+hist-span-2000-512 stat successions_disputed 0
+hist-span-2000-512 stat exiles 0
+hist-span-2000-512 stat generals_appointed 6
+hist-span-2000-512 stat battles_led 11
+hist-span-2000-512 stat generals_fallen 1
+hist-span-2000-512 stat heroes_risen 0
+hist-span-2000-512 stat monsters_slain_by_heroes 0
+hist-span-2000-512 stat heroes_slain 0
+hist-span-2000-512 stat towers 3
+hist-span-2000-512 stat books 6
+hist-span-2000-512 stat blights 0
+hist-span-2000-512 stat figure_age_median 38
+hist-span-2000-512 stat summary_major_calamities 0
+hist-span-2000-512 calamities 0 -
+sample-42-1024 figure 63 b9664098f64dc91b097121df9f39fefbcbd1ac043d5b0478a5d4071565dce9ab
+sample-42-1024 book 6 8b0af82698fad95eeb4f22e778d606a5ed729437a695eb1114f211240fd6fa28
+sample-42-1024 rows ruled 44 39aef116eea00053a8277b437f528973c29dd428f6628b11487421576318baa9
+sample-42-1024 rows served 10 d96d5fab55d8206325e11a75afaaba1bf24b39edf6b4303f43ab1d9b6418e7e2
+sample-42-1024 rows rival 4 5c9b51da4e6ae01946293775e8a06c5173c7334b9cc4e3c72b9391a11a609e8a
+sample-42-1024 rows parent 0 cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
+sample-42-1024 events 121 d3774be2347ed11b2dd20c0cf59e21db51d042e8c0f44bcf1ca79463f09adce8
+sample-42-1024 participants c70a67f2300e3a25b5046975593d1dfa7c66cc22c236fc0e7333619c7ad942db
+sample-42-1024 causes 727c5633748a64384613340ba43bc70df9609e5e7a5fb71a77d3d6e9428d87c2
+sample-42-1024 values 2e4f3464ff60d9771edcbfba028c004e03b894c4f4222c0a6a0e7b115eddabe2
+sample-42-1024 sites tower 6 610d38665c71d90092de4a509eb129492ab239698417022451861c514da28c32
+sample-42-1024 stat figures 63
+sample-42-1024 stat figures_rulers 44
+sample-42-1024 stat figures_claimants 1
+sample-42-1024 stat figures_generals 10
+sample-42-1024 stat figures_heroes 2
+sample-42-1024 stat figures_casters 6
+sample-42-1024 stat figures_alive 9
+sample-42-1024 stat figures_epithet 12
+sample-42-1024 stat epithet_bearers_max 4
+sample-42-1024 stat reigns 639
+sample-42-1024 stat rulers_recorded 44
+sample-42-1024 stat rulers_by_deed 16
+sample-42-1024 stat rulers_regnal 1
+sample-42-1024 stat successions_disputed 4
+sample-42-1024 stat exiles 1
+sample-42-1024 stat generals_appointed 10
+sample-42-1024 stat battles_led 23
+sample-42-1024 stat generals_fallen 2
+sample-42-1024 stat heroes_risen 2
+sample-42-1024 stat monsters_slain_by_heroes 0
+sample-42-1024 stat heroes_slain 0
+sample-42-1024 stat towers 6
+sample-42-1024 stat books 6
+sample-42-1024 stat blights 0
+sample-42-1024 stat figure_age_median 37
+sample-42-1024 stat summary_major_calamities 3
+sample-42-1024 calamities 3 e234 e463 e888
+seed-0-1024 figure 40 eaaa98a0d69a9ae6080d9cc364a6574dfb2dece3ba42d4bb328deddb7f360941
+seed-0-1024 book 11 fcf5a198154918f4408d3eddb77c7515f14d4aa8aefd67648cfb33f781e00ab5
+seed-0-1024 rows ruled 27 e1c8f56461992bb43933258b1ddcd4c92261442c01a88e9c6ca94987c873fe51
+seed-0-1024 rows served 2 3d424d7db4d7e7492099753ed3af653ed85c9143011d4d465a7bdf6e57edec8d
+seed-0-1024 rows rival 3 0703bd0b8c7e91e4e1b237a462516c66e320b96758d90a8c29058c01aeeaa19d
+seed-0-1024 rows parent 2 f11ea45fa6dbd512686b366f5d6f4fb877a718138494396f256e67f19d270895
+seed-0-1024 events 80 1731eb1a84618e9904a1bda63978808a006019190b5e83051eb7d502adf10007
+seed-0-1024 participants 688ca31b7e0b1c0763decd1264b23edb9397e521fd1f64bbf677b444d59da53b
+seed-0-1024 causes b6eceac1421677cd7a603d809e5d26955c35b5c09471c696f860ed11d1f4dc03
+seed-0-1024 values 085dde6bccf2d36c30eee4339ca3a4dfb394c5a7093180da217d51307e34c81e
+seed-0-1024 sites tower 6 95bd057dab29f1b48a841b3e94424ea01b03fa31bdbec7f835467519819a46ec
+seed-0-1024 stat figures 40
+seed-0-1024 stat figures_rulers 27
+seed-0-1024 stat figures_claimants 2
+seed-0-1024 stat figures_generals 2
+seed-0-1024 stat figures_heroes 3
+seed-0-1024 stat figures_casters 6
+seed-0-1024 stat figures_alive 9
+seed-0-1024 stat figures_epithet 12
+seed-0-1024 stat epithet_bearers_max 2
+seed-0-1024 stat reigns 525
+seed-0-1024 stat rulers_recorded 27
+seed-0-1024 stat rulers_by_deed 8
+seed-0-1024 stat rulers_regnal 0
+seed-0-1024 stat successions_disputed 3
+seed-0-1024 stat exiles 2
+seed-0-1024 stat generals_appointed 2
+seed-0-1024 stat battles_led 5
+seed-0-1024 stat generals_fallen 0
+seed-0-1024 stat heroes_risen 3
+seed-0-1024 stat monsters_slain_by_heroes 4
+seed-0-1024 stat heroes_slain 0
+seed-0-1024 stat towers 6
+seed-0-1024 stat books 11
+seed-0-1024 stat blights 0
+seed-0-1024 stat figure_age_median 41
+seed-0-1024 stat summary_major_calamities 8
+seed-0-1024 calamities 8 e428 e487 e393 e77 e287 e394 e494 e430

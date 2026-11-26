@@ -147,7 +147,10 @@ set(_end_year "")
 set(_age_starts "")
 set(_first_ceded "")
 set(_first_ruin "")     # R0: the smallest `ruined <year>` of the [present] settlement lines (P4-04 9.1)
-set(_first_faded "")    # D0: the year of the first ruin_faded chronicle line
+set(_ruined_years "")   # P5-06 25.1 (e): the `ruined <year>` of every [present] settlement line
+set(_faded_lines 0)     # P5-06 25.1: no ruin fades, so no ruin_faded chronicle line
+set(_towers_founded 0)  # P5-06 11.4: the tower_founded chronicle lines (check M11)
+set(_figure_lines 0)    # P5-06 11.3: the figure lines of [figures] (check B14)
 set(_mines_opened 0)    # P5-04 11.3: the mine_opened chronicle lines
 foreach(_line IN LISTS _history_lines)
     if(_line MATCHES "^\\[([a-z]+)\\]$")
@@ -161,12 +164,16 @@ foreach(_line IN LISTS _history_lines)
     elseif(_section STREQUAL "chronicle" AND _first_ceded STREQUAL "" AND
            _line MATCHES "^([0-9]+)(-[0-9]+)? e[0-9]+ region_ceded/")
         set(_first_ceded "${CMAKE_MATCH_1}")
-    elseif(_section STREQUAL "chronicle" AND _first_faded STREQUAL "" AND
-           _line MATCHES "^([0-9]+)(-[0-9]+)? e[0-9]+ ruin_faded/")
-        set(_first_faded "${CMAKE_MATCH_1}")
+    elseif(_section STREQUAL "chronicle" AND _line MATCHES "^[0-9]+(-[0-9]+)? e[0-9]+ ruin_faded/")
+        math(EXPR _faded_lines "${_faded_lines} + 1")
+    elseif(_section STREQUAL "chronicle" AND _line MATCHES "^[0-9]+(-[0-9]+)? e[0-9]+ tower_founded/")
+        math(EXPR _towers_founded "${_towers_founded} + 1")
+    elseif(_section STREQUAL "figures" AND _line MATCHES "^ *f[0-9]+ ")
+        math(EXPR _figure_lines "${_figure_lines} + 1")
     elseif(_section STREQUAL "chronicle" AND _line MATCHES "^[0-9]+(-[0-9]+)? e[0-9]+ mine_opened/")
         math(EXPR _mines_opened "${_mines_opened} + 1")
     elseif(_section STREQUAL "present" AND _line MATCHES "^  s[0-9]+ .*, ruined ([0-9]+)")
+        list(APPEND _ruined_years "${CMAKE_MATCH_1}")
         if(_first_ruin STREQUAL "" OR CMAKE_MATCH_1 LESS _first_ruin)
             set(_first_ruin "${CMAKE_MATCH_1}")
         endif()
@@ -181,6 +188,24 @@ endforeach()
 if(_end_year STREQUAL "" OR _first_ceded STREQUAL "" OR NOT _age_starts)
     message(FATAL_ERROR "headless check: cannot read the end year, the ages or the first region_ceded event "
         "from ${_history_report}")
+endif()
+# D0 (P5-06 25.1 (e)): R1 + OLD_RUIN_YEARS (1500), R1 the smallest ruined
+# year of [present] with R1 + 1500 <= E.
+set(_first_faded "")
+foreach(_r IN LISTS _ruined_years)
+    math(EXPR _old "${_r} + 1500")
+    if(NOT _old GREATER _end_year AND (_first_faded STREQUAL "" OR _old LESS _first_faded))
+        set(_first_faded "${_old}")
+    endif()
+endforeach()
+if(_faded_lines GREATER 0)
+    message(FATAL_ERROR "headless check: the chronicle of ${_history_report} has ${_faded_lines} ruin_faded lines; "
+        "no ruin fades at 0.27.0 (P5-06 25.1)")
+endif()
+if(_towers_founded LESS 1 OR _figure_lines LESS 1)
+    message(FATAL_ERROR "headless check: the 512 world needs a tower_founded event and a figure (P5-06, checks M11 "
+        "and B14; towers ${_towers_founded}, [figures] lines ${_figure_lines}); choose another seed and record it in "
+        "gdext/README.md")
 endif()
 math(EXPR _ceded_before "${_first_ceded} - 1")
 math(EXPR _half "${_end_year} / 2")
@@ -206,9 +231,9 @@ if(STEP_OUTPUT MATCHES "\npasses = ([0-9]+)\n")
     set(_passes "${CMAKE_MATCH_1}")
 endif()
 if(_first_ruin STREQUAL "" OR _first_faded STREQUAL "" OR _passes STREQUAL "" OR _passes LESS 1)
-    message(FATAL_ERROR "headless check: the 512 world needs a ruined settlement in [present], a ruin_faded event "
-        "and a pass (R0 '${_first_ruin}', D0 '${_first_faded}', passes '${_passes}'); choose another seed and record "
-        "it in gdext/README.md")
+    message(FATAL_ERROR "headless check: the 512 world needs a ruined settlement in [present], a ruin at least 1500 "
+        "years old at the end and a pass (R0 '${_first_ruin}', D0 '${_first_faded}', passes '${_passes}'); choose "
+        "another seed and record it in gdext/README.md")
 endif()
 if(_mines_opened LESS 1)
     message(FATAL_ERROR "headless check: the 512 world has no mine_opened event (P5-04 11.3, check M10); choose "
@@ -222,6 +247,7 @@ list(REMOVE_DUPLICATES _marker_years)
 list(SORT _marker_years COMPARE NATURAL)
 list(JOIN _marker_years "," _marker_years_arg)
 message("markers: R0 = ${_first_ruin}, D0 = ${_first_faded}, passes ${_passes}, mines opened ${_mines_opened}, "
+    "towers founded ${_towers_founded}, figures ${_figure_lines}, "
     "years ${_marker_years_arg}")
 foreach(_year IN LISTS _marker_years)
     run_step("render markers ${_year}" "${WORLDGEN_CLI}" render --db "${_real_world}" --composite territory

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "p3_06_conflict_support.hpp"
+#include "p5_03_relations_api.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/renaming.hpp"
@@ -90,7 +91,8 @@ wd::ContentSet zero_content(const wd::ContentSet& base) {
             d.record = std::move(r);
         }
     }
-    return c;
+    // P5-06 7.11: and the figures at their zero (the stage without monsters builds none by I0)
+    return p503api::figures_zero_of(c);
 }
 
 // The shipped configuration without MonstersSubsystem and without a wild view.

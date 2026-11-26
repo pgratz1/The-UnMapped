@@ -79,6 +79,18 @@ void ViewerScreen::wire_browser() {
     for (int32_t c = 0; c < 4; ++c) {
         civ_list_->set_column_clip_content(c, true);
     }
+    // P5-06 11.3: the Figures tab.
+    figure_list_->set_column_title(0, "Figure");
+    figure_list_->set_column_title(1, "Role");
+    figure_list_->set_column_title(2, "Realm");
+    figure_list_->set_column_title(3, "Years");
+    figure_list_->set_column_expand_ratio(0, 3);
+    figure_list_->set_column_expand_ratio(1, 1);
+    figure_list_->set_column_expand_ratio(2, 2);
+    figure_list_->set_column_expand_ratio(3, 1);
+    for (int32_t c = 0; c < 4; ++c) {
+        figure_list_->set_column_clip_content(c, true);
+    }
     for (std::size_t i = 0; i < 3; ++i) {
         event_scope_->add_item(SCOPE_LABELS[i], static_cast<int32_t>(i));
     }
@@ -92,6 +104,8 @@ void ViewerScreen::wire_browser() {
     browser_search_->connect("text_changed", callable_mp(this, &ViewerScreen::on_search_changed));
     search_results_->connect("item_selected", callable_mp(this, &ViewerScreen::on_search_result_selected));
     civ_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_civ_list_selected));
+    figure_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_figure_list_selected));
+    entity_tabs_->connect("tab_changed", callable_mp(this, &ViewerScreen::on_entity_tab_changed));
     event_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_event_row_selected));
     event_scope_->connect("item_selected", callable_mp(this, &ViewerScreen::on_scope_selected));
     event_group_->connect("item_selected", callable_mp(this, &ViewerScreen::on_group_selected));
@@ -152,6 +166,22 @@ void ViewerScreen::browser_world_opened() {
         row->set_text(3, c["fate"]);
         row->set_metadata(0, c["id"]);
     }
+    // P5-06 11.3: the figure list, ascending id.
+    figure_list_->clear();
+    const godot::Array figures = model_->get_figure_list();
+    godot::TreeItem* figure_root = figures.is_empty() ? nullptr : figure_list_->create_item();
+    for (int64_t i = 0; i < figures.size(); ++i) {
+        const godot::Dictionary f = figures[i];
+        godot::TreeItem* row = figure_list_->create_item(figure_root);
+        row->set_text(0, f["name"]);
+        row->set_tooltip_text(0, godot::String(f["name"]) + " (" + godot::String::num_int64(f["events"]) + " events)");
+        row->set_text(1, f["role"]);
+        row->set_text(2, f["civ_name"]);
+        row->set_text(3, years_text(f["born"], f["died"]));
+        row->set_metadata(0, f["id"]);
+    }
+    entity_tabs_->set_current_tab(0);
+    show_entity_list();
     // 6.1: a world with history opens on Browser; without, on Legend with
     // the Browser tab disabled.
     right_pane_->set_tab_disabled(0, !available);
@@ -162,6 +192,7 @@ void ViewerScreen::browser_world_opened() {
 
 void ViewerScreen::browser_world_closed() {
     civ_list_->clear();
+    figure_list_->clear();
     swatches_.clear();
     search_results_->clear();
     search_rows_.clear();
@@ -213,24 +244,38 @@ void ViewerScreen::update_browser_controls() {
     if (event_group_->get_item_count() > group_item) {
         event_group_->select(group_item);
     }
-    // The civilization list shows the selected civilization.
-    const int64_t civ = int64_t(sel.get("entity_type", 0)) == 3 ? int64_t(sel.get("entity_id", 0)) : 0;
-    godot::TreeItem* root = civ_list_->get_root();
-    godot::TreeItem* selected = civ_list_->get_selected();
-    if (root != nullptr) {
+    // The civilization and figure lists show the selected entity; a
+    // selected figure brings its tab forward (P5-06 11.3).
+    const int64_t entity_type = sel.get("entity_type", 0);
+    const int64_t entity_id = sel.get("entity_id", 0);
+    if (entity_type == 6 && entity_tabs_->get_current_tab() != 1) {
+        entity_tabs_->set_current_tab(1);
+        show_entity_list();
+    } else if (entity_type == 3 && entity_tabs_->get_current_tab() != 0) {
+        entity_tabs_->set_current_tab(0);
+        show_entity_list();
+    }
+    for (const auto& [list, type] : {std::pair<godot::Tree*, int64_t>{civ_list_, 3}, std::pair<godot::Tree*, int64_t>{figure_list_, 6}}) {
+        const int64_t id = entity_type == type ? entity_id : 0;
+        godot::TreeItem* root = list->get_root();
+        godot::TreeItem* selected = list->get_selected();
+        if (root == nullptr) {
+            continue;
+        }
         godot::TreeItem* want = nullptr;
-        for (godot::TreeItem* row = root->get_first_child(); row != nullptr; row = row->get_next()) {
-            if (int64_t(row->get_metadata(0)) == civ) {
+        for (godot::TreeItem* row = root->get_first_child(); row != nullptr && id != 0; row = row->get_next()) {
+            if (int64_t(row->get_metadata(0)) == id) {
                 want = row;
+                break;
             }
         }
         if (want == nullptr) {
             if (selected != nullptr) {
-                civ_list_->deselect_all();
+                list->deselect_all();
             }
         } else if (want != selected) {
             want->select(0);
-            civ_list_->scroll_to_item(want);
+            list->scroll_to_item(want);
         }
     }
     // The event list shows the selected event.
@@ -454,6 +499,15 @@ void ViewerScreen::show_browser_detail() {
         browser_detail_->add_text(godot::String::num_int64(event_ids_.size()) + " events in the list above.");
         return;
     }
+    if (int64_t(sel["entity_type"]) == 6 && int64_t(sel["entity_id"]) != 0) {
+        // P5-06 11.3: the figure's block.
+        const godot::Array block = model_->get_figure_block(sel["entity_id"]);
+        for (int64_t i = 0; i < block.size(); ++i) {
+            add_linked_text(block[i]);
+            browser_detail_->newline();
+        }
+        return;
+    }
     if (civ != 0) {
         const godot::Array block = model_->get_civilization_block(civ);
         for (int64_t i = 0; i < block.size(); ++i) {
@@ -463,8 +517,8 @@ void ViewerScreen::show_browser_detail() {
         return;
     }
     browser_detail_->add_text(
-        "Choose a civilization, an event or a place on the map. A civilization turns on Follow: "
-        "the event steps (Page Up, Page Down) then walk its events.");
+        "Choose a civilization, a figure, an event or a place on the map. A civilization or a figure turns "
+        "on Follow: the event steps (Page Up, Page Down) then walk its events.");
 }
 
 void ViewerScreen::on_cell_clicked(int64_t x, int64_t y, int64_t marker) {
@@ -510,6 +564,28 @@ void ViewerScreen::on_civ_list_selected() {
     }
 }
 
+void ViewerScreen::on_figure_list_selected() {
+    if (updating_browser_) {
+        return;
+    }
+    godot::TreeItem* row = figure_list_->get_selected();
+    if (row != nullptr) {
+        model_->select_figure(row->get_metadata(0));
+    }
+}
+
+void ViewerScreen::on_entity_tab_changed(int64_t /*tab*/) {
+    show_entity_list();
+}
+
+void ViewerScreen::show_entity_list() {
+    const bool searching = !browser_search_->get_text().is_empty();
+    const bool figures = entity_tabs_->get_current_tab() == 1;
+    search_results_->set_visible(searching);
+    civ_list_->set_visible(!searching && !figures);
+    figure_list_->set_visible(!searching && figures);
+}
+
 void ViewerScreen::on_event_row_selected(int64_t index) {
     if (!updating_browser_ && index >= 0 && index < event_ids_.size()) {
         model_->select_event(event_ids_[index]);
@@ -525,8 +601,7 @@ void ViewerScreen::on_search_changed(const godot::String& text) {
         const godot::Dictionary r = search_rows_[i];
         search_results_->add_item(godot::String(r["name"]) + "   (" + godot::String(r["kind"]) + ")");
     }
-    search_results_->set_visible(!text.is_empty());
-    civ_list_->set_visible(text.is_empty());
+    show_entity_list();
 }
 
 void ViewerScreen::on_search_result_selected(int64_t index) {

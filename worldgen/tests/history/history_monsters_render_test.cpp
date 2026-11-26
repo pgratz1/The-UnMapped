@@ -196,7 +196,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-02 10.1: kinds 44 to 55 appended in the table's order, their uses, roles and values") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
+    REQUIRE(c.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     struct K {
         std::int64_t id;
         const char* key;
@@ -319,7 +319,7 @@ TEST_CASE("P5-02 11.4: the scene loads; each damaged site row is refused with it
     const std::string head = "corrupt table 'site': row ";
     refused("site-id", "UPDATE site SET id = " + n(s.s0 + 16) + " WHERE id = " + s6 + ";",
             head + n(s.s0 + 16) + ": id " + n(s.s0 + 16) + " is not " + s6);
-    refused("site-kind", "UPDATE site SET kind = 4 WHERE id = " + s1 + ";", head + s1 + ": kind 4 is not 1, 2 or 3");   // P5-04 9.2: 3 a mine
+    refused("site-kind", "UPDATE site SET kind = 5 WHERE id = " + s1 + ";", head + s1 + ": kind 5 is not 1, 2, 3 or 4");   // P5-04 9.2: 3 a mine; P5-06: 4 a tower
     refused("site-region", "UPDATE site SET region = 999999 WHERE id = " + s1 + ";",
             head + s1 + ": unknown region 999999");
     refused("site-cell", "UPDATE site SET x = 512, y = 0 WHERE id = " + s1 + ";",
@@ -426,9 +426,10 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
             bp + R + ", 1, 4): count equals the previous row of this region and beast");
     // settlement 4 of geo-seed-42-512 is faded after its sacking (ending 1, derived through its ruin_faded's cause,
     // r1 25 item 3); at 0.24.0 settlement 1 (the witness at 0.23.0) stands to the end
-    // 0.26.0: s4 of the 512 world is a ruin left by famine (ending 4), so the corruption is a sack's code
+    // 0.27.0: s4 of the 512 world (recalibrated monsters, P5-06) stands to the end (expected ending 0), so any
+    // other code is the corruption
     refused("ending", "UPDATE settlement SET ending = 1 WHERE id = 4;",
-            "corrupt table 'settlement': row 4: ending 1 is not its ruin's ending 4");
+            "corrupt table 'settlement': row 4: ending 1 is not its ruin's ending 0");
     // events: a participant of type 8 with no row; a kind 44 without its site; a value beast with no row (R4)
     {
         const auto e = eng::view_error(open_world(corrupt(

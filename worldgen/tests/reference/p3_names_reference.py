@@ -96,6 +96,9 @@ STREAMS = {
 # P5-02 9.1 (generator 0.23.0): kinds monster and site after settlement, with their streams. A monster's forms are
 # its kind's name_forms (not a culture field): with_forms(D, "monster", F) gives the naming data the attempt reads.
 STREAMS_023 = dict(STREAMS, monster="hist.names.monster", site="hist.names.site")
+# P5-06 6.11 (generator 0.27.0): kind person (P3-02 4.5's reserved kind, after site) with its stream; its forms are the
+# culture's person_forms (with_forms(D, "person", F)).
+STREAMS_023["person"] = "hist.names.person"
 KINDS_023 = ("god", "civilization", "settlement", "monster", "site")
 
 

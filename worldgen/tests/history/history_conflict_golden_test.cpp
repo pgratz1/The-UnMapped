@@ -21,6 +21,7 @@
 // doctest suite "history-slow" (worldgen-tests -ts=history-slow --no-skip).
 // Written from the spec only; needs no P3-06 name of the library.
 
+#include "p5_06_history_section.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -97,7 +98,7 @@ void check_world_case(const CCase& g) {
     for (const std::string& l : g.report) {
         want += l + "\n";
     }
-    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(p506section::strip_figure_counts(section(rep.value(), "[history]")) == want);   // P5-06 9.4: figures and books keys close the section
     CHECK(report_lines_05(t, in) == g.report);
     CHECK(stats_lines_06(t, in) == g.stats);
     CHECK(war_lines_from_rows(t) == golden_wars_without_how(g));

@@ -11,6 +11,7 @@
 
 #include "worldgen/db/result.hpp"
 #include "worldgen/history/digest.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 
 namespace unmapped {
 
@@ -51,6 +52,8 @@ std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
         case GLYPH_RING: return key.declining || key.capital ? std::string() : std::string("ring");
         case worldgen::inspect::GLYPH_MINE:  // P5-04 11.3
             return key.declining || key.capital ? std::string() : std::string("mine");
+        case worldgen::inspect::GLYPH_TOWER:  // P5-06 11.4
+            return key.declining || key.capital ? std::string() : std::string("tower");
         default: break;
     }
     const std::string_view word = worldgen::history::settlement_kind_word(key.base);
@@ -67,8 +70,16 @@ std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
     return name;
 }
 
+std::string figure_display_name(const worldgen::history::LoadedHistory& history, std::int64_t id) {
+    if (const worldgen::db::FigureRow* row = find_row(history.tables.figures, id)) {
+        return worldgen::history::figure_display_name(*row);
+    }
+    return "figure " + std::to_string(id);
+}
+
 std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name) {
-    for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING, worldgen::inspect::GLYPH_MINE}) {
+    for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING, worldgen::inspect::GLYPH_MINE,
+                                    worldgen::inspect::GLYPH_TOWER}) {
         if (name == marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false})) {
             return worldgen::inspect::GlyphKey{base, false, false};
         }
@@ -288,8 +299,12 @@ std::string HistoryState::holding_text(std::int64_t region) const {
     }
     if (h->civ != 0) {
         const worldgen::db::CivilizationRow* civ = civilization(h->civ);
-        return "   |   held by " + (civ != nullptr ? civ->name : "civilization " + std::to_string(h->civ)) +
-               " since " + std::to_string(h->since);
+        std::string text = "   |   held by " + (civ != nullptr ? civ->name : "civilization " + std::to_string(h->civ)) +
+                           " since " + std::to_string(h->since);
+        // P5-06 12: the realm's recorded ruler at Y.
+        const std::int64_t ruler = history_->timeline.ruler_at(h->civ, year_);
+        text += ruler != 0 ? ", ruled by " + figure_display_name(*history_, ruler) : std::string(", ruler unrecorded");
+        return text;
     }
     return h->since > 0 ? "   |   free since " + std::to_string(h->since) : std::string("   |   free");
 }

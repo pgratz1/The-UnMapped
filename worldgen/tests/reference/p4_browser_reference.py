@@ -66,9 +66,10 @@ T3_NAME = "t3-browser"
 INPUTS_023 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-fix", "report-inputs")
 INPUTS_024 = tl.INPUTS_P5_03
 INPUTS_025 = tl.INPUTS_P5_03A
-INPUTS = tl.INPUTS_P5_04   # 0.26.0 (phase 2); --version 0.25.0, 0.24.0 or 0.23.0 serves the committed file of that version
+INPUTS_026 = tl.INPUTS_P5_04
+INPUTS = prr.DEFAULT_INPUTS_027   # 0.27.0 (P5-06 phase 2); --version 0.26.0 to 0.23.0 serves the file of that version
 SCRATCH = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-05-a-tests", "fixtures-ref")
-GENERATOR_VERSION = "0.26.0"   # P5-04 11.2: group alliances = 7, ALL_GROUPS 0xFF (0.25.0: the groups of 0.24.0)
+GENERATOR_VERSION = "0.27.0"   # P5-06 11.3: group figures = 8, ALL_GROUPS 0x1FF (0.26.0: P5-04's alliances = 7, 0xFF)
 WORLD_CASES = tl.WORLD_CASES
 SLOW_CASES = tuple(n for n in WORLD_CASES if n.endswith("-1024"))
 
@@ -148,22 +149,32 @@ GROUP_KEYS_026.update({1: GROUP_KEYS_024[1] + ("mine_opened",), 2: GROUP_KEYS_02
                        7: ("alliance_formed", "alliance_renewed", "alliance_lapsed", "alliance_broken",
                            "alliance_betrayed", "ally_joined_war", "ally_refused", "ally_withdrew", "trade_opened",
                            "trade_broken", "spoils_shared", "spoils_withheld", "alliance_spurned", "arms_sold")})
-GROUP_VERSION = "0.26.0"
+# P5-06 11.3 (0.27.0): kinds 79 to 84, 86, 87, 89 to 91 in the new group `figures` = 8; 85 battle_led in `war`;
+# 88 monster_slain_by_hero in `monsters`; 92 blight in `calamity`; ALL_GROUPS 0x1FF.
+GROUP_KEYS_027 = dict(GROUP_KEYS_026)
+GROUP_KEYS_027.update({2: GROUP_KEYS_026[2] + ("battle_led",), 3: GROUP_KEYS_026[3] + ("blight",),
+                       5: GROUP_KEYS_026[5] + ("monster_slain_by_hero",),
+                       8: ("came_to_rule", "figure_died", "succession_disputed", "exiled", "reigned_at_end",
+                           "general_appointed", "fell_in_battle", "hero_rose", "hero_slain", "tower_founded",
+                           "book_written")})
+GROUP_VERSION = "0.27.0"
 
 
 def use_groups(v):
     global GROUP_KEYS, GROUP_OF, ALL_GROUPS, GROUP_VERSION, GROUP_WORDS
     GROUP_VERSION = v
-    GROUP_KEYS = GROUP_KEYS_026 if v == "0.26.0" else GROUP_KEYS_024 if v == "0.24.0" else GROUP_KEYS_023
+    GROUP_KEYS = (GROUP_KEYS_027 if v == "0.27.0" else GROUP_KEYS_026 if v == "0.26.0" else GROUP_KEYS_024
+                  if v == "0.24.0" else GROUP_KEYS_023)
     GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters") + (
-        ("peoples", "alliances") if v == "0.26.0" else ("peoples",) if v == "0.24.0" else ())
+        ("peoples", "alliances", "figures") if v == "0.27.0" else ("peoples", "alliances") if v == "0.26.0"
+        else ("peoples",) if v == "0.24.0" else ())
     GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
-    ALL_GROUPS = 0xFF if v == "0.26.0" else 0x7F if v == "0.24.0" else 0x3F
-    n = 78 if v == "0.26.0" else 62 if v == "0.24.0" else 55
+    ALL_GROUPS = 0x1FF if v == "0.27.0" else 0xFF if v == "0.26.0" else 0x7F if v == "0.24.0" else 0x3F
+    n = 92 if v == "0.27.0" else 78 if v == "0.26.0" else 62 if v == "0.24.0" else 55
     assert sum(len(x) for x in GROUP_KEYS.values()) == n and len(GROUP_OF) == n
 
 
-use_groups("0.26.0")
+use_groups("0.27.0")
 
 
 def event_group(key):
@@ -394,8 +405,13 @@ class Browser:
         if not short:
             o.append([lit("  peak regions: %d, %d-%d" % (m, y0, y1) if m else "  peak regions: 0")])
             o.append([lit("  peak population: %d in %d" % pp if pp else "  peak population: 0")])
-        o.append([lit("  settlements: %d founded, %d held at the end, %d ruined, %d faded" % (
-            d.founded[cid], d.held_settlements[cid], d.ruined_only[cid], d.faded[cid]))])
+        if prr.V8:   # P5-06 25.1 (d): ", <d> faded" only when d > 0
+            o.append([lit("  settlements: %d founded, %d held at the end, %d ruined%s" % (
+                d.founded[cid], d.held_settlements[cid], d.ruined_only[cid],
+                ", %d faded" % d.faded[cid] if d.faded[cid] > 0 else ""))])
+        else:
+            o.append([lit("  settlements: %d founded, %d held at the end, %d ruined, %d faded" % (
+                d.founded[cid], d.held_settlements[cid], d.ruined_only[cid], d.faded[cid]))])
         rel = [x for x in w.t["relation"] if (x[0] == CIV and x[1] == cid) or (x[2] == CIV and x[3] == cid)]
         joined = getattr(w, "joined", set())   # P5-04 10.4: an ally's war rows are not wars (prr.civ_block)
         wars = [x for x in rel if x[4] == "war" and x[7] not in joined]
@@ -458,6 +474,26 @@ class Browser:
                     o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
                 else:
                     o.append([lit(t_)])
+        if prr.V8 and (level == "full" or len(w.t["civilization"]) <= prr.SUMMARY_LINES_CIVS):
+            # P5-06 10.3: the rulers lines (as the C++ BlockLines: the figure references are entity segments)
+            rulers = sorted((x for x in w.t["figure"] if x[3] == 1 and x[6] == cid), key=lambda x: x[15])
+            n = max([x[15] for x in rulers] or [0])
+            head = [lit("  rulers: %s, %d recorded" % (prr.pl(n, "reign"), len(rulers)))]
+            if rulers:
+                head += [lit("; first "), ent(FIGURE, rulers[0][0])]
+                last = None
+                if c[8] is None:
+                    for x in rulers:
+                        r = prr.ruled_row(w, x[0])
+                        if r is not None and r[6] is None:
+                            last = x
+                if last is not None:
+                    head += [lit("; at the end "), ent(FIGURE, last[0])]
+            o.append(head)
+            if level == "full":
+                for x in rulers:
+                    o.append([lit("    "), ent(FIGURE, x[0]), lit(": %d-%s, reign %d, %s" % (
+                        x[8], prr.reign_end(w, x[0]), x[15], prr.TEMPER_WORD.get(x[17], "?")))])
         return o
 
     def adversary_lines(self, cid, rel):
@@ -1063,7 +1099,7 @@ def cmd_check(argv):
          [])
     if len(pe.COMPILED) > 56:   # reading B13
         c.eq("4.4 P5-03 kinds 57 to 62 are peoples (reading B13)",
-             [k["key"] for k in pe.COMPILED[56:] if event_group(k["key"]) != 6], [])
+             [k["key"] for k in pe.COMPILED[56:62] if event_group(k["key"]) != 6], [])
     c.eq("4.4 no compiled kind falls to other", [k["key"] for k in pe.COMPILED if event_group(k["key"]) == 4], [])
     c.eq("4.4 near misses", [event_group(k) for k in ("", "warx", "Battle", "battle ", "unknown_key")], [4] * 5)
     check_t3(c)
@@ -1103,14 +1139,20 @@ def main(argv):
         elif v == "0.24.0":
             prr.use_version("0.24.0")
             tl.RULES = "p5-03"
+            use_groups("0.24.0")
             INPUTS, GENERATOR_VERSION = INPUTS_024, "0.24.0"
         elif v == "0.25.0":
             prr.use_version("0.25.0")
             tl.RULES = "p5-03a"
             use_groups("0.24.0")
             INPUTS, GENERATOR_VERSION = INPUTS_025, "0.25.0"
-        elif v != "0.26.0":
-            raise SystemExit("--version: 0.23.0, 0.24.0, 0.25.0 or 0.26.0")
+        elif v == "0.26.0":
+            prr.use_version("0.26.0")
+            tl.RULES = "p5-04"
+            use_groups("0.26.0")
+            INPUTS, GENERATOR_VERSION = INPUTS_026, "0.26.0"
+        elif v != "0.27.0":
+            raise SystemExit("--version: 0.23.0 to 0.27.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":

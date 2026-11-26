@@ -537,4 +537,44 @@ Result<std::vector<SettlementRaceRow>> read_settlement_race_rows(const WorldRead
     });
 }
 
+// Schema 12 (P5-06 9.1, 9.3).
+Result<std::vector<FigureRow>> read_figure_rows(const WorldReader& world) {
+    return read_rows<FigureRow>(world, FIGURE_TABLE, [](Columns& c) {
+        FigureRow r;
+        r.id = c.integer();
+        r.name = c.text();
+        r.epithet = c.text();
+        r.role = c.integer();
+        r.race = c.integer();
+        r.culture = c.integer();
+        r.civ = c.integer();
+        r.born = c.integer();
+        r.office_from = c.integer();
+        r.start_event = c.integer();
+        r.died = c.nullable_integer();
+        r.death_event = c.integer();
+        r.death_region = c.integer();
+        r.death_settlement = c.integer();
+        r.status = c.integer();
+        r.reign_no = c.integer();
+        r.regnal = c.integer();
+        r.temper = c.integer();
+        r.skill = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<BookRow>> read_book_rows(const WorldReader& world) {
+    return read_rows<BookRow>(world, BOOK_TABLE, [](Columns& c) {
+        BookRow r;
+        r.id = c.integer();
+        r.title = c.text();
+        r.author = c.integer();
+        r.site = c.integer();
+        r.year = c.integer();
+        r.event = c.integer();
+        return r;
+    });
+}
+
 }  // namespace worldgen::db

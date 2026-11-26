@@ -64,6 +64,27 @@ def p503a():
     return pcr.FLAGS.get("p503a", False)
 
 
+def riders():
+    """P5-06 25.3 and 7.8 are on with the conflict flag riders of 0.27.0."""
+    import p3_conflict_reference as pcr
+    return pcr.FLAGS.get("riders", False)
+
+
+def occupies(s):
+    """P5-02 6.3.2's "occupied" test of a site at a ruin: kind != 3 at 0.26.0; P5-06 7.8: a lair or an outpost."""
+    return s["kind"] in (LAIR, OUTPOST) if riders() else s["kind"] != MINE
+
+
+def undead_threshold_027(min_dead, permille, P_W, M, R, regions_ref):
+    """P5-06 25.3: Tpop = P_W x undead_dead_permille div 1000; x regions_ref div max(regions_ref, R) when
+    regions_ref > 0; T = max(undead_min_dead, Tpop); S(r) >= T x 1000 div max(1000, M)."""
+    tpop = P_W * permille // 1000
+    if regions_ref > 0:
+        tpop = tpop * regions_ref // max(regions_ref, R)
+    T = max(min_dead, tpop)
+    return T * 1000 // max(1000, M)
+
+
 def undead_threshold_025(min_dead, permille, P_W, M):
     """P5-03a 6: T = max(undead_min_dead, P_W x undead_dead_permille div 1000); S(r) >= T x 1000 div max(1, M)."""
     T = max(min_dead, P_W * permille // 1000)
@@ -228,6 +249,7 @@ class Monsters:
         self.sites = []
         self.W = {}
         self.cursor = 1
+        self.heroes_slain_now = set()   # P5-06 reading F-G1
         self.pending_flare = 0
         self.created_this_step = False
         # logs (not state), for checks and statistics
@@ -575,7 +597,7 @@ class Monsters:
             r = ev["region"]
             if r == 0:
                 continue
-            if key in ("battle", "battle_at_pass", "allied_battle"):   # P5-04 11.1: the battle kinds set
+            if key in ("battle", "battle_at_pass", "allied_battle", "battle_led"):   # P5-04, P5-06 11.1
                 dead = ev["values"][1] + ev["values"][2]
             elif key == "sacked":
                 dead = ev["values"][1]
@@ -593,7 +615,10 @@ class Monsters:
         P_W = sum(s["population"] for s in w.settlements if w.standing(s)) if p503a() else 0
         for r in self.regions:
             ent = self.W.get(r, [])
-            if p503a():
+            if riders():   # P5-06 25.3: the population term scaled by undead_regions_ref; no rise below normal
+                need = undead_threshold_027(t["undead_min_dead"], t["undead_dead_permille"], P_W, self.M,
+                                            self.R, t.get("undead_regions_ref", 0))
+            elif p503a():
                 need = undead_threshold_025(t["undead_min_dead"], t["undead_dead_permille"], P_W, self.M)
             else:
                 need = t["undead_min_dead"] * 1000 // max(1, self.M) if p503() else t["undead_min_dead"]   # P5-03 14.2
@@ -615,7 +640,7 @@ class Monsters:
                 if bev["key"] == "sacked":
                     x = bev["settlement"]
                     if x and w.stl(x)["status"] in (3, 4) and not any(
-                            s["settlement"] == x and s["ending"] == OPEN and s["kind"] != MINE for s in self.sites):
+                            s["settlement"] == x and s["ending"] == OPEN and occupies(s) for s in self.sites):
                         at = x
                 self.appear(k, r, key="undead_rose", causes=causes, at_settlement=at)
                 self.W[r] = []
@@ -797,21 +822,30 @@ class Monsters:
             H = sum(u["population"] * t["hunt_levy_permille"] // 1000 for u in w.settlements
                     if u["owner_civ"] == c and u["status"] in (1, 2) and w.visible(u)
                     and u["region"] in hops and hops[u["region"]] <= t["hunt_hops"])
-            S = H * self.prowess(civ["race"]) // 1000
+            hero = self.hero_of(c)   # P5-06 7.7: (figure, hunt_permille, might_permille); (0, 0, 0) none
+            S = H * self.prowess(civ["race"]) // 1000 * (1000 + hero[2]) // 1000
             if S == 0:
                 continue
             p_h = t["hunt_permille"]
             if p503():   # P5-03 9.3 (reading H1: R_c counts the raids with Y - year <= hunt_memory_years)
                 R = sum(1 for yr in m["raid_years"].get(c, []) if Y - yr <= t["hunt_memory_years"])
-                p_h = min(t["hunt_max_permille"], t["hunt_permille"] + (max(1, R) - 1) * t["hunt_raid_permille"])
+                p_h = min(t["hunt_max_permille"] + hero[1], t["hunt_permille"] + (max(1, R) - 1) *
+                          t["hunt_raid_permille"] + hero[1])
+            elif hero[0]:
+                p_h = p_h + hero[1]
             if not chance_pm(w.draw("hist.monsters.hunt", m["id"], c, 0), p_h):
                 continue
             odds = min(t["slay_max_permille"], S * 1000 // (S + kd["might"]))
             u = pnr.pick(w.draw("hist.monsters.hunt_outcome", m["id"], c, 0), 1000)
             if u < odds:
-                e = w.append("monster_slain", region=lr, participants=(("monster", MONSTER, m["id"]),
-                                                                       ("slayer", CIV, c)),
-                             values=(H,), causes=(raid_e,))
+                if hero[0]:   # P5-06 7.7: the hero's slaying
+                    e = w.append("monster_slain_by_hero", region=lr,
+                                 participants=(("monster", MONSTER, m["id"]), ("slayer", CIV, c),
+                                               ("hero", pe.FIGURE, hero[0])), values=(H,), causes=(raid_e,))
+                else:
+                    e = w.append("monster_slain", region=lr, participants=(("monster", MONSTER, m["id"]),
+                                                                           ("slayer", CIV, c)),
+                                 values=(H,), causes=(raid_e,))
                 m["status"], m["died"], m["death_event"], m["slayer"] = SLAIN, Y, e, c
                 self.end_site(m["lair"], e, END_SLAIN)
                 self.log.append((Y, "slain", m["id"], c, H, S, odds, u))
@@ -824,9 +858,30 @@ class Monsters:
                 self.log.append((Y, "driven", m["id"], c, H, S, odds, u))
                 return
             self.log.append((Y, "hunt failed", m["id"], c, H, S, odds, u))
+            if hero[0] and chance_pm(w.draw("hist.monsters.hero_fall", m["id"], c, 0),
+                                     w.figures.t["hero_fall_permille"]):
+                # P5-06 7.7: a failed hunt led by a hero may kill the hero; either ends the hunts of the year
+                w.append("hero_slain", region=lr, participants=(("figure", pe.FIGURE, hero[0]),
+                                                                ("civilization", CIV, c),
+                                                                ("monster", MONSTER, m["id"])), causes=(raid_e,))
+                self.heroes_slain_now.add(hero[0])
+                self.log.append((Y, "hero slain", m["id"], c, hero[0]))
+                return
 
     def prowess(self, race):
         return self.w.pd.race[race]["prowess"]
+
+    def hero_of(self, c):
+        """P5-06 7.7: FigureView::hero_of(c) as (figure, hunt_permille, might_permille); (0, 0, 0) without the view
+        or a hero. Reading F-G1 (spec gap): a hero that a hero_slain of this T4 named is no longer the realm's hero for
+        the rest of the step (the figures subsystem reads its death only in its own T4, after the monsters)."""
+        fv = getattr(self.w, "figures", None)
+        if fv is None:
+            return (0, 0, 0)
+        h = fv.hero_of(c)
+        if h[0] == 0 or h[0] in self.heroes_slain_now:
+            return (0, 0, 0)
+        return h
 
     # ---------------------------------------------------------------- 6.6 outposts
     def at_war(self, a, b):
@@ -915,6 +970,7 @@ class Monsters:
 
     def t4(self):
         self.created_this_step = False
+        self.heroes_slain_now = set()
         self.read_log()
         self.beasts_bold()
         self.monsters_year()
@@ -1141,7 +1197,8 @@ class Rows:
 
 
 MONSTER_EVENT_KINDS = ("monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid",
-                       "settlement_overrun", "monster_slain", "monster_driven_off", "monster_died")
+                       "settlement_overrun", "monster_slain", "monster_driven_off", "monster_died",
+                       "monster_slain_by_hero", "hero_rose", "hero_slain")   # P5-06 11.2: kinds naming a monster
 
 
 def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, quarter=True):
@@ -1186,11 +1243,14 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if [e[0] for e in app] != [m[5]]:
             out.append("4: monster %d appearances %s, born_event %d" % (m[0], [e[0] for e in app], m[5]))
         for e in evs:
+            # P5-06 6.7: a hero may rise in T4 after the raids of a monster slain earlier in the same year
+            if x.key[e[3]] == "hero_rose" and m[6] is not None and e[1] == m[6]:
+                continue
             if e[0] < m[5] or e[1] < m[4] or (m[6] is not None and (e[1] > m[6] or e[0] > m[7])):
                 out.append("4: monster %d event e%d outside its life" % (m[0], e[0]))
         if sum(1 for e in evs if x.key[e[3]] == "settlement_overrun") > 1:
             out.append("4: monster %d overran twice" % m[0])
-        sl = [e for e in evs if x.key[e[3]] == "monster_slain"]
+        sl = [e for e in evs if x.key[e[3]] in ("monster_slain", "monster_slain_by_hero")]   # P5-06 11.2
         di = [e for e in evs if x.key[e[3]] == "monster_died"]
         if (m[9] == SLAIN) != (len(sl) == 1) or len(sl) > 1 or (m[9] == DIED) != (len(di) == 1) or len(di) > 1:
             out.append("4: monster %d status %d with %d slain, %d died" % (m[0], m[9], len(sl), len(di)))
@@ -1224,7 +1284,8 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if m[9] in (SLAIN, DIED) and (lair[13] == OPEN or lair[11] != m[6]):
             out.append("6: ended monster %d lair ended %s, died %s" % (m[0], lair[11], m[6]))
     for s in x.sites:
-        if s[6] and s[2] != MINE:   # P5-04 9.2: a mine's settlement is its town (the alliances' check-world)
+        # P5-04 9.2, P5-06 7.8: a mine's settlement is its town, a library's its city; rule 6 reads lairs and outposts
+        if s[6] and s[2] in (LAIR, OUTPOST):
             k = x.kind_of(s[10])
             st = x.stl.get(s[6])
             if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose"):
@@ -1268,7 +1329,9 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
             out.append("10: settlement %d ending %s, derived %d" % (st[0], st[14] if len(st) > 14 else None,
                                                                   want[st[0]]))
     # 11: causes (10.2) and W9
-    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked", "allied_battle"), "monster_woke": ("monster_slept",
+    cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked", "allied_battle", "battle_led"),
+                   "monster_slain_by_hero": ("monster_raid",), "hero_slain": ("monster_raid",),
+                   "monster_woke": ("monster_slept",
                    "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke"),
                    "settlement_overrun": ("monster_raid",), "monster_slain": ("monster_raid",),
                    "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose"),
@@ -1961,7 +2024,7 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    version = "0.26.0"   # P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
+    version = "0.27.0"   # P5-06 phase 2 (--version 0.26.0: P5-04's file); P5-04; --version 0.25.0 the P5-03a file, 0.24.0 serves the P5-03 file, 0.23.0 the committed P5-02 file
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

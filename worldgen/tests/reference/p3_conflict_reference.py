@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.26.0"
+GENERATOR_VERSION = "0.27.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -154,8 +154,13 @@ FLAGS = dict(
     p503a=True,         # P5-03a 3 to 8: long peace, common enemies, credit and contributions by sign, meetings by
                         # word, graded settlers, the expulsion gap, A1; the undead threshold by world population (6)
     # P5-04 (generator 0.26.0)
-    alliances=False,    # P5-04 6, 7: alliances, trade, mines and arms (p5_04_alliances_reference.Alliances after the
+    alliances=True,     # P5-04 6, 7: alliances, trade, mines and arms (p5_04_alliances_reference.Alliances after the
                         # relations; the seams of 7 in World), the AllianceView read by conflict
+    # P5-06 (generator 0.27.0)
+    figures=True,       # P5-06 5 to 7: the figures subsystem after the alliances (p5_06_figures_reference.Figures), the
+                        # FigureView read by conflict, peoples, monsters and alliances; battle_led; schema 12
+    riders=True,        # P5-06 25.3 (the two undead rules) and 7.8 (P5-02's site loops test kinds 1 and 2); 25.1 is the
+                        # peoples flag nofade
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -168,8 +173,9 @@ FLAGS_023 = ("monsters", "flare_claim")
 FLAGS_024 = ("relations",)
 FLAGS_025 = ("p503a",)
 FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7
+FLAGS_027 = ("figures", "riders")   # P5-06 (generator 0.27.0)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0")
+            "0.26.0", "0.27.0")
 
 
 
@@ -182,6 +188,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_027:
+        return i >= 11
     if k in FLAGS_026:
         return i >= 10
     if k in FLAGS_025:
@@ -228,7 +236,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.26.0")
+    use_version("0.16.0" if on else "0.27.0")   # P5-06 phase 2: 0.27.0 by default (--version 0.26.0: P5-04)
 
 
 class rules:
@@ -251,6 +259,7 @@ class rules:
         pp.FLAGS.update(self.saved[1])
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
+FIGURE = 6   # P5-06: entity type 6 comes into use
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
 HAMLET, VILLAGE, TOWN, CITY, FORTRESS = 1, 2, 3, 4, 5
 THRIVING, DECLINING, RUINED, FADED = 1, 2, 3, 4
@@ -278,8 +287,9 @@ _PWR = {}
 
 
 def BATTLES():
-    """P5-04 11.1: the battle kinds set (allied_battle where the catalogue has it)."""
-    return (K["battle"], K["battle_at_pass"]) + ((K["allied_battle"],) if "allied_battle" in K else ())
+    """P5-04 11.1: the battle kinds set (allied_battle where the catalogue has it); P5-06 11.1: battle_led."""
+    return (K["battle"], K["battle_at_pass"]) + ((K["allied_battle"],) if "allied_battle" in K else ()) + (
+        (K["battle_led"],) if "battle_led" in K else ())
 
 
 def fatal(msg):
@@ -505,6 +515,9 @@ KEY_OF = {k["id"]: k["key"] for k in COMPILED}
 # P5-04 8.1 (0.26.0): kinds 63 to 78 named for the row checks (no 0.25.0 world holds them)
 KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_026})
 KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_026})
+# P5-06 8.1 (0.27.0): kinds 79 to 92 likewise
+KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_027})
+KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_027})
 K = KIND_ID
 # r19 23.2 / P3-07 r14 23 item 1: wherever a rule, invariant, statistic or report reads a claim, kinds 20 and 39
 # are read alike; a cession of invariants (13), (17), the units and the companions is kind 29 or 40. Kinds 39 and
@@ -564,6 +577,7 @@ class Data(pp.Data):
         self.renaming = hist.get("renaming")   # P5-12 4 (0.22.0); an older root has none
         self.relations = hist.get("relations")   # P5-03 4.2 (0.24.0); an older root has none
         self.alliances = hist.get("alliances")   # P5-04 4.2 (0.26.0); an older root has none
+        self.figures = hist.get("figures")       # P5-06 4.4 (0.27.0); an older root has none
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -583,6 +597,14 @@ class Data(pp.Data):
             self.race[rid]["origin_allies"] = list(t.get("origin_allies", []))
             self.race[rid]["ally_join"] = t.get("ally_join_permille", 0)
             self.race[rid]["mining"] = t.get("mining_permille", 0)
+            # P5-06 4.1 (0.27.0): the race's leanings of temper (steady, warlike, peaceable, grasping, just) and the
+            # chances of generals, heroes and casters; an older root has none
+            tw = t.get("temper_weights")
+            self.race[rid]["temper_weights"] = (tuple(tw[x] for x in ("steady", "warlike", "peaceable", "grasping",
+                                                                       "just")) if tw else None)
+            self.race[rid]["general"] = t.get("general_permille", 0)
+            self.race[rid]["hero"] = t.get("hero_permille", 0)
+            self.race[rid]["magic"] = t.get("magic_permille", 0)
 
 
 _DATA = {}
@@ -601,6 +623,7 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d.renaming = copy.deepcopy(getattr(dat, "renaming", None))
     d.relations = copy.deepcopy(getattr(dat, "relations", None))
     d.alliances = copy.deepcopy(getattr(dat, "alliances", None))
+    d.figures = copy.deepcopy(getattr(dat, "figures", None))
     return d
 
 
@@ -807,6 +830,12 @@ class World(pp.World):
         if conflict and FLAGS["alliances"] and getattr(dat, "alliances", None) is not None:
             import p5_04_alliances_reference as p504
             self.alliances = p504.Alliances(self, dat, inp)
+        # P5-06: the figures subsystem after the alliances (p5_06_figures_reference.Figures); its FigureView read by
+        # conflict (7.2, 7.3, 7.6), peoples (7.4), monsters (7.7) and alliances (7.3); None: no view, 0.26.0's rules
+        self.figures = None
+        if conflict and FLAGS["figures"] and getattr(dat, "figures", None) is not None:
+            import p5_06_figures_reference as p506
+            self.figures = p506.Figures(self, dat, inp)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -824,11 +853,15 @@ class World(pp.World):
         if self.alliances is not None:
             self.alliances.t2()              # T2: alliances (P5-04 6.1: after relations, which has no T2)
         self.begin()                         # T3
+        if self.figures is not None:
+            self.figures.t3()                # T3: figures (P5-06 6.1: the only subsystem of T3)
         self.t4()                            # T4
         if self.monsters is not None:
             self.monsters.t4()               # T4: monsters (same step, after peoples)
         if self.race_relations is not None:
             self.race_relations.t4()
+        if self.figures is not None:
+            self.figures.t4()                # T4: figures (after relations; alliances has no T4)
         self.begin()                         # T5
         self.begin()                         # T6
         if self.conflict_on:
@@ -841,6 +874,8 @@ class World(pp.World):
             self.race_relations.t6()
         if self.alliances is not None:
             self.alliances.t6()              # T6: alliances (after relations)
+        if self.figures is not None:
+            self.figures.t6()                # T6: figures (after alliances)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -870,6 +905,8 @@ class World(pp.World):
             self.race_relations.q4()
         if self.alliances is not None:
             self.alliances.q4()             # Q4: alliances (after relations)
+        if self.figures is not None:
+            self.figures.q4()               # Q4: figures (after alliances)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -1477,6 +1514,8 @@ class World(pp.World):
     def housekeeping(self):
         ended = lambda c: self.civ(c)["ended_year"] is not None  # noqa: E731
         for k in sorted(list(self.relations), key=key_order):
+            if k[0] != CIV or k[2] != CIV:
+                continue                      # P5-06 7.5: relations with a figure side are the figures subsystem's
             a, b = k[1], k[3]
             ea, eb = ended(a), ended(b)
             if ea or eb:
@@ -1555,6 +1594,10 @@ class World(pp.World):
                 rate = g * g // 1000 * drive // 1000 * (1000 // k) // 1000
                 if self.allied(a, b):          # P5-04 7.2: after 5.2's evaluation, before the step's product
                     rate = rate * t["allied_strain_permille"] // 1000
+                    if self.figures is not None:   # P5-06 7.3: the attacker's temper on strain toward an ally
+                        rate = rate * self.figures.allied_strain_permille(a) // 1000
+                if self.figures is not None:       # P5-06 7.2: the attacker's temper, normalized by race
+                    rate = rate * self.figures.strain_permille(a) // 1000
                 v = self.strain.get((a, b), 0) + rate * years * permille * I // 1000
                 v = min(v, t["strain_max"] * 1000)
                 if v > (1 << 40):
@@ -1975,7 +2018,8 @@ class World(pp.World):
                          causes=(e,))
         self.end_civ(y, e2)
         self.version += 1
-        for k in sorted([k for k in self.relations if y in (k[1], k[3])], key=key_order):
+        for k in sorted([k for k in self.relations if y in (k[1], k[3]) and k[0] == CIV and k[2] == CIV],
+                        key=key_order):   # P5-06 7.5: civilization pairs only
             self.close_rel(k, e2)
         if self.alliances is not None:
             self.allies_ended()               # P5-04 7.11: y as an ally of another war
@@ -2042,11 +2086,33 @@ class World(pp.World):
             A = self.force(x) // self.wars_of(x)
             D = self.force(y) // self.wars_of(y)
         dv, pass_id = self.defence(r, r_from, y)
-        p = self.battle_p(A, D, dv)
+        gx = gy = None
+        if self.figures is not None:        # P5-06 7.6: the generals' skill in the win chance only
+            gx, gy = self.figures.general_of(w, x), self.figures.general_of(w, y)
+        if gx is not None and (gx[0] or gy[0]):
+            A1 = A * (1000 + gx[1]) // 1000
+            D2 = D * dv // 1000 * (1000 + gy[1]) // 1000
+            p = A1 * 1000 // (A1 + D2) if A1 + D2 > 0 else 500
+        else:
+            p = self.battle_p(A, D, dv)
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
         dead_w, dead_l = self.battle_tolls(FW, FL, w)
-        if allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1])):
+        some_ally = allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1]))
+        if gx is not None and (gx[0] or gy[0]):
+            fw, fl = ((fx, fy) if xwin else (fy, fx)) if allied else ((0, []), (0, []))
+            gw, gl = (gx, gy) if xwin else (gy, gx)
+            e = self.append("battle_led", region=r,
+                            participants=(("winner", CIV, W), ("loser", CIV, L)) +
+                            tuple(("winner_ally", CIV, z) for z, f in fw[1] if f > 0) +
+                            tuple(("loser_ally", CIV, z) for z, f in fl[1] if f > 0) +
+                            ((("winner_general", FIGURE, gw[0]),) if gw[0] else ()) +
+                            ((("loser_general", FIGURE, gl[0]),) if gl[0] else ()),
+                            values=(dead_w, dead_l, pass_id), causes=(w,))
+            if some_ally:
+                self.allied_casualties(W, dead_w, fw, e, war)
+                self.allied_casualties(L, dead_l, fl, e, war)
+        elif some_ally:
             fw, fl = (fx, fy) if xwin else (fy, fx)
             e = self.append("allied_battle", region=r,
                             participants=(("winner", CIV, W), ("loser", CIV, L)) +
@@ -2061,7 +2127,7 @@ class World(pp.World):
         else:
             e = self.append("battle", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l), causes=(w,))
-        if not (allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1]))):
+        if not some_ally:
             self.casualties(W, dead_w, e, war)
             self.casualties(L, dead_l, e, war)
         war["fought"].add(r)
@@ -2633,6 +2699,11 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
             res["race_relation"] = w.race_relations.race_relation_rows()
             res["settlement_race"] = w.race_relations.settlement_race_rows()
         pe.with_ending(res)
+    if w.figures is not None:   # schema 12 (P5-06 9.1, 9.3): the figure and book rows, written at the end
+        res["figure"] = w.figures.figure_rows()
+        res["book"] = w.figures.book_rows()
+    elif pe.RENDER_R27:
+        res["figure"], res["book"] = [], []
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
@@ -3289,6 +3360,8 @@ def check_peoples_invariants(c, res, inp, w, label):
         red += ("settlement_fled", "people_expelled")
     if FLAGS["alliances"]:   # P5-04 11.1: the battle kinds set
         red += ("allied_battle",)
+    if FLAGS["figures"]:   # P5-06 11.1: battle_led a battle; 6.8: a blight is a reduction (note_reduction)
+        red += ("battle_led", "blight")
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
@@ -3330,7 +3403,8 @@ def check_peoples_invariants(c, res, inp, w, label):
                                                "settlement_mixed", "standing_changed")) or (   # P5-03 6.1 Q1, Q4
                 FLAGS["alliances"] and key in ("alliance_renewed", "alliance_lapsed", "alliance_broken",
                                                "trade_opened", "trade_broken", "spoils_shared", "spoils_withheld",
-                                               "alliance_spurned", "mine_opened", "arms_sold"))   # P5-04 6.1 Q4
+                                               "alliance_spurned", "mine_opened", "arms_sold")) or (   # P5-04 6.1 Q4
+                FLAGS["figures"] and e[3] >= K.get("came_to_rule", 1 << 30))   # P5-06 6.1 Q4, 6.13 (invariant 8 there)
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
@@ -3361,6 +3435,8 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     rel = res["relation"]
     seen_enmity = set()
     for r in rel:
+        if FLAGS["figures"] and r[0] == FIGURE:
+            continue   # P5-06 9.2: ruled, served, rival, parent (checked by p5_06_figures_reference's 9.4 and 13)
         lab = "%s inv 1 relation %s" % (label, r)
         c.true(lab + " types", r[0] == CIV and r[2] == CIV)
         al = FLAGS["alliances"]
@@ -3453,7 +3529,7 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for e in res["event"]:
         key = KEY_OF[e[3]]
         if key in ("battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held",
-                   "search_abandoned", "allied_battle", "ally_withdrew"):
+                   "search_abandoned", "allied_battle", "ally_withdrew", "battle_led"):
             c.true("%s inv 2 e%d %s not in a quiet phase" % (label, e[0], key), ph[e[4]][2] != QUIET)
         if key in ("peace", "war_won", "truce", "region_ceded", "settlements_ceded", "tribute") and ph[e[4]][2] == QUIET:
             row = ph[e[4]]
@@ -3464,12 +3540,12 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             c.true("%s inv 2 e%d caused by the war's last event" % (label, e[0]),
                    len(cs) == 1 and KEY_OF[kind[cs[0]]] in ("war_declared", "battle", "battle_at_pass", "siege",
                                                            "sacked", "settlement_captured", "refugees_settled",
-                                                           "refuge_held", "allied_battle"))
+                                                           "refuge_held", "allied_battle", "battle_led"))
         if key == "region_ceded":
             cs = causes.get(e[0], [])
             c.true("%s 11 e%d cession caused by a peace" % (label, e[0]), len(cs) == 1 and
                    kind[cs[0]] in (K["peace"], K["war_won"]))
-        if key in ("battle", "battle_at_pass", "allied_battle"):
+        if key in ("battle", "battle_at_pass", "allied_battle", "battle_led"):
             cs = causes.get(e[0], [])
             c.true("%s 11 e%d caused by its declaration" % (label, e[0]), len(cs) == 1 and
                    kind[cs[0]] == K["war_declared"])
@@ -3539,7 +3615,8 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for x in res["civilization"]:
         if x[8] is not None:
             c.true("%s inv 4 ended c%d no open relation" % (label, x[0]),
-                   not any(r[6] is None and x[0] in (r[1], r[3]) for r in rel))
+                   not any(r[6] is None and ((r[0] == CIV and r[1] == x[0]) or (r[2] == CIV and r[3] == x[0]))
+                           for r in rel))   # P5-06: by entity type (a figure's id may equal the civilization's)
     # 5 territory: every owner change by P3-06 is a capture or a cession
     for r in res["region_control"]:
         c.true("%s inv 5 region_control %s event kind" % (label, r), KEY_OF[kind[r[4]]] in (
@@ -7420,7 +7497,7 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    want_schema = "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))

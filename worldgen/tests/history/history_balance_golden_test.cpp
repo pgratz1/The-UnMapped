@@ -14,6 +14,7 @@
 //
 // Written from the spec only; needs no new library name. Runs by default (one 512 world, two threads).
 
+#include "p5_06_history_section.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -66,7 +67,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     REQUIRE(rep.ok());
     std::string want = "[history]\n";
     for (const std::string& l : g.report) want += l + "\n";
-    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(p506section::strip_figure_counts(section(rep.value(), "[history]")) == want);   // P5-06 9.4: figures and books keys close the section
     CHECK(stats_lines_06(t, in) == g.stats);
     CHECK(war_lines_from_rows(t) == golden_wars_without_how(g));
     const std::vector<std::string> sent = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));
@@ -110,7 +111,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 1, a colony founded in the step of a cession passes to the winner") {
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 12, a colony founded in the step of a cession passes to the winner") {
     // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration; the first
     // round's 1024 seed 36 case, e310, no longer occurs with the second round's rules, and no 1024 default world
     // of seeds 0 to 160 has one): the reference (p3_conflict_reference.py check-world, table for table on this
@@ -132,11 +133,15 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 1, a colony founded i
     // 5, 15 and 29 have one each (C++ worlds); seed 4's is region_ceded e173 of region 24 in 3030 (colony e171, s50).
     // P5-04 (generator 0.26.0, test writer at integration): seed 4 has none any more; of seeds 0 to 16 only seed 1
     // has one: region_ceded e648 of region 28 in 3816 (colony e643, s70; check-world equal).
-    static dbtest::TempDir dir("balance-golden-1024-turbulent-1");
+    // P5-06 (generator 0.27.0, test writer at integration): seed 1 has none any more; of the 1024 turbulent seeds 0
+    // to 30, seed 12 has two (region_ceded e1986 of region 9 in 5108, colony e1984, s127; e2403 of region 9 in 5308,
+    // colony e2401, s134) and seed 24 one (e1356 of region 14 in 5109, colony e1354, s95) (C++ worlds, searched by
+    // this test's rule).
+    static dbtest::TempDir dir("balance-golden-1024-turbulent-12");
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const std::string path = dir.file("turbulent-1-1024.db");
-    REQUIRE(worldgen::generate_world(chrono_test::world_params(1, 1024, hp, shipped()), shipped(), path,
+    const std::string path = dir.file("turbulent-12-1024.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(12, 1024, hp, shipped()), shipped(), path,
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     const db::WorldReader r = open_world(path);
@@ -174,7 +179,8 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 1, a colony founded i
     }
     CHECK(found >= 1);  // 0.21.0: e751 (s122, region 10, 4331); 0.23.0 seed 5: e1048 (s112, region 34, 4410);
                         // 0.24.0 seed 34: e148 (s36, region 36, 2611); 0.25.0 seed 4: e173 (s50, region 24, 3030)
-                        // 0.26.0 seed 1: e648 (s70, region 28, 3816)
+                        // 0.26.0 seed 1: e648 (s70, region 28, 3816); 0.27.0 seed 12: e1986 (s127, region 9,
+                        // 5108), e2403 (s134, region 9, 5308)
     MESSAGE("same-step colony cessions found: " << found);
     // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
     CHECK(cession_violations(t) == std::vector<std::string>{});

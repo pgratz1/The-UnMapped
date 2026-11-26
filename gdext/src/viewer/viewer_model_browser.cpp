@@ -19,6 +19,7 @@
 #include <godot_cpp/variant/vector2i.hpp>
 
 #include "viewer/viewer_model.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
@@ -71,6 +72,7 @@ const char* match_kind_word(std::int64_t type) {
         case BROWSER_CIVILIZATION: return "civilization";
         case BROWSER_SETTLEMENT: return "settlement";
         case BROWSER_REGION: return "region";
+        case BROWSER_FIGURE: return "figure";
         default: break;
     }
     return "";
@@ -261,6 +263,44 @@ godot::Array ViewerModel::get_civilization_block(int64_t civilization) const {
     return out;
 }
 
+godot::Array ViewerModel::get_figure_list() const {
+    godot::Array out;
+    if (!get_browser_available()) {
+        return out;
+    }
+    const auto& timeline = history_.history().timeline;
+    for (const auto& f : browser_.index().figures()) {
+        godot::Dictionary row;
+        row["id"] = f.id;
+        row["name"] = to_godot(f.display_name);
+        row["role"] = to_godot(worldgen::history::figure_role_word(f.role));
+        row["civ"] = f.civ;
+        const auto* civ = f.civ != 0 ? browser_.civilization(f.civ) : nullptr;
+        row["civ_name"] = civ != nullptr ? to_godot(civ->name) : godot::String();
+        row["born"] = f.born;
+        row["died"] = f.died;
+        row["events"] = static_cast<int64_t>(timeline.events_of_figure(f.id).size());
+        out.push_back(row);
+    }
+    return out;
+}
+
+godot::Array ViewerModel::get_figure_block(int64_t figure) const {
+    godot::Array out;
+    if (!get_browser_available() || browser_.figure(figure) == nullptr) {
+        return out;
+    }
+    try {
+        for (const auto& line : browser_.index().figure_block(history_.history(), figure, browser_.filter.level)) {
+            out.push_back(linked_dictionary(line));
+        }
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel.get_figure_block: ") + e.what());
+        return {};
+    }
+    return out;
+}
+
 godot::PackedInt64Array ViewerModel::get_event_ids() const {
     return get_browser_available() ? packed(browser_.ids()) : godot::PackedInt64Array();
 }
@@ -441,6 +481,23 @@ bool ViewerModel::select_civilization(int64_t civilization) {
     return true;
 }
 
+bool ViewerModel::select_figure(int64_t figure) {
+    if (!get_browser_available() || (figure != 0 && browser_.figure(figure) == nullptr)) {
+        return false;
+    }
+    browser_.push_path(history_.year());
+    BrowserSelection& s = browser_.selection;
+    s = {};
+    if (figure != 0) {
+        s.entity_type = BROWSER_FIGURE;
+        s.entity_id = figure;
+    }
+    browser_.filter.scope = figure != 0 ? BrowserScope::entity : BrowserScope::all;
+    browser_.follow = figure != 0;
+    selection_changed(true);
+    return true;
+}
+
 bool ViewerModel::select_event(int64_t event) {
     const worldgen::inspect::EventEntry* e = get_browser_available() ? browser_.event(event) : nullptr;
     if (e == nullptr) {
@@ -490,10 +547,13 @@ bool ViewerModel::follow_link(const godot::String& target) {
     if (!get_browser_available() || !parse_browser_target(to_utf8(target), prefix, id)) {
         return false;
     }
-    // 5.2: c, s, rg and e; ra, g and (until section 9) m, si, f, fa are not
-    // followed.
+    // 5.2: c, s, rg, e and (P5-06 11.3) f; ra, g and (until section 9) m,
+    // si, fa are not followed.
     if (prefix == "c") {
         return id != 0 && select_civilization(id);
+    }
+    if (prefix == "f") {
+        return id != 0 && select_figure(id);
     }
     if (prefix == "s") {
         return select_place(BROWSER_SETTLEMENT, id);
@@ -511,7 +571,7 @@ bool ViewerModel::can_follow_link(const godot::String& target) const {
     std::string prefix;
     std::int64_t id = 0;
     return get_browser_available() && parse_browser_target(to_utf8(target), prefix, id) &&
-           (prefix == "c" || prefix == "s" || prefix == "rg" || prefix == "e");
+           (prefix == "c" || prefix == "s" || prefix == "rg" || prefix == "e" || prefix == "f");
 }
 
 bool ViewerModel::browser_back() {
@@ -699,6 +759,9 @@ void ViewerModel::bind_browser_methods() {
     ClassDB::bind_method(D_METHOD("set_browser_years", "from", "to"), &ViewerModel::set_browser_years);
     ClassDB::bind_method(D_METHOD("set_browser_this_year", "on"), &ViewerModel::set_browser_this_year);
     ClassDB::bind_method(D_METHOD("select_civilization", "civilization"), &ViewerModel::select_civilization);
+    ClassDB::bind_method(D_METHOD("select_figure", "figure"), &ViewerModel::select_figure);
+    ClassDB::bind_method(D_METHOD("get_figure_list"), &ViewerModel::get_figure_list);
+    ClassDB::bind_method(D_METHOD("get_figure_block", "figure"), &ViewerModel::get_figure_block);
     ClassDB::bind_method(D_METHOD("select_event", "event"), &ViewerModel::select_event);
     ClassDB::bind_method(D_METHOD("select_place", "type", "id"), &ViewerModel::select_place);
     ClassDB::bind_method(D_METHOD("clear_selection"), &ViewerModel::clear_selection);

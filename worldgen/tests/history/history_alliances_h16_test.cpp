@@ -282,7 +282,7 @@ TEST_CASE("P5-04 9.1, 9.2: H16 loads; each corruption refused with its message")
     refused("no-ally", "DELETE FROM event_participant WHERE event = 50 AND seq = 3;", "allied_battle without an ally");
     refused("spoils-war", "DELETE FROM event_cause WHERE event = 53 AND cause = 51;", "spoils without its war");
     // 9.2 the site kind mine (P5-02 11.4's line, amended)
-    refused("site-kind", "UPDATE site SET kind = 4 WHERE id = 1;", "kind 4 is not 1, 2 or 3");
+    refused("site-kind", "UPDATE site SET kind = 5 WHERE id = 1;", "kind 5 is not 1, 2, 3 or 4");   // P5-06: 4 is a tower
     refused("mine-monster", "UPDATE site SET monster = 1 WHERE id = 1;", "mine with a monster");
     refused("mine-settlement", "UPDATE site SET settlement = 0 WHERE id = 1;", "mine without a settlement");
     refused("mine-civ", "UPDATE site SET founder_civ = 99 WHERE id = 1;", "unknown civilization 99");
@@ -299,7 +299,7 @@ TEST_CASE("P5-04 9.2: a schema 10 file is refused (readers refuse version 10 wor
                                                  "'schema_version';");
     auto r = db::WorldReader::open(path);
     REQUIRE_FALSE(r.ok());
-    CHECK(r.error().message.find("world schema version 10, this build reads 11") != std::string::npos);
+    CHECK(r.error().message.find("world schema version 10, this build reads 12") != std::string::npos);
     CHECK(db::SCHEMA_VERSION == p504api::SCHEMA_SPEC);
 }
 
@@ -313,8 +313,8 @@ TEST_CASE("P5-04 10.1, 10.2: H16's header and [alliances] at both levels") {
     const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary));
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full));
     REQUIRE_FALSE(s.empty());
-    CHECK(s.front() == "# worldgen history v7");
-    CHECK(f.front() == "# worldgen history v7");
+    CHECK(s.front() == "# worldgen history v8");
+    CHECK(f.front() == "# worldgen history v8");
     const std::string count = "alliances: 6 formed, 1 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 1 betrayed, "
                               "0 with a realm";
     const std::string l7 = "  c1 The House of Aelin and c2 The Court of Onsae: 50-E, by origin, e7; joined 1, refused 0; "
@@ -331,13 +331,13 @@ TEST_CASE("P5-04 10.1, 10.2: H16's header and [alliances] at both levels") {
     const std::string spoils = "spoils: 3 owed, 1 granted, 2 withheld; 270 people owed, 10 granted";
     const std::string bloc = "largest bloc: 400 permille, c1 with c2, c3 in 1300";   // reading P1 (the sign)
     const std::string trade = "trade: 3 opened, 2 standing at E; broken 1 (war 1, cooled 0, out of reach 0); arms sold 1";
-    CHECK(between(f, "[alliances]", "[stats]") ==
+    CHECK(between(f, "[alliances]", "[figures]") ==   // P5-06 10.1: [figures] follows [alliances]
           std::vector<std::string>{"[alliances]", count, l7, l30, l47, l58, l63, l65, calls, spoils, bloc, trade,
                                    "  c3 The Hold of Durn and c5 The Kingdom of Cear: 400-E, e23; arms from c3",
                                    "  c1 The House of Aelin and c5 The Kingdom of Cear: 410-E, e24",
                                    "  c4 The Gub Horde and c7 The Urarz Horde: 420-1000, e25; broken e61"});
     // summary: standing at E, betrayed or spurned; no trade lines
-    CHECK(between(s, "[alliances]", "[stats]") ==
+    CHECK(between(s, "[alliances]", "[figures]") ==
           std::vector<std::string>{"[alliances]", count, l7, l30, l58, calls, spoils, bloc, trade});
     // block order: [peoples], [alliances], [stats]
     const auto at = [&](const std::string& head) { return std::find(f.begin(), f.end(), head) - f.begin(); };
@@ -357,13 +357,19 @@ TEST_CASE("P5-04 10.3, 10.4: civilization lines; the joined war rows kept out of
     CHECK(has(f1, "  allies: 3"));
     const auto a1 = std::find(f1.begin(), f1.end(), "  allies: 3");
     REQUIRE(a1 != f1.end());
-    REQUIRE(f1.end() - a1 == 4);
+    REQUIRE(f1.end() - a1 == 5);   // P5-06 10.3: the rulers line closes the block
     CHECK(*(a1 + 1) == "    c2 The Court of Onsae: 50-E, by origin");
     CHECK(*(a1 + 2) == "    c5 The Kingdom of Cear: 1100-1250, after trade");
     CHECK(*(a1 + 3) == "    c3 The Hold of Durn: 1300-1400, in friendship");
-    CHECK(hrtest::civ_block(s, 1).back() == "  allies: 3; at the end: c2");
-    CHECK(hrtest::civ_block(s, 2).back() == "  allies: 1; at the end: c1");
-    CHECK(hrtest::civ_block(s, 3).back() == "  allies: 2");
+    // P5-06 10.3: the rulers line follows the allies line
+    const auto allies_last = [&](std::int64_t c) {
+        std::vector<std::string> b = hrtest::civ_block(s, c);
+        if (!b.empty() && b.back().rfind("  rulers: ", 0) == 0) b.pop_back();
+        return b.back();
+    };
+    CHECK(allies_last(1) == "  allies: 3; at the end: c2");
+    CHECK(allies_last(2) == "  allies: 1; at the end: c1");
+    CHECK(allies_last(3) == "  allies: 2");
     // 10.4: Cear joined two wars against the Gub Horde: its rows are no wars of its own
     CHECK(has(hrtest::civ_block(s, 5), "  wars: 1 declared, 1 defended; won 1, lost 0, drawn 1, open 0"));
     CHECK(has(hrtest::civ_block(s, 4), "  wars: 3 declared, 1 defended; won 0, lost 4, drawn 0, open 0"));
@@ -382,10 +388,10 @@ TEST_CASE("P5-04 10.6: [sites] counts mines; the mine lines at full") {
     const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary));
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full));
     CHECK(between(s, "[sites]", "[peoples]") ==
-          std::vector<std::string>{"[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2"});
+          std::vector<std::string>{"[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0"});
     CHECK(between(f, "[sites]", "[peoples]") ==
           std::vector<std::string>{
-              "[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2",
+              "[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0",
               "  si1 The Mines of Kazad Rune: mine in Kazad Fells (rg3) at 30 30, since 450 e26, of The Hold of Durn "
               "(c3), at Kazad Rune (s3); open",
               "  si2 The Delvings of Duldar: mine in The Grey Fells (rg8) at 80 80, since 455 e28, of The Hold of Durn "
@@ -408,8 +414,12 @@ TEST_CASE("P5-04 10.5: the [stats] keys appended at full, in order; none at summ
         {"arms_sold", 1}, {"arms_buyers_at_end", 1}};
     const auto all = hrtest::stats_list(text(HistoryLevel::full));
     REQUIRE(all.size() >= want.size());
-    CHECK(std::vector<std::pair<std::string, std::int64_t>>(all.end() - static_cast<std::ptrdiff_t>(want.size()),
-                                                            all.end()) == want);
+    // P5-06 10.4: the [figures] keys follow the alliances' (the block is the first want entry to the 30th)
+    const auto first = std::find(all.begin(), all.end(), want.front());
+    REQUIRE(first != all.end());
+    REQUIRE(static_cast<std::size_t>(all.end() - first) >= want.size());
+    CHECK(std::vector<std::pair<std::string, std::int64_t>>(first, first + static_cast<std::ptrdiff_t>(want.size())) ==
+          want);
     const auto sum = hrtest::stats_of(text(HistoryLevel::summary));
     for (const auto& [k, v] : want) CHECK(sum.count(k) == 0U);
 }
@@ -542,7 +552,7 @@ TEST_CASE("P5-04 11.2: browser groups of kinds 63 to 78; alliances = 7; ALL_GROU
     }
     // every kind of the compiled catalogue is in a group other than `other` (P4-05 10.2 item 2), 78 of them
     const h::EventCatalogue& cat = h::compiled_event_catalogue();
-    CHECK(cat.kinds.size() == 78U);
+    CHECK(cat.kinds.size() == 92U);
     for (const h::KindDef& k : cat.kinds) {
         CAPTURE(k.key);
         CHECK(ins::event_group(k.key) != ins::EventGroup::other);

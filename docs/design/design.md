@@ -367,6 +367,8 @@ Phase P3 was approved on November 22, 2026, and phase P5 builds on it in twelve 
 11. Factions.
 12. Artifacts.
 
+**Scope as revised on November 24, 2026.** Merged so far: the follow-ups, renamed regions, beasts and monsters, race relations with mixed settlements and migrations, and alliances with trade, mines and arms. Wealth as a number was left out, since no rule needed one. Still to come in phase P5: figures with minimal casters, the mountain depths (deepening the mines already built), the pantheon with cults, and artifacts, with small follow-up stages between them and vassalage after figures. Roads move to phase P6, where one stage also builds contact by sea for peoples alone on a land mass. Spell invention is deferred beyond phase P5. Factions, with the guilds, are a stage of their own between phases P5 and P6 (Paul, November 25): it runs after figures and the rest of P5 are in place and before P6 derives anything from the finished history.
+
 Decisions that shape these stages:
 
 - **History renames regions.** A region's defining event (the fall of a realm, a great sack, a slaughter, a great plague, a seat becoming a city) can give it its present-day name, and the old name stays on record. Which events can rename a region is set in data, so later stages add their own. Renamings are rare.
@@ -381,6 +383,25 @@ Decisions that shape these stages:
 - **Event rules** stay code with their numbers in TOML.
 - **Budget.** A default world still generates in under 60 seconds at the end of phase P5.
 - **Exit check.** Every race, god camp and monster kind is a participant in at least one event, and a bloc of allies and vassals is held to the same runaway bound as a single realm.
+- **Guilds are founded in history.** The factions stage, which runs between phases P5 and P6, founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
+
+**What the first P5 stages settled** (Paul's decisions of November 23 to 25, 2026)
+
+- **Abandoned places.** Land can lose its owner without gaining a new one. A monster may overrun a small settlement and make it its lair; a hamlet or village struck low by plague or famine may be left standing empty; a small place raided repeatedly may flee for fear. Every dead settlement records how it ended: sacked, overrun, plague, famine, left or fled.
+- **Monsters prefer easy targets.** A raid's target is a weighted draw that favours small settlements, while dragons and giants still strike towns. An undead host risen in a ruin may still overrun one living settlement.
+- **Living monsters are a highlight of play.** The targets stay at a living monster in at least 85 of 100 default worlds at the end of history, and a lair on a former settlement in at least 65.
+- **Every ruin stays.** No ruin fades before the end of history, sacked ones included, so all of them are there to explore.
+- **Monster flare-ups force no war.** The rule that a flare-up always brings its war holds for flare-ups of strain between realms. A dragon or giant appearing in a quiet stretch brings none.
+- **First sites.** Lairs, watchtowers raised on a frontier and later left, and dwarven mines.
+- **Race relations.** Each pair of peoples has a disposition built from their gods' camps, each race's own stances, and a memory of events that fades slowly. It falls into three bands: hatred, wariness and friendship. Wars, conquests, sacks and expulsions lower it. Long peace between neighbours, a common enemy and shelter given raise it. A change of band is an event that names its causes. Realms read their peoples' disposition when choosing wars.
+- **Meeting.** Two peoples meet when their realms come within reach. Peoples sealed apart by closed borders meet by word after a time.
+- **Mixed settlements.** Conquest and cession keep the conquered as subjects under new rulers, refugees bring their race to the place that shelters them, and minorities pass slowly into the ruling people. A ruling people in hatred with a minority may expel it, at most once in sixty years per realm.
+- **Alliances.** Realms in reach and on tolerable terms ally for a reason: a common enemy, fear of a great realm, long trade or friendship. Allies are called at a declaration of war and fight in their partner's battles. Elves and faeries begin allied by origin wherever they live. A war declared on an ally is a betrayal, and the betrayed never ally with the betrayer again.
+- **Spoils.** An ally that fought in a won war is owed a share of tribute and plunder, never land. A first withheld share sours the alliance; a second, or one large kept share, ends it.
+- **Blocs.** No alliance forms that would put a bloc above half the land, and a bloc above seven tenths sheds its smallest ally.
+- **Trade and arms.** Trade between realms on tolerable terms strengthens both. Dwarves open mines and sell arms, and a realm with an open mine is itself stronger.
+- **Balance between the races.** By the end goblins usually hold the most land (a median of 12 regions against 2 or 3 for each other race in 100 default worlds) and the elves are often beaten down to one region with many ruins. This is kept, with no target on the spread. Validation reports the table again when roads or arms change, so their effect can be seen.
+- **Calamities in reports.** The summary of a large world records a calamity when its impact is significant.
 
 **Tick loop (active phases)**
 
@@ -461,6 +482,10 @@ Schema versions so far:
 | 5 | 0.11.0 | `region`, with bounds as four integer columns, and `region_border` |
 | 6 | 0.13.0 | Chronology: race, race\_biome, culture, god and age tables, and the world-creation settings stored in meta |
 | 7 | 0.14.0 | History engine: the event catalogue tables, phase, event with its participants, causes and values, civilization, settlement, settlement census by year, region control by year, and relation |
+| 8 | 0.22.0 | Regions renamed by history: region\_name, one row per later name of a region with its year, culture and event; the geographic name in region is never rewritten |
+| 9 | 0.23.0 | Beasts and monsters: beast, monster\_kind, beast\_population by year, monster and site tables, and how each settlement ended |
+| 10 | 0.24.0 | Race relations and mixed settlements: race\_relation and settlement\_race, both by year |
+| 11 | 0.26.0 | Alliances, trade, mines and arms: mines as a kind of site, and alliance and trade as kinds of relation; no new tables |
 
 The layer catalogue (each layer's name, type, units and meaning) is part of the contract and is kept in `docs/specs/schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
 
@@ -479,6 +504,30 @@ The game builds playable space on demand from `world.db`, and every piece is a p
 - Rivers and lakes are carved into chunk heightmaps from the database layers, and roads from their polylines. A river channel is narrower than a 16 m cell, so the runtime traces, smooths and cuts it from the stored flow rasters.
 
 **Steep ground and weather.** Some high ground is too steep to walk, by design. The runtime keeps those slopes as they are; roads and improved passes from history are the built ways through, and spells such as levitate give casters others. The stored prevailing wind and per-world temperature feed weather and vegetation at runtime.
+
+**What makes each biome distinct**
+
+The nine land biomes are all cool and northern (alpine, highland moor, heath, steppe, grassland, temperate forest, wet woodland, fen and marsh), so several could blur together on foot. Each biome gets a signature across five channels, and no two biomes may share more than two of them:
+
+- **Silhouette.** Vegetation height and density, and small-scale ground shape: tussocks, peat hags, scree, reed beds, standing water.
+- **Light and weather.** Fog in the fens, wind and long sight lines on the steppe, low cloud on the moor, dim green light under forest canopy.
+- **Movement.** Each biome changes how the player travels. Fen slows and hides deep water, forest blocks sight, alpine ground forces the player onto passes, steppe leaves them exposed.
+- **Life and resources.** One or two beasts, a gatherable and a hazard that belong mainly to that biome, driven by the stored resource and beast layers.
+- **A landmark type.** Something visible from a distance that occurs only there, such as tors on the moor, standing stones on the heath or ancient giant trees in the forest.
+
+The signatures are data: each biome's TOML file names its scatter sets, weather, movement rules, gatherables and landmark types.
+
+**Land marked by history**
+
+History alters the ground. The runtime lays these marks over the natural biome wherever the database records the cause, with its place and year, and older marks are more overgrown:
+
+- Battlefields: grave mounds, broken arms, earthworks. History records a battle's region and year; phase P6 derives the exact ground within the region.
+- Plague and famine villages: fields gone wild, burial pits.
+- Land burnt by a dragon or ravaged by monsters: dead trees, scorched rock, the renamed region around it.
+- The forest around a hidden refuge, especially a faerie one: denser, stranger, harder to cross.
+- Sacked and abandoned places, and the roads that once served them.
+
+Every mark traces back to events the player can learn about, so the land is evidence for the history.
 
 **Terrain approach: Terrain3D first, with a test**
 
@@ -501,6 +550,32 @@ The deciding test:
 4. Keep Terrain3D if VR holds 90 Hz throughout. Switch to custom chunk meshes if region loading causes hitches that cannot be fixed from outside the plugin.
 
 Other reasons to switch later: worlds well beyond 32 km, or open-world terrain a heightmap cannot express, such as overhangs.
+
+**Style of built places: four layers**
+
+Every city, town, village, tower, hold, mine, lair and ruin takes its look from four independent layers, so no kit is authored per race and biome pair:
+
+| Layer | Decides | Source in the world file |
+| --- | --- | --- |
+| Site kind | Layout grammar: what a city, town, tower, mine or lair consists of | Settlement and site kind, population |
+| Builder race and culture | Form: proportions, roof shapes, defences, street pattern, ornament | Founding race, mixed-race shares, later holders |
+| Biome | Material and adaptation: timber, stone, turf, thatch; stilts in fen, terraces on slopes | Biome and resource layers at the site |
+| History | Age and condition: burnt, abandoned intact, overgrown, reoccupied, renamed | Founding year, how it ended, later holders |
+
+This needs six race kits, nine material palettes and a set of adaptation rules.
+
+- **Races are strongly distinct.** A player who has travelled for a while can tell who built a place by looking at it. The races differ in layout grammar as well as ornament: dwarves build mostly underground with little showing above, faeries build small within living trees, goblins dig warrens, and elves, humans and orcs build above ground in forms that cannot be mistaken for one another. Each race's kit is fixed in its own spec.
+- **Biome sets material.** The same dwarven hold reads as dwarven whether it is cut into alpine granite or dug under a moor; an elven town in forest is built differently from one on the steppe.
+- **History shows.** A place left by plague stands intact with belongings in place; a sacked one is burnt and broken; one overrun by monsters is a lair. A town founded by one people and held by another shows the work of both, and a mixed settlement has quarters in each people's style.
+
+Built in two tiers:
+
+1. **Site plans at world creation**, in phase P6: footprint, walls, gates, districts and roads, stored in the world file so they are identical on every machine.
+2. **Geometry at runtime**: buildings, interiors and loose objects are generated from the plan and a seed when the player approaches.
+
+Interiors load behind a door, as in Skyrim. Seamless interiors were considered for VR and set aside for their performance cost.
+
+Cities are the most expensive kind. The layers are proved first on a vertical slice: one race's village in two biomes, plus its ruined form.
 
 **Cities and villages**
 
@@ -622,7 +697,7 @@ The first version keeps the ruleset small so effort goes to the world. Each syst
 
 - **Disposition.** Every NPC has a disposition toward the player that starts from the relation between their race and the player's, as history left it. An elf-founded town that fought goblins for a thousand years is cold to a goblin player.
 - **Local variation.** Disposition is then adjusted by the settlement's racial mix and its own history, the NPC's faction, and the NPC's personal record. A mixed trading town is more tolerant than an isolated hold.
-- **Effects.** Disposition sets the tone of dialogue, how much an NPC will share, prices, and which services and quests are offered. Low disposition means being shunned or refused; it does not by itself start a fight.
+- **Effects.** Disposition sets the tone of dialogue, how much an NPC will share, prices, and which services and quests are offered. Low disposition usually means a cold reception, being shunned or refused service. Attack on sight is rare and needs a fresh cause, such as a raid or battle by the player's people against that settlement within recent years; the window is a tuning value.
 - **Earned standing.** The player's deeds move disposition over time, per settlement and per faction, so a shunned outsider can win acceptance and a welcome one can lose it.
 - **Dialogue.** Disposition and its reasons go into the NPC's fact sheet, so the wording reflects both the attitude and the history behind it.
 - **Start.** The player begins in or near a settlement where their race is present, when the world has one.
@@ -695,6 +770,92 @@ Constraints that keep research in check: one effect per spell at first, with a p
 
 All schools, effects, forms, compatibility rules and formula constants live in data files.
 
+### Townspeople
+
+Every named NPC in a settlement has a record, generated from the settlement's site plan and a seed, so the same world always holds the same people.
+
+**The NPC record**
+
+- **Identity.** Name from their culture's name lists, race, age, and household: who they live with and are related to.
+- **Role.** Occupation, workplace building and home building. Roles follow the settlement's kind, size and resources: a mining town has miners and smiths, a fen village has fishers and reed cutters.
+- **Schedule.** A daily timetable of blocks (work, meals, tavern, temple, sleep) drawn from a template for the role, with small per-person shifts and a weekly variation such as a market day. A blacksmith works the smithy by day and goes home at night.
+- **Temperament.** A few seeded traits, among them how open the person is to strangers.
+- **Knowledge.** Which local events and people they know about, for the fact sheet used in dialogue.
+
+**Schedules are timetables.** An NPC's place is a function of the time of day, so the game puts everyone where they belong when the player arrives, with no simulation of the town while the player is away. Bad weather, danger and festivals interrupt the timetable. All six races keep the same daytime hours for now; night-active goblins and orcs were considered and set aside as more trouble than they are worth.
+
+**How many people are realized.** On the player's first visit the game generates full records for up to about two hundred residents, starting with those whose roles the settlement needs. The rest of the recorded population appears as background figures. A background figure the player engages with gets a full record at that moment, drawn from the same seed, and keeps it.
+
+**Attitude, person by person.** An NPC's disposition (see Player race above) is the sum of five layers, and each layer carries a reason the NPC can voice:
+
+| Layer | Source | Example |
+| --- | --- | --- |
+| Their people's view of the player's | Race relations at the present year | Elves and goblins have hated each other for 2,000 years in this world |
+| Local history | Events at this settlement | The town was sacked by goblins 80 years ago, or it has a goblin quarter and is used to them |
+| The individual | Temperament, role and personal history | An innkeeper or trader is more tolerant, a guard less; someone lost family in a raid |
+| The player's deeds | Reputation earned in play | The player cleared the lair that threatened the town |
+| The moment | Current behaviour | Weapon drawn, caught stealing |
+
+The individual layer is a bell-shaped spread around the settlement's baseline, with its width set per race in data. A goblin player in an elven town meets mostly cold receptions, a few people openly hostile and a few willing to deal fairly. Earned reputation can in time outweigh race.
+
+**The range of receptions.** A cold reception is what a player meets among a people who are enemies of their own, such as a goblin among elves. It is one end of a range:
+
+- **Own kind and friends.** People are warm to a player of their own race or of a friendly one. Elves are quite welcoming to an elf or a faerie.
+- **Neither friend nor enemy.** The reception follows the host race's general manner toward outsiders, a value set per race in data. Dwarves are somewhat suspicious of all outsiders; humans are relatively gregarious; elves are reserved; faeries are shy and hard to find; goblins and orcs are rough with everyone, their own kind included.
+- **Enemies.** Usually cold, and hostile only with a fresh cause as described under Player race.
+
+Which peoples count as friends and enemies comes from the world's race relations, so it can differ between worlds.
+
+**Memory of the player.** An NPC remembers their dealings with the player: what was said, trades, favours, slights, tasks given and how they ended. The memory is kept in the save file, moves that NPC's disposition, and goes into their fact sheet, so a person the player has dealt with for a long time becomes distinct from their neighbours.
+
+**Quest givers.** Between one in five and one in ten named NPCs has a task for the player who talks to them; the share is a tuning value. A task grows out of the NPC's role and the world around them, and its target is a real place or people in the world file. A blacksmith might need mithril for an important weapon and send the player to the nearest dwarven hold that mines it. Relations between the peoples involved, the road there and what lives along it all come from history, so the same kind of task plays differently in each world.
+
+### Guilds
+
+Four guilds cut across realms, and the player can join them. The same four kinds exist in every world:
+
+| Kind | Work |
+| --- | --- |
+| Company of arms | Fighting for hire, guarding, hunting monsters |
+| College of mages | Study and teaching of magic, spell research |
+| Thieves | Theft, smuggling, information |
+| Assassins | Killing for pay |
+
+- **Made by history.** Each guild has a founding place and year, a founder who is a figure in the chronicle, and chapter houses in settlements. Its name is generated per world from the founding culture's name lists, such as "the Company of the Grey Shield". The factions stage of the history simulation creates them (section 5).
+- **Chapters.** A realm's capital has all four. Other settlements have some or none by size, and small places usually have none. A guild's reach follows trade and alliance links, so its map is explained by the world's past.
+- **Two systems.** The company of arms and the college of mages span the realms of the good and neutral peoples. Goblin and orc realms have their own counterparts to those two, separate organisations with their own names, ranks and quest lines, such as a war band where the others have a company of arms. The thieves and the assassins are single guilds that work across both sides. A world therefore has six guilds and six quest lines.
+- **Rivalries.** The guilds are rivals, and a player belongs to one at a time. Thieves and assassins sit closest to each other and still do not mix well. Quitting a guild is final for that guild and opens the others to the player.
+- **Ranks.** Advancement needs both skill levels and completed work, which ties the guilds to progression by use.
+- **Membership and attitude.** Fellow members treat the player better whatever the player's race. Membership is one more layer of disposition. Joining depends on disposition as well, with no bar by race: a goblin who wins the good opinion of a human or elven chapter can join it, which in practice takes a charismatic or lucky character.
+- **Hidden guilds.** Thieves and assassins have no sign on the door. The player finds them through NPCs who trust them, or by being noticed for their crimes.
+
+**Quest lines, written once per world.** Each guild has one bespoke quest line, written after history is finished by the enrichment pass of section 14 so that it ties into that world's past:
+
+1. **Dossier.** The game builds a brief for the guild: its history and founder, its chapters, and candidate figures, sites, monsters, ruins and rival realms.
+2. **Plan.** The model returns a structured plan, constrained by a grammar: an arc of about eight to twelve quests. Each quest is built from a fixed library of quest forms (fetch, escort, hunt, investigate, infiltrate, steal, defend) with targets chosen from the dossier. The model also writes the prose: briefings, letters, rumours and the ending.
+3. **Validation.** The game checks that every target exists and can be reached and that every stage can be completed. A failed plan is retried, then replaced by the fallback.
+4. **Storage.** The result goes in the lore file beside the world file, so the world itself stays bit-identical.
+
+With no model, a rule-based writer builds each arc from the same quest forms with plainer text, so every world has quest lines. Claude gives the richest result and a local model a middling one.
+
+**Guild work.** Besides its quest line, a guild offers randomized jobs by rank. They use the same quest forms bound to the current state of the world, and the same generator as the townspeople's tasks.
+
+### Rulers and their realms
+
+Every realm standing at the end of history has a living ruler the player can meet.
+
+- **Rulers are figures.** The figures stage of phase P5 names the ruler of every living realm at the end of history. A realm's reigns are counted, and a ruler becomes a recorded figure by a deed: founding the realm, declaring a war, betraying an ally, sharing or withholding spoils, a disputed succession, or reigning at the end. The present ruler therefore has a founder and a few notable predecessors in the chronicle, typically three to eight recorded rulers per realm. The generator records no families.
+- **Seats.** The ruler holds court in a seat at the realm's capital, built in that race's kit under the style layers of section 7: a castle, a tower, a hall or whatever that people builds. The seat is a landmark of the capital's site plan. Lesser holdings of the realm, such as border towers and forts, follow the same kit.
+- **Audience.** Reaching the ruler takes standing with the realm. Disposition, deeds and guild rank all count, and a player of an enemy people has the hardest road.
+
+**The ruler's quest line.** Each realm has one quest line given by its ruler, written once per world by the same process as the guild quest lines above (dossier, structured plan, validation, lore file, and a rule-based writer when there is no model). Its dossier is the realm's own history: settlements lost and who holds them now, old enemies and grudges, claims never won, allies, and things of value left behind. An elven realm that has lost several towns might ask the player to drive out the monsters that took one of its cities and bring back what was left there. Where a line needs a ruler's family or the predecessors history did not record, the quest writer supplies them in the lore file, held to what the world file states: the count of reigns, the recorded rulers and their years, and the realm's events.
+
+- **Written on demand.** A ruler's line is written when the player first gains an audience with that ruler, by Claude or the local model, whichever the player has set up, and then kept in the lore file. A world with ten realms therefore costs nothing for the rulers the player never meets. The guild lines are still written at world creation.
+- **Rival realms.** Working for a realm's enemy lowers the player's reputation in that realm. Its ruler turns cold or hostile, which in practice closes that ruler's quest line. No separate rule forbids serving two rulers; disposition does the work.
+- **Artifacts.** Ruler lines send the player after artifacts once the artifacts stage of phase P5 exists, and after lesser valuables until then.
+
+The world file stays frozen during play. What the player changes through these quests, such as a ruin cleared and resettled, is recorded in the save file.
+
 ### Local LLM dialogue
 
 NPC conversation is driven by game facts and phrased by a small language model running on the player's machine. The game decides what an NPC knows and what a conversation can change; the model supplies the wording and personality.
@@ -711,7 +872,7 @@ Rules:
 
 - **Grounded.** The prompt tells the model to speak only from the fact sheet. Facts that unlock content (a site location, a quest) come from intents the game checks against the database.
 - **Always optional.** A template renderer produces every line without a model. It is the fallback when the model is disabled, missing or too slow, and it is what milestone 7 ships.
-- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation.
+- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation or when a ruler's quest line is written at the player's first audience.
 - **Off the frame path.** Inference runs on its own thread with a bounded share of GPU memory, or on CPU, so VR frame rate holds while an NPC is talking.
 - **Not part of world determinism.** The world is reproducible from its seed; NPC phrasing may vary between runs.
 - **Memory.** Each NPC keeps a short summary of past talks with the player in the save file.
@@ -926,14 +1087,22 @@ Still open:
 * [x] **Layer catalogue in the library.** Decided: `worldgen` exposes the layer catalogue and region names through its public interface.
 * [x] **History movie.** Decided: it is the last stage of the viewer phase, as playback recorded with Godot's Movie Maker mode.
 * [ ] **Sub-peoples.** Each race keeps one culture through phase P5. Still open for later: hill dwarves as a small optional stage after the mountain depths, and dark elves once geography has an underground.
-* [ ] **Renaming details.** The share of regions that history renames (a median of 4 of 49 at the default size in the first measurement), whether new names use English forms only for now, and a wider rule against doubled place suffixes in settlement names. (Phase P5, regions renamed by history)
-* [ ] **Layer catalogue as code.** The catalogue is proposed as a fixed table in code in place of a TOML data file, since it describes what the stages' code writes. (Phase P4)
-* [ ] **Viewer technical readings.** Three library additions await sign-off: markers answered by the library with a command-line overlay, the report's civilization blocks built from the same structured lines the browser shows, and the year readout and key handling at the present day. (Phase P4)
+* [x] **Renaming details.** Decided: about one region in twelve is renamed, new names use English forms only for now, and the wider rule against doubled place suffixes applies. (Phase P5, regions renamed by history)
+* [x] **Layer catalogue as code.** Settled by the approval of phase P4: the catalogue is a fixed table in code, since it describes what the stages' code writes. (Phase P4)
+* [x] **Viewer technical readings.** Settled by the approval of phase P4 on November 24, with every interim choice of the viewer specs standing as built: markers answered by the library with a command-line overlay, the report's civilization blocks built from the same structured lines the browser shows, and the year readout and key handling at the present day. (Phase P4)
 * [ ] **Maps drawn as tiles.** Godot uploads a whole texture on any change, so a large picture that changes in place, such as the in-game map, should be drawn as tiles. A note for the game's map; nothing to decide until it is built. (Milestone 7)
+
+- [x] **Ruins.** Decided: every ruin stays to the end of history.
+- [x] **Peoples alone on a land mass.** Decided: they can thrive and in time reach other lands by ship. Contact by sea is built with roads in one stage of phase P6.
+- [x] **Withheld spoils.** Decided: a first withheld share sours an alliance and a second ends it.
+- [x] **Balance between the races.** Decided: kept as it is, and watched when roads and arms change.
+- [x] **When guilds enter history.** Decided: the factions stage, which founds the guilds, is a stage of its own between phases P5 and P6.
+- [x] **Rulers in the figures stage.** Decided: the figures stage names every living realm's ruler and its notable predecessors, and its naming rule stays as it is. The quest writer supplies any further family history, within the history as recorded.
+- [ ] **Movie recording on Windows.** Untried; to be fixed if it proves broken.
 
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 23, 2026: P0 through P3 are complete. Paul approved P1 on November 19 and P3 on November 22. P4 (viewer v1) and P5 (history depth) are running in parallel.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 25, 2026: P0 through P4 are complete. Paul approved P1 on November 19, P3 on November 22 and P4 on November 24. P5 (history depth) is in progress at generator 0.26.0 and schema 11: the carried-over follow-ups, regions renamed by history, beasts and monsters, race relations with mixed settlements and migrations, and alliances, trade, mines and arms are merged. Figures are next.
 
 ### Phases
 

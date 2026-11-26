@@ -91,7 +91,10 @@ void check_world(const tltest::WorldSpec& spec) {
         for (const db::SettlementRow& s : rows) {
             if (s.founded_year > y) continue;
             want.push_back(s.id);
-            if (h.timeline.settlement_state(s.id, y).status != 4) want_nf.push_back(s.id);
+            // P5-06 25.1 (e): without the option, no faded row and no old ruin (OLD_RUIN_YEARS or more)
+            const std::int64_t stt = h.timeline.settlement_state(s.id, y).status;
+            const bool old = stt == 3 && s.ruined_year && y - *s.ruined_year >= wi::OLD_RUIN_YEARS;
+            if (stt != 4 && !old) want_nf.push_back(s.id);
         }
         for (const SettlementMarker& s : m.settlements) got.push_back(s.settlement);
         for (const SettlementMarker& s : nf.settlements) got_nf.push_back(s.settlement);
@@ -213,7 +216,7 @@ void check_world(const tltest::WorldSpec& spec) {
     const std::int64_t mid = E / 2;
     const std::vector<std::uint8_t> plain = wi::render_territory(base, h.timeline, colours, mid, 1);
     const std::vector<std::uint8_t> one = overlay(base, h, ix, mid, 1);
-    std::set<std::tuple<int, int, int>> allowed = {{0, 0, 0}, {240, 240, 240}, {150, 150, 150}, {128, 128, 128}};
+    std::set<std::tuple<int, int, int>> allowed = {{0, 0, 0}, {240, 240, 240}, {150, 150, 150}, {128, 128, 128}, {120, 60, 180}};   // P5-06 11.4: the tower's fill
     for (const wi::Rgb& c : colours) allowed.insert({c.r, c.g, c.b});
     for (const wi::EventSymbol sy : {wi::EventSymbol::plain, wi::EventSymbol::plague, wi::EventSymbol::battle,
                                      wi::EventSymbol::siege, wi::EventSymbol::sack}) {

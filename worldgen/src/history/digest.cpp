@@ -338,6 +338,61 @@ std::string history_note(const HistoryView& view, std::int64_t event_id, std::in
     return {};
 }
 
+std::vector<std::vector<std::int64_t>> figure_event_lists(const HistoryView& view) {
+    const std::size_t nf = view.figure_rows().size();
+    std::vector<std::vector<std::int64_t>> out(nf);
+    const auto add = [&out](std::int64_t f, std::int64_t e) {
+        if (f < 1 || static_cast<std::uint64_t>(f) > out.size()) {
+            return;
+        }
+        std::vector<std::int64_t>& list = out[static_cast<std::size_t>(f - 1)];
+        if (list.empty() || list.back() != e) {
+            list.push_back(e);  // events visited in id order: ascending, each once
+        }
+    };
+    if (nf == 0) {
+        return out;
+    }
+    // Per stored kind (index id - 1): the seqs of its civilization roles that
+    // its template uses with the form under ("{<role>:under}").
+    const std::vector<KindDef>& kinds = view.catalogue().kinds;
+    std::vector<std::vector<std::int64_t>> under(kinds.size());
+    constexpr std::string_view FORM = ":under}";
+    for (std::size_t k = 0; k < kinds.size(); ++k) {
+        const std::string& t = kinds[k].templ;
+        for (std::size_t at = t.find(FORM); at != std::string::npos; at = t.find(FORM, at + FORM.size())) {
+            const std::size_t open = t.rfind('{', at);
+            if (open == std::string::npos) {
+                continue;
+            }
+            const RoleDef* role = kinds[k].find_role(std::string_view(t).substr(open + 1, at - open - 1));
+            if (role != nullptr && role->type == EntityType::civilization &&
+                std::find(under[k].begin(), under[k].end(), role->seq) == under[k].end()) {
+                under[k].push_back(role->seq);
+            }
+        }
+    }
+    for (const HistoryView::Event& e : view.events()) {
+        for (const db::EventParticipantRow& p : e.participants) {
+            if (p.entity_type == static_cast<std::int64_t>(EntityType::figure)) {
+                add(p.entity_id, e.row.id);
+            }
+        }
+        if (e.row.kind < 1 || static_cast<std::size_t>(e.row.kind) > under.size()) {
+            continue;
+        }
+        for (const std::int64_t seq : under[static_cast<std::size_t>(e.row.kind - 1)]) {
+            for (const db::EventParticipantRow& p : e.participants) {  // seq order: the first of the role
+                if (p.role == seq) {
+                    add(view.ruler_at_event(p.entity_id, e.row.id), e.row.id);
+                    break;
+                }
+            }
+        }
+    }
+    return out;
+}
+
 }  // namespace worldgen::history
 
 // --- The digest (P3-07 section 7, 9; 21 to 23) ------------------------------
@@ -393,6 +448,8 @@ struct Kinds {
     // P5-03: kinds 56 to 62.
     Id settlement_fled = 0, peoples_met = 0, disposition_turned = 0, refugees_arrived = 0, settlement_mixed = 0;
     Id standing_changed = 0, people_expelled = 0;
+    // P5-06: kinds 79 to 92 the digest reads.
+    Id battle_led = 0, succession_disputed = 0, exiled = 0, fell_in_battle = 0;
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -452,6 +509,10 @@ struct Kinds {
         settlement_mixed = id("settlement_mixed");
         standing_changed = id("standing_changed");
         people_expelled = id("people_expelled");
+        battle_led = id("battle_led");  // P5-06 11.1
+        succession_disputed = id("succession_disputed");
+        exiled = id("exiled");
+        fell_in_battle = id("fell_in_battle");
     }
     // 25.2: the calamity kinds of the summary's cap.
     [[nodiscard]] bool calamity(Id k) const noexcept {
@@ -462,7 +523,10 @@ struct Kinds {
         return calamity(k) || k == plague_spread || k == settlement_dwindled;
     }
     // P3-07 r17 24.1: the chain kinds W and the war-event kinds E_w.
-    [[nodiscard]] bool battle_kind(Id k) const noexcept { return k == battle || k == battle_at_pass || (allied_battle != 0 && k == allied_battle); }
+    // P5-06 11.1: and battle_led.
+    [[nodiscard]] bool battle_kind(Id k) const noexcept {
+        return k == battle || k == battle_at_pass || k == allied_battle || k == battle_led;
+    }
     [[nodiscard]] bool chain(Id k) const noexcept {
         return k == war_declared || battle_kind(k) || k == siege || k == sacked || k == settlement_captured ||
                k == refuge_held || k == peace || k == war_won || k == truce;
@@ -493,6 +557,7 @@ public:
         civilizations();
         monster_stories();  // P5-03 10.1
         summary();
+        figures();  // P5-06 10.2
         stats();
         return std::move(d_);
     }
@@ -626,6 +691,13 @@ private:
         out.push_back(d);
         if (const Id b = last_battle_[static_cast<std::size_t>(d)]; b != 0) {
             out.push_back(b);
+            // P5-06 10.3: a general's fall is a companion of the battle it
+            // cites, shown with it as the war's last.
+            for (const Id x : effects_[static_cast<std::size_t>(b)]) {
+                if (kind(x) == kinds_.fell_in_battle) {
+                    out.push_back(x);
+                }
+            }
         }
         if (const Id u = war_ending(d); u != 0) {
             out.push_back(u);
@@ -1124,6 +1196,21 @@ private:
         }
         // r21 26.5 item 1: every renaming e caused.
         add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
+        // P5-06 10.3: a disputed succession is a companion of the crisis and
+        // of the secession it cites, and brings its exile (reading: the
+        // exile is named a companion of the dispute, which is itself only a
+        // companion, so it is added here, one step further).
+        if (k == kinds_.succession_crisis || k == kinds_.civ_seceded) {
+            for (const Id x : effects_[static_cast<std::size_t>(e)]) {
+                if (kind(x) != kinds_.succession_disputed) {
+                    continue;
+                }
+                out.push_back(x);
+                add_effects(x, [this](Id y) { return y == kinds_.exiled; });
+            }
+        } else if (k == kinds_.succession_disputed) {
+            add_effects(e, [this](Id y) { return y == kinds_.exiled; });
+        }
         // P5-03 11.3: a flight for fear brings the abandonment it caused.
         if (k == kinds_.settlement_fled) {
             add_effects(e, [this](Id x) { return x == kinds_.settlement_abandoned || x == kinds_.settlement_abandoned_to; });
@@ -1160,6 +1247,11 @@ private:
         // P5-04 8.3 (reading): a call to arms is in the summary as a
         // companion of its war only.
         if (k == kinds_.ally_joined_war || k == kinds_.ally_refused) {
+            return false;
+        }
+        // P5-06 8.2, 10.3 (reading): a disputed succession and an exile are
+        // in the summary as companions only.
+        if (k == kinds_.succession_disputed || k == kinds_.exiled) {
             return false;
         }
         if (k == kinds_.settlement_mixed &&
@@ -1233,19 +1325,40 @@ private:
         std::stable_sort(ranked.begin(), ranked.end(), [this](Id a, Id b) {
             return salience(a) != salience(b) ? salience(a) > salience(b) : a < b;
         });
+        // P5-06 25.2: G, the major calamities among the candidates.
+        major_calamities(ranked);
+        std::vector<std::uint8_t> is_major(n + 1, 0);
+        for (const Id g : d_.summary_major) {
+            is_major[static_cast<std::size_t>(g)] = 1;
+        }
         // r19 25.2: per phase only the first SUMMARY_CALAMITY_PER_PHASE
         // candidates of the calamity kinds (together), in rank order, stay
-        // candidates. The phase ids were checked (reads_disagree).
+        // candidates; P5-06 25.2 rule 2: the members of G of the phase stay
+        // and take its slots first. The phase ids were checked
+        // (reads_disagree).
         {
+            const auto phase_index = [this](const HistoryView::Event& ev) -> std::size_t {
+                return ev.row.phase >= 1 && static_cast<std::size_t>(ev.row.phase) <= t_.phases.size()
+                           ? static_cast<std::size_t>(ev.row.phase)
+                           : NONE;
+            };
+            std::vector<std::size_t> majors(t_.phases.size() + 1, 0);
+            for (const Id g : d_.summary_major) {
+                if (const std::size_t p = phase_index(events_[static_cast<std::size_t>(g - 1)]); p != NONE) {
+                    ++majors[p];
+                }
+            }
             std::vector<std::size_t> per_phase(t_.phases.size() + 1, 0);
             std::vector<Id> kept;
             kept.reserve(ranked.size());
             for (const Id e : ranked) {
                 const HistoryView::Event& ev = events_[static_cast<std::size_t>(e - 1)];
-                if (kinds_.calamity(ev.row.kind) && ev.row.phase >= 1 &&
-                    static_cast<std::size_t>(ev.row.phase) <= t_.phases.size()) {
-                    std::size_t& count = per_phase[static_cast<std::size_t>(ev.row.phase)];
-                    if (count >= SUMMARY_CALAMITY_PER_PHASE) {
+                const std::size_t p = phase_index(ev);
+                if (kinds_.calamity(ev.row.kind) && p != NONE && is_major[static_cast<std::size_t>(e)] == 0) {
+                    const std::size_t room =
+                        SUMMARY_CALAMITY_PER_PHASE > majors[p] ? SUMMARY_CALAMITY_PER_PHASE - majors[p] : 0;
+                    std::size_t& count = per_phase[p];
+                    if (count >= room) {
                         continue;
                     }
                     ++count;
@@ -1291,6 +1404,12 @@ private:
         // P5-03 10.1: the floor starts as F with the stories of the told
         // monsters, each with its unit.
         for (const Id e : stories_) {
+            for (const Id u : unit(e)) {
+                add(u);
+            }
+        }
+        // P5-06 25.2 rule 1: and the units of G's members.
+        for (const Id e : d_.summary_major) {
             for (const Id u : unit(e)) {
                 add(u);
             }
@@ -1350,6 +1469,96 @@ private:
         set_summary(d_, SUMMARY_BUDGET);
     }
 
+    // P5-06 25.2: G = the first SUMMARY_CALAMITY_MAJOR_MAX major famines,
+    // plagues and plague outbreaks among the candidates `candidates`, by
+    // (ended descending, impact descending, id ascending).
+    void major_calamities(const std::vector<Id>& candidates) {
+        d_.summary_major.clear();
+        const std::size_t n = events_.size();
+        // ended(e): e is a cause of the ruin event of a settlement with status 3.
+        std::vector<std::uint8_t> ended(n + 1, 0);
+        for (const db::SettlementRow& s : t_.settlements) {
+            if (s.status != 3 || s.ruin_event < 1 || static_cast<std::size_t>(s.ruin_event) > n) {
+                continue;
+            }
+            for (const Id c : events_[static_cast<std::size_t>(s.ruin_event - 1)].causes) {
+                if (c >= 1 && static_cast<std::size_t>(c) <= n) {
+                    ended[static_cast<std::size_t>(c)] = 1;
+                }
+            }
+        }
+        // The census rows of settlement index i are census[first[i]] ..
+        // census[first[i + 1] - 1], ascending year ((settlement, year) order).
+        const std::size_t ns = t_.settlements.size();
+        std::vector<std::size_t> first(ns + 2, 0);
+        for (const db::SettlementCensusRow& r : t_.census) {
+            if (r.settlement >= 1 && static_cast<std::size_t>(r.settlement) <= ns) {
+                ++first[static_cast<std::size_t>(r.settlement) + 1];
+            }
+        }
+        for (std::size_t i = 1; i < first.size(); ++i) {
+            first[i] += first[i - 1];
+        }
+        const bool census_in_order = first[ns + 1] == t_.census.size();
+        struct Major {
+            Id event = 0;
+            std::uint8_t ended = 0;
+            std::int64_t impact = 0;
+        };
+        std::vector<Major> majors;
+        for (const Id e : candidates) {
+            const HistoryView::Event& ev = events_[static_cast<std::size_t>(e - 1)];
+            const Id k = ev.row.kind;
+            if (k != kinds_.famine && k != kinds_.plague && k != kinds_.plague_outbreak) {
+                continue;
+            }
+            Id civ = 0;
+            for (const db::EventParticipantRow& p : ev.participants) {
+                if (p.entity_type == static_cast<std::int64_t>(EntityType::civilization)) {
+                    civ = p.entity_id;
+                    break;
+                }
+            }
+            // P(e): the realm's people in its standing settlements before the
+            // blow (each settlement's census row of the largest year < year(e)).
+            std::int64_t people = 0;
+            if (civ != 0 && census_in_order) {
+                for (std::size_t i = 0; i < ns; ++i) {
+                    const auto lo = t_.census.begin() + static_cast<std::ptrdiff_t>(first[i + 1]);
+                    const auto hi = t_.census.begin() + static_cast<std::ptrdiff_t>(first[i + 2]);
+                    const auto at = std::lower_bound(lo, hi, ev.row.year,
+                                                     [](const db::SettlementCensusRow& r, std::int64_t y) {
+                                                         return r.year < y;
+                                                     });
+                    if (at == lo) {
+                        continue;
+                    }
+                    const db::SettlementCensusRow& r = *(at - 1);
+                    if (r.owner_civ == civ && standing(r.status)) {
+                        const std::int64_t v = std::max<std::int64_t>(0, r.population);
+                        people = people > std::numeric_limits<std::int64_t>::max() - v
+                                     ? std::numeric_limits<std::int64_t>::max()
+                                     : people + v;
+                    }
+                }
+            }
+            const std::int64_t dead = value_of(ev, k == kinds_.plague_outbreak ? "total" : "dead");
+            const std::int64_t impact = people > 0 ? permille(dead, people) : 0;
+            const std::uint8_t end = ended[static_cast<std::size_t>(e)];
+            if (end != 0 || impact >= SUMMARY_CALAMITY_MAJOR_PERMILLE) {
+                majors.push_back(Major{e, end, impact});
+            }
+        }
+        std::stable_sort(majors.begin(), majors.end(), [](const Major& a, const Major& b) {
+            if (a.ended != b.ended) return a.ended > b.ended;
+            if (a.impact != b.impact) return a.impact > b.impact;
+            return a.event < b.event;
+        });
+        for (std::size_t i = 0; i < majors.size() && i < SUMMARY_CALAMITY_MAJOR_MAX; ++i) {
+            d_.summary_major.push_back(majors[i].event);
+        }
+    }
+
     // --- [stats] (section 9 with 21.5, 21.8, 22, 23) --------------------
 
     void put(std::string key, std::int64_t value) { d_.stats.emplace_back(std::move(key), value); }
@@ -1382,6 +1591,173 @@ private:
         monster_stats();
         relations_stats();  // P5-03 17.4
         alliance_stats();   // P5-04 10.5
+        figure_stats();     // P5-06 10.5
+    }
+
+    // --- Figures (P5-06 10.2) ---------------------------------------------
+
+    [[nodiscard]] FigureDigest* figure_slot(Id f) {
+        return f >= 1 && static_cast<std::size_t>(f) <= d_.figures.size() ? &d_.figures[static_cast<std::size_t>(f - 1)]
+                                                                         : nullptr;
+    }
+
+    void figures() {
+        const std::span<const db::FigureRow> rows = view_.figure_rows();
+        d_.figures.assign(rows.size(), {});
+        for (std::size_t i = 0; i < rows.size(); ++i) {
+            d_.figures[i].id = static_cast<Id>(i) + 1;  // ids 1, 2, ... (P5-06 9.4 F1)
+        }
+        const std::vector<std::vector<Id>> lists = figure_event_lists(view_);
+        for (std::size_t i = 0; i < lists.size() && i < d_.figures.size(); ++i) {
+            for (const Id e : lists[i]) {
+                d_.figures[i].renown += salience(e) >= SUMMARY_MIN_SALIENCE ? 1 : 0;
+                if (kind(e) == kinds_.war_declared && rows[i].role == 1) {
+                    ++d_.figures[i].wars_declared;
+                }
+            }
+        }
+        const Id slain_by_hero = kind_id("monster_slain_by_hero"), hero_slain = kind_id("hero_slain");
+        const Id blight = kind_id("blight");
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            // A war won by a realm, or a realm conquered, at an ending
+            // where the figure was its recorded ruler.
+            Id winner = 0;
+            if (k == kinds_.peace || k == kinds_.war_won) {
+                winner = role_entity(e, "winner");
+            } else if (k == kinds_.civ_conquered) {
+                winner = role_entity(e, "conqueror");
+            }
+            if (winner != 0) {
+                if (FigureDigest* f = figure_slot(view_.ruler_at_event(winner, e.row.id))) {
+                    ++f->wars_won;
+                    f->realms_conquered += k == kinds_.civ_conquered ? 1 : 0;
+                }
+            }
+            if (k == kinds_.battle_led) {
+                if (FigureDigest* f = figure_slot(role_entity(e, "winner_general"))) {
+                    ++f->battles_led;
+                    ++f->battles_won;
+                }
+                if (FigureDigest* f = figure_slot(role_entity(e, "loser_general"))) {
+                    ++f->battles_led;
+                }
+            } else if (k == slain_by_hero) {
+                if (FigureDigest* f = figure_slot(role_entity(e, "hero"))) {
+                    f->slew.push_back(role_entity(e, "monster"));
+                }
+            } else if (k == hero_slain) {
+                if (FigureDigest* f = figure_slot(role_entity(e, "figure")); f != nullptr && f->slain_by == 0) {
+                    f->slain_by = role_entity(e, "monster");
+                }
+            } else if (k == blight) {
+                if (FigureDigest* f = figure_slot(role_entity(e, "figure"))) {
+                    f->blight = true;
+                }
+            } else if (k == kinds_.exiled) {
+                if (FigureDigest* f = figure_slot(role_entity(e, "figure")); f != nullptr && f->host == 0) {
+                    f->host = role_entity(e, "host");
+                }
+            }
+        }
+        for (const db::BookRow& b : view_.book_rows()) {
+            if (FigureDigest* f = figure_slot(b.author)) {
+                ++f->books;
+            }
+        }
+    }
+
+    // P5-06 10.5: appended at the end, in this order (full only).
+    void figure_stats() {
+        const std::span<const db::FigureRow> rows = view_.figure_rows();
+        std::array<std::int64_t, 6> by_role{};
+        std::int64_t alive = 0, epithet = 0, by_deed = 0, regnal = 0;
+        std::vector<std::string> epithets;
+        std::vector<std::int64_t> ages;
+        std::vector<std::int64_t> last_reign(t_.civilizations.size(), 0);
+        const Id alliance_betrayed = kinds_.alliance_betrayed, spoils_shared = kinds_.spoils_shared;
+        const Id spoils_withheld = kinds_.spoils_withheld;
+        for (const db::FigureRow& f : rows) {
+            if (f.role >= 1 && f.role <= 5) {
+                ++by_role[static_cast<std::size_t>(f.role)];
+            }
+            alive += (f.status == 1 || f.status == 2) ? 1 : 0;
+            if (!f.epithet.empty()) {
+                ++epithet;
+                epithets.push_back(f.epithet);
+            }
+            if (f.died) {
+                ages.push_back(*f.died - f.born);
+            }
+            if (f.role != 1) {
+                continue;
+            }
+            regnal += f.regnal >= 2 ? 1 : 0;
+            if (f.start_event >= 1 && static_cast<std::size_t>(f.start_event) <= events_.size()) {
+                const Id k = kind(f.start_event);  // 6.4 rule 3: a deed of the realm
+                by_deed += (k == kinds_.war_declared || k == alliance_betrayed || k == spoils_shared ||
+                            k == spoils_withheld)
+                               ? 1
+                               : 0;
+            }
+            if (is_civ(f.civ)) {
+                std::int64_t& r = last_reign[civ_index(f.civ)];
+                r = std::max(r, f.reign_no);
+            }
+        }
+        std::stable_sort(epithets.begin(), epithets.end());
+        std::int64_t bearers_max = 0;
+        for (std::size_t i = 0; i < epithets.size();) {
+            std::size_t j = i;
+            while (j < epithets.size() && epithets[j] == epithets[i]) {
+                ++j;
+            }
+            bearers_max = std::max(bearers_max, static_cast<std::int64_t>(j - i));
+            i = j;
+        }
+        std::int64_t reigns = 0;
+        for (const std::int64_t r : last_reign) {
+            reigns += r;
+        }
+        std::stable_sort(ages.begin(), ages.end());
+        std::int64_t towers = 0;
+        for (const db::SiteRow& x : t_.sites) {
+            towers += x.kind == 4 ? 1 : 0;
+        }
+        const auto count_kind = [this](std::string_view key) {
+            const Id k = kind_id(key);
+            std::int64_t n = 0;
+            for (const HistoryView::Event& e : events_) {
+                n += e.row.kind == k ? 1 : 0;
+            }
+            return n;
+        };
+        put("figures", static_cast<std::int64_t>(rows.size()));
+        put("figures_rulers", by_role[1]);
+        put("figures_claimants", by_role[2]);
+        put("figures_generals", by_role[3]);
+        put("figures_heroes", by_role[4]);
+        put("figures_casters", by_role[5]);
+        put("figures_alive", alive);
+        put("figures_epithet", epithet);
+        put("epithet_bearers_max", bearers_max);
+        put("reigns", reigns);
+        put("rulers_recorded", by_role[1]);
+        put("rulers_by_deed", by_deed);
+        put("rulers_regnal", regnal);
+        put("successions_disputed", count_kind("succession_disputed"));
+        put("exiles", count_kind("exiled"));
+        put("generals_appointed", count_kind("general_appointed"));
+        put("battles_led", count_kind("battle_led"));
+        put("generals_fallen", count_kind("fell_in_battle"));
+        put("heroes_risen", count_kind("hero_rose"));
+        put("monsters_slain_by_heroes", count_kind("monster_slain_by_hero"));
+        put("heroes_slain", count_kind("hero_slain"));
+        put("towers", towers);
+        put("books", static_cast<std::int64_t>(view_.book_rows().size()));
+        put("blights", count_kind("blight"));
+        put("figure_age_median", ages.empty() ? STAT_NONE : ages[(ages.size() - 1) / 2]);
+        put("summary_major_calamities", static_cast<std::int64_t>(d_.summary_major.size()));
     }
 
     // P5-04 10.5: appended at the end, in this order (full only).
@@ -1455,7 +1831,15 @@ private:
         put("allies_refused", count_kind("ally_refused"));
         put("allies_withdrew", count_kind("ally_withdrew"));
         put("wars_with_ally", static_cast<std::int64_t>(with_ally.size()));
-        put("allied_battles", count_kind("allied_battle"));
+        // P5-06 11.1: and every battle_led with an ally participant.
+        std::int64_t led_allied = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == kinds_.battle_led &&
+                (role_entity(e, "winner_ally") != 0 || role_entity(e, "loser_ally") != 0)) {
+                ++led_allied;
+            }
+        }
+        put("allied_battles", count_kind("allied_battle") + led_allied);
         blocs_by_year();
         put("bloc_share_max_permille", d_.bloc_any ? d_.bloc_max : 0);
         put("bloc_over_800_years", bloc_over_800_);

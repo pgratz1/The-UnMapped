@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 11;
+inline constexpr std::int64_t SCHEMA_VERSION = 12;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -260,13 +260,29 @@ inline constexpr std::string_view DDL_SETTLEMENT_RACE =
 inline constexpr std::string_view RACE_RELATION_TABLE = "race_relation";
 inline constexpr std::string_view SETTLEMENT_RACE_TABLE = "settlement_race";
 
+// DDL of the tables of P5-06 9.1 and 9.3 (schema version 12), executed after
+// settlement_race, in this order: the named figures and the books, written
+// by the history stage, empty when it did not run. Nullable column:
+// figure.died.
+inline constexpr std::string_view DDL_FIGURE =
+    "CREATE TABLE figure (id INTEGER PRIMARY KEY, name TEXT NOT NULL, epithet TEXT NOT NULL, role INTEGER NOT NULL, "
+    "race INTEGER NOT NULL, culture INTEGER NOT NULL, civ INTEGER NOT NULL, born INTEGER NOT NULL, office_from "
+    "INTEGER NOT NULL, start_event INTEGER NOT NULL, died INTEGER, death_event INTEGER NOT NULL, death_region INTEGER "
+    "NOT NULL, death_settlement INTEGER NOT NULL, status INTEGER NOT NULL, reign_no INTEGER NOT NULL, regnal INTEGER "
+    "NOT NULL, temper INTEGER NOT NULL, skill INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_BOOK =
+    "CREATE TABLE book (id INTEGER PRIMARY KEY, title TEXT NOT NULL, author INTEGER NOT NULL, site INTEGER NOT NULL, "
+    "year INTEGER NOT NULL, event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view FIGURE_TABLE = "figure";
+inline constexpr std::string_view BOOK_TABLE = "book";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
 // history tables of P3-04 9.1; schema 8: then region_name; schema 9: then
 // beast, monster_kind, beast_population, monster, site; schema 10: then
-// race_relation, settlement_race).
-inline constexpr std::array<std::string_view, 34> DDL_STATEMENTS = {
+// race_relation, settlement_race; schema 12: then figure, book).
+inline constexpr std::array<std::string_view, 36> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -278,7 +294,7 @@ inline constexpr std::array<std::string_view, 34> DDL_STATEMENTS = {
     DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME,
     DDL_BEAST,          DDL_MONSTER_KIND,    DDL_BEAST_POPULATION,
     DDL_MONSTER,        DDL_SITE,            DDL_RACE_RELATION,
-    DDL_SETTLEMENT_RACE};
+    DDL_SETTLEMENT_RACE, DDL_FIGURE,         DDL_BOOK};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------

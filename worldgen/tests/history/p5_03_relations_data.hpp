@@ -90,15 +90,14 @@ inline const std::vector<RelField>& monsters_fields_024() {
     static const std::vector<RelField> v = {{"raid_chain_years", 1, 100000, 300}, {"toll_over_permille", 0, 1000, 250},
                                             {"hunt_raid_permille", 0, 1000, 5},   {"hunt_max_permille", 0, 1000, 200},
                                             {"fear_raids", 1, 100, 2},            {"fear_years", 1, 100000, 50},
-                                            {"fear_permille", 0, 1000, 400},      {"overrun_people_ref", 1, 1000000, 800}};
+                                            {"fear_permille", 0, 1000, 400},      {"overrun_people_ref", 1, 1000000, 3000}};
     return v;
 }
 // 11.1, after ghost_max_population.
 inline const std::vector<RelField>& peoples_fields_024() {
     static const std::vector<RelField> v = {{"abandon_reach_hops", 0, 16, 0},
                                             {"abandon_loss_min_permille", 0, 1000, 50},
-                                            {"abandon_loss_max_permille", 0, 1000, 200},
-                                            {"ghost_fade_years", 0, 100000, 0}};
+                                            {"abandon_loss_max_permille", 0, 1000, 200}};   // P5-06: ghost_fade_years removed
     return v;
 }
 

@@ -37,7 +37,7 @@ struct RRule {
 inline const std::vector<RRule>& shipped_rule_kinds() {
     static const std::vector<RRule> v = {{"conquest", {"civ_conquered"}, 100}, {"capital_sack", {"sacked"}, 90},
                                          {"great_sack", {"sacked"}, 80},
-                                         {"slaughter", {"battle", "battle_at_pass", "allied_battle"}, 70},   // P5-04 11.1
+                                         {"slaughter", {"battle", "battle_at_pass", "allied_battle", "battle_led"}, 70},   // P5-04 11.1
                                          {"plague", {"plague_outbreak"}, 60}, {"heartland", {"became_city"}, 50},
                                          {"ravage", {"settlement_overrun"}, 75}};   // P5-02 9.3: rule 7
     return v;

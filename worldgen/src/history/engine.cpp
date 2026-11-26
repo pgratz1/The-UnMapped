@@ -372,8 +372,9 @@ public:
 
     // P5-02 10.4 (W4): the engine knows no monster or site; their ids are
     // only checked to be at least 1 (the history stage checks the rows).
+    // P5-06 8.5: nor any figure.
     [[nodiscard]] bool participant_exists(EntityType type, std::int64_t id) const noexcept {
-        if (type == EntityType::monster || type == EntityType::site) {
+        if (type == EntityType::monster || type == EntityType::site || type == EntityType::figure) {
             return id >= 1;
         }
         return entity_exists(type, id);
@@ -1216,7 +1217,8 @@ void State::open_relation(RelationKey key, std::int64_t event) {
     }
     const std::optional<EntityType> a = entity_type_from_code(key.a_type);
     const std::optional<EntityType> b = entity_type_from_code(key.b_type);
-    if (!a || !b || !engine_.entity_exists(*a, key.a_id) || !engine_.entity_exists(*b, key.b_id)) {
+    // P5-06 8.5: a figure side is checked to be at least 1 (the stage checks the rows).
+    if (!a || !b || !engine_.participant_exists(*a, key.a_id) || !engine_.participant_exists(*b, key.b_id)) {
         fail("history: state: open_relation: an entity of the relation does not exist");
     }
     require_event(event, what);
@@ -1342,6 +1344,18 @@ std::int64_t StepContext::quiet_events_left(std::int64_t civ) const {
 std::uint64_t StepContext::draw(std::uint64_t stream_key, std::uint64_t a, std::uint64_t b,
                                 std::uint64_t k) const noexcept {
     return history::draw(stream_key, static_cast<std::uint64_t>(engine_.year()), a, b, k);
+}
+
+// P5-06 7.10: draw(stream_key, year, a, b, k) for a year inside the step.
+std::uint64_t StepContext::draw_at(std::uint64_t stream_key, std::int64_t year, std::uint64_t a, std::uint64_t b,
+                                   std::uint64_t k) const {
+    const std::int64_t first = engine_.year();
+    const std::int64_t last = first + engine_.years() - 1;
+    if (year < first || year > last) {
+        throw FatalError("history: draw_at: year " + int_text(year) + " outside the step " + int_text(first) + "-" +
+                         int_text(last));
+    }
+    return history::draw(stream_key, static_cast<std::uint64_t>(year), a, b, k);
 }
 
 // --- run_engine ------------------------------------------------------------------------------

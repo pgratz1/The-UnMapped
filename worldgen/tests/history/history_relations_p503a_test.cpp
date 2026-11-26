@@ -143,15 +143,15 @@ TEST_CASE("P5-03a 10.2: undead_min_dead 1000 and undead_dead_permille int(0, 100
     const Load l = load(p503a::files_025());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& r = record_of(*l.content, "monsters");
-    REQUIRE(r.size() >= 2U);
-    CHECK(r.name_at(r.size() - 2U) == "overrun_people_ref");
-    CHECK(r.name_at(r.size() - 1U) == "undead_dead_permille");
-    CHECK(r.get_int("undead_dead_permille") == 25);
+    REQUIRE(r.size() >= 3U);
+    CHECK(r.name_at(r.size() - 3U) == "overrun_people_ref");
+    CHECK(r.name_at(r.size() - 2U) == "undead_dead_permille");
+    CHECK(r.get_int("undead_dead_permille") == 28);
     CHECK(r.get_int("undead_min_dead") == 1000);
     const std::string p = "history/monsters.toml";
     CHECK_FALSE(load(without(p, "undead_dead_permille")).ok());
-    for (const std::int64_t v : {-1, 1001}) CHECK_FALSE(load(edited(p, line("undead_dead_permille", 25), line("undead_dead_permille", v))).ok());
-    for (const std::int64_t v : {0, 1000}) CHECK(load(edited(p, line("undead_dead_permille", 25), line("undead_dead_permille", v))).ok());
+    for (const std::int64_t v : {-1, 1001}) CHECK_FALSE(load(edited(p, line("undead_dead_permille", 28), line("undead_dead_permille", v))).ok());
+    for (const std::int64_t v : {0, 1000}) CHECK(load(edited(p, line("undead_dead_permille", 28), line("undead_dead_permille", v))).ok());
 }
 
 TEST_CASE("P5-03a 10.1, 10.2: the shipped game/data and both fixture roots hold the 0.25.0 fields") {

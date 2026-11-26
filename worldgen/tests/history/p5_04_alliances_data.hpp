@@ -214,6 +214,30 @@ inline std::string with_allied_cause(std::string t) {
     return t;
 }
 
+// P5-06 8.2, 11.1 (0.27.0): the expectation of a shipped template over its 0.26.0 text: battle_led= after
+// allied_battle=, blight= before tribute=, and {r:under} after the acting role of the six changed templates.
+inline std::string with_p506_templates(std::string t) {
+    t = with_allied_cause(std::move(t));
+    const std::size_t a = t.find("allied_battle=");
+    if (a != std::string::npos && t.find("battle_led=") == std::string::npos) {
+        const std::size_t e1 = t.find_first_of(",|", a);
+        const std::string word = t.substr(a + 14, e1 - a - 14);
+        t.insert(e1, ",battle_led=" + word);
+    }
+    auto rep = [&t](const std::string& from, const std::string& to) {
+        const std::size_t b = t.find(from);
+        if (b != std::string::npos) t.replace(b, from.size(), to);
+    };
+    rep(",tribute=tribute", ",blight=blight,tribute=tribute");
+    rep("{attacker} declared war on", "{attacker}{attacker:under} declared war on");
+    rep("{betrayer} broke faith", "{betrayer}{betrayer:under} broke faith");
+    rep("{principal} gave", "{principal}{principal:under} gave");
+    rep("{principal} kept", "{principal}{principal:under} kept");
+    rep("{civilization} fell to", "{civilization}{civilization:under} fell to");
+    rep("{civilization} came to an end.", "{civilization}{civilization:under} came to an end.");
+    return t;
+}
+
 inline std::string entry_line(const std::string& key, std::int64_t sal, const std::string& templ) {
     return "  { kind = \"" + key + "\", salience = " + std::to_string(sal) + ", template = \"" + templ + "\" },";
 }

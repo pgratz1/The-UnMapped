@@ -281,9 +281,24 @@ inline wd::ContentSet without_origin_allies(const wd::ContentSet& base) {
 // P5-04 4.2: the zero tuning of P5-04's I0 (7.14): no reach, no trade reach, no mine, no origin ally. The
 // configurations "without" a subsystem of P5-02 and P5-03 build no alliances either, so their I0 runs the stage with
 // this tuning (by P5-04's I0, the same as without the subsystem).
+// P5-06 4.4 (integration): and P5-06's zero tuning (name_rulers false, no generals, heroes, casters, exiles or split
+// bonus, neutral tempers): those configurations build no figures either, and by P5-06's I0 (7.11) the zero tuning is
+// the same as no subsystem.
+inline wd::Value tempers_of(std::int64_t v) {
+    wd::Record r;
+    for (const char* t : {"steady", "warlike", "peaceable", "grasping", "just"}) r.add(t, V(v));
+    return wd::Value::record(std::move(r));
+}
+inline wd::ContentSet figures_zero_of(const wd::ContentSet& base) {
+    return with_history(base, "figures",
+                        {{"name_rulers", wd::Value::boolean(false)}, {"general_scale_permille", V(0)},
+                         {"hero_scale_permille", V(0)}, {"caster_ppm", V(0)}, {"exile_permille", V(0)},
+                         {"short_reign_split_permille", V(0)}, {"temper_strain_permille", tempers_of(1000)},
+                         {"temper_allied_permille", tempers_of(1000)}, {"temper_spoils_permille", tempers_of(0)}});
+}
 inline wd::ContentSet alliances_zero_of(const wd::ContentSet& base) {
-    return without_origin_allies(
-        with_history(base, "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}}));
+    return figures_zero_of(without_origin_allies(
+        with_history(base, "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}})));
 }
 
 // 4.2 the zero tuning of I0 (7.4), with every race's stances empty.

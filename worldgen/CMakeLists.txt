@@ -83,6 +83,7 @@ add_library(worldgen STATIC
     src/inspect/chronology.cpp
     # P3-04: the history stage as an engine with stub subsystems, the event
     # catalogue and its renderer, and the [history] report section.
+    src/history/figures.cpp
     src/history/engine.cpp
     src/history/event_catalogue.cpp
     src/history/inputs.cpp

@@ -1,7 +1,7 @@
 # Beasts, monsters and sites (spec P5-02 4.3). Generator 0.23.0; P5-03a 10.2 (generator 0.25.0).
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
-living_permille = 100
+living_permille = 200
 undead_min_dead = 1000
 undead_window_years = 100
 hunt_hops = 2
@@ -39,5 +39,7 @@ hunt_max_permille = 200
 fear_raids = 2
 fear_years = 50
 fear_permille = 400
-overrun_people_ref = 800
-undead_dead_permille = 25
+overrun_people_ref = 3000
+undead_dead_permille = 28
+# P5-06 25.3 (generator 0.27.0).
+undead_regions_ref = 64

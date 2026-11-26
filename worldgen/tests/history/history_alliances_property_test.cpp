@@ -57,8 +57,9 @@ wd::ContentSet without_origin(const wd::ContentSet& base) {
     return c;
 }
 const wd::ContentSet& zero() {
-    static const wd::ContentSet c = without_origin(p503api::with_history(
-        conflict_test::shipped(), "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}}));
+    // P5-06 (integration): with P5-06's zero tuning, since the configuration without alliances builds no figures
+    static const wd::ContentSet c = p503api::figures_zero_of(without_origin(p503api::with_history(
+        conflict_test::shipped(), "alliances", {{"ally_hops", V(-1)}, {"trade_hops", V(-1)}, {"mine_permille", V(0)}})));
     return c;
 }
 
@@ -66,7 +67,7 @@ const wd::ContentSet& zero() {
 // elves and faeries ally by origin), on stress seeds of the conflict golden file (together every kind of 63 to
 // 78 at the calibrated values; seed 5 holds the spurnings).
 const std::vector<std::uint64_t>& fixture_seeds() {
-    static const std::vector<std::uint64_t> v = {3U, 5U, 6U, 7U};
+    static const std::vector<std::uint64_t> v = {3U, 5U, 6U, 7U, 9U, 12U, 13U, 14U};   // P5-06: spoils_shared and alliance_spurned no longer occur on 3, 5, 6, 7 (stress geographies of the golden) (temper_spoils, figures)
     return v;
 }
 

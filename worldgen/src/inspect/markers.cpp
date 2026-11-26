@@ -125,7 +125,8 @@ EventSymbol event_symbol(std::string_view kind_key) noexcept {
     if (kind_key == "siege" || kind_key == "refuge_held") {
         return EventSymbol::siege;
     }
-    if (kind_key == "battle" || kind_key == "battle_at_pass" || kind_key == "allied_battle") {  // P5-04 11.1
+    if (kind_key == "battle" || kind_key == "battle_at_pass" || kind_key == "allied_battle" ||
+        kind_key == "battle_led") {  // P5-04 11.1, P5-06 11.1
         return EventSymbol::battle;
     }
     if (kind_key == "plague" || kind_key == "plague_outbreak" || kind_key == "plague_spread") {
@@ -414,7 +415,11 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
     out.settlements.clear();
     for (std::size_t i = 0; i < state.settlements.size(); ++i) {
         const history::SettlementState& st = state.settlements[i];
-        if (!st.exists || (st.status == 4 && !options.faded)) {
+        // P5-06 25.1 (e): a ruin OLD_RUIN_YEARS or more before Y is an old
+        // ruin, an entry of type faded, shown only with the option.
+        const bool old_ruin = st.exists && st.status == 3 && ruined_year_[i] >= 0 &&
+                              year - ruined_year_[i] >= OLD_RUIN_YEARS;
+        if (!st.exists || ((st.status == 4 || old_ruin) && !options.faded)) {
             continue;
         }
         SettlementMarker m;
@@ -433,6 +438,7 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
         } else {
             m.ruined_year = ruined_year_[i];
             m.ruin_event = ruin_event_[i];
+            m.old_ruin = old_ruin;
         }
         out.settlements.push_back(m);
     }
@@ -464,13 +470,14 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
         }
     }
 
-    // P5-04 11.3: the mines existing at Y, ascending id.
+    // P5-04 11.3: the mines existing at Y, and P5-06 11.4 the towers,
+    // ascending id.
     out.sites.clear();
     if (options.sites) {
         for (const std::int64_t id : history.timeline.sites_existing(year)) {
             const history::SiteState s = history.timeline.site_at(id, year);
-            if (s.kind == 3 && s.open) {
-                out.sites.push_back(SiteMarker{id, s.x, s.y, s.kind, s.founder});
+            if ((s.kind == 3 || s.kind == 4) && s.open) {
+                out.sites.push_back(SiteMarker{id, s.x, s.y, s.kind, s.founder, s.settlement});
             }
         }
         std::stable_sort(out.sites.begin(), out.sites.end(),
@@ -724,6 +731,25 @@ Glyph mine_glyph() {
     return std::move(g).take();
 }
 
+// P5-06 11.4: the tower, a narrow upright tower with a pointed top in the
+// 7 x 7 cell: fill where dx = 0 and -1 <= dy <= 1; ink where |dx| = 1 and
+// -1 <= dy <= 2, or dx = 0 and dy is -2 or 2; then the halo rule (20 halo,
+// 3 fill, 10 ink).
+Glyph tower_glyph() {
+    GlyphGrid g(3);
+    for (std::int32_t dy = -1; dy <= 1; ++dy) {
+        g.set(0, dy, GLYPH_FILL);
+    }
+    for (std::int32_t dy = -1; dy <= 2; ++dy) {
+        g.set(-1, dy, GLYPH_INK);
+        g.set(1, dy, GLYPH_INK);
+    }
+    g.set(0, -2, GLYPH_INK);
+    g.set(0, 2, GLYPH_INK);
+    g.halo();
+    return std::move(g).take();
+}
+
 std::string key_text(GlyphKey key) {
     return "base " + num(key.base) + (key.declining ? " declining" : "") + (key.capital ? " capital" : "");
 }
@@ -736,6 +762,9 @@ Glyph marker_glyph(GlyphKey key) {
     }
     if (key.base == GLYPH_MINE && !key.declining && !key.capital) {
         return mine_glyph();  // P5-04 11.3
+    }
+    if (key.base == GLYPH_TOWER && !key.declining && !key.capital) {
+        return tower_glyph();  // P5-06 11.4
     }
     if (key.declining || key.capital || (key.base < 8 || key.base > 11)) {
         throw FatalError("marker_glyph: no glyph for " + key_text(key));
@@ -755,11 +784,30 @@ GlyphKey glyph_of(const SettlementMarker& marker) noexcept {
         key.declining = marker.status == 2;
         key.capital = marker.capital;
     } else if (marker.status == 3) {
-        key.base = 8;
+        key.base = marker.old_ruin ? 9 : 8;  // P5-06 25.1 (e)
     } else if (marker.status == 4) {
         key.base = 9;
     }
     return key;
+}
+
+MarkerType settlement_marker_type(const SettlementMarker& marker) noexcept {
+    if (standing_status(marker.status)) {
+        return MarkerType::standing;
+    }
+    return marker.status == 4 || (marker.status == 3 && marker.old_ruin) ? MarkerType::faded : MarkerType::ruin;
+}
+
+std::array<std::int64_t, 2> site_glyph_offset(const SiteMarker& site) noexcept {
+    if (site.kind == 4) {
+        return site.settlement != 0 ? std::array<std::int64_t, 2>{-SITE_GLYPH_OFFSET, -SITE_GLYPH_OFFSET}
+                                    : std::array<std::int64_t, 2>{0, 0};
+    }
+    return {SITE_GLYPH_OFFSET, -SITE_GLYPH_OFFSET};
+}
+
+std::uint8_t site_glyph_base(const SiteMarker& site) noexcept {
+    return site.kind == 3 ? GLYPH_MINE : site.kind == 4 ? GLYPH_TOWER : std::uint8_t{0};
 }
 
 // --- Drawing (section 6) ---------------------------------------------------------
@@ -794,10 +842,13 @@ private:
         if (key.base == GLYPH_MINE && !key.declining && !key.capital) {
             return 24U;
         }
+        if (key.base == GLYPH_TOWER && !key.declining && !key.capital) {
+            return 25U;  // P5-06 11.4
+        }
         (void)marker_glyph(key);  // throws its FatalError
         draw_fatal("no glyph for base " + num(key.base));
     }
-    std::array<std::optional<Glyph>, 25> glyphs_;
+    std::array<std::optional<Glyph>, 26> glyphs_;
 };
 
 class Canvas {
@@ -895,16 +946,22 @@ void draw_markers(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_
     }
     // (3) to (6): faded, ruins, standing non-capitals, capitals.
     const auto pass_of = [](const SettlementMarker& m) -> int {
-        if (m.status == 4) return 3;
+        if (m.status == 4 || (m.status == 3 && m.old_ruin)) return 3;  // P5-06 25.1 (e): old ruins with the faded
         if (m.status == 3) return 4;
         if (standing_status(m.status)) return m.capital ? 6 : 5;
         return 0;
     };
     for (int pass = 3; pass <= 6; ++pass) {
         if (pass == 5) {  // P5-04 11.3: sites, between ruins and standing settlements
+            // P5-06 11.4: and the towers, each at its offset.
             for (const SiteMarker& s : markers.sites) {
-                canvas.draw(glyphs.get(GlyphKey{GLYPH_MINE, false, false}), s.x + SITE_GLYPH_OFFSET,
-                            s.y - SITE_GLYPH_OFFSET, MARKER_MINE);
+                const std::uint8_t base = site_glyph_base(s);
+                if (base == 0) {
+                    continue;
+                }
+                const std::array<std::int64_t, 2> d = site_glyph_offset(s);
+                canvas.draw(glyphs.get(GlyphKey{base, false, false}), s.x + d[0], s.y + d[1],
+                            base == GLYPH_TOWER ? MARKER_TOWER : MARKER_MINE);
             }
         }
         for (const SettlementMarker& m : markers.settlements) {

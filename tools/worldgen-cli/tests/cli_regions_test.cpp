@@ -220,9 +220,9 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
         }
         hex[l[0] + " " + l[1]] = l[2];
     }
-    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                             "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
+                                             "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                              "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
                                              "settlement_census", "settlement_race", "site"});
@@ -256,7 +256,8 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
             "table event_value",  "table phase",             "table region_control", "table relation",
             "table settlement",   "table settlement_census", "table region_name",
             "table beast",        "table monster_kind",      "table beast_population", "table monster",
-            "table site",         "table race_relation",     "table settlement_race"};   // chronology (P3-03) and
+            "table site",         "table race_relation",     "table settlement_race",
+            "table book",         "table figure"};   // P5-06 9.1, 9.3   // chronology (P3-03) and
                                                                                    // history (P3-04, P5-12, P5-02, P5-03)
         if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
@@ -295,7 +296,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nrace_relation = "));   // P5-03 16.1
     CHECK(contains(r.out, "\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
-    CHECK(contains(r.out, "\nschema_version = 11\n"));
+    CHECK(contains(r.out, "\nschema_version = 12\n"));
 }
 
 TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and no region keys") {
@@ -307,10 +308,10 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     // --until none: every table empty, 35 pages (143360 bytes) since schema 8 (P5-12 12).
     const fs::path e = w.sb.file("none.db");
     generate(w.sb, w.data, {"--until", "none"}, e);
-    CHECK(read_bytes(e).size() == 184320U);   // 45 pages at schema 10 (P5-03a 12 item 5)
+    CHECK(read_bytes(e).size() == 192512U);   // 47 pages at schema 12 (P5-06; 45 pages at schema 10) at schema 10 (P5-03a 12 item 5)
     const ProcessResult re = w.sb.cli({"report", "--db", u8(e)});
     REQUIRE(re.exit_code == EXIT_OK);
-    CHECK(contains(re.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\n"
+    CHECK(contains(re.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\n"
                            "region_biome = 0\nregion_border = 0\n"));
 }
 
@@ -462,7 +463,7 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code == EXIT_INPUT);
-        CHECK(contains(r.err, "world schema version 4, this build reads 11"));
+        CHECK(contains(r.err, "world schema version 4, this build reads 12"));
         CHECK(r.out.empty());
     }
     // Plain `hash` hashes the bytes without opening the world (P0-04 8).

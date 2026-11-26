@@ -184,9 +184,9 @@ void check_golden_world(const Sandbox& sb, const std::string& name, const std::v
             tables.push_back(l.substr(6, l.find(' ', 6) - 6));
         }
     }
-    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause",
+    CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                             "event_value", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
+                                             "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                              "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
                                              "settlement_census", "settlement_race", "site"});
@@ -387,7 +387,7 @@ TEST_CASE("cli P3-03 4.2, 14.1 item 8: each setting value reaches its meta key")
     CHECK(contains(meta, "\nparam.civs_per_race = auto\nparam.divine_activity = normal\nparam.divine_script =\n"
                          "param.event_intensity = normal\nparam.history_detail = normal\nparam.history_span = 6000\n"
                          "param.map_size = 1024\nparam.monster_pressure = normal\nparam.races = " +
-                             std::string(ALL_RACES) + "\nschema_version = 11\n"));
+                             std::string(ALL_RACES) + "\nschema_version = 12\n"));
 }
 
 TEST_CASE("cli P3-03 4.1, P3-01 8.2 test 7: file values are recorded, and a flag wins over its file key") {

@@ -2649,7 +2649,7 @@ def main(argv):
         print(__doc__)
         return 2
     import p3_conflict_reference as pcr
-    version = "0.26.0"   # P5-04; --version 0.25.0 serves P5-03a's file, 0.24.0 P5-03's
+    version = "0.27.0"   # P5-06 phase 2 (--version 0.26.0: P5-04's file); P5-04; --version 0.25.0 serves P5-03a's file, 0.24.0 P5-03's
     if "--version" in argv:
         i = argv.index("--version")
         version = argv[i + 1]

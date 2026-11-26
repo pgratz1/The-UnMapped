@@ -86,8 +86,8 @@ const wd::ContentSet& quiet_reach_content() {
                                                   {"famine_ppm", I64(0)},
                                                   {"plague_ppm", by_kind(0, 0, 0, 0, 0)},
                                                   {"crisis_per_generation_permille", I64(0)},
-                                                  {"abandon_reach_hops", I64(2)},
-                                                  {"ghost_fade_years", I64(1500)}});
+                                                  {"abandon_reach_hops", I64(2)}});   // P5-06 25.1:
+    // ghost_fade_years is gone (no ruin fades), so the pre-0.24.0 fading of this case no longer applies
     return c;
 }
 
@@ -154,9 +154,9 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0, P3-06 r9 20.9
     // kinds 32 and 33 at 0.18.0
-    REQUIRE(compiled.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40  // r10: kinds 34-36; P3-04 r12 20.4 (0.19.0): kinds 37, 38
+    REQUIRE(compiled.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40  // r10: kinds 34-36; P3-04 r12 20.4 (0.19.0): kinds 37, 38
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; P3-04 r19 22.2 (0.21.0): kinds 41, 42
+    REQUIRE(cat.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P5-02 10.1 (0.23.0): kinds 44 to 55; P3-04 r21 23.2 (0.22.0): kind 43; P3-04 r19 22.2 (0.21.0): kinds 41, 42
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -180,7 +180,7 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
             }
         }
         CHECK(cat.kinds[i + 5].salience == w.salience);
-        CHECK(cat.kinds[i + 5].templ == p504data::with_allied_cause(w.templ));   // P5-04 11.1
+        CHECK(cat.kinds[i + 5].templ == p504data::with_p506_templates(w.templ));   // P5-04 11.1
         CHECK(eng::template_problem(cat.kinds[i + 5], cat.kinds[i + 5].templ) == std::nullopt);
     }
     // 17i: kind 31 settlement_abandoned_to (r6 11): caused, region and settlement use 1, three 1-1 roles
@@ -205,8 +205,8 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
                       "battle_at_pass=war,allied_battle=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to "
                       "{destination}{lost?|, and one was lost|, and # were lost}.";
     CHECK(cat.kinds[30].salience == 55);
-    CHECK(cat.kinds[30].templ == t31);  // history.report lists it (data)
-    CHECK(eng::template_problem(cat.kinds[30], t31) == std::nullopt);
+    CHECK(cat.kinds[30].templ == p504data::with_p506_templates(t31));  // history.report lists it (data)
+    CHECK(eng::template_problem(cat.kinds[30], cat.kinds[30].templ) == std::nullopt);
     // P3-04's five kinds are unchanged (a shipped kind is never edited, P3-04 8.2).
     CHECK(compiled.kinds[0].key == "awakening");
     CHECK(compiled.kinds[4].key == "flare_up");
@@ -217,7 +217,7 @@ TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awa
     // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
     // geo.regions.name after geo.regions.cost; P3-06 r10 20.17 (0.18.0) hist.conflict.search; r22 24.5 (0.21.0)
     // hist.conflict.toll
-    REQUIRE(names.size() == 82U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-12 3 (0.22.0): the two hist.renaming streams; P5-02 3 sixteen (0.23.0)
+    REQUIRE(names.size() == 97U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-12 3 (0.22.0): the two hist.renaming streams; P5-02 3 sixteen (0.23.0)
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
@@ -518,18 +518,11 @@ TEST_CASE("P3-05 8.5 r1, 13: ruin(s, e) applies items 2-5 with e and does not en
     CHECK(ended_causes == std::vector<std::int64_t>{e_ruin2});
     CHECK(at(t.civilization[0], 8) == 6);
     CHECK(at(t.civilization[0], 9) == at(*ended[0], 0));
-    // both ruins fade within the span (1500 years, quiet steps from 50): the rows are cleared (lead's
-    // ruling 3) and each ruin_faded is caused by the ruin event the hook was given
-    std::set<std::int64_t> fade_causes;
-    for (const Row& e : t.event) {
-        if (at(e, 3) != k_ruin_faded) continue;
-        for (const Row& c : t.event_cause) {
-            if (at(c, 0) == at(e, 0)) fade_causes.insert(at(c, 1));
-        }
-    }
-    CHECK(fade_causes == std::set<std::int64_t>{e_ruin, e_ruin2});
-    CHECK(at(t.settlement[0], 10) == faded);
-    CHECK(at(t.settlement[0], 13) == 0);
+    // P5-06 25.1 (0.27.0): no ruin ever fades: both ruins stay to the end, no ruin_faded is written and neither
+    // settlement row is cleared
+    for (const Row& e : t.event) CHECK(at(e, 3) != k_ruin_faded);
+    CHECK(at(t.settlement[0], 10) != faded);
+    CHECK(at(t.settlement[0], 13) != 0);
 }
 
 TEST_CASE("P3-05 13, 8.5 (b), r9 21 item 6: note_reduction records P3-06's event; a race's last refuge is not abandoned") {

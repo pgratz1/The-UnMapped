@@ -38,3 +38,7 @@ stances = [{ race = "goblin", value = -100 }]
 origin_allies = []
 ally_join_permille = 800
 mining_permille = 1000
+temper_weights = { steady = 450, warlike = 150, peaceable = 100, grasping = 200, just = 100 }
+general_permille = 500
+hero_permille = 120
+magic_permille = 300

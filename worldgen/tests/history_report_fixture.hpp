@@ -64,7 +64,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h13-v4",    // P5-02 19.1 item 15 (format v4, schema 9)
                                                "h14-v5",    // P5-03 24.1 item 11 (format v5, schema 10)
                                                "h15-v6",    // P5-03a 14 item 11 (format v6, schema 10)
-                                               "h16-alliances"};   // P5-04 18.1 item 16 (format v7, schema 11)
+                                               "h16-alliances",   // P5-04 18.1 item 16 (format v7, schema 11)
+                                               "h17-figures"};    // P5-06 18.1 item 14 (format v8, schema 12)
     return v;
 }
 
@@ -105,6 +106,9 @@ struct Fixture {
     // schema 10 (P5-03 16.1; H14): the rows as given, in key order
     std::vector<db::RaceRelationRow> race_relations;
     std::vector<db::SettlementRaceRow> settlement_races;
+    // schema 12 (P5-06 9.1, 9.3; H17): the rows as given, in id order (figure.died -1 is NULL)
+    std::vector<db::FigureRow> figures;
+    std::vector<db::BookRow> books;
 };
 
 namespace detail {
@@ -280,6 +284,33 @@ inline Fixture load_fixture(const std::string& name) {
     for (const toml::array* r : detail::rows(doc, "settlement_race")) {
         fx.settlement_races.push_back(
             {i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4))});
+    }
+    for (const toml::array* r : detail::rows(doc, "figure")) {
+        db::FigureRow f;
+        f.id = i64(*r->get(0));
+        f.name = str(*r->get(1));
+        f.epithet = str(*r->get(2));
+        f.role = i64(*r->get(3));
+        f.race = i64(*r->get(4));
+        f.culture = i64(*r->get(5));
+        f.civ = i64(*r->get(6));
+        f.born = i64(*r->get(7));
+        f.office_from = i64(*r->get(8));
+        f.start_event = i64(*r->get(9));
+        f.died = nullable(*r->get(10));
+        f.death_event = i64(*r->get(11));
+        f.death_region = i64(*r->get(12));
+        f.death_settlement = i64(*r->get(13));
+        f.status = i64(*r->get(14));
+        f.reign_no = i64(*r->get(15));
+        f.regnal = i64(*r->get(16));
+        f.temper = i64(*r->get(17));
+        f.skill = i64(*r->get(18));
+        fx.figures.push_back(std::move(f));
+    }
+    for (const toml::array* r : detail::rows(doc, "book")) {
+        fx.books.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
+                            i64(*r->get(5))});
     }
     // The catalogue: id = position; roles and values seq = position.
     struct KindInfo {
@@ -502,6 +533,8 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.sites) ctx.write_site(r);
     for (const auto& r : f.race_relations) ctx.write_race_relation(r);   // P5-03 16.1
     for (const auto& r : f.settlement_races) ctx.write_settlement_race(r);
+    for (const auto& r : f.figures) ctx.write_figure(r);   // P5-06 9.1, 9.3
+    for (const auto& r : f.books) ctx.write_book(r);
 }
 
 inline const dbtest::TempDir& fixture_dir() {

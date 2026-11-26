@@ -122,6 +122,10 @@ stances = [{ race = "faerie", value = 200 }]
 origin_allies = ["faerie"]
 ally_join_permille = 700
 mining_permille = 0
+temper_weights = { steady = 450, warlike = 100, peaceable = 250, grasping = 50, just = 150 }
+general_permille = 500
+hero_permille = 100
+magic_permille = 1000
 )";
 
 inline constexpr std::string_view GOBLIN_TOML = R"([race.goblin]
@@ -165,6 +169,10 @@ stances = [{ race = "dwarf", value = -100 }]
 origin_allies = []
 ally_join_permille = 400
 mining_permille = 0
+temper_weights = { steady = 300, warlike = 300, peaceable = 50, grasping = 300, just = 50 }
+general_permille = 250
+hero_permille = 40
+magic_permille = 150
 )";
 
 inline constexpr std::string_view DWARF_TOML = R"([race.dwarf]
@@ -207,6 +215,10 @@ stances = [{ race = "goblin", value = -100 }]
 origin_allies = []
 ally_join_permille = 800
 mining_permille = 1000
+temper_weights = { steady = 450, warlike = 150, peaceable = 100, grasping = 200, just = 100 }
+general_permille = 500
+hero_permille = 120
+magic_permille = 300
 )";
 
 inline constexpr std::string_view FAERIE_TOML = R"([race.faerie]
@@ -251,6 +263,10 @@ stances = [{ race = "elf", value = 200 }]
 origin_allies = ["elf"]
 ally_join_permille = 150
 mining_permille = 0
+temper_weights = { steady = 400, warlike = 50, peaceable = 350, grasping = 50, just = 150 }
+general_permille = 150
+hero_permille = 60
+magic_permille = 900
 )";
 
 inline constexpr std::string_view HUMAN_TOML = R"([race.human]
@@ -294,6 +310,10 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+temper_weights = { steady = 400, warlike = 175, peaceable = 175, grasping = 125, just = 125 }
+general_permille = 450
+hero_permille = 150
+magic_permille = 500
 )";
 
 inline constexpr std::string_view ORC_TOML = R"([race.orc]
@@ -338,6 +358,10 @@ stances = []
 origin_allies = []
 ally_join_permille = 600
 mining_permille = 0
+temper_weights = { steady = 250, warlike = 500, peaceable = 50, grasping = 150, just = 50 }
+general_permille = 400
+hero_permille = 80
+magic_permille = 150
 )";
 
 // --- Naming blocks (P3-02 5, verbatim) ---------------------------------------------
@@ -354,6 +378,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The Hold of {root}", "Clan {root}", "The {root} Throne"]
 settlement_forms = ["{root}", "{root} Deep", "{root} Hold", "{root}"]
 site_forms = ["{root} Watch", "The Tower of {root}"]
+person_forms = ["{root}"]
+tower_forms = ["The Rune-Tower of {root}", "{root}'s Delving-Spire"]
+library_forms = ["The Rune-Halls of {root}"]
+book_titles = ["The Deep Reckoning", "On the Hearts of Stones", "The Rune-Book of the Forge", "The Iron Annals", "On the Binding of Runes", "The Book of Seams", "The Hammer-Canon", "The Grey Ledger"]
+regnal_permille = 200
 )";
 
 inline constexpr std::string_view ELVEN_NAMING = R"(onsets = ["", "l", "th", "s", "f", "n", "m", "r", "v", "gl", "c", "el", "ith"]
@@ -368,6 +397,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
 settlement_forms = ["{root}", "{root}", "{root}", "{root}dell"]
 site_forms = ["{root} Watch", "The Spire of {root}"]
+person_forms = ["{root}"]
+tower_forms = ["The Star-Tower of {root}", "{root}'s White Tower"]
+library_forms = ["The Leaf-House of {root}"]
+book_titles = ["The Lay of the First Stars", "On the Speech of Trees", "The Book of Falling Leaves", "The Silver Canticle", "On Starlight and Shadow", "The Long Remembering", "The Song of the Waking", "The Mirror of Waters"]
+regnal_permille = 0
 )";
 
 inline constexpr std::string_view FAERIE_NAMING = R"(onsets = ["", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"]
@@ -382,6 +416,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The {root} Ring", "The Circle of {root}", "The {root} Court"]
 settlement_forms = ["{root}", "{root} Glade", "{root} Hollow", "{root}"]
 site_forms = ["{root} Watch", "The Thorn of {root}"]
+person_forms = ["{root}"]
+tower_forms = ["The Thorn-Tower of {root}", "{root}'s Moonspire"]
+library_forms = ["The Dream-Hollow of {root}"]
+book_titles = ["The Book of Glimmers", "On the Dreams of Moths", "The Dew-Book", "The Little Mysteries", "On Hidden Ways", "The Thistle Pages", "The Riddle of Hollows", "The Book of Moonmilk"]
+regnal_permille = 0
 )";
 
 inline constexpr std::string_view GOBLIN_NAMING = R"(onsets = ["g", "gr", "sn", "k", "kr", "z", "sk", "b", "n", "gn", "dr", "sl", "skr"]
@@ -396,6 +435,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The {root} Horde", "The Warrens of {root}", "The {root} Mob"]
 settlement_forms = ["{root}", "{root}", "{root} Pit", "{root} Hole"]
 site_forms = ["{root} Lookout", "{root} Stockade"]
+person_forms = ["{root}"]
+tower_forms = ["The Smoke-Tower of {root}", "{root}'s Bone-Tower"]
+library_forms = ["The Scratching-House of {root}"]
+book_titles = ["The Black Scratchings", "On Biting Things", "The Book of Smokes", "The Gnawed Pages", "On the Fears of Elves", "The Rot-Book", "The Twelve Curses", "The Book of Spite"]
+regnal_permille = 0
 )";
 
 inline constexpr std::string_view HUMAN_NAMING = R"(onsets = ["b", "c", "d", "g", "h", "m", "r", "s", "t", "w", "st", "br", "al", "ed", "ash"]
@@ -410,6 +454,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The Kingdom of {root}", "The {root} League", "The Duchy of {root}"]
 settlement_forms = ["{root}", "{root}ford", "{root}ton", "{root}bury", "{root}wick", "{root}ham", "{root}stead"]
 site_forms = ["{root} Watch", "{root} Tower"]
+person_forms = ["{root}"]
+tower_forms = ["The Tower of {root}", "{root}'s Tower"]
+library_forms = ["The Library of {root}"]
+book_titles = ["The Codex of Hours", "On the Nature of Fire", "The Grey Grimoire", "The Book of Wards", "On the Turning of the Stars", "The Treatise of Bindings", "The Book of Keys", "The Ember Codex"]
+regnal_permille = 250
 )";
 
 inline constexpr std::string_view ORCISH_NAMING = R"(onsets = ["gh", "gr", "ug", "m", "k", "z", "sh", "b", "d", "th", "kr", "ur", "az"]
@@ -424,6 +473,11 @@ god_forms = ["{root}"]
 civilization_forms = ["The {root} Horde", "Clan {root}", "The Warband of {root}"]
 settlement_forms = ["{root}", "{root} Camp", "{root}", "{root} Fort"]
 site_forms = ["{root} Stockade", "The Watch of {root}"]
+person_forms = ["{root}"]
+tower_forms = ["The Skull-Tower of {root}", "{root}'s War-Spire"]
+library_forms = ["The Bone-Hall of {root}"]
+book_titles = ["The Skull-Songs", "On Blood and Iron", "The Book of the Storm", "The Bone-Tally", "The Red Chants", "The War-Runes", "The Ash-Book", "The Chant of Ruin"]
+regnal_permille = 0
 )";
 
 // --- Chronology (P3-01 5.1) -------------------------------------------------------
@@ -461,18 +515,18 @@ events = [
   { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
   { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
   { kind = "became_city", salience = 45, template = "{settlement} in {@region} grew into a city." },
-  { kind = "settlement_dwindled", salience = 15, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls." },
+  { kind = "settlement_dwindled", salience = 15, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,battle_led=war,blight=blight,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls." },
   { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
   { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
   { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
   { kind = "succession_crisis", salience = 40, template = "A succession crisis at {@settlement} shook {civilization}." },
   { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}." },
-  { kind = "settlement_abandoned", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
+  { kind = "settlement_abandoned", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,battle_led=war,blight=blight,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
   { kind = "capital_moved", salience = 50, template = "The seat of {civilization} moved to {settlement}." },
-  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
+  { kind = "civ_ended", salience = 85, template = "{civilization}{civilization:under} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
   { kind = "claim", salience = 35, template = "{claimant} laid claim to {@region}, held by {holder}." },
-  { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
+  { kind = "war_declared", salience = 70, template = "{attacker}{attacker:under} declared war on {defender} over {@region}." },
   { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "siege", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}." },
@@ -481,8 +535,8 @@ events = [
   { kind = "peace", salience = 60, template = "{loser} sued {winner} for peace after {years} {years?year|years} of war." },
   { kind = "truce", salience = 50, template = "{parties:all} made peace after {years} {years?year|years} of war, neither the victor." },
   { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
-  { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
-  { kind = "settlement_abandoned_to", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
+  { kind = "civ_conquered", salience = 90, template = "{civilization}{civilization:under} fell to {conqueror}." },
+  { kind = "settlement_abandoned_to", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,allied_battle=war,battle_led=war,blight=blight,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
   { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}." },
   { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} {people?was|were} carried off." },
   { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
@@ -494,9 +548,9 @@ events = [
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
-  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}." },
+  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,battle_led=the slaughter,plague_outbreak=the plague,became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }{@region_former} became known as {@region}." },
   { kind = "monster_appeared", salience = 45, template = "{monster}, {monster:kind}, made {monster:its} lair in {@region}." },
-  { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,sacked=the sack|After |, }{monster} rose from {monster:its} graves{monster:where}." },
+  { kind = "undead_rose", salience = 50, template = "{@causes:battle=the slaughter,battle_at_pass=the slaughter,allied_battle=the slaughter,battle_led=the slaughter,sacked=the sack|After |, }{monster} rose from {monster:its} graves{monster:where}." },
   { kind = "monster_woke", salience = 25, template = "{monster} woke again in {@region}." },
   { kind = "monster_slept", salience = 10, template = "{monster} sank into sleep in {lair}." },
   { kind = "monster_raid", salience = 15, template = "{monster} {monster:raid} {@settlement}; {dead?no one died|one died|# died}." },
@@ -518,25 +572,39 @@ events = [
   { kind = "alliance_renewed", salience = 10, template = "{ally_a} and {ally_b} renewed their alliance{foe:against}." },
   { kind = "alliance_lapsed", salience = 25, template = "The alliance of {ally_a} and {ally_b} lapsed{reason?, for together they had grown too great|, its cause long past}." },
   { kind = "alliance_broken", salience = 40, template = "{@causes:ally_refused=a call to arms refused|After |, }the alliance of {ally_a} and {ally_b} was broken{reason?, their friendship having cooled|}." },
-  { kind = "alliance_betrayed", salience = 65, template = "{betrayer} broke faith and made war on {betrayed}, an ally." },
+  { kind = "alliance_betrayed", salience = 65, template = "{betrayer}{betrayer:under} broke faith and made war on {betrayed}, an ally." },
   { kind = "ally_joined_war", salience = 40, template = "{ally} {side?joined the war of|came to the defence of} {partner} against {enemy}." },
   { kind = "ally_refused", salience = 30, template = "{ally} would not take up arms for {partner} against {enemy}." },
   { kind = "ally_withdrew", salience = 25, template = "Bled white, {ally} left the war of {partner} against {enemy}." },
   { kind = "allied_battle", salience = 35, template = "{winner}{winner_ally:with} defeated {loser}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "trade_opened", salience = 20, template = "{@causes:peace=the peace,war_won=the war,truce=the truce,peoples_met=the first meeting of their peoples|After |, }{partner_a} and {partner_b} opened trade." },
   { kind = "trade_broken", salience = 15, template = "{@causes:war_declared=war came,alliance_betrayed=war came|When |, }the trade between {partner_a} and {partner_b} {reason?ended|dwindled as their friendship cooled|was lost with the roads between them}." },
-  { kind = "spoils_shared", salience = 20, template = "{principal} gave {ally} its share of the spoils of {@region}." },
-  { kind = "spoils_withheld", salience = 35, template = "{principal} kept the spoils of {@region} from {ally}, its ally." },
+  { kind = "spoils_shared", salience = 20, template = "{principal}{principal:under} gave {ally} its share of the spoils of {@region}." },
+  { kind = "spoils_withheld", salience = 35, template = "{principal}{principal:under} kept the spoils of {@region} from {ally}, its ally." },
   { kind = "alliance_spurned", salience = 50, template = "After the spoils of {@region} were kept from it, {ally} broke its alliance with {principal}." },
   { kind = "mine_opened", salience = 20, template = "{civilization} opened {site} in {@region}." },
   { kind = "arms_sold", salience = 30, template = "{seller} sold arms forged in {site} to {buyer}." },
+  # P5-06 8.2 (generator 0.27.0): kinds 79 to 92.
+  { kind = "came_to_rule", salience = 15, template = "{figure} became the first ruler of {civilization}." },
+  { kind = "figure_died", salience = 15, template = "{figure} of {civilization} died at the age of {age}{how?.|, and the succession was disputed.|, in exile.}" },
+  { kind = "succession_disputed", salience = 30, template = "{ruler} took the throne of {civilization} against the claim of {claimant}{outcome?, who broke away with the far lands|, who was driven out}." },
+  { kind = "exiled", salience = 25, template = "{figure}, who had claimed the throne of {civilization}, {hosted?went into exile with |fled into the wilds}{host:all}." },
+  { kind = "reigned_at_end", salience = 10, template = "At the end of the age {civilization} was ruled by {figure}." },
+  { kind = "general_appointed", salience = 15, template = "{figure} {again?again took|took} command of the armies of {civilization} against {enemy}." },
+  { kind = "battle_led", salience = 35, template = "{winner}{winner_general:under}{winner_ally:with} defeated {loser}{loser_general:under}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
+  { kind = "fell_in_battle", salience = 30, template = "{figure} of {civilization} fell in battle against {enemy} in {@region}." },
+  { kind = "hero_rose", salience = 25, template = "After the raids of {monster}, {figure} of {civilization} took up the hunt." },
+  { kind = "monster_slain_by_hero", salience = 55, template = "{hero} of {slayer} hunted down and slew {monster}{monster:aside}{monster:where}." },
+  { kind = "hero_slain", salience = 45, template = "{figure} of {civilization} was slain hunting {monster}{monster:where}." },
+  { kind = "tower_founded", salience = 40, template = "{figure} of {civilization} {library?founded|raised} {site} in {@region}." },
+  { kind = "book_written", salience = 30, template = "{figure} wrote {@book} at {site}." },
+  { kind = "blight", salience = 50, template = "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} died." },
 ]
 )";
 
 // --- history.renaming (P5-12 4 and 4.1, P3-01 r16 5.4; generator 0.22.0) ---
 
-inline constexpr std::string_view RENAMING_TOML = R"(# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 21.2
-# and rule 7 (P5-02 9.3), generator 0.23.0; rule 7's {name}'s Waste (P5-03 12.3), generator 0.24.0.
+inline constexpr std::string_view RENAMING_TOML = R"(# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; P5-02 21.2 and rule 7, generator 0.23.0.
 [history.renaming]
 region_max = 2
 region_gap_years = 300
@@ -588,7 +656,7 @@ forms = ["{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder
 
 [[history.renaming.rules]]
 key = "slaughter"
-kinds = ["battle", "battle_at_pass", "allied_battle"]
+kinds = ["battle", "battle_at_pass", "allied_battle", "battle_led"]
 values = ["winner_dead", "loser_dead"]
 min_magnitude = 5000
 window_years = 100
@@ -648,10 +716,10 @@ forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "{name
 // (both fixture roots hold identical copies). The rates are interim (P5-02 17 step 9): after the engineer's
 // calibration these listings follow the data files.
 
-inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts and monsters (spec P5-02 4.3; P5-03 9.4; P5-03a 10.2). Generator 0.25.0.
+inline constexpr std::string_view MONSTERS_TOML = R"(# Beasts, monsters and sites (spec P5-02 4.3). Generator 0.23.0; P5-03a 10.2 (generator 0.25.0).
 [history.monsters]
 pressure = { low = 500, normal = 1000, high = 1600 }
-living_permille = 100
+living_permille = 200
 undead_min_dead = 1000
 undead_window_years = 100
 hunt_hops = 2
@@ -681,6 +749,7 @@ prey_capital_permille = 250
 prey_hop_permille = 500
 prey_might_ref = 1500
 prey_might_max_permille = 4000
+# P5-03 9.1 to 9.4, 14.1 (generator 0.24.0).
 raid_chain_years = 300
 toll_over_permille = 250
 hunt_raid_permille = 5
@@ -688,110 +757,74 @@ hunt_max_permille = 200
 fear_raids = 2
 fear_years = 50
 fear_permille = 400
-overrun_people_ref = 800
-undead_dead_permille = 25
+overrun_people_ref = 3000
+undead_dead_permille = 28
+# P5-06 25.3 (generator 0.27.0).
+undead_regions_ref = 64
 )";
 
-inline constexpr std::string_view BEAST_BEAR_TOML = R"([beast.bear]
+inline constexpr std::string_view BEAST_BEAR_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
+[beast.bear]
 name = "Bear"
 plural = "bears"
-habitat = [
-  { biome = "temperate_forest", weight = 900 },
-  { biome = "wet_woodland", weight = 700 },
-  { biome = "highland_moor", weight = 400 },
-  { biome = "alpine", weight = 500 },
-  { biome = "heath", weight = 200 },
-]
+habitat = [{ biome = "temperate_forest", weight = 900 }, { biome = "wet_woodland", weight = 700 }, { biome = "highland_moor", weight = 400 }, { biome = "alpine", weight = 500 }, { biome = "heath", weight = 200 }]
 density = 5
 growth_permille = 60
 menace = 30
 food = 30
 bold_phrases = ["broke into the stores of", "came down on the herds of"]
 )";
-inline constexpr std::string_view BEAST_BOAR_TOML = R"([beast.boar]
+inline constexpr std::string_view BEAST_BOAR_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
+[beast.boar]
 name = "Boar"
 plural = "boar"
-habitat = [
-  { biome = "temperate_forest", weight = 800 },
-  { biome = "wet_woodland", weight = 900 },
-  { biome = "grassland", weight = 300 },
-  { biome = "heath", weight = 300 },
-  { biome = "marsh", weight = 400 },
-  { biome = "fen", weight = 300 },
-]
+habitat = [{ biome = "temperate_forest", weight = 800 }, { biome = "wet_woodland", weight = 900 }, { biome = "grassland", weight = 300 }, { biome = "heath", weight = 300 }, { biome = "marsh", weight = 400 }, { biome = "fen", weight = 300 }]
 density = 40
 growth_permille = 250
 menace = 3
 food = 100
 bold_phrases = ["trampled the fields of", "tore up the gardens of"]
 )";
-inline constexpr std::string_view BEAST_DEER_TOML = R"([beast.deer]
+inline constexpr std::string_view BEAST_DEER_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
+[beast.deer]
 name = "Deer"
 plural = "deer"
-habitat = [
-  { biome = "temperate_forest", weight = 900 },
-  { biome = "wet_woodland", weight = 600 },
-  { biome = "grassland", weight = 800 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 500 },
-  { biome = "highland_moor", weight = 500 },
-  { biome = "alpine", weight = 200 },
-  { biome = "marsh", weight = 200 },
-  { biome = "fen", weight = 200 },
-]
+habitat = [{ biome = "temperate_forest", weight = 900 }, { biome = "wet_woodland", weight = 600 }, { biome = "grassland", weight = 800 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 500 }, { biome = "highland_moor", weight = 500 }, { biome = "alpine", weight = 200 }, { biome = "marsh", weight = 200 }, { biome = "fen", weight = 200 }]
 density = 100
 growth_permille = 250
 menace = 0
 food = 60
 bold_phrases = ["strayed into the fields of"]
 )";
-inline constexpr std::string_view BEAST_GIANT_SPIDER_TOML = R"([beast.giant_spider]
+inline constexpr std::string_view BEAST_GIANT_SPIDER_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
+[beast.giant_spider]
 name = "Giant spider"
 plural = "giant spiders"
-habitat = [
-  { biome = "wet_woodland", weight = 800 },
-  { biome = "temperate_forest", weight = 400 },
-  { biome = "marsh", weight = 600 },
-  { biome = "fen", weight = 500 },
-  { biome = "blighted_waste", weight = 900 },
-]
+habitat = [{ biome = "wet_woodland", weight = 800 }, { biome = "temperate_forest", weight = 400 }, { biome = "marsh", weight = 600 }, { biome = "fen", weight = 500 }, { biome = "blighted_waste", weight = 900 }]
 density = 10
 growth_permille = 200
 menace = 40
 food = 0
 bold_phrases = ["spun their webs across the paths of", "lay in wait on the roads from"]
 )";
-inline constexpr std::string_view BEAST_WOLF_TOML = R"([beast.wolf]
+inline constexpr std::string_view BEAST_WOLF_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
+[beast.wolf]
 name = "Wolf"
 plural = "wolves"
-habitat = [
-  { biome = "temperate_forest", weight = 700 },
-  { biome = "wet_woodland", weight = 500 },
-  { biome = "grassland", weight = 400 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 700 },
-  { biome = "highland_moor", weight = 800 },
-  { biome = "alpine", weight = 400 },
-  { biome = "marsh", weight = 100 },
-  { biome = "fen", weight = 100 },
-  { biome = "blighted_waste", weight = 200 },
-]
+habitat = [{ biome = "temperate_forest", weight = 700 }, { biome = "wet_woodland", weight = 500 }, { biome = "grassland", weight = 400 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 700 }, { biome = "highland_moor", weight = 800 }, { biome = "alpine", weight = 400 }, { biome = "marsh", weight = 100 }, { biome = "fen", weight = 100 }, { biome = "blighted_waste", weight = 200 }]
 density = 20
 growth_permille = 150
 menace = 10
 food = 0
 bold_phrases = ["hunted the roads from", "grew bold and stalked the herds of"]
 )";
-inline constexpr std::string_view MONSTER_DRAGON_TOML = R"([monster.dragon]
+inline constexpr std::string_view MONSTER_DRAGON_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.dragon]
 name = "Dragon"
 noun = "a dragon of the old world"
 grouped = false
 wake = "wild"
-biomes = [
-  { biome = "alpine", weight = 800 },
-  { biome = "highland_moor", weight = 400 },
-  { biome = "blighted_waste", weight = 600 },
-]
+biomes = [{ biome = "alpine", weight = 800 }, { biome = "highland_moor", weight = 400 }, { biome = "blighted_waste", weight = 600 }]
 wake_rate = 60
 naming_culture = "elven"
 name_forms = ["{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing", "{root} the Gold-Eyed", "{root}"]
@@ -805,22 +838,21 @@ kill_max = 600
 overruns = ["hamlet", "village", "town"]
 overrun_permille = 600
 active_years = 40
-rewake_ppm = 2000
+rewake_ppm = 700
 lifespan_years = 0
 max_alive = 1
 flare = true
 hoard_permille = 40
 raid_phrases = ["fell in fire upon", "burned the fields of", "came down in flame on"]
+slayer_epithet = "Dragonslayer"
 )";
-inline constexpr std::string_view MONSTER_GIANT_TOML = R"([monster.giant]
+inline constexpr std::string_view MONSTER_GIANT_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.giant]
 name = "Giant"
 noun = "a giant of the mountains"
 grouped = false
 wake = "wild"
-biomes = [
-  { biome = "alpine", weight = 900 },
-  { biome = "highland_moor", weight = 500 },
-]
+biomes = [{ biome = "alpine", weight = 900 }, { biome = "highland_moor", weight = 500 }]
 wake_rate = 25
 naming_culture = "dwarven"
 name_forms = ["{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"]
@@ -832,26 +864,23 @@ toll_min_permille = 30
 toll_max_permille = 100
 kill_max = 150
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 150
-rewake_ppm = 3000
-lifespan_years = 2500
+rewake_ppm = 1000
+lifespan_years = 4000
 max_alive = 2
 flare = true
 hoard_permille = 8
 raid_phrases = ["came down from the heights upon", "hurled stones upon", "fell upon"]
+slayer_epithet = "Giantsbane"
 )";
-inline constexpr std::string_view MONSTER_OGRE_TOML = R"([monster.ogre]
+inline constexpr std::string_view MONSTER_OGRE_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.ogre]
 name = "Ogre"
 noun = "an ogre"
 grouped = false
 wake = "wild"
-biomes = [
-  { biome = "grassland", weight = 400 },
-  { biome = "heath", weight = 600 },
-  { biome = "steppe", weight = 700 },
-  { biome = "highland_moor", weight = 300 },
-]
+biomes = [{ biome = "grassland", weight = 400 }, { biome = "heath", weight = 600 }, { biome = "steppe", weight = 700 }, { biome = "highland_moor", weight = 300 }]
 wake_rate = 40
 naming_culture = "orcish"
 name_forms = ["{root} the Glutton", "{root} the Gaunt", "{root} the Hungering", "{root} Bonebreaker", "{root} the Fat", "{root}"]
@@ -863,26 +892,23 @@ toll_min_permille = 20
 toll_max_permille = 60
 kill_max = 40
 overruns = ["hamlet"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 80
-rewake_ppm = 8000
-lifespan_years = 1000
+rewake_ppm = 2000
+lifespan_years = 2000
 max_alive = 3
 flare = false
 hoard_permille = 3
 raid_phrases = ["fell upon", "plundered the stores of", "carried off the herds of"]
+slayer_epithet = "Ogrebane"
 )";
-inline constexpr std::string_view MONSTER_TROLL_TOML = R"([monster.troll]
+inline constexpr std::string_view MONSTER_TROLL_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.troll]
 name = "Troll"
 noun = "a troll of the hills"
 grouped = false
 wake = "wild"
-biomes = [
-  { biome = "highland_moor", weight = 800 },
-  { biome = "alpine", weight = 600 },
-  { biome = "temperate_forest", weight = 400 },
-  { biome = "heath", weight = 300 },
-]
+biomes = [{ biome = "highland_moor", weight = 800 }, { biome = "alpine", weight = 600 }, { biome = "temperate_forest", weight = 400 }, { biome = "heath", weight = 300 }]
 wake_rate = 50
 naming_culture = "goblin"
 name_forms = ["Old {root}", "{root} the Grey", "{root} Stonehide", "{root} of the Fells", "Mossback {root}", "{root}"]
@@ -894,22 +920,24 @@ toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 60
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 120
-rewake_ppm = 5000
-lifespan_years = 2000
+rewake_ppm = 1500
+lifespan_years = 4000
 max_alive = 3
 flare = false
 hoard_permille = 5
 raid_phrases = ["came down by night on", "fell upon", "prowled the edges of"]
+slayer_epithet = "Trollbane"
 )";
-inline constexpr std::string_view MONSTER_UNDEAD_TOML = R"([monster.undead]
+inline constexpr std::string_view MONSTER_UNDEAD_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.undead]
 name = "Undead"
 noun = "a host of the restless dead"
 grouped = true
 wake = "dead"
 biomes = []
-wake_rate = 15000
+wake_rate = 25000
 naming_culture = "human"
 name_forms = ["The Host of {place}", "The Restless of {place}", "The Dead of {place}"]
 lair_forms = ["The Barrows of {root}", "The Howes of {root}"]
@@ -920,25 +948,23 @@ toll_min_permille = 30
 toll_max_permille = 120
 kill_max = 200
 overruns = ["hamlet", "village"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 200
 rewake_ppm = 3000
-lifespan_years = 1000
-max_alive = 2
+lifespan_years = 5000
+max_alive = 5
 flare = false
 hoard_permille = 0
 raid_phrases = ["came out of the barrows against", "walked by night in", "crept into"]
+slayer_epithet = "the Gravewarden"
 )";
-inline constexpr std::string_view MONSTER_WYVERN_TOML = R"([monster.wyvern]
+inline constexpr std::string_view MONSTER_WYVERN_TOML = R"(# Monster kind (spec P5-02 4.2). Generator 0.24.0.
+[monster.wyvern]
 name = "Wyvern"
 noun = "a brood of wyverns"
 grouped = true
 wake = "wild"
-biomes = [
-  { biome = "alpine", weight = 700 },
-  { biome = "heath", weight = 500 },
-  { biome = "highland_moor", weight = 600 },
-]
+biomes = [{ biome = "alpine", weight = 700 }, { biome = "heath", weight = 500 }, { biome = "highland_moor", weight = 600 }]
 wake_rate = 50
 naming_culture = "goblin"
 name_forms = ["The {root} Brood", "The Brood of {root}", "The Screamers of {root}"]
@@ -950,14 +976,15 @@ toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 50
 overruns = ["hamlet"]
-overrun_permille = 900
+overrun_permille = 1000
 active_years = 60
-rewake_ppm = 10000
-lifespan_years = 1000
+rewake_ppm = 2500
+lifespan_years = 2000
 max_alive = 2
 flare = false
 hoard_permille = 0
 raid_phrases = ["stooped on", "swept down on", "came screaming down on"]
+slayer_epithet = "Wyrmbane"
 )";
 
 // The files of the two kinds as "<directory>/<file name>" -> text.
@@ -980,7 +1007,8 @@ inline const std::vector<std::pair<std::string, std::string_view>>& monster_file
 
 // --- history.relations (P5-03 4.2, P5-03a 10.1; generator 0.25.0, the calibrated values) ---
 
-inline constexpr std::string_view RELATIONS_TOML = R"(# Race relations, mixed settlements and migrations (spec P5-03 4.2; P5-03a 10.1). Generator 0.25.0.
+inline constexpr std::string_view RELATIONS_TOML = R"(# Race relations, mixed settlements and migrations (spec P5-03 4.2).
+# Generator 0.24.0; P5-03a 10.1 (generator 0.25.0).
 [history.relations]
 hatred_max = -500
 friend_min = 150
@@ -1023,6 +1051,7 @@ expel_gap_years = 60
 inline constexpr std::string_view CONFLICT_TOML = R"([history.conflict]
 camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
 enmity_max = -500
+# P5-03a calibration (generator 0.25.0): 200 -> 300, restoring the wars that peace between neighbours removed.
 border_friction = 520
 want_weight = 500
 hunger_full = 300
@@ -1097,7 +1126,65 @@ arms_strength_permille = 100
 // p3_data_reference.py) -----------------------------------------------------------
 
 // P5-04 4.2 (generator 0.26.0): history.alliances at the calibrated values.
-inline constexpr std::string_view ALLIANCES_TOML = R"(# Alliances, trade, the dwarves' mines and arms (spec P5-04 4.2). Generator 0.26.0.
+inline constexpr std::string_view FIGURES_TOML = R"(# P5-06 4.4 (generator 0.27.0): figures. Rulers named by deed, their
+# reigns and tempers; generals, heroes, exiles and casters; epithets earned
+# by deeds.
+[history.figures]
+name_rulers = true
+reign_min_permille = 500
+reign_span_permille = 1000
+accession_age_permille = 250
+accession_span_permille = 250
+temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
+temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
+temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
+short_reign_permille = 500
+short_reign_split_permille = 100
+exile_permille = 250
+exile_hops = 3
+general_scale_permille = 850
+skill_min = 500
+skill_max = 800
+career_permille = 300
+fall_loser_permille = 120
+fall_winner_permille = 25
+general_age_permille = 300
+general_age_span_permille = 300
+hero_age_permille = 150
+hero_age_span_permille = 200
+life_min_permille = 700
+life_span_permille = 500
+hero_scale_permille = 1000
+hero_hunt_permille = 20
+hero_might_permille = 1000
+hero_fall_permille = 300
+caster_ppm = 1500
+caster_age_permille = 400
+caster_age_span_permille = 300
+book_permille = 10
+books_max = 3
+blight_ppm = 500
+blight_toll_permille = 80
+regnal_max = 9
+epithets = [
+  { role = "ruler", deed = "conquests", min = 1, substantial = 2, text = "the Conqueror" },
+  { role = "ruler", deed = "betrayals", min = 1, substantial = 1, text = "the Faithless" },
+  { role = "ruler", deed = "realm_fell", min = 1, substantial = 0, text = "the Last" },
+  { role = "ruler", deed = "wars_won", min = 2, substantial = 4, text = "the Victorious" },
+  { role = "ruler", deed = "reign_permille", min = 1300, substantial = 1450, text = "the Old" },
+  { role = "ruler", deed = "founded_years", min = 1, substantial = 3000, text = "the Founder" },
+  { role = "general", deed = "battles_unbeaten", min = 3, substantial = 6, text = "the Unbeaten" },
+  { role = "general", deed = "battles_won", min = 5, substantial = 10, text = "the Hammer" },
+  { role = "hero", deed = "slew_might", min = 1, substantial = 1200, text = "{slayer}" },
+  { role = "claimant", deed = "exiled", min = 1, substantial = 0, text = "the Exile" },
+  { role = "caster", deed = "blights", min = 1, substantial = 1, text = "the Accursed" },
+  { role = "caster", deed = "books", min = 3, substantial = 0, text = "the Learned" },
+]
+epithet_repeat_max = 2
+)";
+
+inline constexpr std::string_view ALLIANCES_TOML = R"(# Alliances, trade and the dwarves' mines and arms (spec P5-04 4.2).
+# Generator 0.26.0.
 [history.alliances]
 ally_hops = 3
 ally_min_disposition = -300
@@ -1223,17 +1310,16 @@ crisis_loss_permille = 50
 split_min_settlements = 6
 split_min_regions = 3
 split_permille = 300
-ruin_fade_years = 1500
 colony_new_region_salience = 30
 plague_small_salience = 25
 plague_major_dead = 1000
 crisis_small_salience = 25
 ghost_permille = 200
 ghost_max_population = 600
+# P5-03 11.1, 11.2 (generator 0.24.0).
 abandon_reach_hops = 0
 abandon_loss_min_permille = 50
 abandon_loss_max_permille = 200
-ghost_fade_years = 0
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -1314,6 +1400,7 @@ inline Files shipped_files() {
     f["history/renaming.toml"] = std::string(RENAMING_TOML);
     f["history/relations.toml"] = std::string(RELATIONS_TOML);   // P5-03 4.2
     f["history/report.toml"] = std::string(REPORT_TOML);
+    f["history/figures.toml"] = std::string(FIGURES_TOML);   // P5-06
     f["history/alliances.toml"] = std::string(ALLIANCES_TOML);   // P5-04 4.2
     add_monster_files(f);   // P5-02 4.1 to 4.3
     return f;
@@ -1433,7 +1520,8 @@ inline const std::vector<std::string_view>& race_fields() {
         "hidden_years",                            // P3-01 r13 3.6 (P3-10 second round)
         "awakening_population",                    // P3-01 r14 3.7 (P3-11, generator 0.20.0)
         "settlement_kinds", "culture", "stances",    // stances: P5-03 4.1 (generator 0.24.0)
-        "origin_allies", "ally_join_permille", "mining_permille"};   // P5-04 4.1 (generator 0.26.0)
+        "origin_allies", "ally_join_permille", "mining_permille",   // P5-04 4.1 (generator 0.26.0)
+        "temper_weights", "general_permille", "hero_permille", "magic_permille"};   // P5-06 (generator 0.27.0)
     return v;
 }
 // P3-01 r8 (1): record race_cell_weights.
@@ -1453,7 +1541,9 @@ inline const std::vector<std::string_view>& naming_fields() {
     static const std::vector<std::string_view> v = {"onsets",          "nuclei",      "codas",     "patterns", "god_patterns",
                                                      "min_letters",     "max_letters", "forbidden", "god_forms",
                                                      "civilization_forms", "settlement_forms",
-                                                     "site_forms"};   // P5-02 4.4
+                                                     "site_forms",   // P5-02 4.4
+                                                     "person_forms", "tower_forms", "library_forms", "book_titles",
+                                                     "regnal_permille"};   // P5-06 (generator 0.27.0)
     return v;
 }
 inline const std::vector<std::string_view>& chronology_fields() {

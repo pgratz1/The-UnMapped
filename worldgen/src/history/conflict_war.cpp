@@ -133,7 +133,19 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     std::stable_sort(allies_x.begin(), allies_x.end(), by_id);
     std::stable_sort(allies_y.begin(), allies_y.end(), by_id);
     const bool allied_battle = !allies_x.empty() || !allies_y.empty();
-    const std::int64_t p = battle_permille_of(attack, defend, def);
+    // P5-06 7.6: each principal's general multiplies its side's force for
+    // the win chance only.
+    const FigureView::General gx = figures_ != nullptr ? figures_->general_of(w0.declared, x) : FigureView::General{};
+    const FigureView::General gy = figures_ != nullptr ? figures_->general_of(w0.declared, y) : FigureView::General{};
+    const bool led = gx.figure != 0 || gy.figure != 0;
+    std::int64_t p = battle_permille_of(attack, defend, def);
+    if (led) {
+        const std::int64_t a2 = floor_div(checked_mul(attack, checked_add(1000, gx.skill)), 1000);
+        const std::int64_t d1 = floor_div(checked_mul(defend, def), 1000);
+        const std::int64_t d2 = floor_div(checked_mul(d1, checked_add(1000, gy.skill)), 1000);
+        const std::int64_t sum = checked_add(a2, d2);
+        p = sum > 0 ? floor_div(checked_mul(a2, 1000), sum) : 500;
+    }
     const bool x_wins = chance_pm(ctx.draw(keys_[BATTLE_WIN], word(w0.declared), 0, 0), p);
     const std::int64_t winner = x_wins ? x : y;
     const std::int64_t loser = x_wins ? y : x;
@@ -156,7 +168,8 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     }
     const std::vector<Member>& allies_w = x_wins ? allies_x : allies_y;
     const std::vector<Member>& allies_l = x_wins ? allies_y : allies_x;
-    EventSpec e = point_event(ctx, allied_battle ? "allied_battle" : (at_pass ? "battle_at_pass" : "battle"), region, 0);
+    EventSpec e = point_event(
+        ctx, led ? "battle_led" : (allied_battle ? "allied_battle" : (at_pass ? "battle_at_pass" : "battle")), region, 0);
     e.participants = {civ_role("winner", winner), civ_role("loser", loser)};
     for (const Member& m : allies_w) {
         e.participants.push_back(civ_role("winner_ally", m.civ));
@@ -164,8 +177,18 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     for (const Member& m : allies_l) {
         e.participants.push_back(civ_role("loser_ally", m.civ));
     }
+    if (led) {
+        const FigureView::General& gw = x_wins ? gx : gy;
+        const FigureView::General& gl = x_wins ? gy : gx;
+        if (gw.figure != 0) {
+            e.participants.push_back(Participant{"winner_general", EntityType::figure, gw.figure});
+        }
+        if (gl.figure != 0) {
+            e.participants.push_back(Participant{"loser_general", EntityType::figure, gl.figure});
+        }
+    }
     e.values = {dead_winner, dead_loser};
-    if (at_pass || allied_battle) {
+    if (at_pass || allied_battle || led) {
         e.values.push_back(pass_id);
     }
     e.causes = {w0.declared};

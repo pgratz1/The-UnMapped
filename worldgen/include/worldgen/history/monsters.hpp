@@ -26,6 +26,7 @@
 #include "worldgen/data/content.hpp"
 #include "worldgen/db/writer.hpp"
 #include "worldgen/history/engine.hpp"
+#include "worldgen/history/figures_view.hpp"
 #include "worldgen/history/names.hpp"
 #include "worldgen/history/peoples.hpp"
 #include "worldgen/history/renaming.hpp"
@@ -91,6 +92,7 @@ struct MonsterKindDef {
     bool flare = false;
     std::int64_t hoard_permille = 0;
     std::vector<std::string> raid_phrases;  // P5-03 9.5
+    std::string slayer_epithet;             // P5-06 4.3
 
     friend bool operator==(const MonsterKindDef&, const MonsterKindDef&) = default;
 };
@@ -122,6 +124,9 @@ struct MonstersTuning {
     // people. 0 in a hand-made tuning, where undead_min_dead is then the
     // whole threshold (the rule before 0.25.0); shipped 25.
     std::int64_t undead_dead_permille = 0;
+    // P5-06 25.3 (generator 0.27.0): the region count above which the
+    // population term shrinks; 0 (a hand-made tuning) leaves it out.
+    std::int64_t undead_regions_ref = 0;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -171,13 +176,25 @@ public:
     // P5-03 12.2: the region names in force (the renaming subsystem, set by
     // the history stage; without it a host is named for region.name).
     void set_region_names(const RenamingSubsystem* renaming) noexcept { renaming_ = renaming; }
+    // P5-06 7.1, 7.7: the figures (set once by the stage; nullptr: no hero).
+    void set_figures(const FigureView* figures) noexcept { figures_ = figures; }
+    // P5-06 3: const reads for the figures: the kind index of a monster
+    // (into kinds()), the kinds, and P5-02 6.6.1's height cell of a region
+    // (cells of standing settlements and open sites taken), none when no
+    // free land cell is left.
+    [[nodiscard]] std::size_t monster_kind_of(std::int64_t monster) const;
+    [[nodiscard]] std::span<const MonsterKindDef> kinds() const noexcept { return kinds_; }
+    struct HeightCell {
+        std::int64_t x = 0, y = 0;
+    };
+    [[nodiscard]] std::optional<HeightCell> height_cell(const StepContext& context, std::int64_t region) const;
     // P5-03 11.2 (WildView): an open site of kind 1 or 2 stands on the
     // settlement (P5-04 6.12: a mine does not hold back a ruin's fading).
     [[nodiscard]] bool holds_site(std::int64_t settlement) const override;
 
     // P5-04 7.16: the site seam for the alliances subsystem's mines (kind 3).
     struct SiteSpec {
-        std::int64_t id = 0, kind = 3;
+        std::int64_t id = 0, kind = 3;  // 3 mine (P5-04), 4 tower (P5-06)
         std::string name;
         std::int64_t region = 0, x = 0, y = 0;
         std::int64_t settlement = 0, founder_civ = 0, monster = 0;
@@ -311,7 +328,7 @@ private:
     std::vector<BeastDef> beasts_;
     std::vector<MonsterKindDef> kinds_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 15> keys_{};  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear
+    std::array<std::uint64_t, 16> keys_{};  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear; P5-06: hero_fall
     std::int64_t pressure_ = 1000;  // M
     std::int64_t threshold_ = 0;    // T_d
     std::int64_t region_count_ = 0;
@@ -350,6 +367,9 @@ private:
     std::int64_t pending_flare_ = 0;
     MonstersStats stats_;
     const RenamingSubsystem* renaming_ = nullptr;  // P5-03 12.2
+    const FigureView* figures_ = nullptr;          // P5-06 7.1
+    std::vector<std::int64_t> heroes_slain_;       // ruling G1: heroes slain in the T4 of heroes_slain_year_
+    std::int64_t heroes_slain_year_ = -1;
     std::uint64_t name_key_ = 0;                   // P5-03 12.2: hist.names.monster
     std::vector<std::string> epithets_;            // P5-03 12.1: of the wild monsters' names, creation order
 };

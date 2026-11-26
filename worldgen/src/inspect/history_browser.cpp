@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 78> GROUPS = {{
+constexpr std::array<GroupRow, 92> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -122,6 +122,23 @@ constexpr std::array<GroupRow, 78> GROUPS = {{
     {"alliance_spurned", EventGroup::alliances},
     {"mine_opened", EventGroup::settlements},
     {"arms_sold", EventGroup::alliances},
+    // P5-06 11.3: kinds 79 to 84, 86, 87 and 89 to 91 in the new group
+    // figures (code 8); the battle led with the war, the hero's slaying with
+    // the monsters, the blight with the calamities.
+    {"came_to_rule", EventGroup::figures},
+    {"figure_died", EventGroup::figures},
+    {"succession_disputed", EventGroup::figures},
+    {"exiled", EventGroup::figures},
+    {"reigned_at_end", EventGroup::figures},
+    {"general_appointed", EventGroup::figures},
+    {"battle_led", EventGroup::war},
+    {"fell_in_battle", EventGroup::figures},
+    {"hero_rose", EventGroup::figures},
+    {"monster_slain_by_hero", EventGroup::monsters},
+    {"hero_slain", EventGroup::figures},
+    {"tower_founded", EventGroup::figures},
+    {"book_written", EventGroup::figures},
+    {"blight", EventGroup::calamity},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -177,6 +194,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::monsters: return "monsters";
         case EventGroup::peoples: return "peoples";
         case EventGroup::alliances: return "alliances";
+        case EventGroup::figures: return "figures";
     }
     return "other";
 }
@@ -240,6 +258,19 @@ db::Result<BrowserIndex> BrowserIndex::build(const LoadedHistory& history) {
             }
             index.civilizations_.push_back(std::move(entry));
         }
+        // P5-06 11.3: the figures, ascending id.
+        index.figures_.reserve(tables.figures.size());
+        for (const db::FigureRow& f : tables.figures) {
+            FigureEntry entry;
+            entry.id = f.id;
+            entry.role = f.role;
+            entry.civ = f.civ;
+            entry.born = f.born;
+            entry.died = f.died ? *f.died : -1;
+            entry.name = f.name;
+            entry.display_name = history::figure_display_name(f);
+            index.figures_.push_back(std::move(entry));
+        }
         return index;
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the browser"};
@@ -248,7 +279,8 @@ db::Result<BrowserIndex> BrowserIndex::build(const LoadedHistory& history) {
 
 void BrowserIndex::check_history(const LoadedHistory& history) const {
     if (history.view.events().size() != events_.size() ||
-        history.tables.civilizations.size() != civilizations_.size()) {
+        history.tables.civilizations.size() != civilizations_.size() ||
+        history.tables.figures.size() != figures_.size()) {
         browser_fatal("the history is not the one the index was built from");
     }
 }
@@ -266,7 +298,7 @@ void BrowserIndex::select(const LoadedHistory& history, const EventFilter& filte
     out.clear();
     const history::Timeline& tl = history.timeline;
     // The entity lists of the non-zero fields, in field order.
-    std::array<std::span<const std::int64_t>, 3> lists{};
+    std::array<std::span<const std::int64_t>, 4> lists{};
     std::size_t n = 0;
     if (filter.civilization != 0) {
         if (filter.civilization < 1 || static_cast<std::uint64_t>(filter.civilization) > tl.civilization_count()) {
@@ -285,6 +317,12 @@ void BrowserIndex::select(const LoadedHistory& history, const EventFilter& filte
             browser_fatal("no region " + num(filter.region));
         }
         lists[n++] = tl.events_of_region(filter.region);
+    }
+    if (filter.figure != 0) {  // P5-06 11.3
+        if (filter.figure < 1 || static_cast<std::uint64_t>(filter.figure) > tl.figure_count()) {
+            browser_fatal("no figure " + num(filter.figure));
+        }
+        lists[n++] = tl.events_of_figure(filter.figure);
     }
     const auto keep = [&](const EventEntry& e) {
         for (std::size_t k = 1; k < n; ++k) {
@@ -375,6 +413,22 @@ std::vector<history::LinkedText> BrowserIndex::block(const LoadedHistory& histor
     return out;
 }
 
+std::vector<history::LinkedText> BrowserIndex::figure_block(const LoadedHistory& history, std::int64_t figure,
+                                                            HistoryLevel level) const {
+    check_history(history);
+    if (level != HistoryLevel::summary && level != HistoryLevel::full) {
+        browser_fatal("bad level");
+    }
+    if (figure < 1 || static_cast<std::uint64_t>(figure) > figures_.size()) {
+        browser_fatal("no figure " + num(figure));
+    }
+    std::vector<history::LinkedText> out;
+    for (const BlockLine& line : inspect::figure_block(history.view, history.tables, digest_, figure, level)) {
+        out.push_back(block_line_display(history.view, line));
+    }
+    return out;
+}
+
 std::string BrowserIndex::row_text(const LoadedHistory& history, std::int64_t event) const {
     check_history(history);
     const EventEntry& e = entry(event);
@@ -433,6 +487,12 @@ std::vector<NameMatch> BrowserIndex::search(const LoadedHistory& history, std::s
             }
         }
         if (found != nullptr && add(EntityType::region, id, *found)) {
+            return out;
+        }
+    }
+    // P5-06 11.3: figures by display name, after the regions.
+    for (const FigureEntry& f : figures_) {
+        if (matches(f.display_name, q) && add(EntityType::figure, f.id, f.display_name)) {
             return out;
         }
     }

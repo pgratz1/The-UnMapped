@@ -469,6 +469,21 @@ target_sources(worldgen-tests PRIVATE
     history/history_alliances_property_test.cpp
     history/history_alliances_golden_test.cpp
 )
+# Figures (spec P5-06 r3, generator 0.27.0, schema 12, report v8): the spec's arithmetic by hand and the data of 4
+# (history_figures_unit_test.cpp), the invariants of 13 on generated worlds and figures-small, determinism
+# (property), the reader checks of 9.4 (reader), report v8, {r:under}, the timeline reads of 12 (views), the golden
+# file golden/p5-06-figures.txt (recorded after calibration; skipped while absent). The adapter of the names the spec
+# does not fix is history/p5_06_figures_api.hpp (UNMAPPED_P506_API at integration: until then the cases that need the
+# stage return at their start). Slow cases in the suite "figures-slow". The reference is
+# reference/p5_06_figures_reference.py.
+target_sources(worldgen-tests PRIVATE
+    history/history_figures_unit_test.cpp
+    history/history_figures_property_test.cpp
+    history/history_figures_reader_test.cpp
+    history/history_figures_views_test.cpp
+    history/history_figures_golden_test.cpp
+    history/history_figures_h17_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -617,6 +632,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD browser 30 "*browser_*"
     SHARD relations 30 "*history_relations_*"
     SHARD alliances 30 "*history_alliances_*"
+    SHARD figures 30 "*history_figures_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -638,5 +654,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-browser 300 "*-slow" "*browser_*"
     SLOW slow-relations 300 "*-slow" "*history_relations_*"
     SLOW slow-alliances 300 "*-slow" "*history_alliances_*"
+    SLOW slow-figures 300 "*-slow" "*history_figures_*"
     SLOW_REST slow-other 10 "*-slow"
 )

@@ -216,7 +216,7 @@ void PeoplesSubsystem::run(StepContext& ctx) {
             abandon_small(ctx);
             change_kinds(ctx);
             break;
-        case Step::q3: fade_ruins(ctx); break;
+        case Step::q3: break;  // P5-06 25.1: no ruin fades (Q3 kept, with no action)
         default: break;
     }
 }
@@ -1294,7 +1294,10 @@ PeoplesSubsystem::SplitPlan PeoplesSubsystem::plan_split(const StepContext& ctx,
     std::vector<std::int64_t>& leaving = plan.leaving;
     if (static_cast<std::int64_t>(mine.size()) >= tuning_.split_min_settlements &&
         static_cast<std::int64_t>(held.size()) >= tuning_.split_min_regions &&
-        chance_pm(ctx.draw(key(SPLIT), word(c), 0, 0), tuning_.split_permille)) {
+        chance_pm(ctx.draw(key(SPLIT), word(c), 0, 0),
+                  std::min<std::int64_t>(1000, checked_add(tuning_.split_permille,
+                                                           figures_ != nullptr ? figures_->split_bonus_permille(c)
+                                                                               : 0)))) {  // P5-06 7.4
         // Hop distances within c's held regions.
         const auto within = [&](std::int64_t from) {
             std::vector<std::int64_t> d(static_cast<std::size_t>(nr) + 1, FAR);
@@ -1388,35 +1391,6 @@ void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t eve
     state.set_population(capital, p - floor_div(checked_mul(p, tuning_.crisis_loss_permille), 1000));
     state.set_settlement_status(capital, SettlementStatus::declining, event);
     slot(last_reduction_, capital) = event;
-}
-
-// --- Q3: ruins fade (8.6) -------------------------------------------------------------------------
-
-void PeoplesSubsystem::fade_ruins(StepContext& ctx) {
-    State& state = ctx.state();
-    const std::int64_t n = settlement_count(state);
-    for (std::int64_t id = 1; id <= n; ++id) {
-        const Settlement& s = state.settlement(id);
-        if (s.status != SettlementStatus::ruined || !ctx.visible(s) || !s.ruined_year ||
-            ctx.year() - *s.ruined_year < tuning_.ruin_fade_years) {
-            continue;
-        }
-        // P5-03 11.2: only a burned ruin fades (or, with ghost_fade_years,
-        // an old one left standing), and none while a site stands on it.
-        const bool burned = s.ruin_event != 0 && ctx.event_kind(s.ruin_event) == "sacked";
-        const bool old_ghost = tuning_.ghost_fade_years > 0 && ctx.year() - *s.ruined_year >= tuning_.ghost_fade_years;
-        if ((!burned && !old_ghost) || (wild_ != nullptr && wild_->holds_site(id))) {
-            continue;
-        }
-        if (ctx.quiet_events_left(0) <= 0) {
-            return;  // the rest wait
-        }
-        EventSpec e = point_event(ctx, "ruin_faded", s.region, id);
-        e.participants = {Participant{"settlement", EntityType::settlement, id}};
-        e.causes = {s.ruin_event};
-        const std::int64_t ev = ctx.append(e);
-        state.set_settlement_status(id, SettlementStatus::faded, ev);
-    }
 }
 
 // --- The seam (13) -----------------------------------------------------------------------------------

@@ -187,7 +187,9 @@ Result probe_run(const wd::ContentSet& content, const eng::HistoryInputs& in, h:
                          (mode == Mode::aim ? o == x.a : (o != x.a && o != x.b));
             x.closed = !w.open;
             if (x.at_check && !x.closed && step == h::Step::t6) ++out.open_after;
-            x.s = (w.dead[1] - w.dead[0]) + (w.taken_people[0] - w.taken_people[1]);
+            std::array<std::int64_t, 2> dead = w.dead;  // P5-04 7.8: each side's dead include its allies'
+            for (const h::ConflictAlly& m : w.allies) dead[m.side == 0 ? 1 : 0] += m.dead;
+            x.s = (dead[1] - dead[0]) + (w.taken_people[0] - w.taken_people[1]);
             x.lbw = w.last_battle_winner;
             x.ex_a = exhausted(w, 0, permille, muster.at(st.civ(x.a).race));
             x.ex_b = exhausted(w, 1, permille, muster.at(st.civ(x.b).race));

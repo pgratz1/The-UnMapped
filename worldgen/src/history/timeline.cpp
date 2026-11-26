@@ -426,6 +426,68 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             append_once(t.effects_[*ci], id);
         }
     }
+
+    // P5-06 12: figures, their reigns and commands.
+    t.figures_ = tables.figures;
+    for (std::size_t i = 0; i < t.figures_.size(); ++i) {
+        if (t.figures_[i].id != static_cast<std::int64_t>(i) + 1) {
+            timeline_fatal("figure " + num(t.figures_[i].id) + " out of order");
+        }
+    }
+    t.figure_events_ = figure_event_lists(view);
+    if (t.figure_events_.size() != t.figures_.size()) {
+        timeline_fatal("the view has " + num(static_cast<std::int64_t>(t.figure_events_.size())) + " figures, the tables " +
+                       num(static_cast<std::int64_t>(t.figures_.size())));
+    }
+    t.figure_exiled_.assign(t.figures_.size(), -1);
+    if (const KindDef* exiled = view.catalogue().find("exiled")) {
+        const RoleDef* role = exiled->find_role("figure");
+        for (const HistoryView::Event& e : events) {
+            if (e.row.kind != exiled->id || role == nullptr) {
+                continue;
+            }
+            for (const db::EventParticipantRow& p : e.participants) {
+                if (p.role != role->seq) {
+                    continue;
+                }
+                const std::optional<std::size_t> f = index_of(p.entity_id, t.figures_.size());
+                if (!f) {
+                    timeline_fatal("event " + num(e.row.id) + " names no figure");
+                }
+                if (t.figure_exiled_[*f] < 0) {
+                    t.figure_exiled_[*f] = e.row.year;
+                }
+                break;
+            }
+        }
+    }
+    t.civ_rulers_.resize(t.civ_founded_.size());
+    t.civ_generals_.resize(t.civ_founded_.size());
+    constexpr std::int64_t TYPE_FIGURE = static_cast<std::int64_t>(EntityType::figure);
+    for (const db::RelationRow& r : t.relations_) {
+        const bool ruled = r.kind == "ruled";
+        if ((!ruled && r.kind != "served") || r.a_type != TYPE_FIGURE || r.b_type != TYPE_CIVILIZATION) {
+            continue;
+        }
+        const std::optional<std::size_t> f = index_of(r.a_id, t.figures_.size());
+        const std::optional<std::size_t> c = index_of(r.b_id, t.civ_founded_.size());
+        if (!f || !c) {
+            timeline_fatal(r.kind + " row of figure " + num(r.a_id) + " and civilization " + num(r.b_id) +
+                           " names no such entity");
+        }
+        // An open row (no until) holds through E inclusive (lead ruling 2026-11-25).
+        const std::int64_t to = r.until.value_or(t.end_year_ + 1);
+        if (ruled) {
+            t.civ_rulers_[*c].push_back(Term{t.figures_[*f].office_from, to, r.a_id});
+        } else {
+            t.civ_generals_[*c].push_back(Term{r.since, to, r.a_id});
+        }
+    }
+    for (std::vector<Term>& terms : t.civ_rulers_) {
+        std::stable_sort(terms.begin(), terms.end(), [](const Term& a, const Term& b) {
+            return a.from != b.from ? a.from < b.from : a.figure < b.figure;
+        });
+    }
     return t;
 }
 
@@ -870,6 +932,76 @@ std::span<const std::int64_t> Timeline::effects(std::int64_t event) const {
         timeline_fatal("no event " + num(event));
     }
     return effects_[*i];
+}
+
+// --- Figures (P5-06 12) --------------------------------------------------------
+
+std::int64_t Timeline::ruler_at(std::int64_t civ, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> c = index_of(civ, civ_rulers_.size());
+    if (!c) {
+        timeline_fatal("no civilization " + num(civ));
+    }
+    std::int64_t out = 0;
+    for (const Term& term : civ_rulers_[*c]) {  // ascending from: the latest reign begun wins
+        if (term.from <= year && year < term.to) {
+            out = term.figure;
+        }
+    }
+    return out;
+}
+
+std::vector<std::int64_t> Timeline::figures_alive(std::int64_t year) const {
+    require_year(year);
+    std::vector<std::int64_t> out;
+    for (const db::FigureRow& f : figures_) {
+        if (f.born <= year && year < f.died.value_or(end_year_ + 1)) {
+            out.push_back(f.id);
+        }
+    }
+    return out;
+}
+
+std::vector<std::int64_t> Timeline::generals_of(std::int64_t civ, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> c = index_of(civ, civ_generals_.size());
+    if (!c) {
+        timeline_fatal("no civilization " + num(civ));
+    }
+    std::vector<std::int64_t> out;
+    for (const Term& term : civ_generals_[*c]) {
+        if (term.from <= year && year < term.to) {
+            out.push_back(term.figure);
+        }
+    }
+    std::stable_sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
+    return out;
+}
+
+FigureState Timeline::figure_at(std::int64_t figure, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(figure, figures_.size());
+    if (!i) {
+        timeline_fatal("no figure " + num(figure));
+    }
+    const db::FigureRow& f = figures_[*i];
+    const bool alive = f.born <= year && year < f.died.value_or(end_year_ + 1);
+    std::int64_t status = f.status;
+    if (year < f.born) {
+        status = 0;
+    } else if (alive) {
+        status = figure_exiled_[*i] >= 0 && year >= figure_exiled_[*i] ? 2 : 1;
+    }
+    return FigureState{f.id, f.role, f.civ, status, alive};
+}
+
+std::span<const std::int64_t> Timeline::events_of_figure(std::int64_t figure) const {
+    const std::optional<std::size_t> i = index_of(figure, figure_events_.size());
+    if (!i) {
+        timeline_fatal("no figure " + num(figure));
+    }
+    return figure_events_[*i];
 }
 
 // --- load_history (5.2) ------------------------------------------------------

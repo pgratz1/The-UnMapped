@@ -20,6 +20,7 @@
 // (worldgen-tests -ts=history-slow --no-skip). Empty until the
 // implementation's header exists (p3_05_peoples_api.hpp).
 
+#include "p5_06_history_section.hpp"
 #include "p3_05_peoples_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -115,7 +116,7 @@ void check_world_case(const GCase& g) {
     for (const std::string& l : g.report) {
         want += l + "\n";
     }
-    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(p506section::strip_figure_counts(section(rep.value(), "[history]")) == want);   // P5-06 9.4: figures and books keys close the section
     CHECK(report_lines_05(t, in) == g.report);
     const std::vector<std::string> sent = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));
     for (const auto& [id, text] : g.sentences) {

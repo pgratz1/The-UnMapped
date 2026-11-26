@@ -64,7 +64,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
         s += line;
-        s += "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 18\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n(none)\n";
+        s += "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 18\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n(none)\n";
         return s;
     };
     SUBCASE("backslash and tab") {
@@ -94,15 +94,15 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 58);  // 17 meta rows and 34 tables since schema 10 (P5-03 16.1)
+    REQUIRE(lines.size() == 60);  // 17 meta rows and 36 tables since schema 12 (P5-06 9.1)
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
     CHECK(lines[18] == "stages = test_pattern");
     CHECK(lines[19] == "[tables]");
     std::vector<std::string> tables;
-    for (const char* t : {"age", "beast", "beast_population", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
-                          "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer",
+    for (const char* t : {"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
+                          "event_kind_role", "event_kind_value", "event_participant", "event_value", "figure", "god", "layer",
                           "meta", "monster", "monster_kind", "pass", "phase", "race", "race_biome", "race_relation", "region", "region_biome", "region_border",
                           "region_control", "region_name", "relation", "settlement", "settlement_census", "settlement_race", "site"}) {
         const std::string n(t);
@@ -111,13 +111,13 @@ TEST_CASE("cli 12.4: test-pattern world") {
     for (std::size_t k = 0; k < tables.size(); ++k) {
         CHECK(lines[20 + k] == tables[k]);
     }
-    CHECK(lines[54] == "[layers]");   // schema 10: 34 tables
-    CHECK(starts_with(lines[55], "test.ramp u8 256x256 codec=1 bytes="));
-    CHECK(lines[55].substr(lines[55].size() - 14) == " min=0 max=255");
-    CHECK(lines[55] == layer_line("test.ramp", "u8", p004::ramp_cells()));
-    CHECK(lines[56] == layer_line("test.hash", "u8", p004::hash_cells(0)));
-    CHECK(lines[57] == layer_line("test.noise", "i16", p004::noise_cells(0)));
-    MESSAGE("seed-0 pattern report layer lines:\n", lines[55], "\n", lines[56], "\n", lines[57]);
+    CHECK(lines[56] == "[layers]");   // schema 12: 36 tables
+    CHECK(starts_with(lines[57], "test.ramp u8 256x256 codec=1 bytes="));
+    CHECK(lines[57].substr(lines[57].size() - 14) == " min=0 max=255");
+    CHECK(lines[57] == layer_line("test.ramp", "u8", p004::ramp_cells()));
+    CHECK(lines[58] == layer_line("test.hash", "u8", p004::hash_cells(0)));
+    CHECK(lines[59] == layer_line("test.noise", "i16", p004::noise_cells(0)));
+    MESSAGE("seed-0 pattern report layer lines:\n", lines[57], "\n", lines[58], "\n", lines[59]);
 }
 
 TEST_CASE("cli 12.4: --out writes the same bytes as stdout") {

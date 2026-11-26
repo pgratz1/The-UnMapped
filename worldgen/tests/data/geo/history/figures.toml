@@ -1,0 +1,55 @@
+# P5-06 4.4 (generator 0.27.0): figures. Rulers named by deed, their
+# reigns and tempers; generals, heroes, exiles and casters; epithets earned
+# by deeds.
+[history.figures]
+name_rulers = true
+reign_min_permille = 500
+reign_span_permille = 1000
+accession_age_permille = 250
+accession_span_permille = 250
+temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
+temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 2000, just = 500 }
+temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
+short_reign_permille = 500
+short_reign_split_permille = 100
+exile_permille = 250
+exile_hops = 3
+general_scale_permille = 850
+skill_min = 500
+skill_max = 800
+career_permille = 300
+fall_loser_permille = 120
+fall_winner_permille = 25
+general_age_permille = 300
+general_age_span_permille = 300
+hero_age_permille = 150
+hero_age_span_permille = 200
+life_min_permille = 700
+life_span_permille = 500
+hero_scale_permille = 1000
+hero_hunt_permille = 20
+hero_might_permille = 1000
+hero_fall_permille = 300
+caster_ppm = 1500
+caster_age_permille = 400
+caster_age_span_permille = 300
+book_permille = 10
+books_max = 3
+blight_ppm = 500
+blight_toll_permille = 80
+regnal_max = 9
+epithets = [
+  { role = "ruler", deed = "conquests", min = 1, substantial = 2, text = "the Conqueror" },
+  { role = "ruler", deed = "betrayals", min = 1, substantial = 1, text = "the Faithless" },
+  { role = "ruler", deed = "realm_fell", min = 1, substantial = 0, text = "the Last" },
+  { role = "ruler", deed = "wars_won", min = 2, substantial = 4, text = "the Victorious" },
+  { role = "ruler", deed = "reign_permille", min = 1300, substantial = 1450, text = "the Old" },
+  { role = "ruler", deed = "founded_years", min = 1, substantial = 3000, text = "the Founder" },
+  { role = "general", deed = "battles_unbeaten", min = 3, substantial = 6, text = "the Unbeaten" },
+  { role = "general", deed = "battles_won", min = 5, substantial = 10, text = "the Hammer" },
+  { role = "hero", deed = "slew_might", min = 1, substantial = 1200, text = "{slayer}" },
+  { role = "claimant", deed = "exiled", min = 1, substantial = 0, text = "the Exile" },
+  { role = "caster", deed = "blights", min = 1, substantial = 1, text = "the Accursed" },
+  { role = "caster", deed = "books", min = 3, substantial = 0, text = "the Learned" },
+]
+epithet_repeat_max = 2

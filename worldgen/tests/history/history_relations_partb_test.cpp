@@ -151,7 +151,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-03 8.1, 11.3: kinds 56 to 62 appended after 55, their uses, roles and values") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 78U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
+    REQUIRE(c.kinds.size() == 92U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     struct K {
         std::int64_t id;
         const char* key;
