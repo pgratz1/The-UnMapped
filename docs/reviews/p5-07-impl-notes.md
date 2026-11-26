@@ -98,3 +98,25 @@ deep kinds too (their weights keep their ratios; later takes become near certain
 - `MonstersSubsystem::mine_depth`, `kind_wake`, `stats()` (deep counters) for tests.
 - `monster_kind.wake` 3 marks a deep kind; a deep monster's `born_event` is its `deep_woken`; its lair's
   `origin_event` is the same event; a sealed horror has status 2 with `deep_sealed` as its last sleeping event.
+
+## Runs (linux-gcc-release, shipped data, 1024, seeds 0 to 19)
+
+`generate` and `report --history` at both levels run without error on all twenty seeds and on the sixteen cases of
+`world-hashes.sh generate linux-gcc-release`; seed 0 generated twice gives the same file hash. Over the twenty
+worlds: 134 deepenings (38 mines reach depth 3, in 19 worlds), 17 wakings (in 11 worlds), 8 sealed, 13 holds lost
+(in 9 worlds), 0 realms ended by the deep, 0 deep flights, 14 horrors alive at E, 3 slain. With hurried data
+(`deep_years` 5, 10, 20, delve 1000, wake 0, 200000, 600000, takes 3) at 512 the flight fired (4 in seeds 0 to 5);
+with `--civs-per-race 3` as well, a realm ended by the deep (seed 0..8: e.g. "After the loss of its last hold to the
+deep, Clan Drailimai under Hamgri the Last came to an end."). The shipped values were not changed.
+
+## Existing tests (ctest linux-gcc-release)
+
+31 of 45 entries fail. Causes, none a crash, invariant or reader error found:
+
+- `worldgen/tests/p3_01_history_data.hpp` embeds a copy of the shipped `history` and `monster` files at 0.28.0
+  (`history_data::shipped_files()`): it lacks the new required fields (`forge_depth_permille`, the eight `deep_*`)
+  and the three deep kinds, so every test that loads it fails to load (about 2,300 `missing required field` lines;
+  the engine tests' "unknown exception" and `data_history_kinds_test`'s path checks are this). Updating it first
+  will unmask the rest.
+- Golden values and expected counts at 0.28.0 (world hashes, table hashes, report hashes, stats lines, history
+  notes, `cat.kinds.size() == 92U`, the stream count).
