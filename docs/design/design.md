@@ -830,6 +830,10 @@ Every realm standing at the end of history has a living ruler the player can mee
 
 **The ruler's quest line.** Each realm has one quest line given by its ruler, written once per world by the same process as the guild quest lines above (dossier, structured plan, validation, lore file, and a rule-based writer when there is no model). Its dossier is the realm's own history: settlements lost and who holds them now, old enemies and grudges, claims never won, allies, and things of value left behind. An elven realm that has lost several towns might ask the player to drive out the monsters that took one of its cities and bring back what was left there.
 
+- **Written on demand.** A ruler's line is written when the player first gains an audience with that ruler, by Claude or the local model, whichever the player has set up, and then kept in the lore file. A world with ten realms therefore costs nothing for the rulers the player never meets. The guild lines are still written at world creation.
+- **Rival realms.** Working for a realm's enemy lowers the player's reputation in that realm. Its ruler turns cold or hostile, which in practice closes that ruler's quest line. No separate rule forbids serving two rulers; disposition does the work.
+- **Artifacts.** Ruler lines send the player after artifacts once the artifacts stage of phase P5 exists, and after lesser valuables until then.
+
 The world file stays frozen during play. What the player changes through these quests, such as a ruin cleared and resettled, is recorded in the save file.
 
 ### Local LLM dialogue
@@ -848,7 +852,7 @@ Rules:
 
 - **Grounded.** The prompt tells the model to speak only from the fact sheet. Facts that unlock content (a site location, a quest) come from intents the game checks against the database.
 - **Always optional.** A template renderer produces every line without a model. It is the fallback when the model is disabled, missing or too slow, and it is what milestone 7 ships.
-- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation.
+- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation or when a ruler's quest line is written at the player's first audience.
 - **Off the frame path.** Inference runs on its own thread with a bounded share of GPU memory, or on CPU, so VR frame rate holds while an NPC is talking.
 - **Not part of world determinism.** The world is reproducible from its seed; NPC phrasing may vary between runs.
 - **Memory.** Each NPC keeps a short summary of past talks with the player in the save file.
