@@ -103,8 +103,9 @@ D-R19 (r2 6.10) "its region qualifies" reads the region's P1-06 row: upland is 4
      upland), else ore_reach_cells >= deep_warren_ore_min; deep_warren_ore_min 0 lets every region qualify.
 D-R20 (r2 6.10) The warren waking loop is over settlement ids 1 to the count at its start; "owner c = warren_delver(t)"
      is owner(t) = warren_delver(t) != 0. A warren lost to another realm and won back keeps its depth and, if c started
-     another meanwhile, c has two live warrens: the spec's own rules allow it (invariant 12's "at most one live warren"
-     is checked from rows with a warren's life ended at the first capture or cession of its settlement).
+     another meanwhile, c has two live warrens: the spec's own rules allow it. Integration (lead ruling): invariant 12
+     reads "a realm starts no new warren while it holds a live one", checked from rows with a warren's life ended at
+     its waking, ruin, capture, cession or secession, a cession of its region or its delver's conquest.
 D-R21 (r2 6.11) The aid's hop distances are GeoView's (every region_border row, as D-R5), from the hold's region; the
      ally's settlement q is chosen among its standing visible settlements; an ally whose race equals the realm's gets no
      credit; the credit goes through RelationsSubsystem::credit (no credit before the races have met, as credit does).

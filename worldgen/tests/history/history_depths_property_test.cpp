@@ -265,9 +265,36 @@ TEST_CASE("P5-07 14, P3-04 16.3 Y2: resume from --until chronology on a depths-s
     FAIL("no depths-small world of seeds 0 to 9 at 512 has a waking");
 }
 
+TEST_CASE("P5-07 integration witnesses at 512 (shipped): seed 78 a warren woken and sealed, seed 9 an aid") {
+    P507_REQUIRE_INTEGRATED();
+    // Found by the integration's witness search (docs/reviews/p5-07-integration-notes.md) over shipped seeds 0 to 99
+    // at 512; the reference's replay of these worlds equals the engine's tables.
+    const std::set<std::string> p78 = paths_of(rows_of(p503run::world_path(78, 512), conflict_test::shipped()));
+    CHECK(p78.count("warren woken") == 1U);
+    CHECK(p78.count("warren sealed") == 1U);
+    const std::set<std::string> p9 = paths_of(rows_of(p503run::world_path(9, 512), conflict_test::shipped()));
+    CHECK(p9.count("aid") == 1U);
+}
+
 }  // TEST_SUITE
 
 TEST_SUITE("depths-slow" * doctest::skip()) {
+
+TEST_CASE("P5-07 integration witnesses at 1024 (shipped): seed 5 two aids at one waking and a warren sealed, seed 72 a "
+          "realm ended by the deep") {
+    P507_REQUIRE_INTEGRATED();
+    const std::string w5 = p503run::world_path(5, 1024);
+    check_world(w5, conflict_test::shipped(), "seed 5 at 1024");
+    const std::set<std::string> p5 = paths_of(rows_of(w5, conflict_test::shipped()));
+    CHECK(p5.count("two aids") == 1U);
+    CHECK(p5.count("warren woken") == 1U);
+    CHECK(p5.count("warren sealed") == 1U);
+    const std::string w72 = p503run::world_path(72, 1024);
+    check_world(w72, conflict_test::shipped(), "seed 72 at 1024");
+    const std::set<std::string> p72 = paths_of(rows_of(w72, conflict_test::shipped()));
+    CHECK(p72.count("realm lost") == 1U);
+    CHECK(p72.count("aid") == 1U);
+}
 
 TEST_CASE("P5-07 13, 16 item 13: the invariants at 1024, seeds 0 to 19 (shipped)") {
     P507_REQUIRE_INTEGRATED();
