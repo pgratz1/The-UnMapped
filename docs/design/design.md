@@ -381,6 +381,7 @@ Decisions that shape these stages:
 - **Event rules** stay code with their numbers in TOML.
 - **Budget.** A default world still generates in under 60 seconds at the end of phase P5.
 - **Exit check.** Every race, god camp and monster kind is a participant in at least one event, and a bloc of allies and vassals is held to the same runaway bound as a single realm.
+- **Guilds are founded in history.** The factions stage founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
 
 **Tick loop (active phases)**
 
@@ -788,6 +789,36 @@ Which peoples count as friends and enemies comes from the world's race relations
 **Memory of the player.** An NPC remembers their dealings with the player: what was said, trades, favours, slights, tasks given and how they ended. The memory is kept in the save file, moves that NPC's disposition, and goes into their fact sheet, so a person the player has dealt with for a long time becomes distinct from their neighbours.
 
 **Quest givers.** Between one in five and one in ten named NPCs has a task for the player who talks to them; the share is a tuning value. A task grows out of the NPC's role and the world around them, and its target is a real place or people in the world file. A blacksmith might need mithril for an important weapon and send the player to the nearest dwarven hold that mines it. Relations between the peoples involved, the road there and what lives along it all come from history, so the same kind of task plays differently in each world.
+
+### Guilds
+
+Four guilds cut across realms, and the player can join them. The same four kinds exist in every world:
+
+| Kind | Work |
+| --- | --- |
+| Company of arms | Fighting for hire, guarding, hunting monsters |
+| College of mages | Study and teaching of magic, spell research |
+| Thieves | Theft, smuggling, information |
+| Assassins | Killing for pay |
+
+- **Made by history.** Each guild has a founding place and year, a founder who is a figure in the chronicle, and chapter houses in settlements. Its name is generated per world from the founding culture's name lists, such as "the Company of the Grey Shield". The factions stage of phase P5 creates them (section 5).
+- **Chapters.** A realm's capital has all four. Other settlements have some or none by size, and small places usually have none. A guild's reach follows trade and alliance links, so its map is explained by the world's past.
+- **Two systems.** The four guilds above span the realms of the good and neutral peoples. Goblin and orc realms have a parallel set of their own, separate organisations with their own names, ranks and quest lines, such as a war band where the others have a company of arms. The kinds in the parallel set are fixed in the factions spec.
+- **Rivalries.** The guilds are rivals, and a player generally belongs to one at a time. Thieves and assassins sit closest to each other and still do not mix well.
+- **Ranks.** Advancement needs both skill levels and completed work, which ties the guilds to progression by use.
+- **Membership and attitude.** Fellow members treat the player better whatever the player's race. Membership is one more layer of disposition.
+- **Hidden guilds.** Thieves and assassins have no sign on the door. The player finds them through NPCs who trust them, or by being noticed for their crimes.
+
+**Quest lines, written once per world.** Each guild has one bespoke quest line, written after history is finished by the enrichment pass of section 14 so that it ties into that world's past:
+
+1. **Dossier.** The game builds a brief for the guild: its history and founder, its chapters, and candidate figures, sites, monsters, ruins and rival realms.
+2. **Plan.** The model returns a structured plan, constrained by a grammar: an arc of about eight to twelve quests. Each quest is built from a fixed library of quest forms (fetch, escort, hunt, investigate, infiltrate, steal, defend) with targets chosen from the dossier. The model also writes the prose: briefings, letters, rumours and the ending.
+3. **Validation.** The game checks that every target exists and can be reached and that every stage can be completed. A failed plan is retried, then replaced by the fallback.
+4. **Storage.** The result goes in the lore file beside the world file, so the world itself stays bit-identical.
+
+With no model, a rule-based writer builds each arc from the same quest forms with plainer text, so every world has quest lines. Claude gives the richest result and a local model a middling one.
+
+**Guild work.** Besides its quest line, a guild offers randomized jobs by rank. They use the same quest forms bound to the current state of the world, and the same generator as the townspeople's tasks.
 
 ### Local LLM dialogue
 
