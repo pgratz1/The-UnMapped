@@ -1569,4 +1569,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Rulings: L-1 a tower ending when its line of casters lapses is deferred (it needs a new ending code); a tower ends with its settlement or when its realm ends, by the existing codes. L-2 no schema version bump for tower endings: no table or column changes, the ending codes exist, and `schema.md` records that a site of kind `tower` may now carry them; the generator version bump covers the reader. L-3 `reign N` is dropped from the summary's ruler lines. L-4 monsters slain by heroes restated to at least 25%. L-5 figures alive through a quiet step restated to at least 15% overall, with 30% for elven and faerie figures as a reported figure only until first measured. L-6 the most figures in one world restated to 250. L-7 and L-8 retune as proposed (skill range 600 to 900; grasping allied strain 3000), within the guard targets.
 - Why restate rather than tune (L-4 to L-6): the bounds were estimates set before any world had figures; the worlds read well at the measured values (world critic), and tuning toward them risks the monster targets Paul named, which now pass.
 - Status: ruled by the lead.
+### The bound on lairs in former settlements is an average of two samples (Paul, 2026-11-25)
+
+- Section: 12 ("Living monsters are a highlight of play").
+- Problem: the bound of at least 65 of 100 default worlds with a lair on a former settlement open at the end was measured at 63 (seeds 0 to 99) and 68 (seeds 100 to 199) at generator 0.27.0 (Q-P5-06-1).
+- Decision (Paul, 2026-11-25): "Agreed, accept it as the average of the two samples". The bound is: at least 65 on the average of the two samples of 100 default worlds, neither sample below 60. The bound of 85 worlds with a living monster at the end is unchanged (92 and 93 measured).
+- Status: decided. P5-04a holds both as guard targets.
+
+### P5-04a as calibrated: lead rulings on the remaining misses (2026-11-26)
+
+- Section: 5.
+- Context: calibration (`docs/reviews/p5-04a-calibration.md`) brought the targets inside their bounds on both samples of 100 default worlds, with Paul's two monster bounds held (a living monster at the end in 94 and 93 worlds; a lair on a former settlement in 62 and 68, average 65), except for the items below.
+- Rulings: AL7 (betrayals 16.8% and 16.3% of ended alliances against 15%; 23.1% before tuning) is accepted and restated to at most 18%. SP2 as a share of ended alliances (6.6% and 8.4% against 6%) is accepted as it trades against the share of large spoils; Paul's accepted form of SP2 (10% to 35% of worlds) is what validation checks. TW1 (towers ended 7% to 9% against 15%) is restated to at least 5%: the bound was an estimate and the caster-lapse ending is deferred (L-1). FG8 is measured as at 0.27.0 (at least 25 years of a quiet phase inside a life), bound at least 15%. `spoils_large_part_permille` stays at 401 (above the cap of 400, so the people threshold alone decides a large share); the spec records that. RR6 on seeds 100 to 199 (9 worlds against 5) and the turbulent set's refusals above joins are reported by validation and not tuned.
+- Status: ruled by the lead.
 
