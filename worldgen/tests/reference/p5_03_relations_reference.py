@@ -444,6 +444,13 @@ class Relations:
         elif units < 0:
             p["neg"] = (p["neg"] + [event])[-8:]
 
+    def credit_units(self, race_a, race_b, units):
+        """P5-07 7.5: M += units x 1000, clamped, as credit; no contribution is kept."""
+        p = self.pair(race_a, race_b)
+        if not p["met"]:
+            return
+        p["M"] = clamp_memory(p["M"] + units * 1000, self.t)
+
     def presences(self):
         """P5-03 6.2.4 / P5-03a 3.2: presence(c) of the alive visible civilizations, by civilization."""
         w = self.w

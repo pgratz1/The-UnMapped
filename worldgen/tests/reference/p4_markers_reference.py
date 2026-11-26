@@ -139,8 +139,11 @@ def use_version(v):
     elif v == "0.26.0":
         GENERATOR_VERSION, INPUTS = "0.26.0", INPUTS_026
         tl.RULES = "p5-04"
+    elif v == "0.29.0":   # P5-07 11.1 (no new glyph; hold_lost a sack symbol)
+        GENERATOR_VERSION = "0.29.0"
+        prr.use_version("0.29.0")
     elif v not in ("0.27.0", "0.28.0"):
-        raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0, 0.25.0, 0.26.0 or 0.27.0")
+        raise SystemExit("--version: 0.22.0 to 0.29.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """
@@ -219,6 +222,8 @@ def event_symbol(key):
     """key: bytes. P5-06 11.1: battle_led is a battle at 0.27.0."""
     if key == b"battle_led" and v027():
         return BATTLE
+    if key == b"hold_lost" and GENERATOR_VERSION == "0.29.0":   # P5-07 11.1: a lost hold is a sack's symbol
+        return SACK
     return SYMBOL_KEYS.get(key, PLAIN)
 
 

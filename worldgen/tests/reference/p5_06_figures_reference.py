@@ -792,6 +792,9 @@ class Figures:
             elif k == "ally_refused" and self.r28 and ev["values"].get(1) == 5:   # value 1: motive
                 # P5-04a 2.1, 4.4: P5-06 6.4 rule 3 gains the deed ally_refused with motive 5 (the ally)
                 self.name_by_deed(_one(w, ev, "ally"), e)
+            elif k in ("deep_woken", "deep_sealed") and _pcr().FLAGS.get("deep", False):
+                # P5-07 6.9: P5-06 6.4 rule 3 gains the deeds deep_woken and deep_sealed (role civilization)
+                self.name_by_deed(_one(w, ev, "civilization"), e)
             elif k in ("peace", "war_won"):
                 self.tally(_one(w, ev, "winner"), "wars_won")
             elif k == "civ_conquered":
@@ -1810,6 +1813,8 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
                   ("spoils_withheld", "principal"), ("civ_conquered", "civilization"), ("civ_ended", "civilization"))
         if is_028(w):   # P5-04a 2.1: a grasping refusal (motive 5) names the ally's ruler
             acting = acting + (("ally_refused", "ally"),)
+        if "hold_lost" in w.kid:   # P5-07 6.9: a ruler named at a waking and at a sealing
+            acting = acting + (("deep_woken", "civilization"), ("deep_sealed", "civilization"))
         for k, role in acting:
             for e in w.of(k):
                 if k == "ally_refused" and w.value(e, "motive") != 5:

@@ -2059,6 +2059,27 @@ table (every history table, `figure` and `book` included); conflict's invariants
 `report --history` equals `p3_report_reference.py` at 0.28.0 at both levels on all 24. Scripts:
 `~/.cache/the-unmapped/out/p504a-int/scripts/` (`run_all.sh`, `cmp_world028.py`, `rep_cmp.py`).
 
+## Generator 0.29.0 (P5-07: mountain depths; written before integration)
+
+Written by the test writer from `docs/specs/p5-07-mountain-depths.md` r1 without the engineer's branch
+(`docs/reviews/p5-07-tests-notes.md`). Flags `deep` and `a1_units` of `p3_conflict_reference.py` (on from
+`use_version("0.29.0")`; 0.28.0 stays the rules of every older default).
+
+- `p5_07_depths_reference.py` (new): the deep rules of 6.2 to 6.7 (`Deep`, installed on the monsters subsystem by the
+  conflict World), the formulas with `units` (149 checks: formulas, the data listings, every new template at each
+  telling and depth, the catalogue), `violations` (13), `reader_problems` (9), `stats_of_tables` (10 item 7),
+  `mine_depth_at` and `sealed_year` (11.1), `fixtures` (depths-small on the stress geographies and I0 against the same
+  build without the deep rules), `check-world` (rows), `golden --inputs DIR` (`p5-07-depths.txt`), `readings`.
+- `p5_07_h19_fixture.py` (new): writes `data/history-report/h19-v10.toml`; `--lines` prints the v10 report.
+- `p3_data_reference.py`: `KINDS_029` and the listings of 4 and 8.2; a 0.28.0 root is read at 0.29.0 with them
+  filled in (`FALLBACK_029_USED`).
+- `p3_engine_reference.py`: kinds 93 to 96, schema 13, wake 3, a `hold_lost` ruin is ending 2.
+- `p3_conflict_reference.py`: the forge's depth (6.3), invariant 3 of 20.13 widened (L-7), check-world at schema 13
+  and, without `--version`, at the world's own generator version (12 item 3).
+- `p5_02`, `p5_03`, `p5_04`, `p5_06`, `p3_report`, `p4_browser`, `p4_markers`, `p4_timeline`: the hooks, 13 item 11,
+  `credit_units`, `; soured`, the deeds, report v10, the groups, the `hold_lost` symbol, the monster state with 94
+  and 95.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

@@ -498,14 +498,16 @@ class History:
         m = self.monsters[mid - 1]
         alive = m[4] <= y and (m[6] is None or y < m[6])
         awake = False
-        wake = {"monster_appeared", "undead_rose", "monster_woke"}
-        sleep = {"monster_slept", "monster_driven_off"}
+        wake = {"monster_appeared", "undead_rose", "monster_woke", "deep_woken"}   # P5-07 11.1: 94 wakes, 95 sleeps
+        sleep = {"monster_slept", "monster_driven_off", "deep_sealed"}
         for e in self.events:
             if e[1] > y:
                 break
             key = self.kind_key.get(e[3])
             if key in wake or key in sleep:
-                if any(p[3] == 8 and p[4] == mid and p[2] == 1 for p in self.parts.get(e[0], [])):
+                # the monster role: seq 1, but seq 2 in deep_sealed (P5-07 8.1)
+                seq = 2 if key == "deep_sealed" else 1
+                if any(p[3] == 8 and p[4] == mid and p[2] == seq for p in self.parts.get(e[0], [])):
                     awake = key in wake
         lair, region = 0, 0
         for x in self.sites:
