@@ -484,6 +484,21 @@ target_sources(worldgen-tests PRIVATE
     history/history_figures_golden_test.cpp
     history/history_figures_h17_test.cpp
 )
+# Relations and alliances follow-ups (spec P5-04a r2, generator 0.28.0, report v9): the spec's arithmetic by hand
+# (history_alliances_p504a_unit_test.cpp, runs before integration; the browser's figure search golden lines are in
+# browser_support.hpp), the data of 14 on game/data, the invariants of 16 items 13 and 19 on generated worlds and the
+# small fixtures (alliances, relations, figures shards), report v9 on fixture H18 (h18-v9.toml, written by
+# reference/p5_04a_h18_fixture.py) with the reader checks of 14.4 (history-report shard). Names and the switch are in
+# history/p5_04a_api.hpp (UNMAPPED_P504A_API at integration: until then the cases that need 0.28.0 return at their
+# start). Slow cases in the suites "alliances-slow", "relations-slow" and "figures-slow".
+target_sources(worldgen-tests PRIVATE
+    history/history_alliances_p504a_unit_test.cpp
+    history/history_alliances_p504a_data_test.cpp
+    history/history_alliances_p504a_property_test.cpp
+    history/history_relations_p504a_test.cpp
+    history/history_figures_p504a_test.cpp
+    history/history_report_v9_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams

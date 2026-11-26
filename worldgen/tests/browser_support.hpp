@@ -325,11 +325,41 @@ inline std::string dump_filters(const Opened& o) {
 
 inline const std::string NOTHING = "qqqzzzxxq";
 
+// P5-04a 21.7 item 3 (the reference's figure_queries): (a) the full display name of the smallest-id figure, (b) the
+// first three bytes of the first ruler's name (the smallest-id figure of role 1), (c) the display name of the
+// smallest-id figure with a regnal number (figure.regnal >= 2, read from the table), each when the case has one.
+inline std::vector<std::pair<std::string, std::size_t>> figure_queries(const Opened& o) {
+    std::vector<std::pair<std::string, std::size_t>> q;
+    const auto figs = o.index.figures();   // ascending id
+    if (figs.empty()) return q;
+    q.emplace_back(figs.front().display_name, 50);
+    for (const auto& f : figs) {
+        if (f.role == 1) {
+            q.emplace_back(f.name.substr(0, 3), 50);
+            break;
+        }
+    }
+    std::int64_t regnal_id = 0;
+    if (auto rows = o.reader.table_rows("figure"); rows.ok()) {
+        for (const auto& r : rows.value()) {   // primary-key order: ascending id
+            if (r.size() > 16U && r[16].integer >= 2) {
+                regnal_id = r[0].integer;
+                break;
+            }
+        }
+    }
+    for (const auto& f : figs) {
+        if (regnal_id != 0 && f.id == regnal_id) q.emplace_back(f.display_name, 50);
+    }
+    return q;
+}
+
 inline std::vector<std::pair<std::string, std::size_t>> search_queries(const Opened& o) {
     std::vector<std::pair<std::string, std::size_t>> q = {{"a", 50}, {"the", 50}, {"THE", 50}};
     for (const brapi::CivilizationEntry& c : o.index.civilizations()) q.emplace_back(c.name.substr(0, 3), 50);
     q.emplace_back(NOTHING, 50);
     q.emplace_back("a", 3);
+    for (auto& f : figure_queries(o)) q.push_back(std::move(f));
     return q;
 }
 
@@ -338,9 +368,8 @@ inline std::string dump_search(const Opened& o) {
     for (const auto& [q, limit] : search_queries(o)) {
         out += "query " + unum(limit) + " " + dtext(q) + "\n";
         for (const brapi::NameMatch& m : o.index.search(o.h, q, limit)) {
-            // P5-06 11.5 adds figures (type 6) after the regions; the reference's search and its golden
-            // (p4-05-browser.txt) know only the three older entity types, so the dump leaves them out.
-            if (m.type == 6) continue;
+            // P5-06 11.3: figures (type 6) after the regions, by display name; the reference's search has them
+            // since P5-04a 21.7 item 3.
             out += "match " + num(m.type) + " " + num(m.id) + " " + dtext(m.name) + "\n";
         }
     }

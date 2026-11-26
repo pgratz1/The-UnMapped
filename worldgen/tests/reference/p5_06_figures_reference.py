@@ -313,6 +313,33 @@ def undead_threshold(min_dead, permille, P_W, M, R, regions_ref):
     return p502.undead_threshold_027(min_dead, permille, P_W, M, R, regions_ref)
 
 
+def tower_spacing(permille, width):
+    """P5-04a 21.4: D = tower_spacing_permille x W div 1000."""
+    return permille * width // 1000
+
+
+def chebyshev(a, b):
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+
+
+def height_cell(m, rid, avoid, D):
+    """P5-04a 21.4: MonstersSubsystem::height_cell: P5-02 6.6.1's height of region rid (the largest elevation, then
+    smaller y, then smaller x) among the cells not taken and at Chebyshev distance > D from every cell of avoid."""
+    best = None
+    for x, y, _h, e in m.cells_of(rid):
+        if any(chebyshev((x, y), a) <= D for a in avoid):
+            continue
+        k = (-e, y, x)
+        if best is None or k < best[0]:
+            best = (k, (x, y))
+    return best[1] if best is not None else None
+
+
+def hero_quiet(g, return_years):
+    """P5-04a 21.5 item 3: quiet = g when g >= hero_return_years, else 0."""
+    return g if g >= return_years else 0
+
+
 def display_name(name, regnal, epithet):
     """6.10, 6.14: name, ' ' + roman(regnal) when regnal >= 2, ' ' + epithet when not empty."""
     out = name
@@ -432,6 +459,7 @@ class Figures:
         self.books = []          # book records (5)
         self.cursor = 1
         self.skip = set()        # civ_seceded events handled with their crisis (R2)
+        self.r28 = _pcr().FLAGS.get("p504a", False)   # P5-04a 21.4, 21.5 (generator 0.28.0)
         self.log = []            # (year, what, ...) for the checks (not state)
         # data: the cultures' 0.27.0 fields (4.2), by culture key; the monsters' slayer epithets (4.3)
         root = getattr(dat, "root", None) or getattr(dat.base, "root", None) or "game/data"
@@ -487,6 +515,11 @@ class Figures:
     def reign_temper(self, c):
         L = self.lines.get(c)
         return None if L is None else L["temper"]
+
+    def temper(self, c):
+        """P5-04a 2: FigureView::temper(c): the temper code of c's current reign, -1 with no reign."""
+        tau = self.reign_temper(c)
+        return -1 if tau is None else tau
 
     def strain_permille(self, c):
         tau = self.reign_temper(c)
@@ -699,6 +732,8 @@ class Figures:
     # --- the steps (6.1)
     def t3(self):
         self.read_log()
+        if self.r28:
+            self.tower_endings()   # P5-04a 21.4: after the log, before the rises
         self.lines_t3()
         self.deaths(quiet=False)
         self.vacancies()
@@ -709,6 +744,8 @@ class Figures:
 
     def t6(self):
         self.read_log()
+        if self.r28:
+            self.tower_endings()   # P5-04a 21.4
         self.stand_down()
         if self.w.year == self.E - 1:
             self.present()
@@ -716,6 +753,8 @@ class Figures:
 
     def q4(self):
         self.read_log()
+        if self.r28:
+            self.tower_endings()   # P5-04a 21.4
         self.stand_down()
         self.lines_q4()
         self.deaths(quiet=True)
@@ -992,7 +1031,8 @@ class Figures:
 
     def battle(self, ev, b):
         w, t = self.w, self.t
-        war = ev["causes"][0]
+        # P5-04a 9.2: a battle won may also cite an arms_sold; its war is its war_declared cause
+        war = [x for x in ev["causes"] if w.events[x - 1]["key"] == "war_declared"][0]
         W, L = _one(w, ev, "winner"), _one(w, ev, "loser")
         for role, side, other, won in (("winner_general", W, L, True), ("loser_general", L, W, False)):
             for fid in _parts(w, ev, role):
@@ -1051,9 +1091,15 @@ class Figures:
         if not chance_pm(self.D("hist.figures.hero", r, c, 0), p):
             return
         f = self.non_ruler(HERO, c, t["hero_age_permille"], t["hero_age_span_permille"])
+        vals = ()
+        if self.r28:   # P5-04a 21.5 item 3: the quiet before the raid
+            prev = [x for x in range(r - 1, 0, -1) if w.events[x - 1]["key"] == "monster_raid" and
+                    _one(w, w.events[x - 1], "monster") == m]
+            g = ev["year"] - w.events[prev[0] - 1]["year"] if prev else 0
+            vals = (hero_quiet(g, t["hero_return_years"]),)
         e = w.append("hero_rose", region=ev["region"], settlement=ev["settlement"],
                      participants=(("figure", FIGURE, f["id"]), ("civilization", CIV, c), ("monster", MONSTER, m)),
-                     causes=(r,))
+                     values=vals, causes=(r,))
         f["start_event"] = e
         self.hero[c] = f["id"]
         self.log.append((w.year, "hero", c, f["id"], m))
@@ -1080,10 +1126,23 @@ class Figures:
             if not cv["capital"]:
                 continue
             ts = w.stl(cv["capital"])
-            library = ts["kind"] == 4 and not any(s["kind"] == SITE_TOWER and s["ending"] == 0 and
-                                                  s["settlement"] == ts["id"] for s in m.sites)
+            if self.r28:   # P5-04a 21.4: one library per settlement ever
+                library = ts["kind"] == 4 and not any(s["kind"] == SITE_TOWER and s["settlement"] == ts["id"]
+                                                      for s in m.sites)
+            else:
+                library = ts["kind"] == 4 and not any(s["kind"] == SITE_TOWER and s["ending"] == 0 and
+                                                      s["settlement"] == ts["id"] for s in m.sites)
             if library:
                 cell = (ts["x"], ts["y"])
+            elif self.r28:
+                # P5-04a 21.4: the height of the seat region among the cells farther than D (Chebyshev) from every
+                # kind 4 site of c, open or ended
+                D = tower_spacing(t["tower_spacing_permille"], self.inp.map_size)
+                avoid = [(s["x"], s["y"]) for s in sorted(m.sites, key=lambda s: s["id"])
+                         if s["kind"] == SITE_TOWER and s["founder"] == c] if D > 0 else []
+                cell = height_cell(m, ts["region"], avoid, D)
+                if cell is None:
+                    continue
             else:
                 cell = m.height(ts["region"])
                 if cell is None:
@@ -1099,6 +1158,32 @@ class Figures:
                                 settlement=ts["id"] if library else 0, founder=c, monster=0, origin_year=w.year,
                                 origin_event=e, ended_year=None, ending_event=0, ending=0, hostile=None))
             self.log.append((w.year, "tower", c, f["id"], sid, library))
+
+    def tower_endings(self):
+        """P5-04a 21.4: each open kind 4 site ascending by id ends when its realm fell (5) or it lost the land (4)."""
+        w = self.w
+        m = w.monsters
+        for site in sorted(m.sites, key=lambda s: s["id"]):
+            if site["kind"] != SITE_TOWER or site["ending"] != 0 or site["ended_year"] is not None:
+                continue
+            c, t_id, R = site["founder"], site["settlement"], site["region"]
+            cv = self.civ(c)
+            if cv["ended_year"] is not None:
+                ev, ending = cv["ending_event"], 5
+            elif t_id:
+                st = w.stl(t_id)
+                if not w.standing(st):
+                    ev, ending = st["ruin_event"], 4
+                elif st["owner_civ"] != c:
+                    ev, ending = st["owner_event"], 4
+                else:
+                    continue
+            elif w.owner[R][0] != c:
+                ev, ending = w.owner[R][1], 4
+            else:
+                continue
+            m.end_site(site["id"], ev, ending, year=w.events[ev - 1]["year"])
+            self.log.append((w.year, "tower-ended", site["id"], ending, ev))
 
     def open_site(self, spec):
         """7.8: MonstersSubsystem::open_site with kind 3 or 4 and the next id."""
@@ -1135,6 +1220,8 @@ class Figures:
         for f in list(self.figs):
             if f["role"] != CASTER or not self.alive(f["id"]) or f["books"] >= t["books_max"]:
                 continue
+            if self.r28 and w.monsters.site(f["tower"])["ending"] != 0:
+                continue   # P5-04a 21.4: a caster whose tower ended writes no book
             p = min(1000, t["book_permille"] * w.years) if quiet else t["book_permille"]
             if not chance_pm(self.D("hist.figures.book", f["id"], 0, 0), p):
                 continue
@@ -1178,6 +1265,8 @@ class Figures:
         for f in list(self.figs):
             if f["role"] != CASTER or not self.alive(f["id"]) or f["blights"] > 0:
                 continue
+            if self.r28 and w.monsters.site(f["tower"])["ending"] != 0:
+                continue   # P5-04a 21.4: ... and causes no blight
             if not chance_ppm(self.D("hist.figures.blight", f["id"], 0, 0), t["blight_ppm"]):
                 continue
             site = w.monsters.site(f["tower"])
@@ -1272,7 +1361,7 @@ class Figures:
 
 READ_TABLES = ("region", "race", "culture", "event_kind", "event_kind_role", "event_kind_value", "phase", "event",
                "event_participant", "event_cause", "event_value", "civilization", "settlement", "settlement_census",
-               "relation", "monster_kind", "monster", "site", "figure", "book")
+               "relation", "monster_kind", "monster", "site", "figure", "book", "region_control")
 FIG_COLS = ("id", "name", "epithet", "role", "race", "culture", "civ", "born", "office_from", "start_event", "died",
             "death_event", "death_region", "death_settlement", "status", "reign_no", "regnal", "temper", "skill")
 
@@ -1393,7 +1482,7 @@ def fw_of_res(res):
     t["culture"] = [tuple(c[:4]) if len(c) >= 4 else tuple(c) for c in inp.cultures]
     t["event_kind"] = [(r[0], r[1]) for r in res["event_kind"]]
     meta = {"history_end_year": str(inp.params["span"]), "schema_version": str(SCHEMA_VERSION),
-            "generator_version": GENERATOR_VERSION}
+            "generator_version": GENERATOR_VERSION, "param.map_size": str(inp.map_size)}
     return FW(meta, t)
 
 
@@ -1604,7 +1693,7 @@ def reader_problems(w):
                 out.append(S % s[0] + "unknown civilization %d" % s[7])
             if s[8] != 0:
                 out.append(S % s[0] + "tower with a monster")
-            if s[13] != 0:
+            if s[13] != 0 and not is_028(w):   # P5-04a 21.4: 4 and 5 at 0.28.0 (reader_problems_028)
                 out.append(S % s[0] + "ending %d is not 0 for a tower" % s[13])
             oe = s[10]
             if not (oe in w.ev and w.kind(oe) == "tower_founded" and w.year(oe) == s[9] and w.one(oe, "site") == s[0]):
@@ -2209,7 +2298,91 @@ def res_problems(res, dat):
     cr = {k: v["regnal_permille"] for k, v in (getattr(dat, "figure_cultures", None) or {}).items()} or None
     qmax = dat.engine["quiet_events_max"] if isinstance(dat.engine, dict) and "quiet_events_max" in dat.engine \
         else None
-    return invariant_violations(w, dat.figures, cr, qmax) + reader_problems(w)
+    out = invariant_violations(w, dat.figures, cr, qmax) + reader_problems(w)
+    if _pcr().FLAGS.get("p504a"):   # P5-04a 16 item 19, 18
+        out += violations_028(w, dat.figures) + reader_problems_028(w)
+    return out
+
+
+def is_028(w):
+    """A world with the catalogue of 0.28.0 (kind 87 hero_rose carries quiet)."""
+    k = w.kid.get("hero_rose")
+    return k is not None and any(kk == k and v == "quiet" for (kk, _s), v in w.value_key.items())
+
+
+def violations_028(w, t):
+    """P5-04a 16 item 19: towers apart (21.4, a library at its city excepted as the later one), every ended tower's
+    ending event that of 21.4's table at its ended year, books not after their site's end, hero_rose's quiet (21.5).
+    t: history.figures with tower_spacing_permille and hero_return_years."""
+    out = []
+    W = int(w.meta.get("param.map_size") or w.meta.get("map_size") or 0)
+    D = tower_spacing(t["tower_spacing_permille"], W)
+    towers = sorted(x for x in w.t["site"] if x[2] == SITE_TOWER)
+    for i, s_ in enumerate(towers):
+        if s_[6] == 0 and D > 0:
+            for q in towers[:i]:
+                if q[7] == s_[7] and chebyshev((s_[4], s_[5]), (q[4], q[5])) <= D:
+                    out.append("19: tower si%d at (%d, %d) within %d of si%d of c%d" % (s_[0], s_[4], s_[5], D, q[0], s_[7]))
+        if s_[11] is None:
+            if s_[13] != 0:
+                out.append("19: open tower si%d with ending %d" % (s_[0], s_[13]))
+            continue
+        ee = s_[12]
+        if s_[13] not in (4, 5) or ee not in w.ev or w.year(ee) != s_[11]:
+            out.append("19: tower si%d ending %d e%d at %d" % (s_[0], s_[13], ee, s_[11]))
+            continue
+        c = s_[7]
+        if s_[13] == 5:
+            if ee != w.ending_event(c):
+                out.append("19: tower si%d ending 5 by e%d, not c%d's end" % (s_[0], ee, c))
+        elif s_[6]:
+            st = w.stl.get(s_[6])
+            names = ee == (st[13] if st else -1) or w.ev[ee][6] == s_[6] or s_[6] in [x for (_r, typ, x) in
+                                                                                      w.parts.get(ee, ()) if typ == 4]
+            rc = [r for r in w.t["region_control"] if r[4] == ee and r[0] == s_[3]]
+            if not names and not rc:
+                out.append("19: library si%d ending 4 by e%d, an event not of its city" % (s_[0], ee))
+        else:
+            rc = [r for r in w.t["region_control"] if r[0] == s_[3] and r[4] == ee and r[3] != c]
+            ended_holder = [r for r in w.t["region_control"] if r[0] == s_[3] and r[3] == c and r[2] == s_[11]]
+            if not rc and not ended_holder:
+                out.append("19: tower si%d ending 4 by e%d, not its region's change of owner" % (s_[0], ee))
+    ended = {x[0]: x[11] for x in w.t["site"]}
+    for b in w.t["book"]:
+        if ended.get(b[3]) is not None and b[4] > ended[b[3]]:
+            out.append("19: book %d of %d after its site si%d ended in %d" % (b[0], b[4], b[3], ended[b[3]]))
+    raids = {}
+    for r in w.of("monster_raid"):
+        raids.setdefault(w.one(r, "monster"), []).append(r)
+    for h in w.of("hero_rose"):
+        cs = [c for c in w.causes.get(h, []) if w.kind(c) == "monster_raid"]
+        if len(cs) != 1:
+            continue
+        r = cs[0]
+        m = w.one(h, "monster")
+        prev = [x for x in raids.get(m, []) if x < r]
+        g = w.year(r) - w.year(max(prev)) if prev else 0
+        if w.value(h, "quiet") != hero_quiet(g, t["hero_return_years"]):
+            out.append("19: hero_rose e%d quiet %r, g %d" % (h, w.value(h, "quiet"), g))
+    return out
+
+
+def reader_problems_028(w):
+    """P5-04a 16 item 18: a tower may end with 4 or 5 (the widened message), its ending event of its ended year;
+    hero_rose's quiet in 0 to E - 1."""
+    out = []
+    for x in sorted(w.t["site"]):
+        if x[2] != SITE_TOWER:
+            continue
+        if x[13] not in (0, 4, 5):
+            out.append("corrupt table 'site': row %d: ending %d is not 0, 4 or 5 for a tower" % (x[0], x[13]))
+        elif x[11] is not None and (x[12] not in w.ev or w.year(x[12]) != x[11]):
+            out.append("corrupt table 'site': row %d: ending_event %d is not an event of %d" % (x[0], x[12], x[11]))
+    for h in sorted(w.of("hero_rose")):
+        q = w.value(h, "quiet")
+        if q is None or not 0 <= q <= w.E - 1:
+            out.append("corrupt table 'event': row %d: value quiet %r outside 0 to %d" % (h, q, w.E - 1))
+    return out
 
 
 class Checker:
@@ -2419,6 +2592,31 @@ def check_units(c):
     check_reader_units(c)
 
 
+def check_units_028(c):
+    """P5-04a 16 items 15, 16 (21.1, 21.4, 21.5) on hand-checked values."""
+    import p3_data_reference as pdr
+    ent = [dict(e) for e in pdr._epithet_dicts(pdr.EPITHETS_027)]
+    for e in ent:
+        if e["deed"] == "reign_permille":
+            e["min"], e["substantial"] = pdr.EPITHET_OLD_028
+    two = {"the Old": 2}
+    c.eq("21.1 the Old at 1479 with two earlier bearers: none (ordinary, repeat_max 2)",
+         epithet_of("ruler", {"reign_permille": 1479}, "", ent, two, 2), ("", ""))
+    c.eq("21.1 the Old at 1480 with two earlier bearers: substantial",
+         epithet_of("ruler", {"reign_permille": 1480}, "", ent, two, 2), ("the Old", "substantial"))
+    c.eq("21.1 the Old at 1479 with one earlier bearer: ordinary",
+         epithet_of("ruler", {"reign_permille": 1479}, "", ent, {"the Old": 1}, 2), ("the Old", "ordinary"))
+    c.eq("21.1 at 1399: none", epithet_of("ruler", {"reign_permille": 1399}, "", ent, {}, 2), ("", ""))
+    c.eq("21.1 at 1400: ordinary", epithet_of("ruler", {"reign_permille": 1400}, "", ent, {}, 2),
+         ("the Old", "ordinary"))
+    c.eq("21.4 D at 1024", tower_spacing(30, 1024), 30)
+    c.eq("21.4 D at 512", tower_spacing(30, 512), 15)
+    c.eq("21.4 D at 2048", tower_spacing(30, 2048), 61)
+    c.eq("21.4 Chebyshev at D", chebyshev((100, 100), (130, 110)), 30)
+    c.eq("21.5 quiet at 99", hero_quiet(99, 100), 0)
+    c.eq("21.5 quiet at 100", hero_quiet(100, 100), 100)
+
+
 def reader_stub():
     """A minimal world of rows: one realm with a founder, a general and a hero; every row valid."""
     t = {n: [] for n in READ_TABLES}
@@ -2556,6 +2754,11 @@ def cmd_check_world(paths, tuning=None):
             c.ok("%s invariant %s" % (os.path.basename(path), v), False)
         for m in reader_problems(w):
             c.ok("%s reader %s" % (os.path.basename(path), m), False)
+        if is_028(w):   # P5-04a 16 items 18, 19 (the tuning's 0.28.0 fields: shipped values when absent)
+            import p3_data_reference as pdr2
+            t28 = dict({n: v for n, _, _, v in pdr2.FIGURES_NEW_RANGES_028}, **t)
+            for v in violations_028(w, t28) + reader_problems_028(w):
+                c.ok("%s 0.28.0 %s" % (os.path.basename(path), v), False)
         st = dict(stats(w))
         print("%s: %d figures (%d rulers, %d generals, %d heroes, %d casters), %d books; %d checks, %d failures" % (
             os.path.basename(path), st["figures"], st["figures_rulers"], st["figures_generals"], st["figures_heroes"],
@@ -2674,6 +2877,7 @@ def main(argv):
         use_027()
         c = Checker()
         check_units(c)
+        check_units_028(c)
         print("%d checks, %d failures" % (c.count, c.failures))
         return 1 if c.failures else 0
     if cmd == "check-world":

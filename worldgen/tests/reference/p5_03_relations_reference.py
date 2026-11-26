@@ -303,6 +303,30 @@ def summary_ruins(ruins):
     return ids, len(ruins) - len(ids)
 
 
+def turn_change(old, new):
+    """P5-04a 7.1: change 0 into hatred, 1 a thaw (wariness from hatred), 2 a decline (wariness from friendship), 3
+    into friendship."""
+    if new == HATRED:
+        return 0
+    if new == FRIENDSHIP:
+        return 3
+    return 1 if old == HATRED else 2
+
+
+def turn_allowed(Y, last_turn_year, has_turned, cooldown, fresh):
+    """P5-04a 7.2: a pair turns inside the cool-down only with a fresh contribution of the turn's direction (reading
+    R3: a pair that never turned has no cool-down)."""
+    return not has_turned or Y - last_turn_year >= cooldown or fresh
+
+
+def expel_allowed(Y, since_year, hatred_year, settled_years, fresh_years):
+    """P5-04a 8: an entry held for at least expel_settled_years is expelled only when the pair's last turn into
+    hatred is at least Y - expel_fresh_years (reading R4: a pair that met in hatred and never turned has none)."""
+    if Y - since_year < settled_years:
+        return True
+    return hatred_year is not None and hatred_year >= Y - fresh_years
+
+
 def road_loss(P, u, lo, hi):
     """11.1: road = P x (lo + pick(u, hi - lo + 1)) div 1000, at most P - 1 when P >= 1."""
     road = P * (lo + pnr.pick(u, hi - lo + 1)) // 1000
@@ -348,6 +372,7 @@ class Relations:
         # P5-03a (generator 0.25.0)
         import p3_conflict_reference as pcr
         self.r25 = pcr.FLAGS.get("p503a", False)
+        self.r28 = pcr.FLAGS.get("p504a", False)   # P5-04a 7, 8, 11 item 6 (generator 0.28.0)
         if self.r25:
             w.keys["hist.relations.settlers"] = cr.stream_key(w.inp.seed, "hist.relations.settlers")
             for p in self.pairs.values():
@@ -378,6 +403,11 @@ class Relations:
         if a == b:
             return 0
         return self.pair(a, b)["hatred_event"]
+
+    def hatred_year(self, a, b):
+        """P5-04a 8: the year of the pair's last turn into hatred (None: no such turn)."""
+        e = self.hatred_event(a, b)
+        return self.w.events[e - 1]["year"] if e else None
 
     def band(self, a, b):
         """The band of a pair: its band when met, else the plain band of B (6.3.5)."""
@@ -431,12 +461,18 @@ class Relations:
     def war_foes(self):
         w, t = self.w, self.t
         Y = w.year
+        seen = set()
         for _k, c1, c2, e in self.open_wars():
             r1, r2 = self.race_of_civ(c1), self.race_of_civ(c2)
             if r1 == r2:
                 continue
-            self.foe_civ[(c1, r2)] = (Y, e)
-            self.foe_civ[(c2, r1)] = (Y, e)
+            for key in ((c1, r2), (c2, r1)):
+                # P5-04a 11 item 6 (P5-03a audit A2): at war with several realms of one race, the entry keeps the
+                # larger opening event (the later war); before 0.28.0 the last war in key order
+                if self.r28 and key in seen and self.foe_civ[key][1] > e:
+                    continue
+                self.foe_civ[key] = (Y, e)
+                seen.add(key)
         by_z = {}
         for (z, r), v in sorted(self.foe_civ.items()):
             by_z.setdefault(z, []).append((r, v))
@@ -720,6 +756,9 @@ class Relations:
             nb = band_step(p["band"], D, self.t)
             if nb == p["band"]:
                 continue
+            if self.r28 and p["turn_event"] and w.year - p["turn_year"] < self.t["turn_cooldown_years"] and \
+                    not (p["pos"] if nb > p["band"] else p["neg"]):
+                continue   # P5-04a 7.2: the cool-down, unless a fresh cause of the turn's direction
             if quiet and w.quiet_events_left(0) <= 0:
                 continue
             if self.r25:   # P5-03a 3.5: the causes by the turn's direction
@@ -730,8 +769,9 @@ class Relations:
                 p["pos"], p["neg"] = [], []
             else:
                 causes = sorted(set(p["contrib"])) if p["contrib"] else [p["turn_event"] or p["met_event"]]
+            vals = (D, nb, turn_change(p["band"], nb)) if self.r28 else (D, nb)   # P5-04a 7.1
             e = w.append("disposition_turned", participants=(("race_a", RACE, a), ("race_b", RACE, b)),
-                         values=(D, nb), causes=tuple(causes))
+                         values=vals, causes=tuple(causes))
             self.log.append((w.year, "turn-from", a, b, p["band"], nb, tuple(causes)))
             p["band"], p["turn_year"], p["turn_event"], p["contrib"] = nb, w.year, e, []
             if nb == HATRED:
@@ -986,6 +1026,9 @@ class Relations:
                     continue
                 if self.r25 and o in self.last_expel and w.year - self.last_expel[o] < t["expel_gap_years"]:
                     continue   # P5-03a 5.3: the gap, tested before the draw
+                if self.r28 and not expel_allowed(w.year, e["since_year"], self.hatred_year(st["q"], g),
+                                                  t["expel_settled_years"], t["expel_fresh_years"]):
+                    continue   # P5-04a 8: a long-held people only after a fresh turn into hatred (before the draw)
                 if not pp.chance_pm(w.draw("hist.relations.expel", s, g, 0), t["expel_permille"]):
                     continue
                 p = self.pair(st["q"], g)
@@ -1157,6 +1200,9 @@ def relations_small_data(dat=None):
     d = pcr.stress_data(dat)
     d = pcr.edited(d, peoples=dict(abandon_reach_hops=0))
     d.relations = dict(d.relations, **(RELATIONS_SMALL_025 if r25() else RELATIONS_SMALL))
+    if pcr.FLAGS.get("p504a"):   # P5-04a 14.2: relations-small at 0.28.0
+        import p3_data_reference as pdr
+        d.relations = dict(d.relations, **pdr.RELATIONS_SMALL_028)
     return d
 
 
@@ -1410,6 +1456,19 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
                             least, span, pnr.draw(cr.stream_key(seed, "hist.relations.settlers"), y0, s,
                                                   x.owner_at(s, y0), 0)) or span == 0)):
                     want = first
+            if first != want and first.get(fr, (0, 0))[1] == RULING and x.stl[s][5] == x.owner_at(s, y0):
+                # P5-04a 21.7 item 2 (civs4 seeds 10, 13, 22; the test writer's finding): a settlement of the colony's
+                # realm ruined in the colony's founding year (its origin sacked after the founding) sends its
+                # survivors into the colony through PeopleLedger::moved (P5-03 6.4.2: the mover's copied entries; no
+                # event names the colony), so its first rows already hold the races of that settlement as subjects
+                # or tolerated. The check accepts them when every other race of the first rows is in the last rows
+                # of such a settlement.
+                donors = set()
+                for u, races_u in per.items():
+                    if u != s and x.ruined_year(u) == y0 and x.owner_at(u, y0 - 1) == x.stl[s][5]:
+                        donors |= {g for g, v in in_force(races_u, y0 - 1).items() if v[0] > 0}
+                if set(first) - {fr} and set(first) - {fr} <= donors:
+                    want = first
             if first != want:
                 out.append("4: colony %d's first rows %r are not its founder's race" % (s, first))
         if fk == "refugees_settled":
@@ -1527,6 +1586,60 @@ NEGATIVE_KINDS_025 = ("war_won", "peace", "truce", "civ_conquered", "sacked", "s
                       # withdrawal, a side's ending event)
                       "ally_refused", "alliance_betrayed", "spoils_withheld", "ally_withdrew", "search_abandoned",
                       "civ_ended")
+
+
+def violations_028(res, t, E):
+    """P5-04a 16 item 13 (relations): the change of every turn (7.1), the cool-down (7.2: a turn inside it does not
+    cite its direction's fallback), 8's rule on every expulsion, and the reader ranges of kind 58. t: history.relations
+    with the 0.28.0 fields. Rows cannot show a contribution itself (a credit may cite an old event), so the cool-down
+    check is that a turn inside it was not made on the fallback causes alone."""
+    x = Rows(res, [])
+    out = []
+    if "change" not in x.vkeys.get(next((k for k, v in x.key.items() if v == "disposition_turned"), -1), {}):
+        return ["7.1: the catalogue has no change on disposition_turned"]
+    met = {}
+    for e in x.events_of("peoples_met"):
+        met[(x.role(e[0], "race_a")[0], x.role(e[0], "race_b")[0])] = e
+    band = {k: x.value(e[0], "band") for k, e in met.items()}
+    last = {}    # pair -> its last turn event row
+    hatred = {}  # pair -> the year of its last turn into hatred
+    turns = {}
+    for e in x.events_of("disposition_turned"):
+        k = (x.role(e[0], "race_a")[0], x.role(e[0], "race_b")[0])
+        turns.setdefault(k, []).append(e)
+    expels = {}
+    for e in x.events_of("people_expelled"):
+        expels.setdefault(e[0], e)
+    order = sorted([(e[0], "t", e) for lst in turns.values() for e in lst] + [(e[0], "x", e) for e in expels.values()])
+    for _id, what, e in order:
+        if what == "t":
+            k = (x.role(e[0], "race_a")[0], x.role(e[0], "race_b")[0])
+            if k not in band:
+                continue
+            old, new = band[k], x.value(e[0], "band")
+            if x.value(e[0], "change") != turn_change(old, new):
+                out.append("7.1: e%d change %r for %d -> %d" % (e[0], x.value(e[0], "change"), old, new))
+            prev = last.get(k)
+            if prev is not None and e[1] - prev[1] < t["turn_cooldown_years"]:
+                cs = sorted(x.causes.get(e[0], []))
+                fallback = [met[k][0]] if new > old else [prev[0]]
+                if cs == fallback:
+                    out.append("7.2: e%d turns %d-%d %d years after e%d on no fresh cause" % (
+                        e[0], k[0], k[1], e[1] - prev[1], prev[0]))
+            band[k], last[k] = new, e
+            if new == HATRED:
+                hatred[k] = e[1]
+        else:
+            years = x.value(e[0], "years")
+            civ = x.role(e[0], "civilization")[0]
+            g = x.role(e[0], "race")[0]
+            q = x.civ[civ][2]
+            k = (min(q, g), max(q, g))
+            if years is not None and years >= t["expel_settled_years"] and not (
+                    k in hatred and hatred[k] >= e[1] - t["expel_fresh_years"]):
+                out.append("8: e%d expels race %d held %d years without a turn into hatred since %d" % (
+                    e[0], g, years, e[1] - t["expel_fresh_years"]))
+    return out
 
 
 def violations_025(res, x, t, met, rows_of):
@@ -2523,10 +2636,14 @@ def res_violations(res, dat):
     borders = [(b["a"], b["b"]) for b in inp.borders if b["walk_pairs"] > 0 or b["pass_id"] > 0]
     res = dict(res, race=[(r[0], r[1]) for r in inp.races])
     base = (lambda a, b: rel.disposition(a, b) if a == b else rel.pair(a, b)["B"]) if rel else (lambda a, b: 0)
-    return invariant_violations(res, dat.relations, inp.params["span"], borders, base,
-                                {r[0]: r[1] for r in inp.races}, list(dat.base.monsters),
-                                dat.peoples.get("ghost_fade_years", 0), rel.log if rel else None, seed=inp.seed,
-                                all_borders=[(b["a"], b["b"]) for b in inp.borders])
+    out = invariant_violations(res, dat.relations, inp.params["span"], borders, base,
+                               {r[0]: r[1] for r in inp.races}, list(dat.base.monsters),
+                               dat.peoples.get("ghost_fade_years", 0), rel.log if rel else None, seed=inp.seed,
+                               all_borders=[(b["a"], b["b"]) for b in inp.borders])
+    import p3_conflict_reference as pcr
+    if pcr.FLAGS.get("p504a"):   # P5-04a 16 item 13 (relations)
+        out += violations_028(res, dat.relations, inp.params["span"])
+    return out
 
 
 def check_fixtures(c, seeds=FIXTURE_SEEDS, verbose=False):
@@ -2609,6 +2726,9 @@ def cmd_check_world(paths, data_root="game/data"):
             c.ok("%s invariant %s" % (path, v), False)
         for m in reader_problems(res, E):
             c.ok("%s reader %s" % (path, m), False)
+        if pcr.FLAGS.get("p504a"):   # P5-04a (--version 0.28.0)
+            for v in violations_028(res, dat.relations, E):
+                c.ok("%s invariant %s" % (path, v), False)
         print("%s: %d race_relation rows, %d settlement_race rows, %d checks, %d failures" % (
             os.path.basename(path), len(res.get("race_relation", [])), len(res.get("settlement_race", [])),
             c.count, c.failures))

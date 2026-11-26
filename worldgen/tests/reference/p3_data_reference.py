@@ -3505,6 +3505,49 @@ KINDS_027["history"] = ("history", dict(KINDS_026["history"][1], peoples=PEOPLES
                                         figures=FIGURES_027))
 
 
+# ---------------------------------------------------------------------------
+# P5-04a (generator 0.28.0): the appended fields of 3.7, 4.4, 5, 7.2, 8, 14.2a and the changed values of 14.1 and
+# 14.2a (name, low, high, shipped); the code defaults of 14.1, 14.2 and 14.2a (a tuning built in code keeps the
+# meaning of 0.27.0); the fixture roots of 14.1 and 14.2. The spec files of 0.28.0 are not written here (the engineer
+# writes game/data); SPEC_FILES_027 serves the listings, and a 0.27.0 root on disk is read at 0.28.0 with the
+# shipped values of these fields filled in (FALLBACK_028_USED records it; see load_root).
+# ---------------------------------------------------------------------------
+ALLIANCES_NEW_RANGES_028 = (
+    ("spoils_large_share", 1, 1000000, 600), ("spoils_large_part_permille", 0, 1001, 300),
+    ("soured_renew_permille", 0, 1000, 500), ("soured_join_permille", 0, 1000, 500),
+    ("weary_years", 0, 100000, 50), ("join_weary_permille", 0, 1000, 600), ("join_busy_permille", 0, 1000, 250),
+    ("join_fear_floor", 0, 1000, 300), ("join_warmth_floor", 0, 1000, 400), ("grasping_join_permille", 0, 1000, 600),
+    ("join_claim_permille", 0, 1000, 500), ("excused_memory", 0, 1000, 15), ("refuse_grudge", 0, 2000, 150),
+    ("betray_cooled_disposition", -2000, 2000, 0), ("betray_weak_permille", 0, 1000, 500))
+ALLIANCES_CHANGED_028 = {"withheld_to_break": 2, "withheld_grudge": 250}
+ALLIANCES_DEFAULTS_028 = dict(spoils_large_share=1000000, spoils_large_part_permille=1001, soured_renew_permille=1000,
+                              soured_join_permille=1000, weary_years=0, join_weary_permille=1000, join_busy_permille=0,
+                              join_fear_floor=0, join_warmth_floor=0, grasping_join_permille=1000,
+                              join_claim_permille=1000, excused_memory=0, refuse_grudge=0, betray_cooled_disposition=0,
+                              betray_weak_permille=0)
+ALLIANCES_SMALL_028 = dict(spoils_large_share=1, soured_renew_permille=0, weary_years=0)
+RELATIONS_NEW_RANGES_028 = (("turn_cooldown_years", 0, 100000, 300), ("expel_settled_years", 0, 100000, 800),
+                            ("expel_fresh_years", 0, 100000, 150))
+RELATIONS_DEFAULTS_028 = dict(turn_cooldown_years=0, expel_settled_years=100000, expel_fresh_years=0)
+RELATIONS_SMALL_028 = dict(turn_cooldown_years=0)
+FIGURES_NEW_RANGES_028 = (("tower_spacing_permille", 0, 1000, 30), ("hero_return_years", 1, 100000, 100))
+FIGURES_DEFAULTS_028 = dict(tower_spacing_permille=0, hero_return_years=100000)
+FIGURES_CHANGED_028 = {"skill_min": 600, "skill_max": 900}   # 21.3 (L-7); temper_allied grasping 3000 (L-8) below
+FIGURES_ALLIED_GRASPING_028 = 3000
+EPITHET_OLD_028 = (1400, 1480)   # 21.1: the entry reign_permille, min and substantial
+NEW_FIELDS_028 = {"alliances": ALLIANCES_NEW_RANGES_028, "relations": RELATIONS_NEW_RANGES_028,
+                  "figures": FIGURES_NEW_RANGES_028}
+FALLBACK_028_USED = set()
+# P5-04a 14 (generator 0.28.0): fields appended to history.alliances (after mine_forms), history.relations (after
+# expel_gap_years) and history.figures (after epithet_repeat_max), all int and required.
+KINDS_028 = dict(KINDS_027)
+KINDS_028["history"] = ("history", dict(
+    KINDS_027["history"][1],
+    alliances=KINDS_027["history"][1]["alliances"] + tuple((n, INT) for n, _, _, _ in ALLIANCES_NEW_RANGES_028),
+    relations=KINDS_027["history"][1]["relations"] + tuple((n, INT) for n, _, _, _ in RELATIONS_NEW_RANGES_028),
+    figures=KINDS_027["history"][1]["figures"] + tuple((n, INT) for n, _, _, _ in FIGURES_NEW_RANGES_028)))
+
+
 def book_title_ok(s):
     """4.2 grammar book_title: ASCII letters, single spaces, ' and -, starting with an upper-case letter; at most
     48 bytes (string(48, book_title))."""
@@ -3643,7 +3686,7 @@ def pre_027(path, kind):
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0")
+            "0.26.0", "0.27.0", "0.28.0")
 
 
 def at_least(v):
@@ -3653,8 +3696,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0") else ("culture", "history", "race")
-    if v == "0.27.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0") else ("culture", "history", "race")
+    if v == "0.28.0":
+        KINDS, SPEC_FILES = KINDS_028, SPEC_FILES_027
+    elif v == "0.27.0":
         KINDS, SPEC_FILES = KINDS_027, SPEC_FILES_027
     elif v == "0.26.0":
         KINDS, SPEC_FILES = KINDS_026, SPEC_FILES_026
@@ -3975,6 +4020,13 @@ def load_root(root, kinds=None, from_spec=False):
         if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
             # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
             defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
+        if DATA_VERSION == "0.28.0" and kind == "history":
+            # P5-04a: a root without the 0.28.0 fields (the 0.27.0 data on disk before integration) is read with the
+            # shipped values of 14 filled in; recorded in FALLBACK_028_USED (the C++ loader refuses such a root)
+            for did, new in NEW_FIELDS_028.items():
+                if did in defs and any(n not in defs[did] for n, _, _, _ in new):
+                    FALLBACK_028_USED.add(os.path.join(root, "history", did))
+                    defs[did] = dict(defs[did], **{n: v for n, _, _, v in new if n not in defs[did]})
         for did, table in defs.items():
             if isinstance(schema, dict):
                 if did not in schema:

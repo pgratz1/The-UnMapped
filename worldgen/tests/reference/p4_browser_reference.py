@@ -375,6 +375,11 @@ class Browser:
                 if fq in fold(nm):
                     out.append((REGION, r[0], nm))
                     break
+        # P5-06 11.3 (P5-04a 21.7 item 3): figures by display name after the regions, ascending id
+        for f in sorted(w.t.get("figure", ())):
+            dn = figure_display(f)
+            if fq in fold(dn):
+                out.append((FIGURE, f[0], dn))
         return out[:limit]
 
     # --- 4.2 block lines ----------------------------------------------------------------------------------
@@ -664,11 +669,37 @@ def dump_filters(b):
 NOTHING = "qqqzzzxxq"
 
 
+FIGURE = 6
+
+
+def figure_display(f):
+    """P5-06 6.10, 6.14: the display name of a figure row (name 1, epithet 2, regnal 16)."""
+    import p5_06_figures_reference as p506
+    return p506.display_name(f[1], f[16], f[2])
+
+
+def figure_queries(b):
+    """P5-04a 21.7 item 3: (a) the full display name of the smallest-id figure, (b) the first three bytes of the
+    first ruler's name (the smallest-id figure of role 1), (c) the display name of the smallest-id figure with a
+    regnal number (regnal >= 2), each when the case has one; limit 50."""
+    figs = sorted(b.w.t.get("figure", ()))
+    qs = []
+    if figs:
+        qs.append((figure_display(figs[0]), 50))
+    rulers = [f for f in figs if f[3] == 1]
+    if rulers:
+        qs.append((rulers[0][1][:3], 50))
+    regnal = [f for f in figs if f[16] >= 2]
+    if regnal:
+        qs.append((figure_display(regnal[0]), 50))
+    return qs
+
+
 def search_queries(b):
     qs = [("a", 50), ("the", 50), ("THE", 50)]
     qs += [(c[1][:3], 50) for c in b.w.t["civilization"]]
     qs += [(NOTHING, 50), ("a", 3)]
-    return qs
+    return qs + figure_queries(b)
 
 
 def dump_search(b):
@@ -911,7 +942,7 @@ def check_case(c, name, b, every=True):
     full = b.search("a", 10 ** 9)
     c.eq("%s search limit" % name, b.search("a", 3), full[:3])
     c.eq("%s search order" % name, [(t, i) for t, i, _ in full],
-         sorted({(t, i) for t, i, _ in full}, key=lambda x: ({CIV: 0, SETTLEMENT: 1, REGION: 2}[x[0]], x[1])))
+         sorted({(t, i) for t, i, _ in full}, key=lambda x: ({CIV: 0, SETTLEMENT: 1, REGION: 2, FIGURE: 3}[x[0]], x[1])))
     c.eq("%s search THE = the" % name, b.search("THE", 50), b.search("the", 50))
     # event_place against the places of P4-04 3.4 (every year of each event's span)
     if every:
