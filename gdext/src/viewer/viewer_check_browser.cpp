@@ -41,6 +41,7 @@
 #include "worldgen/db/reader.hpp"
 #include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/history_browser.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/markers.hpp"
 
@@ -189,7 +190,80 @@ namespace check_ref {
 
 // --- The references, as the check reads them (8.1) ----------------------------
 
-BrowserReport read_browser_report(const godot::String& path) {
+bool parse_group_line(const std::string& line, GroupLine& out) {
+    static const std::regex group_re(R"(^([0-9]+)(?:-([0-9]+))? e([0-9]+)((?:, e[0-9]+)+) ([a-z_]+)/([0-9]+): (.*)$)");
+    static const std::regex id_re(R"(e([0-9]+))");
+    std::smatch m;
+    if (!std::regex_match(line, m, group_re)) {
+        return false;
+    }
+    out = GroupLine{};
+    out.start = std::stoll(m[1]);
+    out.end = m[2].matched ? std::stoll(m[2]) : out.start;
+    out.ids.push_back(std::stoll(m[3]));
+    const std::string rest = m[4];
+    for (auto it = std::sregex_iterator(rest.begin(), rest.end(), id_re); it != std::sregex_iterator(); ++it) {
+        out.ids.push_back(std::stoll((*it)[1]));
+    }
+    out.kind = m[5];
+    out.salience = std::stoll(m[6]);
+    out.text = m[7];
+    return true;
+}
+
+std::map<int64_t, EventRefs> event_refs(const godot::String& world_path, const std::vector<int64_t>& ids,
+                                        std::string& problem) {
+    std::map<int64_t, EventRefs> out;
+    if (ids.empty()) {
+        return out;
+    }
+    try {
+        auto reader = worldgen::db::WorldReader::open(to_utf8(world_path));
+        if (!reader.ok()) {
+            problem = reader.error().message;
+            return out;
+        }
+        auto view = worldgen::history::HistoryView::load(reader.value());
+        if (!view.ok()) {
+            problem = view.error().message;
+            return out;
+        }
+        const worldgen::history::HistoryView& v = view.value();
+        for (const int64_t id : ids) {
+            const auto* e = v.event(id);
+            const auto* k = e != nullptr ? v.catalogue().find_id(e->row.kind) : nullptr;
+            if (k == nullptr) {
+                problem = "e" + std::to_string(id) + " of a group line is not an event of the world";
+                return out;
+            }
+            EventRefs r;
+            r.region = e->row.region;
+            r.settlement = e->row.settlement;
+            if (r.region != 0) {
+                r.refs.push_back("@rg" + std::to_string(r.region));
+            }
+            if (r.settlement != 0) {
+                r.refs.push_back("@s" + std::to_string(r.settlement));
+            }
+            for (const auto& p : e->participants) {
+                const auto role = static_cast<std::size_t>(p.role - 1);
+                r.refs.push_back(worldgen::inspect::escape_history_text(role < k->roles.size() ? k->roles[role].role : "?") +
+                                 "=" + worldgen::inspect::history_entity_tag(p.entity_type, p.entity_id));
+            }
+            for (std::size_t i = 0; i < e->values.size() && i < k->values.size(); ++i) {
+                r.refs.push_back(worldgen::inspect::escape_history_text(k->values[i]) + "=" +
+                                 std::to_string(e->values[i]));
+            }
+            r.causes = e->causes;
+            out[id] = std::move(r);
+        }
+    } catch (const std::exception& e) {
+        problem = e.what();
+    }
+    return out;
+}
+
+BrowserReport read_browser_report(const godot::String& path, const godot::String& world_path) {
     BrowserReport report;
     if (path.is_empty() || !godot::FileAccess::file_exists(path)) {
         report.problem = "no history report at " + to_utf8(path);
@@ -208,6 +282,7 @@ BrowserReport read_browser_report(const godot::String& path) {
     static const std::regex cause_re(R"(e([0-9]+))");
     std::string section;
     std::size_t start = 0;
+    std::vector<int64_t> grouped;
     try {
         while (start < text.size()) {
             std::size_t stop = text.find('\n', start);
@@ -217,8 +292,22 @@ BrowserReport read_browser_report(const godot::String& path) {
             const std::string line = text.substr(start, stop - start);
             start = stop + 1;
             std::smatch m;
+            GroupLine group;
             if (std::regex_match(line, m, section_re)) {
                 section = m[1];
+            } else if (section == "chronicle" && parse_group_line(line, group)) {
+                for (const int64_t id : group.ids) {
+                    ChronicleLine e;
+                    e.id = id;
+                    e.start = group.start;
+                    e.end = group.end;
+                    e.kind = group.kind;
+                    e.salience = group.salience;
+                    e.text = group.text;
+                    e.grouped = true;
+                    grouped.push_back(id);
+                    report.chronicle.push_back(std::move(e));
+                }
             } else if (section == "chronicle" && std::regex_match(line, m, event_re)) {
                 ChronicleLine e;
                 e.start = std::stoll(m[1]);
@@ -283,6 +372,22 @@ BrowserReport read_browser_report(const godot::String& path) {
     }
     std::sort(report.chronicle.begin(), report.chronicle.end(),
               [](const ChronicleLine& a, const ChronicleLine& b) { return a.id < b.id; });
+    if (report.problem.empty() && !grouped.empty()) {
+        std::string problem;
+        const std::map<int64_t, EventRefs> refs = event_refs(world_path, grouped, problem);
+        if (!problem.empty()) {
+            report.problem = to_utf8(path) + ": the events of its group lines: " + problem;
+        }
+        for (ChronicleLine& e : report.chronicle) {
+            const auto it = refs.find(e.id);
+            if (e.grouped && it != refs.end()) {
+                e.region = it->second.region;
+                e.settlement = it->second.settlement;
+                e.refs = it->second.refs;
+                e.causes = it->second.causes;
+            }
+        }
+    }
     if (report.problem.empty() && (report.chronicle.empty() || report.blocks.empty())) {
         report.problem = to_utf8(path) + " has no chronicle lines or no civilization blocks";
     }
@@ -382,8 +487,8 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
                                                     ? godot::String()
                                                     : ": " + model->get_browser_error_code() + ": " +
                                                           model->get_browser_error_message()));
-    const BrowserReport full = read_browser_report(options.history_report);
-    const BrowserReport summary = read_browser_report(options.history_summary);
+    const BrowserReport full = read_browser_report(options.history_report, model->get_world_path());
+    const BrowserReport summary = read_browser_report(options.history_summary, model->get_world_path());
     expect(full.problem.empty() && summary.problem.empty(),
            "B the history reports at both levels read" +
                (full.problem.empty() ? godot::String() : ": " + to_godot(full.problem)) +
@@ -503,7 +608,7 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
             };
             const std::vector<int64_t> want_effects = effects[e.id];
             const std::string where = "e" + std::to_string(e.id) + ": ";
-            if (text != e.text) {
+            if (text != e.text && !e.grouped) {  // a group line's sentence names every settlement of it
                 problem = where + "text '" + text + "', the line's '" + e.text + "'";
             } else if (to_utf8(d["kind_key"]) != e.kind || int64_t(d["salience"]) != e.salience ||
                        int64_t(d["year"]) != e.start || int64_t(d["end_year"]) != e.end) {
@@ -518,8 +623,13 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
                 problem = where + "the summary flag differs from history-summary.txt";
             }
         }
-        expect(problem.empty(), "B2 " + num(static_cast<int64_t>(full.chronicle.size())) +
-                                    " events: sentence, note, kind, salience, span, causes, refs, effects and summary "
+        int64_t grouped = 0;
+        for (const auto& e : full.chronicle) {
+            grouped += e.grouped ? 1 : 0;
+        }
+        expect(problem.empty(), "B2 " + num(static_cast<int64_t>(full.chronicle.size())) + " events (" + num(grouped) +
+                                    " of same-day group lines, refs and causes from the check's own read, no sentence "
+                                    "compared): sentence, note, kind, salience, span, causes, refs, effects and summary "
                                     "flag equal the chronicle lines" +
                                     (problem.empty() ? godot::String() : ": " + to_godot(problem)));
     }

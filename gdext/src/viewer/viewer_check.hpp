@@ -50,7 +50,8 @@ struct ViewerCheckOptions {
     godot::String reference_dir;
     int64_t expect_layers = -1;      // -1: not checked
     int64_t expect_composites = -1;  // -1: not checked
-    // P4-03 10.2: "none" (checks N1 to N3), "loaded" (H1 to H8) or empty.
+    // P4-03 10.2: "none" (checks N1 to N3), "loaded" (H1 to H8), "library" (M12 only,
+    // P5-04a 21.7 item 4) or empty.
     godot::String expect_history;
     int64_t expect_end_year = -1;
     std::vector<int64_t> expect_years;  // compared with <reference dir>/territory-<Y>.png
@@ -59,6 +60,7 @@ struct ViewerCheckOptions {
     int64_t expect_passes = -1;         // the world report's passes; -1: not checked
     int64_t expect_mines = -1;          // the history report's mine_opened lines (P5-04 11.3); -1: not checked
     godot::String history_summary;      // P4-05 8.1: `report --history --level summary`
+    int64_t expect_library = -1;        // P5-04a 21.7 item 4: a library's site id (check M12); -1: not checked
     bool wired = false;
 };
 

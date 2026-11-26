@@ -8,7 +8,7 @@
 # 1. Test pattern: worldgen-cli generate --seed 42 --test-pattern into
 #    WORK_DIR/pattern/, and render each layer to <layer>.png with the default
 #    palette (auto) and scale (1).
-# 2. Real world: worldgen-cli generate --seed 42 --map-size 512 into
+# 2. Real world: worldgen-cli generate --seed 49 --map-size 512 into
 #    WORK_DIR/real/; its layers are listed from `worldgen-cli report`
 #    ([layers]), the layers biome, elevation, rainfall and region must be
 #    among them,
@@ -27,7 +27,7 @@
 #    project and the extension and scans the project, as on a first open.
 # 4. For each world: godot --headless --path PROJECT_DIR -- <world> --check
 #    <dir> --expect-layers <n> --expect-composites <m> --expect-history
-#    <none|loaded> [...]: the viewer scene opens the world, shows each layer
+#    <none|loaded|library> [...]: the viewer scene opens the world, shows each layer
 #    and composite and compares its pixels with the PNGs, and checks the
 #    year bar and the territory view (gdext/src/viewer/viewer_check.hpp),
 #    and the markers (P4-04 9: markers-<Y>.png, markers-faded-<Y>.png and
@@ -35,6 +35,10 @@
 #    P5-04 11.3: the world must have a mine_opened event, check M10),
 #    and the browser (P4-05 8: history-summary.txt from report --history
 #    --level summary; checks B0 to B12).
+# 4b. Library world (P5-04a 21.7 item 4): --seed 51 --map-size 512, the
+#    smallest seed >= 42 at 512 whose full history report has a `library`
+#    line in [sites] (at 0.28.0); the viewer gets --expect-history library
+#    --expect-library <site id> (check M12 only).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
@@ -124,9 +128,15 @@ function(render_world label world dir prefix)
     set(${prefix}_count ${_count} PARENT_SCOPE)
 endfunction()
 
+# The real world's seed: 42 until 0.27.0; at 0.28.0 seed 42 at 512 has no
+# ended civilization; seed 49 is the smallest seed above 42 with every
+# feature the checks below need (an ended civilization, a pass, a mine, towers).
+# No seed from 42 to 69 at 512 with those has an ended tower.
+set(_real_seed 49)
+set(_library_seed 51)
 set(_real_dir "${WORK_DIR}/real")
 set(_real_world "${_real_dir}/world.db")
-run_step("generate seed 42, map size 512" "${WORLDGEN_CLI}" generate --seed 42 --map-size 512 --data "${DATA_DIR}"
+run_step("generate seed ${_real_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_real_seed} --map-size 512 --data "${DATA_DIR}"
     --out "${_real_world}")
 render_world("512 world" "${_real_world}" "${_real_dir}" _real)
 set(_real_composite_count 4)  # territory, map, biomes, regions
@@ -263,9 +273,27 @@ run_step("render elevation markers ${_first_ruin}" "${WORLDGEN_CLI}" render --db
 # --- 2b. Geography-only world --------------------------------------------------
 set(_geo_dir "${WORK_DIR}/geo")
 set(_geo_world "${_geo_dir}/world.db")
-run_step("generate seed 42, map size 512, until regions" "${WORLDGEN_CLI}" generate --seed 42 --map-size 512
+run_step("generate seed ${_real_seed}, map size 512, until regions" "${WORLDGEN_CLI}" generate --seed ${_real_seed} --map-size 512
     --data "${DATA_DIR}" --until regions --out "${_geo_world}")
 render_world("geography-only world" "${_geo_world}" "${_geo_dir}" _geo)
+
+# --- 2c. Library world (P5-04a 21.7 item 4) -------------------------------------
+set(_library_dir "${WORK_DIR}/library")
+file(MAKE_DIRECTORY "${_library_dir}")
+set(_library_world "${_library_dir}/world.db")
+run_step("generate seed ${_library_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_library_seed} --map-size 512
+    --data "${DATA_DIR}" --out "${_library_world}")
+run_step("report --history, library world" "${WORLDGEN_CLI}" report --db "${_library_world}" --history --level full
+    --out "${_library_dir}/history.txt" QUIET)
+file(STRINGS "${_library_dir}/history.txt" _library_lines REGEX "^  si[0-9]+ .*: library in ")
+if(NOT _library_lines)
+    message(FATAL_ERROR "headless check: the seed ${_library_seed} world has no library line in [sites]; choose the "
+        "smallest seed >= 42 at 512 that has one and record it here and in gdext/README.md")
+endif()
+list(GET _library_lines 0 _library_line)
+string(REGEX MATCH "^  si([0-9]+) " _m "${_library_line}")
+set(_library_site "${CMAKE_MATCH_1}")
+message("library world: seed ${_library_seed}, ${_library_line}")
 
 # --- 3. Import, 4. viewer checks ----------------------------------------------
 run_step("editor import" "${GODOT}" --headless --path "${PROJECT_DIR}" --import)
@@ -283,6 +311,8 @@ viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_
     --expect-history loaded --expect-end-year ${_end_year} --expect-years ${_years_arg}
     --history-report "${_history_report}" --history-summary "${_history_summary}"
     --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes} --expect-mines ${_mines_opened})
+viewer_check("library world" "${_library_world}" "${_library_dir}" -1 -1 --expect-history library
+    --expect-library ${_library_site})
 
 # --- 5. Playback runs (P4-06 11.1) ---------------------------------------------
 # R1: a short movie with --play-log at a fixed frame step: the year lines

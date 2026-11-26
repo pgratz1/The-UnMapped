@@ -26,7 +26,30 @@ struct ChronicleLine {
     std::string kind, text;          // text: between "<key>/<salience>: " and " {"
     std::vector<std::string> refs;   // the tokens inside {...}
     std::vector<int64_t> causes;
+    // P5-04a 12.4: one event of a same-day group line, which prints no
+    // {...} and no causes; refs, region, settlement and causes are then the
+    // check's own read of the event (event_refs), text is the group's.
+    bool grouped = false;
 };
+// A same-day group line of [chronicle] (P5-04a 12.4): "<year>[-<end>]
+// e<id>, e<id>[, ...] <key>/<salience>: <sentence>".
+struct GroupLine {
+    int64_t start = 0, end = 0, salience = 0;
+    std::vector<int64_t> ids;
+    std::string kind, text;
+};
+[[nodiscard]] bool parse_group_line(const std::string& line, GroupLine& out);
+// The {...} tokens of an event as the report prints them, its region,
+// settlement and causes, from the check's own HistoryView of the world.
+struct EventRefs {
+    int64_t region = 0, settlement = 0;
+    std::vector<std::string> refs;
+    std::vector<int64_t> causes;
+};
+// For each id (problem set when the world cannot be read or an id is not
+// an event).
+[[nodiscard]] std::map<int64_t, EventRefs> event_refs(const godot::String& world_path,
+                                                      const std::vector<int64_t>& ids, std::string& problem);
 
 struct BlockText {
     int64_t id = 0, race = 0, founded = -1, ended = -1, events = -1;
@@ -42,7 +65,8 @@ struct BrowserReport {
 };
 
 // `report --history` at either level.
-[[nodiscard]] BrowserReport read_browser_report(const godot::String& path);
+// world_path: the world, read for the events of group lines (P5-04a 12.4).
+[[nodiscard]] BrowserReport read_browser_report(const godot::String& path, const godot::String& world_path);
 
 // The check's own read of the world.
 struct OwnWorld {

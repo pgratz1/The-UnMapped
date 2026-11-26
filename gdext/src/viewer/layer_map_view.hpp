@@ -157,6 +157,8 @@ private:
         const GlyphCells* cells = nullptr;  // into glyphs_; null: glyph unknown
     };
     [[nodiscard]] bool marker_drawn(const Marker& marker) const;
+    // Drawn after (above) every other entry and hit first: the towers.
+    [[nodiscard]] static bool on_top(const Marker& marker) { return marker.glyph == "tower"; }
     [[nodiscard]] godot::Vector2i marker_centre(const Marker& marker) const;
     godot::Ref<godot::ImageTexture> glyph_texture(const Marker& marker, int32_t g);
     void update_marker_hover();

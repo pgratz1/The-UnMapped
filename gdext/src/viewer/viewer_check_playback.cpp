@@ -310,8 +310,8 @@ void check_playback_at_open(ViewerScreen& screen, const CheckExpect& expect) {
 
 void check_playback(ViewerScreen& screen, const ViewerCheckOptions& options, const CheckExpect& expect) {
     godot::Ref<ViewerModel> model = screen.get_model();
-    const BrowserReport full = read_browser_report(options.history_report);
-    const BrowserReport summary = read_browser_report(options.history_summary);
+    const BrowserReport full = read_browser_report(options.history_report, model->get_world_path());
+    const BrowserReport summary = read_browser_report(options.history_summary, model->get_world_path());
     OwnWorld own = open_own_world(model->get_world_path());
     const std::map<int64_t, int64_t> phase_starts = read_phase_starts(options.history_report);
     if (!full.problem.empty() || !summary.problem.empty() || !own.problem.empty() || phase_starts.empty() ||

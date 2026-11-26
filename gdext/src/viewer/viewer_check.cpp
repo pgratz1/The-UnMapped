@@ -44,6 +44,7 @@
 
 #include "viewer/viewer_check_browser.hpp"
 #include "viewer/viewer_check_playback.hpp"
+#include "viewer/viewer_check_reference.hpp"
 #include "viewer/viewer_screen.hpp"
 #include "world_file.hpp"
 #include "worldgen/db/reader.hpp"
@@ -223,7 +224,9 @@ int64_t to_i64(const std::string& text) {
     return std::stoll(text);
 }
 
-HistoryReport read_history_report(const godot::String& path) {
+// world_path: the world, read for the events of same-day group lines
+// (P5-04a 12.4), which print no {...}.
+HistoryReport read_history_report(const godot::String& path, const godot::String& world_path) {
     HistoryReport report;
     if (path.is_empty() || !godot::FileAccess::file_exists(path)) {
         report.problem = "no history report at " + to_utf8(path);
@@ -250,6 +253,7 @@ HistoryReport read_history_report(const godot::String& path) {
     static const std::regex ruined_re(R"(, ruined ([0-9]+)(?:, e([0-9]+))?,)");
     std::string section;
     std::size_t start = 0;
+    std::vector<int64_t> grouped;
     try {
         while (start < text.size()) {
             std::size_t stop = text.find('\n', start);
@@ -259,8 +263,21 @@ HistoryReport read_history_report(const godot::String& path) {
             const std::string line = text.substr(start, stop - start);
             start = stop + 1;
             std::smatch m;
+            check_ref::GroupLine group;
             if (std::regex_match(line, m, section_re)) {
                 section = m[1];
+            } else if (section == "chronicle" && check_ref::parse_group_line(line, group)) {
+                report.last_event_year = std::max(report.last_event_year, group.start);
+                for (const int64_t id : group.ids) {
+                    ReportEvent e;
+                    e.id = id;
+                    e.start = group.start;
+                    e.end = group.end;
+                    e.kind = group.kind;
+                    e.sentence = group.text;
+                    grouped.push_back(id);
+                    report.events.push_back(std::move(e));
+                }
             } else if (section == "ages" && std::regex_search(line, m, age_re)) {
                 report.ages.push_back(ReportAge{to_i64(m[1]), to_i64(m[3]), to_i64(m[4]), to_i64(m[6]), m[2]});
                 report.race_plural[to_i64(m[6])] = m[5];
@@ -326,6 +343,22 @@ HistoryReport read_history_report(const godot::String& path) {
         }
     } catch (const std::exception& e) {
         report.problem = std::string("cannot read the history report: ") + e.what();
+    }
+    std::sort(report.events.begin(), report.events.end(),
+              [](const ReportEvent& a, const ReportEvent& b) { return a.id < b.id; });
+    if (report.problem.empty() && !grouped.empty()) {
+        std::string problem;
+        const std::map<int64_t, check_ref::EventRefs> refs = check_ref::event_refs(world_path, grouped, problem);
+        if (!problem.empty()) {
+            report.problem = "the events of the history report's group lines: " + problem;
+        }
+        for (ReportEvent& e : report.events) {
+            const auto it = refs.find(e.id);
+            if (it != refs.end()) {
+                e.region = it->second.region;
+                e.settlement = it->second.settlement;
+            }
+        }
     }
     if (report.problem.empty() && (report.end_year < 0 || report.ages.empty() || report.phases.empty() ||
                                    report.civs.empty() || report.last_event_year < 0 ||
@@ -460,7 +493,7 @@ void check_without_history(Checker& check, ViewerScreen& screen, const godot::St
 void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options) {
     godot::Ref<ViewerModel> model = screen.get_model();
     const godot::Ref<WorldFile> world = model->get_world();
-    const HistoryReport report = read_history_report(options.history_report);
+    const HistoryReport report = read_history_report(options.history_report, model->get_world_path());
     check.expect(report.problem.empty(), "history report read: " + options.history_report +
                                              (report.problem.empty() ? godot::String() : ": " + to_godot(report.problem)));
     if (!report.problem.empty()) {
@@ -1342,7 +1375,18 @@ void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib)
         return ids;
     };
     std::string problem;
-    for (const int64_t y : {towers.front()->origin_year - 1, towers.front()->origin_year, end}) {
+    // P5-04a 21.4: towers can end; every ended tower is checked the year
+    // before its end (shown) and in its end year (gone).
+    std::vector<int64_t> years = {towers.front()->origin_year - 1, towers.front()->origin_year, end};
+    int64_t ended_towers = 0;
+    for (const auto* t : towers) {
+        if (t->ended_year) {
+            ++ended_towers;
+            years.push_back(*t->ended_year - 1);
+            years.push_back(*t->ended_year);
+        }
+    }
+    for (const int64_t y : years) {
         if (y < 0 || y > end) {
             continue;
         }
@@ -1359,7 +1403,8 @@ void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib)
         }
     }
     check.expect(problem.empty(), "M11 the tower entries are the towers open at the year (before and at the first "
-                                  "tower's year " + num(towers.front()->origin_year) + ", and at E)" +
+                                  "tower's year " + num(towers.front()->origin_year) + ", at E, and the year before "
+                                  "and the end year of each of the " + num(ended_towers) + " ended towers)" +
                                       (problem.empty() ? godot::String() : ": " + to_godot(problem)));
     // The entries at E.
     model->set_year(end);
@@ -1371,6 +1416,7 @@ void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib)
     std::string wrong;
     int64_t entries = 0;
     int64_t hovered = -1;
+    int64_t hovered_count = 0;
     for (int64_t i = 0; i < markers.size(); ++i) {
         const godot::Dictionary m = markers[i];
         if (godot::String(m["type"]) != "site" || int64_t(m.get("site_kind", int64_t{0})) != 4) {
@@ -1419,11 +1465,17 @@ void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib)
             wrong = "site " + std::to_string(id) + " drawn at " + to_utf8(godot::String(godot::Variant(at))) +
                     ", cell centre " + std::to_string(cx) + "," + std::to_string(cy);
         }
-        // The mouse over it: the first tower no later entry covers.
-        if (hovered < 0 && at.x >= 0) {
+        // The mouse over it: towers are drawn above every other entry
+        // (P5-04a), so each tower that no other tower covers is hovered.
+        if (at.x >= 0) {
             send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
-            if (view->get_hovered_marker() == i && screen.cell_label()->get_text() == text) {
-                hovered = id;
+            const int64_t got = view->get_hovered_marker();
+            const bool other_tower = got >= 0 && got != i && godot::String(godot::Dictionary(markers[got])["glyph"]) == "tower";
+            if (got == i && screen.cell_label()->get_text() == text) {
+                hovered = hovered < 0 ? id : hovered;
+                ++hovered_count;
+            } else if (!other_tower && wrong.empty()) {
+                wrong = "the mouse over site " + std::to_string(id) + " hovers entry " + std::to_string(got);
             }
         }
     }
@@ -1431,8 +1483,113 @@ void check_towers(Checker& check, ViewerScreen& screen, const LibraryWorld& lib)
     check.expect(wrong.empty() && entries == static_cast<int64_t>(model_towers().size()) && entries > 0 && hovered > 0,
                  "M11 at " + num(end) + " the " + num(entries) +
                      " tower entries: glyph tower, fill 120,60,180, a library 7 glyph cells left and up, a wild "
-                     "tower on its cell, hover '<name> (tower|library of <figure>), since <year>'; the mouse over site " +
-                     num(hovered) + " shows its text" + (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+                     "tower on its cell, hover '<name> (tower|library of <figure>), since <year>'; the mouse over " +
+                     num(hovered_count) + " of them (first site " + num(hovered) + ") shows its text, drawn above "
+                     "every other entry" + (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+}
+
+// M12 (P5-04a 21.7 item 4): a library, the site the script names
+// (--expect-library <site id>, from the `library` line of [sites]). Absent
+// the year before its origin; at its origin year (and at E, or the year
+// before its end) an entry drawn one glyph cell to the upper left of its
+// city's marker, with the hover text '<site name> (library of <figure
+// display name>), since <year>' and a mouse motion over it showing that
+// text; gone in its end year when it has ended.
+void check_library(Checker& check, ViewerScreen& screen, int64_t site_id) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    const LibraryWorld lib = open_library_world(model->get_world_path());
+    const worldgen::db::SiteRow* row = nullptr;
+    if (lib.problem.empty()) {
+        for (const auto& s : lib.history->tables.sites) {
+            row = s.id == site_id ? &s : row;
+        }
+    }
+    check.expect(row != nullptr && row->kind == 4 && row->settlement != 0,
+                 "M12 site " + num(site_id) + " is a library (kind 4 in a settlement)" +
+                     (lib.problem.empty() ? godot::String() : ": " + to_godot(lib.problem)));
+    if (row == nullptr || row->kind != 4 || row->settlement == 0) {
+        return;
+    }
+    std::string figure = "?";
+    if (const auto* origin = lib.history->view.event(row->origin_event)) {
+        for (const auto& p : origin->participants) {
+            if (p.entity_type == 6) {
+                for (const auto& f : lib.history->tables.figures) {
+                    figure = f.id == p.entity_id ? worldgen::history::figure_display_name(f) : figure;
+                }
+                break;
+            }
+        }
+    }
+    const std::string want_text = row->name + " (library of " + figure + "), since " + std::to_string(row->origin_year);
+    const int64_t end = model->get_end_year();
+    const int64_t last = row->ended_year ? *row->ended_year - 1 : end;
+    LayerMapView* view = screen.map_view();
+    // The library's entry and its city's entry in the model at year y.
+    const auto find = [&model, row](int64_t& library, int64_t& city) {
+        library = -1;
+        city = -1;
+        const godot::Array markers = model->get_markers();
+        for (int64_t i = 0; i < markers.size(); ++i) {
+            const godot::Dictionary m = markers[i];
+            const godot::String type = m["type"];
+            if (type == "site" && int64_t(m["id"]) == row->id) {
+                library = i;
+            } else if (type != "site" && type != "place" && type != "pass" && int64_t(m["id"]) == row->settlement) {
+                city = i;
+            }
+        }
+    };
+    int64_t library = -1;
+    int64_t city = -1;
+    if (row->origin_year > 0) {
+        model->set_year(row->origin_year - 1);
+        find(library, city);
+        check.expect(library < 0, "M12 no entry for library " + num(row->id) + " in " + num(row->origin_year - 1) +
+                                      ", the year before its origin");
+    }
+    for (const int64_t y : {row->origin_year, last}) {
+        model->set_year(y);
+        find(library, city);
+        std::string wrong;
+        godot::Vector2i at(-1, -1);
+        godot::Vector2i city_at(-1, -1);
+        if (library < 0 || city < 0) {
+            wrong = library < 0 ? "no library entry" : "no entry for its city s" + std::to_string(row->settlement);
+        } else {
+            const godot::Dictionary m = model->get_markers()[library];
+            const godot::Dictionary c = model->get_markers()[city];
+            const int64_t g = view->glyph_cell_size();
+            at = view->get_marker_screen_position(library);
+            city_at = view->get_marker_screen_position(city);
+            if (godot::String(m["glyph"]) != "tower" || int64_t(m["offset_x"]) != -7 || int64_t(m["offset_y"]) != -7 ||
+                int64_t(m["x"]) != int64_t(c["x"]) || int64_t(m["y"]) != int64_t(c["y"])) {
+                wrong = "entry " + to_utf8(godot::Variant(m).stringify()) + ", city " + to_utf8(godot::Variant(c).stringify());
+            } else if (at.x < 0 || city_at.x < 0 || at.x != city_at.x - 7 * g || at.y != city_at.y - 7 * g) {
+                wrong = "drawn at " + to_utf8(godot::String(godot::Variant(at))) + ", its city at " +
+                        to_utf8(godot::String(godot::Variant(city_at))) + ", glyph cell " + std::to_string(g);
+            } else if (to_utf8(model->describe_marker(library)) != want_text) {
+                wrong = "hover text '" + to_utf8(model->describe_marker(library)) + "'";
+            } else {
+                send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
+                if (view->get_hovered_marker() != library || to_utf8(screen.cell_label()->get_text()) != want_text) {
+                    wrong = "the mouse over it shows '" + to_utf8(screen.cell_label()->get_text()) + "'";
+                }
+                screen.hover_cell(-1, -1);
+            }
+        }
+        check.expect(wrong.empty(), "M12 in " + num(y) + " library " + num(row->id) + " is drawn 7 glyph cells left "
+                                    "and up of its city s" + num(row->settlement) + ", hover '" + to_godot(want_text) +
+                                    "'" + (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+    }
+    if (row->ended_year) {
+        model->set_year(*row->ended_year);
+        find(library, city);
+        check.expect(library < 0, "M12 library " + num(row->id) + " is gone in its end year " + num(*row->ended_year));
+    } else {
+        godot::UtilityFunctions::print("UNMAPPED-CHECK: info: M12 library ", row->id, " stands at the end");
+    }
+    model->set_year(end);
 }
 
 void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
@@ -2120,7 +2277,9 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
                  godot::String("meta panel shows {0} of {1} meta rows")
                      .format(godot::Array::make(tree_row_count(screen.meta_tree()), meta_count)));
 
-    for (int64_t i = 0; i < count; ++i) {
+    // The library world (P5-04a 21.7 item 4) has no reference images.
+    const bool library_only = options.expect_history == "library";
+    for (int64_t i = 0; i < (library_only ? 0 : count); ++i) {
         const bool is_layer = i < layer_count;
         const godot::String name = model->get_view_info(i)["name"];
         screen.choose_view(i);
@@ -2267,7 +2426,7 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
         check_playback_at_open(screen, [&check](bool ok, const godot::String& what) { check.expect(ok, what); });
         check_markers_at_open(check, screen);
         check_with_history(check, screen, options);
-        const HistoryReport report = read_history_report(options.history_report);
+        const HistoryReport report = read_history_report(options.history_report, model->get_world_path());
         if (report.problem.empty()) {
             check_markers(check, screen, options, report);
         }
@@ -2282,8 +2441,13 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
         check_playback(screen, options, [&check](bool ok, const godot::String& what) { check.expect(ok, what); });
         godot::UtilityFunctions::print("UNMAPPED-CHECK: info: playback checks ",
                                        num((usec_now() - playback_start) / 1000), " ms");
+    } else if (options.expect_history == "library") {
+        check.expect(model->has_history(), "the library world has a history");
     } else if (!options.expect_history.is_empty()) {
-        check.expect(false, "--expect-history " + options.expect_history + ": expected none or loaded");
+        check.expect(false, "--expect-history " + options.expect_history + ": expected none, loaded or library");
+    }
+    if (options.expect_library > 0 && model->has_history()) {
+        check_library(check, screen, options.expect_library);
     }
 
     // The reader's distinct errors reach Godot as code and message.
@@ -2299,7 +2463,7 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
                      godot::String(what) + ": " + code + ": " + message);
     };
     expect_open_error(options.reference_dir.path_join("no-such-world.db"), "file_unreadable", "missing file");
-    if (layer_count > 0) {
+    if (layer_count > 0 && !library_only) {
         const godot::String layer_name = model->get_view_info(0)["name"];
         expect_open_error(options.reference_dir.path_join(layer_name + godot::String(".png")), "not_sqlite",
                           "PNG file opened as a world");
