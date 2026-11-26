@@ -855,6 +855,9 @@ std::string site_marker_text(const HistoryState& history, const worldgen::inspec
     if (row != nullptr) {
         text += ", since " + std::to_string(row->origin_year);
     }
+    if (m.kind == 3) {
+        text += history.mine_depth_text(m.site);  // P5-07 11.2 item 1
+    }
     return text;
 }
 
@@ -1137,6 +1140,7 @@ godot::String ViewerModel::describe_marker(int64_t index) const {
             text += ", " + std::string(worldgen::history::settlement_status_word(s.status)) + ", population " +
                     std::to_string(s.population) + " recorded in " + std::to_string(s.since) + ", founded in " +
                     std::to_string(s.founded);
+            text += history_.warren_text(s.settlement);  // P5-07 11.2 item 4
         } else {
             // P5-06 25.1 (e): a status 3 entry of type faded is an old ruin.
             const char* word = ref.type != MarkerType::faded ? ", ruin of a "

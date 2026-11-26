@@ -421,6 +421,7 @@ private:
     int64_t check_expect_passes_ = -1;
     int64_t check_expect_mines_ = -1;
     int64_t check_expect_library_ = -1;
+    bool check_expect_depths_ = false;  // P5-07 11.2: checks M13 and M14 must find their cases
     double start_zoom_ = 0.0;
     int64_t start_centre_x_ = -1;
     int64_t start_centre_y_ = -1;

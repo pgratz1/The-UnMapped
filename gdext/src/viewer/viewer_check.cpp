@@ -1166,6 +1166,95 @@ std::string id_list(const std::vector<int64_t>& v) {
     return out + "]";
 }
 
+// P5-07 11.2, from the check's own read of the events: the depth words, and
+// per mine site and per warren settlement the (year, depth) of its
+// deepenings and the year its horror was sealed (-1 none).
+const char* depth_word(int64_t d) {
+    return d == 1 ? "below daylight" : d == 2 ? "to the mountain's roots" : d == 3 ? "to the old deep" : "";
+}
+
+struct DeepRecord {
+    std::vector<std::pair<int64_t, int64_t>> deepenings;  // (year, depth), event order
+    int64_t monster = 0;
+    int64_t sealed = -1;
+};
+
+struct DeepWorld {
+    std::map<int64_t, DeepRecord> mines;    // by site
+    std::map<int64_t, DeepRecord> warrens;  // by settlement
+    int64_t lost = 0;                       // hold_lost events
+};
+
+DeepWorld read_deep(const worldgen::history::LoadedHistory& h) {
+    DeepWorld w;
+    const auto& cat = h.view.catalogue();
+    const auto* deepened = cat.find("delving_deepened");
+    const auto* woken = cat.find("deep_woken");
+    const auto* sealed = cat.find("deep_sealed");
+    const auto* delved = cat.find("warren_delved");
+    const auto* wsealed = cat.find("warren_sealed");
+    const auto* lost = cat.find("hold_lost");
+    if (deepened == nullptr || woken == nullptr || sealed == nullptr || delved == nullptr || wsealed == nullptr) {
+        return w;
+    }
+    const auto participant = [](const worldgen::history::HistoryView::Event& e, const worldgen::history::KindDef& k,
+                                const char* role) -> int64_t {
+        const auto* r = k.find_role(role);
+        for (const auto& p : e.participants) {
+            if (r != nullptr && p.role == r->seq) {
+                return p.entity_id;
+            }
+        }
+        return 0;
+    };
+    const auto value = [](const worldgen::history::HistoryView::Event& e, const worldgen::history::KindDef& k,
+                          const char* key) -> int64_t {
+        const int64_t seq = k.value_seq(key);
+        return seq >= 1 && static_cast<std::size_t>(seq) <= e.values.size() ? e.values[static_cast<std::size_t>(seq - 1)]
+                                                                            : 0;
+    };
+    std::map<int64_t, int64_t> sealed_of;  // monster -> year of its sealing
+    for (const auto& e : h.view.events()) {
+        const int64_t k = e.row.kind;
+        if (k == deepened->id) {
+            w.mines[participant(e, *deepened, "site")].deepenings.emplace_back(e.row.year, value(e, *deepened, "depth"));
+        } else if (k == delved->id) {
+            w.warrens[e.row.settlement].deepenings.emplace_back(e.row.year, value(e, *delved, "depth"));
+        } else if (k == woken->id) {
+            const int64_t site = participant(e, *woken, "site");
+            DeepRecord& r = site != 0 ? w.mines[site] : w.warrens[e.row.settlement];
+            r.monster = participant(e, *woken, "monster");
+        } else if (k == sealed->id || k == wsealed->id) {
+            const int64_t m = participant(e, k == sealed->id ? *sealed : *wsealed, "monster");
+            if (sealed_of.find(m) == sealed_of.end()) {
+                sealed_of[m] = e.row.year;
+            }
+        } else if (lost != nullptr && k == lost->id) {
+            ++w.lost;
+        }
+    }
+    for (auto* records : {&w.mines, &w.warrens}) {
+        for (auto& [key, r] : *records) {
+            const auto it = sealed_of.find(r.monster);
+            r.sealed = r.monster != 0 && it != sealed_of.end() ? it->second : -1;
+        }
+    }
+    return w;
+}
+
+// The hover suffix of 11.2 items 1 and 4 at year y.
+std::string deep_suffix(const DeepRecord& r, int64_t y, const char* lead) {
+    int64_t depth = 0;
+    for (const auto& [year, d] : r.deepenings) {
+        depth = year <= y && d > depth ? d : depth;
+    }
+    std::string out = depth >= 1 ? std::string(lead) + depth_word(depth) : std::string();
+    if (r.sealed >= 0 && r.sealed <= y) {
+        out += ", sealed in " + std::to_string(r.sealed);
+    }
+    return out;
+}
+
 // M10 (P5-04 11.3): mines. The sites of kind 3 of table site, by the
 // half-open rule of P3-04 10, against the model's entries at a few years;
 // draw order, glyph, fill and offset of the entries; the hover text; the
@@ -1302,7 +1391,8 @@ void check_mines(Checker& check, ViewerScreen& screen, const ViewerCheckOptions&
             row != nullptr ? lib.history->view.name(worldgen::history::EntityType::civilization, row->founder_civ) : nullptr;
         const std::string want = (name != nullptr ? *name : std::string("?")) + " (mine of " +
                                  (civ != nullptr ? *civ : std::string("?")) + "), since " +
-                                 (row != nullptr ? std::to_string(row->origin_year) : std::string("?"));
+                                 (row != nullptr ? std::to_string(row->origin_year) : std::string("?")) +
+                                 deep_suffix(read_deep(*lib.history).mines[id], model->get_year(), ", delved ");
         const godot::String text = model->describe_marker(first_site_entry);
         check.expect(to_utf8(text) == want, "M10 describe_marker of the mine site " + num(id) + ": " + text +
                                                 (to_utf8(text) == want ? godot::String() : ", expected " + to_godot(want)));
@@ -1588,6 +1678,192 @@ void check_library(Checker& check, ViewerScreen& screen, int64_t site_id) {
         check.expect(library < 0, "M12 library " + num(row->id) + " is gone in its end year " + num(*row->ended_year));
     } else {
         godot::UtilityFunctions::print("UNMAPPED-CHECK: info: M12 library ", row->id, " stands at the end");
+    }
+    model->set_year(end);
+}
+
+// M13 (P5-07 11.2 item 1): a mine's hover gains ", delved <word>" from its
+// first deepening and ", sealed in <year>" from its horror's sealing: the
+// deepest mine (smallest id) before its first deepening, at each deepening
+// and at its last open year; the first sealed mine the year before and the
+// year of its sealing. M14 (item 4): the same for the deepest warren of a
+// standing settlement, ", warrens delved <word>". With --expect-depths each
+// case must exist.
+void check_depths(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    const LibraryWorld lib = open_library_world(model->get_world_path());
+    if (!lib.problem.empty()) {
+        check.expect(false, "M13 the check reads the world: " + to_godot(lib.problem));
+        return;
+    }
+    const DeepWorld deep = read_deep(*lib.history);
+    const int64_t end = model->get_end_year();
+    // The hover text of entry (type, id) at y, or "(no entry)".
+    const auto hover = [&model](bool site, int64_t id, int64_t y) -> std::string {
+        model->set_year(y);
+        const godot::Array markers = model->get_markers();
+        for (int64_t i = 0; i < markers.size(); ++i) {
+            const godot::Dictionary m = markers[i];
+            const godot::String type = m["type"];
+            if ((site ? type == "site" : type == "standing") && int64_t(m["id"]) == id) {
+                return to_utf8(model->describe_marker(i));
+            }
+        }
+        return "(no entry)";
+    };
+    // The text must end in the suffix and hold no other depth or seal part.
+    const auto fits = [](const std::string& text, const std::string& suffix, const char* lead) {
+        if (text.size() < suffix.size() || text.compare(text.size() - suffix.size(), suffix.size(), suffix) != 0) {
+            return false;
+        }
+        const std::string head = text.substr(0, text.size() - suffix.size());
+        return head.find(lead) == std::string::npos && head.find(", sealed in ") == std::string::npos &&
+               head != "(no entry)";
+    };
+    struct Case {
+        bool site;
+        const char* name;
+        const char* lead;
+        const std::map<int64_t, DeepRecord>* records;
+    };
+    const Case cases[] = {{true, "M13 mine", ", delved ", &deep.mines}, {false, "M14 warren", ", warrens delved ", &deep.warrens}};
+    for (const Case& c : cases) {
+        // Open (or standing) years of the entity, from the check's own tables.
+        const auto span = [&](int64_t id) -> std::pair<int64_t, int64_t> {
+            if (c.site) {
+                for (const auto& s : lib.history->tables.sites) {
+                    if (s.id == id) {
+                        return {s.origin_year, s.ended_year ? *s.ended_year - 1 : end};
+                    }
+                }
+                return {0, -1};
+            }
+            const auto state_end = [&](int64_t y) {
+                return lib.history->timeline.settlement_state(id, y).status;
+            };
+            // The last year the settlement stands, searched down from E.
+            int64_t last = end;
+            while (last >= 0 && (state_end(last) == 0 || state_end(last) >= 3)) {
+                --last;
+            }
+            int64_t first = last;
+            while (first > 0 && state_end(first - 1) != 0 && state_end(first - 1) < 3) {
+                --first;
+            }
+            return {first, last};
+        };
+        int64_t best = 0;
+        int64_t best_depth = 0;
+        int64_t sealed_id = 0;
+        for (const auto& [id, r] : *c.records) {
+            if (id == 0) {
+                continue;
+            }
+            int64_t d = 0;
+            for (const auto& p : r.deepenings) {
+                d = std::max(d, p.second);
+            }
+            const auto [from, to] = span(id);
+            if (d > best_depth && !r.deepenings.empty() && r.deepenings.front().first <= to) {
+                best = id;
+                best_depth = d;
+            }
+            if (sealed_id == 0 && r.sealed >= 0 && r.sealed - 1 >= from && r.sealed <= to) {
+                sealed_id = id;
+            }
+        }
+        const std::string what = std::string(c.name);
+        if (best == 0) {
+            check.expect(!options.expect_depths, to_godot(what) + ": none delved in this world" +
+                                                     (options.expect_depths ? " (--expect-depths)" : ""));
+        } else {
+            const DeepRecord& r = c.records->at(best);
+            const auto [from, to] = span(best);
+            std::vector<int64_t> years;
+            if (r.deepenings.front().first - 1 >= from) {
+                years.push_back(r.deepenings.front().first - 1);
+            }
+            for (const auto& p : r.deepenings) {
+                if (p.first <= to) {
+                    years.push_back(p.first);
+                }
+            }
+            years.push_back(to);
+            std::string wrong;
+            for (const int64_t y : years) {
+                const std::string text = hover(c.site, best, y);
+                const std::string suffix = deep_suffix(r, y, c.lead);
+                if (!fits(text, suffix, c.lead) && wrong.empty()) {
+                    wrong = "in " + std::to_string(y) + " '" + text + "', expected the ending '" + suffix + "'";
+                }
+            }
+            check.expect(wrong.empty(), to_godot(what) + (c.site ? " site " : " of settlement ") + num(best) + " (depth " + num(best_depth) + ") at " +
+                                            num(static_cast<int64_t>(years.size())) +
+                                            " years: the hover's depth part follows its deepenings" +
+                                            (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+        }
+        if (sealed_id == 0) {
+            check.expect(!options.expect_depths || !c.site, to_godot(what) + ": none sealed while open the year before" +
+                                                               (options.expect_depths && c.site ? " (--expect-depths)" : ""));
+        } else {
+            const DeepRecord& r = c.records->at(sealed_id);
+            std::string wrong;
+            for (const int64_t y : {r.sealed - 1, r.sealed}) {
+                const std::string text = hover(c.site, sealed_id, y);
+                const std::string suffix = deep_suffix(r, y, c.lead);
+                if (!fits(text, suffix, c.lead) && wrong.empty()) {
+                    wrong = "in " + std::to_string(y) + " '" + text + "', expected the ending '" + suffix + "'";
+                }
+            }
+            check.expect(wrong.empty(), to_godot(what) + (c.site ? " site " : " of settlement ") + num(sealed_id) + ": ', sealed in " + num(r.sealed) +
+                                            "' from its sealing year, not the year before" +
+                                            (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+        }
+    }
+    godot::UtilityFunctions::print("UNMAPPED-CHECK: info: M13 hold_lost events: ", deep.lost);
+    // M15 (P5-07 11.1, 11.2 item 4 of the brief): each kind 93 to 99 the
+    // world has: its first event is listed by the browser under the group
+    // of 11.1 at level full and has a place square.
+    {
+        const std::pair<const char*, const char*> groups[] = {
+            {"delving_deepened", "settlements"}, {"deep_woken", "monsters"},  {"deep_sealed", "monsters"},
+            {"hold_lost", "monsters"},           {"ally_aided_hold", "alliances"}, {"warren_delved", "settlements"},
+            {"warren_sealed", "monsters"}};
+        model->set_browser_scope("all");
+        model->set_browser_level("full");
+        std::string wrong;
+        int64_t kinds = 0;
+        for (const auto& [key, group] : groups) {
+            const auto* kind = lib.history->view.catalogue().find(key);
+            int64_t first = 0;
+            for (const auto& e : lib.history->view.events()) {
+                if (kind != nullptr && e.row.kind == kind->id) {
+                    first = e.row.id;
+                    break;
+                }
+            }
+            if (first == 0) {
+                continue;
+            }
+            ++kinds;
+            model->set_browser_group(group);
+            const godot::PackedInt64Array ids = model->get_event_ids();
+            bool listed = false;
+            for (int64_t i = 0; i < ids.size(); ++i) {
+                listed = listed || ids[i] == first;
+            }
+            const godot::Vector2i place = model->get_event_detail(first)["place"];
+            if ((!listed || place.x < 0) && wrong.empty()) {
+                wrong = std::string(key) + " e" + std::to_string(first) + (listed ? "" : " not listed under ") +
+                        (listed ? "" : group) + (place.x < 0 ? " has no place" : "");
+            }
+        }
+        model->set_browser_group("all");
+        model->set_browser_level("summary");
+        check.expect(wrong.empty() && (kinds >= 4 || !options.expect_depths),
+                     "M15 the first event of each of the " + num(kinds) +
+                         " depth kinds (93 to 99) present is listed under its group and has a place" +
+                         (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
     }
     model->set_year(end);
 }
@@ -2442,12 +2718,15 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
         godot::UtilityFunctions::print("UNMAPPED-CHECK: info: playback checks ",
                                        num((usec_now() - playback_start) / 1000), " ms");
     } else if (options.expect_history == "library") {
-        check.expect(model->has_history(), "the library world has a history");
+        check.expect(model->has_history(), "the world has a history (library or depths world)");
     } else if (!options.expect_history.is_empty()) {
         check.expect(false, "--expect-history " + options.expect_history + ": expected none, loaded or library");
     }
     if (options.expect_library > 0 && model->has_history()) {
         check_library(check, screen, options.expect_library);
+    }
+    if ((options.expect_depths || options.expect_history == "loaded") && model->has_history()) {
+        check_depths(check, screen, options);  // P5-07 11.2: M13, M14
     }
 
     // The reader's distinct errors reach Godot as code and message.

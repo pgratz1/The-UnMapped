@@ -1424,6 +1424,62 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         model->set_browser_level("summary");
     }
 
+    // B15 (P5-07 11.2 item 3, 12 item 4): the allies lines at full are
+    // tagged references: one untagged link per ally line, "c<id>" over
+    // "c<id> <name>" from column 4; following the first selects that realm.
+    {
+        model->set_browser_level("full");
+        std::string problem = "no block with 'allies: <n>' above 0";
+        int64_t links = 0;
+        int64_t first = 0;
+        for (const auto& b : full.blocks) {
+            std::size_t at = b.lines.size();
+            for (std::size_t i = 0; i < b.lines.size() && at == b.lines.size(); ++i) {
+                if (b.lines[i].rfind("  allies: ", 0) == 0 && b.lines[i] != "  allies: 0") {
+                    at = i;
+                }
+            }
+            if (at == b.lines.size()) {
+                continue;
+            }
+            problem.clear();
+            const godot::Array block = model->get_civilization_block(b.id);
+            for (std::size_t i = at + 1; i < b.lines.size() && b.lines[i].rfind("    c", 0) == 0; ++i) {
+                const std::string& line = b.lines[i];
+                const std::size_t space = line.find(' ', 5);
+                const std::size_t colon = line.find(": ", 5);
+                const std::string tag = line.substr(4, space == std::string::npos ? 0 : space - 4);
+                const std::string covered = colon == std::string::npos ? std::string() : line.substr(4, colon - 4);
+                const godot::Dictionary d =
+                    static_cast<int64_t>(i) < block.size() ? godot::Dictionary(block[static_cast<int64_t>(i)]) : godot::Dictionary();
+                const godot::Array l = d.get("links", godot::Array());
+                const godot::Dictionary k = l.size() == 1 ? godot::Dictionary(l[0]) : godot::Dictionary();
+                const godot::String text = d.get("text", godot::String());
+                const bool ok = l.size() == 1 && to_utf8(k.get("target", "")) == tag &&
+                                int64_t(k.get("start", -1)) == 4 && !bool(k.get("tagged", true)) &&
+                                escape(to_utf8(text.substr(4, int64_t(k.get("length", 0))))) == covered;
+                if (!ok && problem.empty()) {
+                    problem = "c" + std::to_string(b.id) + " line " + std::to_string(i) + " '" + line + "': " +
+                              std::to_string(l.size()) + " links " + to_utf8(godot::Variant(l).stringify());
+                }
+                if (first == 0 && tag.size() > 1) {
+                    first = std::stoll(tag.substr(1));
+                }
+                ++links;
+            }
+            break;
+        }
+        const bool followed = first != 0 && model->follow_link("c" + num(first)) &&
+                              int64_t(selection(*model.ptr())["entity_id"]) == first &&
+                              int64_t(selection(*model.ptr())["entity_type"]) == 3;
+        expect(problem.empty() && links > 0 && followed,
+               "B15 a realm's " + num(links) + " allies lines each carry one link over 'c<id> <name>' to the ally; "
+               "following the first selects c" + num(first) +
+                   (problem.empty() ? godot::String() : ": " + to_godot(problem)));
+        model->clear_selection();
+        model->set_browser_level("summary");
+    }
+
     model->disconnect("year_changed", on_year);
     model->disconnect("event_list_changed", on_list);
     model->disconnect("highlight_changed", on_highlight);
