@@ -19032,24 +19032,24 @@ synthetic syn-9 9 6000 all 4 normal
 syn-9 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
 syn-9 table beast_population 2cf0cee264af316dee3cfc3f0297696cc21a46b812d0161b3f1cd16c28567c47
 syn-9 table civilization 3e8672329d82db6a90d7cf507a152c7fba0c365b30c2375551e43e5e2bdd37c6
-syn-9 table event 6e31eac9372f2aac8c855e25b701e71becd36bb861f3438b6f3abff1851ac214
-syn-9 table event_cause e4b945e1aa4af63295873d5734ffb1c4210b28d3394266f0e622406086adf673
+syn-9 table event 56706657ec304e29e185a99b387f7b5113bb3c46aa601f6da27c335eadc66063
+syn-9 table event_cause a3b04e8b765497743fad57d62c2100e324bc0f01819b5e707afb1c8760c1a2f1
 syn-9 table event_kind 818b4e8a259b6798779e1771c833f41f4f4becc685430a8bcf896b93ff8e4310
 syn-9 table event_kind_role 82a93e2a95db60db04356d2d3602ddc8c215fb622ee7a0be2d9441031afac4c0
 syn-9 table event_kind_value dc0787b6cb77b51fe8e9321516d7d738c432696978c46ba81cd76a3fa2a4d7dc
-syn-9 table event_participant 461d9e88926466fd6bb896fe4ec4ae3797401398250f287618954ad13245274e
-syn-9 table event_value ec77a70c46c48f4c2948d53549bcbda945094ab9f52c54db62871c03507ff8c4
+syn-9 table event_participant 7b24bff265fab634aae887d2422374bcb382a62b673d21273a4a75826ec5b441
+syn-9 table event_value 2e1642dc10a68f9a86d9f2f93440c1772fc2ca558e66a5f0b477906a325b3568
 syn-9 table monster 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
 syn-9 table monster_kind d617606cf331d6d79529708d3ea31e185a63fa34cd01b6b022cb78d1674e7c76
 syn-9 table phase 9f6fdccc8e68fda6f6c84604de4f573f7d6bd351939947355d26a9a34cd96f02
 syn-9 table race_relation c4a14e2e5672b7cf42d97fcebf2dad91e1d39c2b6cd2d1b1c692b904a1896bf4
 syn-9 table region_control 29afb8bb2bb22ff8ec995174b519b09277c815278222d44b94a8b3fd5aa0413a
 syn-9 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-syn-9 table relation 4f643c86880b308b603163ccc1d3e7288f00a0d0f17b7880c96b48f77d1d0e1a
-syn-9 table settlement 4752de2ab54c84709ab9646b50e85b40a65b19d47e0a0064c06f36bfc120f745
+syn-9 table relation d5ec806e1f5c94e90209ab7ba44fa4821b9736f6e7507ff83b4ab7c28d204288
+syn-9 table settlement f09881acae6fdd5154778540f9882dd7a18144789cc7939ce7d530407a0d8747
 syn-9 table settlement_census 105d4a54ba653693716b0ee1bf436c428e13df1fca235153bbc166d8836bfad1
 syn-9 table settlement_race b175efa0ac3da2eb9b2c7442891143d8657c1e8d19c361dafa55d87d358efeaa
-syn-9 table site 92321eb5cb4ae734dfe0e1dc755b536d19696b933beea3b03acc6744b3775cee
+syn-9 table site 123b00c01b83cdf4af6ca9f6eb1de11efc945d820c077a8f9bd92a146a4ced00
 syn-9 report end_year = 6000
 syn-9 report phases_opening = 6
 syn-9 report phases_quiet = 6
@@ -19057,7 +19057,7 @@ syn-9 report phases_flare = 1
 syn-9 report phases_final = 1
 syn-9 report simulated_years = 1211
 syn-9 report simulated_permille = 201
-syn-9 report events = 173
+syn-9 report events = 176
 syn-9 report events_awakening = 6
 syn-9 report events_civ_founded = 6
 syn-9 report events_settlement_founded = 6
@@ -19138,9 +19138,9 @@ syn-9 report events_mine_opened = 1
 syn-9 report events_arms_sold = 1
 syn-9 report events_came_to_rule = 6
 syn-9 report events_figure_died = 21
-syn-9 report events_succession_disputed = 1
-syn-9 report events_exiled = 1
-syn-9 report events_reigned_at_end = 6
+syn-9 report events_succession_disputed = 3
+syn-9 report events_exiled = 3
+syn-9 report events_reigned_at_end = 4
 syn-9 report events_general_appointed = 5
 syn-9 report events_battle_led = 11
 syn-9 report events_fell_in_battle = 1
@@ -19148,7 +19148,7 @@ syn-9 report events_hero_rose = 0
 syn-9 report events_monster_slain_by_hero = 0
 syn-9 report events_hero_slain = 0
 syn-9 report events_tower_founded = 3
-syn-9 report events_book_written = 3
+syn-9 report events_book_written = 4
 syn-9 report events_blight = 1
 syn-9 report civilizations = 6
 syn-9 report civilizations_alive = 6
@@ -19156,7 +19156,7 @@ syn-9 report settlements = 9
 syn-9 report settlements_standing = 8
 syn-9 report regions_held = 5
 syn-9 report census_rows = 111
-syn-9 report relations = 49
+syn-9 report relations = 51
 syn-9 report region_names = 0
 syn-9 report beasts = 5
 syn-9 report monster_kinds = 6
@@ -19419,7 +19419,7 @@ syn-9 note e91 Claimed since 4542. The second war between them.
 syn-9 note e101 The claim, since 4867, was to Fanvia in Synthetic 17. The second war between them.
 syn-9 note e125 Claimed since 5337. The third war between them.
 syn-9 note e137 The claim, since 5487, was to Fanvia in Synthetic 17. The third war between them.
-syn-9 summary threshold 20 shown 125 ages 9,8,9,34,23,42
+syn-9 summary threshold 20 shown 130 ages 9,8,9,34,23,47
 syn-9 e1 Lisael awakened the Elves in Synthetic 17.
 syn-9 e2 The Elves founded the House of Motheme in Synthetic 17.
 syn-9 e3 The House of Motheme founded Ciendae in Synthetic 17.
@@ -19566,33 +19566,36 @@ syn-9 e143 After the first meeting of their peoples, the Dreek-Drox Mob and the 
 syn-9 e144 Mysee of the Wigliesk Ring raised Mysee's Moonspire in Synthetic 17.
 syn-9 e145 A succession crisis at Kourn Hold shook the Hold of Minkholi.
 syn-9 e146 A succession crisis at Rontwick shook the Asheam League.
-syn-9 e147 A succession crisis at Geeg shook the Dreek-Drox Mob.
-syn-9 e148 A succession crisis at Rontwick shook the Asheam League.
-syn-9 e149 Mysee of the Wigliesk Ring died at the age of 352.
-syn-9 e150 Sedashad of the Asheam League raised Sedashad's Tower in Synthetic 31.
-syn-9 e151 Famine struck Kourn Hold; 134 died.
-syn-9 e152 Plague broke out in Kourn Hold and spread to one other settlement; 81 died in all.
-syn-9 e153 The plague spread to Dangrod Deep; 17 died.
-syn-9 e154 Famine struck Ciendae; 25 died.
-syn-9 e155 Sedashad of the Asheam League died at the age of 73.
-syn-9 e156 After long years of trade, the Dreek-Drox Mob and the Kogh'krakh Horde swore friendship and alliance.
-syn-9 e157 A succession crisis at Kam shook the Kogh'krakh Horde.
-syn-9 e158 Famine struck Heldwick; 70 died.
-syn-9 e159 Weakened by famine, Heldwick was abandoned; 266 survivors went to Rontwick, and 65 were lost.
-syn-9 e160 Rontwick grew into a town of 1,501.
-syn-9 e161 Plague broke out in Rontwick; 310 died.
-syn-9 e162 A succession crisis at Fanvia shook the Wigliesk Ring.
-syn-9 e163 Mitheve of the House of Motheme died at the age of 542.
-syn-9 e164 Famine struck Kourn Hold; 109 died.
-syn-9 e165 Plague broke out in Rontwick; 218 died.
-syn-9 e166 Plague broke out in Kam; 60 died.
-syn-9 e167 A succession crisis at Ciendae shook the House of Motheme.
-syn-9 e168 At the end of the age the House of Motheme was ruled by Evaco.
-syn-9 e169 At the end of the age the Dreek-Drox Mob was ruled by Neex.
-syn-9 e170 At the end of the age the Hold of Minkholi was ruled by Drilithrik.
-syn-9 e171 At the end of the age the Wigliesk Ring was ruled by Teetwa.
-syn-9 e172 At the end of the age the Asheam League was ruled by Edul.
-syn-9 e173 At the end of the age the Kogh'krakh Horde was ruled by Uraz.
+syn-9 e147 Mysee wrote the Dew-Book at Mysee's Moonspire.
+syn-9 e148 A succession crisis at Geeg shook the Dreek-Drox Mob.
+syn-9 e149 A succession crisis at Rontwick shook the Asheam League.
+syn-9 e150 Mysee of the Wigliesk Ring died at the age of 352.
+syn-9 e151 Sedashad of the Asheam League raised Sedashad's Tower in Synthetic 31.
+syn-9 e152 Famine struck Kourn Hold; 134 died.
+syn-9 e153 Plague broke out in Kourn Hold and spread to one other settlement; 81 died in all.
+syn-9 e154 The plague spread to Dangrod Deep; 17 died.
+syn-9 e155 Famine struck Ciendae; 25 died.
+syn-9 e156 Sedashad of the Asheam League died at the age of 73.
+syn-9 e157 After long years of trade, the Dreek-Drox Mob and the Kogh'krakh Horde swore friendship and alliance.
+syn-9 e158 A succession crisis at Kam shook the Kogh'krakh Horde.
+syn-9 e159 Famine struck Heldwick; 70 died.
+syn-9 e160 Weakened by famine, Heldwick was abandoned; 266 survivors went to Rontwick, and 65 were lost.
+syn-9 e161 Rontwick grew into a town of 1,501.
+syn-9 e162 Plague broke out in Rontwick; 310 died.
+syn-9 e163 A succession crisis at Fanvia shook the Wigliesk Ring.
+syn-9 e164 Fonfy took the throne of the Wigliesk Ring against the claim of Wiathgly the Exile, who was driven out.
+syn-9 e165 Wiathgly the Exile, who had claimed the throne of the Wigliesk Ring, went into exile with the House of Motheme.
+syn-9 e166 Mitheve of the House of Motheme died at the age of 542.
+syn-9 e167 Famine struck Kourn Hold; 109 died.
+syn-9 e168 Plague broke out in Rontwick; 218 died.
+syn-9 e169 Plague broke out in Kam; 60 died.
+syn-9 e170 A succession crisis at Ciendae shook the House of Motheme.
+syn-9 e171 Faethsie took the throne of the House of Motheme against the claim of Eslann, who was driven out.
+syn-9 e172 Eslann, who had claimed the throne of the House of Motheme, went into exile with the Wigliesk Ring.
+syn-9 e173 At the end of the age the Dreek-Drox Mob was ruled by Sniskagg.
+syn-9 e174 At the end of the age the Hold of Minkholi was ruled by Mirdmuk.
+syn-9 e175 At the end of the age the Asheam League was ruled by Edean.
+syn-9 e176 At the end of the age the Kogh'krakh Horde was ruled by Kozgrukh.
 synthetic syn-10 10 2000 elf,goblin 4 calm
 syn-10 table beast c25e2e4a197b47019e76356208b3f8661a616f157f30dc5973016ebdab6108da
 syn-10 table beast_population 8c32594aed6577b84d536e4de8fca322835dcbcafa3280cdcff242b04d21a2db
@@ -24753,7 +24756,7 @@ stress-9 table relation 1a6cc2b662e3c42cee925d18313c55d7e4b74633eb2d8182421c1671
 stress-9 table settlement 5893aae37707644b42f928466008bd660b9953348c4bbbf9d4f8f696f1d79de0
 stress-9 table settlement_census 9cfce060aedbe7e8e97083cdef3cb75799aede027c371cff76b9017416642f50
 stress-9 table settlement_race 5df95e05393bf6cfe74ed4b4419cbc3f60296f4e6bec289345b5ac73260476bc
-stress-9 table site ba6fddec60733d57813babdd2cee150d09965d63f0148847b3a446801da2bd18
+stress-9 table site 90334c1e1db90158347f2d45fe9e45926eb9216c271e42a2bf6c4b0400204d98
 stress-9 report end_year = 6000
 stress-9 report phases_opening = 6
 stress-9 report phases_quiet = 8

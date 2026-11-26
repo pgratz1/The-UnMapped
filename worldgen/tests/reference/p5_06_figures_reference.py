@@ -1185,6 +1185,11 @@ class Figures:
                 ev, ending = w.owner[R][1], 4
             else:
                 continue
+            # The engine's reading (P5-04a integration part 3; spec 21.4 is silent): an ending event older than the
+            # site (a tower raised in a region its realm did not own) waits for the next change of owner, so that
+            # ended_year is never below origin_year.
+            if not ev or w.events[ev - 1]["year"] < site.get("origin_year", 0):
+                continue
             m.end_site(site["id"], ev, ending, year=w.events[ev - 1]["year"])
             self.log.append((w.year, "tower-ended", site["id"], ending, ev))
 
@@ -2674,10 +2679,10 @@ def check_tower_units_028(c):
     c.eq("21.4 a rival's tower does not", height_cell(_Cells([(80, 81, 0, 9)]), 1, avoid, D), (80, 81))
 
     # endings, in the order of 21.4's table, on a stub of the run
-    def run(civ_ended, st, owner_R):
+    def run(civ_ended, st, owner_R, origin=1000):
         events = [dict(year=y) for y in (1100, 1200, 1300, 1400)]
         tower = dict(id=1, kind=SITE_TOWER, founder=1, settlement=st["id"] if st else 0, region=7, ending=0,
-                     ended_year=None, ending_event=0)
+                     ended_year=None, ending_event=0, origin_year=origin)
         ended = []
         mon = types.SimpleNamespace(sites=[tower],
                                     end_site=lambda sid, e, ending, year=None: ended.append((sid, e, ending, year)))
@@ -2698,6 +2703,11 @@ def check_tower_units_028(c):
     c.eq("21.4 wild tower: region lost: 4 with the region's owner event", run(False, None, (2, 3)), [(1, 3, 4, 1300)])
     c.eq("21.4 wild tower: region held: open", run(False, None, (1, 1)), [])
     c.eq("21.4 wild tower: realm fell and region lost: 5", run(True, None, (2, 3)), [(1, 4, 5, 1400)])
+    # integration part 3: a region lost before the tower was raised (event 3 of 1300, tower of 1350) waits
+    c.eq("21.4 wild tower raised in a region already lost: open until the next change of owner",
+         run(False, None, (2, 3), origin=1350), [])
+    c.eq("21.4 wild tower raised in a region lost the same year: ends", run(False, None, (2, 3), origin=1300),
+         [(1, 3, 4, 1300)])
 
 
 def reader_stub():

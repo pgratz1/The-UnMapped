@@ -533,7 +533,9 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         }
     }
     // 14
-    std::map<std::int64_t, std::int64_t> sold;
+    // Lead ruling (P5-04a integration part 3): at most one arms_sold per trade and ordered (seller, buyer) pair
+    // (6.13's set is ordered, so a trade between two realms that each hold a mine may sell once each way).
+    std::map<std::tuple<std::int64_t, std::int64_t, std::int64_t>, std::int64_t> sold;
     for (const std::int64_t a : r.of("arms_sold")) {
         const std::int64_t sl = r.one(a, "seller"), b = r.one(a, "buyer"), si = r.one(a, "site");
         const Row* m = r.site(si);
@@ -546,8 +548,8 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         }
         if (tr.size() != 1U) {
             out.push_back("14: arms_sold e" + s(a) + ": no open trade");
-        } else if (++sold[at(*tr[0], 7)] > 1) {
-            out.push_back("14: two arms sales on one trade");
+        } else if (++sold[std::make_tuple(at(*tr[0], 7), sl, b)] > 1) {
+            out.push_back("14: two arms sales by one seller to one buyer on one trade");
         }
         for (const Row& mm : w.rows.t.site) {
             if (at(mm, 2) == 3 && at(mm, 7) == b && at(mm, 10) < a && (is_null(mm, 11) || at(mm, 12) > a)) {

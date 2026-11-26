@@ -936,14 +936,14 @@ monsters-small-7 si60 lair rg12 108 140 s0 c0 m30 5975 e1772 - 0 | Nimm's Seat
 fixture monsters-small-9 9 6000 all auto normal monsters-small
 monsters-small-9 table beast_population 68 2cf0cee264af316dee3cfc3f0297696cc21a46b812d0161b3f1cd16c28567c47
 monsters-small-9 table monster 0 5fd1b79ebdef9619a57916a3bfc264b54d37a792659b3693f8ab36ec3ebce448
-monsters-small-9 table site 4 ba6fddec60733d57813babdd2cee150d09965d63f0148847b3a446801da2bd18
+monsters-small-9 table site 4 90334c1e1db90158347f2d45fe9e45926eb9216c271e42a2bf6c4b0400204d98
 monsters-small-9 ending 3cc8c964ff1a7a68f17c44d940d176bcd338dca127de8593bc4970034bc85a03
 monsters-small-9 M monsters 0 alive 0 slain 0 died 0 raids 0 killed 0 overruns 0 risen 0 lair_settlement_open 0
 monsters-small-9 G ghost 1 endings 0:8,4:1 standing 8 population 4354 shunned 0
 monsters-small-9 S outposts 0 ended 0 bold 0 monster_flares 0
 monsters-small-9 si1 outpost rg17 74 76 s0 c1 m0 33 e5 - 0 | The Star-Tower of Elerglae
 monsters-small-9 si2 outpost rg37 46 178 s4 c3 m0 3354 e104 - 0 | The Delvings of Kourn Hold
-monsters-small-9 si3 outpost rg17 69 92 s0 c4 m0 5671 e358 0 4 | Fiegly's Moonspire
+monsters-small-9 si3 outpost rg17 69 92 s0 c4 m0 5671 e358 - 0 | Fiegly's Moonspire
 monsters-small-9 si4 outpost rg31 12 161 s0 c5 m0 5769 e382 - 0 | Ashear's Tower
 fixture monsters-small-12 12 2000 goblin,human,orc 4 normal monsters-small
 monsters-small-12 table beast_population 238 3d9af5ccba575add4cbbf78cddc485ce98af7f7ff3471af57d3700c7b4e02e26

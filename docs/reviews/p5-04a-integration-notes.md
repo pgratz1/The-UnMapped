@@ -251,3 +251,54 @@ After the fixes the slow suite's only failing entry is `worldgen-tests-slow-alli
 `-figures`, `-conflict`, `-timeline`, `-markers`, `-browser`, `-renaming`, `-monsters`, the other `-slow-` entries and the
 CLI slow entries pass, the new `alliances-slow`, `relations-slow` and `figures-slow` cases of P5-04a included (except
 the seed 14 invariant).
+
+## Part 3: seed 9 of the conflict stress geographies; invariant 14
+
+### Seed 9: the reference ended a tower before it was raised
+
+First differing row, `stress-9`: `site` 3 (`Fiegly's Moonspire`, kind 4, a wild tower of c4 in region 17, raised in
+5671 by `tower_founded` e358). The engine leaves it open. The reference gives it `ended_year` 0, `ending_event` 2,
+`ending` 4. Region 17 was not c4's when the tower was raised, and the region's `owner_event` is e2 of year 0, so the
+reference's `tower_endings` (21.4, "tower in the wild: R's owner is not c") ended the tower on the event that had last
+changed the region's owner, which came before the tower existed. The same thing happens in `syn-9` (site 3, e144 of
+5671). There the open tower lets its caster write the `book_written` e147 of 5732, which the reference never wrote, so
+from that event on the event ids, a succession, relations and settlements all shift. `monsters-small-9` and
+`rename-small-9` are built on stress seed 9 and differ through `site` and `region_name`.
+
+Which side moved: **the reference.** Spec 21.4 does not say what happens when the ending event is older than the
+tower. Read literally it gives `ended_year` < `origin_year`. The engine's reading (impl notes, reading 2) is: **an
+ending event older than the tower (a tower raised in a region its realm did not own) waits for the next change of
+owner, so a tower never ends before its origin year.** The reference now skips an ending whose event is 0 or whose
+year is below the site's `origin_year`, as `FiguresSubsystem::tower_endings` does. Two unit checks cover it: a region
+lost before the tower was raised keeps the tower open, and a region lost in the tower's own year ends it
+(`p5_06_figures_reference.py units`: 149 checks, 0 failures). The spec writer should record the reading in 21.4.
+
+Goldens re-recorded with the references' own `golden` commands, as in Part 2's list (`p3_conflict`, `p5_12_renaming`,
+`p5_02_monsters`, `p5_03_relations`, `p3_peoples` with `--inputs $I`, and `p5_04_alliances`, `p5_06_figures` with
+`--inputs $RI`). Only three changed: `p3-06-conflict.txt` (syn-9 and stress-9), `p5-02-monsters.txt`
+(monsters-small-9) and `p5-12-renaming.txt` (rename-small-9). The new syn-9 event hash is 56706657..., the hash the
+C++ engine gave. **No engine change, so no world bytes change.**
+
+### Invariant 14 (lead ruling)
+
+Spec 6.13 keeps an ordered (seller, buyer) set, so a trade between two realms that each hold a mine may see one sale in
+each direction (1024 seed 14, trade e163). Invariant 14 is now "at most one `arms_sold` per trade and ordered (seller,
+buyer) pair". The change is in `p5_04_alliances_reference.py` (check-world) and in `p5_04_alliances_checks.hpp`, which
+serves both P5-04 18.2 and P5-04a 16 item 13. `check-world` on seed 14 now gives 0 failures, and
+`worldgen-tests-slow-alliances` passes. Spec P5-04 13 item 14 still reads "at most one per opened trade" and needs the
+same wording.
+
+### Files and results
+
+Files changed: `worldgen/tests/reference/p5_06_figures_reference.py`, `worldgen/tests/reference/p5_04_alliances_reference.py`,
+`worldgen/tests/history/p5_04_alliances_checks.hpp`, `worldgen/tests/golden/p3-06-conflict.txt`,
+`p5-02-monsters.txt`, `p5-12-renaming.txt`.
+
+Results:
+
+- `linux-gcc-release` builds with no warnings.
+- `ctest -R 'renaming|conflict|monsters|alliances|figures|relations' -LE slow`: 8 of 8 pass.
+- `-slow-alliances`: passes.
+- The full fast suite: 43 of 45 pass. The two failures are `worldgen-tests-other` and `worldgen-cli-tests-other`,
+  which compare world-file hashes only.
+- The determinism lint is clean.

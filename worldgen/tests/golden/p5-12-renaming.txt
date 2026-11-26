@@ -182,10 +182,10 @@ rename-small-7 rename 16 2314 plague culture 4 e263 cause e261 The Silent Steppe
 rename-small-7 rename 16 2616 slaughter culture 4 e370 cause e369 The Grim Steppe
 rename-small-7 rename_stats candidates 508 taken 16 dropped gap:75,region_max:107,weight:122,world:58
 fixture rename-small-9 9 6000 all auto normal rename-small
-rename-small-9 region_name 6 09db1345529a6725a23aa3f66d7d094d1422f02770f952c3be4e9f0c01add694
+rename-small-9 region_name 6 9f9401fc7b3e9c6fb252d8fd930f4b9a9381fe2c7e002268986ebe9daf96ad60
 rename-small-9 rename 17 2139 slaughter culture 2 e30 cause e29 The Wood of the Slain
 rename-small-9 rename 23 2138 slaughter culture 4 e26 cause e25 The Weeping Heath
-rename-small-9 rename 30 5982 plague culture 6 e403 cause e402 The Silent Mere
+rename-small-9 rename 30 5982 plague culture 6 e417 cause e416 The Pale Mere
 rename-small-9 rename 31 5000 slaughter culture 1 e268 cause e266 The Bloody Downs
 rename-small-9 rename 37 4151 plague culture 1 e140 cause e138 The Emptied Fells
 rename-small-9 rename 37 5004 slaughter culture 5 e280 cause e278 The Fells of the Slain

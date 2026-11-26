@@ -1162,10 +1162,12 @@ def invariant_violations(w, t, races):
         if len(tr) != 1:
             out.append("14: arms_sold e%d: no open trade of c%d and c%d" % (a, s_, b_))
         else:
-            k = tr[0][7]
+            # lead ruling (P5-04a integration part 3): 6.13's rule is per ordered (seller, buyer) pair, so a trade
+            # between two realms that each hold a mine may see one sale in each direction
+            k = (tr[0][7], s_, b_)
             sold[k] = sold.get(k, 0) + 1
             if sold[k] > 1:
-                out.append("14: two arms sales on trade e%d" % k)
+                out.append("14: two arms sales by c%d to c%d on trade e%d" % (s_, b_, k[0]))
         if any(m[7] == b_ and m[10] < a and (m[11] is None or m[12] > a) for m in mines):
             out.append("14: arms_sold e%d: the buyer c%d has an open mine" % (a, b_))
     return out
