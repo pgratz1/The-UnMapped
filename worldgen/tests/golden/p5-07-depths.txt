@@ -1,6 +1,8 @@
 # P5-07 16: golden values of the mountain depths (generator 0.29.0, schema 13), written by
 # worldgen/tests/reference/p5_07_depths_reference.py golden (the test writer's reference, never from C++ output).
 # Lines: case <name> <seed> <size> <data>; table <name> <sha256 of repr rows>; stat <key> <value>.
+# depths-forced (size 0: a conflict stress geography; worldgen/tests/data/depths/depths-forced.toml) also has
+# path forced_seal <year> <monster> <seal event> and path no_take <year> <monster> <settlement> (the replay's log).
 case depths-small-0-512 0 512 depths-small
 table site c7bf984b6a650bd216d010b96f18008ca473df3572cffbd8f36c0e81edd24a67
 table monster bad7bfbd3703a40f743307a1cba4a5dd238fe6b637f3e0bdbd72ac179b7c242d
@@ -210,3 +212,64 @@ stat warrens_woken 0
 stat warrens_sealed 0
 stat deep_aided 0
 stat wakings_aided 0
+case depths-forced-48 48 0 depths-forced
+table site c33a46e00202d9a9a36c715024c3c4774a37f52e773539d3c264e9218c9a3afa
+table monster 1a6f601ea980984adf030de35680930898b5391a6d5df2f22917a412a0adc53e
+table event 5b11c1a38e27a1a84a4e9639d63db766b13400eb89411806f68b37f4beb74936
+table event_value 734397386deaca85aee2781344b02c9d5fc9ed4b88d44c6248adc6f3e168ecfb
+stat mines_deepened 2
+stat mines_deepest 0
+stat deep_woken 5
+stat deep_sealed 1
+stat holds_lost 3
+stat deep_flights 0
+stat realms_lost_to_deep 0
+stat deep_alive 5
+stat warrens_delved 11
+stat warrens_deepest 3
+stat warrens_woken 4
+stat warrens_sealed 1
+stat deep_aided 0
+stat wakings_aided 0
+path forced_seal 734 7 38
+path forced_seal 1149 13 114
+path no_take 1115 10 2
+path no_take 1121 12 2
+path no_take 1138 12 2
+path no_take 1146 12 2
+case depths-forced-39 39 0 depths-forced
+table site 7b8e4fca476a44f5b6b39dbfb9b8ee5039ce9ce5c23ede1b17fb29edf782f34c
+table monster 5647e0f39d26b027600e2e7a779456a64a6844c7ed5467a320cea2c61afb2112
+table event 23e401ddd8382fa004f5f23d0b373670c94676417691e4a644aa978a47c43f24
+table event_value 9cff63179fca149afb64660eb51cfda78811cb63b33c6ca48152dd67a197be39
+stat mines_deepened 7
+stat mines_deepest 1
+stat deep_woken 3
+stat deep_sealed 1
+stat holds_lost 3
+stat deep_flights 0
+stat realms_lost_to_deep 1
+stat deep_alive 3
+stat warrens_delved 0
+stat warrens_deepest 0
+stat warrens_woken 0
+stat warrens_sealed 0
+stat deep_aided 0
+stat wakings_aided 0
+path forced_seal 49 8 38
+path no_take 4136 20 2
+path no_take 4161 20 2
+path no_take 4179 20 2
+path no_take 4184 20 2
+path no_take 4193 20 2
+path no_take 4201 20 2
+path no_take 4210 20 2
+path no_take 4215 20 2
+path no_take 4217 20 2
+path no_take 4224 20 2
+path no_take 4227 20 2
+path no_take 4229 20 2
+path no_take 4236 20 2
+path no_take 4238 20 2
+path no_take 5773 20 2
+path no_take 5776 20 2

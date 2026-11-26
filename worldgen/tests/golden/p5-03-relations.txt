@@ -164,7 +164,7 @@ relations-small-5 stat peoples_met_by_word 0
 relations-small-5 stat dispositions_warmed 0
 case relations-small-6 6 0 2000 all --civs-per-race 4 --event-intensity normal relations-small
 relations-small-6 table race_relation f85d57efc0f40915de87b1a4ca1f9752cf50ed1f2a5b941bd4097458abdcecb7
-relations-small-6 table settlement_race 359b18faf42d1291b28045fce7305ed29f260c753033320719287e838451ef4b
+relations-small-6 table settlement_race a59dc63b6bcd337d7e83ac616168e3edf61988baf052a42324df6fbf0f634460
 relations-small-6 events_settlement_fled 0
 relations-small-6 events_peoples_met 14
 relations-small-6 events_disposition_turned 11
@@ -173,7 +173,7 @@ relations-small-6 events_settlement_mixed 7
 relations-small-6 events_standing_changed 3
 relations-small-6 events_people_expelled 7
 relations-small-6 stat race_relations 102
-relations-small-6 stat settlement_races 125
+relations-small-6 stat settlement_races 123
 relations-small-6 stat race_pairs 15
 relations-small-6 stat race_pairs_met 14
 relations-small-6 stat dispositions_turned 11

@@ -161,3 +161,38 @@ schema 13, `DEFAULT_INPUTS_029`. `p4_timeline_reference.py`: fixture meta from `
 4. Known and left: H15 v6 milestone fact, three grant-chance units of `p5_04_alliances_reference.py units`, `p4_browser_reference.py check` T3.
 
 Rounds used: 8 build-and-test rounds, one full slow run, one rerun of the two slow entries that changed.
+
+## Part 3: the last two disagreements, and a hand fixture for the forced paths
+
+Test writer (Opus), 2026-11-26, `p5/07-int`. Fast suite: 50 of 52 pass (the two `-other` entries fail only on the world-file hash goldens, for validation); slow `history-report|depths|relations`: 3 of 3. **No engine change; no world byte and no report byte of the engine changed.**
+Every fix is on the test side (references, goldens, one new fixture and test file).
+
+1. **`relations-small-6` (`settlement_race`): the reference was wrong.** Engine and reference agree on every other
+   history table of the fixture; the reference had two extra rows, (18, 2, 1921, 1000, 3) and (18, 6, 1921, 0, 0).
+   In 1921 refugees of race 6 arrived at settlement 18 and were expelled again, and the reference wrote its rows
+   twice that year: the second write replaced the first in the table (P5-03 6.7: "same-year rows of one (s, g): the
+   later replaces the earlier") but was compared with the replaced row, not with the row before it. So it stored a
+   row equal to the previous row of (18, 2) (16.4: `equals the previous row`) and a first row of share 0 for race 6
+   (6.7: "never written"). The engine's `put_row` (`src/history/relations.cpp`) already drops both. Fix:
+   `p5_03_relations_reference.py` `put_row` (per key, the written rows in order; a same-year row replaces the last
+   and is dropped when it then equals the row before, or is a first row of share 0), used for `settlement_race` and
+   `race_relation`. Fixture data copies were not stale. `p5-03-relations.txt` re-recorded (`golden --version 0.29.0`).
+2. **e422 of `seed-0-1024`: the reference was wrong.** P5-07 8.2: "the forms `{m:aside}`, `{m:where}` and `{m:died}`
+   of a `deep` kind render as for `wild`", so the noun clause is right. `p3_engine_reference.py`'s render view mapped
+   `monster_kind.wake` as `1 -> wild, else dead`, so `wake` 3 read as dead. Now 1 wild, 2 dead, 3 deep. Report text
+   goldens re-recorded from the references: only `p3-07-report.txt` changed (`seed-0-1024` summary and full, now equal
+   to the C++ report's SHA-256); `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt`, `p5-04-alliances.txt`
+   and `p5-06-figures.txt` came out unchanged.
+3. **Hand fixture `depths-forced`** (`worldgen/tests/data/depths/depths-forced.toml`): depths-small with
+   `history.conflict.refuge_flight` 0 (7.3's flight has no plan for any last refuge) and
+   `history.monsters.deep_gate_levy_permille` 0 (S = 0 without aid, so every waking falls), on conflict stress
+   geographies 48 (span 2000, all races) and 39 (span 6000, dwarf and faerie). Reference replay: seed 48 has two
+   forced seals and four refused later takes, seed 39 one and sixteen. `p5_07_depths_reference.py golden` reads the
+   file and writes `case depths-forced-<seed> <seed> 0 depths-forced` with the four table hashes, the stats and new
+   `path forced_seal <year> <monster> <event>` / `path no_take <year> <monster> <settlement>` lines (the older
+   cases' lines unchanged). `history/history_depths_forced_test.cpp` (shard `depths`) runs the engine on the same
+   inputs and checks the tables, stats, 13's row invariants, no flight after a `hold_lost`, each forced seal (a seal
+   of that monster that year; that horror never takes a hold), each refused take (a raid of that monster on that
+   settlement that year with no `hold_lost` of it), and that both paths occur; plus a twice-run determinism case.
+   (The brief's "seal forced at the cap (`deep_takes_max`)" is read as the notes' "a seal forced (last refuge, no
+   flight plan, 6.5)": the cap on takes is not a seal path.)

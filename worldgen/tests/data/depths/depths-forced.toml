@@ -1,0 +1,38 @@
+# P5-07 hand fixture `depths-forced` (spec docs/specs/p5-07-mountain-depths.md r2, 6.5 and 6.6 item 2; integration
+# part 3, docs/reviews/p5-07-integration-notes.md). Read by worldgen/tests/reference/p5_07_depths_reference.py
+# (golden) and worldgen/tests/history/history_depths_forced_test.cpp; its lines in golden/p5-07-depths.txt are the
+# reference's.
+#
+# The two paths no generated world reaches (none in 336 worlds of the witness search):
+#   - a seal forced at the gate: the hold that falls is its race's last refuge and the flight has no plan
+#     ("there was nowhere to flee", 6.5);
+#   - a later take refused: a deep horror's raid would take its race's last refuge, the flight has no plan, the raid
+#     stands and nothing else happens (6.6 item 2).
+# How: the fixture depths-small (4.2, in memory: monsters-small on the conflict stress data with the deep edits) with
+# two edits. `refuge_flight` 0 leaves 7.3's deep_flight_plan without a plan for every last refuge; a gate levy of 0
+# gives S = 0 (with no aid), odds 0, so every waking falls and a waking at a race's last refuge is forced to a seal.
+# On the conflict stress geographies (the reference's make_synthetic(seed); settings as its synthetic_case(seed)).
+
+base = "depths-small"
+
+[conflict]
+refuge_flight = 0
+
+[monsters]
+deep_gate_levy_permille = 0
+
+# Two forced seals and four refused later takes (reference replay).
+[[case]]
+seed = 48
+span = 2000
+races = "all"
+civs = "auto"
+intensity = "normal"
+
+# One forced seal and sixteen refused later takes, on dwarves and faeries alone.
+[[case]]
+seed = 39
+span = 6000
+races = "dwarf,faerie"
+civs = "auto"
+intensity = "normal"

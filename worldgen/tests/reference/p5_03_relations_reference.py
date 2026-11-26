@@ -361,6 +361,8 @@ class Relations:
         self.known = 0
         self.sr_rows = {}          # (s, g, year) -> (share, standing)
         self.sr_last = {}          # (s, g) -> (share, standing) of the last row
+        self.sr_hist = {}          # (s, g) -> [(year, (share, standing))] the rows written, in order
+        self.rr_hist = {}          # (a, b) -> [(year, (disposition, band))]
         self.pending = []          # the ledger's records, in record order
         self.cursor = 1
         self.last_drift = None
@@ -749,9 +751,8 @@ class Relations:
     def rr_row(self, a, b, year):
         p = self.pairs[(a, b)]
         v = (disposition(p["B"], p["M"]), p["band"])
-        if p["last"] != v:
-            self.rr_rows[(a, b, year)] = v
-            p["last"] = v
+        put_row(self.rr_rows, self.rr_hist.setdefault((a, b), []), (a, b), year, v, False)
+        p["last"] = self.rr_hist[(a, b)][-1][1] if self.rr_hist[(a, b)] else None
 
     def turns(self, quiet):
         w = self.w
@@ -1077,9 +1078,12 @@ class Relations:
         for g in sorted(races):
             e = st["e"].get(g)
             v = (e["share"], e["standing"]) if e is not None else (0, 0)
-            if self.sr_last.get((s, g), (0, 0) if e is None else None) != v:
-                self.sr_rows[(s, g, y)] = v
-                self.sr_last[(s, g)] = v
+            h = self.sr_hist.setdefault((s, g), [])
+            put_row(self.sr_rows, h, (s, g), y, v, True)
+            if h:
+                self.sr_last[(s, g)] = h[-1][1]
+            else:
+                self.sr_last.pop((s, g), None)
 
     def phase_start(self, quiet):
         w = self.w
@@ -1359,6 +1363,23 @@ class Rows:
 def open_borders(rows_region_border):
     """PeoplesView's neighbours (P3-05 4.4): the borders with walk pairs or a pass."""
     return [(b["a"], b["b"]) for b in rows_region_border if b["walk_pairs"] > 0 or b["pass_id"] > 0]
+
+
+def put_row(rows, hist, key, year, v, drop_zero_first):
+    """6.7 (P5-03 r2): nothing when v equals the last row of the key; a row of the last row's year replaces it
+    ("same-year rows: the later replaces the earlier"), and is then dropped when it equals the row before (16.4:
+    no row equals the previous row) or when it would be a first row of share 0 ("never written")."""
+    if hist and hist[-1][1] == v:
+        return
+    if hist and hist[-1][0] == year:
+        del rows[key + (year,)]
+        hist.pop()
+        if hist and hist[-1][1] == v:
+            return
+    if not hist and drop_zero_first and v[0] == 0:
+        return
+    rows[key + (year,)] = v
+    hist.append((year, v))
 
 
 def shares_in_force(sr_rows):

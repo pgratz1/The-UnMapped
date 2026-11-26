@@ -1265,6 +1265,35 @@ def depths_small_data(dat=None):
     return d
 
 
+FORCED_FIXTURE = os.path.join(pe.REPO, "worldgen", "tests", "data", "depths", "depths-forced.toml")
+
+
+def depths_forced():
+    """Integration part 3: the hand fixture depths-forced (worldgen/tests/data/depths/depths-forced.toml):
+    depths-small with the file's [conflict] and [monsters] edits, and its cases (seed, (span, races, civs,
+    intensity)) on the conflict stress geographies. The two paths no generated world reaches: a seal forced at the
+    gate (6.5, a last refuge with no flight plan) and a later take refused for want of a flight plan (6.6 item 2)."""
+    import tomllib
+    with open(FORCED_FIXTURE, "rb") as f:
+        doc = tomllib.load(f)
+    assert doc["base"] == "depths-small"
+    base = depths_small_data()
+    d = copy.copy(base)
+    d.conflict = dict(copy.deepcopy(base.conflict), **doc.get("conflict", {}))
+    d.base = copy.copy(base.base)
+    d.base.monsters_tuning = dict(copy.deepcopy(base.base.monsters_tuning), **doc.get("monsters", {}))
+    cases = [(c["seed"], (c["span"], c["races"], c["civs"], c["intensity"])) for c in doc["case"]]
+    return d, cases
+
+
+def forced_paths(log):
+    """The path lines of a depths-forced case from the replay's deep log: each forced seal (year, monster, the seal
+    event) and each refused later take (year, monster, settlement)."""
+    o = ["path forced_seal %d %d %d" % (x[0], x[3], x[4]) for x in log if x[1] == "sealed" and x[5]]
+    o += ["path no_take %d %d %d" % (x[0], x[2], x[3]) for x in log if x[1] == "no take"]
+    return o
+
+
 def i1_data(dat=None):
     """r2 I1 (14): delving_permille 0 for every race and deep_aid_permille 0."""
     d = depths_small_data(dat)
@@ -1814,6 +1843,8 @@ GOLDEN_HEADER = """\
 # P5-07 16: golden values of the mountain depths (generator 0.29.0, schema 13), written by
 # worldgen/tests/reference/p5_07_depths_reference.py golden (the test writer's reference, never from C++ output).
 # Lines: case <name> <seed> <size> <data>; table <name> <sha256 of repr rows>; stat <key> <value>.
+# depths-forced (size 0: a conflict stress geography; worldgen/tests/data/depths/depths-forced.toml) also has
+# path forced_seal <year> <monster> <seal event> and path no_take <year> <monster> <settlement> (the replay's log).
 """
 
 
@@ -1840,6 +1871,19 @@ def golden_text(inputs):
             o.append("table %s %s" % (t, pchr.table_hash(pcr.COLUMNS[t], res[t])))
         for k, v in stats_of_tables(res):
             o.append("stat %s %d" % (k, v))
+    # integration part 3: the hand fixture depths-forced on the stress geographies (size 0)
+    dat, cases = depths_forced()
+    for seed, case in cases:
+        inp, _g = pcr.synthetic_inputs(seed, dat, case)
+        res = pcr.history_stage(dat, inp)
+        bad = res_problems(res, inp, dat)
+        assert not bad, bad
+        o.append("case depths-forced-%d %d 0 depths-forced" % (seed, seed))
+        for t in ("site", "monster", "event", "event_value"):
+            o.append("table %s %s" % (t, pchr.table_hash(pcr.COLUMNS[t], res[t])))
+        for k, v in stats_of_tables(res):
+            o.append("stat %s %d" % (k, v))
+        o += forced_paths(res["_world"].monsters.deep.log)
     return "\n".join(o) + "\n"
 
 

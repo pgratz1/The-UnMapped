@@ -2087,7 +2087,8 @@ def view_from_rows(res, regions, races, gods):
         view["beast_bold"] = lambda b: bold[b]
         view["raid_phrases"] = lambda m: raid[mkind[m]]
     if RENDER_R23:   # P5-03a 7.1: the kind of a monster (grouped, wake, noun) for the forms its, aside and where
-        kinds = {k[0]: dict(grouped=k[4], wake="wild" if k[5] == 1 else "dead", noun=k[3])
+        # schema 13 (P5-07 9): wake 1 wild, 2 dead, 3 deep; a deep kind renders as wild (P5-07 8.2)
+        kinds = {k[0]: dict(grouped=k[4], wake={1: "wild", 2: "dead", 3: "deep"}[k[5]], noun=k[3])
                  for k in res.get("monster_kind", [])}
         view["monster_kind"] = lambda m: kinds[mkind[m]]
     if RENDER_R21:
