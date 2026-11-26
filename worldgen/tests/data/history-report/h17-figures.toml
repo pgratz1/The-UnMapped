@@ -444,6 +444,7 @@ settlement_use = 0
 salience = 65
 template = "{betrayer}{betrayer:under} broke faith and made war on {betrayed}, an ally."
 roles = [["betrayer", 3, 1, 1], ["betrayed", 3, 1, 1]]
+values = ["motive", "years"]
 
 [[kind]]
 key = "ally_joined_war"
@@ -463,6 +464,7 @@ settlement_use = 0
 salience = 30
 template = "{ally} would not take up arms for {partner} against {enemy}."
 roles = [["ally", 3, 1, 1], ["partner", 3, 1, 1], ["enemy", 3, 1, 1]]
+values = ["motive", "count"]
 
 [[kind]]
 key = "ally_withdrew"
@@ -1230,6 +1232,7 @@ year = 800
 kind = "ally_refused"
 phase = 5
 parts = [["ally", 7], ["partner", 6], ["enemy", 5]]
+values = [3, 1]
 causes = [50, 58]
 
 [[event]]
@@ -1338,6 +1341,7 @@ year = 1000
 kind = "alliance_betrayed"
 phase = 5
 parts = [["betrayer", 7], ["betrayed", 4]]
+values = [2, 100]
 causes = [67, 69]
 
 [[event]]

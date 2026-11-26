@@ -91,6 +91,24 @@ inline std::int64_t event_id_of(const std::string& l) {
     return std::stoll(l.substr(sp + 2));
 }
 
+// P5-04a 12.4 (format v9): a same-day group line is `<span> e<id>, e<id>... <key>/<salience>: ...`; all its ids.
+inline std::vector<std::int64_t> event_ids_of(const std::string& l) {
+    std::vector<std::int64_t> out;
+    std::size_t at = l.find(' ');
+    REQUIRE(at != std::string::npos);
+    while (l.compare(at + 1, 1, "e") == 0) {
+        std::size_t used = 0;
+        out.push_back(std::stoll(l.substr(at + 2), &used));
+        at += 2 + used;
+        if (l.compare(at, 2, ", ") == 0 && l.compare(at + 2, 1, "e") == 0) {
+            at += 1;   // the space after the comma, then the next "e<id>"
+            continue;
+        }
+        break;
+    }
+    return out;
+}
+
 // --- r17 24.1: the war of an event, the frames, the summary rules of 24.10 item 1 -------------------
 
 class Wars {
@@ -255,7 +273,9 @@ private:
 inline std::set<std::int64_t> shown_ids(const std::string& report) {
     std::set<std::int64_t> out;
     for (const std::string& l : block(report, "[chronicle]")) {
-        if (is_event_line(l)) out.insert(event_id_of(l));
+        if (is_event_line(l)) {
+            for (const std::int64_t id : event_ids_of(l)) out.insert(id);
+        }
     }
     return out;
 }
@@ -316,8 +336,10 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     return out;
 }
 
-// P5-03a 9.2: per realm, n of `  milestones: <n>` at summary is the number of full's milestone lines, and the
-// summary's milestone lines are full's of kind quiet_stretch, in order.
+// P5-04a 12.2 (format v9, replacing P5-03a 9.2's): per realm, `  milestones: <n>` at summary with n the realm's own
+// events of salience 40 or more that are no quiet stretch (not determinable from full's capped list of eight, so it is
+// bounded here: at least the shown lines), then at most three lines, none of them a quiet stretch, in ascending event
+// id, each a line of the full list or a deed the full list's cap left out (checked by the reference's golden).
 inline void v6_milestones(const std::string& summary, const std::string& full) {
     auto per_civ = [](const std::string& text) {
         std::map<std::string, std::pair<std::string, std::vector<std::string>>> out;
@@ -349,12 +371,19 @@ inline void v6_milestones(const std::string& summary, const std::string& full) {
         const auto it = f.find(civ);
         REQUIRE(it != f.end());
         CHECK(it->second.first == "  milestones:");
-        CHECK(sv.first == "  milestones: " + std::to_string(it->second.second.size()));
-        std::vector<std::string> quiet;
-        for (const std::string& l : it->second.second) {
-            if (l.find(" quiet_stretch: ") != std::string::npos) quiet.push_back(l);
+        const std::int64_t n = std::stoll(sv.first.substr(std::string("  milestones: ").size()));
+        CHECK(n >= static_cast<std::int64_t>(sv.second.size()));
+        CHECK(sv.second.size() <= 3U);
+        CHECK(static_cast<std::int64_t>(sv.second.size()) <= std::min<std::int64_t>(3, n));   // none above SUMMARY_LINES_CIVS
+        std::int64_t last_id = 0;
+        for (const std::string& l : sv.second) {
+            CHECK(l.find(" quiet_stretch: ") == std::string::npos);
+            const std::size_t e = l.find(" e");
+            REQUIRE(e != std::string::npos);
+            const std::int64_t id = std::stoll(l.substr(e + 2));
+            CHECK(id > last_id);
+            last_id = id;
         }
-        CHECK(sv.second == quiet);
     }
 }
 
@@ -490,7 +519,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         const std::vector<std::string> lines = lines_of(*text);
         REQUIRE(lines.size() >= 2U);
         // r19 25.1: the header is v2 (tested on the text: the spec names no library constant for it)
-        CHECK(lines[0] == "# worldgen history v8");   // P5-02 12.1; P5-03 17.1; P5-03a 9.1
+        CHECK(lines[0] == "# worldgen history v9");   // P5-02 12.1; P5-03 17.1; P5-03a 9.1
         CHECK(lines[1] == (is_full ? "level = full" : "level = summary"));
         std::vector<std::string> got_heads;
         for (const std::string& l : lines) {
@@ -514,7 +543,9 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     // 24.10 item 1
     std::vector<std::int64_t> ids_f;
     for (const std::string& l : chron_f) {
-        if (is_event_line(l)) ids_f.push_back(event_id_of(l));
+        if (is_event_line(l)) {
+            for (const std::int64_t id : event_ids_of(l)) ids_f.push_back(id);
+        }
     }
     std::vector<std::int64_t> all;
     for (std::int64_t i = 1; i <= events; ++i) all.push_back(i);
@@ -541,8 +572,9 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
                 heading[cur] = std::stoll(l.substr(l.rfind("; ") + 2));
                 per_phase[cur] += 0;
             } else if (is_event_line(l)) {
-                ++per_phase[cur];
-                ++total;
+                const std::int64_t k = static_cast<std::int64_t>(event_ids_of(l).size());   // P5-04a 12.4: a group line
+                per_phase[cur] += k;
+                total += k;
             } else if (!l.empty() && l[0] == '(') {
                 const std::int64_t n = std::stoll(l.substr(1));
                 CHECK(n > 0);
@@ -563,6 +595,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     // 13 item 4: every chronicle sentence is render_event's, escaped
     for (const std::string& l : chron_f) {
         if (!is_event_line(l)) continue;
+        if (event_ids_of(l).size() > 1U) continue;   // P5-04a 12.4: a group line joins its settlements' texts
         const std::int64_t id = event_id_of(l);
         const std::size_t colon = l.find(": ");
         REQUIRE(colon != std::string::npos);
@@ -684,7 +717,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         CHECK(k_sum == af);
         CHECK(without == 0);                 // P5-03a 9.2: no `without war:` line at v6
         CHECK(war_adv <= n_adv);             // r19 25.12 item 3 without m
-        CHECK(quiet_milestones == (qs_civs.count(std::stoll(id.substr(1))) != 0U ? 1 : 0));
+        CHECK(quiet_milestones == 0);        // P5-04a 12.2: no quiet-stretch line at summary
         CHECK(quiet_noted);
     }
     std::int64_t alive_lines = 0;

@@ -78,15 +78,15 @@ std::string event_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history-report") {
 
-TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v8` (P5-03a 9.1) at both levels") {
+TEST_CASE("P3-07 r19 25.13 item 1, r21 26.1: the header is `# worldgen history v9` (P5-03a 9.1) at both levels") {
     // the spec names no library constant for the header: the text is checked
     for (const std::string& t : {summary(), full()}) {
         const std::vector<std::string> lines = hrtest::lines_of(t);
         REQUIRE(!lines.empty());
-        CHECK(lines[0] == "# worldgen history v8");   // P5-03a 9.1
+        CHECK(lines[0] == "# worldgen history v9");   // P5-03a 9.1
     }
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v8");
-    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v8");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::summary))[0] == "# worldgen history v9");
+    CHECK(hrtest::lines_of(text("h2-minimal", HistoryLevel::full))[0] == "# worldgen history v9");
 }
 
 TEST_CASE("P3-07 r19 25.13 item 2: at most two calamity candidates per phase (25.2)") {
@@ -154,10 +154,10 @@ TEST_CASE("P3-07 r19 25.13 item 5: an ended realm in short at summary, unchanged
               "  last capital: Eskmere (s11)", "  settlements: 2 founded, 0 held at the end, 1 ruined, 1 faded",
               "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: 1",
               "  fate: ended in 1200, e30: Esk came to an end.",
-              // P5-03a 9.2 (v6): the count of the full list (its six events) and the quiet stretch only
-              "  milestones: 6",
-              "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
-              "kept the peace. (Esk: 54 new generations of rulers.)",
+              // P5-04a 12.2 (v9): the count of its own events of salience 40 or more, and the weightiest three
+              "  milestones: 2",
+              "    0 e11 settlement_founded: Esk founded Eskby in Esk Heath.",
+              "    600 e28 settlement_founded: Esk founded Eskmere in Esk Heath.",
                "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7): in every block
     const std::vector<std::string> f5 = civ_block(full(), 5);
     CHECK(contains_line(f5, "  home: Esk Heath (rg7), grassland"));
@@ -186,11 +186,9 @@ TEST_CASE("P3-07 r19 25.13 item 7: one end year per war; colonies and kind chang
     // Dun, no war: the fill key (own, cal, salience, id) takes its colonies, then its claim, sack and abandonment
     // (own 0, cal 0) before the plague e26 and the outbreak e27 of 45 and the crisis e25 of 40 (cal 1)
     // (P5-03a 9.2: the list at full; at summary its count and the quiet stretch)
-    CHECK(contains_line(civ_block(summary(), 4), "  milestones: 8"));
+    CHECK(contains_line(civ_block(summary(), 4), "  milestones: 1"));   // P5-04a 12.2 (v9)
     CHECK(sub_lines(civ_block(summary(), 4), "  milestones:") ==
-          std::vector<std::string>{
-              "    150-1499 e16 quiet_stretch: For 1,350 years, from 150 to 1499, the land was quiet, and six realms "
-              "kept the peace. (Dun: 54 new generations of rulers.)"});
+          std::vector<std::string>{"    0 e9 settlement_founded: Dun founded Dunholm in the Holt of Yews."});
     CHECK(sub_lines(civ_block(full(), 4), "  milestones:") ==
           std::vector<std::string>{
               "    0 e8 civ_founded: The Humans founded Dun in the Holt of Yews.",

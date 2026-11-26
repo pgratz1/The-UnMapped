@@ -169,8 +169,13 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     // milestones: no quiet stretch; four sacks of salience 75 give two (e17, e18: ties broken by id); two
     // declarations of 70 (e15, e16) of four; then the two endings of 60 and the conquest. P5-03a 9.2 (v6): the list
     // at full, its count at summary (no quiet stretch: no line)
-    CHECK(contains_line(c1, "  milestones: 8"));
-    CHECK(sub_lines(c1, "  milestones:").empty());
+    // P5-04a 12.2 (v9): n = the own events of salience 40 or more that are no quiet stretch, then the three weightiest
+    CHECK(contains_line(c1, "  milestones: 16"));
+    CHECK(sub_lines(c1, "  milestones:") ==
+          std::vector<std::string>{
+              "    305 e17 sacked: Alird sacked Branmoor of Brannock; 100 died and 0 fled.",
+              "    306 e18 sacked: Alird sacked Branlea of Brannock; 100 died and 0 fled.",
+              "    1210 e33 civ_conquered: Dunmark fell to Alird."});
     CHECK(sub_lines(civ_block(full("h9-realms"), 1), "  milestones:") ==
           std::vector<std::string>{
               "    0 e2 civ_founded: The Humans founded Alird in Alird Vale.",
@@ -187,13 +192,15 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     CHECK(contains_line(civ_block(s, 3), "  wars: 0 declared, 2 defended; won 0, lost 1, drawn 1, open 0"));
     // the longest quiet stretch with its generations note: c2 the 100-year one (4 generations), not the other;
     // c3 its only one (no new generation)
-    CHECK(contains_line(civ_block(s, 2),
+    // P5-04a 12.2 (v9): no quiet-stretch line at summary; the stretches stay at full (and in the chronicle)
+    CHECK(sub_lines(civ_block(full("h9-realms"), 2), "  milestones:").size() > 0U);
+    CHECK_FALSE(contains_line(civ_block(s, 2),
                         "    2300-2399 e50 quiet_stretch: For 100 years, from 2300 to 2399, the land was quiet; one realm "
                         "held it. (Brannock: 4 new generations of rulers.)"));
     CHECK_FALSE(contains_line(civ_block(s, 2),
                               "    2200-2209 e49 quiet_stretch: For 10 years, from 2200 to 2209, the land was quiet, and "
                               "two realms kept the peace. (Brannock: no new generation of rulers.)"));
-    CHECK(contains_line(civ_block(s, 3),
+    CHECK_FALSE(contains_line(civ_block(s, 3),
                         "    2200-2209 e49 quiet_stretch: For 10 years, from 2200 to 2209, the land was quiet, and two "
                         "realms kept the peace. (Cendrel: no new generation of rulers.)"));
     // seceded from; last capital on ended realms; a realm with fewer than eight events
@@ -215,13 +222,15 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
                           "    1210 e33 civ_conquered: Dunmark fell to Alird."}) {
         CHECK(contains_line(f4, l));
     }
-    CHECK(contains_line(civ_block(s, 4), "  milestones: " + std::to_string(f4.size())));
-    CHECK(sub_lines(civ_block(s, 4), "  milestones:").empty());
+    CHECK(contains_line(civ_block(s, 4), "  milestones: 2"));   // P5-04a 12.2 (v9)
+    CHECK(sub_lines(civ_block(s, 4), "  milestones:") ==
+          std::vector<std::string>{"    0 e9 settlement_founded: Dunmark founded Dunwick in Dun Moor.",
+                                   "    800 e29 settlement_captured: Dunmark took Branford from Cendrel; 0 died."});
     CHECK(sub_lines(civ_block(full("h9-realms"), 8), "  milestones:") ==
           std::vector<std::string>{"    1800 e44 civ_seceded: Ruk broke away from Skab with one settlement.",
                                    "    1800 e45 settlement_founded: Ruk founded Rukhold in Ruk Crag.",
                                    "    2500 e51 war_declared: Mog declared war on Ruk over Ruk Crag."});
-    CHECK(contains_line(civ_block(s, 8), "  milestones: 3"));
+    CHECK(contains_line(civ_block(s, 8), "  milestones: 1"));   // P5-04a 12.2 (v9)
     // the relation rows are kept at full, the adversary lines not
     const std::vector<std::string> f1 = civ_block(full("h9-realms"), 1);
     CHECK(contains_line(f1, "  relations: 12 (enmity 2, pact 1, peace 1, war 8)"));

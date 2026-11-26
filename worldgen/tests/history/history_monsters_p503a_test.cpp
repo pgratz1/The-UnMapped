@@ -194,7 +194,7 @@ TEST_CASE("P5-03a 10.4: kinds 57, 60 and 62 gain sealed; standing, majority; sta
     CHECK(values_of(c.kinds[56]) == "disposition,band,sealed");
     CHECK(values_of(c.kinds[59]) == "share,standing,majority");
     CHECK(values_of(c.kinds[61]) == "people,standing,years");
-    CHECK(values_of(c.kinds[57]) == "disposition,band");   // 58 unchanged
+    CHECK(values_of(c.kinds[57]) == "disposition,band,change");   // 58 unchanged
     CHECK(values_of(c.kinds[58]) == "people,standing");    // 59 unchanged
 }
 
@@ -250,8 +250,8 @@ TEST_CASE("P5-03a 7.1, 7.2: its, aside and where in the six monster sentences") 
     CHECK(at("slain-wyvern") == "The Stinrild League hunted down and slew the Screamers of Nux, " + wyv +
                                     ", in the Red Heath.");
     // 52: named for a settlement: where; named for the name in force at the event's year after a renaming: none
-    CHECK(at("died-settlement") == "The Host of Drutnot Hole died of great age in the Red Heath.");
-    CHECK(at("died-new") == "The Restless of the Ash Downs died of great age.");
+    CHECK(at("died-settlement") == "The Host of Drutnot Hole crumbled to dust at last in the Red Heath.");
+    CHECK(at("died-new") == "The Restless of the Ash Downs crumbled to dust at last.");
     // 51: named for the geographic name of a renamed region: where, with the name in force
     CHECK(at("driven-old") ==
           "The Snat Horde drove the Dead of Grey Fells back to " + its("undead") + " lair in the Ash Downs.");

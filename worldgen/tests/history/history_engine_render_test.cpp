@@ -83,7 +83,9 @@ const char* const RENAMES =
     // 0.23.0: the 512 world renames region 7 (P5-12) before the cases' year; its later names read the same
     "UPDATE region_name SET name = 'The Ashen Downs' WHERE region = 7;"
     // 0.26.0: and region 3 (4926); its later names read as its own
-    "UPDATE region_name SET name = 'The C' WHERE region = 3;";
+    "UPDATE region_name SET name = 'The C' WHERE region = 3;"
+    // 0.28.0: and region 5 (the world's history renames it before the cases' year)
+    "UPDATE region_name SET name = 'The Grove of the Hunt' WHERE region = 5;";
 
 struct Built {
     std::string path;
@@ -188,8 +190,11 @@ TEST_CASE("P3-04 r10 8.4: a body with four words is an unknown placeholder; the 
     CHECK_FALSE(eng::template_problem(k, "{n?|one|#}").has_value());
     // P5-03 9.5 (0.24.0): the four-word choice is valid; five words are an unknown placeholder
     CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d}").has_value());
-    CHECK(eng::template_problem(k, "{n?a|b|c|d|e}") ==
-          std::optional<std::string>("unknown placeholder '{n?a|b|c|d|e}' at byte 0"));
+    // P5-04a 8.5 (0.28.0): two to eight words are valid; nine words are refused with their count
+    CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d|e}").has_value());
+    CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h}").has_value());
+    CHECK(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h|i}") ==
+          std::optional<std::string>("choice of 9 words at byte 0"));
     CHECK(eng::template_problem(k, "x {m?a|b|c}") == std::optional<std::string>("unknown placeholder '{m?a|b|c}' at byte 2"));
     // The shipped templates of 0.17.0 that use the form parse (P3-04 r10 4.2, P3-05 r6 11, P3-06 r7 11).
     for (const ReportEntry& e : shipped_report()) {

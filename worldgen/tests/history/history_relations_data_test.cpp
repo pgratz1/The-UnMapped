@@ -241,9 +241,9 @@ TEST_CASE("P5-03 9.4: the new history.monsters fields after prey_might_max_permi
     }
     const std::string p = "history/monsters.toml";
     field_bounds(p, "history.monsters", p503data::monsters_fields_024(), {"hunt_max_permille"});
-    check_failure(one_error(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 19"))), p,
-                  "monsters_hunt_ordered", "history.monsters", "hunt_permille 20 is above hunt_max_permille 19");
-    CHECK(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 20")).ok());
+    check_failure(one_error(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 11"))), p,
+                  "monsters_hunt_ordered", "history.monsters", "hunt_permille 12 is above hunt_max_permille 11");   // P5-04a: hunt_permille 12
+    CHECK(load(with_edit(p, "hunt_max_permille = 200", "hunt_max_permille = 12")).ok());
 }
 
 TEST_CASE("P5-03 11.1: the new history.peoples fields after ghost_max_population; peoples_abandon_loss_ordered") {

@@ -313,17 +313,17 @@ TEST_CASE("P5-04 10.1, 10.2: H16's header and [alliances] at both levels") {
     const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary));
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full));
     REQUIRE_FALSE(s.empty());
-    CHECK(s.front() == "# worldgen history v8");
-    CHECK(f.front() == "# worldgen history v8");
+    CHECK(s.front() == "# worldgen history v9");
+    CHECK(f.front() == "# worldgen history v9");
     const std::string count = "alliances: 6 formed, 1 standing at E; ended: 2 lapsed, 1 broken, 1 spurned, 1 betrayed, "
                               "0 with a realm";
     const std::string l7 = "  c1 The House of Aelin and c2 The Court of Onsae: 50-E, by origin, e7; joined 1, refused 0; "
                            "spoils 1 granted, 0 withheld";
-    const std::string l30 = "  c3 The Hold of Durn and c5 The Kingdom of Cear: 480-630, against a common enemy against "
-                            "c4, e30; joined 2, refused 0; spoils 0 granted, 2 withheld; spurned e46";
+    const std::string l30 = "  c3 The Hold of Durn and c5 The Kingdom of Cear: 480-630, against c4 The Gub Horde, "
+                            "e30; joined 2, refused 0; spoils 0 granted, 2 withheld; spurned e46";
     const std::string l47 = "  c6 The Skreegg Horde and c7 The Urarz Horde: 650-800, in friendship, e47; joined 0, "
                             "refused 1; broken e56";
-    const std::string l58 = "  c4 The Gub Horde and c7 The Urarz Horde: 900-1000, in fear against c3, e58; betrayed e60";
+    const std::string l58 = "  c4 The Gub Horde and c7 The Urarz Horde: 900-1000, in fear of c3 The Hold of Durn, e58; betrayed e60";
     const std::string l63 = "  c1 The House of Aelin and c5 The Kingdom of Cear: 1100-1250, after trade, e63; lapsed e64";
     const std::string l65 = "  c1 The House of Aelin and c3 The Hold of Durn: 1300-1400, in friendship, e65; lapsed e66";
     const std::string calls = "calls to arms: 3 joined (3 in defence, 0 in attack), 1 refused, 0 withdrew; wars with an "
@@ -367,8 +367,8 @@ TEST_CASE("P5-04 10.3, 10.4: civilization lines; the joined war rows kept out of
         if (!b.empty() && b.back().rfind("  rulers: ", 0) == 0) b.pop_back();
         return b.back();
     };
-    CHECK(allies_last(1) == "  allies: 3; at the end: c2");
-    CHECK(allies_last(2) == "  allies: 1; at the end: c1");
+    CHECK(allies_last(1) == "  allies: 3; at the end: c2 The Court of Onsae");
+    CHECK(allies_last(2) == "  allies: 1; at the end: c1 The House of Aelin");
     CHECK(allies_last(3) == "  allies: 2");
     // 10.4: Cear joined two wars against the Gub Horde: its rows are no wars of its own
     CHECK(has(hrtest::civ_block(s, 5), "  wars: 1 declared, 1 defended; won 1, lost 0, drawn 1, open 0"));

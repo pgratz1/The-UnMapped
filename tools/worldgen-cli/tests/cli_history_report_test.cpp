@@ -69,7 +69,7 @@ TEST_CASE("cli P3-07 14.2 items 9 and 13: report --history on a default world, -
     INFO("stderr: ", s.err);
     REQUIRE(s.exit_code == EXIT_OK);
     CHECK(s.err.empty());
-    CHECK(starts_with(s.out, "# worldgen history v8\nlevel = summary\n[settings]\n"));
+    CHECK(starts_with(s.out, "# worldgen history v9\nlevel = summary\n[settings]\n"));
     CHECK(sha(s.out) == golden("geo-seed-42-512", "summary"));
     CHECK(s.out.find('\r') == std::string::npos);
     const ProcessResult s2 = sb.cli({"report", "--db", u8(db), "--history", "--level", "summary"});
@@ -77,7 +77,7 @@ TEST_CASE("cli P3-07 14.2 items 9 and 13: report --history on a default world, -
     CHECK(s2.out == s.out);
     const ProcessResult f = sb.cli({"report", "--level", "full", "--history", "--db", u8(db)});
     REQUIRE(f.exit_code == EXIT_OK);
-    CHECK(starts_with(f.out, "# worldgen history v8\nlevel = full\n"));
+    CHECK(starts_with(f.out, "# worldgen history v9\nlevel = full\n"));
     CHECK(sha(f.out) == golden("geo-seed-42-512", "full"));
     CHECK(f.out.find('\r') == std::string::npos);
     // --out: the same bytes, nothing on stdout
@@ -102,7 +102,7 @@ TEST_CASE("cli P3-07 14.2 items 9 and 13: report --history on a default world, -
     // the world report is unchanged by the new options' existence
     const ProcessResult w = sb.cli({"report", "--db", u8(db)});
     CHECK(w.exit_code == EXIT_OK);
-    CHECK_FALSE(starts_with(w.out, "# worldgen history v8"));
+    CHECK_FALSE(starts_with(w.out, "# worldgen history v9"));
     // environment independence (P0-04 12.2)
     RunOptions env;
     env.env = {{"TZ", std::string("Pacific/Kiritimati")}, {"LANG", std::string("de_DE.UTF-8")},
@@ -144,7 +144,7 @@ TEST_CASE("cli P3-07 14.2 item 10: usage errors and the help text") {
     CHECK(h.exit_code == EXIT_OK);
     CHECK(contains(h.out, "usage: worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] "
                           "[--force] [--verbose]\n"));
-    CHECK(contains(h.out, "\n  --history           print the history report (format '# worldgen history v8') "
+    CHECK(contains(h.out, "\n  --history           print the history report (format '# worldgen history v9') "
                           "instead of the world report\n"));
     CHECK(contains(h.out, "\n  --level LEVEL       with --history: summary (default) or full\n"));
 }

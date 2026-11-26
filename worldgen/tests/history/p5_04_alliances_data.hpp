@@ -77,8 +77,8 @@ inline const std::vector<Field>& alliances_fields() {
         {"spoils_grant_max", 0, 1000, 950},
         {"share_memory", 0, 1000, 25},
         {"withheld_memory", 0, 1000, 100},
-        {"withheld_grudge", 0, 2000, 400},
-        {"withheld_to_break", 1, 100, 1},
+        {"withheld_grudge", 0, 2000, 150},
+        {"withheld_to_break", 1, 100, 2},
         {"mine_permille", 0, 1000, 40},
         {"mine_ore_min", 1, 100000, 1},
         {"mine_settlement_min", 0, 1000000, 200},
@@ -165,31 +165,47 @@ spoils_grant_min = 100
 spoils_grant_max = 950
 share_memory = 25
 withheld_memory = 100
-withheld_grudge = 400
-withheld_to_break = 1
+withheld_grudge = 150
+withheld_to_break = 2
 mine_permille = 40
 mine_ore_min = 1
 mine_settlement_min = 200
 arms_trade_permille = 2000
 mine_forms = ["The Mines of {settlement}", "The Delvings of {settlement}"]
+# P5-04a 3.7, 4.4, 5 (generator 0.28.0), in this order.
+spoils_large_share = 475
+spoils_large_part_permille = 401
+soured_renew_permille = 250
+soured_join_permille = 500
+weary_years = 50
+join_weary_permille = 750
+join_busy_permille = 150
+join_fear_floor = 600
+join_warmth_floor = 700
+grasping_join_permille = 600
+join_claim_permille = 500
+excused_memory = 15
+refuse_grudge = 80
+betray_cooled_disposition = 0
+betray_weak_permille = 500
 )";
 // 8.3: (key, salience, template) of kinds 63 to 78
 inline const std::vector<std::pair<std::string, std::pair<std::int64_t, std::string>>>& report_entries() {
     static const std::vector<std::pair<std::string, std::pair<std::int64_t, std::string>>> v = {
-        {"alliance_formed", {50, R"({@causes:trade_opened=long years of trade,war_declared=the outbreak of war,disposition_turned=the friendship of their peoples,civ_conquered=the fall of a realm,settlement_captured=the fall of a neighbour,sacked=the sack of a neighbour,region_ceded=the loss of a neighbour's land,settlements_ceded=the loss of a neighbour's land|After |, }{ally_a} and {ally_b} {basis?swore the alliance their peoples had kept since the gods made them|swore to stand together|made common cause|swore friendship and alliance}{foe:against}.)"}},
-        {"alliance_renewed", {10, R"({ally_a} and {ally_b} renewed their alliance{foe:against}.)"}},
+        {"alliance_formed", {50, R"({@causes:trade_opened=long years of trade,war_declared=the outbreak of war,disposition_turned=the friendship of their peoples,civ_conquered=the fall of a realm,settlement_captured=the conquests of their foe,sacked=the sacks of their foe,region_ceded=the conquests of their foe,settlements_ceded=the conquests of their foe|After |, }{ally_a} and {ally_b} {basis?swore the alliance their peoples had kept since the gods made them|swore to stand together|made common cause|swore friendship and alliance}{foe:against}{band?, though their peoples hated one another||}.)"}},
+        {"alliance_renewed", {10, R"({@causes:ally_joined_war=the war they fought together,spoils_shared=the spoils they shared,war_declared=the outbreak of a new war,trade_opened=long years of trade,disposition_turned=the friendship of their peoples,civ_conquered=the fall of a realm,settlement_captured=the conquests of their foe,sacked=the sacks of their foe,region_ceded=the conquests of their foe,settlements_ceded=the conquests of their foe|After |, }{ally_a} and {ally_b} renewed their alliance{foe:against}.)"}},
         {"alliance_lapsed", {25, R"(The alliance of {ally_a} and {ally_b} lapsed{reason?, for together they had grown too great|, its cause long past}.)"}},
         {"alliance_broken", {40, R"({@causes:ally_refused=a call to arms refused|After |, }the alliance of {ally_a} and {ally_b} was broken{reason?, their friendship having cooled|}.)"}},
-        {"alliance_betrayed", {65, R"({betrayer} broke faith and made war on {betrayed}, an ally.)"}},
+        {"alliance_betrayed", {65, R"({motive?Grasping for more|Its friendship long cooled|Seeing its ally weak|Coveting its ally's land}, {betrayer}{betrayer:under} broke an alliance of {years} {years?year|years} with {betrayed}.)"}},
         {"ally_joined_war", {40, R"({ally} {side?joined the war of|came to the defence of} {partner} against {enemy}.)"}},
-        {"ally_refused", {30, R"({ally} would not take up arms for {partner} against {enemy}.)"}},
+        {"ally_refused", {30, R"({motive?Loath to send its people to war|Weary of war|With a war of its own to fight|Fearing the strength of the foe|Grown cold toward its ally|Grasping for its own gain|Nursing a claim on its ally's land|Remembering the spoils kept from it}, {ally}{ally:under} would not take up arms for {partner} against {enemy}{count?|, and its ally did not forget it|}.)"}},
         {"ally_withdrew", {25, R"(Bled white, {ally} left the war of {partner} against {enemy}.)"}},
-        {"allied_battle", {35, R"({winner}{winner_ally:with} defeated {loser}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}.)"}},
+        {"allied_battle", {35, R"({@causes:arms_sold=new-bought arms|With |, }{winner}{winner_ally:with} defeated {loser}{loser_ally:with} {pass?in|at the pass into|at the pass into} {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}.)"}},
         {"trade_opened", {20, R"({@causes:peace=the peace,war_won=the war,truce=the truce,peoples_met=the first meeting of their peoples|After |, }{partner_a} and {partner_b} opened trade.)"}},
         {"trade_broken", {15, R"({@causes:war_declared=war came,alliance_betrayed=war came|When |, }the trade between {partner_a} and {partner_b} {reason?ended|dwindled as their friendship cooled|was lost with the roads between them}.)"}},
-        {"spoils_shared", {20, R"({principal} gave {ally} its share of the spoils of {@region}.)"}},
-        {"spoils_withheld", {35, R"({principal} kept the spoils of {@region} from {ally}, its ally.)"}},
-        {"alliance_spurned", {50, R"(After the spoils of {@region} were kept from it, {ally} broke its alliance with {principal}.)"}},
+        {"spoils_shared", {20, R"({principal}{principal:under} gave {ally} its share of the spoils of {@region}, {share?no captives|one captive|# captives}.)"}},
+        {"spoils_withheld", {35, R"({principal}{principal:under} kept the spoils of {@region}, {share?no captives|one captive|# captives}, from {ally}, its ally{grievance?|, which did not forget it|, which would not forgive it}.)"}},
+        {"alliance_spurned", {50, R"({reason?Still bitter|Long resentful|Outraged} that the spoils of {@region} had been kept from it{years?| the year before| # years before}, {ally} broke its alliance with {principal}.)"}},
         {"mine_opened", {20, R"({civilization} opened {site} in {@region}.)"}},
         {"arms_sold", {30, R"({seller} sold arms forged in {site} to {buyer}.)"}},
     };
@@ -235,6 +251,8 @@ inline std::string with_p506_templates(std::string t) {
     rep("{principal} kept", "{principal}{principal:under} kept");
     rep("{civilization} fell to", "{civilization}{civilization:under} fell to");
     rep("{civilization} came to an end.", "{civilization}{civilization:under} came to an end.");
+    // P5-04a 9.2 / 14.4 (0.28.0): a battle sentence (kinds 21 and 22) starts with the arms_sold clause
+    if (t.rfind("{winner} defeated {loser} ", 0) == 0) t.insert(0, "{@causes:arms_sold=new-bought arms|With |, }");
     return t;
 }
 

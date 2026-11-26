@@ -1418,7 +1418,7 @@ class World:
         if self.events and year < self.events[-1]["year"]:
             fatal("history: event %d (%s): year below the previous event's" % (eid, kind_key))
         assert year <= end_year <= self.inp.params["span"] - 1
-        assert len(values) == len(k["values"])
+        assert len(values) == len(k["values"]), (kind_key, values, k["values"])
         assert all(1 <= c < eid for c in causes) and list(causes) == sorted(set(causes))
         assert (not k["caused"]) or causes
         parts = []
@@ -4386,4 +4386,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p3_engine_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

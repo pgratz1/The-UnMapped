@@ -18,222 +18,229 @@
 #       world, century, quiet, name (6 item 2)
 #   rules_seen <rule key>,...     the rules that renamed at least once over the rename-small fixtures
 world geo-seed-0-512 0 512 6000 all normal auto normal
-geo-seed-0-512 region_name 1 41d8ccc9718fa46a4a1ad92adac99caa49da543e21fbd2676830dff1c65eefb4
-geo-seed-0-512 rename 13 5833 ravage culture 4 e284 cause e283 The Forsaken Downs
-geo-seed-0-512 rename_stats candidates 3 taken 1 dropped century:1,gap:1
+geo-seed-0-512 region_name 1 690b9a0bd1d6ca23e5350099a543247ce4021a29a53477f4a8c7517f051655f0
+geo-seed-0-512 rename 9 5983 ravage culture 6 e345 cause e344 The Forsaken Wood
+geo-seed-0-512 rename_stats candidates 1 taken 1 dropped -
 world geo-seed-42-512 42 512 6000 all normal auto normal
-geo-seed-42-512 region_name 2 e76f1f2a8bb82949b74ac6b0e5faba0fbcc5e1cd39218c2270f85529b30e6593
-geo-seed-42-512 rename 7 2887 capital_sack culture 4 e153 cause e149 The Fallen Wood
-geo-seed-42-512 rename 11 4261 capital_sack culture 4 e351 cause e349 Ciennfae's Fall
-geo-seed-42-512 rename_stats candidates 11 taken 2 dropped gap:1,weight:2,world:6
+geo-seed-42-512 region_name 2 3a364586ee27fc8cab127e39933bcdecd8fbc2b5e60633c4f157a46d51f26770
+geo-seed-42-512 rename 5 5730 ravage culture 5 e590 cause e585 The Forsaken Downs
+geo-seed-42-512 rename 8 2921 ravage culture 4 e160 cause e159 The Forsaken Wood
+geo-seed-42-512 rename_stats candidates 2 taken 2 dropped -
 world geo-phrase-512 15629206466951235176 512 6000 all normal auto normal
-geo-phrase-512 region_name 1 b527afb4456da817d930be5d12996ad871a036863a826226750569e630d80f8b
-geo-phrase-512 rename 12 5215 capital_sack culture 4 e249 cause e244 The Ashes of Brimham
+geo-phrase-512 region_name 1 6ed89783d43cade99a7668595ca0b3efe65c0edeadab59af8638af7671aeea4c
+geo-phrase-512 rename 12 5218 capital_sack culture 4 e240 cause e235 Brimham's Fall
 geo-phrase-512 rename_stats candidates 2 taken 1 dropped world:1
 world geo-seed-1-1024 1 1024 6000 all normal auto normal
-geo-seed-1-1024 region_name 6 6c3cfe9e62682750f1f0ee8562e2600931190482b5ac7b1ac5f9220608d44e02
+geo-seed-1-1024 region_name 8 7b9bb459bf2bc66c5733afb1f559da1886bc1c68da060c0277f32029f834ac3a
+geo-seed-1-1024 rename 12 5844 plague culture 5 e1315 cause e1314 The Emptied Wood
 geo-seed-1-1024 rename 13 3234 ravage culture 4 e158 cause e157 The Forsaken Downs
-geo-seed-1-1024 rename 13 5777 capital_sack culture 2 e1286 cause e1282 The Ashes of Gnitch
+geo-seed-1-1024 rename 13 5813 capital_sack culture 4 e1264 cause e1262 The Ruin of Thinriedell
 geo-seed-1-1024 rename 18 2102 ravage culture 2 e38 cause e37 Zug's Waste
-geo-seed-1-1024 rename 18 5898 great_sack culture 4 e1450 cause e1447 The Burnt Wood
-geo-seed-1-1024 rename 29 3953 capital_sack culture 4 e425 cause e421 The Ruin of Gnank Hole
-geo-seed-1-1024 rename 45 3948 ravage culture 4 e410 cause e408 Greegg-Kut's Waste
-geo-seed-1-1024 rename_stats candidates 9 taken 6 dropped region_max:1,weight:2
+geo-seed-1-1024 rename 24 5604 capital_sack culture 2 e1067 cause e1065 The Fallen Wood
+geo-seed-1-1024 rename 28 4899 ravage culture 4 e698 cause e697 The Forsaken Wood
+geo-seed-1-1024 rename 45 3993 ravage culture 4 e388 cause e387 Greegg-Kut's Shadow
+geo-seed-1-1024 rename 52 3995 capital_sack culture 4 e398 cause e393 The Ashes of Tarngrou Hold
+geo-seed-1-1024 rename_stats candidates 17 taken 8 dropped gap:2,name:1,weight:1,world:3
 world hist-span-2000-512 7 512 2000 all normal auto normal
-hist-span-2000-512 region_name 1 b41d3e27b3c7233dc7ba0470d5506facdd67b613a75e0e45fc36c73795b7654d
-hist-span-2000-512 rename 13 1912 capital_sack culture 4 e245 cause e240 The Ashes of Moddoldham
-hist-span-2000-512 rename_stats candidates 2 taken 1 dropped world:1
+hist-span-2000-512 region_name 1 7f68db839b6b6a9376c93dc4a3710c548ba9b8ea3f05172fe9a9837cbf00bf9f
+hist-span-2000-512 rename 3 1091 conquest culture 4 e48 cause e47 The End of Ienngleth
+hist-span-2000-512 rename_stats candidates 2 taken 1 dropped -
 world hist-races-elf-orc-1024 3 1024 6000 elf,orc normal auto normal
-hist-races-elf-orc-1024 region_name 2 4a260e34cfa98e8d54bc2f3f70fed9a96bbe7675e2552b5deadd99bdb1896ecf
-hist-races-elf-orc-1024 rename 9 5870 slaughter culture 6 e237 cause e235 The Red Wood
-hist-races-elf-orc-1024 rename 14 5868 ravage culture 2 e233 cause e232 The Forsaken Wood
-hist-races-elf-orc-1024 rename_stats candidates 3 taken 2 dropped century:1
+hist-races-elf-orc-1024 region_name 2 9212356689cb02aecc26c6b039bd2968279c3dd75c6224c1099afb68ac242965
+hist-races-elf-orc-1024 rename 9 5957 slaughter culture 2 e220 cause e217 The Weeping Wood
+hist-races-elf-orc-1024 rename 28 5913 ravage culture 6 e190 cause e188 The Forsaken Downs
+hist-races-elf-orc-1024 rename_stats candidates 2 taken 2 dropped -
 world hist-dense-1024 11 1024 6000 all dense auto normal
-hist-dense-1024 region_name 4 90162688569e62c47e7feb5bf829edd799632955e7fc635bc40d15f631c7c2c2
-hist-dense-1024 rename 8 5168 ravage culture 3 e433 cause e432 Grutch's Shadow
+hist-dense-1024 region_name 7 7a7df4eb7d252251158629168a132e233cbb0726cc781a9073d19d7f035b54c4
+hist-dense-1024 rename 8 4879 conquest culture 4 e385 cause e384 The End of Fiall
+hist-dense-1024 rename 18 5866 slaughter culture 6 e892 cause e890 The Weeping Downs
+hist-dense-1024 rename 20 5648 great_sack culture 4 e672 cause e670 The Ashes of Skat
+hist-dense-1024 rename 22 5721 ravage culture 4 e781 cause e780 The Forsaken Steppe
+hist-dense-1024 rename 23 5974 slaughter culture 6 e1021 cause e1018 The Rout of Rird
 hist-dense-1024 rename 26 4353 ravage culture 4 e210 cause e208 Drub's Waste
-hist-dense-1024 rename 39 5770 capital_sack culture 4 e663 cause e661 The Fallen Wood
-hist-dense-1024 rename 41 5827 conquest culture 5 e758 cause e757 Zubgeeg's Barrow
-hist-dense-1024 rename_stats candidates 7 taken 4 dropped gap:2
+hist-dense-1024 rename 37 5892 conquest culture 4 e925 cause e924 Nagdriz's Barrow
+hist-dense-1024 rename_stats candidates 15 taken 7 dropped gap:5,weight:2
 world hist-conflict-42-1024 42 1024 6000 all normal auto normal
-hist-conflict-42-1024 region_name 7 e7471687a6cbb1e1406ca050646a08704bfc11f17c8577da86debf4bfa7da881
+hist-conflict-42-1024 region_name 7 7b34022acb1d7d0d2ed0c34b4a5a3d0be94ad7ad8649ffe6be131fcb9af44b67
+hist-conflict-42-1024 rename 3 5975 ravage culture 6 e1005 cause e1004 The Forsaken Downs
+hist-conflict-42-1024 rename 8 5708 capital_sack culture 5 e731 cause e728 Dashthosh's Fall
+hist-conflict-42-1024 rename 17 5717 plague culture 5 e742 cause e741 The Emptied Wood
 hist-conflict-42-1024 rename 22 2074 ravage culture 2 e40 cause e38 Neezz's Waste
-hist-conflict-42-1024 rename 22 4545 capital_sack culture 4 e351 cause e346 The Fallen Wood
 hist-conflict-42-1024 rename 23 2955 ravage culture 4 e153 cause e151 Gneerk's Shadow
-hist-conflict-42-1024 rename 27 3290 capital_sack culture 4 e222 cause e218 The Ashes of Voeledell
-hist-conflict-42-1024 rename 27 3943 conquest culture 4 e291 cause e290 Finen's Grave
-hist-conflict-42-1024 rename 42 5001 conquest culture 4 e452 cause e451 The End of Dribnark
-hist-conflict-42-1024 rename 44 3418 conquest culture 4 e262 cause e261 Dulimin's Grave
-hist-conflict-42-1024 rename_stats candidates 17 taken 7 dropped world:9
+hist-conflict-42-1024 rename 26 5877 ravage culture 3 e876 cause e875 Gnizzeezz's Waste
+hist-conflict-42-1024 rename 28 5835 slaughter culture 4 e851 cause e850 The Weeping Downs
+hist-conflict-42-1024 rename_stats candidates 11 taken 7 dropped century:4
 world hist-conflict-turbulent-512 42 512 6000 all normal auto turbulent
-hist-conflict-turbulent-512 region_name 2 af8457e74f311e03a4cf696ff3e512cdc8ba8f20eb645b00c7a8326b885f1a04
-hist-conflict-turbulent-512 rename 7 3298 capital_sack culture 4 e230 cause e228 Mofaesi's Fall
-hist-conflict-turbulent-512 rename 11 4276 ravage culture 2 e428 cause e427 The Forsaken Wood
-hist-conflict-turbulent-512 rename_stats candidates 9 taken 2 dropped world:7
+hist-conflict-turbulent-512 region_name 2 2362631d12795cb057aca3f245b5d90f036c48fb2ea75ce3a471ac847059d4d2
+hist-conflict-turbulent-512 rename 2 3419 capital_sack culture 4 e263 cause e258 Gudbrain's Fall
+hist-conflict-turbulent-512 rename 8 3172 ravage culture 4 e187 cause e186 The Haunt of Gogg
+hist-conflict-turbulent-512 rename_stats candidates 21 taken 2 dropped weight:1,world:16
 world hist-conflict-civs4-512 42 512 6000 all normal 4 normal
-hist-conflict-civs4-512 region_name 2 97e2f08769fdf0f8ac00d4210674ac9d50bfdb04f2dbdbea04c28828c1de5822
-hist-conflict-civs4-512 rename 5 3927 great_sack culture 1 e561 cause e557 Snozz-Skink's Pyre
-hist-conflict-civs4-512 rename 7 3290 capital_sack culture 4 e320 cause e318 The Ashes of Mofaesi
-hist-conflict-civs4-512 rename_stats candidates 19 taken 2 dropped world:14
+hist-conflict-civs4-512 region_name 2 4f482a9765118cebbed7e07c8a01ab9b20482f5e7e4de1841a79de1d15988dfb
+hist-conflict-civs4-512 rename 1 4425 capital_sack culture 4 e602 cause e599 The Ashes of Shiemi Glade
+hist-conflict-civs4-512 rename 7 3251 capital_sack culture 4 e266 cause e264 The Ashes of Mofaesi
+hist-conflict-civs4-512 rename_stats candidates 11 taken 2 dropped weight:1,world:8
 world hist-conflict-flight 1 512 6000 all normal auto normal
 hist-conflict-flight region_name 1 49c1662df61a4e4e88b3e0d40ff33a6757533b9f58c8b0202a1fa37a2e75db6e
 hist-conflict-flight rename 2 2354 capital_sack culture 2 e63 cause e61 The Fallen Downs
-hist-conflict-flight rename_stats candidates 10 taken 1 dropped world:8
+hist-conflict-flight rename_stats candidates 16 taken 1 dropped world:13
 world hist-conflict-73-1024 73 1024 6000 all normal auto normal
-hist-conflict-73-1024 region_name 7 387d3a5aebec88464d6428e17a4bbddf89ff443a1ee6760e25efb452f7b7b4c7
-hist-conflict-73-1024 rename 2 4240 capital_sack culture 2 e830 cause e828 The Ashes of Rovesie
-hist-conflict-73-1024 rename 5 5972 slaughter culture 4 e2530 cause e2529 The Wood of the Slain
-hist-conflict-73-1024 rename 8 4980 slaughter culture 4 e1360 cause e1359 The Bloody Downs
-hist-conflict-73-1024 rename 11 3452 capital_sack culture 2 e487 cause e485 The Ruin of Indvil
-hist-conflict-73-1024 rename 19 4308 slaughter culture 4 e924 cause e921 The Downs of the Slain
-hist-conflict-73-1024 rename 25 5503 slaughter culture 4 e1930 cause e1927 The Rout of Snonugg
-hist-conflict-73-1024 rename 39 5775 slaughter culture 4 e2226 cause e2224 The Bloody Steppe
-hist-conflict-73-1024 rename_stats candidates 12 taken 7 dropped gap:2,weight:2,world:1
+hist-conflict-73-1024 region_name 7 1c9b280e1177d9e3c66e0681d107e3a76b4f5daad8e16c3b365b58faea5b0fa9
+hist-conflict-73-1024 rename 8 5556 capital_sack culture 4 e1687 cause e1685 The Ruin of Skreeslurk Pit
+hist-conflict-73-1024 rename 11 4888 ravage culture 2 e1238 cause e1237 The Forsaken Wood
+hist-conflict-73-1024 rename 18 4807 slaughter culture 4 e1141 cause e1136 The Rout of Ielasie
+hist-conflict-73-1024 rename 23 4987 great_sack culture 2 e1326 cause e1321 The Cinder Downs
+hist-conflict-73-1024 rename 25 4359 slaughter culture 4 e828 cause e823 The Downs of the Slain
+hist-conflict-73-1024 rename 27 4710 capital_sack culture 4 e1021 cause e1019 The Ashes of Glaglien
+hist-conflict-73-1024 rename 28 5045 ravage culture 2 e1395 cause e1393 The Forsaken Steppe
+hist-conflict-73-1024 rename_stats candidates 22 taken 7 dropped century:3,gap:2,weight:4,world:6
 fixture rename-small-0 0 2000 all auto normal rename-small
-rename-small-0 region_name 9 f725fec071e030d9aa4682629d06fc5aef5254392238ef2c6f4de3295aa36b37
-rename-small-0 rename 3 1959 slaughter culture 1 e367 cause e363 The Weeping Wood
-rename-small-0 rename 4 1860 slaughter culture 6 e284 cause e282 The Bloody Fen
-rename-small-0 rename 5 1670 slaughter culture 1 e188 cause e187 The Weeping Fells
-rename-small-0 rename 10 1851 slaughter culture 1 e264 cause e263 The Grim Peaks
-rename-small-0 rename 14 815 slaughter culture 4 e69 cause e67 The Wood of the Slain
-rename-small-0 rename 15 1669 slaughter culture 3 e186 cause e185 The Bloody Fells
-rename-small-0 rename 20 1845 ravage culture 6 e252 cause e251 The Forsaken Fen
-rename-small-0 rename 23 817 slaughter culture 4 e72 cause e71 The Red Heath
-rename-small-0 rename 25 1852 slaughter culture 6 e268 cause e267 The Grim Heath
-rename-small-0 rename_stats candidates 57 taken 9 dropped gap:42
+rename-small-0 region_name 11 db28a0f308eb28b83201170a8ad79d42b13ccf80bf06cf5fb5f4685e94d388d2
+rename-small-0 rename 3 1969 slaughter culture 5 e487 cause e485 The Bloody Wood
+rename-small-0 rename 4 1714 slaughter culture 5 e242 cause e241 The Weeping Fen
+rename-small-0 rename 5 1671 slaughter culture 1 e199 cause e198 The Weeping Fells
+rename-small-0 rename 10 1851 slaughter culture 1 e285 cause e284 The Rout of Ghom
+rename-small-0 rename 14 815 slaughter culture 4 e70 cause e68 The Grim Wood
+rename-small-0 rename 14 1118 ravage culture 2 e142 cause e141 Zunk's Waste
+rename-small-0 rename 15 1670 slaughter culture 3 e197 cause e196 The Fells of the Slain
+rename-small-0 rename 20 1905 slaughter culture 6 e397 cause e396 The Fen of the Slain
+rename-small-0 rename 23 818 slaughter culture 4 e73 cause e72 The Red Heath
+rename-small-0 rename 23 1911 capital_sack culture 6 e421 cause e416 Gnink-Snunk's Fall
+rename-small-0 rename 25 1852 slaughter culture 6 e292 cause e291 The Grim Heath
+rename-small-0 rename_stats candidates 89 taken 11 dropped gap:65,weight:7
 fixture rename-small-1 1 6000 all auto turbulent rename-small
 rename-small-1 region_name 2 1aea2fe45f56d90ddcf82c09429ccae308909f9daa22488247ecb0818ac1ec87
 rename-small-1 rename 1 2082 plague culture 2 e42 cause e35 The Fever Heath
 rename-small-1 rename 1 2397 slaughter culture 4 e162 cause e160 The Rout of Glaefaenn
-rename-small-1 rename_stats candidates 208 taken 2 dropped gap:31,region_max:114
+rename-small-1 rename_stats candidates 218 taken 2 dropped gap:31,region_max:115
 fixture rename-small-2 2 2000 elf,goblin auto calm rename-small
-rename-small-2 region_name 4 3721e76b5925cabbfe1f1e41388170cf2b187780a1b29e76b90ef7f795775cf4
-rename-small-2 rename 1 1152 slaughter culture 4 e125 cause e123 The Grim Marsh
-rename-small-2 rename 4 810 capital_sack culture 2 e95 cause e90 The Ruin of Greeskrozz
-rename-small-2 rename 6 1155 slaughter culture 4 e138 cause e136 The Bloody Carr
-rename-small-2 rename 7 1711 slaughter culture 4 e191 cause e189 The Rout of Ithasfa
-rename-small-2 rename_stats candidates 39 taken 4 dropped gap:17,weight:7
+rename-small-2 region_name 6 59605a3a1fe696b9c74e03639f157d82e97d34db1a868f37b0be6b9290a948e3
+rename-small-2 rename 1 1152 slaughter culture 2 e120 cause e119 The Grim Marsh
+rename-small-2 rename 1 1785 capital_sack culture 4 e411 cause e409 The Fallen Marsh
+rename-small-2 rename 2 1153 slaughter culture 4 e124 cause e123 The Red Heath
+rename-small-2 rename 4 810 capital_sack culture 2 e94 cause e89 The Ashes of Greeskrozz
+rename-small-2 rename 6 1249 slaughter culture 2 e167 cause e166 The Red Carr
+rename-small-2 rename 6 1745 capital_sack culture 4 e382 cause e376 The Fallen Carr
+rename-small-2 rename_stats candidates 108 taken 6 dropped gap:26,region_max:4,weight:55
 fixture rename-small-3 3 6000 elf,goblin auto normal rename-small
-rename-small-3 region_name 2 4dae30e44f4054bc3249bc87a5c19155a9187b7542d7b17fb2d8421798f30641
-rename-small-3 rename 21 5964 plague culture 4 e172 cause e171 The Pale Downs
-rename-small-3 rename 25 4129 ravage culture 2 e93 cause e90 Snaslogg's Waste
-rename-small-3 rename_stats candidates 2 taken 2 dropped -
+rename-small-3 region_name 1 4f82d0099a008164031fd0cfe4a206864e5b83556a23c793d8d8eac80164b8bc
+rename-small-3 rename 21 5964 plague culture 4 e206 cause e204 The Fever Downs
+rename-small-3 rename_stats candidates 1 taken 1 dropped -
 fixture rename-small-4 4 2000 goblin,human,orc 4 turbulent rename-small
 rename-small-4 region_name 1 a2713f6a1b6001717e1941c8b19de6ae393b46606935eee02d357d98cf49114f
 rename-small-4 rename 44 1957 plague culture 4 e55 cause e54 The Emptied Fells
 rename-small-4 rename_stats candidates 1 taken 1 dropped -
 fixture rename-small-5 5 6000 goblin,human,orc 4 calm rename-small
-rename-small-5 region_name 10 390518ecfc113ca5338d87617d88f1a93b3743b52879a75838de58b4d96f19f4
-rename-small-5 rename 2 5169 slaughter culture 4 e389 cause e388 The Grim Heath
-rename-small-5 rename 2 5628 capital_sack culture 6 e554 cause e552 The Fallen Heath
-rename-small-5 rename 4 4112 ravage culture 4 e227 cause e226 The Forsaken Moor
-rename-small-5 rename 4 5562 conquest culture 4 e502 cause e501 The End of Skizz
+rename-small-5 region_name 10 a6a43fc5f3895991bcd141439e2d74e528331e5f0ec4a942b8d3ca7955f77c81
+rename-small-5 rename 2 5169 slaughter culture 4 e456 cause e454 The Bloody Heath
+rename-small-5 rename 2 5615 conquest culture 4 e594 cause e593 Beeg's Barrow
+rename-small-5 rename 4 4116 ravage culture 4 e270 cause e269 Budgurin's Waste
+rename-small-5 rename 4 5692 conquest culture 6 e696 cause e695 Skizz's Grave
 rename-small-5 rename 5 777 slaughter culture 4 e134 cause e133 The Weeping Fells
-rename-small-5 rename 5 5441 great_sack culture 4 e472 cause e469 The Ashes of Bagg
-rename-small-5 rename 7 5565 slaughter culture 4 e508 cause e506 The Rout of Burz'bokh
+rename-small-5 rename 5 5675 capital_sack culture 6 e673 cause e671 Snurk's Fall
+rename-small-5 rename 7 5849 slaughter culture 6 e791 cause e789 The Downs of the Slain
 rename-small-5 rename 10 61 slaughter culture 4 e62 cause e60 The Red Heath
-rename-small-5 rename 10 1387 conquest culture 4 e189 cause e188 Kig's Barrow
+rename-small-5 rename 10 1984 capital_sack culture 4 e208 cause e206 The Ruin of Konknit
 rename-small-5 rename 15 66 slaughter culture 4 e73 cause e72 The Bloody Downs
-rename-small-5 rename_stats candidates 103 taken 10 dropped gap:38,region_max:9,weight:31
+rename-small-5 rename_stats candidates 172 taken 10 dropped gap:38,region_max:39,weight:66
 fixture rename-small-6 6 2000 all 4 normal rename-small
-rename-small-6 region_name 16 f00274c466fcefaedb7a3b432df2dadc7ba49cbeaecfa9b1f99ea82351a74a0c
+rename-small-6 region_name 16 6cef6b573dabc34cf29795282755bf70bd6c7530c1e96eed3d14150533536d62
 rename-small-6 rename 2 1412 slaughter culture 4 e377 cause e376 The Weeping Marsh
 rename-small-6 rename 3 1409 slaughter culture 4 e371 cause e369 The Bloody Marsh
+rename-small-6 rename 3 1756 capital_sack culture 4 e707 cause e704 The Ruin of Grix
 rename-small-6 rename 9 1177 slaughter culture 1 e252 cause e251 The Red Moor
-rename-small-6 rename 9 1853 conquest culture 6 e713 cause e712 Thirnbai's Grave
 rename-small-6 rename 14 683 plague culture 2 e41 cause e40 The Fever Wood
 rename-small-6 rename 14 1093 slaughter culture 4 e134 cause e132 The Bloody Wood
 rename-small-6 rename 16 1177 slaughter culture 1 e253 cause e250 The Weeping Moor
-rename-small-6 rename 16 1760 conquest culture 4 e687 cause e686 The Grave of Groz
+rename-small-6 rename 16 1683 capital_sack culture 4 e631 cause e629 The Ruin of Khalikhi Hold
 rename-small-6 rename 18 810 slaughter culture 4 e83 cause e82 The Weeping Downs
-rename-small-6 rename 18 1420 conquest culture 1 e401 cause e400 Drax's Grave
+rename-small-6 rename 18 1604 conquest culture 4 e537 cause e536 Drax's Grave
 rename-small-6 rename 20 1104 slaughter culture 4 e170 cause e169 The Grim Downs
-rename-small-6 rename 20 1859 capital_sack culture 6 e727 cause e725 The Fallen Downs
-rename-small-6 rename 21 1484 slaughter culture 3 e449 cause e446 The Carr of the Slain
+rename-small-6 rename 20 1755 capital_sack culture 4 e700 cause e698 Skrunk's Fall
+rename-small-6 rename 21 1483 slaughter culture 3 e464 cause e463 The Carr of the Slain
 rename-small-6 rename 23 965 ravage culture 4 e124 cause e123 Girndrai's Shadow
-rename-small-6 rename 24 1105 slaughter culture 4 e175 cause e174 The Weeping Fen
-rename-small-6 rename 24 1750 conquest culture 4 e647 cause e646 Stirgild's Grave
-rename-small-6 rename_stats candidates 188 taken 16 dropped gap:84,region_max:34,weight:26
+rename-small-6 rename 24 1105 slaughter culture 4 e176 cause e174 The Weeping Fen
+rename-small-6 rename 24 1750 capital_sack culture 4 e683 cause e678 Sentstead's Fall
+rename-small-6 rename_stats candidates 209 taken 16 dropped gap:99,region_max:42,weight:37
 fixture rename-small-7 7 6000 all 4 turbulent rename-small
-rename-small-7 region_name 16 2160dfef0874a76649e2e271ccc10bc6ac0a629a73c1473f9f22232c81aa63b6
-rename-small-7 rename 2 2126 slaughter culture 4 e165 cause e164 The Red Downs
-rename-small-7 rename 2 2441 conquest culture 4 e439 cause e438 Sneezbeezz's Barrow
-rename-small-7 rename 3 3401 conquest culture 4 e1716 cause e1714 The End of Khidin
-rename-small-7 rename 4 2426 conquest culture 4 e384 cause e383 The Grave of Naz
-rename-small-7 rename 5 2093 slaughter culture 4 e131 cause e130 The Red Fells
-rename-small-7 rename 5 3893 capital_sack culture 1 e1940 cause e1936 Sneegg's Fall
-rename-small-7 rename 6 2429 slaughter culture 4 e402 cause e397 The Bloody Downs
-rename-small-7 rename 6 2791 conquest culture 4 e1045 cause e1043 The End of Slig
+rename-small-7 region_name 16 7171fcf26260664340c6404b4dee9c2ce536af0456ca8b25717f202e45f0a30e
+rename-small-7 rename 2 2126 conquest culture 4 e169 cause e168 Sneerk-Grik's Barrow
+rename-small-7 rename 4 2655 slaughter culture 4 e452 cause e451 The Bloody Steppe
+rename-small-7 rename 5 2094 slaughter culture 2 e129 cause e127 The Rout of Slidreeb
+rename-small-7 rename 5 3926 conquest culture 4 e1349 cause e1348 The Grave of Slidreeb
+rename-small-7 rename 6 2585 slaughter culture 4 e344 cause e342 The Rout of Sneezbeezz
+rename-small-7 rename 6 2918 conquest culture 4 e846 cause e845 Gnark's Barrow
 rename-small-7 rename 7 927 ravage culture 2 e48 cause e47 The Haunt of Snunark
-rename-small-7 rename 9 3401 slaughter culture 1 e1717 cause e1715 The Bloody Fells
-rename-small-7 rename 9 3908 capital_sack culture 4 e1967 cause e1962 The Ashes of Groukbak
-rename-small-7 rename 10 3933 plague culture 1 e1980 cause e1979 The Fever Carr
-rename-small-7 rename 14 2418 slaughter culture 4 e360 cause e359 The Red Peaks
-rename-small-7 rename 15 3426 slaughter culture 4 e1786 cause e1783 The Weeping Downs
-rename-small-7 rename 16 2416 slaughter culture 4 e354 cause e352 The Grim Steppe
-rename-small-7 rename 16 2873 conquest culture 4 e1171 cause e1170 The End of Gneetch
-rename-small-7 rename_stats candidates 509 taken 16 dropped gap:94,region_max:95,weight:155,world:49
+rename-small-7 rename 9 3404 slaughter culture 1 e976 cause e975 The Weeping Fells
+rename-small-7 rename 9 3751 capital_sack culture 4 e1138 cause e1134 The Ashes of Brourd Hold
+rename-small-7 rename 12 3760 slaughter culture 1 e1155 cause e1154 The Bloody Marsh
+rename-small-7 rename 13 4082 ravage culture 4 e1499 cause e1498 The Forsaken Steppe
+rename-small-7 rename 14 2617 slaughter culture 4 e373 cause e372 The Grim Peaks
+rename-small-7 rename 14 4073 conquest culture 4 e1487 cause e1486 The End of Skiz-Sleet
+rename-small-7 rename 15 3411 slaughter culture 1 e997 cause e996 The Weeping Downs
+rename-small-7 rename 16 2314 plague culture 4 e263 cause e261 The Silent Steppe
+rename-small-7 rename 16 2616 slaughter culture 4 e370 cause e369 The Grim Steppe
+rename-small-7 rename_stats candidates 508 taken 16 dropped gap:75,region_max:107,weight:122,world:58
 fixture rename-small-9 9 6000 all auto normal rename-small
-rename-small-9 region_name 6 440773684056595dd84a0ad5518a2a97804b70f0fd564666cf8d7204928a2908
+rename-small-9 region_name 6 09db1345529a6725a23aa3f66d7d094d1422f02770f952c3be4e9f0c01add694
 rename-small-9 rename 17 2139 slaughter culture 2 e30 cause e29 The Wood of the Slain
 rename-small-9 rename 23 2138 slaughter culture 4 e26 cause e25 The Weeping Heath
-rename-small-9 rename 30 5982 plague culture 6 e419 cause e418 The Emptied Mere
-rename-small-9 rename 31 5000 slaughter culture 1 e253 cause e251 The Downs of the Slain
+rename-small-9 rename 30 5982 plague culture 6 e403 cause e402 The Silent Mere
+rename-small-9 rename 31 5000 slaughter culture 1 e268 cause e266 The Bloody Downs
 rename-small-9 rename 37 4151 plague culture 1 e140 cause e138 The Emptied Fells
-rename-small-9 rename 37 5004 slaughter culture 1 e260 cause e259 The Rout of Asheam
-rename-small-9 rename_stats candidates 93 taken 6 dropped gap:10,region_max:4,weight:73
+rename-small-9 rename 37 5004 slaughter culture 5 e280 cause e278 The Fells of the Slain
+rename-small-9 rename_stats candidates 90 taken 6 dropped gap:10,region_max:6,weight:68
 fixture rename-small-12 12 2000 goblin,human,orc 4 normal rename-small
-rename-small-12 region_name 5 4da2dbcf0219101d4bf858989c20577f1b663ecee84bb46c8c5a0c8cbaad894d
+rename-small-12 region_name 5 c4904a5993ce797a1aef257ca38a1c7c2f7c5e8d28da581cb57458c187d1eb5f
 rename-small-12 rename 2 448 slaughter culture 4 e186 cause e185 The Bloody Downs
 rename-small-12 rename 3 276 slaughter culture 4 e57 cause e56 The Marsh of the Slain
-rename-small-12 rename 3 663 capital_sack culture 4 e407 cause e403 The Fallen Marsh
+rename-small-12 rename 3 663 capital_sack culture 4 e405 cause e401 The Fallen Marsh
 rename-small-12 rename 4 277 slaughter culture 4 e62 cause e60 The Heath of the Slain
 rename-small-12 rename 5 280 slaughter culture 4 e73 cause e72 The Rout of Snunk
-rename-small-12 rename_stats candidates 194 taken 5 dropped gap:68,region_max:10,weight:48,world:5
+rename-small-12 rename_stats candidates 213 taken 5 dropped gap:68,region_max:8,weight:83,world:1
 fixture rename-small-13 13 6000 goblin,human,orc 4 turbulent rename-small
-rename-small-13 region_name 18 5e916d5fd59871ac62598235e3ff4b7eea994a7f014e2456456e46503d445a98
+rename-small-13 region_name 17 ffa2790ac8187299d4df17cd160c735c432333ee19c22732cbc9a63e2d9567ea
 rename-small-13 rename 1 497 plague culture 4 e329 cause e324 The Silent Carr
-rename-small-13 rename 1 820 slaughter culture 4 e879 cause e878 The Grim Carr
+rename-small-13 rename 1 880 slaughter culture 4 e991 cause e990 The Rout of Griskeet
 rename-small-13 rename 2 484 slaughter culture 4 e247 cause e245 The Bloody Marsh
-rename-small-13 rename 2 5213 great_sack culture 5 e1393 cause e1388 The Cinder Marsh
+rename-small-13 rename 2 803 conquest culture 4 e929 cause e928 Gotch's Grave
 rename-small-13 rename 3 485 plague culture 4 e261 cause e253 The Emptied Steppe
-rename-small-13 rename 3 802 slaughter culture 4 e850 cause e849 The Red Steppe
 rename-small-13 rename 6 483 slaughter culture 4 e243 cause e242 The Rout of Krink-Greeb
+rename-small-13 rename 6 811 conquest culture 4 e957 cause e956 The Grave of Gagg
 rename-small-13 rename 7 415 plague culture 4 e173 cause e172 The Fever Heath
 rename-small-13 rename 9 401 slaughter culture 4 e146 cause e142 The Bloody Moor
+rename-small-13 rename 9 5339 conquest culture 5 e1602 cause e1601 Gix's Grave
 rename-small-13 rename 11 486 slaughter culture 4 e268 cause e267 The Fells of the Slain
-rename-small-13 rename 13 5723 conquest culture 6 e1883 cause e1882 Al'buz's Barrow
+rename-small-13 rename 11 979 conquest culture 4 e1071 cause e1070 Beekrork's Grave
 rename-small-13 rename 16 487 slaughter culture 4 e272 cause e271 The Grim Marsh
-rename-small-13 rename 16 5255 conquest culture 4 e1471 cause e1470 Zagirk's Grave
+rename-small-13 rename 16 800 great_sack culture 4 e916 cause e913 The Burnt Marsh
 rename-small-13 rename 17 407 plague culture 4 e164 cause e163 The Silent Downs
-rename-small-13 rename 17 4999 slaughter culture 4 e1167 cause e1163 The Red Downs
-rename-small-13 rename 18 4999 slaughter culture 4 e1168 cause e1165 The Bloody Steppe
-rename-small-13 rename 18 5927 conquest culture 6 e2098 cause e2097 Ghom's Grave
-rename-small-13 rename 19 5666 conquest culture 6 e1807 cause e1806 The Grave of Arz'graald
-rename-small-13 rename_stats candidates 437 taken 18 dropped gap:169,region_max:66,weight:131
+rename-small-13 rename 17 877 slaughter culture 4 e981 cause e980 The Weeping Downs
+rename-small-13 rename 18 4998 slaughter culture 4 e1355 cause e1353 The Steppe of the Slain
+rename-small-13 rename_stats candidates 361 taken 17 dropped gap:189,region_max:58,weight:56
 fixture rename-small-14 14 2000 all 4 calm rename-small
-rename-small-14 region_name 16 f6e88ea954df1a9edc246d88d6ac213d21ce8593102b52d2957db2a7b45c1860
-rename-small-14 rename 1 925 great_sack culture 4 e239 cause e238 The Cinder Heath
-rename-small-14 rename 2 859 slaughter culture 4 e131 cause e129 The Weeping Downs
-rename-small-14 rename 2 1385 conquest culture 4 e553 cause e552 The End of Grotch
-rename-small-14 rename 4 1894 slaughter culture 4 e1075 cause e1074 The Rout of Draktoud
-rename-small-14 rename 5 1497 plague culture 4 e689 cause e684 The Pale Steppe
-rename-small-14 rename 6 1169 slaughter culture 1 e433 cause e432 The Bloody Fells
-rename-small-14 rename 7 1092 great_sack culture 4 e321 cause e318 The Ashes of Drogg-Krot
-rename-small-14 rename 9 1737 slaughter culture 4 e865 cause e861 The Peaks of the Slain
-rename-small-14 rename 10 1167 conquest culture 4 e415 cause e413 The End of Hirnai
+rename-small-14 region_name 16 904c7f878e40d44efc39e0e8f6c8e852af1c12dd00fa502ece327d35e5b1c32a
+rename-small-14 rename 1 1167 slaughter culture 1 e490 cause e488 The Grim Heath
+rename-small-14 rename 2 857 slaughter culture 4 e107 cause e104 The Bloody Downs
+rename-small-14 rename 3 857 slaughter culture 4 e108 cause e105 The Red Downs
+rename-small-14 rename 3 1211 conquest culture 4 e601 cause e600 The End of Krabdreex
+rename-small-14 rename 4 1011 slaughter culture 4 e319 cause e318 The Downs of the Slain
+rename-small-14 rename 4 1602 great_sack culture 4 e886 cause e885 The Cinder Downs
+rename-small-14 rename 5 998 slaughter culture 4 e247 cause e246 The Grim Steppe
+rename-small-14 rename 6 1002 slaughter culture 4 e265 cause e263 The Grim Fells
+rename-small-14 rename 7 1417 ravage culture 4 e756 cause e755 Gak's Shadow
+rename-small-14 rename 9 1213 slaughter culture 4 e612 cause e610 The Grim Peaks
+rename-small-14 rename 10 1167 slaughter culture 4 e491 cause e483 The Weeping Fells
 rename-small-14 rename 11 709 ravage culture 2 e47 cause e46 Ag'uraakh's Waste
-rename-small-14 rename 12 925 slaughter culture 4 e240 cause e235 The Grim Marsh
-rename-small-14 rename 13 858 slaughter culture 4 e122 cause e120 The Red Moor
-rename-small-14 rename 14 1167 slaughter culture 1 e416 cause e414 The Rout of Beeb
-rename-small-14 rename 15 860 slaughter culture 4 e139 cause e137 The Fells of the Slain
-rename-small-14 rename 15 1176 capital_sack culture 4 e467 cause e464 Skudreegg's Fall
-rename-small-14 rename 16 1168 slaughter culture 4 e428 cause e427 The Bloody Downs
-rename-small-14 rename_stats candidates 369 taken 16 dropped gap:100,region_max:39,weight:113,world:14
+rename-small-14 rename 12 1004 great_sack culture 4 e288 cause e285 Skudreegg's Pyre
+rename-small-14 rename 13 856 slaughter culture 4 e102 cause e101 The Weeping Moor
+rename-small-14 rename 14 1174 conquest culture 4 e543 cause e542 Nourkgoli's Grave
+rename-small-14 rename 15 857 slaughter culture 4 e109 cause e106 The Fells of the Slain
+rename-small-14 rename_stats candidates 348 taken 16 dropped gap:94,region_max:48,weight:104,world:1
 rules_seen conquest,capital_sack,great_sack,slaughter,plague,ravage
 fixture off-0 0 2000 all auto normal off
 off-0 region_name 0 f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
-off-0 rename_stats candidates 0 taken 0 dropped -
+off-0 rename_stats candidates 1 taken 0 dropped region_max:1
 fixture off-1 1 6000 all auto turbulent off
 off-1 region_name 0 f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 off-1 rename_stats candidates 3 taken 0 dropped region_max:3

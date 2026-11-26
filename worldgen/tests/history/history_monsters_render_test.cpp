@@ -429,7 +429,9 @@ TEST_CASE("P5-02 11.4: beast, monster_kind, beast_population, settlement.ending 
     // 0.27.0: s4 of the 512 world (recalibrated monsters, P5-06) stands to the end (expected ending 0), so any
     // other code is the corruption
     refused("ending", "UPDATE settlement SET ending = 1 WHERE id = 4;",
-            "corrupt table 'settlement': row 4: ending 1 is not its ruin's ending 0");
+            "corrupt table 'settlement': row 4: ending 1 is not its ruin's ending 4");
+    // 0.28.0 (P5-04a integration): s4 of the 512 world is ruined now (a ruin whose cause gives ending 4), so the
+    // expected ending in the reader's message is 4; the message describes the corruption (1 against 4) correctly.
     // events: a participant of type 8 with no row; a kind 44 without its site; a value beast with no row (R4)
     {
         const auto e = eng::view_error(open_world(corrupt(

@@ -70,7 +70,7 @@ TEST_CASE("P5-06 10.1, 10.2, 10.4, 10.5: report v8: header, [figures], [sites] w
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string text = hrtest::report_of(r, level);
         CAPTURE(level == HistoryLevel::full);
-        CHECK(starts(text, "# worldgen history v8"));
+        CHECK(starts(text, "# worldgen history v9"));
         const auto fb = block(text, "[figures]");
         REQUIRE_FALSE(fb.empty());
         std::map<std::int64_t, std::int64_t> by_role;
@@ -128,7 +128,7 @@ TEST_CASE("P5-06 10.3: every civilization block ends with its rulers: line; at s
     for (const std::string& l : block(text, "[civilizations]")) {
         if (starts(l, "  rulers: ")) {
             ++n;
-            CHECK(l.find(" reigns, ") != std::string::npos);
+            CHECK(l.find(" reign") != std::string::npos);
             CHECK(l.find(" recorded; first ") != std::string::npos);
         }
     }

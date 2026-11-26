@@ -63,8 +63,8 @@ TEST_CASE("P5-06 10.1, 10.2, 18.1 item 14: H17 [figures] at full and at summary"
     const std::vector<std::string> s = lines(HistoryLevel::summary);
     REQUIRE_FALSE(f.empty());
     REQUIRE_FALSE(s.empty());
-    CHECK(f[0] == "# worldgen history v8");
-    CHECK(s[0] == "# worldgen history v8");
+    CHECK(f[0] == "# worldgen history v9");
+    CHECK(s[0] == "# worldgen history v9");
     const std::vector<std::string> want_full = {
         "[figures]",
         "figures: 20; rulers 13, claimants 2, generals 2, heroes 2, casters 1; alive at the end 7",

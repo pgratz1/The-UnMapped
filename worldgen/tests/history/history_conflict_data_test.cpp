@@ -297,7 +297,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 97U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    REQUIRE(names.size() == 98U)  /* P5-04 3: five hist.alliances streams */;   // P5-03a 2 (0.25.0): hist.relations.settlers; P5-02 3, 26.1 (0.23.0): fifteen streams after hist.renaming.name, then hist.monsters.raid_target; P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -335,7 +335,9 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
         "hist.figures.fall", "hist.figures.exile", "hist.figures.hero", "hist.figures.caster", "hist.figures.book",
         "hist.figures.blight", "hist.figures.tower_name", "hist.names.person", "hist.names.book",
         "hist.monsters.hero_fall"};
-    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() + p506.size() == names.size() - 1);
+    // P5-04a 3 (generator 0.28.0): hist.alliances.renew last
+    REQUIRE(at + 9 + p502.size() + p503.size() + p504.size() + p506.size() == names.size() - 2);
+    CHECK(names[names.size() - 1] == "hist.alliances.renew");
     for (std::size_t i = 0; i < p502.size(); ++i) CHECK(names[at + 10 + i] == p502[i]);
     for (std::size_t i = 0; i < p503.size(); ++i) CHECK(names[at + 10 + p502.size() + i] == p503[i]);
     for (std::size_t i = 0; i < p504.size(); ++i) CHECK(names[at + 10 + p502.size() + p503.size() + i] == p504[i]);

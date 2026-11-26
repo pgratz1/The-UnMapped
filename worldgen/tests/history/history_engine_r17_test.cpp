@@ -206,7 +206,12 @@ TEST_CASE("P3-04 r17 21.3 item 2: no shipped template puts a value at byte 0 or 
             const std::string v = body.substr(0, body.find('?'));
             const bool value = std::find(k.values.begin(), k.values.end(), v) != k.values.end();
             const std::size_t bars = static_cast<std::size_t>(std::count(body.begin(), body.end(), '|'));
-            CHECK_FALSE((value && (body.find('?') == std::string::npos || bars == 2U)));
+            // P5-04a 3.6 (lead ruling, integration): a three-word choice is a number clause only when its last word
+            // is `#` alone (`{n?none|one|#}`); a word choice such as alliance_spurned's `{reason?Still bitter|Long
+            // resentful|Outraged}` or hero_rose's `{quiet?...|When, after # quiet years, }` is allowed at byte 0.
+            const bool number_clause =
+                bars == 2U && body.size() >= 2U && body.compare(body.size() - 2U, 2U, "|#") == 0;
+            CHECK_FALSE((value && (body.find('?') == std::string::npos || number_clause)));
         }
     }
 }

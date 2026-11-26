@@ -30,13 +30,13 @@ struct K {
 const std::vector<K>& spec_kinds() {
     const std::int64_t C = 3, S = 9;
     static const std::vector<K> v = {
-        {63, "alliance_formed", 1, 0, 0, {{"ally_a", C, 1, 1}, {"ally_b", C, 1, 1}, {"foe", C, 0, 1}}, {"basis"}},
+        {63, "alliance_formed", 1, 0, 0, {{"ally_a", C, 1, 1}, {"ally_b", C, 1, 1}, {"foe", C, 0, 1}}, {"basis", "term", "band"}},
         {64, "alliance_renewed", 1, 0, 0, {{"ally_a", C, 1, 1}, {"ally_b", C, 1, 1}, {"foe", C, 0, 1}}, {"basis"}},
         {65, "alliance_lapsed", 1, 0, 0, {{"ally_a", C, 1, 1}, {"ally_b", C, 1, 1}}, {"reason"}},
         {66, "alliance_broken", 1, 0, 0, {{"ally_a", C, 1, 1}, {"ally_b", C, 1, 1}}, {"reason"}},
-        {67, "alliance_betrayed", 1, 0, 0, {{"betrayer", C, 1, 1}, {"betrayed", C, 1, 1}}, {}},
+        {67, "alliance_betrayed", 1, 0, 0, {{"betrayer", C, 1, 1}, {"betrayed", C, 1, 1}}, {"motive", "years"}},
         {68, "ally_joined_war", 1, 0, 0, {{"ally", C, 1, 1}, {"partner", C, 1, 1}, {"enemy", C, 1, 1}}, {"side"}},
-        {69, "ally_refused", 1, 0, 0, {{"ally", C, 1, 1}, {"partner", C, 1, 1}, {"enemy", C, 1, 1}}, {}},
+        {69, "ally_refused", 1, 0, 0, {{"ally", C, 1, 1}, {"partner", C, 1, 1}, {"enemy", C, 1, 1}}, {"motive", "count"}},
         {70, "ally_withdrew", 1, 0, 0, {{"ally", C, 1, 1}, {"partner", C, 1, 1}, {"enemy", C, 1, 1}}, {}},
         {71, "allied_battle", 1, 1, 0,
          {{"winner", C, 1, 1}, {"loser", C, 1, 1}, {"winner_ally", C, 0, 16}, {"loser_ally", C, 0, 16}},
@@ -44,8 +44,8 @@ const std::vector<K>& spec_kinds() {
         {72, "trade_opened", 1, 0, 0, {{"partner_a", C, 1, 1}, {"partner_b", C, 1, 1}}, {}},
         {73, "trade_broken", 1, 0, 0, {{"partner_a", C, 1, 1}, {"partner_b", C, 1, 1}}, {"reason"}},
         {74, "spoils_shared", 1, 1, 0, {{"principal", C, 1, 1}, {"ally", C, 1, 1}, {"enemy", C, 1, 1}}, {"share"}},
-        {75, "spoils_withheld", 1, 1, 0, {{"principal", C, 1, 1}, {"ally", C, 1, 1}, {"enemy", C, 1, 1}}, {"share"}},
-        {76, "alliance_spurned", 1, 1, 0, {{"ally", C, 1, 1}, {"principal", C, 1, 1}}, {"reason"}},
+        {75, "spoils_withheld", 1, 1, 0, {{"principal", C, 1, 1}, {"ally", C, 1, 1}, {"enemy", C, 1, 1}}, {"share", "grievance"}},
+        {76, "alliance_spurned", 1, 1, 0, {{"ally", C, 1, 1}, {"principal", C, 1, 1}}, {"reason", "years"}},
         {77, "mine_opened", 1, 1, 1, {{"civilization", C, 1, 1}, {"site", S, 1, 1}}, {}},
         {78, "arms_sold", 1, 0, 0, {{"seller", C, 1, 1}, {"buyer", C, 1, 1}, {"site", S, 1, 1}}, {}}};
     return v;

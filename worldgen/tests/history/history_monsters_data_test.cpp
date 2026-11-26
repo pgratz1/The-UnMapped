@@ -158,7 +158,7 @@ const std::vector<Monster>& monsters() {
          {"{root} the Black", "{root} the Pale", "{root} the Red", "{root} the Old", "{root} Ashwing", "{root} the Gold-Eyed",
           "{root}"},
          {"The Lair of {root}", "{root}'s Deep"}, 6000, 2, 60, 50,
-         200, 600, {"hamlet", "village", "town"}, 600, 40, 700, 0, 1, true, 40},
+         200, 600, {"hamlet", "village", "town"}, 1000, 40, 700, 0, 1, true, 40},
         {"giant", "Giant", "a giant of the mountains", false, "wild", {{"alpine", 900}, {"highland_moor", 500}}, 25,
          "dwarven", {"{root} Stonehand", "{root} the Tall", "{root} Cliffbreaker", "{root} the Grey", "{root}"}, {"{root}'s Seat", "The Hall of {root}"}, 1200, 1, 100, 30, 100,
          150, {"hamlet", "village"}, 1000, 150, 1000, 4000, 2, true, 8},
@@ -202,7 +202,7 @@ const std::vector<Field>& tuning_fields() {
         // P5-03a 10.2: undead_min_dead 1000 (the floor of the threshold; was 4000)
         {"living_permille", 0, 1000, 200},       {"undead_min_dead", 1, 1000000000, 1000},
         {"undead_window_years", 1, 100000, 100}, {"hunt_hops", 0, 8, 2},
-        {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 20},
+        {"hunt_levy_permille", 0, 1000, 50},     {"hunt_permille", 0, 1000, 12},
         {"hunt_memory_years", 1, 100000, 30},    {"slay_max_permille", 0, 1000, 900},
         {"drive_permille", 0, 1000, 300},        {"drive_years", 0, 100000, 100},
         {"displace_per_kpeople", 0, 1000, 100},  {"displace_max_permille", 0, 1000, 900},

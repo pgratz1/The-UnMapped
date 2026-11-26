@@ -36,6 +36,6 @@ meet_sealed_years = 150
 conquest_settlers_span_permille = 400
 expel_gap_years = 60
 # P5-04a 7.2, 8 (generator 0.28.0), in this order.
-turn_cooldown_years = 300
+turn_cooldown_years = 800
 expel_settled_years = 800
 expel_fresh_years = 150

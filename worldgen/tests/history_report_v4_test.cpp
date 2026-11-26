@@ -52,10 +52,10 @@ std::string chronicle_line(const std::string& report, std::int64_t id) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-02 12.1, P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v8` at both levels; the text equals the reference's") {
+TEST_CASE("P5-02 12.1, P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v9` at both levels; the text equals the reference's") {
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v8");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v9");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         CHECK(worldgen::to_hex(worldgen::sha256(t)) == hrtest::golden_case("h13-v4").report.at(name));
     }
@@ -134,17 +134,18 @@ TEST_CASE("P5-02 12.6: the [stats] keys appended at the end, full only; the summ
         {"outposts", 2},        {"outposts_open", 1},        {"beasts_bold", 1},       {"settlements_left", 3},
         {"regions_shunned", 1}};
     // P5-03 17.4 (v5): eighteen keys appended after these; P5-03a 9.6 (v6): two more after those
-    const std::ptrdiff_t p503 = 18 + 2 + 30 + 26;   // P5-04 10.5 (v7): thirty more after those; P5-06 10.5 (v8): 26 more
-    REQUIRE(st.size() >= want.size() + 76U);
+    const std::ptrdiff_t p503 = 18 + 2 + 30 + 26 + 19;   // P5-04 10.5 (v7): thirty more after those; P5-06 10.5 (v8): 26 more; P5-04a 12.6 (v9): 19 more
+    REQUIRE(st.size() >= want.size() + 95U);
     CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - p503 - static_cast<std::ptrdiff_t>(want.size()),
                                                             st.end() - p503) == want);
-    CHECK(st[st.size() - 76U].first == "race_relations");   // P5-04 10.5: 30 keys after P5-03's and P5-03a's
-    CHECK(st[st.size() - 59U].first == "ruins_oldest_year");
-    CHECK(st[st.size() - 58U].first == "peoples_met_by_word");
-    CHECK(st[st.size() - 57U].first == "dispositions_warmed");
-    CHECK(st[st.size() - 26U].first == "figures");   // P5-06 10.5: the 26 keys of v8 close [stats]
-    CHECK(st[st.size() - 27U].first == "arms_buyers_at_end");
-    CHECK(st.back().first == "summary_major_calamities");
+    CHECK(st[st.size() - 95U].first == "race_relations");   // P5-04 10.5: 30 keys after P5-03's and P5-03a's
+    CHECK(st[st.size() - 78U].first == "ruins_oldest_year");
+    CHECK(st[st.size() - 77U].first == "peoples_met_by_word");
+    CHECK(st[st.size() - 76U].first == "dispositions_warmed");
+    CHECK(st[st.size() - 45U].first == "figures");   // P5-06 10.5: the 26 keys of v8 close [stats]
+    CHECK(st[st.size() - 46U].first == "arms_buyers_at_end");
+    CHECK(st[st.size() - 20U].first == "summary_major_calamities");   // P5-04a 12.6: 19 keys follow
+    CHECK(st.back().first == "dispositions_thawed");
     const auto m = hrtest::stats_of(text(HistoryLevel::full));
     CHECK(m.at("events_monster_appeared") == 2);
     CHECK(m.at("events_outpost_abandoned") == 1);

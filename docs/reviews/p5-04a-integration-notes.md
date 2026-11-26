@@ -115,3 +115,113 @@ The reference self-tests: `p5_06 units` 147 with no failure. `p5_03 units --vers
 as at HEAD). `p5_04 fixtures-028` and `fixtures --version 0.28.0 --quick` pass. `p5_04 i0-world --version 0.28.0`
 passes on geo-seed-0-512 and geo-seed-42-512. `p5_06 i0-world --version 0.28.0` fails on geo-seed-42-512, which is
 the spec gap of section 3.
+
+## Part 2: stale expected values of the older tests, goldens re-recorded
+
+Branch `p5/04a-int`. Build `linux-gcc-release` without warnings; determinism lint clean (self-test 22 snippets, 189 C++
+files, 0 findings). Part 2 changed no file under `worldgen/src`, `worldgen/include`, `tools/worldgen-cli` (sources) or
+`game/data`.
+
+### Changes by cause
+
+1. **Versions, streams, headers.** `0.27.0` to `0.28.0` in the db, generate, reader, P0-04 reference header, report
+   (`generator_version`), CLI version tests and `p5_06_figures_api.hpp`; stream count 97 to 98 (new last name
+   `hist.alliances.renew`, so the offsets of the name checks of `stages_regions_names_test.cpp` moved by one and
+   `history_conflict_data_test.cpp` expects it last); header `# worldgen history v8` to `v9` in the report tests, the CLI
+   report test and its help-text expectation.
+2. **Data roots.** The listings of `p3_01_history_data.hpp` (alliances, figures, relations, report, history monsters,
+   dragon) are again verbatim copies of `game/data` (replaced from the 0.27.0 text by the 0.28.0 text, the 20 fields
+   included); the fixture roots `worldgen/tests/data/geo` and `geo-small` carry the same six files (they were copies of
+   `game/data` before). The older stage listings (`p5_06_figures_data.hpp` `files_027()` and its figures constant,
+   `p5_04_alliances_data.hpp` alliances listing and its field table, `p5_03a_relations_data.hpp` field list) got the
+   same line edits (fields appended in the spec's order at the shipped values; `withheld_grudge` 150,
+   `withheld_to_break` 2; `temper_allied` 300/300/300/3000/150; skill 600 to 900; the Old 1400/1480; `hunt_permille`
+   12; dragon `overrun_permille` 1000; the changed report templates). Field counts: alliances 55 to 70, relations 34 to
+   37. `p3-01-data.txt` is the reference's hash of `game/data` (`38476882...`).
+3. **Catalogue values, templates, renderer.** Kind 58 `change`, kind 63 `term` and `band`, 67 `motive, years`, 69
+   `motive, count`, 75 `share, grievance`, 76 `reason, years` in the catalogue tests (kinds 64 and 70 and 74 keep
+   their values); the expected templates of 14.4 (battle prefix `{@causes:arms_sold=...}` through
+   `with_p506_templates`, the P5-04 template table, `disposition_turned`, `monster_died` `{monster:died}` with the
+   sentences "crumbled to dust at last" for the undead); P3-04 8.4: two to eight words are valid, nine are refused with
+   `choice of 9 words at byte 0`.
+4. **P3-06 battle cause check.** A battle may cite one extra `arms_sold` (kind 78) besides its declaration (9.2).
+5. **Old P5-04 invariant 12.** `p5_04_alliances_checks.hpp`: the clause "reason 0 only after `withheld_to_break` withheld
+   shares" is removed (replaced by the spec's 16 item 13, checked in `p5_04a_checks.hpp`); the other parts of item 12
+   stay.
+6. **Lead rulings.**
+   (a) I0 of P5-06: `p5_06_figures_reference.zero_data` and the C++ `p503api::figures_zero_of` set
+   `alliances.grasping_join_permille` to 1000. `p5_06_figures_reference.py i0-world --version 0.28.0 --inputs
+   p5-02-tests/inputs geo-seed-42-512 geo-seed-0-512` passes (2 checks, 0 failures); the C++ I0 cases pass.
+   (b) P3-04 r17 21.3 item 2 (`history_engine_r17_test.cpp`): the heuristic took any three-word choice at byte 0 for a
+   number clause. It now flags one only when the last word is exactly `#` (`{n?none|one|#}`); a word choice such as
+   alliance_spurned's `{reason?Still bitter|Long resentful|Outraged}` (the spec's template) or hero_rose's
+   `{quiet?After the raids of |After the raids of |When, after # quiet years, }` (a `#` inside a word) is allowed.
+   (c) P5-02 corrupt copy (`history_monsters_render_test.cpp`): the expected message is `... ending 1 is not its ruin's
+   ending 4`; in the 0.28.0 world s4 is a ruin whose cause gives ending 4, so the message describes the corruption
+   correctly (only the expected text was stale).
+7. **World-file hash goldens** (`p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt`, the inline hashes of
+   `db_determinism_test.cpp`, `stages_pipeline_test.cpp`, `p0_04_reference.hpp` table hashes, the CLI `cli_p1_generate`
+   and `cli_golden` tests): left failing for validation.
+
+Report tests (format v9): the civilization blocks of H1, H2, H9, H11 and H15 follow 12.2 (the count, then the three
+weightiest own events of salience 40 or more, no quiet stretch at summary), checked against the reference's text of
+each fixture (`p3_report_reference.py fixture` and `report`); the [stats] tails grew by 19 keys (12.6); a same-day group
+line `e82, e83 ...` (12.4) is read as several events by the shared checks, the engineer test and the browser test;
+`allies:` names and `against c4 The Gub Horde` / `in fear of c3 The Hold of Durn` in the H16 expectations (the
+reference's text); the claim-note hashes of `history_report_v3_test.cpp` are the reference's text of the same world at
+v9 (summary `1fc91d5d...`, full `d4036290...`). The rulers line test accepts `1 reign`. P3-06 `region_name` renames of
+the P3-04 r10 render test now also cover region 5.
+
+Fixtures H16 and H17 (`worldgen/tests/data/history-report/h16-alliances.toml`, `h17-figures.toml`): their kinds
+`ally_refused` and `alliance_betrayed` had no values (the 0.26.0 catalogue) and one event of each; a kind that lacks the
+value reads as 0 in the C++ [stats] but as absent in the reference (`allies_refused_excused`, `refusal_motive_0`,
+`betrayal_motive_0` differed by one). The fixtures now carry the 0.28.0 values (`motive, count` = 3, 1 and `motive,
+years` = 2, 100); no sentence changes. (A value that the catalogue does not declare reading as 0 is a small difference
+between engine and reference for old files; real worlds always hold the values.)
+
+### Goldens re-recorded (the reference's `golden` command, never C++ output)
+
+`I` = `~/.cache/the-unmapped/out/p5-02-tests/inputs` (geography inputs), `RI` = `~/.cache/the-unmapped/out/p504a-int/report-inputs`
+(`p3_report_reference.py --version 0.28.0 build-inputs` of the 0.28.0 C++ worlds `gen.sh` made at 1024 and 512).
+
+| File | Script and mode |
+| --- | --- |
+| `p3-01-data.txt` | `p3_data_reference.py golden --version 0.28.0` |
+| `p3-04-engine.txt` | `p3_engine_reference.py golden --version 0.28.0 --inputs I` |
+| `p3-05-peoples.txt` | `p3_peoples_reference.py golden --version 0.28.0 --inputs I` |
+| `p3-06-conflict.txt` | `p3_conflict_reference.py golden --version 0.28.0 --inputs I` |
+| `p5-12-renaming.txt` | `p5_12_renaming_reference.py golden --version 0.28.0 --inputs I` |
+| `p5-02-monsters.txt` | `p5_02_monsters_reference.py golden --version 0.28.0 --inputs I` |
+| `p5-03-relations.txt` | `p5_03_relations_reference.py golden --version 0.28.0 --inputs I` |
+| `p3-07-report.txt` (H18 included) | `p3_report_reference.py golden --inputs RI` (default 0.28.0 now) |
+| `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt` | `p4_timeline_reference.py`, `p4_markers_reference.py`, `p4_browser_reference.py golden --inputs RI` |
+| `p5-04-alliances.txt`, `p5-06-figures.txt` | `p5_04_alliances_reference.py`, `p5_06_figures_reference.py golden --inputs RI` |
+
+`p3-02-names.txt` is kept as committed (spec 17). Reference changes needed for this: (1) each reference run as a script
+registers itself under its module name (`sys.modules.setdefault`), because the flag `p504a` of
+`p3_conflict_reference` was off in the imported copy of the module and the alliances replay then wrote the 0.27.0 value
+lists (an assertion in the engine reference's `append`); (2) `p3_report_reference`, `p4_timeline_reference`,
+`p4_markers_reference` and `p4_browser_reference` default to 0.28.0 (meta `generator_version`, accept
+`--version 0.28.0`); (3) `p4_browser_reference` block lines follow 12.2 and `civ_alliance_lines_v9`; (4) the I0
+`zero_data` ruling above. `worldgen/tests/reference/README.md` has a section "0.28.0, integration part 2".
+
+### Listed, not fixed
+
+**Seed 9 of the conflict stress geographies: engine and reference disagree** (not patched, not dug). The cases are
+`syn-9` and `stress-9` of `p3-06-conflict.txt` and the fixtures built on stress seed 9: `monsters-small-9` (P5-02
+19.3) and `rename-small-9` (P5-12 13, 12 checks). Every other seed of the same cases agrees (seeds 0 to 15 of the
+sixteen synthetic geographies, the other stress seeds and every world case). First lines:
+
+```
+P3-06 14, 16.2 item 15 ... (history_conflict_property_test.cpp:49): syn-9: event, event_cause, event_participant,
+    event_value, relation, settlement, site differ (event 56706657... against 6e31eac9...)
+P3-06 7, 14 ... stress-9: site differs only (90334c1e... against ba6fddec...); the same site hash is monsters-small-9's
+P5-12 13 ... rename-small-9: region_name differs (9f9401fc... against 09db1345...)
+```
+
+The history of syn-9 diverges (event tables), the history of stress-9 does not (only `site`). The next agent should
+dump the first differing event or site row of seed 9 on both sides.
+
+Entries that fail now: `worldgen-tests-renaming`, `-conflict`, `-monsters` (seed 9 only) and `worldgen-tests-other`,
+`worldgen-cli-tests-other` (world-file hashes only: `cli_golden_test`, `cli_p1_generate_test`, `db_determinism_test`,
+`stages_pipeline_test`). Every other entry passes, the partition checks included.

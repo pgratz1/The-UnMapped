@@ -8,7 +8,7 @@ reign_span_permille = 1000
 accession_age_permille = 250
 accession_span_permille = 250
 temper_strain_permille = { steady = 1000, warlike = 2000, peaceable = 0, grasping = 1000, just = 1000 }
-temper_allied_permille = { steady = 1000, warlike = 1000, peaceable = 1000, grasping = 3000, just = 500 }
+temper_allied_permille = { steady = 300, warlike = 300, peaceable = 300, grasping = 3000, just = 150 }
 temper_spoils_permille = { steady = 0, warlike = 0, peaceable = 0, grasping = -400, just = 400 }
 short_reign_permille = 500
 short_reign_split_permille = 100

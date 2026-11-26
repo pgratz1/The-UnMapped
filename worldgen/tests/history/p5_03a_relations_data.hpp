@@ -44,6 +44,10 @@ inline const std::vector<RelField>& relations_fields() {
             out.push_back(f);
         }
         for (const RelField& f : new_relations_fields()) out.push_back(f);
+        // P5-04a 14.2 (0.28.0): three more after expel_gap_years, at their shipped values
+        out.push_back({"turn_cooldown_years", 0, 100000, 800});
+        out.push_back({"expel_settled_years", 0, 100000, 800});
+        out.push_back({"expel_fresh_years", 0, 100000, 150});
         return out;
     }();
     return v;
@@ -67,8 +71,8 @@ inline const std::vector<std::pair<std::string, std::string>>& templates() {
          "settlement_captured=the conquests,people_expelled=the expulsions,refugees_arrived=years of shelter given,"
          "war_declared=wars against a common enemy,monster_raid=the raids of a common foe,settlement_overrun=the raids "
          "of a common foe,peoples_met=long years of peace,disposition_turned=long years apart|After |, }the "
-         "{race_a:plural} and the {race_b:plural} {band?came to hate one another|grew wary of one another|became "
-         "friends}."},
+         "{race_a:plural} and the {race_b:plural} {change?came to hate one another|put aside their hatred of one "
+         "another|grew wary of one another|became friends}."},
         {"refugees_arrived",
          "{@causes:sacked=the sack,settlement_captured=the fall,settlement_overrun=the ravage,people_expelled=the "
          "expulsion,settlement_abandoned=the abandonment of their home,settlement_abandoned_to=the abandonment of "
@@ -90,7 +94,7 @@ inline const std::vector<std::pair<std::string, std::string>>& templates() {
          "escaped|# escaped}."},
         {"monster_driven_off", "{civilization} drove {monster} back to {monster:its} lair{monster:where}."},
         {"monster_slain", "{slayer} hunted down and slew {monster}{monster:aside}{monster:where}."},
-        {"monster_died", "{monster}{monster:aside} died of great age{monster:where}."},
+        {"monster_died", "{monster}{monster:aside} {monster:died}{monster:where}."},
         {"undead_rose",
          "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }{monster} rose from "
          "{monster:its} graves{monster:where}."}};

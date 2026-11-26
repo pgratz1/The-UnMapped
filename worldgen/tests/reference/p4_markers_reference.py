@@ -88,7 +88,7 @@ INPUTS_026 = tl.INPUTS_P5_04
 # gain R(s) + OLD_RUIN_YEARS <= E; the glyph dump gains `glyph tower 3` (READINGS K3 to K7). Timeline rules p5-06.
 # `--version 0.26.0` serves the committed P5-04 file.
 INPUTS = tl.INPUTS_P5_06
-GENERATOR_VERSION = "0.27.0"
+GENERATOR_VERSION = "0.28.0"
 MINE_GLYPH = 19   # 16 + site kind 3
 TOWER_GLYPH = 20  # 16 + site kind 4 (P5-06 11.4)
 TOWER_FILL = (120, 60, 180)   # MARKER_TOWER
@@ -96,7 +96,7 @@ OLD_RUIN_YEARS = 1500   # P5-06 25.1 (e)
 
 
 def v027():
-    return GENERATOR_VERSION == "0.27.0"
+    return GENERATOR_VERSION in ("0.27.0", "0.28.0")
 
 
 def site_kinds():
@@ -139,7 +139,7 @@ def use_version(v):
     elif v == "0.26.0":
         GENERATOR_VERSION, INPUTS = "0.26.0", INPUTS_026
         tl.RULES = "p5-04"
-    elif v != "0.27.0":
+    elif v not in ("0.27.0", "0.28.0"):
         raise SystemExit("--version: 0.22.0, 0.23.0, 0.24.0, 0.25.0, 0.26.0 or 0.27.0")
 WORLD_CASES = tl.WORLD_CASES
 
@@ -1221,4 +1221,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p4_markers_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

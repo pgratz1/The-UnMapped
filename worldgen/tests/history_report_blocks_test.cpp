@@ -117,14 +117,14 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
     const std::string s = summary("h1-war-and-ruin");
     const std::vector<std::string> lines = hrtest::lines_of(s);
     REQUIRE(lines.size() > 3U);
-    CHECK(lines[0] == "# worldgen history v8");   // r19 25.1; v6 since P5-03a 9.1
+    CHECK(lines[0] == "# worldgen history v9");   // r19 25.1; v6 since P5-03a 9.1
     CHECK(lines[1] == "level = summary");
     CHECK(lines[2] == "[settings]");
     CHECK(block(s, "[settings]") == std::vector<std::string>{
                                         "seed = 101", "seed_phrase =", "map_size = 512", "history_span = 3000",
                                         "history_detail = normal", "races = elf,goblin", "civs_per_race = auto",
                                         "event_intensity = normal", "monster_pressure = normal",
-                                        "divine_activity = normal", "divine_script =", "generator_version = 0.27.0"});
+                                        "divine_activity = normal", "divine_script =", "generator_version = 0.28.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
               "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "
@@ -177,9 +177,13 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               // the quiet stretches only
               "  events: 19",
               "  fate: alive in 3000: 3 regions, 3 settlements, population 1920",
+              // P5-04a 12.2 (v9): the count, then at most three lines of the realm's own deeds by salience (a quiet
+              // stretch is no milestone of the summary)
               "  milestones: 8",
-              "    2050-2499 e33 quiet_stretch: For 450 years, from 2050 to 2499, the land was quiet, and two realms "
-              "kept the peace. (Finen: one new generation of rulers.)",
+              "    2001 e22 war_declared: Finen declared war on the Skib Horde over Gr\\xC3\\xA9y \\\\ Moor. (Claimed "
+              "since 1999.)",
+              "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 fled.",
+              "    2010 e30 civ_conquered: The Skib Horde fell to Finen.",
                "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7): in every block
     // the relation rows stay at full in place of the adversary lines
     const std::vector<std::string> c1_full = civ_block(full("h1-war-and-ruin"), 1);
@@ -206,7 +210,11 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "    Finen (c1): 1 war, won 0, lost 1, drawn 0, open 0, 2001-2010; now none",
               "  fate: ended in 2010, e30: The Skib Horde fell to Finen.",
               // P5-03a 9.2 (v6): an ended realm's count is that of its full list (eight), no quiet stretch
-              "  milestones: 8", "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7)
+              // P5-04a 12.2 (v9): the count of the full list, then the shown deeds
+              "  milestones: 2",
+              "    1500 e9 settlement_founded: The Skib Horde founded Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor.",
+              "    1510 e12 settlement_founded: The Skib Horde founded Redwall in Gr\\xC3\\xA9y \\\\ Moor.",
+              "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7)
     // the same realm at full keeps 24.5's block (eight milestones)
     const std::vector<std::string> c2_full = civ_block(full("h1-war-and-ruin"), 2);
     CHECK(contains_line(c2_full, "  home: Gr\\xC3\\xA9y \\\\ Moor (rg3), grassland"));
@@ -232,9 +240,9 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "    Finen (c1): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2030; now at peace",
               "  events: 13",
               "  fate: alive in 3000: 1 region, 1 settlement, population 1000",
-              "  milestones: 8",   // P5-03a 9.2 (v6)
-              "    2050-2499 e33 quiet_stretch: For 450 years, from 2050 to 2499, the land was quiet, and two realms "
-              "kept the peace. (Gutrot Clans: 18 new generations of rulers.)",
+              "  milestones: 2",   // P5-04a 12.2 (v9)
+              "    1500 e11 settlement_founded: Gutrot Clans founded Ghashpit in the Ashen Fields.",
+              "    1600 e13 settlement_founded: Gutrot Clans founded Mossgate in Low Marsh.",
                "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3 (v7)
     // the upland rule of 6.6 (4 x walk_cells < cells): Stone Teeth, 300 of 2000
     CHECK(contains_line(block(s, "[present]"), "regions: 6; held 4, free 2"));
@@ -399,7 +407,7 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                  "  settlements: 0 founded, 0 held at the end, 0 ruined",
                                  "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: none",
                                  "  events: 1", "  fate: alive in 2000: 0 regions, 0 settlements, population 0",
-                                 "  milestones: 1", "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-03a 9.2 (v6): a count at summary; P5-04 10.3
+                                 "  milestones: 0", "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04a 12.2 (v9): the count of the shown deeds; P5-04 10.3
     CHECK(contains_line(civ_block(full("h2-minimal"), 1),
                         "    0 e2 civ_founded: The Humans founded the Kingdom of Alird in Northeast Downs."));
     CHECK(block(s, "[phases]").empty());

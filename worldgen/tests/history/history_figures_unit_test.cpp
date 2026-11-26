@@ -106,7 +106,7 @@ const std::vector<Entry>& entries() {
     static const std::vector<Entry> e = {
         {"ruler", "conquests", 1, 2, "the Conqueror"},     {"ruler", "betrayals", 1, 1, "the Faithless"},
         {"ruler", "realm_fell", 1, 0, "the Last"},         {"ruler", "wars_won", 2, 4, "the Victorious"},
-        {"ruler", "reign_permille", 1300, 1450, "the Old"}, {"ruler", "founded_years", 1, 3000, "the Founder"},
+        {"ruler", "reign_permille", 1400, 1480, "the Old"}, {"ruler", "founded_years", 1, 3000, "the Founder"},
         {"general", "battles_unbeaten", 3, 6, "the Unbeaten"}, {"general", "battles_won", 5, 10, "the Hammer"},
         {"hero", "slew_might", 1, 1200, "{slayer}"},      {"claimant", "exiled", 1, 0, "the Exile"},
         {"caster", "blights", 1, 1, "the Accursed"},       {"caster", "books", 3, 0, "the Learned"}};
@@ -266,8 +266,8 @@ TEST_CASE("P5-06 6.10, 18.1 item 10: the epithet rule (order, min, the cap on or
     CHECK(epithet("ruler", M{{"conquests", 1}}, "", M{{"the Conqueror", 2}}).empty());
     CHECK(epithet("ruler", M{{"realm_fell", 1}}, "", M{{"the Last", 2}}).empty());   // substantial 0
     CHECK(epithet("ruler", M{{"conquests", 1}, {"wars_won", 5}}, "", {}) == "the Conqueror");
-    CHECK(epithet("ruler", M{{"reign_permille", 1300}}, "", {}) == "the Old");
-    CHECK(epithet("ruler", M{{"reign_permille", 1299}}, "", {}).empty());
+    CHECK(epithet("ruler", M{{"reign_permille", 1400}}, "", {}) == "the Old");
+    CHECK(epithet("ruler", M{{"reign_permille", 1399}}, "", {}).empty());
     CHECK(epithet("hero", M{{"slew_might", 6000}}, "Dragonslayer", M{{"Dragonslayer", 5}}) == "Dragonslayer");
     CHECK(epithet("hero", M{{"slew_might", 700}}, "Trollbane", M{{"Trollbane", 2}}).empty());
     CHECK(epithet("general", M{{"battles_won", 10}, {"battles_unbeaten", 10}}, "", {}) == "the Unbeaten");
@@ -322,7 +322,7 @@ TEST_CASE("P5-06 11.4: the library's glyph upper left of its town, a mine's uppe
 
 // --- the library (from integration on) ----------------------------------------------------------------------
 
-TEST_CASE("P5-06 9.4, 3, 8.1: generator 0.27.0, schema 12") {
+TEST_CASE("P5-06 9.4, 3, 8.1: generator 0.28.0, schema 12") {
     P506_REQUIRE_INTEGRATED();
     CHECK(worldgen::GENERATOR_VERSION == std::string_view(p506api::GENERATOR_SPEC));
     CHECK(static_cast<std::int64_t>(worldgen::db::SCHEMA_VERSION) == p506api::SCHEMA_SPEC);
@@ -370,11 +370,11 @@ TEST_CASE("P5-06 4, 18.1 item 1: the 0.27.0 data load; each new figures field re
         t.replace(at, from.size(), to);
         return load(g);
     };
-    const Load bad = with("skill_min = 500", "skill_min = 801");   // the shipped 500 and 800 (15.2 step 3)
+    const Load bad = with("skill_min = 600", "skill_min = 901");   // the shipped 600 and 900 (P5-04a L-7)
     REQUIRE_FALSE(bad.ok());
-    CHECK(contains(dump(bad), "check 'figures_skill_ordered' failed for 'history.figures': skill_min 801 is above "
-                              "skill_max 800"));
-    CHECK(with("skill_min = 500", "skill_min = 800").ok());
+    CHECK(contains(dump(bad), "check 'figures_skill_ordered' failed for 'history.figures': skill_min 901 is above "
+                              "skill_max 900"));
+    CHECK(with("skill_min = 600", "skill_min = 900").ok());
     const Load th = with("min = 1, substantial = 2, text = \"the Conqueror\"", "min = 3, substantial = 2, text = \"the "
                                                                               "Conqueror\"");
     REQUIRE_FALSE(th.ok());

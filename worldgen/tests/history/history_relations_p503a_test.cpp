@@ -95,7 +95,7 @@ TEST_CASE("P5-03a 10.1: history.relations: the 0.24.0 fields (shelter 90, settle
     CHECK(h::check_history_data(*l.content).empty());
     const wd::Record& r = record_of(*l.content, "relations");
     REQUIRE(r.size() == p503a::relations_fields().size());
-    REQUIRE(r.size() == 34U);   // 23 of P5-03 and 11 of 10.1
+    REQUIRE(r.size() == 37U);   // 23 of P5-03 and 11 of 10.1
     for (std::size_t i = 0; i < r.size(); ++i) {
         CAPTURE(i);
         CHECK(r.name_at(i) == p503a::relations_fields()[i].name);

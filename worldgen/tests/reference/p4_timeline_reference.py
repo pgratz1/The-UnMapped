@@ -154,7 +154,7 @@ def default_inputs():
 
 
 def generator_version():
-    return "0.27.0" if r7() else "0.26.0" if r6() else "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
+    return "0.28.0" if r7() else "0.26.0" if r6() else "0.25.0" if RULES == "p5-03a" else "0.24.0" if r5() else "0.23.0" if r4() else "0.22.0" if r3() else "0.21.0" if p403() else "0.20.0"
 
 READINGS = """
 T1 13.4 cases: "the world cases of world-hashes.sh with history" are the seven cases geo-phrase-512,
@@ -1145,7 +1145,7 @@ def fixture_ddl():
 def fixture_meta(meta):
     """READINGS F5: a 0.27.0 fixture is the 0.26.0 one with meta generator_version 0.27.0 and schema_version 12."""
     if r7():
-        meta = dict(meta, generator_version="0.27.0", schema_version="12")
+        meta = dict(meta, generator_version="0.28.0", schema_version="12")
     return meta
 
 
@@ -2069,4 +2069,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p4_timeline_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

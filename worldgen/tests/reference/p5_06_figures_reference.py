@@ -2188,6 +2188,9 @@ def zero_data(dat=None):
     d.figures = dict(pdr.FIGURES_ZERO_027)
     if _pcr().FLAGS.get("p504a"):   # P5-04a 14.2a: the zero root holds the new fields at their shipped values
         d.figures.update({n: base_figures.get(n, v) for n, _, _, v in pdr.FIGURES_NEW_RANGES_028})
+        # lead ruling (P5-04a integration, 6a): the I0 configuration sets grasping_join_permille to 1000, so that
+        # the zero figures tuning (whose reigns still draw tempers) equals "no figures subsystem" again
+        d.alliances = dict(d.alliances, grasping_join_permille=1000)
     return d
 
 
@@ -3030,4 +3033,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p5_06_figures_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

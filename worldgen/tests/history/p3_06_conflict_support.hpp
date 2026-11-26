@@ -683,8 +683,19 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             // r7 7.3 item 4 (0.17.0): with the shipped loss_winner 80 <= loss_loser 250 the victors never lose
             // more than the defeated (dead_W from the smaller force)
             CHECK(x.values.at(id).at(1) <= x.values.at(id).at(2));
-            REQUIRE(x.causes.at(id).size() == 1U);
-            CHECK(x.kind(x.causes.at(id)[0]) == k_war_declared);
+            // P5-04a 9.2 (0.28.0): a battle won with arms bought of an ally also cites that one arms_sold (kind 78)
+            std::vector<std::int64_t> cs;
+            std::int64_t arms = 0;
+            for (const std::int64_t c : x.causes.at(id)) {
+                if (x.kind(c) == 78) {
+                    ++arms;
+                } else {
+                    cs.push_back(c);
+                }
+            }
+            CHECK(arms <= 1);
+            REQUIRE(cs.size() == 1U);
+            CHECK(x.kind(cs[0]) == k_war_declared);
         }
         if (is_claim(k)) {  // 8.3 item 4 (N2): a colony of the same step is no claim cause, unless it is
                              // the claimed region's owner_event (its ownership is live state)

@@ -102,7 +102,7 @@ DEFAULT_INPUTS_027 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.27.0 histories (P5-06 phase 2: build-inputs)
 DEFAULT_INPUTS_028 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p504a-int",
                                   "report-inputs")   # 0.28.0 histories (P5-04a integration: build-inputs)
-GENERATOR_VERSION = "0.27.0"
+GENERATOR_VERSION = "0.28.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
@@ -266,7 +266,7 @@ def use_version(v):
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.27.0")
+use_version("0.28.0")   # P5-04a integration: 0.28.0 by default (--version 0.27.0 serves the committed 0.27.0 file)
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -3294,4 +3294,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p3_report_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

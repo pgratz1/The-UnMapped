@@ -45,8 +45,15 @@ std::vector<std::int64_t> chronicle_ids(const std::string& text) {
         if (l.empty() || l[0] < '0' || l[0] > '9') continue;
         const std::size_t sp = l.find(" e");
         if (sp == std::string::npos) continue;
-        const std::size_t end = l.find(' ', sp + 2);
-        out.push_back(std::stoll(l.substr(sp + 2, end - sp - 2)));
+        // P5-04a 12.4: a same-day group line is `<span> e<id>, e<id> <key>/<salience>: ...`
+        std::size_t at = sp;   // the space before an "e<id>"
+        while (true) {
+            std::size_t used = 0;
+            out.push_back(std::stoll(l.substr(at + 2), &used));
+            at += 2 + used;
+            if (l.compare(at, 3, ", e") != 0) break;
+            at += 1;
+        }
     }
     return out;
 }

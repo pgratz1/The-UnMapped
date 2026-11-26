@@ -289,7 +289,10 @@ inline wd::Value tempers_of(std::int64_t v) {
     for (const char* t : {"steady", "warlike", "peaceable", "grasping", "just"}) r.add(t, V(v));
     return wd::Value::record(std::move(r));
 }
-inline wd::ContentSet figures_zero_of(const wd::ContentSet& base) {
+// P5-04a integration (lead ruling 6a): the zero configuration also sets alliances.grasping_join_permille to 1000
+// (neutral), so that the zero figures tuning, whose reigns still draw tempers, equals "no figures subsystem" at 0.28.0.
+inline wd::ContentSet figures_zero_of(const wd::ContentSet& base0) {
+    const wd::ContentSet base = with_history(base0, "alliances", {{"grasping_join_permille", V(1000)}});
     return with_history(base, "figures",
                         {{"name_rulers", wd::Value::boolean(false)}, {"general_scale_permille", V(0)},
                          {"hero_scale_permille", V(0)}, {"caster_ppm", V(0)}, {"exile_permille", V(0)},
@@ -335,7 +338,9 @@ inline const std::map<std::string, wd::Value>& relations_small_edits() {
         // new *_memory fields large as the others, no expulsion gap; the settlers' span 400 (600 + 400 = 1000 passes
         // relations_settlers; reading X4)
         {"meet_sealed_hops", V(3)},  {"meet_sealed_years", V(0)},  {"foe_war_memory", V(300)},
-        {"foe_monster_memory", V(300)}, {"expel_gap_years", V(0)}, {"conquest_settlers_span_permille", V(400)}};
+        {"foe_monster_memory", V(300)}, {"expel_gap_years", V(0)}, {"conquest_settlers_span_permille", V(400)},
+        // P5-04a 14.2 (0.28.0): relations-small holds turn_cooldown_years 0 (the reference's RELATIONS_SMALL_028)
+        {"turn_cooldown_years", V(0)}};
     return m;
 }
 inline const wd::ContentSet& relations_small_content() {

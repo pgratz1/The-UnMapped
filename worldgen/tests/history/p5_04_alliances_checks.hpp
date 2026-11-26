@@ -478,14 +478,8 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         } else if (r.region(e) != r.region(wh[0])) {
             out.push_back("12: e" + s(e) + " not in its withheld share's region");
         }
-        if (r.value(e, "reason") == 0) {
-            std::int64_t n = 0;
-            for (const std::int64_t c : r.of("spoils_withheld")) {
-                const std::set<std::int64_t> pr{r.one(c, "ally"), r.one(c, "principal")};
-                n += (c > last && c < e && pr == std::set<std::int64_t>{z, P}) ? 1 : 0;
-            }
-            if (n < d.withheld_to_break) out.push_back("12: e" + s(e) + " reason 0 with " + s(n) + " withheld");
-        }
+        // The old rule "reason 0 only after withheld_to_break withheld shares" is replaced at 0.28.0 by P5-04a 16
+        // item 13 (a spurning's reasons 0 to 2: P5-04a 3.4 to 3.6; checked in p5_04a_checks.hpp).
     }
     // 13
     std::map<std::int64_t, std::int64_t> per_settlement;

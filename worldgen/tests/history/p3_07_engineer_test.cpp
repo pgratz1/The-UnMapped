@@ -142,7 +142,7 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
                 headings.push_back(l);
             }
         }
-        CHECK(lines[0] == "# worldgen history v8");  // P3-07 r21 26.1; P5-02 12.1; P5-03a 9.1
+        CHECK(lines[0] == "# worldgen history v9");  // P3-07 r21 26.1; P5-02 12.1; P5-03a 9.1
         // r17 24.4: the chronicle before the civilizations, [phases] at full only.
         if (text == &full) {
             CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[chronicle]",
@@ -191,8 +191,8 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
                 CHECK(l.find("new generation") != std::string::npos);
             }
         }
-        CHECK(stretch_milestones > 0);
-        CHECK(stretch_milestones <= blocks);
+        CHECK(stretch_milestones == 0);   // P5-04a 12.2 (v9): no quiet-stretch line at summary
+        CHECK(blocks > 0);
     }
     // r19 25.12 item 2: invariant 6 is read on full.
     const std::map<std::string, std::string> stats = keyed(block(f, "[stats]"));
@@ -215,7 +215,10 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
         hidden = 0;
         for (const std::string& l : chronicle) {
             if (!l.empty() && l[0] >= '0' && l[0] <= '9') {
+                // P5-04a 12.4: a same-day group line `<span> e1, e2 <key>/<salience>: ...` holds several events
+                const std::string head = l.substr(0, l.find(':'));
                 ++n;
+                for (std::size_t at = head.find(", e"); at != std::string::npos; at = head.find(", e", at + 1)) ++n;
             } else if (l.rfind("(", 0) == 0) {
                 hidden += std::stoll(l.substr(1));
             }

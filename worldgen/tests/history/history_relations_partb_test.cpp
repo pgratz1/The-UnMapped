@@ -116,9 +116,9 @@ const Scene& scene() {
         add("53a", "beasts_bold", r, 1, {{1, 4, 1}, {2, 3, 1}}, {5, 41}, {});
         add("53b", "beasts_bold", r, 1, {{1, 4, 1}, {2, 3, 1}}, {5, 0}, {});
         add("56", "settlement_fled", r, 1, {{1, 8, s.m1}, {2, 3, 1}}, {}, {s.ev["48a"]});
-        add("58a", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {-600, 0}, {s.ev["sack"]});
-        add("58b", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {300, 2}, {});
-        add("58c", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {0, 1}, {s.ev["58a"]});
+        add("58a", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {-600, 0, 0}, {s.ev["sack"]});
+        add("58b", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {300, 2, 3}, {});
+        add("58c", "disposition_turned", 0, 0, {{1, 1, 1}, {2, 1, 2}}, {0, 1, 2}, {s.ev["58a"]});
         for (std::int64_t k = 0; k <= 3; ++k) {
             add("59-" + n(k), "refugees_arrived", r, 1, {{1, 4, 1}, {2, 3, 1}, {3, 4, 2}, {4, 1, 1}}, {240, k},
                 {s.ev["sack"]});
@@ -163,7 +163,7 @@ TEST_CASE("P5-03 8.1, 11.3: kinds 56 to 62 appended after 55, their uses, roles 
     for (const K& k : {K{56, "settlement_fled", true, 1, 1, "1:monster:8:1-1;2:civilization:3:1-1;", ""},
                        // P5-03a 10.4 (0.25.0): sealed after band
                        K{57, "peoples_met", true, 1, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band,sealed"},
-                       K{58, "disposition_turned", true, 0, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band"},
+                       K{58, "disposition_turned", true, 0, 0, "1:race_a:1:1-1;2:race_b:1:1-1;", "disposition,band,change"},
                        K{59, "refugees_arrived", true, 1, 1,
                          "1:settlement:4:1-1;2:civilization:3:1-1;3:origin:4:1-1;4:race:1:1-1;", "people,standing"},
                        K{60, "settlement_mixed", true, 1, 1,

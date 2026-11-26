@@ -69,7 +69,7 @@ INPUTS_025 = tl.INPUTS_P5_03A
 INPUTS_026 = tl.INPUTS_P5_04
 INPUTS = prr.DEFAULT_INPUTS_027   # 0.27.0 (P5-06 phase 2); --version 0.26.0 to 0.23.0 serves the file of that version
 SCRATCH = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-05-a-tests", "fixtures-ref")
-GENERATOR_VERSION = "0.27.0"   # P5-06 11.3: group figures = 8, ALL_GROUPS 0x1FF (0.26.0: P5-04's alliances = 7, 0xFF)
+GENERATOR_VERSION = "0.28.0"   # P5-04a: the groups are P5-06's; P5-06 11.3: group figures = 8, ALL_GROUPS 0x1FF (0.26.0: P5-04's alliances = 7, 0xFF)
 WORLD_CASES = tl.WORLD_CASES
 SLOW_CASES = tuple(n for n in WORLD_CASES if n.endswith("-1024"))
 
@@ -459,7 +459,12 @@ class Browser:
         else:
             o.append([lit("  fate: ended in %d, " % c[8]), evs(c[9]), lit(": "), sen(c[9])])
         ms = prr.milestones(w, cid, prr.MILESTONES_ENDED if short else prr.MILESTONES)
-        if prr.V6 and level == "summary":   # P5-03a 9.2 (report v6): the full list's count, then its quiet stretches
+        if prr.V9 and level == "summary":   # P5-04a 12.2 (report v9): the count of own events of salience >= 40, top three
+            mv = prr.milestones_v9(w, cid)
+            o.append([lit("  milestones: %d" % len(mv))])
+            ms = [] if len(w.t["civilization"]) > prr.SUMMARY_LINES_CIVS else sorted(
+                sorted(mv, key=lambda x: (-w.ev[x][7], x))[:prr.SUMMARY_MILESTONES_V9])
+        elif prr.V6 and level == "summary":   # P5-03a 9.2 (report v6): the full list's count, then its quiet stretches
             full_ms = prr.milestones(w, cid, prr.MILESTONES)
             o.append([lit("  milestones: %d" % len(full_ms))])
             ms = [x for x in full_ms if w.ev[x][3] == w.K["quiet_stretch"]]
@@ -473,7 +478,7 @@ class Browser:
                 line += [lit(" ("), txt(nt), lit(")")]
             o.append(line)
         if prr.V7:   # P5-04 10.3: the allies lines at the end of the block (the report's text, plain segments)
-            for t_ in prr.p504.civ_alliance_lines(prr.alliance_world(w), cid, level):
+            for t_ in (prr.p504.civ_alliance_lines_v9 if prr.V9 else prr.p504.civ_alliance_lines)(prr.alliance_world(w), cid, level):
                 if t_.startswith("    c"):
                     z = int(t_[5:t_.index(" ", 5)])
                     o.append([lit("    c%d " % z), txt(w.civ[z][1]), lit(t_[t_.index(": "):])])
@@ -1182,8 +1187,8 @@ def main(argv):
             tl.RULES = "p5-04"
             use_groups("0.26.0")
             INPUTS, GENERATOR_VERSION = INPUTS_026, "0.26.0"
-        elif v != "0.27.0":
-            raise SystemExit("--version: 0.23.0 to 0.27.0")
+        elif v not in ("0.27.0", "0.28.0"):
+            raise SystemExit("--version: 0.23.0 to 0.28.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":
@@ -1213,4 +1218,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p4_browser_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

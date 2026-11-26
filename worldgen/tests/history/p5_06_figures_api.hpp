@@ -35,8 +35,8 @@ namespace h = worldgen::history;
 namespace ins = worldgen::inspect;
 
 inline constexpr std::int64_t SCHEMA_SPEC = 12;                    // 9.4
-inline constexpr const char* GENERATOR_SPEC = "0.27.0";            // header
-inline constexpr std::int64_t STREAMS_SPEC = 97;                   // 3
+inline constexpr const char* GENERATOR_SPEC = "0.28.0";            // header
+inline constexpr std::int64_t STREAMS_SPEC = 98;                   // 3
 inline constexpr std::int64_t KINDS_SPEC = 92;                     // 8.1
 inline constexpr std::uint32_t ALL_GROUPS_SPEC = 0x1FF;            // 11.3
 inline constexpr std::uint8_t GROUP_FIGURES = 8;                   // 11.3

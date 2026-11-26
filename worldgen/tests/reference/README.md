@@ -2312,3 +2312,36 @@ form = the report form; the summary flag = the summary chronicle's ids; `select`
 over 1,350 filters per case; search's order, limit and folding; `event_place` against the places of P4-04 3.4 in
 every year (512 cases and fixtures); and, unless `--quick`, the committed golden file. The readings are `READINGS`
 B1 to B12.
+
+### 0.28.0, integration part 2 (goldens of the older stages)
+
+The older reference-made goldens were re-recorded at 0.28.0 by running each reference's `golden` command, never by
+copying C++ output (`docs/reviews/p5-04a-integration-notes.md`, "Part 2"):
+
+```
+I=~/.cache/the-unmapped/out/p5-02-tests/inputs                       # geography inputs (unchanged)
+RI=~/.cache/the-unmapped/out/p504a-int/report-inputs                 # build-inputs of the 0.28.0 C++ worlds
+python3 -B worldgen/tests/reference/p3_data_reference.py golden --version 0.28.0
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p5_12_renaming_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p5_02_monsters_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p5_03_relations_reference.py golden --version 0.28.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_report_reference.py --version 0.28.0 build-inputs <C++ worlds> $RI
+python3 -B worldgen/tests/reference/p3_report_reference.py golden --inputs $RI
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden --inputs $RI
+python3 -B worldgen/tests/reference/p4_markers_reference.py golden --inputs $RI
+python3 -B worldgen/tests/reference/p4_browser_reference.py golden --inputs $RI
+python3 -B worldgen/tests/reference/p5_04_alliances_reference.py golden --inputs $RI
+python3 -B worldgen/tests/reference/p5_06_figures_reference.py golden --inputs $RI
+```
+
+`p3-02-names.txt` is kept as committed (spec 17). Changes to the references for this: every script with a `__main__`
+guard registers itself under its module name (`sys.modules.setdefault`), so that a replay started as a script and the
+modules it imports share one set of flags (the 0.28.0 flag `p504a` was otherwise off in the imported copy of
+`p3_conflict_reference`); `p3_report_reference`, `p4_timeline_reference`, `p4_markers_reference` and
+`p4_browser_reference` default to generator 0.28.0 (`--version 0.27.0` of `p3_report_reference` serves the 0.27.0
+text; the three P4 references keep their 0.27.0 rules and write the 0.28.0 meta); the zero figures tuning of I0
+(`p5_06_figures_reference.zero_data`) sets `alliances.grasping_join_permille` to 1000 (lead ruling, 0.28.0), and
+`p5_06_figures_reference.py i0-world --version 0.28.0` passes on geo-seed-0-512 and geo-seed-42-512.

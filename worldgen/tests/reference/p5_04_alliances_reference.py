@@ -3252,4 +3252,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    sys.modules.setdefault("p5_04_alliances_reference", sys.modules["__main__"])   # one module object when run as a script (P5-04a integration)
     sys.exit(main(sys.argv[1:]))

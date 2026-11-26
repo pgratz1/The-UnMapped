@@ -258,14 +258,14 @@ Counts counts() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v8` at both levels; H14 equals the reference's") {
+TEST_CASE("P5-03 17.1, P5-03a 9.1: the header is `# worldgen history v9` at both levels; H14 equals the reference's") {
     if (!fixture_present()) {
         MESSAGE("h14-v5.toml absent: skipped (written with the reference)");
         return;
     }
     for (const HistoryLevel level : {HistoryLevel::summary, HistoryLevel::full}) {
         const std::string t = text(level);
-        CHECK(hrtest::lines_of(t).front() == "# worldgen history v8");
+        CHECK(hrtest::lines_of(t).front() == "# worldgen history v9");
         const std::string name = level == HistoryLevel::full ? "full" : "summary";
         const auto& g = hrtest::golden();
         const auto it = g.find(H14);
@@ -422,8 +422,8 @@ TEST_CASE("P5-03a 9.1, 9.4: H15 header and [peoples] at both levels (by word, fr
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full, H15));
     REQUIRE_FALSE(s.empty());
     REQUIRE_FALSE(f.empty());
-    CHECK(s.front() == "# worldgen history v8");
-    CHECK(f.front() == "# worldgen history v8");
+    CHECK(s.front() == "# worldgen history v9");
+    CHECK(f.front() == "# worldgen history v9");
     CHECK(between(s, "[peoples]", "[alliances]") ==   // P5-04 10.2: [alliances] after [peoples]
           std::vector<std::string>{
               "[peoples]", "pairs: 6; met 2; hatred 1, wariness 1, friendship 0",
@@ -451,14 +451,17 @@ TEST_CASE("P5-03a 9.2: H15 milestones as a count with the quiet stretch at summa
     }
     const std::string s = text(HistoryLevel::summary, H15), f = text(HistoryLevel::full, H15);
     const std::vector<std::string> c3 = hrtest::civ_block(s, 3);
-    const auto m = std::find(c3.begin(), c3.end(), "  milestones: 8");
+    const auto m = std::find(c3.begin(), c3.end(), "  milestones: 23");   // P5-04a 12.2 (v9)
     REQUIRE(m != c3.end());
-    // the two quiet stretches e46 (120 years) and e48 (300; ids renumbered by year at integration): the longer is the realm's one milestone of its kind
+    // P5-04a 12.2: n own events of salience 40 or more that are no quiet stretch, then the three weightiest (no quiet
+    // stretch line at summary)
     CHECK(std::vector<std::string>(m, c3.end()) ==
-          std::vector<std::string>{"  milestones: 8",
-                                   "    1000-1299 e48 quiet_stretch: For 300 years, from 1000 to 1299, the land was "
-                                   "quiet; one realm held it. (The Krurz Horde: 15 new generations of rulers.)",
-                                   "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3; P5-06 10.3
+          std::vector<std::string>{
+              "  milestones: 23",
+              "    395 e34 war_declared: The Krurz Horde declared war on the House of Aelin over Fiev Wood.",
+              "    400 e35 settlement_captured: The Krurz Horde took Fievos from the House of Aelin; 40 died.",
+              "    1290 e50 war_declared: The Krurz Horde declared war on the Hold of Kazad over Duld Hills.",
+              "  allies: 0", "  rulers: 0 reigns, 0 recorded"});   // P5-04 10.3; P5-06 10.3
     std::int64_t full_heads = 0, summary_heads = 0;
     for (const std::string& l : hrtest::lines_of(f)) full_heads += l == "  milestones:" ? 1 : 0;
     for (const std::string& l : hrtest::lines_of(s)) summary_heads += l.rfind("  milestones: ", 0) == 0 ? 1 : 0;
