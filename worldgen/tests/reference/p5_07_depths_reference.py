@@ -947,9 +947,10 @@ def outcome_violations(x, r, e, mid, lair, aids, aid_max, warren):
     return out
 
 
-def _life_end(r, tid, after):
+def _life_end(r, tid, after, delver=None):
     """The first event after `after` that ends a warren's life for its delver (r2 invariant 12, reading D-R20): a
-    deep_woken of the settlement, its ruin, its capture or its cession. None: alive at E."""
+    deep_woken of the settlement, its ruin, its capture, its cession or secession, a cession of its region or the
+    conquest of its delver. None: alive at E."""
     st = r.stl.get(tid)
     ends = []
     if st is not None and st[13]:
@@ -960,8 +961,13 @@ def _life_end(r, tid, after):
         k = r.kind_of(y)
         if k == "deep_woken" and r.ev[y][6] == tid:
             ends.append(y)
-        elif k in ("settlement_captured", "settlements_ceded") and (r.ev[y][6] == tid or any(
+        elif k in ("settlement_captured", "settlements_ceded", "civ_seceded") and (r.ev[y][6] == tid or any(
                 p[2] == SETTLEMENT and p[3] == tid for p in r.parts.get(y, []))):
+            ends.append(y)
+        elif k == "region_ceded" and st is not None and r.ev[y][5] == st[4]:
+            ends.append(y)   # integration: a cession of the warren's region hands its settlements over
+        elif k == "civ_conquered" and delver is not None and any(
+                p[2] == CIV and p[3] == delver for p in r.parts.get(y, [])):
             ends.append(y)
     ends = [y for y in ends if y > after]
     return min(ends) if ends else None
@@ -998,7 +1004,7 @@ def warren_violations(x, r, t, per_stl, mining_of_race, delving_of_race):
                 out.append("12: warren %d depth %d at %d years under its owner" % (tid, d, year(e) - year(root)))
         if len(r.causes.get(es[0], [])) != 1:
             out.append("12: first warren_delved e%d causes %s" % (es[0], r.causes.get(es[0], [])))
-        end = _life_end(r, tid, es[0])
+        end = _life_end(r, tid, es[0], c)
         for e in es:
             if end is not None and e > end:
                 st = r.stl.get(tid)
@@ -1006,14 +1012,15 @@ def warren_violations(x, r, t, per_stl, mining_of_race, delving_of_race):
                 woke = r.kind_of(end) == "deep_woken" and e > end
                 if ruined or woke:
                     out.append("12: warren %d delved e%d after its waking or ruin" % (tid, e))
-        lives.setdefault(c, []).append((year(es[0]), year(end) if end is not None else None, tid))
-    for c, ls in sorted(lives.items()):   # at most one live warren at every year's end
-        for i, (a0, a1, t0) in enumerate(ls):
-            for b0, b1, t1 in ls[i + 1:]:
-                lo, hi = max(a0, b0), min(a1 if a1 is not None else 1 << 40, b1 if b1 is not None else 1 << 40)
-                # alive at the end of year Y when it started at or before Y and ended after Y
-                if lo < hi:
-                    out.append("12: c%d has two live warrens %d and %d in %d" % (c, t0, t1, lo))
+        lives.setdefault(c, []).append((es[0], end, tid))
+    # Invariant 12 as restated by the lead (integration): a realm starts no new warren while it holds a live one (a
+    # warren lost and won back, or taken from another realm, may leave it with two). By event ids: no warren's first
+    # warren_delved lies inside the life of an earlier warren of the same realm.
+    for c, ls in sorted(lives.items()):
+        for a0, a1, t0 in ls:
+            for b0, _b1, t1 in ls:
+                if t0 != t1 and a0 < b0 and (a1 is None or b0 < a1):
+                    out.append("12: c%d started warren %d (e%d) while it held the live warren %d" % (c, t1, b0, t0))
     # 13: no kind 3 site and no arms_sold seller of a race with mining_permille 0
     for s in r.sites:
         if s[2] == MINE and mining_of_race.get(race(s[7]), 0) <= 0:

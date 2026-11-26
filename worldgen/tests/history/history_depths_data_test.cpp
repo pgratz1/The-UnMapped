@@ -95,14 +95,21 @@ std::vector<std::string> strings_of(const wd::Value& v) {
     return out;
 }
 
+// Refused with an error that holds every word. Not necessarily the first error: a race whose field is out of range is
+// left out, so the loader may report a check of the kind (race_order_dense) first (integration reading).
 void refused(const std::string& file, const std::string& text, const std::vector<std::string>& words) {
     const Load l = load_edited(file, text);
     REQUIRE_FALSE(l.ok());
     REQUIRE_FALSE(l.errors.empty());
-    for (const std::string& w : words) {
-        CAPTURE(w);
-        CHECK(history_test::contains(l.errors[0].message, w));
+    CAPTURE(l.errors[0].message);
+    bool found = false;
+    for (const auto& err : l.errors) {
+        bool all = true;
+        for (const std::string& w : words) all = all && history_test::contains(err.message, w);
+        found = found || all;
     }
+    CAPTURE(words.front());
+    CHECK(found);
 }
 void accepted(const std::string& file, const std::string& text) {
     const Load l = load_edited(file, text);
@@ -131,9 +138,9 @@ TEST_CASE("P5-07 4.1, invariant 8: the three deep kinds after wyvern, with the s
     CHECK(ids == std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern", "ymrach", "ysgarth",
                                           "zhakul"});
     const std::vector<Kind> kinds = {
-        {"ymrach", "Ymrach", false, 500, 4000, 60, 30, 100, 300, 300, 60, 2000, 2, 10, "Deepbane"},
-        {"ysgarth", "Ysgarth", true, 350, 2500, 100, 20, 80, 150, 200, 100, 3000, 2, 2, "the Lightbearer"},
-        {"zhakul", "Zhakul", false, 150, 7000, 40, 50, 150, 500, 400, 30, 1000, 1, 20, "Flamebreaker"}};
+        {"ymrach", "Ymrach", false, 500, 4000, 60, 30, 100, 300, 600, 60, 2000, 2, 10, "Deepbane"},
+        {"ysgarth", "Ysgarth", true, 350, 2500, 100, 20, 80, 150, 400, 100, 3000, 2, 2, "the Lightbearer"},
+        {"zhakul", "Zhakul", false, 150, 7000, 40, 50, 150, 500, 800, 30, 1000, 1, 20, "Flamebreaker"}};
     for (const Kind& k : kinds) {
         CAPTURE(k.id);
         const wd::Definition* d = p503check::definition(shipped(), "monster", k.id);
@@ -148,7 +155,8 @@ TEST_CASE("P5-07 4.1, invariant 8: the three deep kinds after wyvern, with the s
         CHECK(r.find("flare")->as_bool() == false);
         CHECK(r.get_int("lifespan_years") == 0);   // ageless
         CHECK(r.get_int("range_hops") == 1);
-        // 15.2 may calibrate these (data only); the starts of 4.1
+        // 15.2 may calibrate these (data only): the starts of 4.1, overrun_permille as calibrated (300, 200, 400 ->
+        // 600, 400, 800; docs/reviews/p5-07-calibration.md)
         CHECK(r.get_int("wake_rate") == k.weight);
         CHECK(r.get_int("might") == k.might);
         CHECK(r.get_int("raid_permille") == k.raid);
@@ -198,17 +206,19 @@ TEST_CASE("P5-07 4.2: history.monsters: the sixteen fields after undead_regions_
         REQUIRE(at + 1 + i < r.size());
         CHECK(r.name_at(at + 1 + i) == names[i]);
     }
-    CHECK(ints_of(*r.find("deep_years")) == std::vector<std::int64_t>{150, 500, 1000});
-    CHECK(r.get_int("deep_delve_permille") == 10);
-    CHECK(ints_of(*r.find("deep_wake_ppm")) == std::vector<std::int64_t>{0, 150, 600});
+    // as calibrated (docs/reviews/p5-07-calibration.md; the starts of 4.2 were 150, 500, 1000; 10; 0, 150, 600; 2; 1;
+    // 600; 1)
+    CHECK(ints_of(*r.find("deep_years")) == std::vector<std::int64_t>{250, 1000, 2500});
+    CHECK(r.get_int("deep_delve_permille") == 6);
+    CHECK(ints_of(*r.find("deep_wake_ppm")) == std::vector<std::int64_t>{0, 350, 1400});
     CHECK(r.get_int("deep_gate_levy_permille") == 1000);
     CHECK(r.get_int("deep_seal_max_permille") == 800);
     CHECK(r.get_int("deep_toll_permille") == 400);
-    CHECK(r.get_int("deep_takes_max") == 2);
-    CHECK(r.get_int("deep_reach_hops") == 1);
+    CHECK(r.get_int("deep_takes_max") == 3);
+    CHECK(r.get_int("deep_reach_hops") == 2);
     // r2 starts (15.2's steps 8 to 11 may calibrate them; a moved value is named here at integration)
-    CHECK(r.get_int("deep_warren_population_min") == 600);
-    CHECK(r.get_int("deep_warren_ore_min") == 1);
+    CHECK(r.get_int("deep_warren_population_min") == 3200);
+    CHECK(r.get_int("deep_warren_ore_min") == 500);
     CHECK(r.get_int("deep_warren_wake_permille") == 200);
     CHECK(r.get_int("deep_aid_permille") == 500);
     CHECK(r.get_int("deep_aid_hops") == 2);

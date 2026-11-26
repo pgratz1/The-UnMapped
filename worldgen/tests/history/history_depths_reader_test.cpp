@@ -242,14 +242,18 @@ TEST_CASE("P5-07 9: the event checks of kinds 93 to 96 refused with their messag
             E(b.sealed) + "deep_sealed without its waking");
     if (x.kind_of(fall_woken) == "deep_woken") {
         refused("C2",
-                "UPDATE event_cause SET cause = " + n(b.delve1) + " WHERE event = " + n(b.lost) + " AND cause = " +
-                    n(fall_woken) + ";",
+                // integration: the waking's own cause (its last delving), which lies before the take; b.delve1 can
+                // lie after it, and then the earlier check `cause not below event` fires first
+                "UPDATE event_cause SET cause = " + n(x.cause_list(fall_woken).front()) + " WHERE event = " +
+                    n(b.lost) + " AND cause = " + n(fall_woken) + ";",
                 E(b.lost) + "hold_lost without its waking");
     }
     // a hold_lost that is not its settlement's ruin event (reading D-R10: on the event's row)
     refused("R1",
-            "UPDATE settlement SET ruin_event = (SELECT MAX(id) FROM event WHERE id < " + n(b.lost) + ") WHERE id = " +
-                n(b.lost_settlement) + ";",
+            // integration: an earlier event of the same settlement, with the ending it derives (5), so that the
+            // settlement row's own ending check (which runs before the event checks) passes
+            "UPDATE settlement SET ending = 5, ruin_event = (SELECT MAX(id) FROM event WHERE id < " + n(b.lost) +
+                " AND settlement = " + n(b.lost_settlement) + ") WHERE id = " + n(b.lost_settlement) + ";",
             E(b.lost) + "hold_lost " + n(b.lost) + " did not ruin its settlement");
 }
 

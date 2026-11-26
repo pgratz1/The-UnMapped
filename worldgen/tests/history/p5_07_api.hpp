@@ -28,11 +28,12 @@
 #include "p5_02_monsters_content.hpp"
 #include "p5_03_relations_api.hpp"
 #include "p5_06_figures_runs.hpp"
+#include "p5_07_depths_content.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/markers.hpp"
 
-// #define UNMAPPED_P507_API 1
+#define UNMAPPED_P507_API 1
 
 namespace p507api {
 
@@ -134,27 +135,19 @@ inline wd::ContentSet with_race(const wd::ContentSet& base, const std::string& i
 
 // 4.2 depths-small (from monsters-small, P5-02 19.3: the stress content with every monster kind's wake_rate x 2000
 // and overrun_permille 1000, living_permille 1000): deep_years 5, 10, 20, deep_delve_permille 1000, deep_wake_ppm 0,
-// 200000, 600000, deep_takes_max 3 (reading D-R9 of the reference: monsters-small's edits apply to the deep kinds too);
-// (r2) deep_warren_population_min 100, deep_warren_wake_permille 1000, deep_aid_permille 1000 and goblin
-// delving_permille 1000. Built only when integrated (the 0.28.0 content has no deep field to replace). The spec's 6.12
-// item 4 names the engineer's copy (p5_07_depths_content.hpp, depths_small_content()); this one is the test writer's,
-// from 4.2's text: at integration the two must give the same world file (a finding if not).
+// 200000, 600000, deep_takes_max 3; (r2) deep_warren_population_min 100, deep_warren_wake_permille 1000,
+// deep_aid_permille 1000 and goblin delving_permille 1000 (appended to the race record, where the fixture roots leave
+// the optional field out). One source of truth: the engineer's in-memory content of spec 6.12 item 4
+// (p5_07_depths_content.hpp, depths_small_content()); integration checked it against 4.2's text.
 inline const wd::ContentSet& depths_small() {
-    static const wd::ContentSet c = with_race(
-        p503api::with_history(monsters_content::monsters_small_content(), "monsters",
-                              {{"deep_years", ints({5, 10, 20})}, {"deep_delve_permille", V(1000)},
-                               {"deep_wake_ppm", ints({0, 200000, 600000})}, {"deep_takes_max", V(3)},
-                               {"deep_warren_population_min", V(100)}, {"deep_warren_wake_permille", V(1000)},
-                               {"deep_aid_permille", V(1000)}}),
-        "goblin", {{"delving_permille", V(1000)}});
-    return c;
+    return depths_content::depths_small_content();
 }
 // 14 I1 (r2): depths-small with delving_permille 0 for every race and deep_aid_permille 0.
 inline const wd::ContentSet& i1_content() {
     static const wd::ContentSet c = [] {
         wd::ContentSet x = p503api::with_history(depths_small(), "monsters", {{"deep_aid_permille", V(0)}});
         for (const char* r : {"dwarf", "elf", "faerie", "goblin", "human", "orc"}) {
-            x = with_race(x, r, {{"delving_permille", V(0)}});
+            x = depths_content::with_race_field(x, r, "delving_permille", V(0));
         }
         return x;
     }();

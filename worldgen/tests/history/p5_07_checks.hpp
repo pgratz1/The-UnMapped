@@ -474,7 +474,7 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
         if (year(e) <= year(cs[0]) || holds) out.push_back("7: civ_ended e" + n(e) + " after hold_lost e" + n(cs[0]));
     }
     // r2 12: per warren settlement
-    std::map<std::int64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> lives;   // civ -> (from, to) years
+    std::map<std::int64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> lives;   // civ -> (first delving, end) event ids
     for (const auto& [tid, es] : per_stl) {
         const std::int64_t c = x.part(es.front(), 1);
         if (mining_of_civ(c) != 0 || delving_of_civ(c) <= 0) out.push_back("12: warren " + n(tid) + " delved by c" + n(c));
@@ -492,18 +492,27 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
                 out.push_back("12: warren " + n(tid) + " depth " + n(d) + " too early");
             }
         }
-        // the warren's life for its delver ends at its waking, its ruin, its capture or its cession (D-R20)
+        // the warren's life for its delver ends at its waking, its ruin, its capture, cession or secession, a cession of
+        // its region or its delver's conquest (D-R20)
         std::int64_t end = 0;
         const auto st = x.stl.find(tid);
         if (st != x.stl.end() && at(*st->second, 13) > es.front()) end = at(*st->second, 13);
         for (auto it = x.ev.upper_bound(es.front()); it != x.ev.end(); ++it) {
             const std::string k = x.kind_of(it->first);
             bool hit = (k == "deep_woken" && at(*it->second, 6) == tid);
-            if (k == "settlement_captured" || k == "settlements_ceded") {
+            if (k == "settlement_captured" || k == "settlements_ceded" || k == "civ_seceded") {
                 hit = at(*it->second, 6) == tid;
                 const auto pit = x.parts.find(it->first);
                 if (pit != x.parts.end()) {
                     for (const Row* p : pit->second) hit = hit || (at(*p, 3) == 4 && at(*p, 4) == tid);
+                }
+            }
+            // integration: a cession of the warren's region hands its settlements over; so does the delver's conquest
+            if (k == "region_ceded" && st != x.stl.end() && at(*it->second, 5) == at(*st->second, 4)) hit = true;
+            if (k == "civ_conquered") {
+                const auto pit = x.parts.find(it->first);
+                if (pit != x.parts.end()) {
+                    for (const Row* p : pit->second) hit = hit || (at(*p, 3) == 3 && at(*p, 4) == c);
                 }
             }
             if (hit && (end == 0 || it->first < end)) end = it->first;
@@ -514,13 +523,16 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
                 out.push_back("12: warren " + n(tid) + " delved e" + n(e) + " after its waking or ruin");
             }
         }
-        lives[c].push_back({year(es.front()), end == 0 ? (std::int64_t{1} << 40) : year(end)});
+        lives[c].push_back({es.front(), end == 0 ? (std::int64_t{1} << 40) : end});
     }
+    // Invariant 12 as restated by the lead (integration): a realm starts no new warren while it holds a live one
+    // (a warren lost and won back, or taken from another realm, may leave it with two). By event ids: no warren's
+    // first warren_delved lies inside the life of an earlier warren of the same realm.
     for (const auto& [c, ls] : lives) {
         for (std::size_t i = 0; i < ls.size(); ++i) {
-            for (std::size_t j = i + 1; j < ls.size(); ++j) {
-                if (std::max(ls[i].first, ls[j].first) < std::min(ls[i].second, ls[j].second)) {
-                    out.push_back("12: c" + n(c) + " has two live warrens");
+            for (std::size_t j = 0; j < ls.size(); ++j) {
+                if (i != j && ls[i].first < ls[j].first && ls[j].first < ls[i].second) {
+                    out.push_back("12: c" + n(c) + " started a warren while it held a live one");
                 }
             }
         }

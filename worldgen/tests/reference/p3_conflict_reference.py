@@ -196,7 +196,7 @@ VERSION_EXPLICIT = False   # P5-07 12 item 3: --version given; check-world other
 def overrun_kinds():
     """P5-02 6.4.3 (with the monsters, 0.23.0): settlement_overrun ruins its settlement, as a sack or an
     abandonment does, for the invariants and replays that read the ruin kinds."""
-    return (K["settlement_overrun"],) if FLAGS["monsters"] else ()
+    return ((K["settlement_overrun"],) if FLAGS["monsters"] else ()) + ((K["hold_lost"],) if FLAGS["deep"] else ())
 
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
@@ -535,6 +535,9 @@ KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_026})
 # P5-06 8.1 (0.27.0): kinds 79 to 92 likewise
 KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_027})
 KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_027})
+# P5-07 8.1 (0.29.0): kinds 93 to 99 likewise
+KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_029})
+KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_029})
 K = KIND_ID
 # r19 23.2 / P3-07 r14 23 item 1: wherever a rule, invariant, statistic or report reads a claim, kinds 20 and 39
 # are read alike; a cession of invariants (13), (17), the units and the companions is kind 29 or 40. Kinds 39 and
@@ -3427,8 +3430,8 @@ def check_peoples_invariants(c, res, inp, w, label):
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
         "settlement_abandoned_to": red + ("settlement_founded", "colony_founded"),
-        "capital_moved": ("settlement_abandoned", "settlement_abandoned_to", "sacked", "settlement_captured"),
-        "civ_ended": ("settlement_abandoned", "settlement_abandoned_to"),
+        "capital_moved": ("settlement_abandoned", "settlement_abandoned_to", "sacked", "settlement_captured", "hold_lost"),
+        "civ_ended": ("settlement_abandoned", "settlement_abandoned_to") + (("hold_lost",) if FLAGS["deep"] else ()),
         "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked") + (
             ("settlement_overrun",) if FLAGS["monsters"] else ()),   # P5-02 6.4.3: an overrun is a ruin
         "settlement_dwindled": red,
@@ -7558,9 +7561,12 @@ def stored_rows(conn, table):
 
 def cmd_check_world(argv):
     path = argv[0]
-    dat = data(opt(argv, "--data", "game/data"))
     conn = pchr.open_world(path)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
+    if not VERSION_EXPLICIT and meta.get("generator_version") in VERSIONS and \
+            meta.get("generator_version") != GENERATOR_VERSION:
+        use_version(meta["generator_version"])   # before the data: a root's fields depend on the version
+    dat = data(opt(argv, "--data", "game/data"))
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).

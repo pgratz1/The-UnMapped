@@ -450,7 +450,7 @@ inline Fixture load_fixture(const std::string& name) {
             std::int64_t ending = 5;
             if (k == "sacked") {
                 ending = 1;
-            } else if (k == "settlement_overrun") {
+            } else if (k == "settlement_overrun" || k == "hold_lost") {  // P5-07 6.6: a hold lost is 2
                 ending = 2;
             } else if (k == "settlement_abandoned" || k == "settlement_abandoned_to") {
                 bool plague = false, famine = false, fled = false;
