@@ -661,9 +661,15 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD monsters 30 "*history_monsters_*"
     SHARD markers 30 "*markers_*"
     SHARD browser 30 "*browser_*"
-    SHARD relations 30 "*history_relations_*"
-    SHARD alliances 30 "*history_alliances_*"
-    SHARD figures 30 "*history_figures_*"
+    SHARD relations-golden 100 "*history_relations_golden_test.cpp"
+    SHARD relations-p504a 100 "*history_relations_p504a_test.cpp"
+    SHARD relations 70 "*history_relations_p503a_test.cpp,*history_relations_partb_test.cpp,*history_relations_reader_test.cpp,*history_relations_reads_test.cpp,*history_relations_ledger_test.cpp,*history_relations_data_test.cpp,*history_relations_unit_test.cpp,*history_relations_seams_test.cpp,*history_relations_report_test.cpp"
+    SHARD alliances-p504a 210 "*history_alliances_p504a_property_test.cpp"
+    SHARD alliances-property 120 "*history_alliances_property_test.cpp"
+    SHARD alliances 35 "*history_alliances_catalogue_test.cpp,*history_alliances_data_test.cpp,*history_alliances_golden_test.cpp,*history_alliances_h16_test.cpp,*history_alliances_p504a_data_test.cpp,*history_alliances_p504a_unit_test.cpp"
+    SHARD figures-property 185 "*history_figures_property_test.cpp"
+    SHARD figures-p504a 175 "*history_figures_p504a_test.cpp"
+    SHARD figures 50 "*history_figures_golden_test.cpp,*history_figures_h17_test.cpp,*history_figures_reader_test.cpp,*history_figures_unit_test.cpp,*history_figures_views_test.cpp"
     SHARD depths 30 "*depths_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
