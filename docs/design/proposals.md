@@ -1549,3 +1549,11 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Ruling (lead): merge as measured. None of the misses makes a world read wrong (world critic: acceptable to merge, `docs/reviews/p5-06-figures-world-critic.md`), and the two targets Paul named are met or within sampling noise (a living monster at the end in 92 and 93 worlds against 85). The follow-up stage P5-04a, which changes world bytes anyway, takes them: raise the thresholds of `the Old` (the spec's 15.2 step 11; no per-world cap on substantial epithets is added, following Paul's "regardless of how many bear it"), retune the heroes' hunt and the quiet-step survival or restate those two bounds from what the worlds show, and take the world critic's F1 (towers never end; a new tower is founded on or beside a standing one) and F5 (the `[figures]` summary block lists only generals).
 - Question for Paul (Q-P5-06-1 of the questions file): whether 63 and 68 worlds with a lair on a former settlement meets the bound of 65, stated as an average of two samples. Not blocking.
 - Status: ruled by the lead; the lair bound is open with Paul.
+
+### The bound on lairs in former settlements is an average of two samples (Paul, 2026-11-25)
+
+- Section: 12 ("Living monsters are a highlight of play").
+- Problem: the bound of at least 65 of 100 default worlds with a lair on a former settlement open at the end was measured at 63 (seeds 0 to 99) and 68 (seeds 100 to 199) at generator 0.27.0 (Q-P5-06-1).
+- Decision (Paul, 2026-11-25): "Agreed, accept it as the average of the two samples". The bound is: at least 65 on the average of the two samples of 100 default worlds, neither sample below 60. The bound of 85 worlds with a living monster at the end is unchanged (92 and 93 measured).
+- Status: decided. P5-04a holds both as guard targets.
+
