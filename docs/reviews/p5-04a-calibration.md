@@ -17,7 +17,7 @@ A = seeds 0-99, B = seeds 100-199. Baseline = shipped values at d2412b1 (A only)
 | SP2 spurned worlds; share of ended | 10-35 worlds; <= 6% | -- | 25; 5.0% | 29; **6.6%** | 30; **8.4%** |
 | SP4 large share of grievous withholdings; ended by it | 30-50%; >= 40% | -- | 58.5% (fail); 73% | 30.4%; 74% | 27.3% (low); 75% |
 | RN1 written renewals | <= 35% | -- | 25.7% | 25.2% | 26.4% |
-| RR2 into friendship; before 5500; max turns | >=25%; >=55%; <=20 | 54%, 55% | 55%?; 57%; 11 | 57.4%; 58.6%; 12 | 58.3%; 63.9%; 10 |
+| RR2 into friendship; before 5500; max turns | >=25%; >=55%; <=20 | 54%, 55% | not measured; 57%; 11 | 57.4%; 58.6%; 12 | 58.3%; 63.9%; 10 |
 | RR6 worlds with a pair of 4+ turns | <= 5 | -- | 11 | 5 | 9 (**miss**) |
 | RR4 friendship at E median | >= 3 | -- | 4 | 4 | 4 |
 | MX3 expulsions median (max) | <= 3 | -- | 1 (12) | 2 (12) | 1 (11) |
