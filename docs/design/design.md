@@ -367,6 +367,8 @@ Phase P3 was approved on November 22, 2026, and phase P5 builds on it in twelve 
 11. Factions.
 12. Artifacts.
 
+**Scope as revised on November 24, 2026.** Merged so far: the follow-ups, renamed regions, beasts and monsters, race relations with mixed settlements and migrations, and alliances with trade, mines and arms. Wealth as a number was left out, since no rule needed one. Still to come in phase P5: figures with minimal casters, the mountain depths (deepening the mines already built), the pantheon with cults, and artifacts, with small follow-up stages between them and vassalage after figures. Roads move to phase P6, where one stage also builds contact by sea for peoples alone on a land mass. Spell invention and factions are deferred beyond phase P5.
+
 Decisions that shape these stages:
 
 - **History renames regions.** A region's defining event (the fall of a realm, a great sack, a slaughter, a great plague, a seat becoming a city) can give it its present-day name, and the old name stays on record. Which events can rename a region is set in data, so later stages add their own. Renamings are rare.
@@ -381,7 +383,25 @@ Decisions that shape these stages:
 - **Event rules** stay code with their numbers in TOML.
 - **Budget.** A default world still generates in under 60 seconds at the end of phase P5.
 - **Exit check.** Every race, god camp and monster kind is a participant in at least one event, and a bloc of allies and vassals is held to the same runaway bound as a single realm.
-- **Guilds are founded in history.** The factions stage founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
+- **Guilds are founded in history.** The factions stage, deferred beyond phase P5 on November 24 and so still to be scheduled, founds the guilds of section 9 during the simulation, each by a recorded figure where one fits (a great general for the company of arms, a noted caster for the college), and spreads their chapters along trade and alliance links, with events in the chronicle. Nothing about a guild is back-dated after history ends.
+
+**What the first P5 stages settled** (Paul's decisions of November 23 to 25, 2026)
+
+- **Abandoned places.** Land can lose its owner without gaining a new one. A monster may overrun a small settlement and make it its lair; a hamlet or village struck low by plague or famine may be left standing empty; a small place raided repeatedly may flee for fear. Every dead settlement records how it ended: sacked, overrun, plague, famine, left or fled.
+- **Monsters prefer easy targets.** A raid's target is a weighted draw that favours small settlements, while dragons and giants still strike towns. An undead host risen in a ruin may still overrun one living settlement.
+- **Living monsters are a highlight of play.** The targets stay at a living monster in at least 85 of 100 default worlds at the end of history, and a lair on a former settlement in at least 65.
+- **Every ruin stays.** No ruin fades before the end of history, sacked ones included, so all of them are there to explore.
+- **Monster flare-ups force no war.** The rule that a flare-up always brings its war holds for flare-ups of strain between realms. A dragon or giant appearing in a quiet stretch brings none.
+- **First sites.** Lairs, watchtowers raised on a frontier and later left, and dwarven mines.
+- **Race relations.** Each pair of peoples has a disposition built from their gods' camps, each race's own stances, and a memory of events that fades slowly. It falls into three bands: hatred, wariness and friendship. Wars, conquests, sacks and expulsions lower it. Long peace between neighbours, a common enemy and shelter given raise it. A change of band is an event that names its causes. Realms read their peoples' disposition when choosing wars.
+- **Meeting.** Two peoples meet when their realms come within reach. Peoples sealed apart by closed borders meet by word after a time.
+- **Mixed settlements.** Conquest and cession keep the conquered as subjects under new rulers, refugees bring their race to the place that shelters them, and minorities pass slowly into the ruling people. A ruling people in hatred with a minority may expel it, at most once in sixty years per realm.
+- **Alliances.** Realms in reach and on tolerable terms ally for a reason: a common enemy, fear of a great realm, long trade or friendship. Allies are called at a declaration of war and fight in their partner's battles. Elves and faeries begin allied by origin wherever they live. A war declared on an ally is a betrayal, and the betrayed never ally with the betrayer again.
+- **Spoils.** An ally that fought in a won war is owed a share of tribute and plunder, never land. A first withheld share sours the alliance; a second, or one large kept share, ends it.
+- **Blocs.** No alliance forms that would put a bloc above half the land, and a bloc above seven tenths sheds its smallest ally.
+- **Trade and arms.** Trade between realms on tolerable terms strengthens both. Dwarves open mines and sell arms, and a realm with an open mine is itself stronger.
+- **Balance between the races.** By the end goblins usually hold the most land (a median of 12 regions against 2 or 3 for each other race in 100 default worlds) and the elves are often beaten down to one region with many ruins. This is kept, with no target on the spread. Validation reports the table again when roads or arms change, so their effect can be seen.
+- **Calamities in reports.** The summary of a large world records a calamity when its impact is significant.
 
 **Tick loop (active phases)**
 
@@ -801,7 +821,7 @@ Four guilds cut across realms, and the player can join them. The same four kinds
 | Thieves | Theft, smuggling, information |
 | Assassins | Killing for pay |
 
-- **Made by history.** Each guild has a founding place and year, a founder who is a figure in the chronicle, and chapter houses in settlements. Its name is generated per world from the founding culture's name lists, such as "the Company of the Grey Shield". The factions stage of phase P5 creates them (section 5).
+- **Made by history.** Each guild has a founding place and year, a founder who is a figure in the chronicle, and chapter houses in settlements. Its name is generated per world from the founding culture's name lists, such as "the Company of the Grey Shield". The factions stage of the history simulation creates them (section 5).
 - **Chapters.** A realm's capital has all four. Other settlements have some or none by size, and small places usually have none. A guild's reach follows trade and alliance links, so its map is explained by the world's past.
 - **Two systems.** The company of arms and the college of mages span the realms of the good and neutral peoples. Goblin and orc realms have their own counterparts to those two, separate organisations with their own names, ranks and quest lines, such as a war band where the others have a company of arms. The thieves and the assassins are single guilds that work across both sides. A world therefore has six guilds and six quest lines.
 - **Rivalries.** The guilds are rivals, and a player belongs to one at a time. Thieves and assassins sit closest to each other and still do not mix well. Quitting a guild is final for that guild and opens the others to the player.
@@ -1067,10 +1087,18 @@ Still open:
 * [x] **Layer catalogue in the library.** Decided: `worldgen` exposes the layer catalogue and region names through its public interface.
 * [x] **History movie.** Decided: it is the last stage of the viewer phase, as playback recorded with Godot's Movie Maker mode.
 * [ ] **Sub-peoples.** Each race keeps one culture through phase P5. Still open for later: hill dwarves as a small optional stage after the mountain depths, and dark elves once geography has an underground.
-* [ ] **Renaming details.** The share of regions that history renames (a median of 4 of 49 at the default size in the first measurement), whether new names use English forms only for now, and a wider rule against doubled place suffixes in settlement names. (Phase P5, regions renamed by history)
-* [ ] **Layer catalogue as code.** The catalogue is proposed as a fixed table in code in place of a TOML data file, since it describes what the stages' code writes. (Phase P4)
-* [ ] **Viewer technical readings.** Three library additions await sign-off: markers answered by the library with a command-line overlay, the report's civilization blocks built from the same structured lines the browser shows, and the year readout and key handling at the present day. (Phase P4)
+* [x] **Renaming details.** Decided: about one region in twelve is renamed, new names use English forms only for now, and the wider rule against doubled place suffixes applies. (Phase P5, regions renamed by history)
+* [x] **Layer catalogue as code.** Settled by the approval of phase P4: the catalogue is a fixed table in code, since it describes what the stages' code writes. (Phase P4)
+* [x] **Viewer technical readings.** Settled by the approval of phase P4 on November 24, with every interim choice of the viewer specs standing as built: markers answered by the library with a command-line overlay, the report's civilization blocks built from the same structured lines the browser shows, and the year readout and key handling at the present day. (Phase P4)
 * [ ] **Maps drawn as tiles.** Godot uploads a whole texture on any change, so a large picture that changes in place, such as the in-game map, should be drawn as tiles. A note for the game's map; nothing to decide until it is built. (Milestone 7)
+
+- [x] **Ruins.** Decided: every ruin stays to the end of history.
+- [x] **Peoples alone on a land mass.** Decided: they can thrive and in time reach other lands by ship. Contact by sea is built with roads in one stage of phase P6.
+- [x] **Withheld spoils.** Decided: a first withheld share sours an alliance and a second ends it.
+- [x] **Balance between the races.** Decided: kept as it is, and watched when roads and arms change.
+- [ ] **When guilds enter history.** Guilds are founded by the factions stage, which was deferred beyond phase P5 before guilds were designed. It must run before the world is frozen. Pull it back into phase P5, or schedule it as its own stage before phase P6?
+- [ ] **Rulers in the figures stage.** The ruler quest lines of section 9 need each realm's line of rulers. Confirm that the figures spec records it.
+- [ ] **Movie recording on Windows.** Untried; to be fixed if it proves broken.
 
 ## 13. World generator prototype: phases and agent roles
 
