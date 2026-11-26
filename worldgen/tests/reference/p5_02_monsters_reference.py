@@ -1243,6 +1243,9 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if [e[0] for e in app] != [m[5]]:
             out.append("4: monster %d appearances %s, born_event %d" % (m[0], [e[0] for e in app], m[5]))
         for e in evs:
+            # P5-06 6.7: a hero may rise in T4 after the raids of a monster slain earlier in the same year
+            if x.key[e[3]] == "hero_rose" and m[6] is not None and e[1] == m[6]:
+                continue
             if e[0] < m[5] or e[1] < m[4] or (m[6] is not None and (e[1] > m[6] or e[0] > m[7])):
                 out.append("4: monster %d event e%d outside its life" % (m[0], e[0]))
         if sum(1 for e in evs if x.key[e[3]] == "settlement_overrun") > 1:
