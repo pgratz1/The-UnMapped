@@ -44,14 +44,14 @@ undead_dead_permille = 28
 # P5-06 25.3 (generator 0.27.0).
 undead_regions_ref = 64
 # P5-07 4.2 (generator 0.29.0): the mountain depths.
-deep_years = [150, 500, 1000]
-deep_delve_permille = 10
-deep_wake_ppm = [0, 150, 600]
+deep_years = [250, 1000, 2000]
+deep_delve_permille = 6
+deep_wake_ppm = [0, 350, 1400]
 deep_gate_levy_permille = 1000
 deep_seal_max_permille = 800
 deep_toll_permille = 400
-deep_takes_max = 2
-deep_reach_hops = 1
+deep_takes_max = 3
+deep_reach_hops = 2
 # P5-07 r2 4.2: goblin deep warrens (6.10) and allies' aid at the gate (6.11).
 deep_warren_population_min = 600
 deep_warren_ore_min = 1
