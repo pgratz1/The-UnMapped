@@ -521,7 +521,7 @@ The signatures are data: each biome's TOML file names its scatter sets, weather,
 
 History alters the ground. The runtime lays these marks over the natural biome wherever the database records the cause, with its place and year, and older marks are more overgrown:
 
-- Battlefields: grave mounds, broken arms, earthworks.
+- Battlefields: grave mounds, broken arms, earthworks. History records a battle's region and year; phase P6 derives the exact ground within the region.
 - Plague and famine villages: fields gone wild, burial pits.
 - Land burnt by a dragon or ravaged by monsters: dead trees, scorched rock, the renamed region around it.
 - The forest around a hidden refuge, especially a faerie one: denser, stranger, harder to cross.
@@ -844,11 +844,11 @@ With no model, a rule-based writer builds each arc from the same quest forms wit
 
 Every realm standing at the end of history has a living ruler the player can meet.
 
-- **Rulers are figures.** The figures stage of phase P5 records each realm's line of rulers, so the present ruler has predecessors, a succession and a place in the chronicle.
+- **Rulers are figures.** The figures stage of phase P5 names the ruler of every living realm at the end of history. A realm's reigns are counted, and a ruler becomes a recorded figure by a deed: founding the realm, declaring a war, betraying an ally, sharing or withholding spoils, a disputed succession, or reigning at the end. The present ruler therefore has a founder and a few notable predecessors in the chronicle, typically three to eight recorded rulers per realm. The generator records no families.
 - **Seats.** The ruler holds court in a seat at the realm's capital, built in that race's kit under the style layers of section 7: a castle, a tower, a hall or whatever that people builds. The seat is a landmark of the capital's site plan. Lesser holdings of the realm, such as border towers and forts, follow the same kit.
 - **Audience.** Reaching the ruler takes standing with the realm. Disposition, deeds and guild rank all count, and a player of an enemy people has the hardest road.
 
-**The ruler's quest line.** Each realm has one quest line given by its ruler, written once per world by the same process as the guild quest lines above (dossier, structured plan, validation, lore file, and a rule-based writer when there is no model). Its dossier is the realm's own history: settlements lost and who holds them now, old enemies and grudges, claims never won, allies, and things of value left behind. An elven realm that has lost several towns might ask the player to drive out the monsters that took one of its cities and bring back what was left there.
+**The ruler's quest line.** Each realm has one quest line given by its ruler, written once per world by the same process as the guild quest lines above (dossier, structured plan, validation, lore file, and a rule-based writer when there is no model). Its dossier is the realm's own history: settlements lost and who holds them now, old enemies and grudges, claims never won, allies, and things of value left behind. An elven realm that has lost several towns might ask the player to drive out the monsters that took one of its cities and bring back what was left there. Where a line needs a ruler's family or the predecessors history did not record, the quest writer supplies them in the lore file, held to what the world file states: the count of reigns, the recorded rulers and their years, and the realm's events.
 
 - **Written on demand.** A ruler's line is written when the player first gains an audience with that ruler, by Claude or the local model, whichever the player has set up, and then kept in the lore file. A world with ten realms therefore costs nothing for the rulers the player never meets. The guild lines are still written at world creation.
 - **Rival realms.** Working for a realm's enemy lowers the player's reputation in that realm. Its ruler turns cold or hostile, which in practice closes that ruler's quest line. No separate rule forbids serving two rulers; disposition does the work.
@@ -1097,7 +1097,7 @@ Still open:
 - [x] **Withheld spoils.** Decided: a first withheld share sours an alliance and a second ends it.
 - [x] **Balance between the races.** Decided: kept as it is, and watched when roads and arms change.
 - [x] **When guilds enter history.** Decided: the factions stage, which founds the guilds, is a stage of its own between phases P5 and P6.
-- [ ] **Rulers in the figures stage.** The ruler quest lines of section 9 need each realm's line of rulers. Confirm that the figures spec records it.
+- [x] **Rulers in the figures stage.** Decided: the figures stage names every living realm's ruler and its notable predecessors, and its naming rule stays as it is. The quest writer supplies any further family history, within the history as recorded.
 - [ ] **Movie recording on Windows.** Untried; to be fixed if it proves broken.
 
 ## 13. World generator prototype: phases and agent roles

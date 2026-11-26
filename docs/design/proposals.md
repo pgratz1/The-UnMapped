@@ -1486,5 +1486,5 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Per-race data for receptions (manner toward outsiders, the width of the individual spread) and the attack-on-sight window are runtime tuning; nothing in the generator.
 - Nothing in the design changes of 2026-11-25 conflicts with what is built through 0.26.0 or with P5-06 and P5-04a as specified.
 - Decision (Paul, 2026-11-25): keep the naming rule as it is for now. "Maybe the quest writer can create whatever backstory and family history is needed that fits within the history as written." So a ruler's predecessors and family beyond the recorded figures are written by the quest-line writer (design section 9) into the lore file, constrained by the world file: reign counts, the recorded rulers and their years, and the realm's events. The generator records no families.
-- Status: decided
+- Status: decided. Merged into design.md sections 7, 9 and 12 (2026-11-25).
 
