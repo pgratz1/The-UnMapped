@@ -337,6 +337,8 @@ void ViewerScreen::_ready() {
             check_expect_passes_ = args[++i].to_int();
         } else if (arg == "--expect-mines" && i + 1 < args.size()) {
             check_expect_mines_ = args[++i].to_int();
+        } else if (arg == "--expect-library" && i + 1 < args.size()) {
+            check_expect_library_ = args[++i].to_int();
         } else if (arg == "--history-summary" && i + 1 < args.size()) {
             check_history_summary_ = args[++i];
         } else if (arg == "--select" && i + 1 < args.size()) {
@@ -495,6 +497,7 @@ void ViewerScreen::run_check_deferred() {
     }
     options.expect_passes = check_expect_passes_;
     options.expect_mines = check_expect_mines_;
+    options.expect_library = check_expect_library_;
     options.history_summary = check_history_summary_;
     options.wired = wired_;
     const int exit_code = run_viewer_check(*this, options);

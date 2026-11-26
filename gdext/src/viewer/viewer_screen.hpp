@@ -420,6 +420,7 @@ private:
     godot::String check_history_summary_;
     int64_t check_expect_passes_ = -1;
     int64_t check_expect_mines_ = -1;
+    int64_t check_expect_library_ = -1;
     double start_zoom_ = 0.0;
     int64_t start_centre_x_ = -1;
     int64_t start_centre_y_ = -1;

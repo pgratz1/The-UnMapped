@@ -265,8 +265,12 @@ void LayerMapView::_draw() {
     const int32_t half = g / 2;
     if (!markers_.empty()) {
         const auto start = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
+        // Towers last, above every other entry (P5-04a: a tower in the wild
+        // one cell from a town was hidden under the town's glyph); the
+        // tower glyph is narrow, so the town stays visible around it.
+        for (const bool towers : {false, true}) {
         for (const Marker& marker : markers_) {
-            if (!marker_drawn(marker)) {
+            if (!marker_drawn(marker) || on_top(marker) != towers) {
                 continue;
             }
             const godot::Ref<godot::ImageTexture> texture = glyph_texture(marker, g);
@@ -277,6 +281,7 @@ void LayerMapView::_draw() {
             const int32_t r = marker.cells->radius;
             draw_texture(texture, godot::Vector2(static_cast<float>(c.x - r * g - half),
                                                  static_cast<float>(c.y - r * g - half)));
+        }
         }
         last_marker_draw_usec_ = static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec()) - start;
         ++marker_draws_;
@@ -577,9 +582,12 @@ int64_t LayerMapView::marker_at(godot::Vector2 position) const {
     const auto cell_of = [g](int64_t d) {
         return d >= 0 ? d / g : -((-d + g - 1) / g);
     };
-    for (std::size_t i = markers_.size(); i-- > 0;) {
+    // The topmost first: the towers (drawn last), then the rest, each in
+    // reverse list order.
+    for (std::size_t k = 2 * markers_.size(); k-- > 0;) {
+        const std::size_t i = k % markers_.size();
         const Marker& marker = markers_[i];
-        if (!marker_drawn(marker)) {
+        if (!marker_drawn(marker) || on_top(marker) != (k >= markers_.size())) {
             continue;
         }
         const godot::Vector2i c = marker_centre(marker);
