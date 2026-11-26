@@ -134,6 +134,13 @@ public:
     [[nodiscard]] SiteState site_at(std::int64_t site, std::int64_t year) const;
     [[nodiscard]] MonsterState monster_at(std::int64_t monster, std::int64_t year) const;
     [[nodiscard]] std::int64_t beast_count(std::int64_t region, std::int64_t beast, std::int64_t year) const;
+    // P5-07 11.1: the depth of mine `site` at Y (the largest depth of its
+    // delving_deepened events with year <= Y, 0 none; 0 for a site of another
+    // kind); the year of monster `monster`'s deep_sealed, -1 none. FatalError
+    // "timeline: no site <s>", "timeline: no monster <m>" for an id the world
+    // does not have.
+    [[nodiscard]] std::int64_t mine_depth_at(std::int64_t site, std::int64_t year) const;
+    [[nodiscard]] std::int64_t sealed_year(std::int64_t monster) const;
     [[nodiscard]] std::size_t site_count() const noexcept { return sites_.size(); }
     [[nodiscard]] std::size_t monster_count() const noexcept { return monsters_.size(); }
     // P5-03 18: the pair's disposition at Y (met iff its peoples_met has year
@@ -244,6 +251,10 @@ private:
     std::vector<db::MonsterRow> monsters_;
     std::vector<std::vector<std::pair<std::int64_t, bool>>> monster_awake_;
     std::vector<std::vector<std::int64_t>> monster_lairs_;  // per monster: its lair site ids, ascending
+    // P5-07 11.1: per site its (year, depth) deepenings in event order (depth
+    // ascending), and per monster the year of its deep_sealed (-1 none).
+    std::vector<std::vector<std::pair<std::int64_t, std::int64_t>>> site_depths_;
+    std::vector<std::int64_t> monster_sealed_;
     std::vector<db::BeastPopulationRow> beast_rows_;
     std::size_t beast_kinds_ = 0;
     std::vector<std::size_t> beast_offsets_;  // (position * beast_kinds_ + beast - 1), size + 1 entries

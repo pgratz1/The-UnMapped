@@ -43,8 +43,11 @@ inline constexpr std::string_view HISTORY_REPORT_HEADER_V6 = "# worldgen history
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V7 = "# worldgen history v7";
 // First line of format v8 (P5-06 10.1), the one written.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V8 = "# worldgen history v8";
-// P5-04a 12.1 (generator 0.28.0): format v9.
+// P5-04a 12.1 (generator 0.28.0): format v9; no longer written from
+// generator 0.29.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V9 = "# worldgen history v9";
+// P5-07 10 (generator 0.29.0): format v10, the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V10 = "# worldgen history v10";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 
@@ -72,8 +75,9 @@ template <class T>
 // One piece of a block line: literal bytes as printed; text from the world
 // (escaped in the report); a reference to an entity (type code, id, its name
 // or empty when it has none); an event reference "e<id>"; the sentence of an
-// event (id).
-enum class SegmentKind : std::uint8_t { literal = 1, text = 2, entity = 3, event = 4, sentence = 5 };
+// event (id); P5-07 12 item 4: a tagged reference (type code, id, name),
+// printed tag first as "<tag> <name>".
+enum class SegmentKind : std::uint8_t { literal = 1, text = 2, entity = 3, event = 4, sentence = 5, tagged = 6 };
 struct Segment {
     SegmentKind kind = SegmentKind::literal;
     std::string text;
@@ -107,7 +111,8 @@ using BlockLine = std::vector<Segment>;
 // The report form of a line (before the report's trailing-space rule):
 // literal as is; text escape_history_text(text); entity
 // escape_history_text(name) + " (" + tag + ")", or the tag alone when the
-// name is empty; event "e<id>"; sentence escape_history_text(render_event).
+// name is empty; event "e<id>"; sentence escape_history_text(render_event);
+// tagged tag + " " + escape_history_text(name) (also when the name is empty).
 // The tag is the report's prefix of the type ("ra", "g", "c", "s", "rg",
 // "f", "fa", "m", "si"; "?" otherwise) and the id.
 [[nodiscard]] std::string block_line_report_text(const history::HistoryView& view, const BlockLine& line);
@@ -116,7 +121,8 @@ using BlockLine = std::vector<Segment>;
 // entity with a name is a tagged link over the name; one without a name
 // shows its tag, untagged (so that B4's transform gives the report form); an
 // event is a link (type 0) over "e<id>"; a sentence carries its own links
-// (render_event_linked) shifted.
+// (render_event_linked) shifted; a tagged reference shows "<tag> <name>" with
+// one untagged link over the whole text (so B4's transform adds nothing).
 [[nodiscard]] history::LinkedText block_line_display(const history::HistoryView& view, const BlockLine& line);
 
 // The report's tag of an entity: prefix and id ("c3", "rg4"; "?<id>" for a

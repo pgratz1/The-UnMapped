@@ -106,6 +106,9 @@ struct YearMarkers {
 [[nodiscard]] std::string_view event_symbol_word(EventSymbol symbol) noexcept;
 // The ring colour of 3.4.
 [[nodiscard]] Rgb event_symbol_colour(EventSymbol symbol) noexcept;
+// P5-07 11.1: the mine hover's depth words: 1 "below daylight", 2 "to the
+// mountain's roots", 3 "to the old deep", anything else empty.
+[[nodiscard]] std::string_view mine_depth_word(std::int64_t depth) noexcept;
 
 class MarkerIndex {
 public:

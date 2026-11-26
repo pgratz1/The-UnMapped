@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 92> GROUPS = {{
+constexpr std::array<GroupRow, 96> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -139,6 +139,12 @@ constexpr std::array<GroupRow, 92> GROUPS = {{
     {"tower_founded", EventGroup::figures},
     {"book_written", EventGroup::figures},
     {"blight", EventGroup::calamity},
+    // P5-07 11.1: the deepening with the mines, the waking, the seal and the
+    // lost hold with the monsters.
+    {"delving_deepened", EventGroup::settlements},
+    {"deep_woken", EventGroup::monsters},
+    {"deep_sealed", EventGroup::monsters},
+    {"hold_lost", EventGroup::monsters},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {

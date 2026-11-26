@@ -119,7 +119,7 @@ std::vector<std::int64_t> capital_role_seqs(const history::EventCatalogue& catal
 // --- Symbols (3.4) -----------------------------------------------------------
 
 EventSymbol event_symbol(std::string_view kind_key) noexcept {
-    if (kind_key == "sacked" || kind_key == "settlement_captured") {
+    if (kind_key == "sacked" || kind_key == "settlement_captured" || kind_key == "hold_lost") {  // P5-07 11.1
         return EventSymbol::sack;
     }
     if (kind_key == "siege" || kind_key == "refuge_held") {
@@ -133,6 +133,15 @@ EventSymbol event_symbol(std::string_view kind_key) noexcept {
         return EventSymbol::plague;
     }
     return EventSymbol::plain;
+}
+
+std::string_view mine_depth_word(std::int64_t depth) noexcept {
+    switch (depth) {
+        case 1: return "below daylight";
+        case 2: return "to the mountain's roots";
+        case 3: return "to the old deep";
+        default: return {};
+    }
 }
 
 std::string_view event_symbol_word(EventSymbol symbol) noexcept {

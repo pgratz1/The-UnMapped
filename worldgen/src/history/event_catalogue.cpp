@@ -2102,6 +2102,155 @@ std::optional<std::string> race_participant_problem(const MonsterTables& t) {
     return std::nullopt;
 }
 
+// P5-07 9 (schema 13): the values and the chains of kinds 93 to 96, after
+// the checks of P5-04 9.1. Messages on the event's row.
+template <class KindKey, class ParticipantOf>
+std::optional<std::string> deep_tables_problem(const MonsterTables& t, const KindKey& kind_key,
+                                               const ParticipantOf& participant,
+                                               std::span<const std::pair<std::size_t, std::size_t>> causes) {
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const auto n_sites = static_cast<std::int64_t>(t.sites.size());
+    const auto n_settlements = static_cast<std::int64_t>(t.settlements.size());
+    constexpr std::int64_t OPEN = std::numeric_limits<std::int64_t>::max();
+    for (const db::EventValueRow& v : t.values) {
+        if (v.event < 1 || v.event > n_events) {
+            continue;
+        }
+        const std::string_view k = kind_key(v.event);
+        if (k != "delving_deepened" && k != "deep_woken" && k != "deep_sealed" && k != "hold_lost") {
+            continue;
+        }
+        const KindDef* kind = t.catalogue->find(k);
+        if (kind == nullptr) {
+            continue;
+        }
+        std::string_view key;
+        std::int64_t lo = 0;
+        std::int64_t hi = 0;
+        if ((k == "delving_deepened" || k == "deep_woken") && v.seq == kind->value_seq("depth")) {
+            key = "depth";
+            lo = 1;
+            hi = 3;
+        } else if (v.seq == kind->value_seq("telling")) {
+            key = "telling";
+            hi = 2;
+        } else if (k == "hold_lost" && v.seq == kind->value_seq("dead")) {
+            key = "dead";
+            hi = OPEN;
+        } else if (k == "hold_lost" && v.seq == kind->value_seq("survivors")) {
+            key = "survivors";
+            hi = OPEN;
+        } else {
+            continue;
+        }
+        if (v.value < lo || v.value > hi) {
+            return "corrupt table 'event': row " + int_text(v.event) + ": value " + std::string(key) + " " +
+                   int_text(v.value) + " outside " + int_text(lo) + " to " +
+                   (hi == OPEN ? std::string("its maximum") : int_text(hi));
+        }
+    }
+    const auto value_of = [&](std::int64_t e, std::string_view key) -> std::int64_t {
+        const KindDef* kd = t.catalogue->find(kind_key(e));
+        const std::int64_t seq = kd != nullptr ? kd->value_seq(key) : 0;
+        if (seq == 0) {
+            return -1;
+        }
+        const auto it = std::lower_bound(t.values.begin(), t.values.end(), std::make_pair(e, seq),
+                                         [](const db::EventValueRow& v, const std::pair<std::int64_t, std::int64_t>& x) {
+                                             return v.event != x.first ? v.event < x.first : v.seq < x.second;
+                                         });
+        return it != t.values.end() && it->event == e && it->seq == seq ? it->value : -1;
+    };
+    const auto cites = [&](std::int64_t e, std::int64_t cause) {
+        const auto [c0, c1] = causes[static_cast<std::size_t>(e - 1)];
+        for (std::size_t i = c0; i < c1; ++i) {
+            if (t.causes[i].cause == cause) {
+                return true;
+            }
+        }
+        return false;
+    };
+    // The ruin event of each settlement (index id): its ruin_event, or for a
+    // faded ruin the ruin its ruin_faded cites.
+    std::vector<std::int64_t> ruin_of(t.settlements.size() + 1, 0);
+    for (const db::SettlementRow& r : t.settlements) {
+        if (r.id >= 1 && r.id <= n_settlements && r.status == 3) {
+            ruin_of[static_cast<std::size_t>(r.id)] = r.ruin_event;
+        }
+    }
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "ruin_faded" && e.settlement >= 1 && e.settlement <= n_settlements &&
+            t.settlements[static_cast<std::size_t>(e.settlement - 1)].status == 4) {
+            const auto [a, b] = causes[static_cast<std::size_t>(e.id - 1)];
+            if (a < b) {
+                ruin_of[static_cast<std::size_t>(e.settlement)] = t.causes[a].cause;
+            }
+        }
+    }
+    std::vector<std::uint8_t> depths(t.sites.size() + 1, 0);           // per site: bit d of depth d seen
+    std::vector<std::int64_t> waking_of_site(t.sites.size() + 1, 0);    // per site: its deep_woken
+    std::vector<std::int64_t> waking_of_monster(t.monsters.size() + 1, 0);
+    std::vector<std::uint8_t> took(t.monsters.size() + 1, 0);          // a hold_lost seen
+    const auto mine_of = [&](std::int64_t site, std::int64_t civ) {
+        return site >= 1 && site <= n_sites && t.sites[static_cast<std::size_t>(site - 1)].kind == 3 &&
+               t.sites[static_cast<std::size_t>(site - 1)].founder_civ == civ;
+    };
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        if (k != "delving_deepened" && k != "deep_woken" && k != "deep_sealed" && k != "hold_lost") {
+            continue;
+        }
+        const std::string at = "corrupt table 'event': row " + int_text(e.id) + ": ";
+        const std::int64_t s = participant(e.id, "site");
+        const std::int64_t c = participant(e.id, "civilization");
+        const std::int64_t m = participant(e.id, "monster");
+        if ((k == "delving_deepened" || k == "deep_woken") && !mine_of(s, c)) {
+            return at + "site " + int_text(s) + " is not a mine of " + int_text(c);
+        }
+        if (k == "delving_deepened") {
+            const std::int64_t d = value_of(e.id, "depth");
+            if (d >= 1 && d <= 3) {
+                const auto bit = static_cast<std::uint8_t>(1U << static_cast<unsigned>(d));
+                std::uint8_t& seen = depths[static_cast<std::size_t>(s)];
+                if ((seen & bit) != 0) {
+                    return at + "depth " + int_text(d) + " again";
+                }
+                if (d > 1 && (seen & static_cast<std::uint8_t>(1U << static_cast<unsigned>(d - 1))) == 0) {
+                    return at + "depth " + int_text(d) + " without depth " + int_text(d - 1);
+                }
+                seen = static_cast<std::uint8_t>(seen | bit);
+            }
+            continue;
+        }
+        const bool known_monster = m >= 1 && static_cast<std::uint64_t>(m) <= t.monsters.size();
+        if (k == "deep_woken") {
+            if (waking_of_site[static_cast<std::size_t>(s)] != 0) {
+                return at + "a second waking of site " + int_text(s);
+            }
+            waking_of_site[static_cast<std::size_t>(s)] = e.id;
+            if (known_monster && waking_of_monster[static_cast<std::size_t>(m)] == 0) {
+                waking_of_monster[static_cast<std::size_t>(m)] = e.id;
+            }
+            continue;
+        }
+        const std::int64_t waking = known_monster ? waking_of_monster[static_cast<std::size_t>(m)] : 0;
+        const bool first = k == "deep_sealed" || (known_monster && took[static_cast<std::size_t>(m)] == 0);
+        if (first && (waking == 0 || !cites(e.id, waking))) {
+            return at + std::string(k) + " without its waking";
+        }
+        if (k == "hold_lost") {
+            if (known_monster) {
+                took[static_cast<std::size_t>(m)] = 1;
+            }
+            if (e.settlement < 1 || e.settlement > n_settlements ||
+                ruin_of[static_cast<std::size_t>(e.settlement)] != e.id) {
+                return at + "hold_lost " + int_text(e.id) + " did not ruin its settlement";
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
@@ -2310,8 +2459,15 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             return at + "lair_site " + int_text(r.lair_site) + " is not a lair of this monster";
         }
         const std::string_view bk = kind_key(r.born_event);
-        if (!((bk == "monster_appeared" || bk == "undead_rose" || bk == "deep_woken") && year_of(r.born_event) == r.born &&
-              participant(r.born_event, "monster") == r.id)) {
+        // P5-07 9: a kind with wake 3 is born only of its deep_woken, and a
+        // deep_woken bears only such a kind.
+        const bool deep = t.monster_kinds[static_cast<std::size_t>(r.kind - 1)].wake == 3;
+        if (deep && !(bk == "deep_woken" && year_of(r.born_event) == r.born &&
+                      participant(r.born_event, "monster") == r.id)) {
+            return at + "born_event " + int_text(r.born_event) + " is not the waking of this monster";
+        }
+        if (!deep && !((bk == "monster_appeared" || bk == "undead_rose") && year_of(r.born_event) == r.born &&
+                       participant(r.born_event, "monster") == r.id)) {
             return at + "born_event " + int_text(r.born_event) + " is not the appearance of this monster in year " +
                    int_text(r.born);
         }
@@ -2394,7 +2550,10 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
     if (std::optional<std::string> why = relation_tables_problem(t, kind_key, participant)) {
         return why;
     }
-    return alliance_tables_problem(t, kind_key, participant, causes);
+    if (std::optional<std::string> why = alliance_tables_problem(t, kind_key, participant, causes)) {
+        return why;
+    }
+    return deep_tables_problem(t, kind_key, participant, causes);  // P5-07 9
 }
 
 // --- P5-06 9.4 ------------------------------------------------------------------------------

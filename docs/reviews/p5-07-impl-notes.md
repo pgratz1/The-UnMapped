@@ -120,3 +120,70 @@ deep, Clan Drailimai under Hamgri the Last came to an end."). The shipped values
   will unmask the rest.
 - Golden values and expected counts at 0.28.0 (world hashes, table hashes, report hashes, stats lines, history
   notes, `cat.kinds.size() == 92U`, the stream count).
+
+# Part C: readers, report v10, timeline, browser, markers
+
+Generator engineer (part C), 2026-11-26, same branch. No world byte changes: part C is readers and text only
+(world file hashes of seeds 0 to 5 at 1024 equal those of cd9dce1).
+
+## What is built
+
+- **Reader checks of 9** (`event_catalogue.cpp`, `monster_tables_problem`, which both readers call, so both give the
+  same first error): in the `monster` rows, a kind with `wake` 3 is born only of a `deep_woken` naming it in its year
+  (`born_event <e> is not the waking of this monster`), and a kind with `wake` 1 or 2 no longer accepts a
+  `deep_woken` (the old appearance message). After P5-04 9.1's checks, the new `deep_tables_problem`: the values
+  `depth` (1 to 3, kinds 93 and 94), `telling` (0 to 2, 93 to 96), `dead` and `survivors` (0 to its maximum, 96) in
+  P5-03 16.4's form; then per event in id order `site <s> is not a mine of <c>` (93, 94), `depth <d> again`,
+  `depth <d> without depth <d-1>`, `a second waking of site <s>`, `<kind> without its waking` (every 95 and the
+  first 96 of a monster must cite the monster's `deep_woken`), `hold_lost <e> did not ruin its settlement`. All on
+  `corrupt table 'event': row <e>: `. Part A's relaxations (wake 1 to 3, a lair's origin 94, 94 must be a site's
+  origin) stay where they were.
+- **Report v10** (`history_report.cpp`, `digest.cpp`, `cli.cpp` help): header `# worldgen history v10`
+  (`HISTORY_REPORT_HEADER_V10`); `[monsters]` `sealed in si<id> <name>` for a status 2 monster named by a
+  `deep_sealed`; `[sites]` (full) a mine's `, depth <d>` and `, sealed <year> e<id>` after its settlement part;
+  `[present]` ruins `lost to <monster ref>` for a `hold_lost` ruin; `[alliances]` `; soured e<id>` after the spoils
+  part; summary milestones at most one per kind (`summary_milestones`); eight stats appended after P5-04a's, in 10
+  item 7's order (`deep_stats`).
+- **`tagged` segment** (`SegmentKind::tagged = 6`): report text `<tag> <escaped name>` (also with an empty name,
+  as before); display `<tag> <name>` with one link over the whole text, `tagged = false`. Both `allies:` forms (summary
+  `; at the end:` list and full ally lines) use it; the report text is byte for byte that of v9's form.
+- **Timeline**: `mine_depth_at(site, year)`, `sealed_year(monster)`; monster state: `deep_woken` awake,
+  `deep_sealed` asleep.
+- **Browser**: 93 `settlements`, 94 to 96 `monsters` (table of 96 rows).
+- **Markers**: `event_symbol("hold_lost")` = `sack`; `mine_depth_word(d)` in `markers.hpp`.
+
+## Readings
+
+1. "Sealed in" is decided by any `deep_sealed` naming the monster (a sealed horror never wakes, so it is its last
+   sleeping event); the count line still counts it asleep.
+2. A mine's final depth for `[sites]` is the largest `depth` of the kind 93 events naming it as `site`; the sealed
+   part names the first `deep_sealed` naming the mine as `site`.
+3. `deep_flights` and `realms_lost_to_deep` count `refugees_settled` and `civ_ended` with any `hold_lost` among their
+   causes; `mines_deepest` counts distinct sites with a depth-3 event; `deep_alive` monsters of a `wake` 3 kind with
+   status 1 or 2.
+4. The `hold_lost` ruin check reads a faded ruin's ruin through its `ruin_faded` cause, as the ending check does.
+5. `soured`: the first `spoils_withheld` of the pair by id with `grievance` 1, inside the same span as the spoils
+   counts (after the formation, before the closing event).
+
+## For the viewer engineer
+
+- New mine hover data: `Timeline::mine_depth_at(site, Y)` and `mine_depth_word(d)`; for ", sealed in <year>", the
+  mine's horror is the monster of the `deep_woken` naming the site (`MarkerIndex` has no such index; read the
+  events, or `Timeline::sealed_year(monster)` once the monster is known).
+- `allies:` lines: segments of kind `tagged` (type 3, the ally's id, its name); `block_line_display` gives
+  `c<id> <name>` with one link (type 3, id, `tagged = false`) over the whole text, so B4's transform needs no change.
+  B14 can count the links with type 3 on an `allies:` line.
+- No new glyph: a lost hold is a ruin, its ring symbol at the place marker is `sack`.
+
+## Runs (part C, linux-gcc-release, shipped data, 1024)
+
+Seeds 0 to 19: `generate` and `report --history` at both levels run without error, every report starts
+`# worldgen history v10`; world files of seeds 0 to 5 hash equal to cd9dce1's. The sixteen cases of
+`world-hashes.sh generate linux-gcc-release` run. Lost holds show in 8 of the 20 summaries (seed 0: waking e391,
+fall e392, the ruin `s29 Thraid ... lost to The Eyeless of Handkaird (m13)`, the horror slain by a hero in 5653);
+`sealed in` and `; soured` lines appear in several. `linux-clang-debug` builds without warnings; lint clean.
+
+## Left
+
+Nothing of part C. Tests (fixture H18, the reader corruption cases, timeline, browser and markers cases) are the
+test writer's.

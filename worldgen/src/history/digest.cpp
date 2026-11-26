@@ -865,11 +865,20 @@ private:
         std::stable_sort(own_ids.begin(), own_ids.end(), [this](Id x, Id y) {
             return salience(x) != salience(y) ? salience(x) > salience(y) : x < y;
         });
-        if (own_ids.size() > SUMMARY_MILESTONES_TOP) {
-            own_ids.resize(SUMMARY_MILESTONES_TOP);
+        // P5-07 10 item 6 (critic F2): at most one of each kind, the first
+        // of its kind in that rank.
+        std::vector<Id> top;
+        for (const Id e : own_ids) {
+            if (top.size() == SUMMARY_MILESTONES_TOP) {
+                break;
+            }
+            const bool seen = std::any_of(top.begin(), top.end(), [this, e](Id x) { return kind(x) == kind(e); });
+            if (!seen) {
+                top.push_back(e);
+            }
         }
-        std::stable_sort(own_ids.begin(), own_ids.end());
-        c.milestones_top = std::move(own_ids);
+        std::stable_sort(top.begin(), top.end());
+        c.milestones_top = std::move(top);
     }
 
     // The participant of `role` (by key) of event `id`, or 0.
@@ -1616,6 +1625,51 @@ private:
         alliance_stats();   // P5-04 10.5
         figure_stats();     // P5-06 10.5
         followup_stats();   // P5-04a 12.6
+        deep_stats();       // P5-07 10 item 7
+    }
+
+    // P5-07 10 item 7: appended at the end, in this order (full only).
+    void deep_stats() {
+        const Id delved = kind_id("delving_deepened"), woken = kind_id("deep_woken");
+        const Id sealed = kind_id("deep_sealed"), lost = kind_id("hold_lost");
+        const Id settled = kind_id("refugees_settled"), ended = kind_id("civ_ended");
+        std::int64_t deepened = 0, n_woken = 0, n_sealed = 0, n_lost = 0, flights = 0, realms = 0;
+        std::vector<Id> deepest;  // sites with a depth-3 event
+        const auto caused_by_lost = [this, lost](const HistoryView::Event& e) {
+            return std::any_of(e.causes.begin(), e.causes.end(), [this, lost](Id c) {
+                return c >= 1 && static_cast<std::size_t>(c) <= events_.size() && kind(c) == lost;
+            });
+        };
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            if (k == delved) {
+                ++deepened;
+                if (value_of(e, "depth") == 3) {
+                    deepest.push_back(role_entity(e, "site"));
+                }
+            }
+            n_woken += k == woken ? 1 : 0;
+            n_sealed += k == sealed ? 1 : 0;
+            n_lost += k == lost ? 1 : 0;
+            flights += k == settled && caused_by_lost(e) ? 1 : 0;
+            realms += k == ended && caused_by_lost(e) ? 1 : 0;
+        }
+        std::stable_sort(deepest.begin(), deepest.end());
+        deepest.erase(std::unique(deepest.begin(), deepest.end()), deepest.end());
+        std::int64_t alive = 0;
+        for (const db::MonsterRow& m : t_.monsters) {
+            const bool deep = m.kind >= 1 && static_cast<std::size_t>(m.kind) <= t_.monster_kinds.size() &&
+                              t_.monster_kinds[static_cast<std::size_t>(m.kind - 1)].wake == 3;
+            alive += deep && (m.status == 1 || m.status == 2) ? 1 : 0;
+        }
+        put("mines_deepened", deepened);
+        put("mines_deepest", static_cast<std::int64_t>(deepest.size()));
+        put("deep_woken", n_woken);
+        put("deep_sealed", n_sealed);
+        put("holds_lost", n_lost);
+        put("deep_flights", flights);
+        put("realms_lost_to_deep", realms);
+        put("deep_alive", alive);
     }
 
     // P5-04a 12.6: appended at the end, in this order (full only).

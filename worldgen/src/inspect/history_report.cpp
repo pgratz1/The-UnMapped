@@ -1,7 +1,7 @@
-// The history report, format "# worldgen history v9" (spec P3-07 section 6
+// The history report, format "# worldgen history v10" (spec P3-07 section 6
 // with amendments 21 to 26; P5-02 12, generator 0.23.0; P5-03 17; P5-03a 9,
 // generator 0.25.0; P5-04 10, generator 0.26.0; P5-06 10, generator 0.27.0;
-// P5-04a 12 and 21.5, generator 0.28.0).
+// P5-04a 12 and 21.5, generator 0.28.0; P5-07 10, generator 0.29.0).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -104,6 +104,10 @@ Segment event_ref(Id event) {
 }
 Segment sentence_of(Id event) {
     return Segment{SegmentKind::sentence, std::string(), 0, event};
+}
+// P5-07 12 item 4: "<tag> <name>", a link over the whole text in the viewer.
+Segment tagged_ref(Id type, Id id, std::string name) {
+    return Segment{SegmentKind::tagged, std::move(name), type, id};
 }
 
 const db::RaceRow* find_race(const history::HistoryTables& t, Id id) {
@@ -466,8 +470,8 @@ private:
             BlockLine l{lit(head)};
             for (std::size_t k = 0; k < at_end.size(); ++k) {
                 const db::CivilizationRow* o = find_civilization(t_, at_end[k]);
-                l.push_back(lit((k == 0 ? "; at the end: c" : ", c") + num(at_end[k]) + " "));
-                l.push_back(txt(o != nullptr ? o->name : std::string()));
+                l.push_back(lit(k == 0 ? "; at the end: " : ", "));
+                l.push_back(tagged_ref(3, at_end[k], o != nullptr ? o->name : std::string()));  // P5-07 12 item 4
             }
             add(std::move(l));
             return;
@@ -476,7 +480,7 @@ private:
         for (const db::RelationRow* r : rows) {
             const Id other = r->a_id == c.id ? r->b_id : r->a_id;
             const db::CivilizationRow* o = find_civilization(t_, other);
-            add({lit("    c" + num(other) + " "), txt(o != nullptr ? o->name : std::string()),
+            add({lit("    "), tagged_ref(3, other, o != nullptr ? o->name : std::string()),  // P5-07 12 item 4
                  lit(": " + num(r->since) + "-" + (r->until ? num(*r->until) : std::string("E")) + ", " +
                      std::string(alliance_basis_word(v_, r->since_event)))});
         }
@@ -561,7 +565,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V9));  // P5-04a 12.1
+        line(std::string(HISTORY_REPORT_HEADER_V10));  // P5-07 10 item 1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -990,6 +994,17 @@ private:
                 }
             }
         }
+        // P5-07 10 item 2: the monsters sealed in at their waking (a sealed
+        // horror never wakes again, so its last sleeping event is the seal).
+        std::vector<std::uint8_t> sealed(t_.monsters.size(), 0);
+        if (const history::KindDef* seal = v_.catalogue().find("deep_sealed")) {
+            for (const HistoryView::Event& e : v_.events()) {
+                const Id m = e.row.kind == seal->id ? role_of(e, "monster") : 0;
+                if (m >= 1 && static_cast<std::size_t>(m) <= sealed.size()) {
+                    sealed[static_cast<std::size_t>(m - 1)] = 1;
+                }
+            }
+        }
         std::vector<const db::MonsterRow*> shown;
         std::int64_t more = 0;
         if (level_ == HistoryLevel::full) {
@@ -1039,7 +1054,9 @@ private:
             std::string state;
             switch (m->status) {
                 case 1: state = "awake"; break;
-                case 2: state = "asleep"; break;
+                case 2:
+                    state = sealed[i] != 0 ? "sealed in " + ref(9, m->lair_site) : std::string("asleep");
+                    break;
                 case 3: {
                     // P5-06 10.3: a slaying by a hero names the hero.
                     const history::KindDef* by_hero = v_.catalogue().find("monster_slain_by_hero");
@@ -1085,6 +1102,27 @@ private:
             return;
         }
         static constexpr std::array<std::string_view, 6> ENDING = {"slain", "died", "moved", "lost", "fell", "quiet"};
+        // P5-07 10 item 3: per mine its final depth and its sealing event.
+        std::vector<std::int64_t> depth(t_.sites.size(), 0);
+        std::vector<const HistoryView::Event*> sealing(t_.sites.size(), nullptr);
+        {
+            const history::KindDef* delved = v_.catalogue().find("delving_deepened");
+            const history::KindDef* seal = v_.catalogue().find("deep_sealed");
+            for (const HistoryView::Event& e : v_.events()) {
+                const bool is_delve = delved != nullptr && e.row.kind == delved->id;
+                const bool is_seal = seal != nullptr && e.row.kind == seal->id;
+                const Id s = is_delve || is_seal ? role_of(e, "site") : 0;
+                if (s < 1 || static_cast<std::size_t>(s) > t_.sites.size()) {
+                    continue;
+                }
+                const auto i = static_cast<std::size_t>(s - 1);
+                if (is_delve) {
+                    depth[i] = std::max(depth[i], value_of(e, "depth", 0));
+                } else if (sealing[i] == nullptr) {
+                    sealing[i] = &e;
+                }
+            }
+        }
         for (const db::SiteRow& x : t_.sites) {
             // P5-06 10.4: a tower, or a library when it stands in a settlement.
             const std::string_view what = x.kind == 1   ? "lair"
@@ -1105,6 +1143,15 @@ private:
             }
             if (x.settlement != 0) {
                 l += ", at " + settlement(x.settlement);
+            }
+            if (x.kind == 3) {
+                const auto i = static_cast<std::size_t>(x.id - 1);  // ids 1, 2, ... (P5-02 11.4)
+                if (depth[i] >= 1) {
+                    l += ", depth " + num(depth[i]);
+                }
+                if (sealing[i] != nullptr) {
+                    l += ", sealed " + num(sealing[i]->row.year) + " e" + num(sealing[i]->row.id);
+                }
             }
             if (x.ended_year) {
                 l += "; ended " + num(*x.ended_year) + " e" + num(x.ending_event) + " " +
@@ -1246,6 +1293,10 @@ private:
         if (key == "settlement_overrun") {
             const Id m = role_of(e, "monster");
             return m != 0 ? "overrun by " + ref(8, m) : std::string("overrun");
+        }
+        if (key == "hold_lost") {  // P5-07 10 item 4
+            const Id m = role_of(e, "monster");
+            return m != 0 ? "lost to " + ref(8, m) : std::string("lost");
         }
         std::string after = ending == 3 ? " after plague" : ending == 4 ? " after famine" : "";
         if (ending == 6) {  // P5-03 11.3: the monster of the settlement_fled cause
@@ -1647,6 +1698,7 @@ private:
                                 (r->until ? num(*r->until) : std::string("E")) + ", " + part;
                 l += ", e" + num(r->since_event);
                 std::int64_t k_renew = 0, k_join = 0, k_ref = 0, k_gr = 0, k_wh = 0;
+                Id soured = 0;  // P5-07 10 item 5: the first withholding with grievance 1
                 const auto pair_is = [&](Id x, Id y) {
                     return (x == r->a_id && y == r->b_id) || (x == r->b_id && y == r->a_id);
                 };
@@ -1664,6 +1716,9 @@ private:
                         (!r->until || e.row.id < r->until_event) &&
                         pair_is(role_of(e, "principal"), role_of(e, "ally"))) {
                         (k == shared ? k_gr : k_wh) += 1;
+                        if (k == withheld && soured == 0 && value_of(e, "grievance", 0) == 1) {
+                            soured = e.row.id;
+                        }
                     }
                     if (e.row.year < r->since || e.row.year > last) {
                         continue;
@@ -1680,6 +1735,9 @@ private:
                 }
                 if (k_gr > 0 || k_wh > 0) {
                     l += "; spoils " + num(k_gr) + " granted, " + num(k_wh) + " withheld";
+                }
+                if (soured != 0) {
+                    l += "; soured e" + num(soured);
                 }
                 if (r->until) {
                     const std::string_view w = end_kind == lapsed     ? "lapsed"
@@ -1958,6 +2016,7 @@ std::string block_line_report_text(const HistoryView& view, const BlockLine& lin
                 break;
             case SegmentKind::event: out += "e" + num(g.id); break;
             case SegmentKind::sentence: out += escape_history_text(history::render_event(view, g.id)); break;
+            case SegmentKind::tagged: out += history_entity_tag(g.type, g.id) + " " + escape_history_text(g.text); break;
         }
     }
     return out;
@@ -1982,6 +2041,10 @@ history::LinkedText block_line_display(const HistoryView& view, const BlockLine&
             case SegmentKind::event:
                 out.text += "e" + num(g.id);
                 link(start, 0, g.id, false);
+                break;
+            case SegmentKind::tagged:  // P5-07 12 item 4: untagged, B4 adds nothing
+                out.text += history_entity_tag(g.type, g.id) + " " + g.text;
+                link(start, g.type, g.id, false);
                 break;
             case SegmentKind::sentence: {
                 history::LinkedText s = history::render_event_linked(view, g.id);
