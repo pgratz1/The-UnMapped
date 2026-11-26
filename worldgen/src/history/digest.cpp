@@ -1670,6 +1670,41 @@ private:
         put("deep_flights", flights);
         put("realms_lost_to_deep", realms);
         put("deep_alive", alive);
+        // r2: the warrens and the aid.
+        const Id wdelved = kind_id("warren_delved"), wsealed = kind_id("warren_sealed");
+        const Id aided = kind_id("ally_aided_hold");
+        std::int64_t warrens = 0, warrens_woken = 0, warrens_sealed = 0, aids = 0;
+        std::vector<Id> warrens_deepest;  // settlements with a depth-3 warren_delved
+        std::vector<Id> aided_wakings;    // kind 94 events cited by a kind 97
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            if (k == wdelved) {
+                ++warrens;
+                if (value_of(e, "depth") == 3) {
+                    warrens_deepest.push_back(e.row.settlement);
+                }
+            }
+            warrens_woken += k == woken && role_entity(e, "site") == 0 ? 1 : 0;
+            warrens_sealed += k == wsealed ? 1 : 0;
+            if (k == aided) {
+                ++aids;
+                for (const Id c : e.causes) {
+                    if (c >= 1 && static_cast<std::size_t>(c) <= events_.size() && kind(c) == woken) {
+                        aided_wakings.push_back(c);
+                    }
+                }
+            }
+        }
+        std::stable_sort(warrens_deepest.begin(), warrens_deepest.end());
+        warrens_deepest.erase(std::unique(warrens_deepest.begin(), warrens_deepest.end()), warrens_deepest.end());
+        std::stable_sort(aided_wakings.begin(), aided_wakings.end());
+        aided_wakings.erase(std::unique(aided_wakings.begin(), aided_wakings.end()), aided_wakings.end());
+        put("warrens_delved", warrens);
+        put("warrens_deepest", static_cast<std::int64_t>(warrens_deepest.size()));
+        put("warrens_woken", warrens_woken);
+        put("warrens_sealed", warrens_sealed);
+        put("deep_aided", aids);
+        put("wakings_aided", static_cast<std::int64_t>(aided_wakings.size()));
     }
 
     // P5-04a 12.6: appended at the end, in this order (full only).

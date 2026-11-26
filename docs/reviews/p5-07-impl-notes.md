@@ -187,3 +187,79 @@ fall e392, the ruin `s29 Thraid ... lost to The Eyeless of Handkaird (m13)`, the
 
 Nothing of part C. Tests (fixture H18, the reader corruption cases, timeline, browser and markers cases) are the
 test writer's.
+
+# r2: allies' aid and goblin deep warrens
+
+Generator engineer, 2026-11-26, same branch. Spec r2 (6.10, 6.11, 6.12); lead rulings L-8 to L-12 as recommended.
+Generator 0.29.0, schema 13 and report v10 unchanged.
+
+## What is built
+
+- **Engine** (`monsters_deep.cpp`): `warren_delving` (6.10; T4 and Q4 after `deepen`), the shared waking
+  `deep_wake_at(DeepHold)` for a mine (site > 0) or a warren (site 0), called by `deep_waking` for mines first, then
+  warrens, at most one waking a step; `deep_aid` (6.11: allies copied from `AllianceView::allies(c)`, q by population
+  then smaller id within `deep_aid_hops` by the monster's BFS hops, draw `hist.deep.aid` (m, a, 0)), its strength
+  added to the gate's S (`gate_odds(..., aid)`); one `ally_aided_hold` per aid after the `deep_woken`, each followed
+  by `RelationsSubsystem::credit(r_a, r_c, deep_aid_memory, aid_event)` when the races differ; the outcome
+  (`deep_sealed`, `warren_sealed` or `hold_lost`) cites the waking and then the aids. `deep_take` takes a list of
+  causes. `hold_lost` and `deep_woken` `telling` + 3 for a warren horror (`Monster::from_warren`).
+- State: per settlement `warren_depth_`, `warren_delver_`, `warren_event_`, `warren_woken_`, `warren_sealed_`
+  (grown to the settlement count at each use); per region `warren_region_` (upland or `ore_reach_cells` >=
+  `deep_warren_ore_min`, from `inputs.regions`); per race `delving_`, `ally_join_`. `set_alliances`,
+  `set_relations`, `warren_depth(settlement)` (7.6); the stage wires both. Stats `warrens_delved`, `warrens_woken`,
+  `warrens_sealed`, `aids`, `wakings_aided`.
+- Streams: four appended (107). Catalogue: 94's `site` 0-1; kinds 97 to 99.
+- Data: race field `delving_permille` (`Field::optional`, default 0; check `race_delves_one_way`); goblin 300, the
+  other five 0 in `game/data/races/`; fixture roots leave it out. The eight r2 `history.monsters` fields with 4.2's
+  ranges in all three roots; code defaults inert (`deep_warren_wake_permille` 0, `deep_aid_permille` 0). Templates 94
+  and 96 widened, 97 to 99 added in the three `report.toml`. `depths_small_content()` gains the r2 edits
+  (`with_race_field` sets goblin `delving_permille` 1000).
+- Readers (`deep_tables_problem`): telling 0 to 5 on 94 and 96; depth of 98; the 98 chain per settlement (`depth <d>
+  again`, `depth <d> without depth <d-1>`), `warren <t> delved by two realms`; **a 94 without a site is legal only
+  as a warren waking**: it needs an earlier `warren_delved` of its settlement by its `civilization`
+  (`waking of settlement <t> without a warren`) and is the only one there (`a second waking of settlement <t>`); a 99
+  must cite its monster's waking and that waking has no site (else `warren_sealed without its waking`); a 97 must
+  cite its monster's waking, of its year, whose `civilization` is its `partner`, with `ally` != `partner`
+  (`ally_aided_hold <e> does not answer its waking`).
+- Report: `sealed in` also for a `warren_sealed`; six stats after `deep_alive` (10 item 7). Timeline:
+  `warren_depth_at(settlement, year)`, `sealed_year` and the monster state read 99. Browser: 97 alliances, 98
+  settlements, 99 monsters (99 rows). Markers: nothing to change (97 to 99 plain by default). `schema.md`: changelog
+  row 13 and catalogue rows 94, 96 to 99.
+
+## Readings
+
+1. `w` for a warren is Y - `event_year(owner_event(t))`; a settlement with `owner_event` 0 is skipped.
+2. "Live warren" is computed once before the delving loop (standing, owner = delver, depth >= 1, not sealed) and
+   set when a warren gets its first level in the loop, so the first candidate by id wins.
+3. The warren wake chance is floor(floor(ppm x M / 1000) x `deep_warren_wake_permille` / 1000), then min 10^6.
+4. An ally equal to c, ended or invisible is skipped with no draw; `deep_aid_max` 0 or no seams: no aid, no draw.
+5. A warren's waking region is its settlement's region; the hops for the aid are the new monster's hops.
+6. `warren_sealed` is not added to P5-06's deed list (spec names only 94 and 95); `{civilization:under}` renders a
+   ruler only when one reigns, as for refusals.
+
+## Runs (linux-gcc-release, 1024, shipped data)
+
+Seeds 0 to 19: `generate` and `report --history` at both levels ran without error, every report `v10`; seed 0
+twice: same hash. The sixteen cases of `world-hashes.sh generate` ran. Counts: 69 warrens dug, 43 reach depth 3 (in
+all 20 worlds: GW1's 10 to 50 per hundred is exceeded, for calibration), 17 wakings (13 mine, 4 goblin, in 4
+worlds), 2 warrens sealed, 2 lost at the waking (3 goblin holds lost in all), 6 aids at 6 wakings, all 6 aided gates
+held (12 gates held in all). No realm ended by the deep. Forced scratch data at 512 (6.10's hurried values, aid
+1000) seeds 0 to 5: 21 goblin wakings, 27 goblin holds lost, a goblin realm ended by the deep, aid at a warren
+gate that held and one that fell.
+
+**I1**: with goblin `delving_permille` 0 and `deep_aid_permille` 0 in a scratch copy, seeds 0 to 5 at 1024 differ
+from 5e60904 (its own data) only in `event_kind`, `event_kind_role`, `event_kind_value` (the catalogue: rows 94, 97
+to 99 and the templates) and `meta` (the data's content hash); every other table hash is equal, so the file hash
+differs for these reasons only.
+
+## Left
+
+- Tests (16 items 15 to 19, H19, reader corruption cases) are the test writer's; `p3_01_history_data.hpp`'s copy
+  of the shipped files also lacks the r2 fields and `delving_permille`.
+- Calibration (15.2 steps 8 to 12): GW1 is high at the starts.
+- `ctest linux-gcc-release`: the same 31 of 45 entries fail as at r1 (the stale embedded `p3_01_history_data.hpp` copy, then 0.28.0 goldens and counts); none is a crash or reader error of r2.
+
+## For the viewer engineer
+
+`Timeline::warren_depth_at(t, Y)` with `mine_depth_word(d)` for the settlement hover (11.2 item 4); M12 can use
+`depths_small_content()` or the hurried data above (every seed 0 to 5 at 512 has a warren at depth >= 1).

@@ -172,8 +172,13 @@ inline constexpr std::string_view hist_deep_wake = "hist.deep.wake";
 inline constexpr std::string_view hist_deep_kind = "hist.deep.kind";
 inline constexpr std::string_view hist_deep_gate = "hist.deep.gate";
 inline constexpr std::string_view hist_deep_take = "hist.deep.take";
+// P5-07 r2 3: the allies' aid (6.11) and the goblin deep warrens (6.10).
+inline constexpr std::string_view hist_deep_aid = "hist.deep.aid";
+inline constexpr std::string_view hist_deep_warren_delve = "hist.deep.warren_delve";
+inline constexpr std::string_view hist_deep_warren_wake = "hist.deep.warren_wake";
+inline constexpr std::string_view hist_deep_warren_kind = "hist.deep.warren_kind";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 103> all_stream_names = {
+inline constexpr std::array<std::string_view, 107> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -277,6 +282,10 @@ inline constexpr std::array<std::string_view, 103> all_stream_names = {
     hist_deep_kind,
     hist_deep_gate,
     hist_deep_take,
+    hist_deep_aid,
+    hist_deep_warren_delve,
+    hist_deep_warren_wake,
+    hist_deep_warren_kind,
 };
 
 }  // namespace worldgen::streams

@@ -348,14 +348,22 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{93, "delving_deepened", true, 1, 1, {civ(1, "civilization"), site_role(2, "site")},
                               {"depth", "telling"}, 0, {}});
     c.kinds.push_back(KindDef{94, "deep_woken", true, 1, 1,
-                              {mon(1), civ(2, "civilization"), site_role(3, "site"), site_role(4, "lair")},
-                              {"depth", "telling"}, 0, {}});
+                              {mon(1), civ(2, "civilization"), site_role(3, "site", 0, 1), site_role(4, "lair")},
+                              {"depth", "telling"}, 0, {}});  // r2: no site at a warren
     c.kinds.push_back(KindDef{95, "deep_sealed", true, 1, 1,
                               {civ(1, "civilization"), mon(2), site_role(3, "site"), site_role(4, "lair")},
                               {"telling"}, 0, {}});
     c.kinds.push_back(KindDef{96, "hold_lost", true, 1, 1,
                               {mon(1), civ(2, "civilization"), site_role(3, "lair"), site_role(4, "site", 0, 1)},
                               {"dead", "survivors", "telling"}, 0, {}});
+    // P5-07 r2 8.1: the allies' aid (6.11) and the goblin deep warrens (6.10).
+    c.kinds.push_back(KindDef{97, "ally_aided_hold", true, 1, 1,
+                              {civ(1, "ally"), civ(2, "partner"), mon(3),
+                               role(4, "origin", EntityType::settlement, 1, 1)},
+                              {"telling"}, 0, {}});
+    c.kinds.push_back(KindDef{98, "warren_delved", true, 1, 1, {civ(1, "civilization")}, {"depth", "telling"}, 0, {}});
+    c.kinds.push_back(KindDef{99, "warren_sealed", true, 1, 1, {civ(1, "civilization"), mon(2), site_role(3, "lair")},
+                              {"telling"}, 0, {}});
     return c;
 }
 
@@ -2102,6 +2110,12 @@ std::optional<std::string> race_participant_problem(const MonsterTables& t) {
     return std::nullopt;
 }
 
+// P5-07 9 (schema 13; r2: 97 to 99): the deep kinds the checks below read.
+bool deep_kind(std::string_view k) noexcept {
+    return k == "delving_deepened" || k == "deep_woken" || k == "deep_sealed" || k == "hold_lost" ||
+           k == "ally_aided_hold" || k == "warren_delved" || k == "warren_sealed";
+}
+
 // P5-07 9 (schema 13): the values and the chains of kinds 93 to 96, after
 // the checks of P5-04 9.1. Messages on the event's row.
 template <class KindKey, class ParticipantOf>
@@ -2117,7 +2131,7 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
             continue;
         }
         const std::string_view k = kind_key(v.event);
-        if (k != "delving_deepened" && k != "deep_woken" && k != "deep_sealed" && k != "hold_lost") {
+        if (!deep_kind(k)) {
             continue;
         }
         const KindDef* kind = t.catalogue->find(k);
@@ -2127,13 +2141,13 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
         std::string_view key;
         std::int64_t lo = 0;
         std::int64_t hi = 0;
-        if ((k == "delving_deepened" || k == "deep_woken") && v.seq == kind->value_seq("depth")) {
+        if ((k == "delving_deepened" || k == "deep_woken" || k == "warren_delved") && v.seq == kind->value_seq("depth")) {
             key = "depth";
             lo = 1;
             hi = 3;
         } else if (v.seq == kind->value_seq("telling")) {
             key = "telling";
-            hi = 2;
+            hi = k == "deep_woken" || k == "hold_lost" ? 5 : 2;  // r2: 3 to 5 at a warren
         } else if (k == "hold_lost" && v.seq == kind->value_seq("dead")) {
             key = "dead";
             hi = OPEN;
@@ -2191,38 +2205,89 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
     std::vector<std::int64_t> waking_of_site(t.sites.size() + 1, 0);    // per site: its deep_woken
     std::vector<std::int64_t> waking_of_monster(t.monsters.size() + 1, 0);
     std::vector<std::uint8_t> took(t.monsters.size() + 1, 0);          // a hold_lost seen
+    // r2: per settlement the depths of its warren_delved, their civilization
+    // and its warren waking.
+    std::vector<std::uint8_t> warren_depths(t.settlements.size() + 1, 0);
+    std::vector<std::int64_t> warren_civ(t.settlements.size() + 1, 0);
+    std::vector<std::int64_t> waking_of_warren(t.settlements.size() + 1, 0);
+    const auto known_settlement = [&](std::int64_t id) { return id >= 1 && id <= n_settlements; };
+    const auto depth_chain = [&](std::vector<std::uint8_t>& all, std::size_t index, std::int64_t d,
+                                 const std::string& at) -> std::optional<std::string> {
+        if (d < 1 || d > 3) {
+            return std::nullopt;
+        }
+        const auto bit = static_cast<std::uint8_t>(1U << static_cast<unsigned>(d));
+        std::uint8_t& seen = all[index];
+        if ((seen & bit) != 0) {
+            return at + "depth " + int_text(d) + " again";
+        }
+        if (d > 1 && (seen & static_cast<std::uint8_t>(1U << static_cast<unsigned>(d - 1))) == 0) {
+            return at + "depth " + int_text(d) + " without depth " + int_text(d - 1);
+        }
+        seen = static_cast<std::uint8_t>(seen | bit);
+        return std::nullopt;
+    };
     const auto mine_of = [&](std::int64_t site, std::int64_t civ) {
         return site >= 1 && site <= n_sites && t.sites[static_cast<std::size_t>(site - 1)].kind == 3 &&
                t.sites[static_cast<std::size_t>(site - 1)].founder_civ == civ;
     };
     for (const db::EventRow& e : t.events) {
         const std::string_view k = kind_key(e.id);
-        if (k != "delving_deepened" && k != "deep_woken" && k != "deep_sealed" && k != "hold_lost") {
+        if (!deep_kind(k)) {
             continue;
         }
         const std::string at = "corrupt table 'event': row " + int_text(e.id) + ": ";
         const std::int64_t s = participant(e.id, "site");
         const std::int64_t c = participant(e.id, "civilization");
         const std::int64_t m = participant(e.id, "monster");
+        const bool known_monster = m >= 1 && static_cast<std::uint64_t>(m) <= t.monsters.size();
+        if (k == "warren_delved") {  // r2: the chain per settlement, one realm
+            if (!known_settlement(e.settlement)) {
+                continue;  // the event's settlement is checked by the event table's own checks
+            }
+            const auto ti = static_cast<std::size_t>(e.settlement);
+            if (warren_civ[ti] != 0 && warren_civ[ti] != c) {
+                return at + "warren " + int_text(e.settlement) + " delved by two realms";
+            }
+            warren_civ[ti] = c;
+            if (std::optional<std::string> why = depth_chain(warren_depths, ti, value_of(e.id, "depth"), at)) {
+                return why;
+            }
+            continue;
+        }
+        if (k == "deep_woken" && s == 0) {  // r2: a warren's waking, legal only after a warren_delved
+            if (!known_settlement(e.settlement) || warren_civ[static_cast<std::size_t>(e.settlement)] == 0 ||
+                warren_civ[static_cast<std::size_t>(e.settlement)] != c) {
+                return at + "waking of settlement " + int_text(e.settlement) + " without a warren";
+            }
+            if (waking_of_warren[static_cast<std::size_t>(e.settlement)] != 0) {
+                return at + "a second waking of settlement " + int_text(e.settlement);
+            }
+            waking_of_warren[static_cast<std::size_t>(e.settlement)] = e.id;
+            if (known_monster && waking_of_monster[static_cast<std::size_t>(m)] == 0) {
+                waking_of_monster[static_cast<std::size_t>(m)] = e.id;
+            }
+            continue;
+        }
+        if (k == "ally_aided_hold") {  // r2: an answer to a waking of its year
+            const std::int64_t waking = known_monster ? waking_of_monster[static_cast<std::size_t>(m)] : 0;
+            const std::int64_t ally = participant(e.id, "ally");
+            const std::int64_t partner = participant(e.id, "partner");
+            if (waking == 0 || !cites(e.id, waking) || t.events[static_cast<std::size_t>(waking - 1)].year != e.year ||
+                participant(waking, "civilization") != partner || ally == partner) {
+                return at + "ally_aided_hold " + int_text(e.id) + " does not answer its waking";
+            }
+            continue;
+        }
         if ((k == "delving_deepened" || k == "deep_woken") && !mine_of(s, c)) {
             return at + "site " + int_text(s) + " is not a mine of " + int_text(c);
         }
         if (k == "delving_deepened") {
-            const std::int64_t d = value_of(e.id, "depth");
-            if (d >= 1 && d <= 3) {
-                const auto bit = static_cast<std::uint8_t>(1U << static_cast<unsigned>(d));
-                std::uint8_t& seen = depths[static_cast<std::size_t>(s)];
-                if ((seen & bit) != 0) {
-                    return at + "depth " + int_text(d) + " again";
-                }
-                if (d > 1 && (seen & static_cast<std::uint8_t>(1U << static_cast<unsigned>(d - 1))) == 0) {
-                    return at + "depth " + int_text(d) + " without depth " + int_text(d - 1);
-                }
-                seen = static_cast<std::uint8_t>(seen | bit);
+            if (std::optional<std::string> why = depth_chain(depths, static_cast<std::size_t>(s), value_of(e.id, "depth"), at)) {
+                return why;
             }
             continue;
         }
-        const bool known_monster = m >= 1 && static_cast<std::uint64_t>(m) <= t.monsters.size();
         if (k == "deep_woken") {
             if (waking_of_site[static_cast<std::size_t>(s)] != 0) {
                 return at + "a second waking of site " + int_text(s);
@@ -2234,8 +2299,11 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
             continue;
         }
         const std::int64_t waking = known_monster ? waking_of_monster[static_cast<std::size_t>(m)] : 0;
-        const bool first = k == "deep_sealed" || (known_monster && took[static_cast<std::size_t>(m)] == 0);
+        const bool first = k == "deep_sealed" || k == "warren_sealed" || (known_monster && took[static_cast<std::size_t>(m)] == 0);
         if (first && (waking == 0 || !cites(e.id, waking))) {
+            return at + std::string(k) + " without its waking";
+        }
+        if (k == "warren_sealed" && participant(waking, "site") != 0) {  // r2: a warren's waking has no site
             return at + std::string(k) + " without its waking";
         }
         if (k == "hold_lost") {

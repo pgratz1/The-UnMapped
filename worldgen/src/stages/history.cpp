@@ -97,6 +97,8 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     peoples.set_figures(&figures);
     monsters.set_figures(&figures);
     monsters.set_conflict(&conflict);  // P5-07 7.3: the flight seam
+    monsters.set_alliances(&alliances);  // P5-07 r2 7.6: the allies' aid at a waking
+    monsters.set_relations(&relations);
     alliances.set_figures(&figures);
     figures.set_sites(&monsters);
     figures.set_conflict(&conflict);

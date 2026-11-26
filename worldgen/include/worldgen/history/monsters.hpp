@@ -36,6 +36,8 @@
 namespace worldgen::history {
 
 class ConflictSubsystem;  // P5-07 7.3: the flight seam
+class AllianceView;       // P5-07 r2 7.6: the allies of a waking realm
+class RelationsSubsystem;  // P5-07 r2 6.11: the aid's goodwill
 
 // The bounds of P5-02 5.
 inline constexpr std::int64_t MAX_BEAST_COUNT = 1000000;
@@ -137,6 +139,11 @@ struct MonstersTuning {
     std::array<std::int64_t, 3> deep_wake_ppm{0, 0, 0};
     std::int64_t deep_gate_levy_permille = 1000, deep_seal_max_permille = 800, deep_toll_permille = 400;
     std::int64_t deep_takes_max = 2, deep_reach_hops = 1;
+    // P5-07 r2 4.2: the goblin deep warrens (6.10) and the allies' aid
+    // (6.11). Inert in a hand-made tuning (no warren wakes, no ally aids).
+    std::int64_t deep_warren_population_min = 600, deep_warren_ore_min = 1, deep_warren_wake_permille = 0;
+    std::int64_t deep_aid_permille = 0, deep_aid_hops = 2, deep_aid_levy_permille = 500, deep_aid_max = 2;
+    std::int64_t deep_aid_memory = 30;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -167,6 +174,12 @@ struct MonstersStats {
     std::int64_t deep_sealed = 0;
     std::int64_t holds_lost = 0;
     std::int64_t deep_flights = 0;
+    // P5-07 r2.
+    std::int64_t warrens_delved = 0;
+    std::int64_t warrens_woken = 0;
+    std::int64_t warrens_sealed = 0;
+    std::int64_t aids = 0;
+    std::int64_t wakings_aided = 0;
 };
 
 class MonstersSubsystem final : public Subsystem, public TensionSource, public WildView, public MonsterNames {
@@ -197,6 +210,14 @@ public:
     // P5-07 5, 7.3: the conflict subsystem for the deep's flight (set once by
     // the stage; nullptr: a last refuge taken by the deep has no plan).
     void set_conflict(ConflictSubsystem* conflict) noexcept { conflict_ = conflict; }
+    // P5-07 r2 7.6: the alliance view and the relations for the allies' aid
+    // at a waking (6.11), set once by the stage; with either unset no aid is
+    // decided and no draw is made.
+    void set_alliances(const AllianceView* alliances) noexcept { alliances_ = alliances; }
+    void set_relations(RelationsSubsystem* relations) noexcept { relations_ = relations; }
+    // P5-07 r2 7.6: the warren depth (0 to 3) of a settlement; 0 for an
+    // unknown id.
+    [[nodiscard]] std::int64_t warren_depth(std::int64_t settlement) const;
     // P5-07 7.1: the depth (0 to 3) of a mine; 0 for an unknown site or a
     // site of another kind.
     [[nodiscard]] std::int64_t mine_depth(std::int64_t site) const;
@@ -293,6 +314,7 @@ private:
         std::int64_t takes = 0;
         bool sealed = false;
         std::int64_t deep_event = 0;
+        bool from_warren = false;  // P5-07 r2 5: it woke from a goblin deep warren
     };
     struct Site {
         std::int64_t id = 0;
@@ -354,16 +376,34 @@ private:
     // P5-07 6.2 to 6.7 (monsters_deep.cpp).
     void deepen(StepContext& context);
     void deep_waking(StepContext& context);
-    // 6.6: take(m, t, cause); false (and nothing written) when t is its
+    // P5-07 r2 6.10: the warren delving (T4, Q4, after deepen).
+    void warren_delving(StepContext& context);
+    // 6.4 items 1 to 7 at one hold, a mine's (site > 0) or a warren's (site
+    // 0); true when a horror woke.
+    struct DeepHold {
+        std::int64_t site = 0, settlement = 0, civ = 0, depth = 0, region = 0, cause = 0;
+    };
+    bool deep_wake_at(StepContext& context, const DeepHold& hold);
+    // P5-07 r2 6.11: the allies that send aid to a waking of monster m at t.
+    struct DeepAid {
+        std::int64_t ally = 0, origin = 0, strength = 0;
+    };
+    [[nodiscard]] std::vector<DeepAid> deep_aid(const StepContext& context, std::int64_t monster, std::int64_t civ,
+                                                const std::vector<std::int64_t>& hops) const;
+    // 6.6: take(m, t, causes); false (and nothing written) when t is its
     // race's last refuge and the flight has no plan.
-    bool deep_take(StepContext& context, std::int64_t monster, std::int64_t settlement, std::int64_t cause);
+    bool deep_take(StepContext& context, std::int64_t monster, std::int64_t settlement,
+                   const std::vector<std::int64_t>& causes);
     // 6.7: after a raid of a deep horror on t.
     void deep_after_raid(StepContext& context, std::int64_t monster, std::int64_t settlement, std::int64_t raid_event);
     // 6.5: the gate's odds for a hold of `people` of civilization c against kind k.
     [[nodiscard]] std::int64_t gate_odds(const StepContext& context, std::int64_t civ, std::int64_t people,
-                                         std::size_t kind) const;
+                                         std::size_t kind, std::int64_t aid) const;
     [[nodiscard]] std::int64_t prowess_of(std::int64_t race) const;
     [[nodiscard]] std::int64_t mining_of(std::int64_t race) const;
+    [[nodiscard]] std::int64_t delving_of(std::int64_t race) const;
+    [[nodiscard]] std::int64_t ally_join_of(std::int64_t race) const;
+    void grow_warrens(std::size_t settlements);
     // 6.6 item 2: whether t is its race's last refuge.
     [[nodiscard]] bool deep_last_refuge(const StepContext& context, std::int64_t settlement) const;
     // 6.6.
@@ -388,7 +428,17 @@ private:
     std::vector<MonsterKindDef> kinds_;
     bool prepared_ = false;
     std::array<std::uint64_t, 16> keys_{};
-    std::array<std::uint64_t, 5> deep_keys_{};  // P5-07 3: hist.deep.delve, wake, kind, gate, take
+    std::array<std::uint64_t, 9> deep_keys_{};  // P5-07 3: hist.deep.delve, wake, kind, gate, take; r2: aid,
+                                                // warren_delve, warren_wake, warren_kind
+    std::vector<std::pair<std::int64_t, std::int64_t>> delving_;    // (race id, delving_permille), ascending
+    std::vector<std::pair<std::int64_t, std::int64_t>> ally_join_;  // (race id, ally_join_permille), ascending
+    std::vector<std::uint8_t> warren_region_;  // per region: a warren may start there (6.10, 4.2)
+    // P5-07 r2 5: per settlement (index id - 1) its warren depth, delver,
+    // last warren_delved (0 none), woken and sealed.
+    std::vector<std::int64_t> warren_depth_, warren_delver_, warren_event_;
+    std::vector<std::uint8_t> warren_woken_, warren_sealed_;
+    const AllianceView* alliances_ = nullptr;  // P5-07 r2 7.6
+    RelationsSubsystem* relations_ = nullptr;   // P5-07 r2 7.6
     std::vector<std::pair<std::int64_t, std::int64_t>> mining_;  // (race id, mining_permille), ascending
     ConflictSubsystem* conflict_ = nullptr;      // P5-07 7.3  // P5-03: + hist.beasts.bold_kind, hist.monsters.fear; P5-06: hero_fall
     std::int64_t pressure_ = 1000;  // M

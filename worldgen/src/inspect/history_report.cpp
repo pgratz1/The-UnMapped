@@ -996,12 +996,15 @@ private:
         }
         // P5-07 10 item 2: the monsters sealed in at their waking (a sealed
         // horror never wakes again, so its last sleeping event is the seal).
+        // r2 10 item 7a: also by a warren_sealed.
         std::vector<std::uint8_t> sealed(t_.monsters.size(), 0);
-        if (const history::KindDef* seal = v_.catalogue().find("deep_sealed")) {
-            for (const HistoryView::Event& e : v_.events()) {
-                const Id m = e.row.kind == seal->id ? role_of(e, "monster") : 0;
-                if (m >= 1 && static_cast<std::size_t>(m) <= sealed.size()) {
-                    sealed[static_cast<std::size_t>(m - 1)] = 1;
+        for (const std::string_view key : {std::string_view("deep_sealed"), std::string_view("warren_sealed")}) {
+            if (const history::KindDef* seal = v_.catalogue().find(key)) {
+                for (const HistoryView::Event& e : v_.events()) {
+                    const Id m = e.row.kind == seal->id ? role_of(e, "monster") : 0;
+                    if (m >= 1 && static_cast<std::size_t>(m) <= sealed.size()) {
+                        sealed[static_cast<std::size_t>(m - 1)] = 1;
+                    }
                 }
             }
         }

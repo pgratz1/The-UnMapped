@@ -276,6 +276,15 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.deep_toll_permille = r.get_int("deep_toll_permille");
     t.deep_takes_max = r.get_int("deep_takes_max");
     t.deep_reach_hops = r.get_int("deep_reach_hops");
+    // P5-07 r2 4.2.
+    t.deep_warren_population_min = r.get_int("deep_warren_population_min");
+    t.deep_warren_ore_min = r.get_int("deep_warren_ore_min");
+    t.deep_warren_wake_permille = r.get_int("deep_warren_wake_permille");
+    t.deep_aid_permille = r.get_int("deep_aid_permille");
+    t.deep_aid_hops = r.get_int("deep_aid_hops");
+    t.deep_aid_levy_permille = r.get_int("deep_aid_levy_permille");
+    t.deep_aid_max = r.get_int("deep_aid_max");
+    t.deep_aid_memory = r.get_int("deep_aid_memory");
     return t;
 }
 
@@ -395,9 +404,10 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
     }
     name_key_ = stream_key(in.seed, streams::hist_names_monster);
     // P5-07 3.
-    const std::array<std::string_view, 5> deep_streams = {streams::hist_deep_delve, streams::hist_deep_wake,
-                                                          streams::hist_deep_kind, streams::hist_deep_gate,
-                                                          streams::hist_deep_take};
+    const std::array<std::string_view, 9> deep_streams = {
+        streams::hist_deep_delve,        streams::hist_deep_wake,        streams::hist_deep_kind,
+        streams::hist_deep_gate,         streams::hist_deep_take,        streams::hist_deep_aid,
+        streams::hist_deep_warren_delve, streams::hist_deep_warren_wake, streams::hist_deep_warren_kind};
     for (std::size_t i = 0; i < deep_streams.size(); ++i) {
         deep_keys_[i] = stream_key(in.seed, deep_streams[i]);
     }
@@ -503,6 +513,21 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
         mining_.emplace_back(r.id, d != nullptr && d->record.find("mining_permille") != nullptr
                                        ? d->record.get_int("mining_permille")
                                        : 0);
+        // P5-07 r2 4.5, 6.11: delving_permille (absent: 0) and ally_join_permille.
+        const data::Value* dv = d != nullptr ? d->record.find("delving_permille") : nullptr;
+        delving_.emplace_back(r.id, dv != nullptr ? dv->as_int() : 0);
+        const data::Value* jv = d != nullptr ? d->record.find("ally_join_permille") : nullptr;
+        ally_join_.emplace_back(r.id, jv != nullptr ? jv->as_int() : 0);
+    }
+    // P5-07 r2 6.10, 4.2: a warren starts in an upland region (4 walk_cells
+    // < cells) or one with ore_reach_cells >= deep_warren_ore_min.
+    warren_region_.assign(regions.size(), 0);
+    for (const db::RegionRow& rr : in.regions) {
+        if (rr.id >= 1 && rr.id <= region_count_) {
+            const bool upland = checked_mul(rr.walk_cells, 4) < rr.cells;
+            warren_region_[static_cast<std::size_t>(rr.id - 1)] =
+                upland || rr.ore_reach_cells >= tuning_.deep_warren_ore_min ? 1 : 0;
+        }
     }
     // 9.1: the naming of each kind's culture with its name forms, and of each culture.
     for (const MonsterKindDef& k : kinds_) {
@@ -540,8 +565,9 @@ void MonstersSubsystem::run(StepContext& ctx) {
             read_log(ctx);
             beasts_bold(ctx);
             monsters_year(ctx);
-            deepen(ctx);       // P5-07 6.1
-            deep_waking(ctx);  // at most one waking; not a creation
+            deepen(ctx);          // P5-07 6.1
+            warren_delving(ctx);  // r2 6.10
+            deep_waking(ctx);     // at most one waking (mines, then warrens); not a creation
             if (!rise(ctx)) {
                 (void)wild_appearance(ctx);
             }
@@ -557,7 +583,8 @@ void MonstersSubsystem::run(StepContext& ctx) {
             deaths_of_age_quiet(ctx);
             (void)wild_appearance(ctx);
             outposts_left(ctx);
-            deepen(ctx);  // P5-07 6.1
+            deepen(ctx);          // P5-07 6.1
+            warren_delving(ctx);  // r2 6.10
             break;
         default: break;
     }

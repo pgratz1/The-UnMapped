@@ -279,6 +279,11 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
         // P5-07 11.1: 94 awake, 95 asleep; 93 a mine's depth.
         const std::int64_t deep_woken = id("deep_woken"), deep_sealed = id("deep_sealed");
         const std::int64_t delved = id("delving_deepened");
+        // r2 11.1: 98 a warren's depth, 99 asleep.
+        const std::int64_t warren_delved = id("warren_delved"), warren_sealed = id("warren_sealed");
+        t.warren_depths_.resize(t.settlement_founded_.size());
+        const KindDef* warren_kind = cat.find_id(warren_delved);
+        const std::int64_t warren_depth_seq = warren_kind != nullptr ? warren_kind->value_seq("depth") : 0;
         t.site_depths_.resize(t.sites_.size());
         t.monster_sealed_.assign(t.monsters_.size(), -1);
         const KindDef* delved_kind = cat.find_id(delved);
@@ -286,6 +291,18 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
         const std::int64_t depth_seq = delved_kind != nullptr ? delved_kind->value_seq("depth") : 0;
         for (const HistoryView::Event& e : view.events()) {
             const std::int64_t k = e.row.kind;
+            if (k == warren_delved && warren_delved >= 0) {
+                const std::optional<std::size_t> s = index_of(e.row.settlement, t.warren_depths_.size());
+                if (!s) {
+                    timeline_fatal("event " + num(e.row.id) + " names no settlement");
+                }
+                const std::int64_t d =
+                    warren_depth_seq >= 1 && static_cast<std::size_t>(warren_depth_seq) <= e.values.size()
+                        ? e.values[static_cast<std::size_t>(warren_depth_seq - 1)]
+                        : 0;
+                t.warren_depths_[*s].emplace_back(e.row.year, d);
+                continue;
+            }
             if (k == delved && delved_site != nullptr) {
                 for (const db::EventParticipantRow& p : e.participants) {
                     if (p.role != delved_site->seq) {
@@ -304,7 +321,7 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
                 continue;
             }
             const bool awake = k == appeared || k == rose || k == woke || k == deep_woken;
-            if (!awake && k != slept && k != driven && k != deep_sealed) {
+            if (!awake && k != slept && k != driven && k != deep_sealed && k != warren_sealed) {
                 continue;
             }
             const KindDef* kd = cat.find_id(k);
@@ -316,7 +333,7 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
                         timeline_fatal("event " + num(e.row.id) + " names no monster");
                     }
                     t.monster_awake_[*m].emplace_back(e.row.year, awake);
-                    if (k == deep_sealed && t.monster_sealed_[*m] < 0) {
+                    if ((k == deep_sealed || k == warren_sealed) && t.monster_sealed_[*m] < 0) {
                         t.monster_sealed_[*m] = e.row.year;
                     }
                     break;
@@ -613,6 +630,21 @@ std::int64_t Timeline::mine_depth_at(std::int64_t site, std::int64_t year) const
     }
     std::int64_t depth = 0;
     for (const auto& [y, d] : site_depths_[*i]) {
+        if (y <= year) {
+            depth = std::max(depth, d);
+        }
+    }
+    return depth;
+}
+
+std::int64_t Timeline::warren_depth_at(std::int64_t settlement, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(settlement, warren_depths_.size());
+    if (!i) {
+        timeline_fatal("no settlement " + num(settlement));
+    }
+    std::int64_t depth = 0;
+    for (const auto& [y, d] : warren_depths_[*i]) {
         if (y <= year) {
             depth = std::max(depth, d);
         }

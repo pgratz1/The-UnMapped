@@ -1051,8 +1051,19 @@ Schema race_schema() {
         Field::required("general_permille", Type::integer(0, 1000)),
         Field::required("hero_permille", Type::integer(0, 1000)),
         Field::required("magic_permille", Type::integer(0, 1000)),
+        // P5-07 r2 4.5 (generator 0.29.0): the pace of deep warren delving;
+        // absent counts 0.
+        Field::optional("delving_permille", Type::integer(0, 1000), Value::integer(0)),
     };
     std::vector<Check> checks{
+        Check{"race_delves_one_way",  // P5-07 r2 4.5
+              [](const Record& r) -> std::optional<std::string> {
+                  const Value* d = r.find("delving_permille");
+                  if (r.get_int("mining_permille") > 0 && d != nullptr && d->as_int() > 0) {
+                      return std::string("a race delves mines or warrens, not both");
+                  }
+                  return std::nullopt;
+              }},
         Check{"race_generation_below_lifespan", [](const Record& r) { return check_race_generation_below_lifespan(r); }},
         Check{"race_site_weights_positive", [](const Record& r) { return check_race_site_weights_positive(r); }},
         Check{"race_biomes_unique", [](const Record& r) { return check_race_biomes_unique(r); }},
@@ -1473,6 +1484,15 @@ Schema history_monsters_schema() {
         i("deep_toll_permille", 0, 1000),
         i("deep_takes_max", 0, 16),
         i("deep_reach_hops", 0, 4),
+        // P5-07 r2 4.2: goblin deep warrens (6.10) and allies' aid (6.11).
+        i("deep_warren_population_min", 0, 1000000),
+        i("deep_warren_ore_min", 0, 100000),
+        i("deep_warren_wake_permille", 0, 1000),
+        i("deep_aid_permille", 0, 1000),
+        i("deep_aid_hops", 0, 8),
+        i("deep_aid_levy_permille", 0, 4000),
+        i("deep_aid_max", 0, 8),
+        i("deep_aid_memory", 0, 500),
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",

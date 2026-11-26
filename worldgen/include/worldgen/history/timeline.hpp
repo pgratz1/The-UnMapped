@@ -141,6 +141,11 @@ public:
     // does not have.
     [[nodiscard]] std::int64_t mine_depth_at(std::int64_t site, std::int64_t year) const;
     [[nodiscard]] std::int64_t sealed_year(std::int64_t monster) const;
+    // P5-07 r2 11.1: the warren depth of settlement `settlement` at Y (the
+    // largest depth of its warren_delved events with year <= Y, 0 none);
+    // sealed_year also reads a warren_sealed. FatalError "timeline: no
+    // settlement <t>" for an id the world does not have.
+    [[nodiscard]] std::int64_t warren_depth_at(std::int64_t settlement, std::int64_t year) const;
     [[nodiscard]] std::size_t site_count() const noexcept { return sites_.size(); }
     [[nodiscard]] std::size_t monster_count() const noexcept { return monsters_.size(); }
     // P5-03 18: the pair's disposition at Y (met iff its peoples_met has year
@@ -255,6 +260,9 @@ private:
     // ascending), and per monster the year of its deep_sealed (-1 none).
     std::vector<std::vector<std::pair<std::int64_t, std::int64_t>>> site_depths_;
     std::vector<std::int64_t> monster_sealed_;
+    // P5-07 r2 11.1: per settlement (index id - 1) its (year, depth) warren
+    // delvings in event order.
+    std::vector<std::vector<std::pair<std::int64_t, std::int64_t>>> warren_depths_;
     std::vector<db::BeastPopulationRow> beast_rows_;
     std::size_t beast_kinds_ = 0;
     std::vector<std::size_t> beast_offsets_;  // (position * beast_kinds_ + beast - 1), size + 1 entries
