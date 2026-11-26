@@ -803,10 +803,10 @@ Four guilds cut across realms, and the player can join them. The same four kinds
 
 - **Made by history.** Each guild has a founding place and year, a founder who is a figure in the chronicle, and chapter houses in settlements. Its name is generated per world from the founding culture's name lists, such as "the Company of the Grey Shield". The factions stage of phase P5 creates them (section 5).
 - **Chapters.** A realm's capital has all four. Other settlements have some or none by size, and small places usually have none. A guild's reach follows trade and alliance links, so its map is explained by the world's past.
-- **Two systems.** The four guilds above span the realms of the good and neutral peoples. Goblin and orc realms have a parallel set of their own, separate organisations with their own names, ranks and quest lines, such as a war band where the others have a company of arms. The kinds in the parallel set are fixed in the factions spec.
-- **Rivalries.** The guilds are rivals, and a player generally belongs to one at a time. Thieves and assassins sit closest to each other and still do not mix well.
+- **Two systems.** The company of arms and the college of mages span the realms of the good and neutral peoples. Goblin and orc realms have their own counterparts to those two, separate organisations with their own names, ranks and quest lines, such as a war band where the others have a company of arms. The thieves and the assassins are single guilds that work across both sides. A world therefore has six guilds and six quest lines.
+- **Rivalries.** The guilds are rivals, and a player belongs to one at a time. Thieves and assassins sit closest to each other and still do not mix well. Quitting a guild is final for that guild and opens the others to the player.
 - **Ranks.** Advancement needs both skill levels and completed work, which ties the guilds to progression by use.
-- **Membership and attitude.** Fellow members treat the player better whatever the player's race. Membership is one more layer of disposition.
+- **Membership and attitude.** Fellow members treat the player better whatever the player's race. Membership is one more layer of disposition. Joining depends on disposition as well, with no bar by race: a goblin who wins the good opinion of a human or elven chapter can join it, which in practice takes a charismatic or lucky character.
 - **Hidden guilds.** Thieves and assassins have no sign on the door. The player finds them through NPCs who trust them, or by being noticed for their crimes.
 
 **Quest lines, written once per world.** Each guild has one bespoke quest line, written after history is finished by the enrichment pass of section 14 so that it ties into that world's past:
