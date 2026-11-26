@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -354,14 +355,20 @@ inline std::vector<std::string> violations(const World& w, bool name_rulers = tr
         }
     }
     // 16
+    // Two towers share a cell only when the earlier one has ended by the later one's opening (P5-04a 21.4: an ended
+    // tower's cell is free again, and another realm's tower does not repel; at 0.27.0 no tower ends).
     std::map<std::int64_t, std::int64_t> at_settlement;
-    std::set<std::pair<std::int64_t, std::int64_t>> cells;
+    std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cells;   // cell -> ended year of its last tower
+    constexpr std::int64_t OPEN = std::numeric_limits<std::int64_t>::max();
     for (const auto& [sid, row] : w.sites) {
         if (I(row, 2) != 4) continue;
         if (I(row, 6) != 0 && I(row, 13) == 0 && !at_settlement.emplace(I(row, 6), sid).second) {
             out.push_back("16: two towers at settlement " + s(I(row, 6)));
         }
-        if (!cells.insert({I(row, 4), I(row, 5)}).second) out.push_back("16: two towers share a cell");
+        const std::pair<std::int64_t, std::int64_t> cell{I(row, 4), I(row, 5)};
+        const auto prev = cells.find(cell);
+        if (prev != cells.end() && prev->second > I(row, 9)) out.push_back("16: two towers share a cell");
+        cells[cell] = is_null(row, 11) ? OPEN : I(row, 11);
         const auto e = w.events.find(I(row, 10));
         if (e == w.events.end() || e->second.region != I(row, 3)) out.push_back("16: tower si" + s(sid) + " region");
     }

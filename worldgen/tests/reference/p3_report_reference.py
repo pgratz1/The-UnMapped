@@ -100,6 +100,8 @@ DEFAULT_INPUTS_026 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.26.0 histories (P5-04 phase 2: build-inputs)
 DEFAULT_INPUTS_027 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-06-int",
                                   "report-inputs")   # 0.27.0 histories (P5-06 phase 2: build-inputs)
+DEFAULT_INPUTS_028 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p504a-int",
+                                  "report-inputs")   # 0.28.0 histories (P5-04a integration: build-inputs)
 GENERATOR_VERSION = "0.27.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
@@ -110,6 +112,9 @@ V5 = True   # P5-03 17 (format v5, generator 0.24.0, schema 10); V5 implies V4's
 V6 = True   # P5-03a 9 (format v6, generator 0.25.0, schema 10); V6 implies V5's rules
 V7 = True   # P5-04 10 (format v7, generator 0.26.0, schema 11); V7 implies V6's rules
 V8 = True   # P5-06 10, 25.1 (d), 25.2 (format v8, generator 0.27.0, schema 12); V8 implies V7's rules
+V9 = False  # P5-04a 12, 21.5 (format v9, generator 0.28.0, schema 12); V9 implies V8's rules (use_version("0.28.0"))
+SUMMARY_MILESTONE_SALIENCE = 40   # P5-04a 12.2 (digest.hpp)
+SUMMARY_MILESTONES_V9 = 3         # P5-04a 12.2: the three with the largest salience
 # P5-06 10.2, 25.2: constants of P3-07 section 8 (digest.hpp)
 SUMMARY_FIGURES_MAX = 6
 SUMMARY_CALAMITY_MAJOR_PERMILLE, SUMMARY_CALAMITY_MAJOR_MAX = 100, 8
@@ -242,19 +247,20 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0"):
+    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, V9, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0")
-    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0")
-    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0")
-    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0")
-    V6 = v in ("0.25.0", "0.26.0", "0.27.0")
-    V7 = v in ("0.26.0", "0.27.0")
-    V8 = v == "0.27.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
+    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
+    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
+    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
+    V6 = v in ("0.25.0", "0.26.0", "0.27.0", "0.28.0")
+    V7 = v in ("0.26.0", "0.27.0", "0.28.0")
+    V8 = v in ("0.27.0", "0.28.0")
+    V9 = v == "0.28.0"
+    DEFAULT_INPUTS = DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
@@ -1087,8 +1093,9 @@ def reign_end(w, f):
     return str(r[6]) if r is not None and r[6] is not None else "E"
 
 
-def figure_line(w, f):
-    """P5-06 10.2: a figure's line of [figures], without its two leading spaces."""
+def figure_line(w, f, level="full"):
+    """P5-06 10.2: a figure's line of [figures], without its two leading spaces. P5-04a 21.5 item 4 (L-3): at
+    summary a ruler's line has no `reign <n>`."""
     x = w.figure[f]
     g = figure_deeds(w)[f]
     r = w.race.get(x[4])
@@ -1096,7 +1103,10 @@ def figure_line(w, f):
                                            r[4] if r is not None else "?", x[7], str(x[10]) if x[10] is not None
                                            else "E")
     if x[3] == 1:
-        line += ", reigned %d-%s (reign %d, %s)" % (x[8], reign_end(w, f), x[15], TEMPER_WORD.get(x[17], "?"))
+        if V9 and level == "summary":
+            line += ", reigned %d-%s (%s)" % (x[8], reign_end(w, f), TEMPER_WORD.get(x[17], "?"))
+        else:
+            line += ", reigned %d-%s (reign %d, %s)" % (x[8], reign_end(w, f), x[15], TEMPER_WORD.get(x[17], "?"))
     deeds = []
     if g.wars_declared:
         deeds.append("%s declared" % pl(g.wars_declared, "war"))
@@ -1169,11 +1179,13 @@ def figures_lines(w, level):
     deeds = figure_deeds(w)
     if level == "full":
         shown = [x[0] for x in fs]
+    elif V9:
+        shown = figures_shown_v9(w, deeds)
     else:
         shown = sorted((x[0] for x in fs if deeds[x[0]].renown > 0), key=lambda f: (-deeds[f].renown, f))
         shown = shown[:SUMMARY_FIGURES_MAX]
     for f in shown:
-        o.append("  " + figure_line(w, f))
+        o.append("  " + figure_line(w, f, level))
     if len(fs) > len(shown):
         o.append("  and %d more" % (len(fs) - len(shown)))
     books = "books: %d" % len(w.book)
@@ -1182,6 +1194,31 @@ def figures_lines(w, level):
             books += "; %s by %s at %s, %d e%d" % (b[1], w.ref(FIGURE, b[2]), w.ref(SITE, b[3]), b[4], b[5])
     o.append(books)
     return o
+
+
+def figures_shown_v9(w, deeds):
+    """P5-04a 21.5 item 1: the reserved picks (ruler, hero, caster, general: the largest renown of the role, ties for
+    rulers by the longer reign, for casters by more books, then the smaller id; the engineer's reading 6: renown 0
+    may be picked), then the others of renown >= 1 by (renown desc, id) up to SUMMARY_FIGURES_MAX; printed by
+    (renown desc, id)."""
+    fs = w.t["figure"]
+    S = []
+    for role in (1, 4, 5, 3):
+        cand = [x for x in fs if x[3] == role]
+        if not cand:
+            continue
+
+        def tie(x):
+            if role == 1:
+                return -((x[10] if x[10] is not None else w.E) - x[8])   # (died, or E when alive) - office_from
+            if role == 5:
+                return -deeds[x[0]].books
+            return 0
+
+        S.append(sorted(cand, key=lambda x: (-deeds[x[0]].renown, tie(x), x[0]))[0][0])
+    rest = sorted((x[0] for x in fs if deeds[x[0]].renown > 0 and x[0] not in S), key=lambda f: (-deeds[f].renown, f))
+    S += rest[:max(0, SUMMARY_FIGURES_MAX - len(S))]
+    return sorted(S, key=lambda f: (-deeds[f].renown, f))
 
 
 def figure_stats(w, d):
@@ -1220,6 +1257,19 @@ def flare_ups_with_war(w):
     """25.6: the flare_up events whose phase holds a war_declared."""
     decl_phases = {e[4] for e in w.t["event"] if e[3] == w.K["war_declared"]}
     return {e[0] for e in w.t["event"] if e[3] == w.K["flare_up"] and e[4] in decl_phases}
+
+
+def milestones_v9(w, c):
+    """P5-04a 12.2: the realm's own events (P3-07 24.5's own(c, e) = 1, among the events naming it) of salience >=
+    SUMMARY_MILESTONE_SALIENCE that are not quiet_stretch, ascending id."""
+    quiet = w.K["quiet_stretch"]
+
+    def own(x):
+        own_seqs = {r[1] for r in w.roles.get(w.ev[x][3], []) if r[2] in OWN_ROLES}
+        return any(p[3] == CIV and p[4] == c and p[2] in own_seqs for p in w.parts.get(x, []))
+
+    return [x for x in w.civ_events.get(c, []) if w.ev[x][3] != quiet and w.ev[x][7] >= SUMMARY_MILESTONE_SALIENCE
+            and own(x)]
 
 
 def milestones(w, c, limit=MILESTONES):
@@ -1328,7 +1378,7 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+    o = ["# worldgen history v9" if V9 else "# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
          "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
@@ -1374,7 +1424,7 @@ def outside_lines(w, d, level):
     if V5:   # P5-03 17.2: after [sites]
         post += peoples_lines(w, level)
     if V7:   # P5-04 10.2: after [peoples], before [stats]
-        post += p504.alliances_block(alliance_world(w), level)
+        post += p504.alliances_block(alliance_world(w), level, v9=V9)
     if V8:   # P5-06 10.2: after [alliances]
         post += figures_lines(w, level)
     post.append("[stats]")
@@ -1413,14 +1463,65 @@ def chronicle_lines(w, d, level):
                 continue
             o.append("-- p%d %s: %s" % (p[0], PHASE_WORD[p[2]], phase_text(p)))
             hidden = 0
+            listed = []
             for e in events_of_phase.get(p[0], []):
                 if shown is not None and e[0] not in shown:
                     hidden += 1
                     continue
-                o.append(event_line(w, e))
+                listed.append(e)
+            o += group_lines(w, listed) if V9 else [event_line(w, e) for e in listed]
             if hidden:
                 o.append("(%s not shown)" % pl(hidden, "more event"))
     return o
+
+
+GROUP_KINDS = ("settlement_mixed", "standing_changed")   # P5-04a 12.4
+
+
+def group_key(w, e):
+    """P5-04a 12.4: (year, the sentence with the settlement's text replaced by a marker, the settlement's text) of an
+    event of a group kind, or None. The settlement's text is the span of the linked render's settlement link (the
+    engineer's reading 4)."""
+    if w.kind_key[e[3]] not in GROUP_KINDS or e[1] != e[2]:
+        return None
+    links = []
+    text = pe.render(w.view, e[0], links)
+    for st, ln, typ, _i in links:
+        if typ == SETTLEMENT:
+            return (e[1], text[:st] + "\x00" + text[st + ln:], text[st:st + ln])
+    return None
+
+
+def join_and(xs):
+    return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+
+
+def group_lines(w, listed):
+    """P5-04a 12.4: consecutive listed events of kind settlement_mixed or standing_changed of one year whose sentences
+    are equal with the settlement's text replaced form one group (two or more events), printed as
+    `<year> e<id>, e<id> <key>/<salience>: <sentence>`; no refs, causes or note."""
+    out = []
+    i = 0
+    while i < len(listed):
+        e = listed[i]
+        k = group_key(w, e)
+        j = i + 1
+        if k is not None:
+            while j < len(listed) and w.ev[listed[j][0]][3] == e[3]:
+                kj = group_key(w, listed[j])
+                if kj is None or kj[:2] != k[:2]:
+                    break
+                j += 1
+        if j - i < 2:
+            out.append(event_line(w, e))
+            i += 1
+            continue
+        grp = listed[i:j]
+        names = [group_key(w, x)[2] for x in grp]
+        out.append("%d %s %s/%d: %s" % (e[1], ", ".join("e%d" % x[0] for x in grp), w.kind_key[e[3]], e[7],
+                                        k[1].replace("\x00", join_and(names))))
+        i = j
+    return out
 
 
 def event_line(w, e):
@@ -1519,7 +1620,12 @@ def civ_block(w, d, c, level):
     else:
         o.append("  fate: ended in %d, e%d: %s" % (c[8], c[9], w.sentence(c[9])))
     ms = milestones(w, cid, MILESTONES_ENDED if short else MILESTONES)
-    if V6 and level == "summary":   # P5-03a 9.2: the count of the full block's list, then its quiet stretches
+    if V9 and level == "summary":   # P5-04a 12.2: the count of own events of salience >= 40, then the top three
+        mv = milestones_v9(w, cid)
+        o.append("  milestones: %d" % len(mv))
+        ms = [] if len(w.t["civilization"]) > SUMMARY_LINES_CIVS else sorted(
+            sorted(mv, key=lambda x: (-w.ev[x][7], x))[:SUMMARY_MILESTONES_V9])
+    elif V6 and level == "summary":   # P5-03a 9.2: the count of the full block's list, then its quiet stretches
         full_ms = milestones(w, cid, MILESTONES)
         o.append("  milestones: %d" % len(full_ms))
         ms = [x for x in full_ms if w.ev[x][3] == w.K["quiet_stretch"]]
@@ -1529,7 +1635,7 @@ def civ_block(w, d, c, level):
         e = w.ev[x]
         o.append("    %s e%d %s: %s" % (span(e), x, w.kind_key[e[3]], with_note(w.sentence(x), note(w, x, cid))))
     if V7:   # P5-04 10.3: appended at the end of the block
-        o += p504.civ_alliance_lines(alliance_world(w), cid, level)
+        o += (p504.civ_alliance_lines_v9 if V9 else p504.civ_alliance_lines)(alliance_world(w), cid, level)
     if V8 and (level == "full" or len(w.t["civilization"]) <= SUMMARY_LINES_CIVS):   # P5-06 10.3, after the allies
         o += rulers_lines(w, c, level)
     return o
@@ -1888,7 +1994,15 @@ def monster_lines(w, level):
     else:
         alive = sorted((m for m in ms if m[9] in (1, 2)), key=lambda m: (-m[10], m[0]))
         shown, more = alive[:SUMMARY_MONSTER_LINES], max(0, len(alive) - SUMMARY_MONSTER_LINES)
-        if V5:   # P5-03 10.2: then the ended notable monsters; x counts every monster not listed
+        if V9:   # P5-04a 21.5 item 2: every living monster first (at most 4), then the ended notable ones
+            cap = SUMMARY_MONSTER_LINES + SUMMARY_MONSTER_ENDED_LINES
+            shown = alive[:cap]
+            harm = monster_harm(w)
+            ended = sorted((m for m in ms if m[9] in (3, 4) and harm.get(m[0], 0) >= SUMMARY_MONSTER_HARM_MIN),
+                           key=lambda m: (-harm.get(m[0], 0), m[0]))
+            shown = shown + ended[:min(SUMMARY_MONSTER_ENDED_LINES, cap - len(shown))]
+            more = len(ms) - len(shown)
+        elif V5:   # P5-03 10.2: then the ended notable monsters; x counts every monster not listed
             harm = monster_harm(w)
             ended = sorted((m for m in ms if m[9] in (3, 4) and harm.get(m[0], 0) >= SUMMARY_MONSTER_HARM_MIN),
                            key=lambda m: (-harm.get(m[0], 0), m[0]))
@@ -2177,6 +2291,8 @@ def stats(w, d):
         o += p504.stats(alliance_world(w))
     if V8:   # P5-06 10.5, appended (full only)
         o += figure_stats(w, d)
+    if V9:   # P5-04a 12.6, appended (full only)
+        o += p504.stats_028(alliance_world(w))
     return o
 
 
@@ -2214,10 +2330,11 @@ FIXTURE_NAMES_V5 = FIXTURE_NAMES_V4 + ("h14-v5",)   # P5-03 24.1 item 11: H14 ho
 FIXTURE_NAMES_V6 = FIXTURE_NAMES_V5 + ("h15-v6",)   # P5-03a 14 item 11: H15 holds the v6 cases
 FIXTURE_NAMES_V7 = FIXTURE_NAMES_V6 + ("h16-alliances",)   # P5-04 18.1 item 16
 FIXTURE_NAMES_V8 = FIXTURE_NAMES_V7 + ("h17-figures",)   # P5-06 18.1 item 14
+FIXTURE_NAMES_V9 = FIXTURE_NAMES_V8 + ("h18-v9",)   # P5-04a 16 item 12 (the spec's "H17"; reading R10)
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V9 if V9 else FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}

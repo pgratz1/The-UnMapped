@@ -21,7 +21,7 @@
 
 #include "worldgen/data/content.hpp"
 
-// #define UNMAPPED_P504A_API 1
+#define UNMAPPED_P504A_API 1
 
 namespace p504a_api {
 

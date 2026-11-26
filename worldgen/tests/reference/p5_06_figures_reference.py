@@ -789,6 +789,9 @@ class Figures:
                 self.tally(a, "betrayals")
             elif k in ("spoils_shared", "spoils_withheld"):
                 self.name_by_deed(_one(w, ev, "principal"), e)
+            elif k == "ally_refused" and self.r28 and ev["values"].get(1) == 5:   # value 1: motive
+                # P5-04a 2.1, 4.4: P5-06 6.4 rule 3 gains the deed ally_refused with motive 5 (the ally)
+                self.name_by_deed(_one(w, ev, "ally"), e)
             elif k in ("peace", "war_won"):
                 self.tally(_one(w, ev, "winner"), "wars_won")
             elif k == "civ_conquered":
@@ -1800,8 +1803,12 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
     if name_rulers:
         acting = (("war_declared", "attacker"), ("alliance_betrayed", "betrayer"), ("spoils_shared", "principal"),
                   ("spoils_withheld", "principal"), ("civ_conquered", "civilization"), ("civ_ended", "civilization"))
+        if is_028(w):   # P5-04a 2.1: a grasping refusal (motive 5) names the ally's ruler
+            acting = acting + (("ally_refused", "ally"),)
         for k, role in acting:
             for e in w.of(k):
+                if k == "ally_refused" and w.value(e, "motive") != 5:
+                    continue
                 c = w.one(e, role)
                 if len([r for r in ruled if r[3] == c and _in_force(r, e)]) != 1:
                     out.append("3: %s e%d: c%d has no recorded ruler at the event" % (k, e, c))
@@ -1961,9 +1968,12 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
             if s[6] in seen_s:
                 out.append("16: towers si%d and si%d at settlement %d" % (seen_s[s[6]], s[0], s[6]))
             seen_s[s[6]] = s[0]
-        if (s[4], s[5]) in seen_c:
-            out.append("16: towers si%d and si%d share a cell" % (seen_c[(s[4], s[5])], s[0]))
-        seen_c[(s[4], s[5])] = s[0]
+        # P5-04a 21.4: an ended tower's cell is free again (another realm's tower does not repel); two towers share
+        # a cell only when the earlier has ended by the later's opening (at 0.27.0 no tower ends)
+        prev = seen_c.get((s[4], s[5]))
+        if prev is not None and (prev[1] is None or prev[1] > s[9]):
+            out.append("16: towers si%d and si%d share a cell" % (prev[0], s[0]))
+        seen_c[(s[4], s[5])] = (s[0], s[11])
         if s[10] in w.ev and w.ev[s[10]][5] != s[3]:
             out.append("16: tower si%d not in the region of its tower_founded" % s[0])
     return out
@@ -2174,7 +2184,10 @@ def zero_data(dat=None):
     tempers)."""
     import p3_data_reference as pdr
     d = _pcr().edited(dat or data_027())
+    base_figures = dict(d.figures)
     d.figures = dict(pdr.FIGURES_ZERO_027)
+    if _pcr().FLAGS.get("p504a"):   # P5-04a 14.2a: the zero root holds the new fields at their shipped values
+        d.figures.update({n: base_figures.get(n, v) for n, _, _, v in pdr.FIGURES_NEW_RANGES_028})
     return d
 
 
@@ -2615,6 +2628,73 @@ def check_units_028(c):
     c.eq("21.4 Chebyshev at D", chebyshev((100, 100), (130, 110)), 30)
     c.eq("21.5 quiet at 99", hero_quiet(99, 100), 0)
     c.eq("21.5 quiet at 100", hero_quiet(100, 100), 100)
+    check_tower_units_028(c)
+
+
+class _Cells:
+    """A region's cells as MonstersSubsystem reads them: (x, y, height, elevation)."""
+
+    def __init__(self, cells):
+        self.cells = cells
+
+    def cells_of(self, _rid):
+        return list(self.cells)
+
+
+def check_tower_units_028(c):
+    """P5-04a 16 item 16 (21.4) on hand fixtures: the spacing at the bound and at the bound + 1, from an open and an
+    ended site of the realm, not from another realm's; no free cell; each ending in 21.4's order (5 before 4; a
+    library's settlement ruined, captured; a wild tower's region lost) with its event and year."""
+    import types
+    D = 3
+    # the highest cell at Chebyshev distance D of the avoided cell is skipped; the next, at D + 1, is taken
+    m = _Cells([(13, 10, 0, 900), (14, 12, 0, 800), (40, 40, 0, 100)])
+    c.eq("21.4 a cell at D is skipped, one at D + 1 taken", height_cell(m, 1, [(10, 10)], D), (14, 12))
+    c.eq("21.4 D + 1 on the other axis", height_cell(_Cells([(10, 14, 0, 5), (10, 13, 0, 9)]), 1, [(10, 10)], D),
+         (10, 14))
+    c.eq("21.4 nothing avoided: the highest", height_cell(m, 1, [], D), (13, 10))
+    c.eq("21.4 D = 0: the avoided cell's neighbour is free", height_cell(_Cells([(11, 10, 0, 9)]), 1, [(10, 10)], 0),
+         (11, 10))
+    c.eq("21.4 no free cell: none (no rise)", height_cell(_Cells([(11, 11, 0, 9), (12, 9, 0, 8)]), 1, [(10, 10)], D),
+         None)
+    c.eq("21.4 ties: smaller y, then smaller x", height_cell(_Cells([(30, 20, 0, 5), (20, 20, 0, 5), (25, 19, 0, 5)]),
+                                                             1, [], D), (25, 19))
+
+    # the avoid list of a rise: every kind 4 site of the realm, open or ended, never another realm's
+    sites = [dict(id=1, kind=SITE_TOWER, founder=1, x=10, y=10, ending=0), dict(id=2, kind=SITE_TOWER, founder=1,
+             x=50, y=50, ending=4), dict(id=3, kind=SITE_TOWER, founder=2, x=80, y=80, ending=0),
+             dict(id=4, kind=3, founder=1, x=90, y=90, ending=0)]
+    avoid = [(s["x"], s["y"]) for s in sorted(sites, key=lambda s: s["id"]) if s["kind"] == SITE_TOWER
+             and s["founder"] == 1]
+    c.eq("21.4 avoid: the realm's open and ended towers, not a rival's, not a mine", avoid, [(10, 10), (50, 50)])
+    c.eq("21.4 an ended tower repels", height_cell(_Cells([(52, 52, 0, 9), (55, 50, 0, 1)]), 1, avoid, D), (55, 50))
+    c.eq("21.4 a rival's tower does not", height_cell(_Cells([(80, 81, 0, 9)]), 1, avoid, D), (80, 81))
+
+    # endings, in the order of 21.4's table, on a stub of the run
+    def run(civ_ended, st, owner_R):
+        events = [dict(year=y) for y in (1100, 1200, 1300, 1400)]
+        tower = dict(id=1, kind=SITE_TOWER, founder=1, settlement=st["id"] if st else 0, region=7, ending=0,
+                     ended_year=None, ending_event=0)
+        ended = []
+        mon = types.SimpleNamespace(sites=[tower],
+                                    end_site=lambda sid, e, ending, year=None: ended.append((sid, e, ending, year)))
+        w = types.SimpleNamespace(monsters=mon, events=events, year=1500, stl=lambda _i: st,
+                                  standing=lambda x: x["status"] in (1, 2), owner={7: owner_R})
+        civ = dict(ended_year=1400 if civ_ended else None, ending_event=4)
+        stub = types.SimpleNamespace(w=w, civ=lambda _c: civ, log=[])
+        Figures.tower_endings(stub)
+        return ended
+
+    lib_ruined = dict(id=5, status=3, owner_civ=1, ruin_event=2, owner_event=1)
+    lib_taken = dict(id=5, status=1, owner_civ=2, ruin_event=0, owner_event=3)
+    lib_held = dict(id=5, status=1, owner_civ=1, ruin_event=0, owner_event=1)
+    c.eq("21.4 realm fell: 5 with its ending event, before 4", run(True, lib_ruined, (1, 1)), [(1, 4, 5, 1400)])
+    c.eq("21.4 library: settlement ruined: 4 with its ruin event", run(False, lib_ruined, (1, 1)), [(1, 2, 4, 1200)])
+    c.eq("21.4 library: settlement captured: 4 with its owner event", run(False, lib_taken, (1, 1)), [(1, 3, 4, 1300)])
+    c.eq("21.4 library held: open", run(False, lib_held, (2, 3)), [])
+    c.eq("21.4 wild tower: region lost: 4 with the region's owner event", run(False, None, (2, 3)), [(1, 3, 4, 1300)])
+    c.eq("21.4 wild tower: region held: open", run(False, None, (1, 1)), [])
+    c.eq("21.4 wild tower: realm fell and region lost: 5", run(True, None, (2, 3)), [(1, 4, 5, 1400)])
 
 
 def reader_stub():
@@ -2797,13 +2877,24 @@ def cmd_i0_world(argv):
     names = [a for a in argv if not a.startswith("--") and a not in (inputs, cdb)]
     c = Checker()
     pcr = _pcr()
+    v28 = "--version" in argv and argv[argv.index("--version") + 1] == "0.28.0"   # P5-04a 16 item 14
+    names = [n for n in names if n != "0.28.0"]
+    if v28:   # the references whose import sets their default version, imported before it is set (no reset)
+        import p3_report_reference  # noqa: F401
+        import p5_03_relations_reference  # noqa: F401
+        import p5_04_alliances_reference  # noqa: F401
     for name in names:
         t0 = time.time()
         use_027()
+        if v28:
+            pcr.use_version("0.28.0")
         run = lambda d: world_run(name, inputs, d)   # noqa: E731
         if "--no-off" not in argv:
-            diff, zero, _off = i0_differences(run, data_027())
+            diff, zero, _off = i0_differences(run, pcr.data() if v28 else data_027())
             c.eq("7.11 I0 %s: zero tuning against no subsystem (%d events)" % (name, len(zero["event"])), diff, [])
+        if v28:   # (b) and (c) compare with 0.26.0, whose other rules 0.28.0 changed
+            print("%s: %.0fs" % (name, time.time() - t0))
+            continue
         diff, old, new = i0_026_differences(run)
         c.eq("7.11 I0 %s against 0.26.0, riders off (%d events)" % (name, len(old["event"])), diff, [])
         if cdb:
@@ -2881,8 +2972,15 @@ def main(argv):
         print("%d checks, %d failures" % (c.count, c.failures))
         return 1 if c.failures else 0
     if cmd == "check-world":
+        # P5-04a integration: a 0.28.0 world is checked with the 0.28.0 rules and the figures tuning of the data
+        # root (the calibrated values), a 0.27.0 world as before with the spec's start values
+        paths = [a for a in argv[1:] if not a.startswith("--")]
+        if "--version" in argv and argv[argv.index("--version") + 1] == "0.28.0":
+            paths = [a for a in paths if a != "0.28.0"]
+            _pcr().use_version("0.28.0")
+            return cmd_check_world(paths, dict(_pcr().data().figures))
         use_027()
-        return cmd_check_world(argv[1:])
+        return cmd_check_world(paths)
     if cmd == "fixtures":
         c = Checker()
         quick = "--quick" in argv

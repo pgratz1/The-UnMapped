@@ -3665,6 +3665,18 @@ def check_spec_027(c):
                                              "peoples", "relations", "renaming", "report"])
 
 
+def pre_028(path, kind):
+    """A history directory older than 0.28.0 (P5-04a 14): no tower_spacing_permille in figures.toml. (Only the
+    history files change structure at 0.28.0; the calibration also moved values in monsters/dragon.toml.)"""
+    if kind != "history":
+        return False
+    p = os.path.join(path, "figures.toml")
+    if not os.path.exists(p):
+        return True
+    with open(p, encoding="utf-8") as f:
+        return "tower_spacing_permille" not in f.read()
+
+
 def pre_027(path, kind):
     """A race, culture, monster or history directory older than 0.27.0 (P5-06): no temper_weights in a race file;
     no regnal_permille in a culture file; no slayer_epithet in a monster file; no figures.toml."""
@@ -3813,6 +3825,8 @@ def read_dir_files(path, directory):
 
 def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
+    if kind == "history" and not pre_027(path, kind) and not pre_024(path, kind) and not pre_028(path, kind):
+        return "0.28.0"   # P5-04a
     if kind in ("race", "culture", "monster", "history") and not pre_027(path, kind) and (
             kind == "culture" or not pre_024(path, kind)):
         return "0.27.0"   # P5-06
@@ -3847,6 +3861,8 @@ def disk_version(path, kind):
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
+    if kind in ("race", "culture", "beast", "monster"):   # P5-04a changes the history files (and dragon's values)
+        a, b = ("0.27.0" if x == "0.28.0" else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
     if kind == "race":   # races did not change at 0.21.0, 0.22.0 and 0.23.0

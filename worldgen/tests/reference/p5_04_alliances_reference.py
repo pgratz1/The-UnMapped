@@ -1391,8 +1391,10 @@ def trade_line(w, r):
     return line
 
 
-def alliances_block(w, level, civs_cap=None):
-    """10.2: the [alliances] block's lines."""
+def alliances_block(w, level, civs_cap=None, v9=False):
+    """10.2: the [alliances] block's lines; v9: P5-04a 12.3 and 12.5's alliance and trade lines."""
+    aline = alliance_line_v9 if v9 else alliance_line
+    tline = trade_line_v9 if v9 else trade_line
     import p3_report_reference as prr
     civs_cap = prr.SUMMARY_LINES_CIVS if civs_cap is None else civs_cap
     al = sorted(w.rows.get("alliance", []), key=lambda r: (r[5], r[1], r[3]))
@@ -1407,10 +1409,10 @@ def alliances_block(w, level, civs_cap=None):
                               ends["spurned"], ends["betrayed"], ends["ended"])]
     few = len(w.civ) > civs_cap
     if level == "full":
-        o += [alliance_line(w, r) for r in al]
+        o += [aline(w, r) for r in al]
     elif not few:
         keep = [r for r in al if r[6] is None or _end_kind(w, r) in ("betrayed", "spurned")]
-        o += [alliance_line(w, r) for r in keep[:SUMMARY_ALLIANCES_MAX]]
+        o += [aline(w, r) for r in keep[:SUMMARY_ALLIANCES_MAX]]
         if len(keep) > SUMMARY_ALLIANCES_MAX:
             o.append("  and %d more" % (len(keep) - SUMMARY_ALLIANCES_MAX))
     joins = w.of("ally_joined_war")
@@ -1437,7 +1439,7 @@ def alliances_block(w, level, civs_cap=None):
         st["trade_opened"], st["trade_standing"], st["trade_broken"], reasons.count(0), reasons.count(1),
         reasons.count(2), st["arms_sold"]))
     if level == "full":
-        o += [trade_line(w, r) for r in tr]
+        o += [tline(w, r) for r in tr]
     return o
 
 
@@ -2522,7 +2524,10 @@ def zero_data(dat=None):
     import copy
     import p3_data_reference as pdr
     d = _pcr().edited(dat or _pcr().data())
+    base_alliances = dict(d.alliances)
     d.alliances = dict(pdr.ALLIANCES_ZERO_026)
+    if _pcr().FLAGS.get("p504a"):   # P5-04a 14.1: the zero root holds the new fields at their shipped values
+        d.alliances.update({n: base_alliances.get(n, v) for n, _, _, v in pdr.ALLIANCES_NEW_RANGES_028})
     d.race = copy.deepcopy(d.race)
     for r in d.race:
         d.race[r]["origin_allies"] = []
@@ -2637,8 +2642,9 @@ def check_fixtures(c, seeds=SMALL_SEEDS, i0_seeds=I0_SEEDS, verbose=False):
             c.ok("stress-%d: %s" % (seed, v), False)
         diff, _z, _o = i0_differences(lambda d: fixture_run(seed, d), pcr.stress_data())
         c.eq("7.14 I0 stress-%d: the history tables equal" % seed, diff, [])
-        diff, _a, _b = i0_025_differences(lambda d: fixture_run(seed, pcr.stress_data(d)))
-        c.eq("7.14 I0 stress-%d against 0.25.0: the history tables equal" % seed, diff, [])
+        if not pcr.FLAGS.get("p504a"):
+            diff, _a, _b = i0_025_differences(lambda d: fixture_run(seed, pcr.stress_data(d)))
+            c.eq("7.14 I0 stress-%d against 0.25.0: the history tables equal" % seed, diff, [])
         if verbose:
             print("stress-%d: invariants and I0 done" % seed)
             sys.stdout.flush()
@@ -2676,8 +2682,12 @@ def last_war_end_at(w, c, e):
 
 
 def open_wars_at(w, c, e):
-    """open_wars_of(c) when e is appended: the war rows of c (principal or joined) open at e."""
-    return sum(1 for r in w.rows.get("war", ()) if c in (r[1], r[3]) and w.open_at_event(r, e))
+    """open_wars_of(c) when e is appended (P5-04 7.6: the open wars with c as a side and the open joined records of
+    c): the open war rows of c's declarations, and the open joined rows whose ally_joined_war has c as the ally (a
+    row opened by another realm joining against c is that realm's record, not one of c's wars; integration, turb-3
+    e1678)."""
+    return sum(1 for r in w.rows.get("war", ()) if c in (r[1], r[3]) and w.open_at_event(r, e) and
+               (w.kind(r[7]) != "ally_joined_war" or w.one(r[7], "ally") == c))
 
 
 def alliance_row_at(w, a, b, e):
@@ -2829,8 +2839,15 @@ def invariant_violations_028(w, t):
         if R not in w.causes.get(n, []):
             out.append("6.2: alliance_renewed e%d does not cite e%d" % (n, R))
         s0, term = w.year(r[7]), w.value(r[7], "term")
-        if term and not any(w.year(n) >= d and (w.year(R) < d or R == r[7]) for d in due_years(s0, term, w.year(n))):
-            out.append("6.1: alliance_renewed e%d in %d at no due year" % (n, w.year(n)))
+        # 6.1: never early. The chain is fixed and a renewal that waited (a quiet step longer than the term, a lapse
+        # or a soured draw without budget) is caught up one due year per T2 or Q4, so a written renewal may be of a
+        # due year at or before the last written one (integration, alliances-small seed 3 e715). Rows show the
+        # renewals written: the j-th written renewal of the row needs j due years at or before its year.
+        j = 1 + sum(1 for y in w.of("alliance_renewed") if r[7] < y < n and {w.one(y, "ally_a"), w.one(y, "ally_b")}
+                    == {a, b})
+        if term and len(due_years(s0, term, w.year(n))) < j:
+            out.append("6.1: alliance_renewed e%d in %d is renewal %d of the row with %d due years" % (
+                n, w.year(n), j, len(due_years(s0, term, w.year(n)))))
     for e in w.of("alliance_formed"):
         if (w.value(e, "term") or 0) < 1 or w.value(e, "band") not in (0, 1, 2):
             out.append("10: alliance_formed e%d term %r band %r" % (e, w.value(e, "term"), w.value(e, "band")))
@@ -3134,6 +3151,14 @@ def cmd_check_world(paths, root):
     return 1 if bad else 0
 
 
+def _import_before_version():
+    """The references whose import sets their default version (0.27.0), imported before a command sets its own (as
+    check_fixtures_028 does), so that a lazy import during the run does not reset it."""
+    import p3_report_reference  # noqa: F401
+    import p5_03_relations_reference  # noqa: F401
+    import p5_06_figures_reference  # noqa: F401
+
+
 def main(argv):
     if not argv:
         print(__doc__)
@@ -3177,7 +3202,11 @@ def main(argv):
                 f.write(text)
         return 0
     if cmd == "fixtures":
-        _pcr().use_version("0.26.0")
+        # --version 0.28.0 (P5-04a 16 item 14): alliances-small, the stress histories and I0 at 0.28.0 (without the
+        # comparison against 0.25.0, whose other rules 0.28.0 changed)
+        v28 = "--version" in argv and argv[argv.index("--version") + 1] == "0.28.0"
+        _import_before_version()
+        _pcr().use_version("0.28.0" if v28 else "0.26.0")
         c = Checker()
         quick = "--quick" in argv
         check_fixtures(c, SMALL_SEEDS[:4] if quick else SMALL_SEEDS, I0_SEEDS[:2] if quick else I0_SEEDS, verbose=True)
@@ -3188,18 +3217,21 @@ def main(argv):
         # the zero tuning against no subsystem, and against 0.25.0
         import time
         pcr = _pcr()
-        pcr.use_version("0.26.0")
+        v28 = "--version" in argv and argv[argv.index("--version") + 1] == "0.28.0"   # P5-04a 16 item 14
+        _import_before_version()
+        pcr.use_version("0.28.0" if v28 else "0.26.0")
         inputs = argv[argv.index("--inputs") + 1]
-        names = [a for a in argv[1:] if not a.startswith("--") and a != inputs]
+        names = [a for a in argv[1:] if not a.startswith("--") and a not in (inputs, "0.28.0")]
         c = Checker()
         for name, seed, size, span, races, detail, civs, intensity in pcr.world_cases():
             if name not in names:
                 continue
             t0 = time.time()
             run = lambda d: pcr.world_case(name, seed, size, span, races, detail, inputs, d, civs, intensity)  # noqa
-            diff, a, b = i0_025_differences(lambda d: run(d))
-            c.eq("7.14 I0 %s against 0.25.0 (%d events)" % (name, len(a["event"])), diff, [])
-            if "--with-off" in argv:
+            if not v28:
+                diff, a, b = i0_025_differences(lambda d: run(d))
+                c.eq("7.14 I0 %s against 0.25.0 (%d events)" % (name, len(a["event"])), diff, [])
+            if "--with-off" in argv or v28:
                 diff, _z, _o = i0_differences(run, pcr.data())
                 c.eq("7.14 I0 %s: zero tuning against no subsystem" % name, diff, [])
             print("%s: %.0fs" % (name, time.time() - t0))

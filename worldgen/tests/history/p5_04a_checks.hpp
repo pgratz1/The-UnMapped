@@ -210,10 +210,16 @@ inline std::pair<std::int64_t, std::int64_t> last_war_end_at(const Rows& r, std:
     return best;
 }
 
+// open_wars_of(c) when e is appended (P5-04 7.6: the open wars with c as a side and c's open joined records): the
+// open war rows of declarations with c as a side, and the open joined rows whose ally_joined_war has c as the ally (a
+// row opened by another realm joining against c is that realm's record; integration, turbulent seed 3 e1678).
 inline std::int64_t open_wars_at(const Rows& r, std::int64_t c, std::int64_t e) {
     std::int64_t n = 0;
     for (const Row* row : r.rows("war")) {
-        if ((at(*row, 1) == c || at(*row, 3) == c) && Rows::open_at_event(*row, e)) ++n;
+        if ((at(*row, 1) != c && at(*row, 3) != c) || !Rows::open_at_event(*row, e)) continue;
+        const std::int64_t opened = at(*row, 7);
+        if (r.kind(opened) == "ally_joined_war" && r.one(opened, "ally") != c) continue;
+        ++n;
     }
     return n;
 }
@@ -389,12 +395,17 @@ inline std::vector<std::string> alliance_violations(const World& w, const Tuning
         for (const std::int64_t y : r.of("spoils_shared")) notable = notable || (y > R && y < n && pair_is(r, y, "ally", "principal", a, b));
         if (!notable) out.push_back("6.2: e" + s(n) + " renews with nothing notable since e" + s(R));
         if (!cites(x, n, R)) out.push_back("6.2: e" + s(n) + " does not cite e" + s(R));
+        // 6.1: never early. A renewal that waited is caught up one due year per T2 or Q4, so the j-th written
+        // renewal of the row needs j due years at or before its year (integration, alliances-small seed 3).
         const std::int64_t term = r.value(at(*row, 7), "term");
-        bool on_chain = false;
-        for (const std::int64_t d : p504a_f::due_years(at(*row, 5), std::max<std::int64_t>(1, term), r.year(n))) {
-            on_chain = on_chain || r.year(n) >= d;
+        std::size_t j = 1;
+        for (const std::int64_t y : r.of("alliance_renewed")) {
+            if (y > at(*row, 7) && y < n && pair_is(r, y, "ally_a", "ally_b", a, b)) ++j;
         }
-        if (!on_chain) out.push_back("6.1: e" + s(n) + " at no due year");
+        if (p504a_f::due_years(at(*row, 5), std::max<std::int64_t>(1, term), r.year(n)).size() < j) {
+            out.push_back("6.1: e" + s(n) + " is written renewal " + s(static_cast<std::int64_t>(j)) +
+                          " of its row with fewer due years");
+        }
     }
     for (const std::int64_t e : r.of("alliance_formed")) {
         const std::int64_t term = r.value(e, "term"), band = r.value(e, "band");

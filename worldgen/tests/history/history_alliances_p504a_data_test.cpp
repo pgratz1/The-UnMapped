@@ -4,6 +4,11 @@
 // bound and one above its high bound (the loader's message `'<key>' is <v>; expected an integer from <lo> to <hi>`)
 // and refused when absent (`missing required field`); the changed values (withheld_to_break 2, withheld_grudge 250;
 // the Old 1400 and 1480, skill 600 to 900, grasping allied strain 3000: 14.1, 14.2a, the lead's rulings L-7 and L-8).
+// Shipped values: those of the calibration (docs/reviews/p5-04a-calibration.md, data only), where it moved the
+// spec's start value (the start value is named in a comment): withheld_grudge 150, spoils_large_share 475,
+// spoils_large_part_permille 401, soured_renew_permille 250, join_weary_permille 750, join_busy_permille 150,
+// join_fear_floor 600, join_warmth_floor 700, refuse_grudge 80, turn_cooldown_years 800, temper_allied_permille
+// 300/300/300/3000/150.
 // The data root is copied to a scratch directory under the build tree and one file is edited per case.
 //
 // Not here (named for the integration agent): the two fixture roots of 14.1 and 14.2 (alliances-small, relations-
@@ -40,19 +45,19 @@ struct Field {
 // 14.1: appended after mine_forms, in this order.
 const std::vector<Field>& alliance_fields() {
     static const std::vector<Field> v = {
-        {"spoils_large_share", 1, 1000000, 600}, {"spoils_large_part_permille", 0, 1001, 300},
-        {"soured_renew_permille", 0, 1000, 500}, {"soured_join_permille", 0, 1000, 500},
-        {"weary_years", 0, 100000, 50},          {"join_weary_permille", 0, 1000, 600},
-        {"join_busy_permille", 0, 1000, 250},    {"join_fear_floor", 0, 1000, 300},
-        {"join_warmth_floor", 0, 1000, 400},     {"grasping_join_permille", 0, 1000, 600},
+        {"spoils_large_share", 1, 1000000, 475}, {"spoils_large_part_permille", 0, 1001, 401},   // start 600, 300
+        {"soured_renew_permille", 0, 1000, 250}, {"soured_join_permille", 0, 1000, 500},   // start 500
+        {"weary_years", 0, 100000, 50},          {"join_weary_permille", 0, 1000, 750},   // start 600
+        {"join_busy_permille", 0, 1000, 150},    {"join_fear_floor", 0, 1000, 600},   // start 250, 300
+        {"join_warmth_floor", 0, 1000, 700},     {"grasping_join_permille", 0, 1000, 600},   // start 400
         {"join_claim_permille", 0, 1000, 500},   {"excused_memory", 0, 1000, 15},
-        {"refuse_grudge", 0, 2000, 150},         {"betray_cooled_disposition", -2000, 2000, 0},
+        {"refuse_grudge", 0, 2000, 80},          {"betray_cooled_disposition", -2000, 2000, 0},   // start 150
         {"betray_weak_permille", 0, 1000, 500}};
     return v;
 }
 // 14.2: appended after expel_gap_years.
 const std::vector<Field>& relation_fields() {
-    static const std::vector<Field> v = {{"turn_cooldown_years", 0, 100000, 300},
+    static const std::vector<Field> v = {{"turn_cooldown_years", 0, 100000, 800},   // start 300
                                          {"expel_settled_years", 0, 100000, 800},
                                          {"expel_fresh_years", 0, 100000, 150}};
     return v;
@@ -162,12 +167,12 @@ void check_bounds(const std::string& file, const std::vector<Field>& fs_) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P5-04a 14.1: history.alliances: the fifteen fields after mine_forms; withheld_to_break 2, withheld_grudge 250") {
+TEST_CASE("P5-04a 14.1: history.alliances: the fifteen fields after mine_forms; withheld_to_break 2, withheld_grudge 150") {
     P504A_REQUIRE_INTEGRATED();
     check_order("alliances", "mine_forms", alliance_fields());
     const wd::Record& r = record(shipped(), "alliances");
     CHECK(r.get_int("withheld_to_break") == 2);
-    CHECK(r.get_int("withheld_grudge") == 250);
+    CHECK(r.get_int("withheld_grudge") == 150);   // 14.1: 250, calibrated to 150
     CHECK(r.get_int("refuse_memory") == 40);       // 4.4: kept
     CHECK(r.get_int("refusals_to_break") == 2);    // 4.4: kept (now of counted refusals)
 }
@@ -182,6 +187,10 @@ TEST_CASE("P5-04a 14.2, 14.2a: history.relations and history.figures: the append
     const wd::Value* allied = f.find("temper_allied_permille");
     REQUIRE(allied != nullptr);
     CHECK(allied->as_record().get_int("grasping") == 3000);   // 21.3, L-8
+    CHECK(allied->as_record().get_int("steady") == 300);      // calibration (from 1000)
+    CHECK(allied->as_record().get_int("warlike") == 300);
+    CHECK(allied->as_record().get_int("peaceable") == 300);
+    CHECK(allied->as_record().get_int("just") == 150);        // calibration (from 500)
     const wd::Value* ep = f.find("epithets");
     REQUIRE(ep != nullptr);
     bool old = false;

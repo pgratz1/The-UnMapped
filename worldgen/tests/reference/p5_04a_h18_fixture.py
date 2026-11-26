@@ -312,7 +312,7 @@ war_end(1610, "peace", warH_row, peaceH, [(4, 6)])
 warI, warI_row = war_start(1790, 3, 7, 7, [wonG])
 capI = add(1800, "settlement_captured", region=7, settlement=7, parts=[("attacker", 3), ("defender", 7)],
            values=[50, 0], causes=[warI])
-conqI = add(1800, "civ_conquered", parts=[("civilization", 7), ("conqueror", 3)], causes=[capI])
+conqI = add(1800, "civ_conquered", region=7, parts=[("civilization", 7), ("conqueror", 3)], causes=[capI])   # region_use 1 (integration: the reader refuses region 0)
 close(warI_row, 1800, conqI)
 close(tr57_row, 1800, conqI)
 
@@ -362,8 +362,10 @@ for sid, race, ruling, standing in ((1, 3, 1, 2), (10, 3, 1, 2), (3, 1, 3, 1), (
 rc = [[r, CIVS[r - 1][4], -1, r, civf[r]] for r in range(1, 7)]
 rc += [[7, 220, 1800, 7, civf[7]], [7, 1800, -1, 3, N(capI)]]
 rc += [[8, 150, -1, 3, stf[8]], [9, 250, -1, 4, stf[9]], [10, 120, -1, 1, stf[10]]]
-rr = [[1, 3, 120, 200, 2], [1, 3, 1200, 100, 1], [1, 3, 1999, 100, 1],
-      [1, 4, 220, -700, 0], [1, 4, 1000, -400, 1], [1, 4, 1999, -400, 1]]
+# integration: no row at E that equals the pair's previous row (the reader refuses it: "equals the previous row of
+# this pair"); the last row of a pair is its state at E
+rr = [[1, 3, 120, 200, 2], [1, 3, 1200, 100, 1],
+      [1, 4, 220, -700, 0], [1, 4, 1000, -400, 1]]
 sites = [[1, "The Mines of Kazad Rune", 3, 3, 30, 30, 3, 3, 0, 450, N(mine1), -1, 0, 0]]
 KINDS = [k["key"] for k in pe.COMPILED_028][:92]
 CIV8 = None

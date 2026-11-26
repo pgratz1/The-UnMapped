@@ -2031,6 +2031,34 @@ Report inputs: `~/.cache/the-unmapped/out/p5-06-int/report-inputs` (`build-input
 `p5_06_figures_reference.py golden --inputs report-inputs`. `p3-02-names.txt` is kept as committed (spec 17: must not
 move; the names reference at 0.27.0 would add three `hist.names.person` stream lines).
 
+## Generator 0.28.0 (P5-04a: relations and alliances follow-ups; integration)
+
+The test writer's 0.28.0 rules (flag `p504a` of `p3_conflict_reference.py`, `use_version("0.28.0")`; the replay
+parts in `p5_04_alliances_reference.Alliances`, `p5_03_relations_reference` and `p5_06_figures_reference.Figures`)
+were joined to the 0.28.0 engine at integration (`docs/reviews/p5-04a-integration-notes.md`):
+
+- `p3_data_reference.py`: a history directory with `tower_spacing_permille` in `figures.toml` is data version
+  0.28.0 (`pre_028`), so the replay reads the calibrated `game/data` instead of the 0.27.0 listings; race, culture,
+  beast and monster files of 0.28.0 are those of 0.27.0 (`same_version`; the calibration moved only values in
+  `monsters/dragon.toml`, which a 0.27.0 run now also reads from disk).
+- `p5_06_figures_reference.py`: the deed `ally_refused` with `motive` 5 names the ally's ruler (P5-04a 2.1, 4.4);
+  invariant 16 lets a tower take a cell whose earlier tower has ended (21.4); `check-world --version 0.28.0` checks
+  with the data root's figures tuning; `i0-world --version 0.28.0`; the tower units of 16 item 16
+  (`check_tower_units_028`).
+- `p5_04_alliances_reference.py`: `open_wars_at` counts the joined rows of the realm itself only (P5-04 7.6); the
+  renewal-chain invariant (6.1) allows a caught-up chain; `alliances_block(..., v9=True)` prints the lines of 12.3
+  and 12.5; `fixtures` and `i0-world` take `--version 0.28.0`; the zero tuning holds the new fields.
+- `p3_report_reference.py`: format v9 (`use_version("0.28.0")`): header, 12.2 milestones, 12.3 alliance and
+  `allies:` lines, 12.4 groups (`group_lines`), 12.6 stats, 21.5 `[figures]` reserved picks and `[monsters]`
+  living first, no `reign <n>` at summary; fixture H18 in `FIXTURE_NAMES_V9`.
+
+C++ worlds of 0.28.0 (the engine's CLI, `--map-size 1024`: default seeds 0 to 11, and seeds 0 to 3 of
+`--monster-pressure high`, `--event-intensity turbulent` and `--civs-per-race 4`) equal the references table for
+table (every history table, `figure` and `book` included); conflict's invariants and the check-world of
+`p5_02`, `p5_03` (`--version 0.28.0`), `p5_04`, `p5_06` (`--version 0.28.0`) and `p5_12` find no problem on them;
+`report --history` equals `p3_report_reference.py` at 0.28.0 at both levels on all 24. Scripts:
+`~/.cache/the-unmapped/out/p504a-int/scripts/` (`run_all.sh`, `cmp_world028.py`, `rep_cmp.py`).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

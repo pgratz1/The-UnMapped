@@ -1212,6 +1212,9 @@ def r25():
 
 
 def tuning_of_version():
+    import p3_conflict_reference as pcr
+    if pcr.FLAGS.get("p504a"):   # P5-04a 14.2: the appended fields at their code defaults (inert: 0.27.0's meaning)
+        return dict(pdr.RELATIONS_TUNING_025, **pdr.RELATIONS_DEFAULTS_028)
     return pdr.RELATIONS_TUNING_025 if r25() else pdr.RELATIONS_TUNING_024
 
 
