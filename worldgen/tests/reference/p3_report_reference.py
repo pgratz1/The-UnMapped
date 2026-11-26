@@ -2020,7 +2020,7 @@ def monster_lines(w, level):
             more = len(ms) - len(shown)
     for m in shown:
         st = "slain by %s" % w.ref(CIV, m[8]) if m[9] == 3 else MONSTER_STATUS[m[9]]
-        if V10 and m[9] == 2 and last_sleep_kind(w, m[0]) == "deep_sealed":   # P5-07 10 item 2
+        if V10 and m[9] == 2 and last_sleep_kind(w, m[0]) in ("deep_sealed", "warren_sealed"):   # 10 items 2, 7a
             st = "sealed in %s" % w.ref(SITE, m[3])
         if V8 and m[9] == 3 and m[7] in w.ev and w.ev[m[7]][3] == w.K["monster_slain_by_hero"]:   # P5-06 10.3
             st = "slain by %s of %s" % (w.ref(FIGURE, first_role(w, m[7], "hero")), w.ref(CIV, m[8]))
@@ -2095,7 +2095,7 @@ def _val(w, eid, key):
 def last_sleep_kind(w, mid):
     """P5-07 10 item 2: the kind of the monster's last sleeping event (monster_slept, monster_driven_off, deep_sealed)."""
     best = None
-    for key in ("monster_slept", "monster_driven_off", "deep_sealed"):
+    for key in ("monster_slept", "monster_driven_off", "deep_sealed", "warren_sealed"):
         for e in _kind_events(w, key):
             if mid in role_ids(w, e[0], "monster") and (best is None or e[0] > best[0]):
                 best = (e[0], key)

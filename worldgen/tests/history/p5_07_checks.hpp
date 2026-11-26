@@ -1,10 +1,12 @@
 #pragma once
 
-// P5-07 (docs/specs/p5-07-mountain-depths.md r1): the formulas of 6.2 to 6.7 and 6.3 as the spec writes them
-// (p507_f, checked on hand values in history_depths_unit_test.cpp), and the invariants of 13 items 1 to 9 that rows
-// show (p507_check::violations), the statistics of 10 item 7 and the derived depth of 9 (p507_check::stats,
-// mine_depth_at), ported from the reference (reference/p5_07_depths_reference.py: violations, stats_of_tables,
-// mine_depth_at). Messages name the item first. No library name beyond P5-03's tests'.
+// P5-07 (docs/specs/p5-07-mountain-depths.md r2): the formulas of 6.2 to 6.7 and 6.3, (r2) 6.10 and 6.11, as the spec
+// writes them (p507_f, checked on hand values in history_depths_unit_test.cpp), and the invariants of 13 items 1 to 9
+// and (r2) 12 to 15 that rows show (p507_check::violations), the statistics of 10 item 7 and the derived depths of 9
+// (p507_check::stats, mine_depth_at, warren_depth_at), ported from the reference
+// (reference/p5_07_depths_reference.py: violations, outcome_violations, warren_violations, aid_violations,
+// stats_of_tables, mine_depth_at, warren_depth_at). Messages name the item first. No library name beyond P5-03's
+// tests'.
 
 #include <algorithm>
 #include <cstdint>
@@ -68,6 +70,22 @@ inline std::int64_t telling_delve(std::int64_t site, std::int64_t depth) { retur
 inline std::int64_t telling_woken(std::int64_t monster) { return monster % 3; }
 inline std::int64_t telling_sealed(std::int64_t monster) { return (monster + 1) % 3; }
 inline std::int64_t telling_lost(std::int64_t monster, std::int64_t settlement) { return (monster + settlement) % 3; }
+// r2 6.10 (4.2): a warren's region: upland (4 x walk_cells < cells) or ore_reach_cells >= deep_warren_ore_min; 0: any.
+inline bool warren_region_ok(std::int64_t cells, std::int64_t walk, std::int64_t ore, std::int64_t ore_min) {
+    return ore_min == 0 || 4 * walk < cells || ore >= ore_min;
+}
+// r2 6.10 item 2: p = min(10^6, deep_wake_ppm[d - 1] x M div 1000 x deep_warren_wake_permille div 1000).
+inline std::int64_t warren_wake_ppm(const std::vector<std::int64_t>& ppm, std::int64_t d, std::int64_t M,
+                                    std::int64_t warren) {
+    return std::min<std::int64_t>(1000000, ppm[static_cast<std::size_t>(d - 1)] * M / 1000 * warren / 1000);
+}
+// r2 6.11: p = deep_aid_permille x ally_join_permille div 1000; S_a = P_q x levy div 1000 x prowess div 1000.
+inline std::int64_t aid_permille(std::int64_t aid, std::int64_t join) { return aid * join / 1000; }
+inline std::int64_t aid_strength(std::int64_t P, std::int64_t levy, std::int64_t prowess) {
+    return P * levy / 1000 * prowess / 1000;
+}
+inline std::int64_t telling_warren_delved(std::int64_t settlement, std::int64_t depth) { return (settlement + depth) % 3; }
+inline std::int64_t telling_aid(std::int64_t monster, std::int64_t ally) { return (monster + ally) % 3; }
 // 11.1 mine_depth_word, as the spec lists it.
 inline std::string depth_word(std::int64_t d) {
     return d == 1 ? "below daylight" : d == 2 ? "to the mountain's roots" : d == 3 ? "to the old deep" : "";
@@ -89,6 +107,8 @@ struct Tuning {
     std::vector<std::int64_t> deep_years{150, 500, 1000}, deep_wake_ppm{0, 150, 600};
     std::int64_t toll = 400, takes_max = 2, reach_hops = 1;
     std::map<std::string, std::int64_t> mining;   // race key -> mining_permille
+    std::map<std::string, std::int64_t> delving;  // r2: race key -> delving_permille (absent 0)
+    std::int64_t aid_max = 2, aid_hops = 2;      // r2
 };
 inline Tuning tuning_of(const wd::ContentSet& c) {
     Tuning t;
@@ -97,11 +117,15 @@ inline Tuning tuning_of(const wd::ContentSet& c) {
     t.toll = p507api::tuning_or(c, "monsters", "deep_toll_permille", t.toll);
     t.takes_max = p507api::tuning_or(c, "monsters", "deep_takes_max", t.takes_max);
     t.reach_hops = p507api::tuning_or(c, "monsters", "deep_reach_hops", t.reach_hops);
+    t.aid_max = p507api::tuning_or(c, "monsters", "deep_aid_max", t.aid_max);
+    t.aid_hops = p507api::tuning_or(c, "monsters", "deep_aid_hops", t.aid_hops);
     for (const wd::KindContent& k : c.kinds) {
         if (k.kind != "race") continue;
         for (const wd::Definition& d : k.definitions) {
             const wd::Value* v = d.record.find("mining_permille");
             t.mining[d.id] = v == nullptr ? 0 : v->as_int();
+            const wd::Value* dv = d.record.find("delving_permille");
+            t.delving[d.id] = dv == nullptr ? 0 : dv->as_int();
         }
     }
     return t;
@@ -138,6 +162,14 @@ inline bool names_monster(const Index& x, std::int64_t e, std::int64_t m) {
     return false;
 }
 
+// The role seq of `role` in kind `kind` (event_kind_role: kind, seq, role, ...), 0 when absent.
+inline std::int64_t role_seq(const World& w, std::int64_t kind, const std::string& role) {
+    for (const Row& r : w.rows.t.event_kind_role) {
+        if (at(r, 0) == kind && r.at(2).bytes == role) return at(r, 1);
+    }
+    return 0;
+}
+
 struct Rows {
     std::map<std::int64_t, const Row*> site, monster, kind_row;
     std::set<std::int64_t> deep_kinds;
@@ -151,7 +183,56 @@ struct Rows {
     }
 };
 
-// 13 items 1 to 9 (10 and 11 are the reference's replay and P5-02's own checks).
+// 13 item 3 (r2: the aids between the waking and its outcome, the outcome citing the waking then the aids;
+// warren_sealed only at a warren's waking, deep_sealed only at a mine's); item 14's count and order.
+inline std::vector<std::string> outcome_violations(const Index& x, const Rows& rw, std::int64_t e, std::int64_t mid,
+                                                   std::int64_t lid, const std::vector<std::int64_t>& aids,
+                                                   const Tuning& t, bool warren) {
+    using p503check::n;
+    std::vector<std::string> out;
+    const std::int64_t y = at(*x.ev.at(e), 1);
+    std::int64_t outcome = 0;
+    bool other = false;
+    for (auto it = x.ev.upper_bound(e); it != x.ev.end() && at(*it->second, 1) == y; ++it) {
+        const std::string k = x.kind_of(it->first);
+        if ((k == "deep_sealed" || k == "hold_lost" || k == "warren_sealed") && names_monster(x, it->first, mid)) {
+            outcome = it->first;
+            break;
+        }
+        const auto pit = x.parts.find(it->first);
+        if (pit == x.parts.end()) continue;
+        for (const Row* p : pit->second) other = other || (at(*p, 3) == 8 && at(*p, 4) != mid);
+    }
+    std::vector<std::int64_t> want{e};
+    want.insert(want.end(), aids.begin(), aids.end());
+    std::sort(want.begin(), want.end());
+    if (outcome == 0 || other || x.cause_list(outcome) != want) {
+        out.push_back("3: deep_woken e" + n(e) + " outcome e" + n(outcome));
+        return out;
+    }
+    const std::string k = x.kind_of(outcome);
+    if (k != (warren ? "warren_sealed" : "deep_sealed") && k != "hold_lost") {
+        out.push_back("3: deep_woken e" + n(e) + " outcome e" + n(outcome) + " is a " + k);
+    }
+    for (const std::int64_t a : aids) {
+        if (a <= e || a >= outcome) out.push_back("3: aid e" + n(a) + " not between e" + n(e) + " and its outcome");
+    }
+    if (static_cast<std::int64_t>(aids.size()) > t.aid_max) out.push_back("14: deep_woken e" + n(e) + " has too many aids");
+    std::vector<std::int64_t> allies;
+    for (const std::int64_t a : aids) allies.push_back(x.part(a, 1));
+    for (std::size_t i = 1; i < allies.size(); ++i) {
+        if (allies[i] <= allies[i - 1]) out.push_back("14: deep_woken e" + n(e) + " aids not in ascending ally id");
+    }
+    const auto li = rw.site.find(lid);
+    if (li != rw.site.end()) {
+        const bool fall = k == "hold_lost";
+        if (!fall && at(*li->second, 6) != 0) out.push_back("3: sealed e" + n(outcome) + " lair holds a settlement");
+        if (fall && at(*li->second, 6) != at(*x.ev.at(e), 6)) out.push_back("3: fall e" + n(outcome) + " lair settlement");
+    }
+    return out;
+}
+
+// 13 items 1 to 9 (10 and 11 are the reference's replay and P5-02's own checks); (r2) 12 to 15.
 inline std::vector<std::string> violations(const World& w, const Tuning& t) {
     using p503check::n;
     const Index x(w);
@@ -170,11 +251,22 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
         const auto it = t.mining.find(race_key[race_of_civ[c]]);
         return it == t.mining.end() ? 0 : it->second;
     };
+    const auto delving_of_civ = [&](std::int64_t c) {
+        const auto it = t.delving.find(race_key[race_of_civ[c]]);
+        return it == t.delving.end() ? 0 : it->second;
+    };
     std::map<std::int64_t, std::int64_t> sealed_of_m, sealed_of_s;
     for (const std::int64_t e : x.events_of("deep_sealed")) {
         sealed_of_m[x.part(e, 2)] = e;
         sealed_of_s[x.part(e, 3)] = e;
     }
+    for (const std::int64_t e : x.events_of("warren_sealed")) sealed_of_m[x.part(e, 2)] = e;   // r2
+    std::map<std::int64_t, std::vector<std::int64_t>> aids_of, per_stl;   // r2
+    for (const std::int64_t e : x.events_of("ally_aided_hold")) {
+        const std::vector<std::int64_t> cs = x.cause_list(e);
+        aids_of[cs.size() == 1U ? cs[0] : 0].push_back(e);
+    }
+    for (const std::int64_t e : x.events_of("warren_delved")) per_stl[at(*x.ev.at(e), 6)].push_back(e);
     // 1
     std::map<std::int64_t, std::vector<std::int64_t>> per_site;
     for (const std::int64_t e : x.events_of("delving_deepened")) per_site[x.part(e, 2)].push_back(e);
@@ -208,14 +300,49 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
     // 2 and 3
     const std::vector<std::int64_t> woken = x.events_of("deep_woken");
     std::map<std::int64_t, std::int64_t> realm, woken_of_m;
-    std::map<std::int64_t, int> wakings_of_site;
+    std::map<std::int64_t, int> wakings_of_site, wakings_of_stl;
+    std::set<std::int64_t> warren_m;
     for (const std::int64_t e : woken) {
         const std::int64_t mid = x.part(e, 1), c = x.part(e, 2), sid = x.part(e, 3), lid = x.part(e, 4);
         const std::int64_t d = x.val(e, 0);
         realm[mid] = c;
         woken_of_m[mid] = e;
-        ++wakings_of_site[sid];
         if (quiet(e)) out.push_back("2: deep_woken e" + n(e) + " in a quiet step");
+        if (sid == 0) {   // r2: a warren's waking (no site)
+            const std::int64_t tid = at(*x.ev.at(e), 6);
+            warren_m.insert(mid);
+            ++wakings_of_stl[tid];
+            std::int64_t last = 0, got = 0;
+            for (const std::int64_t y : per_stl[tid]) {
+                if (y < e) {
+                    last = std::max(last, y);
+                    got = std::max(got, x.val(y, 0));
+                }
+            }
+            if (last == 0 || x.part(last, 1) != c) {
+                out.push_back("2: warren waking e" + n(e) + " at settlement " + n(tid) + " without a warren of c" + n(c));
+                continue;
+            }
+            if (d < 1 || d > 3 || t.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0 || got != d) {
+                out.push_back("2: warren waking e" + n(e) + " at depth " + n(d));
+            }
+            const auto mi = rw.monster.find(mid);
+            if (mi == rw.monster.end() || rw.deep_kinds.count(at(*mi->second, 2)) == 0U || at(*mi->second, 5) != e) {
+                out.push_back("2: deep_woken e" + n(e) + " monster " + n(mid) + " not a deep kind born of it");
+            }
+            const auto li = rw.site.find(lid);
+            const auto st = x.stl.find(tid);
+            if (li == rw.site.end() || st == x.stl.end() || at(*li->second, 2) != p507api::SITE_LAIR ||
+                at(*li->second, 4) != at(*st->second, 2) || at(*li->second, 5) != at(*st->second, 3) ||
+                at(*li->second, 10) != e || at(*li->second, 8) != mid) {
+                out.push_back("2: warren waking e" + n(e) + " lair " + n(lid) + " not at the settlement's cell");
+            }
+            if (x.val(e, 1) != 3 + p507_f::telling_woken(mid)) out.push_back("15: warren waking e" + n(e) + " telling");
+            if (x.cause_list(e) != std::vector<std::int64_t>{last}) out.push_back("2: warren waking e" + n(e) + " causes");
+            for (const std::string& v : outcome_violations(x, rw, e, mid, lid, aids_of[e], t, true)) out.push_back(v);
+            continue;
+        }
+        ++wakings_of_site[sid];
         const auto si = rw.site.find(sid);
         if (si == rw.site.end() || at(*si->second, 2) != p507api::SITE_MINE || d < 1 || d > 3 ||
             t.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0) {
@@ -241,32 +368,17 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
             out.push_back("2: deep_woken e" + n(e) + " lair " + n(lid) + " not at the mine's cell");
         }
         if (c != at(s, 7)) out.push_back("2: deep_woken e" + n(e) + " civilization");
-        if (x.val(e, 1) != p507_f::telling_woken(mid)) out.push_back("2: e" + n(e) + " telling");
+        if (x.val(e, 1) != p507_f::telling_woken(mid)) out.push_back("2, 15: e" + n(e) + " telling");
         if (x.cause_list(e) != std::vector<std::int64_t>{last}) out.push_back("2: deep_woken e" + n(e) + " causes");
-        // 3: the first later event of the year naming the monster among 95 and 96, caused by it, none of another
-        // monster between
-        std::int64_t outcome = 0;
-        bool other = false;
-        for (auto it = x.ev.upper_bound(e); it != x.ev.end() && at(*it->second, 1) == year(e); ++it) {
-            const std::string k = x.kind_of(it->first);
-            if ((k == "deep_sealed" || k == "hold_lost") && names_monster(x, it->first, mid)) {
-                outcome = it->first;
-                break;
-            }
-            const auto pit = x.parts.find(it->first);
-            if (pit == x.parts.end()) continue;
-            for (const Row* p : pit->second) other = other || (at(*p, 3) == 8 && at(*p, 4) != mid);
-        }
-        if (outcome == 0 || other || x.cause_list(outcome) != std::vector<std::int64_t>{e}) {
-            out.push_back("3: deep_woken e" + n(e) + " outcome e" + n(outcome));
-        } else if (li != rw.site.end()) {
-            const bool sealed = x.kind_of(outcome) == "deep_sealed";
-            if (sealed && at(*li->second, 6) != 0) out.push_back("3: sealed e" + n(outcome) + " lair holds a settlement");
-            if (!sealed && at(*li->second, 6) != at(*x.ev.at(e), 6)) out.push_back("3: fall e" + n(outcome) + " lair settlement");
-        }
+        // 3: the first later event of the year naming the monster among 95, 96 and 99, caused by it and its aids,
+        // none of another monster between
+        for (const std::string& v : outcome_violations(x, rw, e, mid, lid, aids_of[e], t, false)) out.push_back(v);
     }
     for (const auto& [sid, k] : wakings_of_site) {
         if (k > 1) out.push_back("2: mine " + n(sid) + " woke " + std::to_string(k) + " times");
+    }
+    for (const auto& [tid, k] : wakings_of_stl) {
+        if (k > 1) out.push_back("2: warren " + n(tid) + " woke " + std::to_string(k) + " times");
     }
     // 4
     for (const auto& [mid, se] : sealed_of_m) {
@@ -280,6 +392,11 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
             }
         }
         if (x.val(se, 0) != p507_f::telling_sealed(mid)) out.push_back("4: e" + n(se) + " telling");
+        if (x.kind_of(se) == "warren_sealed") {   // r2: the warren never deepens again
+            for (const std::int64_t y : per_stl[at(*x.ev.at(se), 6)]) {
+                if (y > se) out.push_back("4: warren delved e" + n(y) + " after its sealing");
+            }
+        }
     }
     // 5 and 9
     std::map<std::int64_t, int> takes;
@@ -294,12 +411,17 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
         if (realm.count(mid) == 0U || realm[mid] != c) out.push_back("5: hold_lost e" + n(e) + " not the waking realm");
         const std::int64_t dead = x.val(e, 0), V = x.val(e, 1);
         if (p507_f::take_toll(dead + V, t.toll) != std::make_pair(dead, V)) out.push_back("5: hold_lost e" + n(e) + " toll");
-        if (x.val(e, 2) != p507_f::telling_lost(mid, sid)) out.push_back("5: e" + n(e) + " telling");
+        if (x.val(e, 2) != p507_f::telling_lost(mid, sid) + (warren_m.count(mid) != 0U ? 3 : 0)) {
+            out.push_back("5, 15: e" + n(e) + " telling");
+        }
         const std::vector<std::int64_t> cs = x.cause_list(e);
         if (k == 1) {
-            if (woken_of_m.count(mid) == 0U || cs != std::vector<std::int64_t>{woken_of_m[mid]}) {
-                out.push_back("5: first hold_lost e" + n(e) + " causes");
+            std::vector<std::int64_t> want;
+            if (woken_of_m.count(mid) != 0U) {
+                want.push_back(woken_of_m[mid]);
+                for (const std::int64_t a : aids_of[woken_of_m[mid]]) want.push_back(a);
             }
+            if (want.empty() || cs != want) out.push_back("5: first hold_lost e" + n(e) + " causes");
         } else {
             const std::int64_t raid = cs.size() == 1U ? cs[0] : 0;
             if (raid == 0 || x.kind_of(raid) != "monster_raid" || x.part(raid, 1) != mid ||
@@ -351,6 +473,111 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
         for (const auto& [sid, s] : x.stl) holds = holds || at(*s, 8) == c;
         if (year(e) <= year(cs[0]) || holds) out.push_back("7: civ_ended e" + n(e) + " after hold_lost e" + n(cs[0]));
     }
+    // r2 12: per warren settlement
+    std::map<std::int64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> lives;   // civ -> (from, to) years
+    for (const auto& [tid, es] : per_stl) {
+        const std::int64_t c = x.part(es.front(), 1);
+        if (mining_of_civ(c) != 0 || delving_of_civ(c) <= 0) out.push_back("12: warren " + n(tid) + " delved by c" + n(c));
+        const std::vector<std::int64_t> root_cs = x.cause_list(es.front());
+        const std::int64_t root = root_cs.size() == 1U ? root_cs[0] : 0;
+        if (root == 0) out.push_back("12: first warren_delved e" + n(es.front()) + " causes");
+        for (std::size_t i = 0; i < es.size(); ++i) {
+            const std::int64_t e = es[i], d = x.val(e, 0);
+            if (d != static_cast<std::int64_t>(i) + 1 || i >= 3U) out.push_back("12: warren " + n(tid) + " e" + n(e) + " depth " + n(d));
+            if (x.part(e, 1) != c) out.push_back("12: warren " + n(tid) + " delved by two realms");
+            if (x.val(e, 1) != p507_f::telling_warren_delved(tid, d)) out.push_back("12: e" + n(e) + " telling");
+            if (i > 0 && x.cause_list(e) != std::vector<std::int64_t>{es[i - 1]}) out.push_back("12: e" + n(e) + " causes");
+            if (root != 0 && x.ev.count(root) != 0U && d >= 1 && d <= 3 &&
+                year(e) - year(root) < t.deep_years[static_cast<std::size_t>(d - 1)]) {
+                out.push_back("12: warren " + n(tid) + " depth " + n(d) + " too early");
+            }
+        }
+        // the warren's life for its delver ends at its waking, its ruin, its capture or its cession (D-R20)
+        std::int64_t end = 0;
+        const auto st = x.stl.find(tid);
+        if (st != x.stl.end() && at(*st->second, 13) > es.front()) end = at(*st->second, 13);
+        for (auto it = x.ev.upper_bound(es.front()); it != x.ev.end(); ++it) {
+            const std::string k = x.kind_of(it->first);
+            bool hit = (k == "deep_woken" && at(*it->second, 6) == tid);
+            if (k == "settlement_captured" || k == "settlements_ceded") {
+                hit = at(*it->second, 6) == tid;
+                const auto pit = x.parts.find(it->first);
+                if (pit != x.parts.end()) {
+                    for (const Row* p : pit->second) hit = hit || (at(*p, 3) == 4 && at(*p, 4) == tid);
+                }
+            }
+            if (hit && (end == 0 || it->first < end)) end = it->first;
+            if (hit) break;
+        }
+        for (const std::int64_t e : es) {
+            if (end != 0 && e > end && (x.kind_of(end) == "deep_woken" || (st != x.stl.end() && end == at(*st->second, 13)))) {
+                out.push_back("12: warren " + n(tid) + " delved e" + n(e) + " after its waking or ruin");
+            }
+        }
+        lives[c].push_back({year(es.front()), end == 0 ? (std::int64_t{1} << 40) : year(end)});
+    }
+    for (const auto& [c, ls] : lives) {
+        for (std::size_t i = 0; i < ls.size(); ++i) {
+            for (std::size_t j = i + 1; j < ls.size(); ++j) {
+                if (std::max(ls[i].first, ls[j].first) < std::min(ls[i].second, ls[j].second)) {
+                    out.push_back("12: c" + n(c) + " has two live warrens");
+                }
+            }
+        }
+    }
+    // r2 13: no kind 3 site and no arms_sold seller of a race with mining_permille 0
+    for (const Row& s : w.rows.t.site) {
+        if (at(s, 2) == p507api::SITE_MINE && mining_of_civ(at(s, 7)) <= 0) out.push_back("13: mine " + n(at(s, 0)) + " of a race that does not mine");
+    }
+    const std::int64_t k_arms = x.kind_id("arms_sold");
+    const std::int64_t seller = k_arms < 0 ? 0 : role_seq(w, k_arms, "seller");
+    for (const std::int64_t e : x.events_of("arms_sold")) {
+        const std::int64_t c = seller == 0 ? 0 : x.part(e, seller);
+        if (c != 0 && mining_of_civ(c) <= 0) out.push_back("13: arms_sold e" + n(e) + " by a race that does not mine");
+    }
+    // r2 14: every ally_aided_hold
+    std::set<std::int64_t> forbidden;
+    for (const char* k : {"war_declared", "ally_joined_war", "ally_refused", "claim_settlements"}) {
+        if (x.kind_id(k) >= 0) forbidden.insert(x.kind_id(k));
+    }
+    std::map<std::int64_t, std::vector<std::int64_t>> cited;
+    for (const auto& [e, cs] : x.causes) {
+        for (const std::int64_t c : cs) cited[c].push_back(e);
+    }
+    for (const auto& [w0, aids] : aids_of) {
+        for (const std::int64_t a : aids) {
+            const std::int64_t ally = x.part(a, 1), partner = x.part(a, 2), mid = x.part(a, 3), q = x.part(a, 4);
+            if (x.kind_of(w0) != "deep_woken" || x.part(w0, 2) != partner || x.part(w0, 1) != mid ||
+                year(w0) != year(a) || ally == partner) {
+                out.push_back("14: ally_aided_hold e" + n(a) + " does not answer its waking");
+                continue;
+            }
+            bool allied = false;
+            for (const Row& r : w.rows.t.relation) {
+                if (r.at(4).bytes != "alliance") continue;
+                const bool pair = (at(r, 1) == ally && at(r, 3) == partner) || (at(r, 1) == partner && at(r, 3) == ally);
+                const bool open = null_at(r, 6) || at(r, 6) == -1 || at(r, 6) > year(a) || at(r, 8) > a;
+                allied = allied || (pair && at(r, 7) < a && open);
+            }
+            if (!allied) out.push_back("14: ally_aided_hold e" + n(a) + ": not allied");
+            const auto st = x.stl.find(q);
+            bool ok = st != x.stl.end() && at(*st->second, 6) <= year(a) &&
+                      (at(*st->second, 13) == 0 || at(*st->second, 13) > a);
+            if (ok && !w.borders.empty()) {
+                const auto hops = geo_hops(w, at(*x.ev.at(a), 5));
+                const auto h = hops.find(at(*st->second, 4));
+                ok = h != hops.end() && h->second <= t.aid_hops;
+            }
+            if (!ok) out.push_back("14: ally_aided_hold e" + n(a) + " origin " + n(q) + " not standing within reach");
+            if (x.val(a, 0) != p507_f::telling_aid(mid, ally)) out.push_back("14: e" + n(a) + " telling");
+            for (const std::int64_t b : cited[a]) {
+                if (forbidden.count(at(*x.ev.at(b), 3)) != 0U) out.push_back("14: e" + n(b) + " caused by the aid e" + n(a));
+            }
+            for (const Row& r : w.rows.t.relation) {
+                if (at(r, 7) == a || at(r, 8) == a) out.push_back("14: a relation row caused by the aid e" + n(a));
+            }
+        }
+    }
     // 8
     const std::vector<std::string> keys = {"dragon", "giant", "ogre", "troll", "undead", "wyvern", "ymrach", "ysgarth", "zhakul"};
     const auto& mk = w.rows.t.monster_kind;
@@ -380,6 +607,17 @@ inline std::vector<std::pair<std::string, std::int64_t>> stats(const World& w) {
         }
         return c;
     };
+    std::set<std::int64_t> warrens_deepest, aided;
+    for (const std::int64_t e : x.events_of("warren_delved")) {
+        if (x.val(e, 0) == 3) warrens_deepest.insert(at(*x.ev.at(e), 6));
+    }
+    std::int64_t warrens_woken = 0;
+    for (const std::int64_t e : x.events_of("deep_woken")) warrens_woken += x.part(e, 3) == 0 ? 1 : 0;
+    for (const std::int64_t e : x.events_of("ally_aided_hold")) {
+        for (const std::int64_t c : x.cause_list(e)) {
+            if (x.kind_of(c) == "deep_woken") aided.insert(c);
+        }
+    }
     std::int64_t alive = 0;
     for (const auto& [id, m] : rw.monster) {
         alive += rw.deep_kinds.count(at(*m, 2)) != 0U && (at(*m, 9) == 1 || at(*m, 9) == 2) ? 1 : 0;
@@ -391,7 +629,14 @@ inline std::vector<std::pair<std::string, std::int64_t>> stats(const World& w) {
             {"holds_lost", static_cast<std::int64_t>(lost.size())},
             {"deep_flights", by_lost("refugees_settled")},
             {"realms_lost_to_deep", by_lost("civ_ended")},
-            {"deep_alive", alive}};
+            {"deep_alive", alive},
+            // r2
+            {"warrens_delved", static_cast<std::int64_t>(x.events_of("warren_delved").size())},
+            {"warrens_deepest", static_cast<std::int64_t>(warrens_deepest.size())},
+            {"warrens_woken", warrens_woken},
+            {"warrens_sealed", static_cast<std::int64_t>(x.events_of("warren_sealed").size())},
+            {"deep_aided", static_cast<std::int64_t>(x.events_of("ally_aided_hold").size())},
+            {"wakings_aided", static_cast<std::int64_t>(aided.size())}};
 }
 
 // 9's derivation: the depth of a mine at year Y (0 none, or a site of another kind).
@@ -400,6 +645,16 @@ inline std::int64_t mine_depth_at(const World& w, std::int64_t site, std::int64_
     std::int64_t d = 0;
     for (const std::int64_t e : x.events_of("delving_deepened")) {
         if (x.part(e, 2) == site && at(*x.ev.at(e), 1) <= year) d = std::max(d, x.val(e, 0));
+    }
+    return d;
+}
+
+// r2 9's derivation: the depth of a warren at year Y (0 none).
+inline std::int64_t warren_depth_at(const World& w, std::int64_t settlement, std::int64_t year) {
+    const Index x(w);
+    std::int64_t d = 0;
+    for (const std::int64_t e : x.events_of("warren_delved")) {
+        if (at(*x.ev.at(e), 6) == settlement && at(*x.ev.at(e), 1) <= year) d = std::max(d, x.val(e, 0));
     }
     return d;
 }

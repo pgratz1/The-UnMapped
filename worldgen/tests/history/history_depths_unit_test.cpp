@@ -1,4 +1,5 @@
-// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r1) test 16 items 2 to 7 on hand-checked values: the formulas of
+// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r2) test 16 items 2 to 7 (r2: 16 and 17's arithmetic) on
+// hand-checked values: the formulas of
 // 6.2 (the worked years at deep_years[d] - 1 and at it, the chance with mining_permille 500, Q4's p x L and its cap),
 // 6.3 (the forge factor at depth 0 to 3, forge_depth_permille 0 gives P5-04's), 6.4 (the wake chance, the weights),
 // 6.5 (the odds at S = 0, S = might and the cap, sealed at u = odds - 1 and fallen at u = odds; the spec's samples),
@@ -130,6 +131,69 @@ TEST_CASE("P5-07 8.1: the tellings are functions of ids; 11.1 the depth words") 
     CHECK(depth_word(2) == "to the mountain's roots");
     CHECK(depth_word(3) == "to the old deep");
     CHECK(depth_word(4).empty());
+}
+
+TEST_CASE("P5-07 r2 6.10: a warren's first level: the region (upland, ore at deep_warren_ore_min - 1 and at it)") {
+    // (cells, walk_cells, ore_reach_cells, deep_warren_ore_min)
+    CHECK(warren_region_ok(2000, 499, 0, 1));          // upland: 4 x 499 < 2000
+    CHECK_FALSE(warren_region_ok(2000, 500, 0, 1));    // 4 x 500 = 2000: not upland
+    CHECK_FALSE(warren_region_ok(2000, 1500, 4, 5));   // ore at deep_warren_ore_min - 1
+    CHECK(warren_region_ok(2000, 1500, 5, 5));         // and at it
+    CHECK(warren_region_ok(2000, 2000, 0, 0));         // deep_warren_ore_min 0: any region
+}
+
+TEST_CASE("P5-07 r2 6.10: a warren's deepening chance (goblins 300), Q4's p x L; its wake chance") {
+    CHECK(delve_permille(10, 300) == 3);              // 6.10: "3 per mille a year"
+    CHECK(delve_permille(10, 300, 50) == 150);
+    CHECK(delve_permille(10, 300, 400) == 1000);
+    CHECK(delve_permille(1000, 1000) == 1000);        // depths-small
+    CHECK(delve_permille(0, 300) == 0);               // deep_delve_permille 0: no warren deepens (I0)
+    CHECK(warren_wake_ppm(PPM, 3, 1000, 200) == 120);   // 600 x 200 div 1000
+    CHECK(warren_wake_ppm(PPM, 2, 1000, 200) == 30);
+    CHECK(warren_wake_ppm(PPM, 1, 1000, 200) == 0);
+    CHECK(warren_wake_ppm(PPM, 3, 1600, 200) == 192);   // pressure high
+    CHECK(warren_wake_ppm(PPM, 3, 1000, 0) == 0);       // deep_warren_wake_permille 0 (the code default)
+    CHECK(warren_wake_ppm({0, 151, 0}, 2, 1000, 7) == 1);   // floor twice: 151 x 7 div 1000
+    CHECK(warren_wake_ppm({0, 0, 1000000}, 3, 10000, 500) == 1000000);   // the min over the whole product
+    CHECK(warren_wake_ppm({0, 200000, 600000}, 3, 1000, 1000) == 600000);   // depths-small
+    // 8.1: a warren's tellings
+    CHECK(telling_warren_delved(7, 1) == 2);
+    CHECK(telling_warren_delved(7, 2) == 0);
+    CHECK(telling_warren_delved(7, 3) == 1);
+    CHECK(3 + telling_woken(4) == 4);
+    CHECK(telling_lost(5, 7) + 3 == 3);
+}
+
+TEST_CASE("P5-07 r2 6.5: a goblin warren's gate (prowess 800): the samples 242, 166 and 102") {
+    const std::int64_t S = gate_strength(1000, 1000, 800);
+    CHECK(S == 800);
+    CHECK(gate_odds(S, 2500, 800) == 242);
+    CHECK(gate_odds(S, 4000, 800) == 166);
+    CHECK(gate_odds(S, 7000, 800) == 102);
+}
+
+TEST_CASE("P5-07 r2 6.11: the aid's chance by race, its strength, the gate with the aid (346) and its boundary") {
+    // 6.11: "a dwarven ally answers at 400 per mille, a human or orc at 300, a goblin at 200, an elf at 350, a faerie
+    // at 75" (ally_join_permille 800, 600, 400, 700, 150 of game/data/races)
+    CHECK(aid_permille(500, 800) == 400);
+    CHECK(aid_permille(500, 600) == 300);
+    CHECK(aid_permille(500, 400) == 200);
+    CHECK(aid_permille(500, 700) == 350);
+    CHECK(aid_permille(500, 150) == 75);
+    CHECK(aid_permille(0, 800) == 0);      // deep_aid_permille 0: no aid
+    CHECK(aid_permille(1000, 150) == 150);  // depths-small
+    const std::int64_t Sa = aid_strength(2000, 500, 1000);   // a human town of 2,000
+    CHECK(Sa == 1000);
+    const std::int64_t S = gate_strength(800, 1000, 1400) + Sa;
+    CHECK(S == 2120);
+    const std::int64_t odds = gate_odds(S, 4000, 800);
+    CHECK(odds == 346);   // 6.5: "2,120,000 div 6,120 = 346"
+    CHECK(sealed_at(odds - 1, odds));
+    CHECK_FALSE(sealed_at(odds, odds));
+    CHECK_FALSE(sealed_at(odds - 1, gate_odds(gate_strength(800, 1000, 1400), 4000, 800)));   // 218 without the aid
+    CHECK(aid_strength(1999, 500, 1600) == 1598);   // floor twice
+    CHECK(aid_strength(1000000, 4000, 1600) == 6400000);
+    CHECK(telling_aid(3, 4) == 1);
 }
 
 TEST_CASE("P5-07 11.1: inspect::mine_depth_word gives the spec's words") {

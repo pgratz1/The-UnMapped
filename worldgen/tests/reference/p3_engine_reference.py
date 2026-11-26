@@ -419,11 +419,16 @@ _M1 = lambda n: (n, MONSTER, 1, 1)
 _S1 = lambda n: (n, SITE, 1, 1)
 KINDS_029 = (
     kind_def(93, "delving_deepened", 1, 1, 1, (_C1("civilization"), _S1("site")), ("depth", "telling")),
-    kind_def(94, "deep_woken", 1, 1, 1, (_M1("monster"), _C1("civilization"), _S1("site"), _S1("lair")),
-             ("depth", "telling")),
+    kind_def(94, "deep_woken", 1, 1, 1, (_M1("monster"), _C1("civilization"), ("site", SITE, 0, 1), _S1("lair")),
+             ("depth", "telling")),   # r2: site 0-1 (none at a warren), telling 0 to 5
     kind_def(95, "deep_sealed", 1, 1, 1, (_C1("civilization"), _M1("monster"), _S1("site"), _S1("lair")), ("telling",)),
     kind_def(96, "hold_lost", 1, 1, 1, (_M1("monster"), _C1("civilization"), _S1("lair"), ("site", SITE, 0, 1)),
              ("dead", "survivors", "telling")),
+    # r2 (8.1): 97 to 99
+    kind_def(97, "ally_aided_hold", 1, 1, 1, (_C1("ally"), _C1("partner"), _M1("monster"),
+                                              ("origin", SETTLEMENT, 1, 1)), ("telling",)),
+    kind_def(98, "warren_delved", 1, 1, 1, (_C1("civilization"),), ("depth", "telling")),
+    kind_def(99, "warren_sealed", 1, 1, 1, (_C1("civilization"), _M1("monster"), _S1("lair")), ("telling",)),
 )
 COMPILED_029 = COMPILED_028 + KINDS_029
 
@@ -489,7 +494,7 @@ RENDER_R27 = False
 #                   `choice of <n> words at byte <b>` above 8; the monster form {m:died} (10 item 5).
 RENDER_R28 = False
 # P5-07 (generator 0.29.0):
-#   RENDER_R29      8.1 kinds 93 to 96; schema 13 (9: monster_kind.wake 3 deep; no DDL change); the ending of a ruin by
+#   RENDER_R29      8.1 kinds 93 to 99 (r2: 97 to 99); schema 13 (9: monster_kind.wake 3 deep; no DDL change); the ending of a ruin by
 #                   hold_lost is 2 (6.6); the choice with an empty first word renders as written (8.2).
 RENDER_R29 = False
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")

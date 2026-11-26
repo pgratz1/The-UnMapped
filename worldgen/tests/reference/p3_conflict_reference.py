@@ -614,6 +614,7 @@ class Data(pp.Data):
             self.race[rid]["origin_allies"] = list(t.get("origin_allies", []))
             self.race[rid]["ally_join"] = t.get("ally_join_permille", 0)
             self.race[rid]["mining"] = t.get("mining_permille", 0)
+            self.race[rid]["delving"] = t.get("delving_permille", 0)   # P5-07 r2 4.5 (absent counts 0)
             # P5-06 4.1 (0.27.0): the race's leanings of temper (steady, warlike, peaceable, grasping, just) and the
             # chances of generals, heroes and casters; an older root has none
             tw = t.get("temper_weights")

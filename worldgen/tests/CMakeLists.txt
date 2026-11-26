@@ -499,7 +499,8 @@ target_sources(worldgen-tests PRIVATE
     history/history_figures_p504a_test.cpp
     history/history_report_v9_test.cpp
 )
-# Mountain depths (spec P5-07 r1, generator 0.29.0, schema 13, report v10): the spec's arithmetic by hand
+# Mountain depths (spec P5-07 r2, generator 0.29.0, schema 13, report v10; r2: goblin warrens and the allies' aid):
+# the spec's arithmetic by hand
 # (history_depths_unit_test.cpp, runs before integration), the data of 4 on game/data, the invariants of 13 on
 # depths-small and shipped worlds with determinism, I0 and resume, the reader checks of 9 on corrupt copies, report v10
 # and the timeline, browser and markers reads on fixture H19 (h19-v10.toml, written by reference/p5_07_h19_fixture.py),

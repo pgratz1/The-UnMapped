@@ -159,8 +159,9 @@ GROUP_KEYS_027.update({2: GROUP_KEYS_026[2] + ("battle_led",), 3: GROUP_KEYS_026
                            "book_written")})
 # P5-07 11.1 (generator 0.29.0): kind 93 in settlements (with mine_opened), 94 to 96 in monsters; ALL_GROUPS unchanged
 GROUP_KEYS_029 = dict(GROUP_KEYS_027)
-GROUP_KEYS_029.update({1: GROUP_KEYS_027[1] + ("delving_deepened",),
-                       5: GROUP_KEYS_027[5] + ("deep_woken", "deep_sealed", "hold_lost")})
+GROUP_KEYS_029.update({1: GROUP_KEYS_027[1] + ("delving_deepened", "warren_delved"),
+                       5: GROUP_KEYS_027[5] + ("deep_woken", "deep_sealed", "hold_lost", "warren_sealed"),
+                       7: GROUP_KEYS_027[7] + ("ally_aided_hold",)})   # r2: 97 alliances, 98 settlements, 99 monsters
 GROUP_VERSION = "0.27.0"
 
 
@@ -173,7 +174,7 @@ def use_groups(v):
                        "figures")
         GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
         ALL_GROUPS = 0x1FF
-        assert sum(len(x) for x in GROUP_KEYS.values()) == 96 and len(GROUP_OF) == 96
+        assert sum(len(x) for x in GROUP_KEYS.values()) == 99 and len(GROUP_OF) == 99
         return
     GROUP_KEYS = (GROUP_KEYS_027 if v == "0.27.0" else GROUP_KEYS_026 if v == "0.26.0" else GROUP_KEYS_024
                   if v == "0.24.0" else GROUP_KEYS_023)

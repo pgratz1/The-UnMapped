@@ -1,4 +1,6 @@
-// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r1) test 16 item 1 on the shipped data root (game/data): the three
+// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r2) test 16 items 1 and (r2) 15 on the shipped data root (game/data):
+// r2 adds the eight warren and aid fields of history.monsters (4.2), the race field delving_permille with its bounds,
+// its absence (0) and the check race_delves_one_way (4.5), and the shipped race values. The three
 // deep kinds load (4.1: ids after wyvern, wake deep, no biomes, the table's values); check monster_deep_biomes; every
 // new history.monsters field of 4.2 after undead_regions_ref in order, refused out of its bounds and when absent;
 // check monsters_deep_years_ordered; history.conflict.forge_depth_permille after arms_strength_permille (4.3); renaming
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../db_test_support.hpp"
@@ -176,12 +179,16 @@ TEST_CASE("P5-07 4.1: check monster_deep_biomes; a deep kind's wake must be an e
     refused(f, with_line(text, "wake", "\"deeper\""), {"wake"});
 }
 
-TEST_CASE("P5-07 4.2: history.monsters: the eight fields after undead_regions_ref, their bounds and absence") {
+TEST_CASE("P5-07 4.2: history.monsters: the sixteen fields after undead_regions_ref, their bounds and absence") {
     P507_REQUIRE_INTEGRATED();
     const wd::Record& r = history("monsters");
     const std::vector<std::string> names = {"deep_years", "deep_delve_permille", "deep_wake_ppm",
                                             "deep_gate_levy_permille", "deep_seal_max_permille", "deep_toll_permille",
-                                            "deep_takes_max", "deep_reach_hops"};
+                                            "deep_takes_max", "deep_reach_hops",
+                                            // r2, in 4.2's order
+                                            "deep_warren_population_min", "deep_warren_ore_min",
+                                            "deep_warren_wake_permille", "deep_aid_permille", "deep_aid_hops",
+                                            "deep_aid_levy_permille", "deep_aid_max", "deep_aid_memory"};
     std::size_t at = r.size();
     for (std::size_t i = 0; i < r.size(); ++i) {
         if (r.name_at(i) == "undead_regions_ref") at = i;
@@ -199,6 +206,15 @@ TEST_CASE("P5-07 4.2: history.monsters: the eight fields after undead_regions_re
     CHECK(r.get_int("deep_toll_permille") == 400);
     CHECK(r.get_int("deep_takes_max") == 2);
     CHECK(r.get_int("deep_reach_hops") == 1);
+    // r2 starts (15.2's steps 8 to 11 may calibrate them; a moved value is named here at integration)
+    CHECK(r.get_int("deep_warren_population_min") == 600);
+    CHECK(r.get_int("deep_warren_ore_min") == 1);
+    CHECK(r.get_int("deep_warren_wake_permille") == 200);
+    CHECK(r.get_int("deep_aid_permille") == 500);
+    CHECK(r.get_int("deep_aid_hops") == 2);
+    CHECK(r.get_int("deep_aid_levy_permille") == 500);
+    CHECK(r.get_int("deep_aid_max") == 2);
+    CHECK(r.get_int("deep_aid_memory") == 30);
     const std::string f = "history/monsters.toml";
     const std::string text = read(data_root() / f);
     struct B {
@@ -207,7 +223,12 @@ TEST_CASE("P5-07 4.2: history.monsters: the eight fields after undead_regions_re
     };
     for (const B& b : {B{"deep_delve_permille", 0, 1000}, B{"deep_gate_levy_permille", 0, 4000},
                        B{"deep_seal_max_permille", 0, 1000}, B{"deep_toll_permille", 0, 1000},
-                       B{"deep_takes_max", 0, 16}, B{"deep_reach_hops", 0, 4}}) {
+                       B{"deep_takes_max", 0, 16}, B{"deep_reach_hops", 0, 4},
+                       // r2
+                       B{"deep_warren_population_min", 0, 1000000}, B{"deep_warren_ore_min", 0, 100000},
+                       B{"deep_warren_wake_permille", 0, 1000}, B{"deep_aid_permille", 0, 1000},
+                       B{"deep_aid_hops", 0, 8}, B{"deep_aid_levy_permille", 0, 4000}, B{"deep_aid_max", 0, 8},
+                       B{"deep_aid_memory", 0, 500}}) {
         CAPTURE(b.name);
         const std::string expected = "expected an integer from " + std::to_string(b.lo) + " to " + std::to_string(b.hi);
         refused(f, with_line(text, b.name, std::to_string(b.lo - 1)), {b.name, expected});
@@ -235,6 +256,42 @@ TEST_CASE("P5-07 4.2: check monsters_deep_years_ordered") {
     refused(f, with_line(text, "deep_years", "[5, 10, 9]"),
             {"monsters_deep_years_ordered", "deep_years[2] 9 is not above deep_years[1] 10"});
     accepted(f, with_line(text, "deep_years", "[5, 10, 20]"));   // depths-small
+}
+
+TEST_CASE("P5-07 r2 4.5: race field delving_permille: the shipped values, bounds, absence and race_delves_one_way") {
+    P507_REQUIRE_INTEGRATED();
+    const std::vector<std::pair<std::string, std::int64_t>> want = {{"dwarf", 0}, {"elf", 0}, {"faerie", 0},
+                                                                     {"goblin", 300}, {"human", 0}, {"orc", 0}};
+    for (const auto& [race, v] : want) {
+        CAPTURE(race);
+        const wd::Definition* d = p503check::definition(shipped(), "race", race);
+        REQUIRE(d != nullptr);
+        // 4.5: "written in every file so the choice is visible"
+        REQUIRE(d->record.find("delving_permille") != nullptr);
+        CHECK(d->record.get_int("delving_permille") == v);
+        CHECK(d->record.get_int("mining_permille") == (race == "dwarf" ? 1000 : 0));   // P5-04, unchanged
+    }
+    const std::string gob = "races/goblin.toml";
+    const std::string gt = read(data_root() / gob);
+    refused(gob, with_line(gt, "delving_permille", "-1"), {"delving_permille", "expected an integer from 0 to 1000"});
+    refused(gob, with_line(gt, "delving_permille", "1001"), {"delving_permille", "expected an integer from 0 to 1000"});
+    accepted(gob, with_line(gt, "delving_permille", "1000"));
+    // optional: absent counts 0 (4.5, 6.12 item 3)
+    {
+        const Load l = load_edited(gob, without(gt, "delving_permille"));
+        REQUIRE_MESSAGE(l.ok(), history_test::dump(l));
+        const wd::Definition* d = p503check::definition(*l.content, "race", "goblin");
+        REQUIRE(d != nullptr);
+        const wd::Value* v = d->record.find("delving_permille");
+        CHECK((v == nullptr || v->as_int() == 0));
+    }
+    // race_delves_one_way: mining and delving both above 0 refused
+    const std::string dw = "races/dwarf.toml";
+    refused(dw, with_line(read(data_root() / dw), "delving_permille", "1"),
+            {"race_delves_one_way", "a race delves mines or warrens, not both"});
+    refused(gob, with_line(with_line(gt, "mining_permille", "1"), "delving_permille", "300"),
+            {"race_delves_one_way", "a race delves mines or warrens, not both"});
+    accepted(dw, with_line(read(data_root() / dw), "delving_permille", "0"));
 }
 
 TEST_CASE("P5-07 4.3: history.conflict.forge_depth_permille right after arms_strength_permille") {

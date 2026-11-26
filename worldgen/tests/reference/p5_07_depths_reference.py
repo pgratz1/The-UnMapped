@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Reference of P5-07 "Mountain depths" (docs/specs/p5-07-mountain-depths.md r1, generator 0.29.0, schema 13, history
-report format v10), written by the test writer from the spec alone, without the engineer's branch.
+"""Reference of P5-07 "Mountain depths" (docs/specs/p5-07-mountain-depths.md r2, generator 0.29.0, schema 13, history
+report format v10), written by the test writer from the spec alone, without the engineer's branch. r2 adds the goblin
+deep warrens (6.10) and the allies' aid at a waking (6.11) to the r1 rules (module flag R2, on by default; off: r1).
 
 The deep rules of 6.2 to 6.7 run inside p3_conflict_reference.py's replay: at 0.29.0 (flag `deep` of the conflict
 reference) the conflict World installs `Deep` on its monsters subsystem (p5_02_monsters_reference.Monsters), which
@@ -48,9 +49,13 @@ import p3_data_reference as pdr  # noqa: E402
 GOLDEN = os.path.join(pe.REPO, "worldgen", "tests", "golden", "p5-07-depths.txt")
 VERSION = "0.29.0"
 # 3: appended to core/streams.hpp after hist.alliances.renew (the 98th), in this order (103 streams)
-STREAMS = ("hist.deep.delve", "hist.deep.wake", "hist.deep.kind", "hist.deep.gate", "hist.deep.take")
-STREAM_COUNT = 103
-KINDS = {93: "delving_deepened", 94: "deep_woken", 95: "deep_sealed", 96: "hold_lost"}
+STREAMS = ("hist.deep.delve", "hist.deep.wake", "hist.deep.kind", "hist.deep.gate", "hist.deep.take",
+           # r2: appended after hist.deep.take (107 streams)
+           "hist.deep.aid", "hist.deep.warren_delve", "hist.deep.warren_wake", "hist.deep.warren_kind")
+STREAM_COUNT = 107
+KINDS = {93: "delving_deepened", 94: "deep_woken", 95: "deep_sealed", 96: "hold_lost",
+         97: "ally_aided_hold", 98: "warren_delved", 99: "warren_sealed"}   # r2: 97 to 99
+R2 = True   # r2's rules (6.10, 6.11); False: the r1 rules (I1 of 14)
 DEEP_KIND_IDS = (7, 8, 9)   # 4.1: ymrach 7, ysgarth 8, zhakul 9 (invariant 8)
 WAKE_DEEP = 3
 CIV, SETTLEMENT, MONSTER, SITE = pe.CIV, pe.SETTLEMENT, pe.MONSTER, pe.SITE
@@ -60,7 +65,9 @@ OPEN, END_LOST = 0, 4
 NEVER = 1 << 40   # a sealed monster's drive_until: it never wakes again (6.5)
 HEADER = "# worldgen history v10"
 STATS_KEYS = ("mines_deepened", "mines_deepest", "deep_woken", "deep_sealed", "holds_lost", "deep_flights",
-              "realms_lost_to_deep", "deep_alive")   # 10 item 7, in this order
+              "realms_lost_to_deep", "deep_alive",   # 10 item 7, in this order
+              "warrens_delved", "warrens_deepest", "warrens_woken", "warrens_sealed", "deep_aided",
+              "wakings_aided")                       # r2
 MINE_DEPTH_WORD = {1: "below daylight", 2: "to the mountain's roots", 3: "to the old deep"}   # 11.1
 
 READINGS = """\
@@ -90,6 +97,22 @@ D-R11 (6.6, 6.7) No note_reduction for a take: the settlement is ruined in the s
 D-R12 (13 item 6) Checked from rows as: every refugees_settled caused by a hold_lost is of its year, its founder the
      hold_lost's civilization and its origin the hold_lost's settlement; and at E every present race that awoke has an
      alive civilization.
+D-R18 (r2 4.5) delving_permille is appended last in the race record (after magic_permille); an absent field encodes in
+     the content hash as 0 (the spec gives neither the position nor the encoding of an optional field).
+D-R19 (r2 6.10) "its region qualifies" reads the region's P1-06 row: upland is 4 x walk_cells < cells (P3-05's
+     upland), else ore_reach_cells >= deep_warren_ore_min; deep_warren_ore_min 0 lets every region qualify.
+D-R20 (r2 6.10) The warren waking loop is over settlement ids 1 to the count at its start; "owner c = warren_delver(t)"
+     is owner(t) = warren_delver(t) != 0. A warren lost to another realm and won back keeps its depth and, if c started
+     another meanwhile, c has two live warrens: the spec's own rules allow it (invariant 12's "at most one live warren"
+     is checked from rows with a warren's life ended at the first capture or cession of its settlement).
+D-R21 (r2 6.11) The aid's hop distances are GeoView's (every region_border row, as D-R5), from the hold's region; the
+     ally's settlement q is chosen among its standing visible settlements; an ally whose race equals the realm's gets no
+     credit; the credit goes through RelationsSubsystem::credit (no credit before the races have met, as credit does).
+D-R22 (r2 6.11, 6.12 item 1) A forced seal is decided with the aid in S: the aid draws, then the gate draw, then the
+     plan; an aid event is written even when the seal is forced.
+D-R23 (r2 6.10) A warren's lair region is the settlement's region; the warren's deep_woken has no site and its forced
+     seal's plan uses the settlement's region as the threat region.
+D-R24 (r2 6.6) hold_lost's telling + 3 holds for every take by a horror from a warren (the first and later ones).
 """
 
 
@@ -183,6 +206,34 @@ def telling_lost(monster, settlement):
     return (monster + settlement) % 3
 
 
+def warren_region_ok(cells, walk_cells, ore_reach_cells, ore_min):
+    """r2 6.10 (4.2): upland (4 x walk_cells < cells) or ore_reach_cells >= deep_warren_ore_min; 0: any region."""
+    return ore_min == 0 or 4 * walk_cells < cells or ore_reach_cells >= ore_min
+
+
+def warren_wake_ppm(deep_wake_ppm, d, M, warren_wake_permille):
+    """r2 6.10 item 2: p = min(10^6, deep_wake_ppm[d - 1] x M div 1000 x deep_warren_wake_permille div 1000)."""
+    return min(1000000, deep_wake_ppm[d - 1] * M // 1000 * warren_wake_permille // 1000)
+
+
+def aid_permille(deep_aid_permille, ally_join_permille):
+    """r2 6.11: p = deep_aid_permille x ally_join_permille(r_a) div 1000."""
+    return deep_aid_permille * ally_join_permille // 1000
+
+
+def aid_strength(P_q, levy_permille, prowess_permille):
+    """r2 6.11: S_a = P_q x deep_aid_levy_permille div 1000 x prowess_permille(r_a) div 1000."""
+    return P_q * levy_permille // 1000 * prowess_permille // 1000
+
+
+def telling_warren_delved(settlement, depth):
+    return (settlement + depth) % 3
+
+
+def telling_aid(monster, ally):
+    return (monster + ally) % 3
+
+
 def may_take_later(takes, takes_max, hops, reach_hops, owner, waking_realm, realm_alive, sealed):
     """6.7's conditions before the draw."""
     return (not sealed and owner == waking_realm and realm_alive and hops is not None and hops <= reach_hops
@@ -210,6 +261,13 @@ class Deep:
         self.takes = {}           # monster -> holds taken, first included
         self.sealed = set()       # monsters sealed at their waking
         self.woken_event = {}     # monster -> its deep_woken
+        # r2 (5): warrens by settlement id, from_warren by monster
+        self.warren_depth = {}
+        self.warren_delver = {}
+        self.warren_woken = set()
+        self.warren_sealed = set()
+        self.last_warren = {}     # settlement -> its last warren_delved
+        self.from_warren = set()
         self.log = []             # (year, what, ids...) for checks
 
     # --- reads (7.1, 7.2)
@@ -243,13 +301,77 @@ class Deep:
     def mining(self, c):
         return self.w.pd.race[self.w.race_c(c)]["mining"]
 
+    def delving(self, c):
+        return self.w.pd.race[self.w.race_c(c)].get("delving", 0)
+
+    def warren_depth_of(self, sid):
+        """7.6 MonstersSubsystem::warren_depth(settlement): 0 for an unknown id."""
+        return self.warren_depth.get(sid, 0)
+
     # --- 6.1 steps
     def t4(self):
         self.deepen(quiet=False)
+        if R2:
+            self.delve_warrens(quiet=False)
         self.waking()
 
     def q4(self):
         self.deepen(quiet=True)
+        if R2:
+            self.delve_warrens(quiet=True)
+
+    # --- r2 6.10 warren delving
+    def region_ok(self, rid):
+        r = self.w.geo.reg[rid]
+        return warren_region_ok(r["cells"], r["walk_cells"], r["ore_reach_cells"], self.t["deep_warren_ore_min"])
+
+    def live_warren(self, c, tid):
+        """c has a live warren other than tid: a standing u owned by c, warren_delver(u) = c, depth >= 1, not sealed."""
+        for u, d in self.warren_depth.items():
+            if u == tid or d < 1 or u in self.warren_sealed or self.warren_delver.get(u) != c:
+                continue
+            uu = self.w.stl(u)
+            if self.w.standing(uu) and uu["owner_civ"] == c:
+                return True
+        return False
+
+    def delve_warrens(self, quiet):
+        w, t = self.w, self.t
+        Y = w.year
+        for tid in range(1, len(w.settlements) + 1):
+            tt = w.stl(tid)
+            if not w.standing(tt) or not w.visible(tt):
+                continue
+            c = tt["owner_civ"]
+            if not c or not self.civ_ok(c) or self.mining(c) != 0 or self.delving(c) <= 0:
+                continue
+            if tid in self.warren_woken or tid in self.warren_sealed:
+                continue
+            d = self.warren_depth.get(tid, 0)
+            if d >= 3:
+                continue
+            if d == 0:
+                if tt["population"] < t["deep_warren_population_min"] or not self.region_ok(tt["region"]) or \
+                        self.live_warren(c, tid):
+                    continue
+            elif self.warren_delver.get(tid) != c:
+                continue   # a warren taken by another realm is frozen
+            oe = tt["owner_event"]
+            if Y - w.events[oe - 1]["year"] < t["deep_years"][d]:
+                continue
+            p = delve_permille(t["deep_delve_permille"], self.delving(c), w.years if quiet else None)
+            if quiet and w.quiet_events_left(c) <= 0:
+                continue
+            if not pp.chance_pm(w.draw("hist.deep.warren_delve", tid, d + 1, 0), p):
+                continue
+            cause = self.last_warren.get(tid, oe)
+            e = w.append("warren_delved", region=tt["region"], settlement=tid,
+                         participants=(("civilization", CIV, c),), values=(d + 1, telling_warren_delved(tid, d + 1)),
+                         causes=(cause,))
+            self.warren_depth[tid] = d + 1
+            self.warren_delver[tid] = c
+            self.last_warren[tid] = e
+            self.log.append((Y, "warren delved", tid, d + 1, e))
 
     # --- 6.2 depth
     def deepen(self, quiet):
@@ -308,6 +430,56 @@ class Deep:
             k = K[pnr.weighted(w.draw("hist.deep.kind", sid, 0, 0), ws)]
             self.wake(s, d, c, tt, k)
             return
+        if not R2:
+            return
+        for tid in range(1, len(w.settlements) + 1):   # r2 6.10: the warrens, after every mine candidate
+            tt = w.stl(tid)
+            if not w.standing(tt) or not w.visible(tt):
+                continue
+            c = self.warren_delver.get(tid, 0)
+            if not c or tt["owner_civ"] != c or not self.civ_ok(c):
+                continue
+            if tid in self.warren_woken or tid in self.warren_sealed:
+                continue
+            d = self.warren_depth.get(tid, 0)
+            if d < 1 or t["deep_wake_ppm"][d - 1] <= 0:
+                continue
+            K = [k for k in self.deep_kinds() if self.living_of(k) < self.m.kind(k)["max_alive"]]
+            if not K:
+                continue
+            p = warren_wake_ppm(t["deep_wake_ppm"], d, self.m.M, t["deep_warren_wake_permille"])
+            if not pp.chance_ppm(w.draw("hist.deep.warren_wake", tid, 0, 0), p):
+                continue
+            ws = [self.m.kind(k)["wake_rate"] for k in K]
+            if sum(ws) == 0:
+                continue
+            k = K[pnr.weighted(w.draw("hist.deep.warren_kind", tid, 0, 0), ws)]
+            self.wake(None, d, c, tt, k)
+            return
+
+    # --- r2 6.11 the allies' aid
+    def aid(self, mid, c, tt):
+        """[(a, q, S_a)] ascending a: the allies that answer (draws only; no event, no state)."""
+        w, t, m = self.w, self.t, self.m
+        if not R2 or w.alliances is None or w.race_relations is None:
+            return []
+        H = m.geo.hops(tt["region"])
+        out = []
+        for a in list(w.alliances.allies(c)):
+            if len(out) >= t["deep_aid_max"]:
+                break
+            if not self.civ_ok(a):
+                continue
+            qs = [q for q in w.settlements if q["owner_civ"] == a and w.standing(q) and w.visible(q) and
+                  H.get(q["region"]) is not None and H[q["region"]] <= t["deep_aid_hops"]]
+            if not qs:
+                continue
+            q = min(qs, key=lambda x: (-x["population"], x["id"]))
+            ra = w.race_c(a)
+            p = aid_permille(t["deep_aid_permille"], w.pd.race[ra]["ally_join"])
+            if pp.chance_pm(w.draw("hist.deep.aid", mid, a, 0), p):
+                out.append((a, q["id"], aid_strength(q["population"], t["deep_aid_levy_permille"], m.prowess(ra))))
+        return out
 
     def last_refuge(self, c, tt):
         """D-R7: P3-05 r12 22.7's predicate."""
@@ -315,61 +487,92 @@ class Deep:
         return w.race_last_refuge(c) and [x["id"] for x in w.standing_of(c)] == [tt["id"]]
 
     def wake(self, s, d, c, tt, k):
+        """6.4 items 4 to 7 at a mine s, or (r2, s None) at the warren tt."""
         w, t, m = self.w, self.t, self.m
         p502 = _p502()
         Y = w.year
-        sid = s["id"]
+        warren = s is None
+        sid = 0 if warren else s["id"]
+        region = tt["region"] if warren else s["region"]
         kd = m.kind(k)
         mid = len(m.monsters) + 1
         if mid > p502.MONSTERS_MAX:
             pe.fatal("history: bound: monsters exceed 100000")
         name, root = m.monster_name(k, mid)
-        # 6.5 the gate, decided before any event
+        # r2 6.11: the aid, then 6.5 the gate, decided before any event
+        A = self.aid(mid, c, tt)
         P = tt["population"]
-        S = gate_strength(P, t["deep_gate_levy_permille"], m.prowess(w.race_c(c)))
+        S = gate_strength(P, t["deep_gate_levy_permille"], m.prowess(w.race_c(c))) + sum(x[2] for x in A)
         odds = gate_odds(S, kd["might"], t["deep_seal_max_permille"])
         u = pnr.pick(w.draw("hist.deep.gate", mid, 0, 0), 1000)
         fall = not sealed_at(u, odds)
         forced = False
         if fall and self.last_refuge(c, tt):
             _dead, V = take_toll(P, t["deep_toll_permille"])
-            if self.flight_plan(c, tt, V, s["region"]) is None:
+            if self.flight_plan(c, tt, V, region) is None:
                 fall, forced = False, True   # "there was nowhere to flee"
         lid = len(m.sites) + 1
         if lid > p502.SITES_MAX:
             pe.fatal("history: bound: sites exceed 1000000")
         lname = m.lair_name(k, lid, root)
-        e = w.append("deep_woken", region=s["region"], settlement=tt["id"],
-                     participants=(("monster", MONSTER, mid), ("civilization", CIV, c), ("site", SITE, sid),
-                                   ("lair", SITE, lid)),
-                     values=(d, telling_woken(mid)), causes=(self.last_delve[sid],))
-        m.sites.append(dict(id=lid, name=lname, kind=LAIR, region=s["region"], x=tt["x"], y=tt["y"],
+        if warren:
+            e = w.append("deep_woken", region=region, settlement=tt["id"],
+                         participants=(("monster", MONSTER, mid), ("civilization", CIV, c), ("lair", SITE, lid)),
+                         values=(d, 3 + telling_woken(mid)), causes=(self.last_warren[tt["id"]],))
+        else:
+            e = w.append("deep_woken", region=region, settlement=tt["id"],
+                         participants=(("monster", MONSTER, mid), ("civilization", CIV, c), ("site", SITE, sid),
+                                       ("lair", SITE, lid)),
+                         values=(d, telling_woken(mid)), causes=(self.last_delve[sid],))
+        m.sites.append(dict(id=lid, name=lname, kind=LAIR, region=region, x=tt["x"], y=tt["y"],
                             settlement=tt["id"] if fall else 0, founder=0, monster=mid, origin_year=Y, origin_event=e,
                             ended_year=None, ending_event=0, ending=OPEN, hostile=None))
         m.monsters.append(dict(id=mid, kind=k, name=name, root=root, status=AWAKE, born=Y, born_event=e, lair=lid,
                                waking=e, sleeping=0, drive_until=0, hoard=0, holds=False, raids={}, died=None,
                                death_event=0, slayer=0, overrun=0, raid_years={}, place_raids={}, dead_kind=False))
-        self.woken.add(sid)
+        if warren:
+            self.warren_woken.add(tt["id"])
+            self.from_warren.add(mid)
+        else:
+            self.woken.add(sid)
         self.waking_realm[mid] = c
         self.takes[mid] = 0
         self.woken_event[mid] = e
-        self.log.append((Y, "woken", sid, mid, k, d, S, odds, u, forced))
+        self.log.append((Y, "woken", sid, mid, k, d, S, odds, u, forced, tt["id"], warren, len(A)))
+        # r2 6.11: one ally_aided_hold per ally in A, ascending, each followed by its credit
+        aids = []
+        rel = w.race_relations
+        for a, q, _Sa in A:
+            ea = w.append("ally_aided_hold", region=tt["region"], settlement=tt["id"],
+                          participants=(("ally", CIV, a), ("partner", CIV, c), ("monster", MONSTER, mid),
+                                        ("origin", SETTLEMENT, q)), values=(telling_aid(mid, a),), causes=(e,))
+            aids.append(ea)
+            ra, rc = w.race_c(a), w.race_c(c)
+            if ra != rc and rel is not None:
+                rel.credit(ra, rc, t["deep_aid_memory"], ea)
+            self.log.append((Y, "aid", mid, a, q, ea))
         if not fall:
             mon = m.monsters[mid - 1]
-            e2 = w.append("deep_sealed", region=s["region"], settlement=tt["id"],
-                          participants=(("civilization", CIV, c), ("monster", MONSTER, mid), ("site", SITE, sid),
-                                        ("lair", SITE, lid)),
-                          values=(telling_sealed(mid),), causes=(e,))
+            if warren:
+                e2 = w.append("warren_sealed", region=region, settlement=tt["id"],
+                              participants=(("civilization", CIV, c), ("monster", MONSTER, mid), ("lair", SITE, lid)),
+                              values=(telling_sealed(mid),), causes=(e,) + tuple(aids))
+                self.warren_sealed.add(tt["id"])
+            else:
+                e2 = w.append("deep_sealed", region=region, settlement=tt["id"],
+                              participants=(("civilization", CIV, c), ("monster", MONSTER, mid), ("site", SITE, sid),
+                                            ("lair", SITE, lid)),
+                              values=(telling_sealed(mid),), causes=(e,) + tuple(aids))
+                self.sealed_site.add(sid)
             mon["status"], mon["sleeping"], mon["drive_until"] = ASLEEP, e2, NEVER
             self.sealed.add(mid)
-            self.sealed_site.add(sid)
-            self.log.append((Y, "sealed", sid, mid, e2, forced))
+            self.log.append((Y, "sealed", sid, mid, e2, forced, warren))
             return
-        took = self.take(mid, tt, e)
+        took = self.take(mid, tt, e, tuple(aids))
         assert took, "6.5: a fall that cannot happen is a seal"
 
     # --- 6.6 the take
-    def take(self, mid, tt, cause):
+    def take(self, mid, tt, cause, aids=()):
         w, t, m = self.w, self.t, self.m
         c = self.waking_realm[mid]
         mon = m.monsters[mid - 1]
@@ -384,8 +587,9 @@ class Deep:
         mine = [x for x in m.sites if x["kind"] == MINE and x["ending"] == OPEN and x["settlement"] == tt["id"]]
         parts = (("monster", MONSTER, mid), ("civilization", CIV, c), ("lair", SITE, mon["lair"])) + (
             (("site", SITE, mine[0]["id"]),) if mine else ())
+        tel = telling_lost(mid, tt["id"]) + (3 if mid in self.from_warren else 0)   # r2: the goblin wordings
         e = w.append("hold_lost", region=tt["region"], settlement=tt["id"], participants=parts,
-                     values=(dead, V, telling_lost(mid, tt["id"])), causes=(cause,))
+                     values=(dead, V, tel), causes=(cause,) + tuple(aids))
         if dead > 0:
             tt["population"] = V
         if plan is not None:
@@ -509,9 +713,10 @@ def deep_kind_set(res):
     return {k[0] for k in res.get("monster_kind", []) if k[5] == WAKE_DEEP}
 
 
-def violations(res, borders, tuning, mining_of_race, E, races_present=None):
-    """13 items 1 to 9 and 11's deep part on rows. tuning: history.monsters (the deep fields); mining_of_race: race id
-    -> mining_permille; races_present: the race ids that awoke (for item 6), or None."""
+def violations(res, borders, tuning, mining_of_race, E, races_present=None, delving_of_race=None):
+    """13 items 1 to 9 and 11's deep part on rows, (r2) items 12 to 15. tuning: history.monsters (the deep fields);
+    mining_of_race, delving_of_race: race id -> mining_permille, delving_permille; races_present: the race ids that
+    awoke (for item 6), or None."""
     x = X(res, borders)
     r = x.r
     out = []
@@ -521,7 +726,16 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
     mon = {m[0]: m for m in r.monsters}
     year = lambda e: r.ev[e][1]   # noqa: E731
     quiet = lambda e: r.phase.get(r.ev[e][4], (0, 0, 0))[2] == 2   # noqa: E731
-    sealed_of_m = {x.one(e, "monster"): e for e in x.of("deep_sealed")}
+    sealed_of_m = {x.one(e, "monster"): e for e in x.of("deep_sealed") + x.of("warren_sealed")}
+    delving_of_race = delving_of_race or {}
+    aid_max = t.get("deep_aid_max", 2)
+    aids_of = {}
+    for e in x.of("ally_aided_hold"):
+        cs = r.causes.get(e, [])
+        aids_of.setdefault(cs[0] if len(cs) == 1 else 0, []).append(e)
+    per_stl = {}
+    for e in x.of("warren_delved"):
+        per_stl.setdefault(r.ev[e][6], []).append(e)
     names_m = lambda e, mid: any(p[2] == MONSTER and p[3] == mid for p in r.parts.get(e, []))   # noqa: E731
     sealed_of_s = {x.one(e, "site"): e for e in x.of("deep_sealed")}
     # 1
@@ -557,13 +771,36 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
     # 2 and 3
     woken = x.of("deep_woken")
     by_site = {}
+    by_stl = {}
     for e in woken:
         sid, mid, lid = x.one(e, "site"), x.one(e, "monster"), x.one(e, "lair")
-        by_site.setdefault(sid, []).append(e)
         s, m, lair = site.get(sid), mon.get(mid), site.get(lid)
         d = x.val(e, "depth")
         if quiet(e):
             out.append("2: deep_woken e%d in a quiet step" % e)
+        if sid == 0:   # r2: a warren's waking (no site)
+            tid, c = r.ev[e][6], x.one(e, "civilization")
+            by_stl.setdefault(tid, []).append(e)
+            st = r.stl.get(tid)
+            wd = [y for y in per_stl.get(tid, []) if y < e]
+            if not wd or x.one(wd[-1], "civilization") != c:
+                out.append("2: warren waking e%d at settlement %d without a warren of c%d" % (e, tid, c))
+                continue
+            if not 1 <= d <= 3 or t["deep_wake_ppm"][d - 1] <= 0 or \
+                    max(x.val(y, "depth") for y in wd) != d:
+                out.append("2: warren waking e%d at depth %d" % (e, d))
+            if m is None or m[2] not in deep or m[5] != e:
+                out.append("2: deep_woken e%d monster %d not a deep kind born of it" % (e, mid))
+            if lair is None or st is None or lair[2] != LAIR or (lair[4], lair[5]) != (st[2], st[3]) or \
+                    lair[10] != e or lair[8] != mid:
+                out.append("2: warren waking e%d lair %d not at the settlement's cell" % (e, lid))
+            if x.val(e, "telling") != 3 + telling_woken(mid):
+                out.append("15: warren waking e%d telling %s" % (e, x.val(e, "telling")))
+            if r.causes.get(e, []) != [wd[-1]]:
+                out.append("2: warren waking e%d causes %s" % (e, r.causes.get(e, [])))
+            out += outcome_violations(x, r, e, mid, lair, aids_of.get(e, []), aid_max, True)
+            continue
+        by_site.setdefault(sid, []).append(e)
         if s is None or s[2] != MINE or not 1 <= d <= 3 or t["deep_wake_ppm"][d - 1] <= 0:
             out.append("2: deep_woken e%d at site %d depth %d" % (e, sid, d))
             continue
@@ -577,26 +814,17 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
         if x.one(e, "civilization") != s[7]:
             out.append("2: deep_woken e%d civilization" % e)
         if x.val(e, "telling") != telling_woken(mid):
-            out.append("2: e%d telling" % e)
+            out.append("2, 15: e%d telling" % e)
         if r.causes.get(e, []) != [max([y for y in per_site.get(sid, []) if y < e] or [0])]:
             out.append("2: deep_woken e%d causes %s" % (e, r.causes.get(e, [])))
         # 3
-        nxt = [y for y in sorted(r.ev) if y > e and r.ev[y][1] == year(e) and names_m(y, mid) and
-               x.r.kind_of(y) in ("deep_sealed", "hold_lost")]
-        between_others = [y for y in sorted(r.ev) if e < y < (nxt[0] if nxt else e) and
-                          any(p[2] == MONSTER and p[3] != mid for p in r.parts.get(y, []))]
-        outcome = [y for y in nxt if r.causes.get(y, []) == [e]]
-        if len(outcome) != 1 or between_others:
-            out.append("3: deep_woken e%d outcome %s" % (e, outcome))
-        elif lair is not None:
-            k = x.r.kind_of(outcome[0])
-            if k == "deep_sealed" and lair[6] != 0:
-                out.append("3: sealed e%d lair %d holds settlement %d" % (outcome[0], lid, lair[6]))
-            if k == "hold_lost" and lair[6] != r.ev[e][6]:
-                out.append("3: fall e%d lair %d settlement %d, the hold %d" % (outcome[0], lid, lair[6], r.ev[e][6]))
+        out += outcome_violations(x, r, e, mid, lair, aids_of.get(e, []), aid_max, False)
     for sid, es in by_site.items():
         if len(es) > 1:
             out.append("2: mine %d woke %d times" % (sid, len(es)))
+    for tid, es in by_stl.items():
+        if len(es) > 1:
+            out.append("2: warren %d woke %d times" % (tid, len(es)))
     # 4
     for mid, se in sorted(sealed_of_m.items()):
         m = mon.get(mid)
@@ -607,8 +835,13 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
                 out.append("4: sealed monster %d in e%d (%s)" % (mid, e, x.r.kind_of(e)))
         if x.val(se, "telling") != telling_sealed(mid):
             out.append("4: e%d telling" % se)
+        if x.r.kind_of(se) == "warren_sealed":   # r2: the warren never deepens again
+            for y in per_stl.get(r.ev[se][6], []):
+                if y > se:
+                    out.append("4: warren %d delved e%d after its sealing" % (r.ev[se][6], y))
     # 5 and 9
     realm = {x.one(e, "monster"): x.one(e, "civilization") for e in woken}
+    warren_m = {x.one(e, "monster") for e in woken if x.one(e, "site") == 0}
     count = {}
     for e in x.of("hold_lost"):
         mid, c, sid = x.one(e, "monster"), x.one(e, "civilization"), r.ev[e][6]
@@ -621,12 +854,13 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
         dead, V = x.val(e, "dead"), x.val(e, "survivors")
         if take_toll(dead + V, t["deep_toll_permille"]) != (dead, V):
             out.append("5: hold_lost e%d dead %d survivors %d against the toll" % (e, dead, V))
-        if x.val(e, "telling") != telling_lost(mid, sid):
-            out.append("5: e%d telling" % e)
+        if x.val(e, "telling") != telling_lost(mid, sid) + (3 if mid in warren_m else 0):
+            out.append("5, 15: e%d telling" % e)
         cs = r.causes.get(e, [])
         first = count[mid] == 1
         if first:
-            if cs != [y for y in woken if x.one(y, "monster") == mid][:1]:
+            w0 = [y for y in woken if x.one(y, "monster") == mid][:1]
+            if cs != w0 + (aids_of.get(w0[0], []) if w0 else []):
                 out.append("5: first hold_lost e%d causes %s" % (e, cs))
         else:
             raid = cs[0] if len(cs) == 1 else 0
@@ -669,11 +903,166 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None):
             c = x.one(e, "civilization")
             if year(e) <= year(cs[0]) or any(s[8] == c for s in r.stl.values()):
                 out.append("7: civ_ended e%d of c%d after hold_lost e%d" % (e, c, cs[0]))
+    out += warren_violations(x, r, t, per_stl, mining_of_race, delving_of_race)
+    out += aid_violations(x, r, res, t, aids_of, mining_of_race)
     # 8
     mk = res.get("monster_kind", [])
     if [k[1] for k in mk][:6] != ["dragon", "giant", "ogre", "troll", "undead", "wyvern"] or \
             [(k[0], k[1], k[5]) for k in mk][6:9] != [(7, "ymrach", 3), (8, "ysgarth", 3), (9, "zhakul", 3)]:
         out.append("8: monster_kind rows %s" % [(k[0], k[1], k[5]) for k in mk])
+    return out
+
+
+def outcome_violations(x, r, e, mid, lair, aids, aid_max, warren):
+    """13 item 3 (r2: the aid events between, the outcome citing the waking then the aids; warren_sealed only at a
+    warren's waking, and the only seal there)."""
+    out = []
+    year = r.ev[e][1]
+    seal = "warren_sealed" if warren else "deep_sealed"
+    nxt = [y for y in sorted(r.ev) if y > e and r.ev[y][1] == year and any(
+        p[2] == MONSTER and p[3] == mid for p in r.parts.get(y, [])) and
+        r.kind_of(y) in ("deep_sealed", "hold_lost", "warren_sealed")]
+    first = nxt[0] if nxt else e
+    between_others = [y for y in sorted(r.ev) if e < y < first and
+                      any(p[2] == MONSTER and p[3] != mid for p in r.parts.get(y, []))]
+    outcome = [y for y in nxt if r.causes.get(y, []) == [e] + list(aids)]
+    if len(outcome) != 1 or between_others or outcome[0] != first:
+        out.append("3: deep_woken e%d outcome %s" % (e, outcome))
+        return out
+    k = r.kind_of(outcome[0])
+    if k not in (seal, "hold_lost"):
+        out.append("3: deep_woken e%d outcome e%d is a %s" % (e, outcome[0], k))
+    if any(not e < a < outcome[0] for a in aids):
+        out.append("3: deep_woken e%d aids %s not between it and its outcome" % (e, aids))
+    if len(aids) > aid_max:
+        out.append("14: deep_woken e%d has %d aids, above deep_aid_max %d" % (e, len(aids), aid_max))
+    allies = [x.one(a, "ally") for a in aids]
+    if allies != sorted(set(allies)):
+        out.append("14: deep_woken e%d aids not in ascending ally id: %s" % (e, allies))
+    if lair is not None:
+        if k != "hold_lost" and lair[6] != 0:
+            out.append("3: sealed e%d lair %d holds settlement %d" % (outcome[0], lair[0], lair[6]))
+        if k == "hold_lost" and lair[6] != r.ev[e][6]:
+            out.append("3: fall e%d lair %d settlement %d, the hold %d" % (outcome[0], lair[0], lair[6], r.ev[e][6]))
+    return out
+
+
+def _life_end(r, tid, after):
+    """The first event after `after` that ends a warren's life for its delver (r2 invariant 12, reading D-R20): a
+    deep_woken of the settlement, its ruin, its capture or its cession. None: alive at E."""
+    st = r.stl.get(tid)
+    ends = []
+    if st is not None and st[13]:
+        ends.append(st[13])
+    for y in sorted(r.ev):
+        if y <= after:
+            continue
+        k = r.kind_of(y)
+        if k == "deep_woken" and r.ev[y][6] == tid:
+            ends.append(y)
+        elif k in ("settlement_captured", "settlements_ceded") and (r.ev[y][6] == tid or any(
+                p[2] == SETTLEMENT and p[3] == tid for p in r.parts.get(y, []))):
+            ends.append(y)
+    ends = [y for y in ends if y > after]
+    return min(ends) if ends else None
+
+
+def warren_violations(x, r, t, per_stl, mining_of_race, delving_of_race):
+    """r2 13 items 12 and 13 on rows."""
+    out = []
+    year = lambda e: r.ev[e][1]   # noqa: E731
+    race = lambda c: r.civ[c][2] if c in r.civ else 0   # noqa: E731
+    lives = {}
+    for tid, es in sorted(per_stl.items()):
+        ds = [x.val(e, "depth") for e in es]
+        if ds != list(range(1, len(ds) + 1)) or len(ds) > 3:
+            out.append("12: warren %d depths %s" % (tid, ds))
+        cs = {x.one(e, "civilization") for e in es}
+        if len(cs) != 1:
+            out.append("12: warren %d delved by %s" % (tid, sorted(cs)))
+        c = x.one(es[0], "civilization")
+        rc = race(c)
+        if mining_of_race.get(rc, 0) != 0 or delving_of_race.get(rc, 0) <= 0:
+            out.append("12: warren %d delved by c%d of race %d (mining %d, delving %d)" % (
+                tid, c, rc, mining_of_race.get(rc, 0), delving_of_race.get(rc, 0)))
+        root = r.causes.get(es[0], [0])[0] if r.causes.get(es[0]) else 0
+        for i, e in enumerate(es):
+            d = x.val(e, "depth")
+            if x.val(e, "telling") != telling_warren_delved(tid, d):
+                out.append("12: e%d telling" % e)
+            want = es[i - 1] if i else None
+            cs_e = r.causes.get(e, [])
+            if want is not None and cs_e != [want]:
+                out.append("12: warren_delved e%d causes %s, want [%d]" % (e, cs_e, want))
+            if root in r.ev and 1 <= d <= 3 and year(e) - year(root) < t["deep_years"][d - 1]:
+                out.append("12: warren %d depth %d at %d years under its owner" % (tid, d, year(e) - year(root)))
+        if len(r.causes.get(es[0], [])) != 1:
+            out.append("12: first warren_delved e%d causes %s" % (es[0], r.causes.get(es[0], [])))
+        end = _life_end(r, tid, es[0])
+        for e in es:
+            if end is not None and e > end:
+                st = r.stl.get(tid)
+                ruined = st is not None and st[13] and e > st[13]
+                woke = r.kind_of(end) == "deep_woken" and e > end
+                if ruined or woke:
+                    out.append("12: warren %d delved e%d after its waking or ruin" % (tid, e))
+        lives.setdefault(c, []).append((year(es[0]), year(end) if end is not None else None, tid))
+    for c, ls in sorted(lives.items()):   # at most one live warren at every year's end
+        for i, (a0, a1, t0) in enumerate(ls):
+            for b0, b1, t1 in ls[i + 1:]:
+                lo, hi = max(a0, b0), min(a1 if a1 is not None else 1 << 40, b1 if b1 is not None else 1 << 40)
+                # alive at the end of year Y when it started at or before Y and ended after Y
+                if lo < hi:
+                    out.append("12: c%d has two live warrens %d and %d in %d" % (c, t0, t1, lo))
+    # 13: no kind 3 site and no arms_sold seller of a race with mining_permille 0
+    for s in r.sites:
+        if s[2] == MINE and mining_of_race.get(race(s[7]), 0) <= 0:
+            out.append("13: mine %d of c%d, whose race does not mine" % (s[0], s[7]))
+    for e in x.of("arms_sold"):
+        c = x.one(e, "seller")
+        if c and mining_of_race.get(race(c), 0) <= 0:
+            out.append("13: arms_sold e%d by c%d, whose race does not mine" % (e, c))
+    return out
+
+
+def aid_violations(x, r, res, t, aids_of, mining_of_race):
+    """r2 13 item 14 on rows."""
+    out = []
+    hops_max = t.get("deep_aid_hops", 2)
+    alliances = [q for q in res.get("relation", []) if q[4] == "alliance"]
+    forbidden = {r.kid[k] for k in ("war_declared", "ally_joined_war", "ally_refused", "claim_settlements",
+                                    "region_claimed") if k in r.kid}
+    cited = {}
+    for e in sorted(r.ev):
+        for c in r.causes.get(e, []):
+            cited.setdefault(c, []).append(e)
+    for w0, aids in sorted(aids_of.items()):
+        for a in aids:
+            ally, partner, mid, q = (x.one(a, k) for k in ("ally", "partner", "monster", "origin"))
+            if w0 not in r.ev or r.kind_of(w0) != "deep_woken" or x.one(w0, "civilization") != partner or \
+                    x.one(w0, "monster") != mid or r.ev[w0][1] != r.ev[a][1] or ally == partner:
+                out.append("14: ally_aided_hold e%d does not answer its waking e%d" % (a, w0))
+                continue
+            y = r.ev[a][1]
+            pair = {ally, partner}
+            ok = any({row[1], row[3]} == pair and row[7] < a and (row[6] is None or row[6] == -1 or row[6] > y or
+                                                                  (row[8] and row[8] > a)) for row in alliances)
+            if not ok:
+                out.append("14: ally_aided_hold e%d: c%d not allied with c%d" % (a, ally, partner))
+            st = r.stl.get(q)
+            h = r.hops(r.ev[a][5]).get(st[4]) if st is not None else None
+            if st is None or (r.nb and (h is None or h > hops_max)) or st[6] > y or \
+                    (st[13] and st[13] < a):
+                out.append("14: ally_aided_hold e%d origin %d not a standing settlement within %d hops" % (
+                    a, q, hops_max))
+            if x.val(a, "telling") != telling_aid(mid, ally):
+                out.append("14: e%d telling" % a)
+            for b in cited.get(a, []):
+                if r.ev[b][3] in forbidden:
+                    out.append("14: e%d (%s) caused by the aid e%d" % (b, r.kind_of(b), a))
+            for row in res.get("relation", []):
+                if a in (row[7], row[8]):
+                    out.append("14: relation %s caused by the aid e%d" % (row[:5], a))
     return out
 
 
@@ -696,21 +1085,32 @@ def reader_problems(res):
     for s in r.sites:
         origin.setdefault(s[10], []).append(s[0])
     ranges = {"depth": (1, 3), "telling": (0, 2)}
+    wide = ("deep_woken", "hold_lost")   # r2: telling 0 to 5
     seen_depth = {}
     woken_site = {}
     woken_m = {}
     first_lost = set()
     sites = {s[0]: s for s in r.sites}
+    later = []   # r2: the warren and aid checks run after the r1 checks, per event in id order (9's r2 item)
     for e in sorted(r.ev):
         k = r.kind_of(e)
         if k not in KINDS.values():
             continue
+        if k in ("ally_aided_hold", "warren_delved", "warren_sealed"):
+            later.append(e)
+            continue
         for key in ("depth", "telling", "dead", "survivors"):
             if key in r.vkeys.get(r.ev[e][3], {}):
                 v = x.val(e, key)
-                lo, hi = ranges.get(key, (0, None))
+                lo, hi = (0, 5) if key == "telling" and k in wide else ranges.get(key, (0, None))
                 if v < lo or (hi is not None and v > hi):
                     E(e, "value %s %d outside %d to %s" % (key, v, lo, hi if hi is not None else "max"))
+        if k == "deep_woken" and x.one(e, "site") == 0:
+            later.append(e)   # r2: a warren's waking
+            woken_m[x.one(e, "monster")] = e
+            if len(origin.get(e, [])) != 1:
+                E(e, "deep_woken is the origin_event of %d sites" % len(origin.get(e, [])))
+            continue
         if k in ("delving_deepened", "deep_woken"):
             sid, c = x.one(e, "site"), x.one(e, "civilization")
             s = sites.get(sid)
@@ -744,6 +1144,46 @@ def reader_problems(res):
                 st = r.stl.get(r.ev[e][6])
                 if st is None or st[13] != e:
                     E(e, "hold_lost %d did not ruin its settlement" % e)
+    # r2 (9): warrens and aid, per event in id order, after the checks above
+    wdepth, wciv, wwoken = {}, {}, {}
+    for e in later:
+        k = r.kind_of(e)
+        tid = r.ev[e][6]
+        if k != "deep_woken":
+            for key in ("depth", "telling"):
+                if key in r.vkeys.get(r.ev[e][3], {}):
+                    v = x.val(e, key)
+                    lo, hi = ranges[key]
+                    if v < lo or v > hi:
+                        E(e, "value %s %d outside %d to %d" % (key, v, lo, hi))
+        if k == "warren_delved":
+            d, c = x.val(e, "depth"), x.one(e, "civilization")
+            got = wdepth.setdefault(tid, set())
+            if d in got:
+                E(e, "depth %d again" % d)
+            elif d > 1 and d - 1 not in got:
+                E(e, "depth %d without depth %d" % (d, d - 1))
+            got.add(d)
+            if wciv.setdefault(tid, c) != c:
+                E(e, "warren %d delved by two realms" % tid)
+        elif k == "deep_woken":
+            c = x.one(e, "civilization")
+            if not wdepth.get(tid) or wciv.get(tid) != c:
+                E(e, "waking of settlement %d without a warren" % tid)
+            if tid in wwoken:
+                E(e, "a second waking of settlement %d" % tid)
+            wwoken[tid] = e
+        elif k == "warren_sealed":
+            w0 = woken_m.get(x.one(e, "monster"))
+            if w0 is None or w0 not in r.causes.get(e, []) or x.one(w0, "site") != 0:
+                E(e, "warren_sealed without its waking")
+        elif k == "ally_aided_hold":
+            w0 = [c for c in r.causes.get(e, []) if c in r.ev and r.kind_of(c) == "deep_woken"]
+            ok = len(w0) == 1 and r.ev[w0[0]][1] == r.ev[e][1] and \
+                x.one(w0[0], "civilization") == x.one(e, "partner") and \
+                x.one(w0[0], "monster") == x.one(e, "monster") and x.one(e, "ally") != x.one(e, "partner")
+            if not ok:
+                E(e, "ally_aided_hold %d does not answer its waking" % e)
     return out
 
 
@@ -761,7 +1201,15 @@ def stats_of_tables(t):
             ("holds_lost", len(lost)),
             ("deep_flights", sum(1 for e in x.of("refugees_settled") if cause_lost(e))),
             ("realms_lost_to_deep", sum(1 for e in x.of("civ_ended") if cause_lost(e))),
-            ("deep_alive", sum(1 for m in r.monsters if m[2] in deep and m[9] in (AWAKE, ASLEEP)))]
+            ("deep_alive", sum(1 for m in r.monsters if m[2] in deep and m[9] in (AWAKE, ASLEEP))),
+            # r2
+            ("warrens_delved", len(x.of("warren_delved"))),
+            ("warrens_deepest", len({r.ev[e][6] for e in x.of("warren_delved") if x.val(e, "depth") == 3})),
+            ("warrens_woken", sum(1 for e in x.of("deep_woken") if x.one(e, "site") == 0)),
+            ("warrens_sealed", len(x.of("warren_sealed"))),
+            ("deep_aided", len(x.of("ally_aided_hold"))),
+            ("wakings_aided", len({c for e in x.of("ally_aided_hold") for c in r.causes.get(e, [])
+                                   if r.kind_of(c) == "deep_woken"}))]
 
 
 def mine_depth_at(t, site, year):
@@ -775,10 +1223,17 @@ def mine_depth_at(t, site, year):
                 x.r.ev[e][1] <= year] or [0])
 
 
-def sealed_year(t, monster):
-    """11.1 Timeline::sealed_year: the year of the monster's deep_sealed, -1 none."""
+def warren_depth_at(t, settlement, year):
+    """r2 11.1 Timeline::warren_depth_at: the largest depth of the settlement's kind 98 events of year <= Y, 0 none."""
     x = X(t, [])
-    for e in x.of("deep_sealed"):
+    return max([x.val(e, "depth") for e in x.of("warren_delved") if x.r.ev[e][6] == settlement and
+                x.r.ev[e][1] <= year] or [0])
+
+
+def sealed_year(t, monster):
+    """11.1 Timeline::sealed_year: the year of the monster's deep_sealed (r2: or warren_sealed), -1 none."""
+    x = X(t, [])
+    for e in x.of("deep_sealed") + x.of("warren_sealed"):
         if x.one(e, "monster") == monster:
             return x.r.ev[e][1]
     return -1
@@ -795,6 +1250,21 @@ def depths_small_data(dat=None):
     d = copy.copy(base)
     d.base = copy.copy(base.base)
     d.base.monsters_tuning = dict(copy.deepcopy(base.base.monsters_tuning), **copy.deepcopy(pdr.DEPTHS_SMALL_029))
+    d.race = copy.deepcopy(base.race)   # r2 4.2: goblin delving_permille 1000
+    for key, f in pdr.DEPTHS_SMALL_RACES_029.items():
+        rid = d.chron.race_by_id[key]["order"]
+        d.race[rid]["delving"] = f["delving_permille"]
+    return d
+
+
+def i1_data(dat=None):
+    """r2 I1 (14): delving_permille 0 for every race and deep_aid_permille 0."""
+    d = depths_small_data(dat)
+    d.base = copy.copy(d.base)
+    d.base.monsters_tuning = dict(d.base.monsters_tuning, deep_aid_permille=0)
+    d.race = copy.deepcopy(d.race)
+    for rid in d.race:
+        d.race[rid]["delving"] = 0
     return d
 
 
@@ -906,6 +1376,116 @@ def check_units(c):
     c.ok("14 P_t x 4000 x 1400 < 2^43 for P_t 10^6", 10 ** 6 * 4000 * 1400 < (1 << 43))
     c.eq("11.1 mine_depth_word", [MINE_DEPTH_WORD.get(d, "") for d in range(5)],
          ["", "below daylight", "to the mountain's roots", "to the old deep", ""])
+    check_units_r2(c)
+
+
+def check_units_r2(c):
+    """r2: 6.10 and 6.11 on hand-checked values (the samples of 6.5, 6.10 and 6.11)."""
+    # 6.10 the warren's first level: population, upland, ore
+    c.eq("6.10 upland: 4 x 499 < 2000", warren_region_ok(2000, 499, 0, 1), True)
+    c.eq("6.10 not upland: 4 x 500 = 2000", warren_region_ok(2000, 500, 0, 1), False)
+    c.eq("6.10 ore at deep_warren_ore_min - 1", warren_region_ok(2000, 1500, 4, 5), False)
+    c.eq("6.10 ore at deep_warren_ore_min", warren_region_ok(2000, 1500, 5, 5), True)
+    c.eq("6.10 deep_warren_ore_min 0: any region", warren_region_ok(2000, 2000, 0, 0), True)
+    # 6.10 the pace: goblins 300 at deep_delve_permille 10: 3 per mille; Q4 x L
+    c.eq("6.10 warren p (goblin 300)", delve_permille(10, 300), 3)
+    c.eq("6.10 warren p, Q4 L 50", delve_permille(10, 300, 50), 150)
+    c.eq("6.10 warren p, Q4 L 400 capped", delve_permille(10, 300, 400), 1000)
+    c.eq("6.10 depths-small (delving 1000, delve 1000)", delve_permille(1000, 1000), 1000)
+    # 6.10 item 2: the warren's wake chance
+    c.eq("6.10 warren wake at depth 3 (600 x 200)", warren_wake_ppm([0, 150, 600], 3, 1000, 200), 120)
+    c.eq("6.10 warren wake at depth 2", warren_wake_ppm([0, 150, 600], 2, 1000, 200), 30)
+    c.eq("6.10 warren wake at depth 1 (0)", warren_wake_ppm([0, 150, 600], 1, 1000, 200), 0)
+    c.eq("6.10 warren wake, M high", warren_wake_ppm([0, 150, 600], 3, 1600, 200), 192)
+    c.eq("6.10 warren wake, floor twice (151 x 1000 div 1000 x 7 div 1000)", warren_wake_ppm([0, 151, 0], 2, 1000, 7),
+         1)
+    c.eq("6.10 warren wake, the min over the product", warren_wake_ppm([0, 0, 1000000], 3, 10000, 500), 1000000)
+    c.eq("6.10 warren wake permille 0", warren_wake_ppm([0, 150, 600], 3, 1000, 0), 0)
+    c.eq("6.10 depths-small at depth 3", warren_wake_ppm([0, 200000, 600000], 3, 1000, 1000), 600000)
+    c.eq("6.10 telling (t + d) mod 3", [telling_warren_delved(7, d) for d in (1, 2, 3)], [2, 0, 1])
+    c.eq("6.10 warren waking telling 3 + m mod 3", [3 + telling_woken(m) for m in (3, 4, 5)], [3, 4, 5])
+    c.eq("6.10 a goblin warren's hold_lost telling + 3", telling_lost(5, 7) + 3, 3)
+    # 6.5's goblin samples: a warren of 1,000 (prowess 800, S = 800)
+    Sg = gate_strength(1000, 1000, 800)
+    c.eq("6.5 S of a goblin warren of 1,000", Sg, 800)
+    c.eq("6.5 goblin warren against Ysgarth", gate_odds(Sg, 2500, 800), 242)
+    c.eq("6.5 goblin warren against Ymrach", gate_odds(Sg, 4000, 800), 166)
+    c.eq("6.5 goblin warren against Zhakul", gate_odds(Sg, 7000, 800), 102)
+    # 6.11 the aid
+    for race, join, want in (("dwarf", 800, 400), ("human", 600, 300), ("orc", 600, 300), ("goblin", 400, 200),
+                             ("elf", 700, 350), ("faerie", 150, 75)):
+        c.eq("6.11 aid chance of a %s ally (6.11's list)" % race, aid_permille(500, join), want)
+    c.eq("6.11 deep_aid_permille 0: no aid", aid_permille(0, 800), 0)
+    c.eq("6.11 depths-small (aid 1000)", aid_permille(1000, 150), 150)
+    Sa = aid_strength(2000, 500, 1000)
+    c.eq("6.11 S_a of a human town of 2,000", Sa, 1000)
+    S = gate_strength(800, 1000, 1400) + Sa
+    c.eq("6.5 the village with the human aid: S", S, 2120)
+    c.eq("6.5 the village with the human aid against Ymrach (346)", gate_odds(S, 4000, 800), 346)
+    c.eq("6.11 S_a floors twice", aid_strength(1999, 500, 1600), 1598)
+    c.eq("6.11 S_a no overflow at 10^6 x 4000 x 1600", aid_strength(10 ** 6, 4000, 1600), 6400000)
+    c.ok("14 P_q x 4000 x 1600 < 2^44", 10 ** 6 * 4000 * 1600 < (1 << 44))
+    c.ok("14 ppm x M x warren permille < 2^44", 10 ** 6 * 10 ** 4 * 10 ** 3 < (1 << 44))
+    c.eq("6.11 telling (m + a) mod 3", telling_aid(3, 4), 1)
+    # 6.5's boundary with the aid: S + S_a exactly at the odds where u = odds - 1 seals and u = odds falls
+    o = gate_odds(S, 4000, 800)
+    c.eq("6.5 with the aid: u = odds - 1 seals, u = odds falls", (sealed_at(o - 1, o), sealed_at(o, o)), (True, False))
+    c.eq("6.5 without the aid the same u falls", sealed_at(o - 1, gate_odds(gate_strength(800, 1000, 1400), 4000, 800)),
+         False)
+
+
+def check_render_r2(c, cat, view):
+    """r2 16 item 18: kinds 94 and 96 at telling 3 to 5, 97 to 99 at each telling and depth; 8.2's samples."""
+    for key in ("ally_aided_hold", "warren_delved", "warren_sealed"):
+        c.eq("8.2 %s passes template_problem" % key, pe.template_problem(cat[key], cat[key]["templ"]), None)
+    wk = ((1, 1, MONSTER, 3), (2, 2, CIV, 3), (4, 4, SITE, 8))   # a warren's waking: no site (role 3)
+    for tel, want in ((3, "Burrowing ever deeper under Gnashgut, Clan Skrag woke the Swarm Beneath Gnashgut, a host of "
+                          "eyeless things from under the stone."),
+                      (4, "Digging after grubs and glitter beneath Gnashgut, Clan Skrag blundered into the old dark and "
+                          "woke the Swarm Beneath Gnashgut, a host of eyeless things from under the stone."),
+                      (5, "In the stinking deep tunnels of Gnashgut, Clan Skrag woke the Swarm Beneath Gnashgut, a "
+                          "host of eyeless things from under the stone.")):
+        c.eq("8.2 deep_woken telling %d (a warren)" % tel, pe.render(view(21, "deep_woken", wk, (2, tel),
+                                                                          settlement=7), 21), want)
+    hl = ((1, 1, MONSTER, 5), (2, 2, CIV, 3), (3, 3, SITE, 8))
+    for tel, want in ((3, "The Eyeless of Gnashgut boiled up out of the burrows into Gnashgut of Clan Skrag; 412 died, "
+                          "and 618 fled."),
+                      (4, "The Eyeless of Gnashgut came up the goblins' own tunnels into Gnashgut of Clan Skrag; 412 "
+                          "died, and 618 fled."),
+                      (5, "The Eyeless of Gnashgut rose under the warrens of Gnashgut of Clan Skrag; 412 died, and 618 "
+                          "fled.")):
+        c.eq("8.2 hold_lost telling %d (a warren)" % tel, pe.render(view(22, "hold_lost", hl, (412, 618, tel),
+                                                                         settlement=7), 22), want)
+    ad = ((1, 1, CIV, 4), (2, 2, CIV, 1), (3, 3, MONSTER, 1), (4, 4, SETTLEMENT, 8))
+    for tel, want in ((0, "Answering its ally's call, the Kingdom of Harl sent warriors from Dunmere to stand with the "
+                          "Hold of Durn at the gate of Gimlin against Bolgrim the Deep-Coiled."),
+                      (1, "Bound by old oaths, the Kingdom of Harl marched out of Dunmere to stand with the Hold of Durn "
+                          "at the gate of Gimlin against Bolgrim the Deep-Coiled."),
+                      (2, "Unbidden, the Kingdom of Harl hurried its people from Dunmere to stand with the Hold of Durn "
+                          "at the gate of Gimlin against Bolgrim the Deep-Coiled.")):
+        c.eq("8.2 ally_aided_hold telling %d" % tel, pe.render(view(23, "ally_aided_hold", ad, (tel,)), 23), want)
+    opens = ("Ever greedy for the dark, ", "Squabbling and scraping, ", "Grub by grub and stone by stone, ")
+    depths = ("deeper", "below the reach of daylight", "down among the mountain's roots",
+              "into the oldest dark beneath the world")
+    for tel in range(3):
+        for d in range(4):
+            c.eq("8.2 warren_delved telling %d depth %d" % (tel, d),
+                 pe.render(view(24, "warren_delved", ((1, 1, CIV, 3),), (d, tel), settlement=7), 24),
+                 "%sClan Skrag dug the warrens of Gnashgut %s." % (opens[tel], depths[d]))
+    ws = ((1, 1, CIV, 3), (2, 2, MONSTER, 4), (3, 3, SITE, 9))
+    for tel, want in ((0, "Clan Skrag caved in the tunnels over Ysmor Flame-Under-Stone beneath Gnashgut."),
+                      (1, "Shrieking and stabbing in the dark, Clan Skrag blocked the deep ways against Ysmor "
+                          "Flame-Under-Stone under Gnashgut."),
+                      (2, "With rockfall and fire, Clan Skrag buried Ysmor Flame-Under-Stone deep below Gnashgut, and "
+                          "no goblin went that way again.")):
+        c.eq("8.2 warren_sealed telling %d (the empty first word at 0)" % tel,
+             pe.render(view(25, "warren_sealed", ws, (tel,), settlement=7), 25), want)
+    # the ruler: {civilization:under} at a warren's sealing when a ruler reigns (civ 1 has one in this view)
+    c.eq("8.2 warren_sealed names a reigning ruler",
+         pe.render(view(26, "warren_sealed", ((1, 1, CIV, 1), (2, 2, MONSTER, 4), (3, 3, SITE, 9)), (2,),
+                        settlement=7), 26),
+         "With rockfall and fire, the Hold of Durn under Thrain the Old buried Ysmor Flame-Under-Stone deep below "
+         "Gnashgut, and no goblin went that way again.")
 
 
 def check_data(c):
@@ -933,8 +1513,19 @@ def check_data(c):
     dat = pdr.load_root("game/data")
     h = dict(dat["history"])
     mo = h["monsters"]
-    c.eq("4.2 fields after undead_regions_ref, in order", list(mo)[-9:],
+    c.eq("4.2 fields after undead_regions_ref, in order (r2: sixteen)", list(mo)[-17:],
          ["undead_regions_ref"] + [n for n, *_ in pdr.MONSTERS_NEW_029])
+    c.eq("4.2 r2 starts", {n: mo[n] for n, *_ in pdr.MONSTERS_NEW_029[8:]},
+         dict(deep_warren_population_min=600, deep_warren_ore_min=1, deep_warren_wake_permille=200,
+              deep_aid_permille=500, deep_aid_hops=2, deep_aid_levy_permille=500, deep_aid_max=2, deep_aid_memory=30))
+    races = dict(dat["race"])
+    c.eq("4.5 delving_permille as shipped", {k: races[k]["delving_permille"] for k in sorted(races)},
+         {k: pdr.DELVING_029[k] for k in sorted(races)})
+    c.eq("4.5 the shipped races pass race_delves_one_way", [k for k in races if pdr.delving_messages(races[k])], [])
+    c.eq("4.5 race_delves_one_way", pdr.delving_messages(dict(mining_permille=1, delving_permille=1)),
+         ["a race delves mines or warrens, not both"])
+    c.eq("4.5 mining only, delving only", (pdr.delving_messages(dict(mining_permille=1000, delving_permille=0)),
+                                         pdr.delving_messages(dict(mining_permille=0, delving_permille=300))), ([], []))
     co = list(h["conflict"])
     c.eq("4.3 forge_depth_permille right after arms_strength_permille",
          co[co.index("arms_strength_permille") + 1], "forge_depth_permille")
@@ -958,8 +1549,14 @@ def check_render(c):
         c.eq("8.2 changed %s passes template_problem" % key, pe.template_problem(cat[key], cat[key]["templ"]), None)
     names = {(CIV, 1): "The Hold of Durn", (CIV, 2): "Clan Nirgurn", (SETTLEMENT, 5): "Gimlin",
              (SETTLEMENT, 6): "Kazmar", (SITE, 3): "The Mines of Gimlin", (SITE, 4): "The Coils of Bolgrim",
-             (MONSTER, 1): "Bolgrim the Deep-Coiled", (MONSTER, 2): "The Swarm Beneath Durak", (pe.REGION, 7): "Iron Downs"}
-    kinds_of = {(MONSTER, 1): "a wyrm of the lightless deep", (MONSTER, 2): "a host of eyeless things from under the stone"}
+             (MONSTER, 1): "Bolgrim the Deep-Coiled", (MONSTER, 2): "The Swarm Beneath Durak", (pe.REGION, 7): "Iron Downs",
+             # r2 (8.2's goblin samples)
+             (CIV, 3): "Clan Skrag", (CIV, 4): "The Kingdom of Harl", (SETTLEMENT, 7): "Gnashgut",
+             (SETTLEMENT, 8): "Dunmere", (SITE, 8): "The Nest of Gnashgut", (SITE, 9): "The Coils of Ysmor",
+             (MONSTER, 3): "The Swarm Beneath Gnashgut", (MONSTER, 4): "Ysmor Flame-Under-Stone",
+             (MONSTER, 5): "The Eyeless of Gnashgut"}
+    kinds_of = {(MONSTER, 1): "a wyrm of the lightless deep", (MONSTER, 2): "a host of eyeless things from under the stone",
+                (MONSTER, 3): "a host of eyeless things from under the stone"}
 
     def name(t, x, form):
         if form == "kind":
@@ -1023,14 +1620,24 @@ def check_render(c):
     c.ok("8.2 refugees_arrived knows hold_lost", "hold_lost=the fall of their hold|" in cat["refugees_arrived"]["templ"])
     c.ok("8.2 ally_refused motive 5", "Hoping to profit by its ally's losses" in cat["ally_refused"]["templ"] and
          "Grasping for its own gain" not in cat["ally_refused"]["templ"])
-    c.eq("8.1 kinds 93 to 96", [(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"])
-                                for k in pe.COMPILED_029[-4:]],
+    c.eq("8.1 kinds 93 to 99", [(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"])
+                                for k in pe.COMPILED_029[-7:]],
          [(93, "delving_deepened", 1, 1, 1), (94, "deep_woken", 1, 1, 1), (95, "deep_sealed", 1, 1, 1),
-          (96, "hold_lost", 1, 1, 1)])
-    c.eq("8.1 hold_lost roles", [(r["role"], r["type"], r["min"], r["max"]) for r in pe.COMPILED_029[-1]["roles"]],
+          (96, "hold_lost", 1, 1, 1), (97, "ally_aided_hold", 1, 1, 1), (98, "warren_delved", 1, 1, 1),
+          (99, "warren_sealed", 1, 1, 1)])
+    roles = {k["id"]: [(r["role"], r["type"], r["min"], r["max"]) for r in k["roles"]] for k in pe.COMPILED_029[-7:]}
+    c.eq("8.1 hold_lost roles", roles[96],
          [("monster", 8, 1, 1), ("civilization", 3, 1, 1), ("lair", 9, 1, 1), ("site", 9, 0, 1)])
-    c.eq("8.1 values", [k["values"] for k in pe.COMPILED_029[-4:]],
-         [["depth", "telling"], ["depth", "telling"], ["telling"], ["dead", "survivors", "telling"]])
+    c.eq("8.1 r2 deep_woken roles (site 0-1)", roles[94],
+         [("monster", 8, 1, 1), ("civilization", 3, 1, 1), ("site", 9, 0, 1), ("lair", 9, 1, 1)])
+    c.eq("8.1 r2 ally_aided_hold roles", roles[97],
+         [("ally", 3, 1, 1), ("partner", 3, 1, 1), ("monster", 8, 1, 1), ("origin", pe.SETTLEMENT, 1, 1)])
+    c.eq("8.1 r2 warren_delved roles", roles[98], [("civilization", 3, 1, 1)])
+    c.eq("8.1 r2 warren_sealed roles", roles[99], [("civilization", 3, 1, 1), ("monster", 8, 1, 1), ("lair", 9, 1, 1)])
+    c.eq("8.1 values", [k["values"] for k in pe.COMPILED_029[-7:]],
+         [["depth", "telling"], ["depth", "telling"], ["telling"], ["dead", "survivors", "telling"], ["telling"],
+          ["depth", "telling"], ["telling"]])
+    check_render_r2(c, cat, view)
     c.eq("9 schema 13", pe.SCHEMA_VERSION, 13)
     c.eq("9 wake codes", pe.WAKE_CODE, {"wild": 1, "dead": 2, "deep": 3})
 
@@ -1042,9 +1649,30 @@ def check_render(c):
 FIXTURE_SEEDS = (0, 1, 2, 3, 5, 6, 7, 9, 12, 13, 14)
 
 
-def run_stress(seed, dat):
+ALLIED_SEEDS = (3, 5, 6, 7)
+
+
+def allied_data():
+    """r2: depths-allied, depths-small on P5-04's alliances-small (alliances form at once, every race present: reading
+    A11 of p5_04_alliances_reference), so that the aid of 6.11 occurs on the stress geographies (depths-small alone
+    forms few alliances before its wakings fill the kinds' max_alive)."""
+    import p5_04_alliances_reference as p504
+    d = depths_small_data(p504.small_data())
+    d.base = copy.copy(d.base)   # and room for wakings all through the history: the deep kinds' max_alive 20
+    d.base.monsters = [(k, dict(v, max_alive=ALLIED_MAX_ALIVE) if v["wake"] == "deep" else v) for k, v in d.base.monsters]
+    d.base.monsters_tuning = dict(d.base.monsters_tuning, deep_aid_hops=8)   # and allies from afar
+    return d
+
+
+ALLIED_MAX_ALIVE = 20
+
+
+def run_stress(seed, dat, allied=False):
     pcr = _pcr()
     case = pcr.STRESS_CASES.get(seed, pcr.synthetic_case(seed))
+    if allied:
+        import p5_04_alliances_reference as p504
+        case = p504.small_case(seed)
     inp, _g = pcr.synthetic_inputs(seed, dat, case)
     return pcr.history_stage(dat, inp), inp
 
@@ -1054,8 +1682,9 @@ def res_problems(res, inp, dat):
     w = res["_world"]
     borders = [(b["a"], b["b"]) for b in inp.borders]
     mining = {rid: v["mining"] for rid, v in w.pd.race.items()}
+    delving = {rid: v.get("delving", 0) for rid, v in w.pd.race.items()}
     present = {r[0] for r in inp.races if r[9] == 1 and any(c["race"] == r[0] for c in w.civs)}
-    out = violations(res, borders, w.monsters.t, mining, inp.params["span"], present)
+    out = violations(res, borders, w.monsters.t, mining, inp.params["span"], present, delving)
     out += ["P5-02 " + v for v in _p502().res_violations(res, w, quarter=False)]
     out += ["reader " + v for v in reader_problems(res)]
     return out
@@ -1067,12 +1696,18 @@ def cmd_fixtures(argv):
     quick = "--quick" in argv
     c = Checker()
     dat = depths_small_data()
-    seen, outcomes = set(), {}
-    for seed in FIXTURE_SEEDS[:4] if quick else FIXTURE_SEEDS:
-        res, inp = run_stress(seed, dat)
+    seen, outcomes, where = set(), {}, {}
+    runs = [(seed, False) for seed in (FIXTURE_SEEDS[:4] if quick else FIXTURE_SEEDS)] + \
+        [(seed, True) for seed in (ALLIED_SEEDS[:2] if quick else ALLIED_SEEDS)]
+    allied = None
+    for seed, al in runs:
+        if al and allied is None:
+            allied = allied_data()
+        res, inp = run_stress(seed, allied if al else dat, al)
+        label = ("allied-%d" if al else "stress-%d") % seed
         w = res["_world"]
         for v in res_problems(res, inp, dat):
-            c.ok("depths-small stress-%d %s" % (seed, v), False)
+            c.ok("depths-small %s %s" % (label, v), False)
         log = w.monsters.deep.log
         for x in log:
             seen.add(x[1])
@@ -1082,12 +1717,28 @@ def cmd_fixtures(argv):
                     any(w.events[cc - 1]["key"] == "monster_raid" for cc in w.events[x[-1] - 1]["causes"]))
         seen.update("realm lost" for e in w.events if e["key"] == "civ_ended" and
                     any(w.events[cc - 1]["key"] == "hold_lost" for cc in e["causes"]))
+        # r2 paths
+        seen.update("warren woken" for x in log if x[1] == "woken" and x[11])
+        seen.update("warren sealed" for x in log if x[1] == "sealed" and x[6])
+        seen.update("warren lost" for x in log if x[1] == "take" and x[2] in w.monsters.deep.from_warren)
+        seen.update("warren depth 3" for x in log if x[1] == "warren delved" and x[3] == 3)
+        seen.update("aid" for x in log if x[1] == "aid")
+        seen.update("two aids" for x in log if x[1] == "woken" and x[12] >= 2)
+        aid_es = {x[5] for x in log if x[1] == "aid"}
+        rel = w.race_relations
+        if rel is not None and any(e in p.get("pos", []) for p in rel.pairs.values() for e in aid_es):
+            seen.add("aid credit")
+        for x in log:
+            if x[1] in ("woken", "aid", "warren delved"):
+                where.setdefault(x[1], (label, x[0]))
         st = dict(stats_of_tables(res))
-        outcomes[seed] = st
-        print("stress-%d %s" % (seed, " ".join("%s=%d" % kv for kv in stats_of_tables(res))))
-    for path in ("deepened", "woken", "sealed", "take", "later take"):
+        outcomes[label] = st
+        print("%s %s" % (label, " ".join("%s=%d" % kv for kv in stats_of_tables(res))))
+    for path in ("deepened", "woken", "sealed", "take", "later take", "warren delved", "warren woken", "aid"):
         c.ok("depths-small shows the path '%s' (seen: %s)" % (path, ", ".join(sorted(seen))), path in seen)
-    for path in ("flight", "forced seal", "no take", "realm lost"):
+    print("first seen (run, year): %s" % ", ".join("%s %s" % kv for kv in sorted(where.items())))
+    for path in ("flight", "forced seal", "no take", "realm lost", "warren sealed", "warren lost", "warren depth 3",
+                 "two aids", "aid credit"):
         if path not in seen:
             print("note: depths-small on the stress geographies shows no '%s' (reported, not failed)" % path)
     # I0 (14): deep_delve_permille 0 and forge_depth_permille 0 give 0.28.0's history tables
@@ -1102,6 +1753,17 @@ def cmd_fixtures(argv):
                   "relation", "site", "region_control"):
             c.eq("I0 stress-%d table %s equals the build without the deep rules" % (seed, t), table_hash(a.get(t, [])), table_hash(b.get(t, [])))
         pcr.use_version(VERSION)
+    # r2 I1 (14): delving 0 for every race and deep_aid_permille 0 give r1's history tables
+    global R2
+    for seed in (FIXTURE_SEEDS[:1] if quick else FIXTURE_SEEDS[:3]):
+        pcr.use_version(VERSION)
+        a, _ = run_stress(seed, i1_data())
+        R2 = False
+        b, _ = run_stress(seed, i1_data())
+        R2 = True
+        for t in ("event", "event_participant", "event_cause", "event_value", "civilization", "settlement",
+                  "relation", "site", "monster", "region_control", "race_relation"):
+            c.eq("I1 stress-%d table %s equals r1's" % (seed, t), table_hash(a.get(t, [])), table_hash(b.get(t, [])))
     print("%d checks, %d failures" % (c.count, c.failures))
     return 1 if c.failures else 0
 
@@ -1122,12 +1784,13 @@ def cmd_check_world(argv):
         conn = sqlite3.connect(path)
         mining = {rid: dat.race[rid]["mining"] for rid, in conn.execute("SELECT id FROM race").fetchall()
                   if rid in dat.race}
+        delving = {rid: dat.race[rid].get("delving", 0) for rid in mining}
         present = {rid for rid, pr in conn.execute("SELECT id, present FROM race").fetchall() if pr == 1}
         conn.close()
         present &= {cv[2] for cv in rows["civilization"]}
         E = int(meta.get("history_end_year", meta.get("param.history_span", "6000")))
         borders = [(r[0], r[1]) for r in rows["region_border"]]
-        for v in violations(rows, borders, dat.base.monsters_tuning, mining, E, present):
+        for v in violations(rows, borders, dat.base.monsters_tuning, mining, E, present, delving):
             c.ok("%s invariant %s" % (path, v), False)
         for v in reader_problems(rows):
             c.ok("%s reader %s" % (path, v), False)

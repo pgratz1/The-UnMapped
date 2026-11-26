@@ -1,4 +1,6 @@
-// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r1) test 16 item 10: the reader checks of 9, each on a corrupt copy
+// Spec P5-07 (docs/specs/p5-07-mountain-depths.md r2) test 16 items 10 and (r2) 18: the reader checks of 9 (r2: the
+// warren and aid item, on a depths-small world with a warren at depth 2, a warren's waking and an aid), each on a
+// corrupt copy
 // of a generated depths-small world (rows changed by SQL), refused by HistoryView::load and read_history_tables alike
 // with the same first message (code corrupt_layer, `corrupt table '<t>': row <k>: <reason>`); a schema 12 world (as
 // 0.28.0 writes) refused at open with the version message. The row numbers are those of the base world; each
@@ -78,12 +80,85 @@ const Base& base() {
     return b;
 }
 
-std::string corrupt(const std::string& name, const std::string& sql) {
+// r2: the first depths-small world of seeds 0 to 9 at 512 with a warren at depth 2 and a warren's waking; its first
+// aid (0 when none).
+struct Base2 {
+    std::string path;
+    std::int64_t w1 = 0, w2 = 0, warren = 0, delver = 0, other_civ = 0, woken = 0, woken_settlement = 0, sealed = 0,
+                 aid = 0;
+};
+const Base2& base2() {
+    static const Base2 b = [] {
+        Base2 out;
+        for (std::uint64_t seed = 0; seed < 10 && out.path.empty(); ++seed) {
+            const std::string path = p507api::generated(seed, 512, p507api::depths_small(), "small");
+            const p503check::World w = p503check::world_of_file(chrono_test::open_world(path), p507api::depths_small());
+            const p503check::Index x(w);
+            std::int64_t w2 = 0, w1 = 0, wk = 0;
+            for (const std::int64_t e : x.events_of("warren_delved")) {
+                if (x.val(e, 0) != 2 || w2 != 0) continue;
+                const std::int64_t t = at(*x.ev.at(e), 6);
+                for (const std::int64_t y : x.events_of("warren_delved")) {
+                    if (at(*x.ev.at(y), 6) == t && x.val(y, 0) == 1) w1 = y;
+                }
+                w2 = e;
+            }
+            for (const std::int64_t e : x.events_of("deep_woken")) {
+                if (x.part(e, 3) == 0 && wk == 0) wk = e;
+            }
+            if (w2 == 0 || wk == 0) continue;
+            out.path = path;
+            out.w1 = w1;
+            out.w2 = w2;
+            out.warren = at(*x.ev.at(w2), 6);
+            out.delver = x.part(w2, 1);
+            out.woken = wk;
+            out.woken_settlement = at(*x.ev.at(wk), 6);
+            for (const std::int64_t e : x.events_of("warren_sealed")) {
+                if (out.sealed == 0) out.sealed = e;
+            }
+            for (const std::int64_t e : x.events_of("ally_aided_hold")) {
+                if (out.aid == 0) out.aid = e;
+            }
+            for (const auto& [c, row] : x.civ) {
+                if (c != out.delver && out.other_civ == 0) out.other_civ = c;
+            }
+        }
+        REQUIRE_MESSAGE(!out.path.empty(), "no depths-small world of seeds 0 to 9 has a warren at depth 2 and a waking");
+        return out;
+    }();
+    return b;
+}
+
+std::string corrupt_of(const std::string& from, const std::string& name, const std::string& sql) {
     static dbtest::TempDir dir("depths-corrupt");
+    const std::string path = dir.file(name + ".db");
+    dbtest::write_file(path, dbtest::read_file(from));
+    REQUIRE_MESSAGE(worldgen::db::testing::execute_on_file(path, sql).ok(), "SQL rejected: " << sql);
+    return path;
+}
+
+std::string corrupt(const std::string& name, const std::string& sql) {
+    static dbtest::TempDir dir("depths-corrupt-r1");
     const std::string path = dir.file(name + ".db");
     dbtest::write_file(path, dbtest::read_file(base().path));
     REQUIRE_MESSAGE(worldgen::db::testing::execute_on_file(path, sql).ok(), "SQL rejected: " << sql);
     return path;
+}
+
+std::string message_of(const std::string& path, const std::string& name) {
+    CAPTURE(name);
+    const db::WorldReader r = chrono_test::open_world(path);
+    const auto e = eng::view_error(r);
+    REQUIRE_MESSAGE(e.has_value(), "HistoryView::load accepted " << name);
+    CHECK(e->code == db::ErrorCode::corrupt_layer);
+    const auto t = h::read_history_tables(r);
+    REQUIRE_FALSE(t.ok());
+    CHECK(t.error().message == e->message);
+    return e->message;
+}
+void refused2(const std::string& name, const std::string& sql, const std::string& message) {
+    CHECK(message_of(corrupt_of(base2().path, name, sql), name) == message);
 }
 
 std::string first_message(const std::string& name, const std::string& sql) {
@@ -176,6 +251,50 @@ TEST_CASE("P5-07 9: the event checks of kinds 93 to 96 refused with their messag
             "UPDATE settlement SET ruin_event = (SELECT MAX(id) FROM event WHERE id < " + n(b.lost) + ") WHERE id = " +
                 n(b.lost_settlement) + ";",
             E(b.lost) + "hold_lost " + n(b.lost) + " did not ruin its settlement");
+}
+
+TEST_CASE("P5-07 r2 9: the warren and aid checks refused with their messages") {
+    P507_REQUIRE_INTEGRATED();
+    const Base2& b = base2();
+    REQUIRE_FALSE(eng::view_error(chrono_test::open_world(b.path)).has_value());
+    // values of 97 to 99 in 8.1's ranges; 94's telling 0 to 5
+    refused2("WV1", value(b.w1, 2, 3), E(b.w1) + "value telling 3 outside 0 to 2");
+    refused2("WV2", value(b.w2, 1, 4), E(b.w2) + "value depth 4 outside 1 to 3");
+    refused2("WV3", value(b.woken, 2, 6), E(b.woken) + "value telling 6 outside 0 to 5");
+    // the depth chain per settlement (93's messages)
+    refused2("WD1", value(b.w1, 1, 2), E(b.w1) + "depth 2 without depth 1");
+    refused2("WD2", value(b.w2, 1, 1), E(b.w2) + "depth 1 again");
+    // all of one settlement name one civilization
+    refused2("WC1",
+             "UPDATE event_participant SET entity_id = " + n(b.other_civ) + " WHERE event = " + n(b.w2) + " AND seq = 1;",
+             E(b.w2) + "warren " + n(b.warren) + " delved by two realms");
+    // a waking without a site whose settlement has no warren of its civilization: the waking's civilization changed
+    refused2("WK1",
+             "UPDATE event_participant SET entity_id = " + n(b.other_civ) + " WHERE event = " + n(b.woken) +
+                 " AND seq = 2;",
+             E(b.woken) + "waking of settlement " + n(b.woken_settlement) + " without a warren");
+    if (b.sealed != 0) {
+        const p503check::World w = p503check::world_of_file(chrono_test::open_world(b.path), p507api::depths_small());
+        const p503check::Index x(w);
+        const std::int64_t wk = x.cause_list(b.sealed).front();
+        refused2("WS1",
+                 "UPDATE event_cause SET cause = " + n(x.cause_list(wk).front()) + " WHERE event = " + n(b.sealed) +
+                     " AND cause = " + n(wk) + ";",
+                 E(b.sealed) + "warren_sealed without its waking");
+    } else {
+        MESSAGE("no warren_sealed in the base world: its check not run");
+    }
+    if (b.aid != 0) {
+        const p503check::World w = p503check::world_of_file(chrono_test::open_world(b.path), p507api::depths_small());
+        const p503check::Index x(w);
+        // ally = partner
+        refused2("WA1",
+                 "UPDATE event_participant SET entity_id = " + n(x.part(b.aid, 2)) + " WHERE event = " + n(b.aid) +
+                     " AND seq = 1;",
+                 E(b.aid) + "ally_aided_hold " + n(b.aid) + " does not answer its waking");
+    } else {
+        MESSAGE("no ally_aided_hold in the base world: its checks not run");
+    }
 }
 
 TEST_CASE("P5-07 9: a schema 12 world (as 0.28.0 writes) is refused with the version message") {

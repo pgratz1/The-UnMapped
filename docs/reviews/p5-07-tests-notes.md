@@ -113,3 +113,86 @@ The D-R numbers are those of `READINGS` in `p5_07_depths_reference.py`.
 - **P3-06 invariant 3 (L-7):** the C++ copies of the flight check (a `refugees_settled` caused by a sack) must accept a `hold_lost` of the same year (`history_conflict_*` checks of 20.13).
 - **References:** the default `use_version` of `p3_conflict_reference` (0.27.0), `p3_report_reference`, `p4_*` (0.28.0), `p5_02` (0.27.0) and the other `main`s moves to 0.29.0 when the goldens are re-recorded.
 - **Goldens:** every world and history golden; `p4-05-browser.txt` (the new kinds' groups); `p4-04-markers.txt` (the `hold_lost` symbol); `p4-01-timeline.txt` (monster states with 94 and 95).
+
+## r2
+
+Spec r2 (2026-11-26): 6.10 goblin deep warrens, 6.11 the allies' aid, 6.12 the build's readings, the corrected samples. Written from the spec alone, on `p5/07-tests` (base d7e8e6f), without the engineer's branch. The switch and the file list are as r1's; what r2 adds:
+
+### Reference
+
+- `p5_07_depths_reference.py`: `Deep.delve_warrens` (6.10, T4 and Q4 after 6.2), the warren candidates of `Deep.waking` after every mine, `Deep.aid` (6.11, before the gate) with its events and `credit`, `warren_sealed`, `from_warren` and the tellings + 3; module flag `R2` (off: r1's rules). `units`: 231 checks, 0 failures (r2: the region test, the warren pace and wake chance, the goblin gate samples 242/166/102, the aid chance per race 400/300/300/200/350/75, S_a, the village with aid 346 and its boundary, the tellings, every r2 template at each telling and depth with 8.2's goblin samples, the catalogue rows 94 and 97 to 99, the r2 fields' starts and `delving_permille` as shipped). `violations` gains 13 items 12 to 15 (`outcome_violations`, `warren_violations`, `aid_violations`), `reader_problems` 9's r2 item, `stats_of_tables` the six r2 stats, `warren_depth_at`; `sealed_year` reads 99.
+- `fixtures`: 68 checks, 0 failures. depths-small on the eleven stress geographies shows deepening, waking, sealing, falls, later takes, flights, a realm lost, forced seals, a refused later take, **warren delved / depth 3 / woken / sealed / lost** (first warren delving: stress-0, year 694; first warren waking: stress-0). It shows **no aid**: the stress worlds form few alliances, and the wakings fill the kinds' `max_alive` (5) early. So the run adds **depths-allied** (depths-small on P5-04's alliances-small, the deep kinds' `max_alive` 20, `deep_aid_hops` 8) on seeds 3, 5, 6, 7. **The first aid is allied-5, year 2062** (allied-5: 3 aids, allied-6: 1, allied-7: 3). Every invariant holds on all fifteen runs, and so do the reader checks and P5-02's invariants. Not seen: two aids at one waking, and an aid's credit kept as a contribution (the aids seen were between races that had not met, or of one race). Both are reported, not failed. I0 holds on stress 0 to 2. **I1** (delving 0 for every race, `deep_aid_permille` 0, against `R2 = False`) gives equal tables on stress 0 to 2.
+- Data: `MONSTERS_NEW_029` holds the sixteen fields; depths-small has the r2 edits (`DEPTHS_SMALL_029`, `DEPTHS_SMALL_RACES_029`). `delving_permille` is in `RACE_029`, filled from `DELVING_029` for the shipped root before the engineer's data, and 0 for the fixture roots. `REPORT_ENTRIES_029` holds the six-word 94 and 96 and the entries 97 to 99.
+- Other references: kinds 97 to 99 and 94's site 0–1 in `p3_engine_reference.py` and `p3_peoples_reference.py` (99 kinds). The rest:
+  - `p4_browser_reference.py`: the groups;
+  - `p4_timeline_reference.py`: 99 sleeps;
+  - `p3_report_reference.py`: `sealed in` at a `warren_sealed`;
+  - `p5_03_relations_reference.py`: `ally_aided_hold` among the positive cause kinds;
+  - `p3_conflict_reference.py`: reads `delving_permille`.
+
+  The existing `units` still pass: `p5_02` 102, `p5_03` 186, `p5_06` 149.
+- H19 (`p5_07_h19_fixture.py`, regenerated): the alliances c1–c2 and c2–c4 of 1460; the waking of 1500 with **two aids** (e41, e42), so its fall e43 cites e40, e41, e42; the warrens of Gorzhak to depth 3 (e44 to e46), woken e47 (telling 4) and **sealed** e48; Gnashgut (founded e37 in 1450) to depth 2 (e49, e55), woken e56 (telling 5) and **lost** e57 (telling 3: 412 died, 618 fled). The wakings e29 and e31 have no aid. The r1 ids up to e36 are unchanged; the later ones moved (e37 → e40, e40 → e51, e41 → e52). The reference reads it with no reader problem.
+
+### C++ (all behind `UNMAPPED_P507_API` except the unit file's arithmetic)
+
+- `p5_07_api.hpp`: 107 streams, 99 kinds, `K_AIDED`/`K_WARREN_DELVED`/`K_WARREN_SEALED`, `with_race`. depths-small gets the r2 edits, `i1_content()` is added, and `warren_depth_at` gets an adapter for `Timeline::warren_depth_at`.
+- `p5_07_checks.hpp`: the r2 formulas, plus `Tuning` with `delving`, `aid_max`, `aid_hops`. It also has `outcome_violations` and items 12 to 15 in `violations`, the six r2 stats and `warren_depth_at`.
+- `history_depths_unit_test.cpp` (runs now): the warren region at the boundaries; the pace (3, 150) and the wake chance (120, 30, 192, the double floor, the min over the product); the goblin gate samples; the aid chance by race; S_a; the village with aid at 346, where u = 345 seals and u = 346 falls (and 345 falls without the aid); the tellings.
+- `history_depths_data_test.cpp`: the sixteen fields in order with the r2 starts and bounds. `delving_permille`: shipped values, bounds, absence counts 0, and `race_delves_one_way` (dwarf delving 1; goblin mining 1).
+- `history_depths_property_test.cpp`:
+  - depths-small must show the paths "warren delved", "warren woken" and "aid" (4.2), and warns on depth 3, a seal, a loss and two aids;
+  - I1 as rows show it (no event 97 to 99, every waking at a mine, tellings 0 to 2);
+  - `deep_aid_max` 0 gives no aid; with `deep_aid_hops` 0 the origin is in the hold's region;
+  - no mine founded by a warren delver, and every siteless waking has a warren.
+- `history_depths_reader_test.cpp`: 9's r2 item, on the first depths-small world with a warren at depth 2 and a warren's waking:
+  - the values of 98 and 94's telling 6;
+  - the depth chain;
+  - `delved by two realms`;
+  - `waking of settlement <t> without a warren` (the waking's civilization changed);
+  - `warren_sealed without its waking` and `ally_aided_hold <e> does not answer its waking` (ally = partner), when present.
+- `history_depths_report_test.cpp`: H19's new ids and lines:
+  - the r2 sentences of 97 to 99 and 94/96 at tellings 3 to 5;
+  - e43's causes;
+  - `sealed in` at e48 (10 item 7a), the s7 ruin, the two new alliance lines and the `allies:` lines;
+  - the fourteen stats;
+  - `warren_depth_at`, `sealed_year(4)` = 1540 and the monster state at 1540;
+  - the groups of 97 to 99 and their plain symbols.
+
+  The row case (runs now) uses `deep_years` 100, 200, 300 and goblin delving 300.
+
+### Waits for the engine
+
+Everything above except the unit file's arithmetic and H19's row case. In addition:
+
+- the engineer's `p5_07_depths_content.hpp` (6.12 item 4) and this branch's `p507api::depths_small()` must give the same world file. Compare them at integration;
+- `golden/p5-07-depths.txt`: the stat lines now carry the six r2 stats, so the kind 97 to 99 counts are `deep_aided`, `warrens_delved` and `warrens_sealed`;
+- `p3-07-report.txt` with H19 at r2.
+
+### Readings (r2; the D-R numbers continue `READINGS`)
+
+18. **D-R18 (4.5):** the spec gives no position for `delving_permille` in the race record and does not say how an absent optional field encodes in the content hash. Read as: appended after `magic_permille`, and absent encodes as 0. A finding if the build differs. This is the first optional field in these kinds: the data reference had none.
+19. **D-R19 (6.10):** "its region qualifies" is P3-05's upland (4 × `walk_cells` < `cells`), else `ore_reach_cells` ≥ `deep_warren_ore_min`.
+20. **D-R20 (6.10, invariant 12):** suppose a warren is taken by another realm and won back while its delver started another warren meanwhile. Then the delver has two live warrens: the rule (`d ≥ 1: warren_delver(t) = c`) lets the old one go on. So invariant 12's "at most one live warren at every year's end" can fail under the spec's own rules. The row checks end a warren's life at the first capture or cession of its settlement, so they do not report this case. Ambiguity, for the spec writer: either "live" excludes a warren that was taken, or a won-back warren is frozen.
+21. **D-R21 (6.11):**
+    - the aid's hops are GeoView's (every border, as D-R5) from the hold's region;
+    - q is chosen among the ally's standing visible settlements;
+    - no credit when the races are equal, nor before they have met (`credit` does nothing then).
+22. **D-R22 (6.5, 6.11):** a forced seal is decided with the aid in S. The aid events are written even when the seal is forced.
+23. **D-R23 (6.10):** a warren's threat region for the forced seal's plan is the settlement's region.
+24. **D-R24 (6.6):** `hold_lost`'s + 3 holds for every take by a warren horror, later takes included (invariant 15 says so; 6.6 item 3 says "when `from_warren(m)`").
+25. **6.10 "years under its present owner"** uses `year(owner_event(t))`. Rows do not store `owner_event`, so invariant 12's years are checked against the first delving's cause (the owner event at that time). That is a necessary condition only.
+26. **6.10 waking:** "owner c = `warren_delver(t)`" is read as owner(t) = `warren_delver(t)` ≠ 0.
+27. **Invariant 14's "no relation row ... caused by it":** read as no relation row whose since or until event is the aid, and no `war_declared`, `ally_joined_war`, `ally_refused` or `claim_settlements` citing it. A `disposition_turned` may cite it (the credit is meant to count).
+
+### Compared with the build's readings (6.12)
+
+- Item 1 (the forced seal uses the take's plan, V after the toll, the threat region the lair's): the r1 reference did this already (`Deep.wake`), so it agrees.
+- Item 4: the engineer's in-memory content. See "Waits for the engine".
+- Item 5 (`hold_lost`'s site is the smallest open kind 3 site at t): agrees with the r1 reference (`mine[0]` of the sites ascending).
+- Item 6 (`takes ≤ deep_takes_max` before the draw, counting the first): agrees with `may_take_later` (D-R5's reach from the lair's region).
+- Item 7 (Q4: p computed, then the budget): agrees with D-R8.
+- Item 8: agrees (the flight's n from the population after the toll).
+- Item 9 (common-enemy goodwill does not read `hold_lost`): the reference adds nothing there, so it agrees.
+- Item 10 (the report): agrees with the r1 reference. r2's `sealed in` for 99 is added.
+
+D-R2 and D-R3 are now the spec's text (218/137; 1,206/1,810). D-R1 is now the spec's name.

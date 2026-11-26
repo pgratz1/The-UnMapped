@@ -1589,7 +1589,8 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
 POSITIVE_KINDS_025 = ("refugees_arrived", "war_declared", "monster_raid", "settlement_overrun",
                       # P5-04 6.9 (no older world holds these kinds)
                       "alliance_formed", "alliance_renewed", "ally_joined_war", "spoils_shared", "arms_sold",
-                      "trade_opened")
+                      "trade_opened",
+                      "ally_aided_hold")   # P5-07 r2 6.11: the aid's credit (no older world holds it)
 NEGATIVE_KINDS_025 = ("war_won", "peace", "truce", "civ_conquered", "sacked", "settlement_captured",
                       "people_expelled",
                       # P5-04 6.9: refusals, betrayals, kept spoils; a joined war's end (its ending event, the

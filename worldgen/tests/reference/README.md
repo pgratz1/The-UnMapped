@@ -2080,6 +2080,18 @@ Written by the test writer from `docs/specs/p5-07-mountain-depths.md` r1 without
   `credit_units`, `; soured`, the deeds, report v10, the groups, the `hold_lost` symbol, the monster state with 94
   and 95.
 
+r2 (spec r2, Paul's answers of 2026-11-26): `p5_07_depths_reference.py` also replays 6.10 (goblin deep warrens:
+`Deep.delve_warrens`, the warren loop of `Deep.waking`) and 6.11 (the allies' aid: `Deep.aid`, kind 97 and
+`RelationsSubsystem::credit`), behind the module flag `R2` (on; off gives r1's rules for I1). `units` has 231 checks;
+`fixtures` adds four `allied-<seed>` runs (depths-small on P5-04's alliances-small with the deep kinds' `max_alive`
+20 and `deep_aid_hops` 8: depths-small alone forms too few alliances before its wakings fill `max_alive`) and I1.
+`violations` gains items 12 to 15, `reader_problems` 9's r2 item, `stats_of_tables` the six r2 stats,
+`warren_depth_at`. The other references: kinds 97 to 99 (`p3_engine_reference.py`, `p3_peoples_reference.py`), the r2
+fields and templates and `delving_permille` (`p3_data_reference.py`: `MONSTERS_NEW_029`, `REPORT_ENTRIES_029`,
+`DELVING_029`, `RACE_029`, `delving_messages`), the groups (`p4_browser_reference.py`), the monster state of 99
+(`p4_timeline_reference.py`), `sealed in` at a `warren_sealed` (`p3_report_reference.py`), `ally_aided_hold` among
+relations' positive kinds (`p5_03_relations_reference.py`).
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file
