@@ -255,6 +255,7 @@ class Monsters:
         # logs (not state), for checks and statistics
         self.log = []          # (year, what, ids...)
         self.tension_log = []
+        self.deep = None       # P5-07: p5_07_depths_reference.Deep, installed by the conflict World at 0.29.0
 
     # ---------------------------------------------------------------- helpers
     def kind(self, k):
@@ -286,7 +287,11 @@ class Monsters:
     def caps_allow(self, k, rid):
         kd = self.kind(k)
         live = self.living()
-        return (len(live) < self.L_world() and sum(1 for m in live if m["kind"] == k) < kd["max_alive"]
+        if self.deep is not None:   # P5-07 7.2: living() counts the kinds with wake != deep (the world cap)
+            live_w = [m for m in live if self.kind(m["kind"])["wake"] != "deep"]
+        else:
+            live_w = live
+        return (len(live_w) < self.L_world() and sum(1 for m in live if m["kind"] == k) < kd["max_alive"]
                 and not self.open_lair_in(rid))
 
     def region_pop(self):
@@ -759,6 +764,8 @@ class Monsters:
         m["raids"][c] = (w.year, e)
         self.log.append((w.year, "raid", m["id"], tt["id"], dead, hops[tt["region"]]))
         self.overrun(m, kd, tt, c, e)
+        if self.deep is not None:   # P5-07 6.7: a deep horror's take in place of the overrun
+            self.deep.after_raid(m, kd, tt, c, e)
         if p503() and tt["status"] in (1, 2):
             self.fear(m, tt, c)
 
@@ -974,6 +981,8 @@ class Monsters:
         self.read_log()
         self.beasts_bold()
         self.monsters_year()
+        if self.deep is not None:   # P5-07 6.1: deepening, then one waking at most (not a creation)
+            self.deep.t4()
         self.undead()
         if not self.created_this_step:
             self.wild_appearance(quiet=False)
@@ -996,6 +1005,8 @@ class Monsters:
                 self.die_of_age(m)
         self.wild_appearance(quiet=True)
         self.outposts_left(quiet=True)
+        if self.deep is not None:   # P5-07 6.1: Q4 deepening
+            self.deep.q4()
 
     def tension(self, start, length):
         """6.5: pure."""
@@ -1199,6 +1210,7 @@ class Rows:
 MONSTER_EVENT_KINDS = ("monster_appeared", "undead_rose", "monster_woke", "monster_slept", "monster_raid",
                        "settlement_overrun", "monster_slain", "monster_driven_off", "monster_died",
                        "monster_slain_by_hero", "hero_rose", "hero_slain")   # P5-06 11.2: kinds naming a monster
+DEEP_EVENT_KINDS = ("deep_woken", "deep_sealed", "hold_lost")   # P5-07 8.1: kinds 94 to 96 name a monster
 
 
 def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, quarter=True):
@@ -1206,6 +1218,10 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     [(key, def)] of the monster definitions (max_alive, range_hops, kill_max, overruns are data, not rows)."""
     x = Rows(res, borders)
     out = []
+    # P5-07 13 item 11: the deep kinds (wake deep) count as monsters; their lairs are outside the one-lair-per-region
+    # rule and their monsters outside the world cap (6.4 "Caps"); a deep monster's first event is its deep_woken
+    deep = {k for k, (_key, kd) in enumerate(kinds, 1) if kd["wake"] == "deep"}
+    mkinds = MONSTER_EVENT_KINDS + (DEEP_EVENT_KINDS if "hold_lost" in x.kid else ())
     R = R if R is not None else len(res.get("region", [])) or len({b for bb in borders for b in bb[:2]})
     Lw = max(1, R * tuning["living_permille"] // 1000)
     # 1
@@ -1222,24 +1238,27 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     # 3: at every event id, open lairs per region, living monsters, per kind
     marks = sorted(set([s[10] for s in x.sites] + [s[12] for s in x.sites if s[12]]))
     for e in marks:
-        lairs = [s for s in x.sites if s[2] == LAIR and s[10] <= e and (s[12] == 0 or e < s[12])]
+        lairs = [s for s in x.sites if s[2] == LAIR and s[10] <= e and (s[12] == 0 or e < s[12])
+                 and not (s[8] in mon and mon[s[8]][2] in deep)]
         regs = [s[3] for s in lairs]
         if len(regs) != len(set(regs)):
             out.append("3: two open lairs in one region at e%d" % e)
         alive = [m for m in x.monsters if m[5] <= e and (m[7] == 0 or e < m[7])]
-        if len(alive) > Lw:
+        if sum(1 for m in alive if m[2] not in deep) > Lw:
             out.append("3: %d living monsters at e%d above %d" % (len(alive), e, Lw))
         for k, (_key, kd) in enumerate(kinds, 1):
             if sum(1 for m in alive if m[2] == k) > kd["max_alive"]:
                 out.append("3: kind %d above max_alive at e%d" % (k, e))
     # 4
     by_m = {}
-    for e in x.events_of(*MONSTER_EVENT_KINDS):
+    for e in x.events_of(*mkinds):
         for mid in x.role(e[0], "monster"):
             by_m.setdefault(mid, []).append(e)
     for m in x.monsters:
         evs = by_m.get(m[0], [])
-        app = [e for e in evs if x.key[e[3]] in ("monster_appeared", "undead_rose")]
+        app = [e for e in evs if x.key[e[3]] in ("monster_appeared", "undead_rose", "deep_woken")]
+        if m[2] in deep and evs and x.key[evs[0][3]] != "deep_woken":
+            out.append("4: deep monster %d first event e%d is not its deep_woken" % (m[0], evs[0][0]))
         if [e[0] for e in app] != [m[5]]:
             out.append("4: monster %d appearances %s, born_event %d" % (m[0], [e[0] for e in app], m[5]))
         for e in evs:
@@ -1288,7 +1307,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if s[6] and s[2] in (LAIR, OUTPOST):
             k = x.kind_of(s[10])
             st = x.stl.get(s[6])
-            if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose"):
+            if s[2] != LAIR or k not in ("settlement_overrun", "undead_rose", "deep_woken"):
                 out.append("6: site %d holds settlement %d from a %s" % (s[0], s[6], k))
             if st is None or st[10] not in (3, 4):
                 out.append("6: site %d settlement %d not ruined or faded" % (s[0], s[6]))
@@ -1332,7 +1351,8 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     cause_kinds = {"undead_rose": ("battle", "battle_at_pass", "sacked", "allied_battle", "battle_led"),
                    "monster_slain_by_hero": ("monster_raid",), "hero_slain": ("monster_raid",),
                    "monster_woke": ("monster_slept",
-                   "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke"),
+                   "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke",
+                                                            "deep_woken"),
                    "settlement_overrun": ("monster_raid",), "monster_slain": ("monster_raid",),
                    "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose"),
                    "outpost_built": ("war_declared", "ally_joined_war")}   # P5-04 7.6: a joined war row's event
@@ -1344,7 +1364,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     # P5-03 9.1 (P5-03a 12 item 4): a raid cites its monster's waking event and at most one earlier raid of the
     # monster on the same settlement within raid_chain_years (before P5-03: the waking event alone)
     waking = {}
-    for e in x.events_of("monster_appeared", "undead_rose", "monster_woke"):
+    for e in x.events_of("monster_appeared", "undead_rose", "monster_woke", "deep_woken"):
         for mid in x.role(e[0], "monster"):
             waking.setdefault(mid, set()).add(e[0])
     chain = tuning.get("raid_chain_years")

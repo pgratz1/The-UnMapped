@@ -499,6 +499,22 @@ target_sources(worldgen-tests PRIVATE
     history/history_figures_p504a_test.cpp
     history/history_report_v9_test.cpp
 )
+# Mountain depths (spec P5-07 r2, generator 0.29.0, schema 13, report v10; r2: goblin warrens and the allies' aid):
+# the spec's arithmetic by hand
+# (history_depths_unit_test.cpp, runs before integration), the data of 4 on game/data, the invariants of 13 on
+# depths-small and shipped worlds with determinism, I0 and resume, the reader checks of 9 on corrupt copies, report v10
+# and the timeline, browser and markers reads on fixture H19 (h19-v10.toml, written by reference/p5_07_h19_fixture.py),
+# and the golden file golden/p5-07-depths.txt (recorded at integration; skipped while absent). Names and the switch
+# are in history/p5_07_api.hpp (UNMAPPED_P507_API at integration: until then the cases that need 0.29.0 return at
+# their start). Slow cases in the suite "depths-slow". The reference is reference/p5_07_depths_reference.py.
+target_sources(worldgen-tests PRIVATE
+    history/history_depths_unit_test.cpp
+    history/history_depths_data_test.cpp
+    history/history_depths_property_test.cpp
+    history/history_depths_reader_test.cpp
+    history/history_depths_report_test.cpp
+    history/history_depths_golden_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -648,6 +664,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD relations 30 "*history_relations_*"
     SHARD alliances 30 "*history_alliances_*"
     SHARD figures 30 "*history_figures_*"
+    SHARD depths 30 "*depths_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -670,5 +687,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-relations 300 "*-slow" "*history_relations_*"
     SLOW slow-alliances 300 "*-slow" "*history_alliances_*"
     SLOW slow-figures 300 "*-slow" "*history_figures_*"
+    SLOW slow-depths 600 "*-slow" "*depths_*"
     SLOW_REST slow-other 10 "*-slow"
 )

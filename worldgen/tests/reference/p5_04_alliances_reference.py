@@ -1750,6 +1750,15 @@ class Alliances:
         rel.credit(ra, rb, units, e)
         self.log.append((self.w.year, "credit", ra, rb, units, e))
 
+    def credit_units(self, a, b, units):
+        """P5-07 7.5: RelationsSubsystem::credit_units (no contribution kept)."""
+        rel = self.w.race_relations
+        ra, rb = self.race(a), self.race(b)
+        if rel is None or ra == rb:
+            return
+        rel.credit_units(ra, rb, units)
+        self.log.append((self.w.year, "credit-units", ra, rb, units))
+
     def younger_founding(self, x, y):
         return max(self.w.civ(x)["founding_event"], self.w.civ(y)["founding_event"])
 
@@ -2042,7 +2051,10 @@ class Alliances:
         else:
             # a renewal with nothing notable (or a notable one without budget: quietly) writes no event; the credit
             # cites R (P5-03a audit A4)
-            self.credit(k[0], k[1], t["renew_memory"], rec["renew_event"])
+            if _pcr().FLAGS.get("a1_units", False):   # P5-07 7.5 (audit A1): a quiet renewal cites no event
+                self.credit_units(k[0], k[1], t["renew_memory"])
+            else:
+                self.credit(k[0], k[1], t["renew_memory"], rec["renew_event"])
             self.log.append((w.year, "renewed-quietly", k, d, bool(notable)))
         rec["due"] = d + rec["term"]
 
@@ -2952,9 +2964,17 @@ def alliance_line_v9(w, r):
     k = sum(1 for x in w.of("spoils_withheld") if by_id(x) and {w.one(x, "ally"), w.one(x, "principal")} == pair)
     if g or k:
         line += "; spoils %d granted, %d withheld" % (g, k)
+    if V10:   # P5-07 10 item 5 (critic F4): the first withholding of the pair with grievance 1 in the row's span
+        so = [x for x in w.of("spoils_withheld") if by_id(x) and {w.one(x, "ally"), w.one(x, "principal")} == pair
+              and w.value(x, "grievance") == 1]
+        if so:
+            line += "; soured e%d" % min(so)
     if r[6] is not None:
         line += "; %s e%d" % (_end_kind(w, r), r[8])
     return line
+
+
+V10 = False   # P5-07 10 item 5: set by p3_report_reference.use_version("0.29.0")
 
 
 def trade_line_v9(w, r):

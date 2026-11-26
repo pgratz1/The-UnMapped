@@ -413,6 +413,24 @@ COMPILED_027 = COMPILED_026 + KINDS_027
 VALUES_028 = {58: ("change",), 63: ("term", "band"), 67: ("motive", "years"), 69: ("motive", "count"),
               75: ("grievance",), 76: ("years",), 87: ("quiet",)}
 COMPILED_028 = tuple(dict(k, values=list(k["values"]) + list(VALUES_028.get(k["id"], ()))) for k in COMPILED_027)
+# P5-07 8.1 (generator 0.29.0): kinds 93 to 96 appended (civ = 3, monster = 8, site = 9; unlisted counts 1-1); every
+# one caused, with a region and a settlement; hold_lost's site 0-1.
+_M1 = lambda n: (n, MONSTER, 1, 1)
+_S1 = lambda n: (n, SITE, 1, 1)
+KINDS_029 = (
+    kind_def(93, "delving_deepened", 1, 1, 1, (_C1("civilization"), _S1("site")), ("depth", "telling")),
+    kind_def(94, "deep_woken", 1, 1, 1, (_M1("monster"), _C1("civilization"), ("site", SITE, 0, 1), _S1("lair")),
+             ("depth", "telling")),   # r2: site 0-1 (none at a warren), telling 0 to 5
+    kind_def(95, "deep_sealed", 1, 1, 1, (_C1("civilization"), _M1("monster"), _S1("site"), _S1("lair")), ("telling",)),
+    kind_def(96, "hold_lost", 1, 1, 1, (_M1("monster"), _C1("civilization"), _S1("lair"), ("site", SITE, 0, 1)),
+             ("dead", "survivors", "telling")),
+    # r2 (8.1): 97 to 99
+    kind_def(97, "ally_aided_hold", 1, 1, 1, (_C1("ally"), _C1("partner"), _M1("monster"),
+                                              ("origin", SETTLEMENT, 1, 1)), ("telling",)),
+    kind_def(98, "warren_delved", 1, 1, 1, (_C1("civilization"),), ("depth", "telling")),
+    kind_def(99, "warren_sealed", 1, 1, 1, (_C1("civilization"), _M1("monster"), _S1("lair")), ("telling",)),
+)
+COMPILED_029 = COMPILED_028 + KINDS_029
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -475,12 +493,16 @@ RENDER_R27 = False
 #   RENDER_R28      8.5: the choice of 2 to 8 words (word i for value i below n - 1, the last for every other value),
 #                   `choice of <n> words at byte <b>` above 8; the monster form {m:died} (10 item 5).
 RENDER_R28 = False
+# P5-07 (generator 0.29.0):
+#   RENDER_R29      8.1 kinds 93 to 99 (r2: 97 to 99); schema 13 (9: monster_kind.wake 3 deep; no DDL change); the ending of a ruin by
+#                   hold_lost is 2 (6.6); the choice with an empty first word renders as written (8.2).
+RENDER_R29 = False
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0")
 
 
 def at_least(v):
@@ -496,14 +518,14 @@ def use_version(v):
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
-    global RENDER_R26, RENDER_R27, RENDER_R28
+    global RENDER_R26, RENDER_R27, RENDER_R28, RENDER_R29
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
                 "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026,
-                "0.27.0": COMPILED_027, "0.28.0": COMPILED_028}[v]
+                "0.27.0": COMPILED_027, "0.28.0": COMPILED_028, "0.29.0": COMPILED_029}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -516,12 +538,13 @@ def use_version(v):
     RENDER_R26 = i >= VERSIONS.index("0.26.0")
     RENDER_R27 = i >= VERSIONS.index("0.27.0")
     RENDER_R28 = i >= VERSIONS.index("0.28.0")
+    RENDER_R29 = i >= VERSIONS.index("0.29.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
     COLUMNS = (COLUMNS_024 if RENDER_R24 else COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21
                else COLUMNS_021)
-    SCHEMA_VERSION = 12 if RENDER_R27 else 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
+    SCHEMA_VERSION = 13 if RENDER_R29 else 12 if RENDER_R27 else 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
@@ -1881,7 +1904,7 @@ def settlement_ending(status, ruin_event, kind_key_of, causes_of):
     k = kind_key_of(ruin_event)
     if k == "sacked":
         return 1
-    if k == "settlement_overrun":
+    if k == "settlement_overrun" or (RENDER_R29 and k == "hold_lost"):   # P5-07 6.6: a hold lost is 2
         return 2
     if k in ("settlement_abandoned", "settlement_abandoned_to"):
         keys = [kind_key_of(c) for c in causes_of(ruin_event)]
@@ -1948,9 +1971,12 @@ def beast_rows(dat):
             for i, (k, d) in enumerate(dat.beasts)]
 
 
+WAKE_CODE = {"wild": 1, "dead": 2, "deep": 3}   # P5-02 11.2; P5-07 9: 3 deep
+
+
 def monster_kind_rows(dat):
     """11.2: (id, key, name, noun, grouped, wake (1 wild, 2 dead), might); P5-03 16.1: + raid_phrases joined with |."""
-    return [(i + 1, k, d["name"], d["noun"], 1 if d["grouped"] else 0, 1 if d["wake"] == "wild" else 2, d["might"])
+    return [(i + 1, k, d["name"], d["noun"], 1 if d["grouped"] else 0, WAKE_CODE[d["wake"]], d["might"])
             + (("|".join(d["raid_phrases"]),) if RENDER_R24 else ())
             for i, (k, d) in enumerate(dat.monsters)]
 

@@ -68,6 +68,7 @@ reproduces the 0.16.0 golden file and the content_hash of a 0.16.0 world.
 Never regenerate the golden file to make a C++ test pass.
 """
 
+import copy
 import hashlib
 import os
 import struct
@@ -3548,6 +3549,186 @@ KINDS_028["history"] = ("history", dict(
     figures=KINDS_027["history"][1]["figures"] + tuple((n, INT) for n, _, _, _ in FIGURES_NEW_RANGES_028)))
 
 
+# ---------------------------------------------------------------------------
+# P5-07 (generator 0.29.0, docs/specs/p5-07-mountain-depths.md r1): the deep kinds of 4.1, the history.monsters fields
+# of 4.2 (name, low, high, shipped), history.conflict.forge_depth_permille (4.3), renaming rule 8 (4.4), the report
+# entries 93 to 96 and the four changed templates (8.2). The engineer writes game/data and both fixture roots (18
+# part D); until then a 0.28.0 root on disk is read at 0.29.0 with these listings filled in (FALLBACK_029_USED, as
+# 0.28.0's). These listings are the one place to edit after calibration (15.2), then the goldens.
+# ---------------------------------------------------------------------------
+DEEP_IDS_029 = ("ymrach", "ysgarth", "zhakul")   # 4.1: they sort after wyvern (invariant 8)
+DEEP_KINDS_029 = {
+    "ymrach": dict(name="Ymrach", noun="a wyrm of the lightless deep", grouped=False, wake="deep", biomes=[],
+                   wake_rate=500, naming_culture="dwarven",
+                   name_forms=["{root} the Deep-Coiled", "{root} Stonegnawer", "{root}"],
+                   lair_forms=["The Coils of {root}", "{root}'s Delving"], might=4000, range_hops=1, raid_permille=60,
+                   toll_min_permille=30, toll_max_permille=100, kill_max=300, overruns=[], overrun_permille=300,
+                   active_years=60, rewake_ppm=2000, lifespan_years=0, max_alive=2, flare=False, hoard_permille=10,
+                   raid_phrases=["came up out of the stone beneath", "burrowed into the halls of", "fell upon"],
+                   slayer_epithet="Deepbane"),
+    "ysgarth": dict(name="Ysgarth", noun="a host of eyeless things from under the stone", grouped=True, wake="deep",
+                    biomes=[], wake_rate=350, naming_culture="dwarven",
+                    name_forms=["The Eyeless of {root}", "The Swarm Beneath {root}"],
+                    lair_forms=["The Warrens of {root}", "The Nest of {root}"], might=2500, range_hops=1,
+                    raid_permille=100, toll_min_permille=20, toll_max_permille=80, kill_max=150, overruns=[],
+                    overrun_permille=200, active_years=100, rewake_ppm=3000, lifespan_years=0, max_alive=2,
+                    flare=False, hoard_permille=2,
+                    raid_phrases=["swarmed out of the dark upon", "crept up the deep ways into", "fell upon"],
+                    slayer_epithet="the Lightbearer"),
+    "zhakul": dict(name="Zhakul", noun="a fire that walks in the roots of the world", grouped=False, wake="deep",
+                   biomes=[], wake_rate=150, naming_culture="dwarven",
+                   name_forms=["{root} the Unquenched", "{root} Flame-Under-Stone", "{root}"],
+                   lair_forms=["The Burning Deep of {root}", "{root}'s Furnace"], might=7000, range_hops=1,
+                   raid_permille=40, toll_min_permille=50, toll_max_permille=150, kill_max=500, overruns=[],
+                   overrun_permille=400, active_years=30, rewake_ppm=1000, lifespan_years=0, max_alive=1, flare=False,
+                   hoard_permille=20,
+                   raid_phrases=["came up burning beneath", "set the deep halls aflame under", "fell in fire upon"],
+                   slayer_epithet="Flamebreaker"),
+}
+# 4.2: appended after undead_regions_ref, in this order; arrays as (name, kind, low, high, shipped)
+MONSTERS_NEW_029 = (("deep_years", "arr3", 1, 100000, [150, 500, 1000]), ("deep_delve_permille", "int", 0, 1000, 10),
+                    ("deep_wake_ppm", "arr3", 0, 1000000, [0, 150, 600]),
+                    ("deep_gate_levy_permille", "int", 0, 4000, 1000), ("deep_seal_max_permille", "int", 0, 1000, 800),
+                    ("deep_toll_permille", "int", 0, 1000, 400), ("deep_takes_max", "int", 0, 16, 2),
+                    ("deep_reach_hops", "int", 0, 4, 1),
+                    # r2 (6.10 warrens, 6.11 the aid), appended in the table's order
+                    ("deep_warren_population_min", "int", 0, 1000000, 600),
+                    ("deep_warren_ore_min", "int", 0, 100000, 1), ("deep_warren_wake_permille", "int", 0, 1000, 200),
+                    ("deep_aid_permille", "int", 0, 1000, 500), ("deep_aid_hops", "int", 0, 8, 2),
+                    ("deep_aid_levy_permille", "int", 0, 4000, 500), ("deep_aid_max", "int", 0, 8, 2),
+                    ("deep_aid_memory", "int", 0, 500, 30))
+MONSTERS_DEFAULTS_029 = dict(deep_delve_permille=0, deep_wake_ppm=[0, 0, 0], deep_warren_wake_permille=0,
+                             deep_aid_permille=0)   # code defaults: inert (r2: warrens and aid too)
+MONSTERS_ZERO_029 = dict(deep_delve_permille=0)                              # the zero fixture (I0)
+DEPTHS_SMALL_029 = dict(deep_years=[5, 10, 20], deep_delve_permille=1000, deep_wake_ppm=[0, 200000, 600000],
+                        deep_takes_max=3,                                    # fixture depths-small (from monsters-small)
+                        deep_warren_population_min=100, deep_warren_wake_permille=1000,
+                        deep_aid_permille=1000)                              # r2 (4.2)
+DEPTHS_SMALL_RACES_029 = {"goblin": dict(delving_permille=1000)}             # r2 (4.2): goblin delving_permille 1000
+# r2 4.5: race field delving_permille (optional, absent counts 0), shipped in every race file; appended after
+# magic_permille (reading D-R18: the spec gives no position; P5-06's fields were appended last the same way)
+DELVING_029 = {"dwarf": 0, "goblin": 300, "human": 0, "elf": 0, "orc": 0, "faerie": 0}
+CONFLICT_NEW_029 = (("forge_depth_permille", 0, 1000, 15),)                 # 4.3, after arms_strength_permille
+RENAMING_RULE_029 = dict(key="deep", kinds=["hold_lost"], values=[], min_magnitude=1, window_years=1, min_salience=0,
+                         capital=False, chance_permille=700, weight=85, name_role="monster",
+                         namer_role="civilization",
+                         forms=["The Deeps of {name}", "{name}'s Dark", "The Lost {noun}", "The Sunken {noun}"])
+REPORT_ENTRIES_029 = (
+    ("delving_deepened", 15, "{telling?Following a rich seam, |Year upon year, |By hammer and lamp, }{civilization} "
+                             "delved {site} {depth?deeper|below the reach of daylight|into the roots of the mountain|"
+                             "into the oldest dark beneath the world}."),
+    ("deep_woken", 60, "{telling?Delving too deep beneath |In the deepest halls under |Where the last seam ran out "
+                       "beneath |Burrowing ever deeper under |Digging after grubs and glitter beneath |In the stinking "
+                       "deep tunnels of }{@settlement}, {civilization}{civilization:under}{telling? woke | woke | broke "
+                       "into the old dark and woke | woke | blundered into the old dark and woke | woke }{monster}, "
+                       "{monster:kind}."),
+    ("deep_sealed", 50, "{telling?|Holding the gate at great cost, |With stone and rune, }{civilization}"
+                        "{civilization:under}{telling? sealed | walled | shut }{monster}{telling? in the deeps of | up "
+                        "beneath | away below }{site}{telling?||, and the deep ways were closed}."),
+    ("hold_lost", 70, "{@causes:monster_raid=the raids|After |, }{monster}{telling? came up out of the deep and took | "
+                      "rose from below and overran | broke out of the deeps into | boiled up out of the burrows into | "
+                      "came up the goblins' own tunnels into | rose under the warrens of }{@settlement} of "
+                      "{civilization}; {dead?no one died|one died|# died}{survivors?, and none escaped|, and one "
+                      "escaped|, and # fled}."),
+    # r2 (8.2): kinds 97 to 99
+    ("ally_aided_hold", 40, "{telling?Answering its ally's call, |Bound by old oaths, |Unbidden, }{ally}{ally:under}"
+                            "{telling? sent warriors from | marched out of | hurried its people from }{origin} to stand "
+                            "with {partner} at the gate of {@settlement} against {monster}."),
+    ("warren_delved", 15, "{telling?Ever greedy for the dark, |Squabbling and scraping, |Grub by grub and stone by "
+                          "stone, }{civilization} dug the warrens of {@settlement} {depth?deeper|below the reach of "
+                          "daylight|down among the mountain's roots|into the oldest dark beneath the world}."),
+    ("warren_sealed", 50, "{telling?|Shrieking and stabbing in the dark, |With rockfall and fire, }{civilization}"
+                          "{civilization:under}{telling? caved in the tunnels over | blocked the deep ways against | "
+                          "buried }{monster}{telling? beneath | under | deep below }{@settlement}{telling?||, and no "
+                          "goblin went that way again}."),
+)
+CIV_ENDED_029 = "{@causes:hold_lost=the loss of its last hold to the deep|After |, }{civilization}{civilization:under} " \
+                "came to an end."
+CAUSE_WORDS_029 = {"region_renamed": "hold_lost=the fall of a hold to the deep",
+                   "refugees_arrived": "hold_lost=the fall of their hold"}
+MOTIVE5_029 = ("Grasping for its own gain", "Hoping to profit by its ally's losses")   # critic F3 (12 item 8)
+DEEP_CHECKS_029 = {"monster_deep_biomes": "a deep monster has no biomes",
+                   "monsters_deep_years_ordered": "deep_years[%d] %d is not above deep_years[%d] %d",
+                   "race_delves_one_way": "a race delves mines or warrens, not both"}   # r2 4.5
+FALLBACK_029_USED = set()
+
+
+def deep_monster_messages(m):
+    """4.1 check monster_deep_biomes (a deep kind with any biome row)."""
+    return [DEEP_CHECKS_029["monster_deep_biomes"]] if m["wake"] == "deep" and m["biomes"] else []
+
+
+def delving_messages(r):
+    """r2 4.5 check race_delves_one_way: mining_permille > 0 and delving_permille > 0 refused."""
+    return ([DEEP_CHECKS_029["race_delves_one_way"]]
+            if r.get("mining_permille", 0) > 0 and r.get("delving_permille", 0) > 0 else [])
+
+
+def deep_years_messages(t):
+    """4.2 check monsters_deep_years_ordered: the first i with deep_years[i] <= deep_years[i - 1]."""
+    y = t["deep_years"]
+    for i in range(1, len(y)):
+        if y[i] <= y[i - 1]:
+            return [DEEP_CHECKS_029["monsters_deep_years_ordered"] % (i, y[i], i - 1, y[i - 1])]
+    return []
+
+
+def add_cause_word(template, word):
+    """Append a cause entry `key=words` last in a template's first {@causes:...} list."""
+    i = template.index("{@causes:")
+    j = template.index("|", i)
+    return template[:j] + "," + word + template[j:]
+
+
+def history_029(defs):
+    """The 0.29.0 additions on a 0.28.0 history definition set (fills only what is absent; returns True if any)."""
+    used = False
+    mo = defs.get("monsters")
+    if mo is not None and any(n not in mo for n, *_ in MONSTERS_NEW_029):
+        defs["monsters"] = dict(mo, **{n: v for n, _k, _lo, _hi, v in MONSTERS_NEW_029 if n not in mo})
+        used = True
+    co = defs.get("conflict")
+    if co is not None and "forge_depth_permille" not in co:
+        out = {}
+        for k, v in co.items():
+            out[k] = v
+            if k == "arms_strength_permille":
+                out["forge_depth_permille"] = CONFLICT_NEW_029[0][3]
+        defs["conflict"] = out
+        used = True
+    rn = defs.get("renaming")
+    if rn is not None and not any(r["key"] == "deep" for r in rn["rules"]):
+        defs["renaming"] = dict(rn, rules=list(rn["rules"]) + [dict(RENAMING_RULE_029)])
+        used = True
+    rp = defs.get("report")
+    if rp is not None and not any(e["kind"] == "hold_lost" for e in rp["events"]):
+        evs = []
+        for e in rp["events"]:
+            e = dict(e)
+            if e["kind"] == "civ_ended":
+                e["template"] = CIV_ENDED_029
+            elif e["kind"] in CAUSE_WORDS_029:
+                e["template"] = add_cause_word(e["template"], CAUSE_WORDS_029[e["kind"]])
+            elif e["kind"] == "ally_refused":
+                e["template"] = e["template"].replace(*MOTIVE5_029)
+            evs.append(e)
+        evs += [dict(kind=k, salience=s, template=t) for k, s, t in REPORT_ENTRIES_029]
+        defs["report"] = dict(rp, events=evs)
+        used = True
+    return used
+
+
+RACE_029 = RACE_027 + (("delving_permille", INT),)   # r2 4.5 (reading D-R18: appended last)
+KINDS_029 = dict(KINDS_028)
+KINDS_029["race"] = ("races", RACE_029)
+KINDS_029["history"] = ("history", dict(
+    KINDS_028["history"][1],
+    monsters=KINDS_028["history"][1]["monsters"] + tuple(
+        (n, ARR(INT) if k == "arr3" else INT) for n, k, _lo, _hi, _v in MONSTERS_NEW_029),
+    conflict=tuple(x for f in KINDS_028["history"][1]["conflict"]
+                   for x in ((f, ("forge_depth_permille", INT)) if f[0] == "arms_strength_permille" else (f,)))))
+
+
 def book_title_ok(s):
     """4.2 grammar book_title: ASCII letters, single spaces, ' and -, starting with an upper-case letter; at most
     48 bytes (string(48, book_title))."""
@@ -3665,6 +3846,19 @@ def check_spec_027(c):
                                              "peoples", "relations", "renaming", "report"])
 
 
+def pre_029(path, kind):
+    """A history or monster directory older than 0.29.0 (P5-07 4): no deep_years in monsters.toml; no ymrach.toml."""
+    if kind == "history":
+        p = os.path.join(path, "monsters.toml")
+        if not os.path.exists(p):
+            return True
+        with open(p, encoding="utf-8") as f:
+            return "deep_years" not in f.read()
+    if kind == "monster":
+        return not os.path.exists(os.path.join(path, "ymrach.toml"))
+    return False
+
+
 def pre_028(path, kind):
     """A history directory older than 0.28.0 (P5-04a 14): no tower_spacing_permille in figures.toml. (Only the
     history files change structure at 0.28.0; the calibration also moved values in monsters/dragon.toml.)"""
@@ -3698,7 +3892,7 @@ def pre_027(path, kind):
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0")
 
 
 def at_least(v):
@@ -3708,8 +3902,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0") else ("culture", "history", "race")
-    if v == "0.28.0":
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") else ("culture", "history", "race")
+    if v == "0.29.0":   # P5-07: the 0.28.0 files with the listings of 4 and 8.2 filled in (load_root)
+        KINDS, SPEC_FILES = KINDS_029, SPEC_FILES_027
+    elif v == "0.28.0":
         KINDS, SPEC_FILES = KINDS_028, SPEC_FILES_027
     elif v == "0.27.0":
         KINDS, SPEC_FILES = KINDS_027, SPEC_FILES_027
@@ -3826,7 +4022,9 @@ def read_dir_files(path, directory):
 def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
     if kind == "history" and not pre_027(path, kind) and not pre_024(path, kind) and not pre_028(path, kind):
-        return "0.28.0"   # P5-04a
+        return "0.29.0" if not pre_029(path, kind) else "0.28.0"   # P5-07, P5-04a
+    if kind == "monster" and not pre_027(path, kind) and not pre_029(path, kind):
+        return "0.29.0"   # P5-07: the deep kinds
     if kind in ("race", "culture", "monster", "history") and not pre_027(path, kind) and (
             kind == "culture" or not pre_024(path, kind)):
         return "0.27.0"   # P5-06
@@ -3861,6 +4059,9 @@ def disk_version(path, kind):
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
+    # P5-07 adds to the history and monster files only; a 0.28.0 directory is read at 0.29.0 with the listings filled in
+    # (load_root), so 0.29.0 and 0.28.0 count as the same files of every kind
+    a, b = ("0.28.0" if x == "0.29.0" else x for x in (a, b))
     if kind in ("race", "culture", "beast", "monster"):   # P5-04a changes the history files (and dragon's values)
         a, b = ("0.27.0" if x == "0.28.0" else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
@@ -4036,13 +4237,30 @@ def load_root(root, kinds=None, from_spec=False):
         if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
             # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
             defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
-        if DATA_VERSION == "0.28.0" and kind == "history":
+        if DATA_VERSION in ("0.28.0", "0.29.0") and kind == "history":
             # P5-04a: a root without the 0.28.0 fields (the 0.27.0 data on disk before integration) is read with the
             # shipped values of 14 filled in; recorded in FALLBACK_028_USED (the C++ loader refuses such a root)
             for did, new in NEW_FIELDS_028.items():
                 if did in defs and any(n not in defs[did] for n, _, _, _ in new):
                     FALLBACK_028_USED.add(os.path.join(root, "history", did))
                     defs[did] = dict(defs[did], **{n: v for n, _, _, v in new if n not in defs[did]})
+        if DATA_VERSION == "0.29.0" and kind == "history" and history_029(defs):
+            FALLBACK_029_USED.add(os.path.join(root, "history"))
+        if DATA_VERSION == "0.29.0" and kind == "race":
+            # r2 4.5: delving_permille is optional (absent counts 0). The shipped root before the engineer's data
+            # (no deep_years in its monsters.toml) is read with 4.5's shipped values; the fixture roots leave it out (0)
+            shipped = os.path.normpath(os.path.abspath(root)).endswith(os.path.join("game", "data")) and \
+                pre_029(os.path.join(root, "history"), "history")
+            for did in defs:
+                if "delving_permille" not in defs[did]:
+                    v = DELVING_029.get(did, 0) if shipped else 0
+                    if shipped and v:
+                        FALLBACK_029_USED.add(os.path.join(root, "races", did))
+                    defs[did] = dict(defs[did], delving_permille=v)
+        if DATA_VERSION == "0.29.0" and kind == "monster" and not any(k in defs for k in DEEP_IDS_029) and defs:
+            FALLBACK_029_USED.add(os.path.join(root, "monsters"))
+            for k in DEEP_IDS_029:
+                defs[k] = copy.deepcopy(DEEP_KINDS_029[k])
         for did, table in defs.items():
             if isinstance(schema, dict):
                 if did not in schema:

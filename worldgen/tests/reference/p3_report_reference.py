@@ -113,6 +113,7 @@ V6 = True   # P5-03a 9 (format v6, generator 0.25.0, schema 10); V6 implies V5's
 V7 = True   # P5-04 10 (format v7, generator 0.26.0, schema 11); V7 implies V6's rules
 V8 = True   # P5-06 10, 25.1 (d), 25.2 (format v8, generator 0.27.0, schema 12); V8 implies V7's rules
 V9 = False  # P5-04a 12, 21.5 (format v9, generator 0.28.0, schema 12); V9 implies V8's rules (use_version("0.28.0"))
+V10 = False  # P5-07 10 (format v10, generator 0.29.0, schema 13); V10 implies V9's rules (use_version("0.29.0"))
 SUMMARY_MILESTONE_SALIENCE = 40   # P5-04a 12.2 (digest.hpp)
 SUMMARY_MILESTONES_V9 = 3         # P5-04a 12.2: the three with the largest salience
 # P5-06 10.2, 25.2: constants of P3-07 section 8 (digest.hpp)
@@ -247,19 +248,21 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, V9, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0"):
+    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, V9, V10, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
-    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
-    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
-    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0")
-    V6 = v in ("0.25.0", "0.26.0", "0.27.0", "0.28.0")
-    V7 = v in ("0.26.0", "0.27.0", "0.28.0")
-    V8 = v in ("0.27.0", "0.28.0")
-    V9 = v == "0.28.0"
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V6 = v in ("0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V7 = v in ("0.26.0", "0.27.0", "0.28.0", "0.29.0")
+    V8 = v in ("0.27.0", "0.28.0", "0.29.0")
+    V9 = v in ("0.28.0", "0.29.0")
+    V10 = v == "0.29.0"
+    p504.V10 = V10
     DEFAULT_INPUTS = DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
@@ -1378,7 +1381,7 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v9" if V9 else "# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+    o = ["# worldgen history v10" if V10 else "# worldgen history v9" if V9 else "# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
          "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
@@ -1623,8 +1626,15 @@ def civ_block(w, d, c, level):
     if V9 and level == "summary":   # P5-04a 12.2: the count of own events of salience >= 40, then the top three
         mv = milestones_v9(w, cid)
         o.append("  milestones: %d" % len(mv))
-        ms = [] if len(w.t["civilization"]) > SUMMARY_LINES_CIVS else sorted(
-            sorted(mv, key=lambda x: (-w.ev[x][7], x))[:SUMMARY_MILESTONES_V9])
+        ranked = sorted(mv, key=lambda x: (-w.ev[x][7], x))
+        if V10:   # P5-07 10 item 6 (critic F2): at most one per kind, the first of each kind in rank order
+            seen, one = set(), []
+            for x in ranked:
+                if w.ev[x][3] not in seen:
+                    seen.add(w.ev[x][3])
+                    one.append(x)
+            ranked = one
+        ms = [] if len(w.t["civilization"]) > SUMMARY_LINES_CIVS else sorted(ranked[:SUMMARY_MILESTONES_V9])
     elif V6 and level == "summary":   # P5-03a 9.2: the count of the full block's list, then its quiet stretches
         full_ms = milestones(w, cid, MILESTONES)
         o.append("  milestones: %d" % len(full_ms))
@@ -2010,6 +2020,8 @@ def monster_lines(w, level):
             more = len(ms) - len(shown)
     for m in shown:
         st = "slain by %s" % w.ref(CIV, m[8]) if m[9] == 3 else MONSTER_STATUS[m[9]]
+        if V10 and m[9] == 2 and last_sleep_kind(w, m[0]) in ("deep_sealed", "warren_sealed"):   # 10 items 2, 7a
+            st = "sealed in %s" % w.ref(SITE, m[3])
         if V8 and m[9] == 3 and m[7] in w.ev and w.ev[m[7]][3] == w.K["monster_slain_by_hero"]:   # P5-06 10.3
             st = "slain by %s of %s" % (w.ref(FIGURE, first_role(w, m[7], "hero")), w.ref(CIV, m[8]))
         lair = w.site[m[3]]
@@ -2051,9 +2063,57 @@ def site_lines(w, level):
             line += ", of %s" % w.ref(CIV, x[7])
         if x[6]:
             line += ", at %s" % w.ref(SETTLEMENT, x[6])
+        if V10 and x[2] == 3:   # P5-07 10 item 3: the final depth, then the sealing
+            dp = mine_final_depth(w, x[0])
+            if dp >= 1:
+                line += ", depth %d" % dp
+            se = mine_sealed_event(w, x[0])
+            if se:
+                line += ", sealed %d e%d" % (w.ev[se][1], se)
         line += "; open" if x[13] == 0 else "; ended %d e%d %s" % (x[11], x[12], SITE_ENDING_WORD[x[13]])
         o.append(line)
     return o
+
+
+def _kind_events(w, key):
+    k = w.K.get(key)
+    return [e for e in w.t["event"] if e[3] == k] if k is not None else []
+
+
+def _val(w, eid, key):
+    """The value `key` of event eid (by the catalogue's event_kind_value rows), None when absent."""
+    k = w.ev[eid][3]
+    seq = [r[1] for r in w.t["event_kind_value"] if r[0] == k and r[2] == key]
+    if not seq:
+        return None
+    for v in w.vals.get(eid, []):
+        if v[1] == seq[0]:
+            return v[2]
+    return None
+
+
+def last_sleep_kind(w, mid):
+    """P5-07 10 item 2: the kind of the monster's last sleeping event (monster_slept, monster_driven_off, deep_sealed)."""
+    best = None
+    for key in ("monster_slept", "monster_driven_off", "deep_sealed", "warren_sealed"):
+        for e in _kind_events(w, key):
+            if mid in role_ids(w, e[0], "monster") and (best is None or e[0] > best[0]):
+                best = (e[0], key)
+    return best[1] if best else None
+
+
+def mine_final_depth(w, sid):
+    """P5-07 9: the largest depth of the site's delving_deepened events (0 none)."""
+    return max([_val(w, e[0], "depth") for e in _kind_events(w, "delving_deepened")
+                if role_ids(w, e[0], "site") == [sid]] or [0])
+
+
+def mine_sealed_event(w, sid):
+    """P5-07 10 item 3: the deep_sealed naming the mine as its site (0 none)."""
+    for e in _kind_events(w, "deep_sealed"):
+        if role_ids(w, e[0], "site") == [sid]:
+            return e[0]
+    return 0
 
 
 def refuge_hidden_end(w):
@@ -2118,6 +2178,9 @@ def ruin_how(w, eid, s=None):
     if V4 and k == "settlement_overrun":
         m = role_ids(w, eid, "monster")
         return "overrun by %s" % w.ref(MONSTER, m[0]) if m else "overrun"
+    if V10 and k == "hold_lost":   # P5-07 10 item 4
+        m = role_ids(w, eid, "monster")
+        return "lost to %s" % w.ref(MONSTER, m[0]) if m else "lost"
     return k
 
 
@@ -2293,6 +2356,9 @@ def stats(w, d):
         o += figure_stats(w, d)
     if V9:   # P5-04a 12.6, appended (full only)
         o += p504.stats_028(alliance_world(w))
+    if V10:   # P5-07 10 item 7, appended (full only)
+        import p5_07_depths_reference as p507
+        o += p507.stats_of_tables(w.t)
     return o
 
 
@@ -2331,10 +2397,11 @@ FIXTURE_NAMES_V6 = FIXTURE_NAMES_V5 + ("h15-v6",)   # P5-03a 14 item 11: H15 hol
 FIXTURE_NAMES_V7 = FIXTURE_NAMES_V6 + ("h16-alliances",)   # P5-04 18.1 item 16
 FIXTURE_NAMES_V8 = FIXTURE_NAMES_V7 + ("h17-figures",)   # P5-06 18.1 item 14
 FIXTURE_NAMES_V9 = FIXTURE_NAMES_V8 + ("h18-v9",)   # P5-04a 16 item 12 (the spec's "H17"; reading R10)
+FIXTURE_NAMES_V10 = FIXTURE_NAMES_V9 + ("h19-v10",)   # P5-07 16 item 11 (the spec's "H18"; reading D-R1)
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V9 if V9 else FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V10 if V10 else FIXTURE_NAMES_V9 if V9 else FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}

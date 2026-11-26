@@ -444,6 +444,13 @@ class Relations:
         elif units < 0:
             p["neg"] = (p["neg"] + [event])[-8:]
 
+    def credit_units(self, race_a, race_b, units):
+        """P5-07 7.5: M += units x 1000, clamped, as credit; no contribution is kept."""
+        p = self.pair(race_a, race_b)
+        if not p["met"]:
+            return
+        p["M"] = clamp_memory(p["M"] + units * 1000, self.t)
+
     def presences(self):
         """P5-03 6.2.4 / P5-03a 3.2: presence(c) of the alive visible civilizations, by civilization."""
         w = self.w
@@ -1582,7 +1589,8 @@ def invariant_violations(res, t, E, borders, base_of, race_key, monster_kinds=No
 POSITIVE_KINDS_025 = ("refugees_arrived", "war_declared", "monster_raid", "settlement_overrun",
                       # P5-04 6.9 (no older world holds these kinds)
                       "alliance_formed", "alliance_renewed", "ally_joined_war", "spoils_shared", "arms_sold",
-                      "trade_opened")
+                      "trade_opened",
+                      "ally_aided_hold")   # P5-07 r2 6.11: the aid's credit (no older world holds it)
 NEGATIVE_KINDS_025 = ("war_won", "peace", "truce", "civ_conquered", "sacked", "settlement_captured",
                       "people_expelled",
                       # P5-04 6.9: refusals, betrayals, kept spoils; a joined war's end (its ending event, the

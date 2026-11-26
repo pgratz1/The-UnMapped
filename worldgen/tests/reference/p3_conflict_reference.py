@@ -166,6 +166,11 @@ FLAGS = dict(
                         # chain, the arms cause of a battle won (9.2), has_claim / claim_event / last_war_end (2), the
                         # turns' change and cool-down, long-held expulsions, towers apart and ended, hero_rose quiet;
                         # off until use_version("0.28.0") (the 0.27.0 worlds and goldens are the default)
+    # P5-07 (generator 0.29.0)
+    deep=False,         # P5-07 6, 7: deepening, the waking, the gate, the take and the deep flight
+                        # (p5_07_depths_reference.py, installed on the monsters subsystem), the forge's depth in the
+                        # force (6.3), the deeds of 6.9, schema 13
+    a1_units=False,     # P5-07 7.5 (P5-04a audit A1): a quiet renewal credits units, no contribution
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -180,8 +185,10 @@ FLAGS_025 = ("p503a",)
 FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7
 FLAGS_027 = ("figures", "riders")   # P5-06 (generator 0.27.0)
 FLAGS_028 = ("p504a",)               # P5-04a (generator 0.28.0)
+FLAGS_029 = ("deep", "a1_units")    # P5-07 (generator 0.29.0)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+VERSION_EXPLICIT = False   # P5-07 12 item 3: --version given; check-world otherwise reads the world's version
 
 
 
@@ -194,6 +201,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_029:
+        return i >= 13
     if k in FLAGS_028:
         return i >= 12
     if k in FLAGS_027:
@@ -605,6 +614,7 @@ class Data(pp.Data):
             self.race[rid]["origin_allies"] = list(t.get("origin_allies", []))
             self.race[rid]["ally_join"] = t.get("ally_join_permille", 0)
             self.race[rid]["mining"] = t.get("mining_permille", 0)
+            self.race[rid]["delving"] = t.get("delving_permille", 0)   # P5-07 r2 4.5 (absent counts 0)
             # P5-06 4.1 (0.27.0): the race's leanings of temper (steady, warlike, peaceable, grasping, just) and the
             # chances of generals, heroes and casters; an older root has none
             tw = t.get("temper_weights")
@@ -824,6 +834,9 @@ class World(pp.World):
             import p5_02_monsters_reference as p502
             self.monsters = p502.Monsters(self, dat.base, inp)
             self.set_wild(p502.WildView(self.monsters))
+            if FLAGS["deep"]:   # P5-07: the deep rules on the monsters subsystem
+                import p5_07_depths_reference as p507
+                self.monsters.deep = p507.Deep(self.monsters)
         # P5-03: the relations subsystem after the monsters; the ledger on peoples, the dispositions on conflict
         self.race_relations = None
         if conflict and FLAGS["relations"] and getattr(dat, "relations", None) is not None:
@@ -1184,9 +1197,20 @@ class World(pp.World):
             return f
         t = self.ct
         f = f * (1000 + t["trade_strength_permille"] * min(al.trade_partners(c), t["trade_strength_max"])) // 1000
-        f = f * (1000 + t["forge_strength_permille"] * (1 if al.forged(c) else 0)) // 1000
+        if FLAGS["deep"] and al.forged(c):   # P5-07 6.3: the depth of c's deepest open mine
+            f = f * (1000 + t["forge_strength_permille"] + t.get("forge_depth_permille", 0) * self.forge_depth(c)) \
+                // 1000
+        else:
+            f = f * (1000 + t["forge_strength_permille"] * (1 if al.forged(c) else 0)) // 1000
         f = f * (1000 + t["arms_strength_permille"] * (1 if al.arms(c) else 0)) // 1000
         return f
+
+    def forge_depth(self, c):
+        """P5-07 7.1: AllianceView::forge_depth(c), the largest mine_depth over c's open mines (0 none)."""
+        al, m = self.alliances, self.monsters
+        if al is None or m is None or getattr(m, "deep", None) is None:
+            return 0
+        return max([m.deep.mine_depth(sid) for (cc, _R), (sid, _ts) in al.mines.items() if cc == c] or [0])
 
     def open_ally_records(self, c):
         """7.6: the open joined records of c (war, record), in war order then join order."""
@@ -3827,9 +3851,12 @@ def check_invariants_r9(c, res, inp, w, label):
         h, y, o = role(e[0], 1)[0], role(e[0], 2)[0], role(e[0], 3)[0]
         c.true(lab + " population >= abandon_min", vals[e[0]][1] >= w.t["abandon_min"])
         cs = causes.get(e[0], [])
-        ok = len(cs) == 1 and kind[cs[0]] == K["sacked"] and ev[cs[0]][1] == e[1] and ev[cs[0]][6] == o and \
-            role(cs[0], 2) == [y]
-        c.true(lab + " caused by the sack of its origin, by its founder's enemy, the same year", ok)
+        # P5-07 7.3 (L-7): or caused by a hold_lost of the same year whose settlement is the origin and whose
+        # civilization (role 2) is the founder (the deep flight writes no sack)
+        deep = FLAGS["deep"] and len(cs) == 1 and kind[cs[0]] == K["hold_lost"]
+        ok = len(cs) == 1 and kind[cs[0]] in ((K["sacked"], K["hold_lost"]) if FLAGS["deep"] else (K["sacked"],)) \
+            and ev[cs[0]][1] == e[1] and ev[cs[0]][6] == o and role(cs[0], 2) == [y] and (deep or True)
+        c.true(lab + " caused by the sack of its origin, by its founder's enemy, the same year (or its hold_lost)", ok)
         c.true(lab + " the settlement is the event's and founded by it", e[6] == h and sts[h][7] == e[0] and
                sts[h][5] == y and sts[h][4] == e[5])
         race = civs[y][2]
@@ -3837,7 +3864,7 @@ def check_invariants_r9(c, res, inp, w, label):
                   (x[8] is None or x[8] > e[1] or (x[8] == e[1] and x[9] > e[0]))]
         c.true(lab + " the founder was its race's only alive civilization", not others)
         c.true(lab + " the origin was the founder's capital (sacked at capital_sacked_salience)",
-               ev[cs[0]][7] == t["capital_sacked_salience"])
+               deep or ev[cs[0]][7] == t["capital_sacked_salience"])
         c.true(lab + " no kind 31 caused by the sack", not any(kind[x] == K["settlement_abandoned_to"]
                                                                   for x in kids.get(cs[0], [])))
         y_end = e[1] + hy_of(y)
@@ -7537,7 +7564,12 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    if not VERSION_EXPLICIT and meta.get("generator_version") in VERSIONS and \
+            meta.get("generator_version") != GENERATOR_VERSION:
+        # P5-07 12 item 3: without --version the world's own generator version selects the rules
+        use_version(meta["generator_version"])
+        dat = data(opt(argv, "--data", "game/data"))
+    want_schema = "13" if FLAGS["deep"] else "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))
@@ -7610,6 +7642,8 @@ def main(argv):
         legacy()
     # --version V: the rules, data, names and catalogue of generator V (0.16.0, 0.17.0 or 0.18.0)
     if "--version" in argv:
+        global VERSION_EXPLICIT
+        VERSION_EXPLICIT = True
         i = argv.index("--version")
         use_version(argv[i + 1])
         argv = argv[:i] + argv[i + 2:]
