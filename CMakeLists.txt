@@ -84,6 +84,13 @@ if(UNMAPPED_BUILD_GDEXT AND UNMAPPED_SANITIZE)
         "(e.g. the linux-clang-asan preset): the extension is loaded into the uninstrumented "
         "Godot editor. Configure the sanitizer preset with -DUNMAPPED_BUILD_GDEXT=OFF.")
 endif()
+# The Terrain3D plug-in (extern/terrain3d/), built from vendored source for
+# the 3D terrain preview (spec V3D-01). OFF by default, separate from
+# UNMAPPED_BUILD_GDEXT so that a 2D-viewer build does not compile it.
+option(UNMAPPED_BUILD_TERRAIN3D "Build the vendored Terrain3D GDExtension (needs UNMAPPED_BUILD_GDEXT)" OFF)
+if(UNMAPPED_BUILD_TERRAIN3D AND NOT UNMAPPED_BUILD_GDEXT)
+    message(FATAL_ERROR "UNMAPPED_BUILD_TERRAIN3D needs UNMAPPED_BUILD_GDEXT=ON")
+endif()
 if(UNMAPPED_BUILD_GDEXT)
     # The extension is a shared library that links the static worldgen and
     # SQLite libraries, so those must be position independent. This changes

@@ -192,3 +192,69 @@ if(UNMAPPED_BUILD_GDEXT)
         COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/pdb")
     add_library(unmapped::godot-cpp ALIAS godot-cpp)
 endif()
+
+# --------------------------------------------------------------------------
+# Terrain3D (a second GDExtension), only with UNMAPPED_BUILD_TERRAIN3D
+# --------------------------------------------------------------------------
+if(UNMAPPED_BUILD_TERRAIN3D)
+    # ======================================================================
+    # TERRAIN3D CONFIGURATION: SINGLE POINT OF CONFIGURATION
+    #
+    # Terrain3D v1.1.0-stable from vendored source (one line edited, see below) (extern/README.md,
+    # spec V3D-01 section 3). Upstream builds it with SCons (SConstruct): the
+    # godot-cpp environment, CPPPATH src/, every src/*.cpp, and in debug
+    # targets an embedded documentation source generated from doc/*.xml.
+    # Here:
+    #   sources        the explicit list below (every src/*.cpp of the tag).
+    #   includes       src/ (shaders are C++ raw-string includes from
+    #                  src/shaders/*.glsl; no generated step).
+    #   defines        none of its own; GDEXTENSION and the rest come PUBLIC
+    #                  from godot-cpp, as in SCons.
+    #   standard       C++17, as upstream (/std:c++17 in its vcxproj).
+    #   documentation  not built (doc/ is not vendored): the editor shows no
+    #                  class reference for Terrain3D, which nothing here needs.
+    #   godot-cpp      the project's own (10.0.0-stable, API 4.7), statically
+    #                  linked, as every GDExtension does with its own copy.
+    #   compatibility  upstream v1.1.0 targets an older godot-cpp. The
+    #                  header extern/terrain3d-compat/terrain3d_compat.hpp is
+    #                  force-included into every source (-include, MSVC /FI)
+    #                  and supplies the names godot-cpp 10.0.0 renamed; the
+    #                  one vendored line no header can reach is edited, as
+    #                  listed in extern/README.md and kept as
+    #                  extern/terrain3d-compat/terrain3d-godot-cpp-10.patch.
+    # Output name and folder are set in gdext/CMakeLists.txt (the run copy).
+    # ======================================================================
+    set(_t3d "${CMAKE_CURRENT_SOURCE_DIR}/terrain3d/src")
+    add_library(unmapped_terrain3d SHARED
+        "${_t3d}/generated_texture.cpp"
+        "${_t3d}/register_types.cpp"
+        "${_t3d}/terrain_3d.cpp"
+        "${_t3d}/terrain_3d_assets.cpp"
+        "${_t3d}/terrain_3d_collision.cpp"
+        "${_t3d}/terrain_3d_data.cpp"
+        "${_t3d}/terrain_3d_editor.cpp"
+        "${_t3d}/terrain_3d_instancer.cpp"
+        "${_t3d}/terrain_3d_material.cpp"
+        "${_t3d}/terrain_3d_mesh_asset.cpp"
+        "${_t3d}/terrain_3d_mesher.cpp"
+        "${_t3d}/terrain_3d_region.cpp"
+        "${_t3d}/terrain_3d_texture_asset.cpp"
+        "${_t3d}/terrain_3d_util.cpp"
+        "${_t3d}/unit_testing.cpp"
+    )
+    add_library(unmapped::terrain3d ALIAS unmapped_terrain3d)
+    target_include_directories(unmapped_terrain3d PRIVATE "${_t3d}")
+    set(_t3d_compat "${CMAKE_CURRENT_SOURCE_DIR}/terrain3d-compat/terrain3d_compat.hpp")
+    if(MSVC)
+        target_compile_options(unmapped_terrain3d PRIVATE "/FI${_t3d_compat}")
+    else()
+        target_compile_options(unmapped_terrain3d PRIVATE "SHELL:-include \"${_t3d_compat}\"")
+    endif()
+    target_link_libraries(unmapped_terrain3d PRIVATE unmapped::godot-cpp)
+    set_target_properties(unmapped_terrain3d PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON)
+    unmapped_vendored_target(unmapped_terrain3d)
+endif()
