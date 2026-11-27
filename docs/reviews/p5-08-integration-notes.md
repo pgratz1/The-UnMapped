@@ -189,3 +189,85 @@ The 20 extra default worlds (seeds 24 to 43) have no cult ended by its realms ei
    - Until E1, E2 and E4 are fixed or ruled the other way, the world golden lines of the C++ tests will disagree
      where the defects bite.
 4. The full fast and slow suites on `linux-gcc-release`, including `-slow-pantheon`.
+
+## Part 2: references on the lead's rulings, stale tests, goldens re-recorded (generator 0.30.0)
+
+Test writer (Sonnet), 2026-11-27, `p5/08-int`. No file under `worldgen/src`, `tools/worldgen-cli/src` or `game/data` changed.
+**Not finished: the fast suite is 40 of 62 entries green, the slow suite and `linux-clang-release` were not run** (the
+list of what is left is below; the budget of rounds ran out, 9 suite rounds were used).
+
+### Step A (done)
+
+`p5_08_pantheon_reference.py`: the switches `AFFINITY_BY_CAMP` and `NEW_CULT_ACTIVE` are gone (camps, also for a creator;
+a cult founded in a step waits), `GROWTH_OF_CAPPED_INCREMENT` is off in `p3_peoples_reference.py` as before; `Pantheon.t6`
+is the end-of-history finish of 6.10 (called from `p3_conflict_reference.py`, T6 after figures, only in year E - 1,
+no event, no draw). The 36 worlds of part 1 were regenerated with the current engine: **36 of 36 agree table for table
+(`p3_conflict_reference.py check-world`) and pass every invariant and the pantheon row checks, `d8` included**, in
+one round.
+
+### What was stale (test side)
+
+- Data: `p3_01_history_fixture.hpp` lacked the `gods` directory; `p3_01_history_data.hpp` now holds the five culture
+  forms (`cult_forms_of`), the shipped `chronology`, `figures`, `monsters`, `alliances` and `report` files (taken from
+  `game/data`; they were equal to `main`'s before), `PANTHEON_TOML` and the nine gods; `naming_fields()` and
+  `chronology_fields()` gained their new names. `history_names_data_test.cpp` copies the five forms of the shipped culture.
+- Constants: generator 0.30.0, schema 14 ("reads 14", user_version 14/15), 120 streams (offsets of the older tests
+  moved by 13), 110 kinds (test kind 111), 37 tables / 37 DDL statements, 48 pages (196608 bytes), `faction` in every
+  table list and in `p0_04_reference.hpp` (DDL, empty hash, `[tables]`), the six-column `god` DDL, 10 data kinds (`god`),
+  11 history ids (`pantheon`), report header v11, `--divine-script` message, `generate --help` paragraph.
+- Hand-made fixtures: a creator's camp is its race's (`history_report_fixture.hpp`, and the reference's fixture writer);
+  `INSERT INTO god` of two tests has six columns; `Config::applier` (`NoApplier`) for a test source that returns acts;
+  `figures_zero_of` (shared by the I0 tests) also zeroes the pantheon (`activity_permille`) and `tower_lapse_years`;
+  `ConflictConfig` installs the pantheon as the stage does; invariants of P3-06/P5-03/P5-02 accept a type-7 relation row,
+  a god's flare-up trigger, a hold lost as a refugee flight's cause and a `divine_monster` as a monster's appearance and
+  waking; `p5_07_checks.hpp` tellings are (s + 4 (d - 1)) mod 9 (P-R23); reader tests: role 8, site kind 8.
+- References: `p3_report_reference.py` default 0.30.0 (inputs `out/p508-int2/report-inputs`, `build-inputs` writes
+  `faction`, `columns(t)` for `god`); `p3_chronology_reference.py --version 0.30.0` (imports the pantheon reference
+  first, which resets the data version); `p3_peoples_reference.py` accepts 110 kinds; `p4_timeline_reference.py` fixture
+  schema 14; `p4_browser_reference.py` group `gods` = 9 (0x3FF; kinds 109 and 110 in `figures`) and `--version 0.30.0`;
+  `p4_markers_reference.py` glyphs 21 to 23 and their offsets (reading K8: the pixel grids are the engine's, the spec
+  gives none) and `--version 0.30.0`; `p5_07_depths_reference.py` VERSION 0.30.0 and `telling` 0 to 8 for kinds 93, 98;
+  `p5_07_h19_fixture.py` writes the aid after the outcome (P5-08 12.4) and `h19-v10.toml` was edited the same way by hand
+  (events 41 to 43 reordered).
+
+### Goldens re-recorded (from the references only)
+
+`I` = `~/.cache/the-unmapped/out/p5-02-tests/inputs` (geography), `GI` = `out/p508-int2/golden-in` (pantheon-0..9-512,
+geo-seed-42-1024, depths-0..9-512 as links, all `--until regions`), `RI` = `out/p508-int2/report-inputs`
+(`p3_report_reference.py build-inputs out/p508-int2/report-src RI`, the 13 report worlds):
+`p3_data_reference.py golden --version 0.30.0`; `p3_chronology`, `p3_engine`, `p3_peoples`, `p3_conflict`, `p5_12_renaming`,
+`p5_02_monsters`, `p5_03_relations` `_reference.py golden --version 0.30.0 --inputs $I` (the first also needs `--version`
+to import the pantheon reference first); `p3_report_reference.py golden --inputs $RI`; `p4_timeline_reference.py golden
+--inputs $RI`; `p4_markers` and `p4_browser` `_reference.py --version 0.30.0 golden --inputs $RI`; `p5_04_alliances`,
+`p5_06_figures` `_reference.py golden --inputs $RI`; `p5_07_depths_reference.py golden --inputs $GI`; `p5_08_pantheon_
+reference.py golden --inputs $GI`. `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` untouched (the world hashes fail in
+`cli_golden`, `cli_p1_generate`, `db_determinism`, `stages_pipeline`, `cli_regions` until-hash: validation records them).
+After the camp rule the report and timeline goldens were recorded again (fixture tables).
+
+### Left (fast suite, `linux-gcc-release`; failing entries and the first cause)
+
+1. World-hash goldens, for validation: `worldgen-tests-other` (`db_determinism`, `stages_pipeline`), `worldgen-cli-tests-other`
+   (`cli_golden`, `cli_p1_generate`, `cli_history_settings` 0.11.0 comparison), `worldgen-cli-tests-regions` (until hashes).
+2. **Reference against engine: `pantheon-small` seed 5 at 512, table `figure`** (`history_pantheon_golden_test.cpp:98`); every
+   other case of `p5-08-pantheon.txt` agrees. Row not located.
+3. **Report text of fixture `h12-v3`** (and other fixtures): the C++ summary and full hashes differ from the golden
+   (`history_report_v3_test.cpp:313`, `history_report_fixtures_test.cpp`): not diagnosed (`p3_report_reference.py compare`
+   on a fixture world is the next step).
+4. Old independent checks written for the 0.29.0 order: `p5_07_checks.hpp` (the aid after the outcome, the first take's
+   causes; `ally_aided_hold ... does not answer its waking` on 3 property cases), `history_depths_report_test.cpp`
+   (expected lines of H19: ids and the 0.30.0 templates), `history_depths_reader_test.cpp`, `history_depths_forced_test.cpp`
+   (hashes and `raided`), `history_depths_golden_test.cpp`, `history_depths_property_a_test.cpp` (aid counted).
+5. Other expected values: `history_figures_*` (towers ending 7 from the lapse; `monster_slain_by_hero names no living hero`
+   with champions; `[figures]` block lines), `history_alliances_property_test` (mine site), `history_alliances_p504a_*`
+   (nine-word choice, `ally_refused.motive` coverage 4 of 5), `history_monsters_*` (22 naming fields, `ymrach` in kinds
+   seen, sites), `history_engine_state_test.cpp:195`, `history_chronology_golden_test.cpp:137` (gods item),
+   `history_report_blocks_test.cpp:123` (settings block), `markers_property_test.cpp:231` (new glyph colours), the browser and
+   timeline support tests that read golden hashes (rerun after the camp rule; not rerun), `data_history_kinds_test` (three
+   cases), `data_history_settings_test.cpp:188`, `conflict_engineer_test.cpp:388` and `history_conflict_unit_test` (the
+   `ConflictConfig` pantheon wiring just added, not yet run).
+
+### Wall time (`linux-gcc-release`, 5 jobs, round 9)
+
+`worldgen-tests-pantheon` 73 s, `-pantheon-property-a` 69 s, `-b` 85 s, `-c` 90 s. Longest others: `-figures-property` 106 s,
+`-relations-p504a` 100 s, `-figures-p504a` 88 s, `-depths-property-b` 85 s, `-depths-property-a` 83 s. No entry is above 200 s
+(MSVC Debug at 13 times: the longest about 1,400 s of 3,600 s). The slow entries were not timed.

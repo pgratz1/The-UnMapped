@@ -134,7 +134,7 @@ TEST_CASE("P5-06 10.3, 10.4, 18.1 item 14: H17 rulers lines, [sites] with a libr
     CHECK_FALSE(hrtest::contains_line(s5, "    Aldric II (f3): 798-820, reign 4, warlike"));
     const std::vector<std::string> sites = hrtest::block(f, "[sites]");
     REQUIRE_FALSE(sites.empty());
-    CHECK(sites[0] == "sites: 5; open 3; lairs 2, outposts 0, mines 2, towers 1");
+    CHECK(sites[0] == "sites: 5; open 3; lairs 2, outposts 0, mines 2, towers 1, shrines 0, temples 0, sanctums 0");
     CHECK(hrtest::contains_line(sites, "  si5 The Leaf-House of Iensath: library in Aelin Vale (rg1) at 10 10, since "
                                        "1360 e85, of The House of Aelin (c1), by Iensath the Accursed (f9), at "
                                        "Aelinost (s1); open"));

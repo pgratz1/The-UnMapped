@@ -388,10 +388,10 @@ TEST_CASE("P5-04 10.6: [sites] counts mines; the mine lines at full") {
     const std::vector<std::string> s = hrtest::lines_of(text(HistoryLevel::summary));
     const std::vector<std::string> f = hrtest::lines_of(text(HistoryLevel::full));
     CHECK(between(s, "[sites]", "[peoples]") ==
-          std::vector<std::string>{"[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0"});
+          std::vector<std::string>{"[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0, shrines 0, temples 0, sanctums 0"});
     CHECK(between(f, "[sites]", "[peoples]") ==
           std::vector<std::string>{
-              "[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0",
+              "[sites]", "sites: 2; open 1; lairs 0, outposts 0, mines 2, towers 0, shrines 0, temples 0, sanctums 0",
               "  si1 The Mines of Kazad Rune: mine in Kazad Fells (rg3) at 30 30, since 450 e26, of The Hold of Durn "
               "(c3), at Kazad Rune (s3); open",
               "  si2 The Delvings of Duldar: mine in The Grey Fells (rg8) at 80 80, since 455 e28, of The Hold of Durn "

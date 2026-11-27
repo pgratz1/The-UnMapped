@@ -12,6 +12,7 @@
 #include "worldgen/history/alliances.hpp"
 #include "worldgen/history/figures.hpp"
 #include "worldgen/history/monsters.hpp"
+#include "worldgen/history/pantheon.hpp"
 #include "worldgen/history/renaming.hpp"
 #include "worldgen/history/relations.hpp"
 #include "p3_05_peoples_support.hpp"
@@ -1877,6 +1878,10 @@ struct ConflictConfig {
     // P5-06 6.13 item 3 (0.27.0): the figures after the alliances, with the alliances only (the configurations
     // without them build none; their I0 runs with P5-06's zero tuning, p503api::figures_zero_of)
     std::unique_ptr<worldgen::history::FiguresSubsystem> figures;
+    // P5-08 6.12 item 3 (0.30.0): the pantheon after the figures (the third tension source, the intervention source
+    // and applier), in the full configuration only
+    std::unique_ptr<worldgen::history::PantheonSubsystem> pantheon;
+    bool default_interventions = true;
 
     // with_relations defaults to with_monsters: the full configuration of the history stage (0.24.0), or P5-02's
     // configuration without monsters, which has no relations either.
@@ -1906,6 +1911,13 @@ struct ConflictConfig {
                 alliances->set_figures(figures.get());
                 figures->set_sites(monsters.get());
                 figures->set_conflict(pair->sub.get());
+                pantheon = std::make_unique<worldgen::history::PantheonSubsystem>(*pair->peoples.sub, c);
+                pantheon->set_sites(monsters.get());
+                pantheon->set_figures(figures.get());
+                pantheon->set_alliances(alliances.get());
+                pantheon->set_conflict(pair->sub.get());
+                pair->peoples.sub->set_divine(pantheon.get());
+                pair->sub->set_divine(pantheon.get());
             }
         }
     }
@@ -1930,10 +1942,16 @@ struct ConflictConfig {
         if (relations) c.subsystems.push_back(relations.get());
         if (alliances) c.subsystems.push_back(alliances.get());
         if (figures) c.subsystems.push_back(figures.get());
+        if (pantheon) c.subsystems.push_back(pantheon.get());
         for (const auto& s : after) c.subsystems.push_back(s.get());
         c.tension.push_back(pair->tension());
         if (monsters) c.tension.push_back(monsters.get());
+        if (pantheon) c.tension.push_back(pantheon.get());
         c.interventions = interventions.get();
+        if (pantheon) {   // P5-08 7.6: the pantheon is the source and the applier
+            c.interventions = pantheon.get();
+            c.applier = pantheon.get();
+        }
         c.catalogue = &catalogue;
         return c;
     }
@@ -1957,6 +1975,9 @@ struct ConflictConfig {
         if (figures) {   // P5-06 9.1, 9.3
             r.figures = figures->figure_rows();
             r.books = figures->book_rows();
+        }
+        if (pantheon) {   // P5-08 9
+            r.factions = pantheon->faction_rows();
         }
         return eng::tables_of(r);
     }

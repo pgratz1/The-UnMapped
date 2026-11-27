@@ -503,10 +503,10 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     // P5-02 12.4, 12.5 (v4): [monsters] and [sites] after [present]; P5-03 17.2 (v5): [peoples] after [sites]
     const std::vector<std::string> heads_s = {"[settings]", "[ages]",     "[chronicle]", "[civilizations]",
                                               "[present]",  "[monsters]", "[sites]",     "[peoples]", "[alliances]",
-                                              "[figures]", "[stats]"};   // P5-04 10.2, P5-06 10.2
+                                              "[figures]", "[pantheon]", "[cults]", "[stats]"};   // P5-04 10.2, P5-06 10.2
     const std::vector<std::string> heads_f = {"[settings]", "[ages]",    "[phases]", "[chronicle]", "[civilizations]",
                                               "[present]",  "[monsters]", "[sites]",  "[peoples]", "[alliances]",
-                                              "[figures]", "[stats]"};
+                                              "[figures]", "[pantheon]", "[cults]", "[stats]"};
     for (const std::string* text : {&summary, &full}) {
         const bool is_full = text == &full;
         CAPTURE(is_full);

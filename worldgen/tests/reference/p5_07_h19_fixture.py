@@ -165,13 +165,17 @@ rel("alliance", 2, 4, 1460, alB)
 # Gimlin falls all the same: 800 die, 1200 survive
 wk3 = add(1500, "deep_woken", region=5, settlement=5, parts=[("monster", 3), ("civilization", 2), ("site", 1),
                                                              ("lair", 6)], values=[3, 3 % 3], causes=[delve[(1, 3)]])
-aid1 = add(1500, "ally_aided_hold", region=5, settlement=5, parts=[("ally", 1), ("partner", 2), ("monster", 3),
-                                                                   ("origin", 1)], values=[(3 + 1) % 3], causes=[wk3])
-aid2 = add(1500, "ally_aided_hold", region=5, settlement=5, parts=[("ally", 4), ("partner", 2), ("monster", 3),
-                                                                   ("origin", 4)], values=[(3 + 4) % 3], causes=[wk3])
+# P5-08 12.4 (integration part 2): the aid after the outcome; the outcome cites the waking only, each aid the waking and
+# the outcome
 hl3 = add(1500, "hold_lost", region=5, settlement=5, parts=[("monster", 3), ("civilization", 2), ("lair", 6),
                                                             ("site", 1)], values=[800, 1200, (3 + 5) % 3],
-          causes=[wk3, aid1, aid2])
+          causes=[wk3])
+aid1 = add(1500, "ally_aided_hold", region=5, settlement=5, parts=[("ally", 1), ("partner", 2), ("monster", 3),
+                                                                   ("origin", 1)], values=[(3 + 1) % 3],
+           causes=[wk3, hl3])
+aid2 = add(1500, "ally_aided_hold", region=5, settlement=5, parts=[("ally", 4), ("partner", 2), ("monster", 3),
+                                                                   ("origin", 4)], values=[(3 + 4) % 3],
+           causes=[wk3, hl3])
 # --- r2: the warrens of Gorzhak (s4) to depth 3; Grubnak Stonegnawer (m4, ymrach) woken in 1540 and sealed (lair si7)
 wdl = {}
 

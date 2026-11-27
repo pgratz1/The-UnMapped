@@ -147,11 +147,11 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
         if (text == &full) {
             CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[chronicle]",
                                                        "[civilizations]", "[present]", "[monsters]", "[sites]",
-                                                       "[peoples]", "[alliances]", "[figures]", "[stats]"});   // P5-06 [figures]; P5-02 12.4, 12.5; P5-03 17.2; P5-04 10.2
+                                                       "[peoples]", "[alliances]", "[figures]", "[pantheon]", "[cults]", "[stats]"});   // P5-06 [figures]; P5-02 12.4, 12.5; P5-03 17.2; P5-04 10.2
         } else {
             CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[chronicle]", "[civilizations]",
                                                        "[present]", "[monsters]", "[sites]", "[peoples]",
-                                                       "[alliances]", "[figures]", "[stats]"});   // P5-06 [figures]; P5-03 17.2; P5-04 10.2
+                                                       "[alliances]", "[figures]", "[pantheon]", "[cults]", "[stats]"});   // P5-06 [figures]; P5-03 17.2; P5-04 10.2
         }
     }
     const std::vector<std::string> s = lines_of(summary);
