@@ -72,7 +72,15 @@ constexpr std::array<std::string_view, 5> ROLE_KEYS = {"ruler", "claimant", "gen
 constexpr std::string_view ROOT_SLOT = "{root}";
 constexpr std::string_view SLAYER = "{slayer}";
 
-enum Role : std::int64_t { RULER = 1, CLAIMANT = 2, GENERAL = 3, HERO_ROLE = 4, CASTER_ROLE = 5 };
+enum Role : std::int64_t {
+    RULER = 1,
+    CLAIMANT = 2,
+    GENERAL = 3,
+    HERO_ROLE = 4,
+    CASTER_ROLE = 5,
+    CHAMPION_ROLE = 6,  // P5-08 9
+    PROPHET_ROLE = 7,
+};
 enum Status : std::int64_t { ALIVE = 1, IN_EXILE = 2, DIED = 3, FELL = 4, SLAIN = 5, FELL_WITH_REALM = 6 };
 
 bool chance_ppm(std::uint64_t u, std::int64_t p) {
@@ -284,6 +292,7 @@ FiguresSubsystem::Line& FiguresSubsystem::line(std::int64_t civ) {
         lines_.resize(static_cast<std::size_t>(civ));
         hero_.resize(static_cast<std::size_t>(civ), 0);
         caster_.resize(static_cast<std::size_t>(civ), 0);
+        champion_.resize(static_cast<std::size_t>(civ), 0);
     }
     return lines_[static_cast<std::size_t>(civ - 1)];
 }
@@ -361,11 +370,65 @@ FigureView::General FiguresSubsystem::general_of(std::int64_t war, std::int64_t 
 }
 
 FigureView::Hero FiguresSubsystem::hero_of(std::int64_t civ) const {
-    if (civ < 1 || static_cast<std::size_t>(civ) > hero_.size() || hero_[static_cast<std::size_t>(civ - 1)] == 0) {
+    std::int64_t f = 0;
+    if (civ >= 1 && static_cast<std::size_t>(civ) <= hero_.size()) {
+        f = hero_[static_cast<std::size_t>(civ - 1)];
+    }
+    if (f == 0) {
+        f = champion_of(civ);  // P5-08 7.5: else its champion
+    }
+    if (f == 0) {
         return {};
     }
-    return Hero{hero_[static_cast<std::size_t>(civ - 1)], tuning_.hero_hunt_permille, tuning_.hero_might_permille,
-                tuning_.hero_fall_permille};
+    return Hero{f, tuning_.hero_hunt_permille, tuning_.hero_might_permille, tuning_.hero_fall_permille};
+}
+
+std::int64_t FiguresSubsystem::champion_of(std::int64_t civ) const {
+    if (civ < 1 || static_cast<std::size_t>(civ) > champion_.size()) {
+        return 0;
+    }
+    const std::int64_t f = champion_[static_cast<std::size_t>(civ - 1)];
+    return f != 0 && figure(f).status == ALIVE ? f : 0;
+}
+
+std::int64_t FiguresSubsystem::caster_of(std::int64_t civ) const {
+    if (civ < 1 || static_cast<std::size_t>(civ) > caster_.size()) {
+        return 0;
+    }
+    const std::int64_t f = caster_[static_cast<std::size_t>(civ - 1)];
+    return f != 0 && figure(f).status == ALIVE ? f : 0;
+}
+
+std::int64_t FiguresSubsystem::ruler_figure(std::int64_t civ) const {
+    const Line* l = line_if(civ);
+    if (l == nullptr || l->reign.figure == 0) {
+        return 0;
+    }
+    return figure(l->reign.figure).status == ALIVE ? l->reign.figure : 0;
+}
+
+void FiguresSubsystem::raise_divine(StepContext& ctx, std::int64_t f, std::int64_t role, std::int64_t c,
+                                    std::int64_t event, std::string_view epithet) {
+    prepare(ctx);
+    if (f != next_figure_id() || (role != CHAMPION_ROLE && role != PROPHET_ROLE)) {
+        fail("history: figures: raise_divine: figure " + int_text(f) + " of role " + int_text(role) +
+             " is not the next champion or prophet");
+    }
+    (void)line(c);  // the per-civilization vectors
+    const std::int64_t id = new_figure(ctx, role, c);
+    if (role == CHAMPION_ROLE) {
+        life_draws(ctx, id, tuning_.hero_age_permille, tuning_.hero_age_span_permille);
+    } else {
+        life_draws(ctx, id, tuning_.caster_age_permille, tuning_.caster_age_span_permille);
+    }
+    draw_person_name(ctx, id);
+    Figure& fig = figure(id);
+    fig.start_event = event;
+    if (role == CHAMPION_ROLE) {
+        fig.skill = std::max<std::int64_t>(1, tuning_.skill_max);
+        fig.epithet = std::string(epithet);
+        champion_[static_cast<std::size_t>(c - 1)] = id;
+    }
 }
 
 bool FiguresSubsystem::figure_exists(std::int64_t f) const {
@@ -469,10 +532,13 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
-        } else if (k == "spoils_shared" || k == "spoils_withheld" || k == "deep_woken" || k == "deep_sealed") {
-            // P5-07 6.9: a waking and a sealing name their ruler (role civilization).
-            const std::int64_t c = ctx.event_participant(e, k == "deep_woken" || k == "deep_sealed" ? "civilization"
-                                                                                                     : "principal");
+        } else if (k == "spoils_shared" || k == "spoils_withheld" || k == "deep_woken" || k == "deep_sealed" ||
+                   k == "cult_adopted" || k == "cult_suppressed") {
+            // P5-07 6.9: a waking and a sealing name their ruler (role
+            // civilization); P5-08 6.5: so do a faith and a suppression.
+            const bool civ_role_kind = k == "deep_woken" || k == "deep_sealed" || k == "cult_adopted" ||
+                                       k == "cult_suppressed";
+            const std::int64_t c = ctx.event_participant(e, civ_role_kind ? "civilization" : "principal");
             if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
@@ -1053,10 +1119,30 @@ void FiguresSubsystem::appoint(StepContext& ctx, std::int64_t w, std::size_t sid
     const std::int64_t v = kw0.vacancy[side];
     const RaceData& r = race(ctx.state().civ(c).race);
     const std::int64_t p = floor_div(checked_mul(r.general, tuning_.general_scale_permille), 1000);
+    const std::int64_t y = ctx.year();
+    // P5-08 7.5: a living champion not serving another war is appointed with
+    // no draw.
+    if (const std::int64_t ch = champion_of(c); ch != 0 && figure(ch).serving == 0) {
+        const bool again = figure(ch).first_command != 0;
+        if (!again) {
+            figure(ch).first_command = y;
+        }
+        EventSpec e = point_event(ctx, "general_appointed", kw0.goal, 0);
+        e.participants = {fig_role("figure", ch), civ_role("civilization", c), civ_role("enemy", enemy)};
+        e.values = {again ? 1 : 0};
+        e.causes = {w};
+        const std::int64_t ev = ctx.append(e);
+        figure(ch).serving = w;
+        ctx.state().open_relation(figure_civ_key(ch, c, "served"), ev);
+        KnownWar& kwc = wars_.at(w);
+        kwc.general[side] = ch;
+        kwc.vacant[side] = false;
+        stats_.appointments += 1;
+        return;
+    }
     if (!chance_pm(ctx.draw(keys_[APPOINT], word(w), word(c), word(v)), p)) {
         return;
     }
-    const std::int64_t y = ctx.year();
     const std::int64_t career = floor_div(checked_mul(r.lifespan, tuning_.career_permille), 1000);
     std::int64_t g = 0;
     const auto n = static_cast<std::int64_t>(figures_.size());
@@ -1592,6 +1678,9 @@ void FiguresSubsystem::epithets(const StepContext& ctx) {
     for (const auto& [key, id] : order) {
         (void)key;
         const Figure& f = figure(id);
+        if (f.role == CHAMPION_ROLE || f.role == PROPHET_ROLE) {
+            continue;  // P5-08 6.5: a champion keeps its epithet; a prophet has none
+        }
         std::string chosen;
         for (const EpithetRule& rule : tuning_.epithets) {
             if (rule.role != f.role) {

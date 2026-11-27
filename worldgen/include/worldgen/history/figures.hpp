@@ -21,6 +21,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -129,6 +130,16 @@ public:
     [[nodiscard]] General general_of(std::int64_t war, std::int64_t civ) const override;
     [[nodiscard]] Hero hero_of(std::int64_t civ) const override;
     [[nodiscard]] bool figure_exists(std::int64_t figure) const override;
+    // P5-08 7.5.
+    [[nodiscard]] std::int64_t champion_of(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t caster_of(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t ruler_figure(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t next_figure_id() const noexcept { return static_cast<std::int64_t>(figures_.size()) + 1; }
+    // Creates figure `figure` (fatal unless it is the next id) of role 6
+    // (champion: hero ages, skill skill_max, the epithet) or 7 (prophet:
+    // caster ages) for civ, start_event `event`, with its name and life.
+    void raise_divine(StepContext& context, std::int64_t figure, std::int64_t role, std::int64_t civ,
+                      std::int64_t event, std::string_view epithet);
 
     // The rows of tables figure and book (9.1, 9.3), ascending id.
     [[nodiscard]] std::vector<db::FigureRow> figure_rows() const;
@@ -279,6 +290,7 @@ private:
     std::map<std::int64_t, KnownWar> wars_;        // by war_declared id
     std::vector<std::int64_t> hero_;               // per civilization: the living hero
     std::vector<std::int64_t> caster_;             // per civilization: the living caster
+    std::vector<std::int64_t> champion_;           // P5-08 7.5: per civilization, the last champion
     std::vector<BookState> books_;                 // index id - 1
     std::set<std::int64_t> libraries_;             // settlements with a library (6.8)
     std::vector<TowerSite> towers_;                // P5-04a 21.4: kind 4 sites, ascending id

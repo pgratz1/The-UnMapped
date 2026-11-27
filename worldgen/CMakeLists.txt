@@ -84,6 +84,8 @@ add_library(worldgen STATIC
     # P3-04: the history stage as an engine with stub subsystems, the event
     # catalogue and its renderer, and the [history] report section.
     src/history/figures.cpp
+    src/history/pantheon.cpp
+    src/history/pantheon_cults.cpp
     src/history/engine.cpp
     src/history/event_catalogue.cpp
     src/history/inputs.cpp

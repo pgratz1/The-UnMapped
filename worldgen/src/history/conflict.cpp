@@ -9,6 +9,7 @@
 // only; every draw is keyed by ids and the year.
 
 #include "worldgen/history/conflict.hpp"
+#include "worldgen/history/pantheon.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -773,7 +774,7 @@ std::int64_t ConflictSubsystem::force(const StepContext& ctx, std::int64_t civ) 
         list.emplace_back(s.population, s.kind);
     }
     const ConflictRace& r = race_of_civ(ctx, civ);
-    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster));
+    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster), ctx.year());
     if (f > BOUND_2_40) {
         fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
     }
@@ -781,9 +782,9 @@ std::int64_t ConflictSubsystem::force(const StepContext& ctx, std::int64_t civ) 
 }
 
 // P5-04 7.5: trade, forge and arms, in this order, each with floor division.
-std::int64_t ConflictSubsystem::strengthened(std::int64_t civ, std::int64_t f) const {
+std::int64_t ConflictSubsystem::strengthened(std::int64_t civ, std::int64_t f, std::int64_t year) const {
     if (alliances_ == nullptr) {
-        return f;
+        return divine(civ, f, year);
     }
     const std::int64_t partners = std::min(alliances_->trade_partners(civ), tuning_.trade_strength_max);
     f = floor_div(checked_mul(f, checked_add(1000, checked_mul(tuning_.trade_strength_permille, partners))), 1000);
@@ -795,7 +796,16 @@ std::int64_t ConflictSubsystem::strengthened(std::int64_t civ, std::int64_t f) c
             : 0;
     f = floor_div(checked_mul(f, checked_add(1000, forge)), 1000);
     f = floor_div(checked_mul(f, 1000 + (alliances_->arms(civ) ? tuning_.arms_strength_permille : 0)), 1000);
-    return f;
+    return divine(civ, f, year);
+}
+
+// P5-08 7.1: after P5-04 7.5's and P5-07 6.3's factors.
+std::int64_t ConflictSubsystem::divine(std::int64_t civ, std::int64_t f, std::int64_t year) const {
+    if (divine_ == nullptr) {
+        return f;
+    }
+    const std::int64_t d = divine_->force_permille(civ, year);
+    return d == 0 ? f : floor_div(checked_mul(f, checked_add(1000, d)), 1000);
 }
 
 bool ConflictSubsystem::allied(std::int64_t a, std::int64_t b) const {
@@ -927,7 +937,7 @@ std::int64_t ConflictSubsystem::local_force(const StepContext& ctx, std::int64_t
         }
     }
     const ConflictRace& r = race_of_civ(ctx, civ);
-    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster));
+    const std::int64_t f = strengthened(civ, force_of(tuning_, list, r.prowess, r.muster), ctx.year());
     if (f > BOUND_2_40) {
         fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
     }

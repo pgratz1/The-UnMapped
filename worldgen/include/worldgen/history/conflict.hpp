@@ -30,6 +30,8 @@
 
 namespace worldgen::history {
 
+class DivineView;  // P5-08 7.1 (pantheon.hpp)
+
 // --- Tuning (12.1) -------------------------------------------------------------------------
 
 // A value per settlement kind (levy_permille, walls_permille).
@@ -306,6 +308,13 @@ public:
     // P5-04a 9.2: when c buys arms, the arms_sold event of the smallest-id
     // seller with an open trade with c whose pair has had a sale; else 0.
     [[nodiscard]] virtual std::int64_t arms_event(std::int64_t c) const = 0;
+    // P5-08 7.4: every civilization with an open alliance or trade with c,
+    // ascending id, each with its opening event (the alliance's when both;
+    // 0 for an origin alliance). A default for views that keep neither.
+    [[nodiscard]] virtual std::vector<std::pair<std::int64_t, std::int64_t>> partners(std::int64_t c) const {
+        (void)c;
+        return {};
+    }
 };
 
 // P5-04 7.6: an ally that joined a war, in join order.
@@ -412,6 +421,8 @@ public:
     void deep_flight(StepContext& context, const DeepFlightPlan& plan, std::int64_t cause);
     // P5-06 7.1: the figures (set once by the stage; nullptr: none, as at 0.26.0).
     void set_figures(const FigureView* view) noexcept { figures_ = view; }
+    // P5-08 7.1: the gods' effects on force (nullptr: neutral).
+    void set_divine(const DivineView* view) noexcept { divine_ = view; }
 
     // P5-04 7.13: const reads with the live state of the step.
     [[nodiscard]] std::int64_t disposition_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
@@ -534,7 +545,8 @@ private:
                                                              std::int64_t region) const;
     [[nodiscard]] bool last_refuge_of(const State& state, std::int64_t civ) const;
     // P5-04 7.5: the trade, forge and arms factors.
-    [[nodiscard]] std::int64_t strengthened(std::int64_t civ, std::int64_t f) const;
+    [[nodiscard]] std::int64_t strengthened(std::int64_t civ, std::int64_t f, std::int64_t year) const;
+    [[nodiscard]] std::int64_t divine(std::int64_t civ, std::int64_t f, std::int64_t year) const;
     [[nodiscard]] bool allied(std::int64_t a, std::int64_t b) const;
     [[nodiscard]] std::size_t war_index(std::int64_t war) const;
     // P5-04 7.9, 7.10, 7.11.
@@ -667,6 +679,7 @@ private:
     const DispositionView* dispositions_ = nullptr;  // P5-03 7.1
     const AllianceView* alliances_ = nullptr;        // P5-04 7.1
     const FigureView* figures_ = nullptr;            // P5-06 7.1
+    const DivineView* divine_ = nullptr;             // P5-08 7.1
     std::set<std::int64_t> arms_cited_;              // P5-04a 9.2: arms_sold events cited by a battle
 };
 

@@ -612,9 +612,10 @@ bool MonstersSubsystem::holds_site(std::int64_t settlement) const {
 }
 
 void MonstersSubsystem::open_site(const SiteSpec& spec) {
-    if (spec.id != next_site_id() || (spec.kind != 3 && spec.kind != 4)) {  // P5-06 7.8
+    // P5-06 7.8; P5-08 9: shrines, temples and sanctums (kinds 5 to 7).
+    if (spec.id != next_site_id() || spec.kind < 3 || spec.kind > 7) {
         fail("history: monsters: open_site: site " + int_text(spec.id) + " of kind " + int_text(spec.kind) +
-             " is not the next site of kind 3 or 4");
+             " is not the next site of kind 3 to 7");
     }
     Site t;
     t.id = spec.id;
@@ -632,8 +633,9 @@ void MonstersSubsystem::open_site(const SiteSpec& spec) {
 }
 
 void MonstersSubsystem::end_site_seam(std::int64_t id, std::int64_t year, std::int64_t event, std::int64_t ending) {
-    if ((site(id).kind != 3 && site(id).kind != 4) || site(id).ended_year) {  // P5-04a 21.4: towers too
-        fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine or tower");
+    // P5-04a 21.4: towers too; P5-08 6.9, 6.10: temples.
+    if ((site(id).kind != 3 && site(id).kind != 4 && site(id).kind != 6) || site(id).ended_year) {
+        fail("history: monsters: end_site: site " + int_text(id) + " is not an open mine, tower or temple");
     }
     end_site(id, year, event, ending);
 }
@@ -860,8 +862,10 @@ void MonstersSubsystem::beasts_bold(StepContext& ctx) {
 
 std::int64_t MonstersSubsystem::living() const {
     std::int64_t n = 0;
-    for (const Monster& m : monsters_) {  // P5-07 7.2: the deep kinds are outside the world cap
-        n += (kinds_[m.kind].wake != 3 && (m.status == MonsterStatus::awake || m.status == MonsterStatus::asleep))
+    // P5-07 7.2: the deep kinds are outside the world cap; P5-08 6.4: so are
+    // the monsters sent by a god.
+    for (const Monster& m : monsters_) {
+        n += (kinds_[m.kind].wake != 3 && !m.sent && (m.status == MonsterStatus::awake || m.status == MonsterStatus::asleep))
                  ? 1
                  : 0;
     }
@@ -1074,6 +1078,91 @@ void MonstersSubsystem::create(StepContext& ctx, std::size_t k, std::int64_t reg
     if (ctx.step() == Step::q4 && def.flare) {
         pending_flare_ = ev;
     }
+}
+
+// --- Sent monsters (P5-08 7.3) ----------------------------------------------------------------------
+
+std::int64_t MonstersSubsystem::lair_region_for_sent(const StepContext& ctx, std::int64_t from_region,
+                                                     std::int64_t hops) const {
+    if (from_region < 1 || from_region > region_count_) {
+        return 0;
+    }
+    const std::vector<std::int64_t> d = hops_from(from_region);
+    for (std::int64_t h = 0; h <= hops; ++h) {
+        for (std::int64_t r = 1; r <= region_count_; ++r) {
+            if (d[static_cast<std::size_t>(r - 1)] != h || has_lair(r)) {
+                continue;
+            }
+            // P5-02 6.6.1: a free wild cell (a land cell no settlement or open
+            // site holds); the ranking of wild_cell does not matter here.
+            if (wild_cell(ctx, r, true).has_value()) {
+                return r;
+            }
+        }
+    }
+    return 0;
+}
+
+MonstersSubsystem::SentMonster MonstersSubsystem::prepare_sent(const StepContext& ctx, std::size_t kind,
+                                                               std::int64_t region) const {
+    if (kind >= kinds_.size() || region < 1 || region > region_count_) {
+        fail("history: monsters: prepare_sent: kind or region out of range");
+    }
+    SentMonster out;
+    out.monster = static_cast<std::int64_t>(monsters_.size()) + 1;
+    out.lair = static_cast<std::int64_t>(sites_.size()) + 1;
+    if (out.monster > MAX_MONSTERS) {
+        fail("history: bound: monsters exceed 100000");
+    }
+    if (out.lair > MAX_SITES) {
+        fail("history: bound: sites exceed 1000000");
+    }
+    out.kind = kind;
+    out.region = region;
+    const std::optional<Cell> c = wild_cell(ctx, region, false);
+    out.cell = SiteCell{c->x, c->y};
+    return out;
+}
+
+void MonstersSubsystem::create_sent(StepContext& ctx, const SentMonster& sent, std::int64_t event) {
+    if (sent.monster != static_cast<std::int64_t>(monsters_.size()) + 1 ||
+        sent.lair != static_cast<std::int64_t>(sites_.size()) + 1) {
+        fail("history: monsters: create_sent: monster " + int_text(sent.monster) + " or lair " +
+             int_text(sent.lair) + " is not the next id");
+    }
+    const std::size_t k = sent.kind;
+    const MonsterKindDef& def = kinds_[k];
+    Monster mon;
+    mon.id = sent.monster;
+    mon.kind = k;
+    if (def.wake == 2) {
+        mon.name = place_name(ctx, k, mon.id, sent.region, 0, mon.root);
+        mon.placed = true;
+    } else {
+        mon.name = wild_name(ctx, k, mon.id);
+        mon.root = realm_root(mon.name, def.name_forms);
+    }
+    std::string lair = lair_name(ctx, sent.lair, k, mon.root);
+    Site site_row;
+    site_row.id = sent.lair;
+    site_row.kind = 1;
+    site_row.name = std::move(lair);
+    site_row.region = sent.region;
+    site_row.x = sent.cell.x;
+    site_row.y = sent.cell.y;
+    site_row.monster = mon.id;
+    site_row.origin_year = ctx.year();
+    site_row.origin_event = event;
+    sites_.push_back(std::move(site_row));
+    ++lair_count_[static_cast<std::size_t>(sent.region - 1)];
+    mon.status = MonsterStatus::awake;
+    mon.born = ctx.year();
+    mon.born_event = event;
+    mon.lair = sent.lair;
+    mon.hops = hops_from(sent.region);
+    mon.waking_event = event;
+    mon.sent = true;
+    monsters_.push_back(std::move(mon));
 }
 
 // --- The monsters' year (6.4) -------------------------------------------------------------------------

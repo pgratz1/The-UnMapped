@@ -30,6 +30,8 @@
 
 namespace worldgen::history {
 
+class DivineView;  // P5-08 7.1 (pantheon.hpp)
+
 // --- Tuning (12.1) -------------------------------------------------------------------
 
 // A value per settlement kind (abandon_permille, plague_ppm).
@@ -365,6 +367,8 @@ public:
     void set_ledger(PeopleLedger* ledger) noexcept { ledger_ = ledger; }
     // P5-06 7.1, 7.4: the figures (set once by the stage; nullptr: none).
     void set_figures(const FigureView* figures) noexcept { figures_ = figures; }
+    // P5-08 7.1: the gods' effects, set once by the stage (nullptr: neutral).
+    void set_divine(const DivineView* divine) noexcept { divine_ = divine; }
     [[nodiscard]] PeopleLedger* ledger() const noexcept { return ledger_; }
     // P5-03 9.4: 8.5's abandonment of a standing settlement with `cause` as
     // the blow (items 1 to 6, the decline start added when declining).
@@ -526,6 +530,8 @@ private:
     std::array<std::uint64_t, 14> keys_{};  // P5-02: + hist.peoples.ghost; P5-03: + hist.peoples.abandon_loss
     const WildView* wild_ = nullptr;        // P5-02 7.1
     const FigureView* figures_ = nullptr;  // P5-06 7.1
+    const DivineView* divine_ = nullptr;   // P5-08 7.1
+    std::int64_t step_year_ = 0;           // P5-08 7.1: Y of the current step
     PeopleLedger* ledger_ = nullptr;        // P5-03 6.4.1
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;

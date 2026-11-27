@@ -45,6 +45,20 @@ public:
     [[nodiscard]] virtual Hero hero_of(std::int64_t civ) const = 0;
     // 8.5: the stage's write check.
     [[nodiscard]] virtual bool figure_exists(std::int64_t figure) const = 0;
+    // P5-08 7.5: civ's living champion (role 6), living caster and reigning
+    // recorded ruler; 0 none. Defaults for views that keep no figures.
+    [[nodiscard]] virtual std::int64_t champion_of(std::int64_t civ) const {
+        (void)civ;
+        return 0;
+    }
+    [[nodiscard]] virtual std::int64_t caster_of(std::int64_t civ) const {
+        (void)civ;
+        return 0;
+    }
+    [[nodiscard]] virtual std::int64_t ruler_figure(std::int64_t civ) const {
+        (void)civ;
+        return 0;
+    }
 };
 
 }  // namespace worldgen::history

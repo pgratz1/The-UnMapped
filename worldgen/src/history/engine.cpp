@@ -48,7 +48,9 @@ constexpr std::array<Step, 5> QUIET_STEPS_BEFORE_TENSION = {Step::q1, Step::q2, 
 }  // namespace
 
 std::span<const std::string_view> supported_intervention_kinds() noexcept {
-    return {};  // P3: none (6.8); P5 fixes the list
+    // P5-08 6.3, 7.6 (generator 0.30.0): the five kinds of an act.
+    static constexpr std::array<std::string_view, 5> KINDS = {"bless", "curse", "champion", "monster", "mark"};
+    return KINDS;
 }
 
 // --- Entry checks (3.4 items 2, 4, 5) ------------------------------------------------
@@ -374,7 +376,8 @@ public:
     // only checked to be at least 1 (the history stage checks the rows).
     // P5-06 8.5: nor any figure.
     [[nodiscard]] bool participant_exists(EntityType type, std::int64_t id) const noexcept {
-        if (type == EntityType::monster || type == EntityType::site || type == EntityType::figure) {
+        if (type == EntityType::monster || type == EntityType::site || type == EntityType::figure ||
+            type == EntityType::faction) {  // P5-08 8.1: factions are checked by the stage
             return id >= 1;
         }
         return entity_exists(type, id);
@@ -583,13 +586,18 @@ private:
         append_event(e, false);
     }
 
-    // T5 (6.8): every intervention is validated and, the supported list
-    // being empty in P3, dropped without an event.
+    // T5 (6.8, P5-08 7.6): every intervention is validated; each valid one
+    // is applied in source order, an invalid one dropped without an event.
     void interventions() {
         StepContext ctx(*this, Step::t5);
         const std::vector<Intervention> list = config_.interventions->interventions(ctx);
+        if (!list.empty() && config_.applier == nullptr) {
+            fail("history: engine: interventions without an applier");
+        }
         for (const Intervention& i : list) {
-            (void)intervention_valid(i);  // dropped either way in P3
+            if (intervention_valid(i)) {
+                config_.applier->apply(ctx, i);
+            }
         }
     }
 
@@ -601,7 +609,11 @@ private:
         if (std::find(kinds.begin(), kinds.end(), std::string_view(i.kind)) == kinds.end()) {
             return false;
         }
-        if (!entity_exists(i.target_type, i.target_id)) {
+        // P5-08 6.3: the target is a civilization, alive and visible.
+        if (i.target_type != EntityType::civilization || !entity_exists(i.target_type, i.target_id)) {
+            return false;
+        }
+        if (state_.civ(i.target_id).created_step >= serial_) {
             return false;
         }
         if (i.target_type == EntityType::civilization && state_.civ(i.target_id).ended_year) {

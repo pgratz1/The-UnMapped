@@ -7,6 +7,7 @@
 // in a member (members hold ids); draws are keyed by ids and the year.
 
 #include "worldgen/history/peoples.hpp"
+#include "worldgen/history/pantheon.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -198,6 +199,7 @@ std::string PeoplesSubsystem::next_name(const StepContext& ctx, std::int64_t rac
 
 void PeoplesSubsystem::run(StepContext& ctx) {
     prepare(ctx);
+    step_year_ = ctx.year();
     switch (ctx.step()) {
         case Step::t1:
             end_empty_civilizations(ctx);
@@ -478,9 +480,18 @@ void PeoplesSubsystem::grow_years(StepContext& ctx, std::int64_t years, bool rec
             }
             const PeoplesRace& r = geo().race(race_of_civ(state, s.owner_civ));
             const std::int64_t p = s.population;
-            const std::int64_t next = grow_population(p, share[static_cast<std::size_t>(id - 1)], r.growth_permille,
-                                                      cap_of(state, s), tuning_.decline_permille,
-                                                      wild_growth(s.region));  // P5-02 7.1
+            std::int64_t next = grow_population(p, share[static_cast<std::size_t>(id - 1)], r.growth_permille,
+                                                cap_of(state, s), tuning_.decline_permille,
+                                                wild_growth(s.region));  // P5-02 7.1
+            if (divine_ != nullptr && next > p) {
+                // P5-08 7.1: the positive growth term x (1000 + growth) div 1000.
+                const std::int64_t g = divine_->growth_permille(s.owner_civ, id, ctx.year());
+                if (g != 0) {
+                    next = std::min(cap_of(state, s),
+                                    p + floor_div(checked_mul(next - p, checked_add(1000, g)), 1000));
+                    next = std::max(next, p);
+                }
+            }
             if (next != p) {
                 state.set_population(id, next);
             }
@@ -784,7 +795,9 @@ std::int64_t PeoplesSubsystem::wild_growth(std::int64_t region) const {
 }
 
 bool PeoplesSubsystem::shunned(std::int64_t region) const {
-    return wild_ != nullptr && wild_->shunned(region);
+    // P5-08 7.1: a profane shrine's region in its years, as a lair's.
+    return (wild_ != nullptr && wild_->shunned(region)) ||
+           (divine_ != nullptr && divine_->shunned(region, step_year_));
 }
 
 std::int64_t PeoplesSubsystem::road_loss(const StepContext& ctx, std::int64_t settlement, std::int64_t p) const {

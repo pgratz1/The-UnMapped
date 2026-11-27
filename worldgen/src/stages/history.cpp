@@ -14,6 +14,7 @@
 #include "worldgen/history/figures.hpp"
 #include "worldgen/history/monsters.hpp"
 #include "worldgen/history/names.hpp"
+#include "worldgen/history/pantheon.hpp"
 #include "worldgen/history/peoples.hpp"
 #include "worldgen/history/relations.hpp"
 #include "worldgen/history/renaming.hpp"
@@ -28,13 +29,15 @@ void check_monster_participants(const HistoryResult& r) {
     const auto monsters = static_cast<std::int64_t>(r.monsters.size());
     const auto sites = static_cast<std::int64_t>(r.sites.size());
     const auto figures = static_cast<std::int64_t>(r.figures.size());  // P5-06 8.5
+    const auto factions = static_cast<std::int64_t>(r.factions.size());  // P5-08 8.1
     for (const db::EventParticipantRow& p : r.event_participants) {
         const bool monster = p.entity_type == static_cast<std::int64_t>(history::EntityType::monster);
         const bool site = p.entity_type == static_cast<std::int64_t>(history::EntityType::site);
         const bool figure = p.entity_type == static_cast<std::int64_t>(history::EntityType::figure);
-        const std::int64_t n = monster ? monsters : (site ? sites : figures);
-        if ((monster || site || figure) && (p.entity_id < 1 || p.entity_id > n)) {
-            const char* what = monster ? "monster " : (site ? "site " : "figure ");
+        const bool faction = p.entity_type == static_cast<std::int64_t>(history::EntityType::faction);
+        const std::int64_t n = monster ? monsters : (site ? sites : (figure ? figures : factions));
+        if ((monster || site || figure || faction) && (p.entity_id < 1 || p.entity_id > n)) {
+            const char* what = monster ? "monster " : (site ? "site " : (figure ? "figure " : "faction "));
             const db::EventRow& e = r.events[static_cast<std::size_t>(p.event - 1)];
             for (const db::EventKindRow& row : r.event_kinds) {
                 if (row.id == e.kind) {
@@ -102,12 +105,21 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     alliances.set_figures(&figures);
     figures.set_sites(&monsters);
     figures.set_conflict(&conflict);
-    history::EmptyInterventionSource none;
+    // P5-08 6.12 item 3: the pantheon runs after the figures; it is the
+    // third tension source, the intervention source and applier, and the
+    // divine view of peoples and conflict.
+    history::PantheonSubsystem pantheon(peoples, content);
+    pantheon.set_sites(&monsters);
+    pantheon.set_figures(&figures);
+    pantheon.set_alliances(&alliances);
+    peoples.set_divine(&pantheon);
+    conflict.set_divine(&pantheon);
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances, &figures};
-    config.tension = {&conflict, &monsters};
-    config.interventions = &none;
+    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances, &figures, &pantheon};
+    config.tension = {&conflict, &monsters, &pantheon};
+    config.interventions = &pantheon;
+    config.applier = &pantheon;
     config.catalogue = &catalogue;
     HistoryResult result = history::run_engine(content, inputs, config);
     result.region_names = renaming.sorted_rows();  // P3-04 r21 23.4
@@ -122,6 +134,7 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     result.settlement_races = relations.settlement_race_rows();
     result.figures = figures.figure_rows();  // P5-06 9.1, 9.3
     result.books = figures.book_rows();
+    result.factions = pantheon.faction_rows();  // P5-08 9
     check_monster_participants(result);  // P5-02 10.4, P5-06 8.5
     return result;
 }

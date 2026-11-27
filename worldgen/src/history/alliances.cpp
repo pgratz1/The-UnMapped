@@ -238,6 +238,21 @@ std::int64_t AlliancesSubsystem::trade_partners(std::int64_t c) const {
     return n;
 }
 
+std::vector<std::pair<std::int64_t, std::int64_t>> AlliancesSubsystem::partners(std::int64_t c) const {
+    std::map<std::int64_t, std::int64_t> by_partner;
+    for (const auto& [p, t] : trades_) {
+        if (p.first == c || p.second == c) {
+            by_partner[p.first == c ? p.second : p.first] = t.opened_event;
+        }
+    }
+    for (const auto& [p, a] : alliances_) {  // the alliance's event when both
+        if (p.first == c || p.second == c) {
+            by_partner[p.first == c ? p.second : p.first] = a.origin ? 0 : a.formed_event;
+        }
+    }
+    return std::vector<std::pair<std::int64_t, std::int64_t>>(by_partner.begin(), by_partner.end());
+}
+
 bool AlliancesSubsystem::is_seller(std::int64_t c) const {
     const auto it = mines_.lower_bound(Pair{c, 0});
     return it != mines_.end() && it->first.first == c;

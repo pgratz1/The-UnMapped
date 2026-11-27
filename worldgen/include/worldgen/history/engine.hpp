@@ -332,13 +332,21 @@ public:
     virtual std::vector<Intervention> interventions(const StepContext& context) = 0;
 };
 
+// P5-08 7.6: writes a valid intervention (events and effects); the seeded
+// source returns only feasible acts.
+class InterventionApplier {
+public:
+    virtual ~InterventionApplier() = default;
+    virtual void apply(StepContext& context, const Intervention& intervention) = 0;
+};
+
 class EmptyInterventionSource final : public InterventionSource {
 public:
     std::vector<Intervention> interventions(const StepContext&) override { return {}; }
 };
 
-// The intervention kinds the engine supports: none in P3 (6.8), so every
-// intervention is dropped.
+// The intervention kinds the engine supports: none in P3 (6.8); P5-08 6.3:
+// bless, curse, champion, monster, mark.
 [[nodiscard]] std::span<const std::string_view> supported_intervention_kinds() noexcept;
 
 // --- The engine --------------------------------------------------------------------------
@@ -349,6 +357,8 @@ struct EngineConfig {
     std::vector<TensionSource*> tension;       // empty: tension 0
     InterventionSource* interventions = nullptr;  // not null; the empty source in P3
     const EventCatalogue* catalogue = nullptr;    // the stage's catalogue (8.2); tests may extend it
+    // P5-08 7.6: null only while the source returns nothing (fatal otherwise).
+    InterventionApplier* applier = nullptr;
 };
 
 // The rows of the thirteen tables of 9.1, each in its write order (9.3).

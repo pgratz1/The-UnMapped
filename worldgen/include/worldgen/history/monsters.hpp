@@ -255,6 +255,27 @@ public:
     // end_site_seam: FatalError unless the site is an open mine or tower (kind
     // 3 or 4, P5-04a 21.4).
     void open_site(const SiteSpec& spec);
+
+    // P5-08 7.3: a monster sent by a god. prepare_sent fixes the ids, the
+    // kind, the lair's region and cell (no state change); create_sent makes
+    // the monster (awake, born in the step's year, born_event `event`) and
+    // its lair (kind 1), drawing their names with the streams and keys of a
+    // wild appearance (engineer's reading: the names are drawn here, not in
+    // prepare_sent, so that the registry is not touched by a pure call).
+    // lair_region_for_sent: 6.4's search, the regions within `hops` borders
+    // of `from_region` with no open lair and a free wild cell, by (hops, id),
+    // the first; 0 none. living_count: the living monsters of a kind.
+    struct SentMonster {
+        std::int64_t monster = 0, lair = 0, region = 0;
+        std::size_t kind = 0;
+        SiteCell cell;
+        std::string name, lair_name;
+    };
+    [[nodiscard]] SentMonster prepare_sent(const StepContext& context, std::size_t kind, std::int64_t region) const;
+    void create_sent(StepContext& context, const SentMonster& sent, std::int64_t event);
+    [[nodiscard]] std::int64_t lair_region_for_sent(const StepContext& context, std::int64_t from_region,
+                                                    std::int64_t hops) const;
+    [[nodiscard]] std::int64_t living_count(std::size_t kind) const { return living_of(kind); }
     void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);
 
     // 6.2.2: the beast rows of the run's end (year end_year - 1), called by
@@ -315,6 +336,7 @@ private:
         bool sealed = false;
         std::int64_t deep_event = 0;
         bool from_warren = false;  // P5-07 r2 5: it woke from a goblin deep warren
+        bool sent = false;         // P5-08 6.4: sent by a god (outside the world cap)
     };
     struct Site {
         std::int64_t id = 0;
