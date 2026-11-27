@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 0, decided 203, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 5, decided 203, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,7 +16,19 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None.
 
-No open questions. (2026-11-26: Paul answered the five questions of P5-07 mountain depths; the rows are in section 2.)
+### Not blocking
+
+The five questions of P5-08 pantheon, divine interventions and cults (2026-11-27). Work goes on with the recommendations.
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-08-1 | The pantheon's shape: besides the six creator gods, nine more, three per camp (good: harvest, oaths, lore; neutral: craft, wild, war; evil: war, death, ruin), each with a title such as "the Keeper of Oaths" and a name drawn per world. Is this the pantheon you want, or more or fewer gods, or other domains? | Recommended: take it. Fifteen gods is enough for each realm to meet three or four of them in a history, and every domain answers deeds the history already records; more gods would mostly sit idle. The build ships the nine. | `docs/specs/p5-08-pantheon-cults.md` 21 (branch `p5/08-spec`) | |
+| Q-P5-08-2 | How often should gods act? The start is about 10 to 25 acts in a default world (one every few centuries), 2.5 times as many with `--divine-activity meddling` and under a third with `distant`. | Recommended: take it: each age has a few acts, and each one reads as an event. The build is calibrated to that. | `docs/specs/p5-08-pantheon-cults.md` 21 (branch `p5/08-spec`) | |
+| Q-P5-08-3 | A cult put down in its last realm may go into hiding at a sanctum in the wild and last to the present day. Should hidden cults stay hidden (a place for the player to find), or may they re-emerge in history later? | Recommended: stay hidden in this stage. The sanctum is a strong dungeon and quest place; re-emergence can be a later rule if hidden cults read as too static. The build keeps them hidden. | `docs/specs/p5-08-pantheon-cults.md` 21 (branch `p5/08-spec`) | |
+| Q-P5-08-4 | May a people take up the cult of a god of the opposed camp (an evil god's cult among elves or men, a good god's among goblins)? | Recommended: yes, rarely. Spread across the camps runs at a tenth of the rate within one, and such cults are the ones rulers usually put down, which angers their god. The build does this. | `docs/specs/p5-08-pantheon-cults.md` 21 (branch `p5/08-spec`) | |
+| Q-P5-08-5 | The divine script (`--divine-script`): keep it refused, as the design says for P5, or build a minimal form now? | Recommended: keep it refused. This stage fixes the kinds of intervention and the seam a script will plug into, so the experiment can come after the prototype. The build refuses it. | `docs/specs/p5-08-pantheon-cults.md` 21 (branch `p5/08-spec`) | |
+
+(2026-11-26: Paul answered the five questions of P5-07 mountain depths; the rows are in section 2.)
 
 (2026-11-25: Paul answered the two rows on monsters and lairs and on spoils; they are in section 2.)
 
