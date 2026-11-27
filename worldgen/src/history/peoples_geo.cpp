@@ -468,28 +468,32 @@ std::int64_t kind_cap(const PeoplesRace& race, SettlementKind kind, const People
     return cap;
 }
 
+std::int64_t growth_term(std::int64_t p, std::int64_t share, std::int64_t g, std::int64_t wild) {
+    std::int64_t d = 0;
+    if (wild == 1000) {
+        // P5-02 7.1 with G = 1000: the same rational number as below,
+        // floored, in 9.1's form.
+        const std::int64_t num = checked_add(checked_mul(checked_mul(p, g), share - p), checked_mul(500, share));
+        d = floor_div(num, checked_mul(1000, share));
+    } else {
+        // P5-02 7.1: (P g G (C - P) + 500 x 1000 x C) div (10^6 C).
+        const std::int64_t num = checked_add(checked_mul(checked_mul(checked_mul(p, g), wild), share - p),
+                                             checked_mul(500000, share));
+        d = floor_div(num, checked_mul(1000000, share));
+    }
+    if (g > 0) {
+        d = std::max<std::int64_t>(1, d);
+    }
+    return d;
+}
+
 std::int64_t grow_population(std::int64_t p, std::int64_t share, std::int64_t g, std::int64_t cap,
                              std::int64_t decline_permille, std::int64_t wild) {
     // r6 (9.1): the target is min(share, cap), so an excess over the kind
     // cap drains like an excess over the share.
     const std::int64_t target = std::min(share, cap);
     if (p < target) {
-        std::int64_t d = 0;
-        if (wild == 1000) {
-            // P5-02 7.1 with G = 1000: the same rational number as below,
-            // floored, in 9.1's form.
-            const std::int64_t num = checked_add(checked_mul(checked_mul(p, g), share - p), checked_mul(500, share));
-            d = floor_div(num, checked_mul(1000, share));
-        } else {
-            // P5-02 7.1: (P g G (C - P) + 500 x 1000 x C) div (10^6 C).
-            const std::int64_t num = checked_add(checked_mul(checked_mul(checked_mul(p, g), wild), share - p),
-                                                 checked_mul(500000, share));
-            d = floor_div(num, checked_mul(1000000, share));
-        }
-        if (g > 0) {
-            d = std::max<std::int64_t>(1, d);
-        }
-        return std::min(p + d, cap);
+        return std::min(p + growth_term(p, share, g, wild), cap);
     }
     if (p > target) {
         return p - std::max<std::int64_t>(1, floor_div(checked_mul(p - target, decline_permille), 1000));

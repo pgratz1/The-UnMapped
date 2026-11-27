@@ -191,3 +191,35 @@ Measured after the second ruling (gcc, seeds 0-39 at 1024, `game/data`; seeds 0-
 `divine_champion`, champions in 18 of 40 worlds, 17 of 22 fight (77.3%; PN5 needs 50%), 13 champions appointed
 general; acts bless 153, curse 158, champion 22, monster 96, mark 115; wars median 28; `monster_slain_by_hero` by
 heroes 78, by champions 4.
+
+## Integration defects E1 to E5 (lead rulings, 2026-11-27)
+
+From `docs/reviews/p5-08-integration-notes.md`, "Engine defects".
+
+- **E1** (fixed in the engine). `PeoplesSubsystem::grow_years`: the divine growth factor now scales the uncapped
+  growth term, then caps: `d = growth_term(P, share, g_race, G)` (new, `peoples_geo.cpp`; `grow_population` is
+  `min(P + d, cap)` with it), `P' = max(P, min(cap, P + d x (1000 + growth) div 1000))`, applied only when
+  `grow_population` grows (`P' > P`). Reference switch: `GROWTH_OF_CAPPED_INCREMENT` off.
+- **E2** (engine stands, spec amended). 6.8's affinity compares camps, also for a creator. Reference switch:
+  `AFFINITY_BY_CAMP` on.
+- **E3** (new rule, engine and spec 6.10, 6.12 item 5, invariant 8a). `PantheonSubsystem::finish`, run once in T6 of
+  year E - 1 (the pantheon now lists T4, T6 and Q4; it is last in the subsystem order, so after figures' present).
+  Exact rule for the reference:
+  1. Scan the log from the pantheon's cursor (the first event after its T4 read of year E - 1) to the last event, in
+     event order; each `civ_ended` or `civ_conquered` with a `civilization` participant c adds (c, e) to the ended list.
+     Nothing else is read (no regard deeds).
+  2. `endings` exactly as in a step, for each (c, e) in list order: every open `cult_in`(k, c), k ascending, closes with
+     e; then c's open `faith_of` closes with e; then each of those k with status 1 and no open `cult_in` left ends:
+     status 3, ending 2, ended year = year of e, ending event e, its open temples (site id ascending) end with code 7,
+     event e, year of e.
+  3. `temples` exactly as in a step: each open temple, site id ascending: settlement not standing -> ending 4 with its
+     `ruin_event`; else owner o differs from the founding realm and o has no open `cult_in` of the cult -> ending 4 with
+     its `owner_event`; an event older than the temple's origin event leaves it open.
+  No event is written, no draw made; every year written is the ending event's year (E - 1 in practice).
+- **E4** (fixed in the engine). `run` takes the count of cults before `foundings`; `spreads` loops over those cults only
+  and `faiths` skips a pair whose cult is newer. A cult founded in a step spreads, is adopted or suppressed from the
+  next step. Reference switch: `NEW_CULT_ACTIVE` off.
+- **E5** (fixed in the readers). `HistoryView::load` no longer checks god and faction participants in its participant
+  loop; `pantheon_tables_problem` checks them last (after its value checks), with the view's former message
+  `corrupt table 'event_participant': row (e, s): god|faction <id> does not exist`. Both readers call it, so their
+  first errors agree (a deleted god now reports `corrupt table 'god': row ...: id ... is not ...` in both).

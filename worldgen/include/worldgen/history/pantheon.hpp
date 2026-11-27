@@ -154,7 +154,7 @@ public:
     // 6.3 champion eligibility: open wars (nullptr: no war counts).
     void set_conflict(const ConflictSubsystem* conflict) noexcept { conflict_ = conflict; }
 
-    [[nodiscard]] std::span<const Step> steps() const override;  // T4, Q4
+    [[nodiscard]] std::span<const Step> steps() const override;  // T4, Q4; T6 of the last year (finish)
     void run(StepContext& context) override;
     // 6.6 (pure).
     TensionReport tension(const StepContext& context) override;
@@ -271,6 +271,8 @@ private:
     // 6.7 to 6.10 (pantheon_cults.cpp).
     void endings(StepContext& context);
     void temples(StepContext& context);
+    // Integration E3: the cult rows of the realms ended in the last year.
+    void finish(StepContext& context);
     void foundings(StepContext& context);
     void spreads(StepContext& context);
     void faiths(StepContext& context);
@@ -320,6 +322,9 @@ private:
     std::vector<std::pair<std::int64_t, std::string>> culture_keys_;  // (culture id, key), ascending
     stages::PlacenameData placenames_;
     std::int64_t cursor_ = 1;
+    std::int64_t end_year_ = 0;       // E, the history's span
+    bool finished_ = false;           // E3: the finish ran
+    std::int64_t settled_cults_ = 0;  // E4: cults founded before this step
     PantheonStats stats_;
 };
 

@@ -316,7 +316,8 @@ One live cult per god (L-6). A cult of a god g may be founded among any people, 
 For each cult k with status 1, ascending: the **candidates** are the realms a, ascending id, alive and visible, with no open `cult_in`(k, a), that hold an open `alliance` or `trade` relation with some realm c having an open `cult_in`(k, c) (read through `AllianceView::partners`, 7.4); the **link** of a is the smallest such c and its relation (alliance before trade, then the smaller `since`).
 
 ```
-affinity = same when camp(g) = camp(r_a) (a creator: r_a = its race), opposed when good against evil, else near
+affinity = same when camp(g) = camp(r_a) (camps are compared, never races: a creator's camp is its race's, so its cult
+           is `same` in every realm of a race of that camp), opposed when good against evil, else near
 p = cult_spread_permille × affinity div 1000                   // T4
 p = min(1000, p × L)                                           // Q4; quiet_events_left(a) > 0, else next a (no draw)
 for each candidate a in order, until one succeeds: if chance_pm(D(hist.pantheon.cult_spread; k, a, 0), p):
@@ -325,11 +326,11 @@ for each candidate a in order, until one succeeds: if chance_pm(D(hist.pantheon.
     open cult_in(k, a) with it
 ```
 
-At most one spread per cult per step. A cult spreads only along links (design 9's "a guild's reach follows trade and alliance links").
+The comparison is of camps (integration E2, lead ruling): a creator's cult spreads to a realm of another race of its camp at the `same` chance, and across camps at the lower chances, which keeps cross-camp cults rare (Paul's decision: a tenth of the rate). A cult founded in this step is no candidate cult (6.12 item 4): it spreads from the next step. At most one spread per cult per step. A cult spreads only along links (design 9's "a guild's reach follows trade and alliance links").
 
 ### 6.9 Cults: faith, suppression, hiding (T4 and Q4, after 6.8)
 
-The realms with an open `cult_in`, in (k, c) order, each at most one of these per step:
+The realms with an open `cult_in`, in (k, c) order, each at most one of these per step; a cult founded in this step takes no part until the next step (6.12 item 4):
 
 **Faith.** Eligible: c has no open `faith_of`, c alive and visible, and R(g, c) ≥ `adopt_regard` or k's founding realm is c. p = `adopt_permille` × `temper_adopt_permille`[τ_c] div 1000 (τ_c the current reign's temper, `FigureView::temper(c)`); Q4: min(1000, p × L) with the budget. `chance_pm(D(hist.pantheon.adopt; k, c, 0), p)`: a temple s at c's capital t when t is standing and has no open temple (named as 6.7); append **`cult_adopted`** (region of t, settlement t; participants k faction, g god, c civilization, s site 0–1; cause c's `cult_founded` or `cult_spread` of k); `open_site` when s; open **`faith_of`**(k, c) with it; `add(g, c, faith_points, e)`; for every god g' whose camp is opposed to g's, ascending, and for c's creator when its camp differs from g's: `add(g', c, −rival_faith_points, e)`. A realm keeps its faith until the cult or the realm ends.
 
@@ -345,6 +346,7 @@ So suppression angers the god, and its wrath may follow by 6.3 with the suppress
 
 - **A realm's end** (`civ_ended` or `civ_conquered` of c read in the log): `cult_in`(k, c) and `faith_of`(k, c) close with that event (keys copied first, P3-04 6.9 rule 1). A cult with status 1 left with no open `cult_in` ends: status 3, ending 2 (its realms fell), ended year and event those of the realm's ending event; its open temples end with code 7 and that event.
 - **Temples** (each open site of kind 6 ascending, of cult k, at settlement t, founded by c): t not standing → ending 4 with t's `ruin_event`; t's owner o ≠ c and o has no open `cult_in`(k, o) → ending 4 with t's `owner_event`. An ending event older than the temple waits (P5-04a 21.4 r3's reading). The ended year is the ending event's year.
+- **At the end of the history** (integration E3): a realm whose `civ_ended` or `civ_conquered` falls after the pantheon's last T4 (in T5 or T6 of the last year, E − 1) has no step left to read it. So in T6 of year E − 1, after every other subsystem (the order of 6.12 item 3, the pantheon last, as figures' present of P5-06 6.12), the pantheon reads the ending events of the log after its T4 cursor, in event order, and applies the two rules above exactly as its next step would have: first the realm's end (each `cult_in`(k, c) and `faith_of`(k, c) closes with the realm's ending event; a cult with status 1 left with no open `cult_in` ends with status 3, ending 2, the ended year and event those of the realm's ending event, and its open temples end with code 7), then the temple rule (ending 4 with the ruin or owner event, the wait of an older event kept). The ending year is the ending event's year, which is E − 1. No event is written (neither rule writes one), no draw is made, and the regard deeds of these events are not read (no act follows). A cult cannot hide here: hiding is a suppression's (6.9).
 - **Shrines** (kind 5) and **sanctums** (kind 7) never end.
 - A god never ends. A god with no cult and no follower is unchanged: its regard and acts go on.
 
@@ -357,7 +359,8 @@ Stays refused (design 5: "The divine script stays refused through phase P5"; des
 1. `PantheonSubsystem` founds no civilization or settlement. It opens and closes `cult_in` and `faith_of` only outside loops over `relations()`, with keys copied first; it creates figures, monsters and sites only through the seams (7), never inside a loop over another subsystem's lists; its own loops run over ids up to a count taken before the loop; members hold ids.
 2. `tension()` and `interventions()` are pure.
 3. Order: `subsystems` = peoples, conflict, renaming, monsters, relations, alliances, figures, **pantheon**; `tension` = conflict, monsters, **pantheon**; the engine's `interventions` = the pantheon, `applier` = the pantheon.
-4. Visibility: pantheon's T4 runs last in T4 and sees every change of the step; entities created in the step are invisible (P5-02 6.7). T5 sees the state after T4.
+4. Visibility: pantheon's T4 runs last in T4 and sees every change of the step; entities created in the step are invisible (P5-02 6.7): a cult founded in the step is not a candidate for spread (6.8), faith or suppression (6.9) until the next step. T5 sees the state after T4.
+5. The pantheon also runs in T6, only in the history's last year E − 1, for the finish of 6.10 (integration E3); in every other T6 it does nothing.
 5. Keys: god, civilization, faction, site, settlement and event ids; never list positions.
 6. **Quiet steps**: `cult_founded`, `cult_spread`, `cult_adopted`, `cult_suppressed` and (12.6) `tower_taken_up`, `tower_abandoned` may occur, each charged to its first civilization participant through `quiet_events_left`. Acts (100 to 104) occur in tick years only. No world-level pantheon event.
 
@@ -580,6 +583,7 @@ A notable renewal is written only while its alliance row has fewer than `history
 6. `cult_in`(k, a) opens only by `cult_founded` or `cult_spread`; a `cult_spread` cites k's founding and its `from` realm had `cult_in` and an open alliance or trade with a at the event; at most one spread per cult per step.
 7. At most one `faith_of` per realm in force; `faith_of`(k, c) only while `cult_in`(k, c) is open; no `cult_suppressed` of a realm's own faith; a suppression's realm satisfies 6.9's hostility rule at the event.
 8. A cult with status 2 has exactly one sanctum (kind 7) and no open `cult_in` at E; status 3 has `ending` 1 or 2 and every temple of it ended by its ending year.
+8a. At E no `cult_in` or `faith_of` is open on a realm that has ended (P3-06 invariant 4), including a realm ended in the last year (6.10's finish); no `cult_spread`, `cult_adopted` or `cult_suppressed` of a cult falls in the step of its `cult_founded` (6.12 item 4).
 9. Every open temple at E stands on a standing settlement whose owner has `cult_in` of its cult or raised it.
 10. The force of a realm in every battle equals 0.29.0's formula times (1000 + `force_permille`) div 1000 (replayed from the acts' effects); growth likewise (replayed by the reference on fixtures).
 11. 12.2: every waking in a tick year that follows a stir has the stirring candidate's last deepening as the phase trigger; no waking happens in a quiet step.
@@ -744,3 +748,4 @@ P6 reads, per shrine: its cell, its god, sacred or profane, the deed it marks (t
 ## Revision notes
 
 - r1 (2026-11-27): first draft, for approval.
+- r1a (2026-11-27, integration E1 to E5, lead rulings): 6.8 compares camps for a creator (E2, the engine's reading); 6.10 gains the finish at the end of the history and 6.12 item 5 its T6 run (E3); 6.8, 6.9 and 6.12 item 4 state that a cult founded in a step waits for the next (E4); invariant 8a. E1 (the growth factor on the term, then the cap, 6.5 and 7.1) and E5 (one function for both readers, 9) were engine defects against the text as it stood.

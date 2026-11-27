@@ -305,7 +305,7 @@ void PantheonSubsystem::spreads(StepContext& ctx) {
     if (alliances_ == nullptr || cults_.empty()) {
         return;
     }
-    const auto nk = static_cast<std::int64_t>(cults_.size());
+    const std::int64_t nk = settled_cults_;  // E4: not the cults founded in this step
     const std::int64_t nc = civ_count(ctx.state());
     for (std::int64_t k = 1; k <= nk; ++k) {
         if (cults_[static_cast<std::size_t>(k - 1)].status != 1) {
@@ -370,8 +370,8 @@ void PantheonSubsystem::faiths(StepContext& ctx) {
     const std::int64_t y = ctx.year();
     const State& state = ctx.state();
     for (const auto& [k, c] : pairs) {
-        if (!cult_in(k, c) || !alive_visible(ctx, c)) {
-            continue;
+        if (k > settled_cults_ || !cult_in(k, c) || !alive_visible(ctx, c)) {
+            continue;  // E4: a cult founded in this step waits for the next
         }
         if (cults_[static_cast<std::size_t>(k - 1)].status != 1) {
             continue;

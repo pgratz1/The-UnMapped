@@ -35,7 +35,8 @@ using namespace pantheon_detail;
 
 namespace {
 
-constexpr std::array<Step, 2> STEPS = {Step::t4, Step::q4};
+// T6 only for the finish of the history's last year (integration E3).
+constexpr std::array<Step, 3> STEPS = {Step::t4, Step::t6, Step::q4};
 
 constexpr std::array<std::string_view, 11> STREAM_NAMES = {
     streams::hist_pantheon_act,         streams::hist_pantheon_kind,       streams::hist_pantheon_flare,
@@ -197,6 +198,7 @@ void PantheonSubsystem::prepare(const StepContext& ctx) {
         case data::DivineActivity::normal: activity_ = tuning_.activity_permille[1]; break;
         case data::DivineActivity::meddling: activity_ = tuning_.activity_permille[2]; break;
     }
+    end_year_ = in.params.span;
     threshold_ = schedule_lengths(in.params.span, engine_tuning_from(ctx.content()), in.params.detail).flare_threshold;
     for (const db::RaceRow& r : in.races) {
         race_camps_.emplace_back(r.id, r.camp);
@@ -321,6 +323,12 @@ bool PantheonSubsystem::faction_exists(std::int64_t faction) const noexcept {
 
 void PantheonSubsystem::run(StepContext& ctx) {
     prepare(ctx);
+    if (ctx.step() == Step::t6) {
+        if (ctx.year() == end_year_ - 1 && !finished_) {
+            finish(ctx);
+        }
+        return;
+    }
     // 6.2: a pair whose realm has ended is dropped at the step after its
     // ending event was read.
     for (const std::int64_t c : drop_next_) {
@@ -344,6 +352,9 @@ void PantheonSubsystem::run(StepContext& ctx) {
     if (ctx.step() == Step::q4) {
         flare(ctx);
     }
+    // 6.12 item 4 (integration E4): a cult founded in this step is no
+    // candidate for spread, faith or suppression until the next step.
+    settled_cults_ = static_cast<std::int64_t>(cults_.size());
     foundings(ctx);  // 6.7
     spreads(ctx);    // 6.8
     faiths(ctx);     // 6.9
@@ -363,6 +374,30 @@ void PantheonSubsystem::add(std::int64_t g, std::int64_t c, std::int64_t points,
     while (static_cast<std::int64_t>(p.contributions.size()) > tuning_.contributions_max) {
         p.contributions.erase(p.contributions.begin());
     }
+}
+
+// --- The finish (6.10, integration E3) -------------------------------------------------------------------
+
+// T6 of the last year, after every other subsystem: the realms that ended
+// after the pantheon's last read of the log (T4 of this year) close their
+// cult rows as 6.10 would at the next step: endings, then temples, with the
+// realms' ending events. The regard deeds of these events are not read: no
+// step follows.
+void PantheonSubsystem::finish(StepContext& ctx) {
+    finished_ = true;
+    const std::int64_t last = ctx.last_event_id();
+    ended_realms_.clear();
+    for (std::int64_t e = cursor_; e <= last; ++e) {
+        const std::string_view k = ctx.event_kind(e);
+        if (k == "civ_ended" || k == "civ_conquered") {
+            const std::int64_t c = ctx.event_participant(e, "civilization");
+            if (c != 0) {
+                ended_realms_.emplace_back(c, e);
+            }
+        }
+    }
+    endings(ctx);
+    temples(ctx);
 }
 
 void PantheonSubsystem::read_log(StepContext& ctx) {

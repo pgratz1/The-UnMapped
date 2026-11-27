@@ -178,6 +178,11 @@ struct PeoplesRegion {
 // 1000 the result is 9.1's exactly.
 [[nodiscard]] std::int64_t grow_population(std::int64_t population, std::int64_t share, std::int64_t growth_permille,
                                            std::int64_t cap, std::int64_t decline_permille, std::int64_t wild = 1000);
+// The positive growth term d of 9.1 (P5-02 7.1) for P below its target,
+// before the cap: grow_population gives min(P + d, cap). P5-08 7.1 scales d
+// by the divine growth factor before the cap (integration E1).
+[[nodiscard]] std::int64_t growth_term(std::int64_t population, std::int64_t share, std::int64_t growth_permille,
+                                       std::int64_t wild = 1000);
 
 // P5-02 7.1, 7.2: what peoples reads of the wild (MonstersSubsystem). With
 // no view set, growth is 1000 and nothing is shunned.

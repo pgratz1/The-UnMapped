@@ -480,15 +480,17 @@ void PeoplesSubsystem::grow_years(StepContext& ctx, std::int64_t years, bool rec
             }
             const PeoplesRace& r = geo().race(race_of_civ(state, s.owner_civ));
             const std::int64_t p = s.population;
-            std::int64_t next = grow_population(p, share[static_cast<std::size_t>(id - 1)], r.growth_permille,
-                                                cap_of(state, s), tuning_.decline_permille,
-                                                wild_growth(s.region));  // P5-02 7.1
+            const std::int64_t sh = share[static_cast<std::size_t>(id - 1)];
+            const std::int64_t cap = cap_of(state, s);
+            const std::int64_t wild = wild_growth(s.region);  // P5-02 7.1
+            std::int64_t next = grow_population(p, sh, r.growth_permille, cap, tuning_.decline_permille, wild);
             if (divine_ != nullptr && next > p) {
-                // P5-08 7.1: the positive growth term x (1000 + growth) div 1000.
+                // P5-08 7.1 (integration E1): the positive growth term d x
+                // (1000 + growth) div 1000, then the cap.
                 const std::int64_t g = divine_->growth_permille(s.owner_civ, id, ctx.year());
                 if (g != 0) {
-                    next = std::min(cap_of(state, s),
-                                    p + floor_div(checked_mul(next - p, checked_add(1000, g)), 1000));
+                    const std::int64_t d = growth_term(p, sh, r.growth_permille, wild);
+                    next = std::min(cap, p + floor_div(checked_mul(d, checked_add(1000, g)), 1000));
                     next = std::max(next, p);
                 }
             }

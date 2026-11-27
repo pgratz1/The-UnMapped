@@ -1226,8 +1226,11 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             // P5-02 11.4: a monster or site participant is checked with the
             // tables of schema 9 below.
             // P5-06 9.4 E1: a figure participant likewise.
+            // P5-08 9 (integration E5): a god or faction participant is
+            // checked by pantheon_tables_problem, so both readers give the
+            // same first error.
             if (*type != EntityType::monster && *type != EntityType::site && *type != EntityType::figure &&
-                v.name(*type, r.entity_id) == nullptr) {
+                *type != EntityType::god && *type != EntityType::faction && v.name(*type, r.entity_id) == nullptr) {
                 view_fail(at + std::string(entity_type_key(*type)) + " " + int_text(r.entity_id) + " does not exist");
             }
             e.participants.push_back(r);
@@ -3359,6 +3362,19 @@ std::optional<std::string> pantheon_tables_problem(const PantheonTables& t) {
         if (v.value < lo || v.value > hi) {
             return "corrupt table 'event_value': row (" + int_text(v.event) + ", " + int_text(v.seq) + "): " + key + " " +
                    int_text(v.value) + " outside " + int_text(lo) + " to " + int_text(hi);
+        }
+    }
+    // Integration E5: every god and faction participant names a row (both
+    // readers defer these participants to this function).
+    for (const db::EventParticipantRow& p : t.participants) {
+        const std::optional<EntityType> type = entity_type_from_code(p.entity_type);
+        if (!type || (*type != EntityType::god && *type != EntityType::faction)) {
+            continue;
+        }
+        const std::int64_t n = *type == EntityType::god ? n_gods : n_factions;
+        if (p.entity_id < 1 || p.entity_id > n) {
+            return "corrupt table 'event_participant': row (" + int_text(p.event) + ", " + int_text(p.seq) + "): " +
+                   std::string(entity_type_key(*type)) + " " + int_text(p.entity_id) + " does not exist";
         }
     }
     return std::nullopt;
