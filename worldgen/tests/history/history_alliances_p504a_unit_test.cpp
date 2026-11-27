@@ -202,10 +202,11 @@ TEST_CASE("P5-04a 8.5: template_problem of the choice of 2 to 8 words, of 9 word
     CHECK_FALSE(h::template_problem(*refused, "{motive?a|b}").has_value());
     CHECK_FALSE(h::template_problem(*refused, "{motive?a|b|c|d|e}").has_value());
     CHECK_FALSE(h::template_problem(*refused, "{motive?a|b|c|d|e|f|g|h}").has_value());
-    CHECK(h::template_problem(*refused, "{motive?a|b|c|d|e|f|g|h|i}") ==
-          std::optional<std::string>("choice of 9 words at byte 0"));
-    CHECK(h::template_problem(*refused, "x {motive?a|b|c|d|e|f|g|h|i|j}") ==
-          std::optional<std::string>("choice of 10 words at byte 2"));
+    CHECK_FALSE(h::template_problem(*refused, "{motive?a|b|c|d|e|f|g|h|i}").has_value());  // P5-08 12.3: up to nine
+    CHECK(h::template_problem(*refused, "{motive?a|b|c|d|e|f|g|h|i|j}") ==
+          std::optional<std::string>("choice of 10 words at byte 0"));
+    CHECK(h::template_problem(*refused, "x {motive?a|b|c|d|e|f|g|h|i|j|k}") ==
+          std::optional<std::string>("choice of 11 words at byte 2"));
     CHECK_FALSE(h::template_problem(*died, "{monster}{monster:aside} {monster:died}{monster:where}.").has_value());
     // P5-03a 7.1's monster forms' problem for a role that is not a monster
     CHECK(h::template_problem(*refused, "{ally:died}") ==

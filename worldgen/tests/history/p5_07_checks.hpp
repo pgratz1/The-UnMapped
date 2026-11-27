@@ -204,9 +204,8 @@ inline std::vector<std::string> outcome_violations(const Index& x, const Rows& r
         if (pit == x.parts.end()) continue;
         for (const Row* p : pit->second) other = other || (at(*p, 3) == 8 && at(*p, 4) != mid);
     }
-    std::vector<std::int64_t> want{e};
-    want.insert(want.end(), aids.begin(), aids.end());
-    std::sort(want.begin(), want.end());
+    // P5-08 12.4: the outcome cites the waking only; each aid follows it and cites the waking and the outcome
+    const std::vector<std::int64_t> want{e};
     if (outcome == 0 || other || x.cause_list(outcome) != want) {
         out.push_back("3: deep_woken e" + n(e) + " outcome e" + n(outcome));
         return out;
@@ -216,7 +215,8 @@ inline std::vector<std::string> outcome_violations(const Index& x, const Rows& r
         out.push_back("3: deep_woken e" + n(e) + " outcome e" + n(outcome) + " is a " + k);
     }
     for (const std::int64_t a : aids) {
-        if (a <= e || a >= outcome) out.push_back("3: aid e" + n(a) + " not between e" + n(e) + " and its outcome");
+        if (a <= outcome) out.push_back("3: aid e" + n(a) + " not after the outcome e" + n(outcome) + " of e" + n(e));
+        if (x.cause_list(a) != std::vector<std::int64_t>{e, outcome}) out.push_back("3: aid e" + n(a) + " causes");
     }
     if (static_cast<std::int64_t>(aids.size()) > t.aid_max) out.push_back("14: deep_woken e" + n(e) + " has too many aids");
     std::vector<std::int64_t> allies;
@@ -265,7 +265,7 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
     std::map<std::int64_t, std::vector<std::int64_t>> aids_of, per_stl;   // r2
     for (const std::int64_t e : x.events_of("ally_aided_hold")) {
         const std::vector<std::int64_t> cs = x.cause_list(e);
-        aids_of[cs.size() == 1U ? cs[0] : 0].push_back(e);
+        aids_of[cs.size() == 2U ? cs[0] : 0].push_back(e);   // P5-08 12.4: an aid cites its waking and the outcome
     }
     for (const std::int64_t e : x.events_of("warren_delved")) per_stl[at(*x.ev.at(e), 6)].push_back(e);
     // 1
@@ -419,8 +419,7 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
         if (k == 1) {
             std::vector<std::int64_t> want;
             if (woken_of_m.count(mid) != 0U) {
-                want.push_back(woken_of_m[mid]);
-                for (const std::int64_t a : aids_of[woken_of_m[mid]]) want.push_back(a);
+                want.push_back(woken_of_m[mid]);   // P5-08 12.4: the aids come after the outcome, not among its causes
             }
             if (want.empty() || cs != want) out.push_back("5: first hold_lost e" + n(e) + " causes");
         } else {

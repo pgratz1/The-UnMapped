@@ -110,7 +110,7 @@ def deepen(year, sid, d):
     cause = delve.get((sid, d - 1), mine[sid])
     delve[(sid, d)] = add(year, "delving_deepened", region=reg, settlement=st, parts=[("civilization", civ),
                                                                                       ("site", sid)],
-                          values=[d, (sid + d) % 3], causes=[cause])
+                          values=[d, (sid + 4 * (d - 1)) % 9], causes=[cause])
 
 
 for year, sid, d in ((560, 1, 1), (580, 2, 1), (620, 3, 1), (900, 1, 2), (1000, 2, 2), (1100, 3, 2), (1450, 1, 3)):
@@ -183,7 +183,7 @@ wdl = {}
 def delve_warren(year, t, d):
     cause = wdl.get((t, d - 1), stf[t])
     wdl[(t, d)] = add(year, "warren_delved", region=4, settlement=t, parts=[("civilization", 4)],
-                      values=[d, (t + d) % 3], causes=[cause])
+                      values=[d, (t + 4 * (d - 1)) % 9], causes=[cause])
 
 
 for year, t, d in ((1510, 4, 1), (1520, 4, 2), (1530, 4, 3)):

@@ -124,7 +124,7 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
                                         "seed = 101", "seed_phrase =", "map_size = 512", "history_span = 3000",
                                         "history_detail = normal", "races = elf,goblin", "civs_per_race = auto",
                                         "event_intensity = normal", "monster_pressure = normal",
-                                        "divine_activity = normal", "divine_script =", "generator_version = 0.29.0"});
+                                        "divine_activity = normal", "divine_script =", "generator_version = 0.30.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
               "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "

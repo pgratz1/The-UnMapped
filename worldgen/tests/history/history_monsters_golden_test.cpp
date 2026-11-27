@@ -306,8 +306,12 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
     }
     std::map<std::int64_t, std::vector<const Row*>> events_of_monster;
     std::map<std::int64_t, std::vector<std::int64_t>> monster_parts;   // event -> monster ids in role 1
+    std::map<std::int64_t, std::int64_t> kind_of_event;
+    for (const Row& e : t.event) kind_of_event[at(e, 0)] = at(e, 3);
     for (const Row& p : t.event_participant) {
-        if (at(p, 3) == 8 && at(p, 2) == 1) monster_parts[at(p, 0)].push_back(at(p, 4));
+        // P5-08 8.2: a divine_monster names its monster in role 2 (the actor, a god, is role 1)
+        const bool divine = k.count("divine_monster") != 0U && kind_of_event[at(p, 0)] == k.at("divine_monster");
+        if (at(p, 3) == 8 && at(p, 2) == (divine ? 2 : 1)) monster_parts[at(p, 0)].push_back(at(p, 4));
     }
     for (const Row& e : t.event) {
         for (const std::int64_t m : monster_parts[at(e, 0)]) events_of_monster[m].push_back(&e);
@@ -464,7 +468,7 @@ TEST_CASE("P5-02 18: the golden file lists the world cases of p3-06-conflict.txt
     // 1024's m6 and three more); at 0.25.0 (P5-03a 6: the threshold follows the world's population) a host rises
     // on the monsters-small fixtures too
     CHECK(monsters_golden().kinds_seen ==
-          std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern"});
+          std::vector<std::string>{"dragon", "giant", "ogre", "troll", "undead", "wyvern", "ymrach"});
     CHECK(monsters_golden().events_seen.size() >= 10U);
     std::size_t undead = 0;
     for (const MCase& c : monsters_golden().cases) {
@@ -493,7 +497,7 @@ TEST_CASE("P5-02 19.3: the fixtures monsters-small and zero against the golden f
         if (g.data == "zero") {
             CHECK(t.monster.empty());
             // P5-04: only mines (kind 3) without monsters; P5-06: and towers (kind 4)
-            for (const Row& s : t.site) CHECK((at(s, 2) == 3 || at(s, 2) == 4));
+            for (const Row& s : t.site) CHECK((at(s, 2) == 3 || at(s, 2) == 4 || at(s, 2) >= 5));
         }
     }
 }

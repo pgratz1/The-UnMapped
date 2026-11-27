@@ -396,7 +396,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 10U);  // figures.toml from 0.27.0 (P5-06); alliances.toml from 0.26.0 (P5-04 4.2),
+    CHECK(directory_from_disk(data, "history").entries.size() == 11U);  // pantheon.toml from 0.30.0 (P5-08 4.2); figures.toml from 0.27.0 (P5-06); alliances.toml from 0.26.0 (P5-04 4.2),
                                                                          // relations.toml from 0.24.0 (P5-03 4.2),
                                                                          // conflict.toml from 0.16.0 (P3-06 12.1),
                                                                          // renaming.toml from 0.22.0 (P5-12 4),
@@ -594,6 +594,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
         f["history/figures.toml"] = std::string(history_data::FIGURES_TOML);   // P5-06: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
+        history_data::add_pantheon_files(f);   // P5-08 4.1, 4.2: the kind god and history.pantheon
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
     }
@@ -622,6 +623,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
         f["history/figures.toml"] = std::string(history_data::FIGURES_TOML);   // P5-06: a required fixed id
         history_data::add_monster_files(f);   // P5-02 4.1 to 4.3
+        history_data::add_pantheon_files(f);   // P5-08 4.1, 4.2: the kind god and history.pantheon
         const Load l = load(f);
         INFO(dump(l));
         CHECK(l.ok());
@@ -721,7 +723,7 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'deities' for kind 'history'; expected one of 'alliances', 'chronology', 'conflict', 'engine', 'figures', 'monsters', "
+          "unknown id 'deities' for kind 'history'; expected one of 'alliances', 'chronology', 'conflict', 'engine', 'figures', 'monsters', 'pantheon', "
           "'peoples', 'relations', 'renaming', 'report'");   // relations: P5-03 4.2
 }
 
@@ -1018,9 +1020,10 @@ TEST_CASE("P3-04 r13 4.2, P5-03a: report_event.template is string(1024) from 0.2
     const std::string old = "{creator} awakened the {race:plural} in {@region}.";
     REQUIRE(contains(history_data::REPORT_TOML, old));
     // plain text after the placeholders keeps the template valid (8.4); only the length changes
-    const std::string at1024 = old + std::string(1024 - old.size(), 'x');
-    REQUIRE(at1024.size() == 1024U);
-    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at1024)).ok(), "1024 bytes");
+    // string(2048) from 0.30.0 (P5-08 8.2 as built: the cause words of kinds 100 to 104 exceed 1024)
+    const std::string at1024 = old + std::string(2048 - old.size(), 'x');
+    REQUIRE(at1024.size() == 2048U);
+    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at1024)).ok(), "2048 bytes");
     const Load l = load(shipped_edited("history/report.toml", old, at1024 + "x"));
     const wd::LoadError e = only_error(l);
     CHECK(e.path == "history/report.toml");

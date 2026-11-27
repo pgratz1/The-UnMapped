@@ -293,6 +293,7 @@ class Deep:
         # P5-08 12.2: the stirring flags (mine site ids, warren settlement ids), cleared at the next Q4
         self.stirring = set()
         self.stirring_warren = set()
+        self.stir_trigger = {}   # the deepening that stirred each candidate (12.2: the flare's trigger is THAT deepening)
         self._last_phase = None
         self.first_flare = False
         self.log = []             # (year, what, ids...) for checks
@@ -376,6 +377,7 @@ class Deep:
             p = stir_ppm(t["deep_wake_ppm"], d, m.M, L, sp)
             if pp.chance_ppm(w.draw("hist.deep.stir", sid, 0, 0), p):
                 self.stirring.add(sid)
+                self.stir_trigger[sid] = self.last_delve[sid]
                 m.pending_flare = self.last_delve[sid]
                 self.log.append((w.year, "stir", sid, self.last_delve[sid]))
                 return
@@ -398,6 +400,7 @@ class Deep:
             p = stir_ppm(t["deep_wake_ppm"], d, m.M, L, sp, t["deep_warren_wake_permille"])
             if pp.chance_ppm(w.draw("hist.deep.warren_stir", tid, 0, 0), p):
                 self.stirring_warren.add(tid)
+                self.stir_trigger[-tid] = self.last_warren[tid]
                 m.pending_flare = self.last_warren[tid]
                 self.log.append((w.year, "stir warren", tid, self.last_warren[tid]))
                 return
@@ -504,7 +507,7 @@ class Deep:
             K = [k for k in self.deep_kinds() if self.living_of(k) < self.m.kind(k)["max_alive"]]
             if not K:
                 continue
-            certain = sid in self.stirring and self.stirred_now(self.last_delve.get(sid, 0))   # P5-08 12.2
+            certain = sid in self.stirring and self.stirred_now(self.stir_trigger.get(sid, 0))   # P5-08 12.2
             if not certain and not pp.chance_ppm(w.draw("hist.deep.wake", sid, 0, 0),
                                                  wake_ppm(t["deep_wake_ppm"], d, self.m.M)):
                 continue
@@ -532,7 +535,7 @@ class Deep:
             if not K:
                 continue
             p = warren_wake_ppm(t["deep_wake_ppm"], d, self.m.M, t["deep_warren_wake_permille"])
-            certain = tid in self.stirring_warren and self.stirred_now(self.last_warren.get(tid, 0))   # P5-08 12.2
+            certain = tid in self.stirring_warren and self.stirred_now(self.stir_trigger.get(-tid, 0))   # P5-08 12.2
             if not certain and not pp.chance_ppm(w.draw("hist.deep.warren_wake", tid, 0, 0), p):
                 continue
             ws = [self.m.kind(k)["wake_rate"] for k in K]

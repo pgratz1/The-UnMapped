@@ -2018,7 +2018,7 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
     for k, frole, crole in (("monster_slain_by_hero", "hero", "slayer"), ("hero_slain", "figure", "civilization")):
         for e in w.of(k):
             f = w.fig.get(w.one(e, frole))
-            if f is None or f["role"] != HERO or f["civ"] != w.one(e, crole) or f["start_event"] > e or (
+            if f is None or f["role"] not in (HERO, 6) or f["civ"] != w.one(e, crole) or f["start_event"] > e or (
                     f["death_event"] and f["death_event"] < e):
                 out.append("6: %s e%d hero %s not a living hero of its realm" % (k, e, w.one(e, frole)))
     heroes = {}
@@ -2081,7 +2081,8 @@ def invariant_violations(w, tuning, cultures_regnal=None, quiet_events_max=None)
     for b in w.t["book"]:
         nb[b[2]] = nb.get(b[2], 0) + 1
         s = w.site.get(b[3])
-        if s is None or s[2] != SITE_TOWER or w.one(s[10], "figure") != b[2]:
+        taken = {(w.one(e, "figure"), w.one(e, "site")) for e in w.of("tower_taken_up")} if "tower_taken_up" in w.K else set()
+        if s is None or s[2] != SITE_TOWER or (w.one(s[10], "figure") != b[2] and (b[2], b[3]) not in taken):   # P5-08 12.6
             out.append("9: book %d is not at its author's tower" % b[0])
     for f, n in nb.items():
         if n > tuning["books_max"]:
@@ -2523,10 +2524,12 @@ def violations_028(w, t):
                 out.append("19: open tower si%d with ending %d" % (s_[0], s_[13]))
             continue
         ee = s_[12]
-        if s_[13] not in (4, 5) or ee not in w.ev or w.year(ee) != s_[11]:
+        if s_[13] not in (4, 5, 7) or ee not in w.ev or w.year(ee) != s_[11]:   # 7: P5-08 12.6, the lapse
             out.append("19: tower si%d ending %d e%d at %d" % (s_[0], s_[13], ee, s_[11]))
             continue
         c = s_[7]
+        if s_[13] == 7:
+            continue
         if s_[13] == 5:
             if ee != w.ending_event(c):
                 out.append("19: tower si%d ending 5 by e%d, not c%d's end" % (s_[0], ee, c))

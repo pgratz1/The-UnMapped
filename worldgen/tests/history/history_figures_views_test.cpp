@@ -82,7 +82,8 @@ TEST_CASE("P5-06 10.1, 10.2, 10.4, 10.5: report v8: header, [figures], [sites] w
         const std::string count = "figures: " + std::to_string(w.figs.size()) + "; rulers " +
                                   std::to_string(by_role[1]) + ", claimants " + std::to_string(by_role[2]) +
                                   ", generals " + std::to_string(by_role[3]) + ", heroes " + std::to_string(by_role[4]) +
-                                  ", casters " + std::to_string(by_role[5]) + "; alive at the end " +
+                                  ", casters " + std::to_string(by_role[5]) + ", champions " + std::to_string(by_role[6]) +
+                                  ", prophets " + std::to_string(by_role[7]) + "; alive at the end " +
                                   std::to_string(alive);
         CHECK(fb.front() == count);
         std::size_t listed = 0;

@@ -211,7 +211,7 @@ TEST_CASE("P5-07 9: the event checks of kinds 93 to 96 refused with their messag
     P507_REQUIRE_INTEGRATED();
     const Base& b = base();
     // values in the ranges of 8.1 (P5-03 16.4's form)
-    refused("V1", value(b.delve1, 2, 3), E(b.delve1) + "value telling 3 outside 0 to 2");
+    refused("V1", value(b.delve1, 2, 9), E(b.delve1) + "value telling 9 outside 0 to 8");   // P5-08 12.3: 93 and 98 have 0 to 8
     refused("V2", value(b.sealed, 1, -1), E(b.sealed) + "value telling -1 outside 0 to 2");
     refused("V3", value(b.woken, 1, 4), E(b.woken) + "value depth 4 outside 1 to 3");
     refused_prefix("V4", value(b.lost, 1, -5), E(b.lost) + "value dead -5 outside 0 to ");
@@ -262,7 +262,7 @@ TEST_CASE("P5-07 r2 9: the warren and aid checks refused with their messages") {
     const Base2& b = base2();
     REQUIRE_FALSE(eng::view_error(chrono_test::open_world(b.path)).has_value());
     // values of 97 to 99 in 8.1's ranges; 94's telling 0 to 5
-    refused2("WV1", value(b.w1, 2, 3), E(b.w1) + "value telling 3 outside 0 to 2");
+    refused2("WV1", value(b.w1, 2, 9), E(b.w1) + "value telling 9 outside 0 to 8");
     refused2("WV2", value(b.w2, 1, 4), E(b.w2) + "value depth 4 outside 1 to 3");
     refused2("WV3", value(b.woken, 2, 6), E(b.woken) + "value telling 6 outside 0 to 5");
     // the depth chain per settlement (93's messages)

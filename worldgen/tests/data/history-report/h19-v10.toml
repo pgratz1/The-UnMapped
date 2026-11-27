@@ -1242,7 +1242,7 @@ phase = 3
 region = 5
 settlement = 5
 parts = [["civilization", 2], ["site", 1]]
-values = [1, 2]
+values = [1, 1]
 causes = [13]
 
 [[event]]
@@ -1253,7 +1253,7 @@ phase = 3
 region = 3
 settlement = 3
 parts = [["civilization", 3], ["site", 2]]
-values = [1, 0]
+values = [1, 2]
 causes = [14]
 
 [[event]]
@@ -1264,7 +1264,7 @@ phase = 3
 region = 2
 settlement = 2
 parts = [["civilization", 2], ["site", 3]]
-values = [1, 1]
+values = [1, 3]
 causes = [15]
 
 [[event]]
@@ -1340,7 +1340,7 @@ phase = 3
 region = 5
 settlement = 5
 parts = [["civilization", 2], ["site", 1]]
-values = [2, 0]
+values = [2, 5]
 causes = [16]
 
 [[event]]
@@ -1351,7 +1351,7 @@ phase = 3
 region = 3
 settlement = 3
 parts = [["civilization", 3], ["site", 2]]
-values = [2, 1]
+values = [2, 6]
 causes = [17]
 
 [[event]]
@@ -1362,7 +1362,7 @@ phase = 3
 region = 2
 settlement = 2
 parts = [["civilization", 2], ["site", 3]]
-values = [2, 2]
+values = [2, 7]
 causes = [18]
 
 [[event]]
@@ -1445,7 +1445,7 @@ phase = 3
 region = 5
 settlement = 5
 parts = [["civilization", 2], ["site", 1]]
-values = [3, 1]
+values = [3, 0]
 causes = [26]
 
 [[event]]
@@ -1528,7 +1528,7 @@ phase = 3
 region = 4
 settlement = 4
 parts = [["civilization", 4]]
-values = [1, 2]
+values = [1, 4]
 causes = [12]
 
 [[event]]
@@ -1539,7 +1539,7 @@ phase = 3
 region = 4
 settlement = 4
 parts = [["civilization", 4]]
-values = [2, 0]
+values = [2, 8]
 causes = [44]
 
 [[event]]
@@ -1550,7 +1550,7 @@ phase = 3
 region = 4
 settlement = 4
 parts = [["civilization", 4]]
-values = [3, 1]
+values = [3, 3]
 causes = [45]
 
 [[event]]
@@ -1583,7 +1583,7 @@ phase = 3
 region = 4
 settlement = 7
 parts = [["civilization", 4]]
-values = [1, 2]
+values = [1, 7]
 causes = [37]
 
 [[event]]
@@ -1648,7 +1648,7 @@ phase = 3
 region = 4
 settlement = 7
 parts = [["civilization", 4]]
-values = [2, 0]
+values = [2, 2]
 causes = [49]
 
 [[event]]

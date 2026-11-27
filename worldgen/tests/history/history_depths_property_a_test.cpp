@@ -72,15 +72,17 @@ TEST_CASE("P5-07 13, 16 item 13: depths-small seeds 0 to 9 at 512: the invariant
     WARN(seen.count("realm lost") == 1U);
 }
 
-TEST_CASE("P5-07 integration witnesses at 512 (shipped): seed 78 a warren woken and sealed, seed 9 an aid") {
+TEST_CASE("P5-07 integration witnesses at 512 (shipped): seed 78 a warren woken and sealed, seed 10 an aid") {
     P507_REQUIRE_INTEGRATED();
     // Found by the integration's witness search (docs/reviews/p5-07-integration-notes.md) over shipped seeds 0 to 99
     // at 512; the reference's replay of these worlds equals the engine's tables.
     const std::set<std::string> p78 = paths_of(rows_of(p503run::world_path(78, 512), conflict_test::shipped()));
     CHECK(p78.count("warren woken") == 1U);
     CHECK(p78.count("warren sealed") == 1U);
-    const std::set<std::string> p9 = paths_of(rows_of(p503run::world_path(9, 512), conflict_test::shipped()));
-    CHECK(p9.count("aid") == 1U);
+    // 0.30.0: seed 9 no longer has an aid (the pantheon moved the draws); the search over seeds 0 to 59 found 10
+    // first (also 34, 38, 41, 55).
+    const std::set<std::string> p10 = paths_of(rows_of(p503run::world_path(10, 512), conflict_test::shipped()));
+    CHECK(p10.count("aid") == 1U);
 }
 
 }  // TEST_SUITE

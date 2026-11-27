@@ -355,10 +355,21 @@ TEST_CASE("P5-06 11.4: marker_glyph(20) is the tower glyph of radius 3") {
 TEST_CASE("P5-06 4, 18.1 item 1: the 0.27.0 data load; each new figures field required; the named checks") {
     P506_REQUIRE_INTEGRATED();
     history_data::Files f = history_data::shipped_files();
-    for (const auto& [path, text] : p506data::files_027()) f[path] = text;
+    for (const auto& [path, text] : p506data::files_027()) {
+        f[path] = text;
+        if (path.rfind("cultures/", 0) == 0U) {   // P5-08 6.7: the five cult forms every culture needs from 0.30.0
+            const std::string id = path.substr(9, path.size() - 9 - 5);
+            f[path] += std::string(history_data::cult_forms_of(id));
+        }
+        // P5-08 4.2, 12: the fields of 0.30.0 that the 0.27.0 files lack (the shipped values)
+        if (path == "history/alliances.toml") f[path] += "renew_written_max = 1\n";
+        if (path == "history/chronology.toml") f[path] += "creator_title = \"the Maker of {plural}\"\n";
+        if (path == "history/figures.toml") f[path] += "tower_lapse_years = 200\n";
+        if (path == "history/monsters.toml") f[path] += "deep_stir_permille = 700\n";
+    }
     f.erase("history/figures.toml");
     REQUIRE_FALSE(load(f).ok());   // history.figures is required
-    f["history/figures.toml"] = std::string(p506data::FIGURES_TOML);
+    f["history/figures.toml"] = std::string(p506data::FIGURES_TOML) + "tower_lapse_years = 200\n";   // P5-08 12.6
     const Load l = load(f);
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(h::check_history_data(*l.content).empty());
@@ -399,7 +410,18 @@ TEST_CASE("P5-06 4, 18.1 item 1: the 0.27.0 data load; each new figures field re
 TEST_CASE("P5-06 4.1 to 4.3: the race, culture and monster fields: values and the named checks") {
     P506_REQUIRE_INTEGRATED();
     history_data::Files f = history_data::shipped_files();
-    for (const auto& [path, text] : p506data::files_027()) f[path] = text;
+    for (const auto& [path, text] : p506data::files_027()) {
+        f[path] = text;
+        if (path.rfind("cultures/", 0) == 0U) {   // P5-08 6.7: the five cult forms every culture needs from 0.30.0
+            const std::string id = path.substr(9, path.size() - 9 - 5);
+            f[path] += std::string(history_data::cult_forms_of(id));
+        }
+        // P5-08 4.2, 12: the fields of 0.30.0 that the 0.27.0 files lack (the shipped values)
+        if (path == "history/alliances.toml") f[path] += "renew_written_max = 1\n";
+        if (path == "history/chronology.toml") f[path] += "creator_title = \"the Maker of {plural}\"\n";
+        if (path == "history/figures.toml") f[path] += "tower_lapse_years = 200\n";
+        if (path == "history/monsters.toml") f[path] += "deep_stir_permille = 700\n";
+    }
     const Load l = load(f);
     REQUIRE_MESSAGE(l.ok(), dump(l));
     for (const auto& r : p506data::RACES) {

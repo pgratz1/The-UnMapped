@@ -131,53 +131,53 @@ TEST_CASE("P5-07 8.2: the sentences of kinds 93 to 96 and of the changed civ_end
     SKIP_UNLESS_READY();
     const std::vector<std::string> f = lines(HistoryLevel::full);
     for (const char* l : {
-             "560 e16 delving_deepened/15: By hammer and lamp, the Hold of Durn delved the Mines of Gimlin below the "
-             "reach of daylight.",
-             "900 e26 delving_deepened/15: Following a rich seam, the Hold of Durn delved the Mines of Gimlin into the "
-             "roots of the mountain.",
-             "1450 e36 delving_deepened/15: Year upon year, the Hold of Durn delved the Mines of Gimlin into the oldest "
-             "dark beneath the world.",
+             "560 e16 delving_deepened/15: Year upon year, the Hold of Durn delved the Mines of Gimlin below "
+             "the reach of daylight.",
+             "900 e26 delving_deepened/15: By hammer and lamp, the Hold of Durn delved the Mines of Gimlin "
+             "into the roots of the mountain.",
+             "1450 e36 delving_deepened/15: Following a rich seam, the Hold of Durn delved the Mines of Gimlin "
+             "into the oldest dark beneath the world.",
              "1150 e29 deep_woken/60: In the deepest halls under Kazad Rune, the Hold of Durn woke Bolgrim the "
              "Deep-Coiled, a wyrm of the lightless deep.",
-             "1200 e31 deep_woken/60: Where the last seam ran out beneath Kazmar, Clan Nirgurn broke into the old dark "
-             "and woke the Swarm Beneath Durak, a host of eyeless things from under the stone.",
-             "1500 e40 deep_woken/60: Delving too deep beneath Gimlin, the Hold of Durn woke Ugrak the Unquenched, a "
-             "fire that walks in the roots of the world.",
-             "1150 e30 deep_sealed/50: With stone and rune, the Hold of Durn shut Bolgrim the Deep-Coiled away below "
-             "the Mines of Kazad Rune, and the deep ways were closed.",
-             "1200 e32 hold_lost/70: The Swarm Beneath Durak broke out of the deeps into Kazmar of Clan Nirgurn; 480 "
-             "died, and 720 fled.",
-             "1600 e51 hold_lost/70: After the raids, Ugrak the Unquenched broke out of the deeps into Kazad Rune of the "
-             "Hold of Durn; 1,206 died, and 1,810 fled.",
+             "1200 e31 deep_woken/60: Where the last seam ran out beneath Kazmar, Clan Nirgurn broke into the "
+             "old dark and woke the Swarm Beneath Durak, a host of eyeless things from under the stone.",
+             "1500 e40 deep_woken/60: Delving too deep beneath Gimlin, the Hold of Durn woke Ugrak the "
+             "Unquenched, a fire that walks in the roots of the world.",
+             "1150 e30 deep_sealed/50: With stone and rune, the Hold of Durn shut Bolgrim the Deep-Coiled away "
+             "below the Mines of Kazad Rune, and the deep ways were closed.",
+             "1200 e32 hold_lost/70: The Swarm Beneath Durak broke out of the deeps into Kazmar of Clan "
+             "Nirgurn; 480 died, and 720 fled.",
+             "1600 e51 hold_lost/70: After the raids, Ugrak the Unquenched broke out of the deeps into Kazad "
+             "Rune of the Hold of Durn; 1,206 died, and 1,810 fled.",
              "1201 e33 civ_ended/85: After the loss of its last hold to the deep, Clan Nirgurn came to an end.",
-             "1600 e52 refugees_settled/65: The survivors of Kazad Rune fled into hiding and founded Brunhal in Brun "
-             "Heights.",
-             // r2: the aids, the fall citing the waking and both aids, the warrens (kinds 94 and 96 at telling 3 to 5)
-             "1500 e41 ally_aided_hold/40: Bound by old oaths, the House of Aelin marched out of Aelinost to stand with "
-             "the Hold of Durn at the gate of Gimlin against Ugrak the Unquenched.",
-             "1500 e42 ally_aided_hold/40: Bound by old oaths, the Gub Horde marched out of Gorzhak to stand with the Hold "
-             "of Durn at the gate of Gimlin against Ugrak the Unquenched.",
-             "1500 e43 hold_lost/70: Ugrak the Unquenched broke out of the deeps into Gimlin of the Hold of Durn; 800 "
-             "died, and 1,200 fled. {@rg5 @s5 monster=m3 civilization=c2 lair=si6 site=si1 dead=800 survivors=1200 "
-             "telling=2} [causes e40, e41, e42]",
-             "1510 e44 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of Gorzhak below "
-             "the reach of daylight.",
-             "1520 e45 warren_delved/15: Ever greedy for the dark, the Gub Horde dug the warrens of Gorzhak down among "
-             "the mountain's roots.",
-             "1530 e46 warren_delved/15: Squabbling and scraping, the Gub Horde dug the warrens of Gorzhak into the "
-             "oldest dark beneath the world. {@rg4 @s4 civilization=c4 depth=3 telling=1} [causes e45]",
-             "1540 e47 deep_woken/60: Digging after grubs and glitter beneath Gorzhak, the Gub Horde blundered into the "
-             "old dark and woke Grubnak Stonegnawer, a wyrm of the lightless deep. {@rg4 @s4 monster=m4 "
-             "civilization=c4 lair=si7 depth=3 telling=4} [causes e46]",
-             "1540 e48 warren_sealed/50: With rockfall and fire, the Gub Horde buried Grubnak Stonegnawer deep below "
-             "Gorzhak, and no goblin went that way again.",
-             "1550 e49 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of Gnashgut "
-             "below the reach of daylight. {@rg4 @s7 civilization=c4 depth=1 telling=2} [causes e37]",
-             "1690 e56 deep_woken/60: In the stinking deep tunnels of Gnashgut, the Gub Horde woke the Eyeless of "
-             "Gnashgut, a host of eyeless things from under the stone.",
-             "1690 e57 hold_lost/70: The Eyeless of Gnashgut boiled up out of the burrows into Gnashgut of the Gub Horde; "
-             "412 died, and 618 fled. {@rg4 @s7 monster=m5 civilization=c4 lair=si8 dead=412 survivors=618 "
-             "telling=3} [causes e56]"}) {
+             "1600 e52 refugees_settled/65: The survivors of Kazad Rune fled into hiding and founded Brunhal "
+             "in Brun Heights.",
+             "1500 e41 hold_lost/70: Ugrak the Unquenched broke out of the deeps into Gimlin of the Hold of "
+             "Durn; 800 died, and 1,200 fled. {@rg5 @s5 monster=m3 civilization=c2 lair=si6 site=si1 dead=800 "
+             "survivors=1200 telling=2} [causes e40]",
+             "1500 e42 ally_aided_hold/40: Bound by old oaths, the House of Aelin marched out of Aelinost to "
+             "stand with the Hold of Durn at the gate of Gimlin against Ugrak the Unquenched.",
+             "1500 e43 ally_aided_hold/40: Bound by old oaths, the Gub Horde marched out of Gorzhak to stand "
+             "with the Hold of Durn at the gate of Gimlin against Ugrak the Unquenched.",
+             "1510 e44 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of "
+             "Gorzhak below the reach of daylight.",
+             "1520 e45 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of "
+             "Gorzhak down among the mountain's roots.",
+             "1530 e46 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of "
+             "Gorzhak into the oldest dark beneath the world. {@rg4 @s4 civilization=c4 depth=3 telling=3} "
+             "[causes e45]",
+             "1540 e47 deep_woken/60: Digging after grubs and glitter beneath Gorzhak, the Gub Horde blundered "
+             "into the old dark and woke Grubnak Stonegnawer, a wyrm of the lightless deep. {@rg4 @s4 "
+             "monster=m4 civilization=c4 lair=si7 depth=3 telling=4} [causes e46]",
+             "1540 e48 warren_sealed/50: With rockfall and fire, the Gub Horde buried Grubnak Stonegnawer deep "
+             "below Gorzhak, and no goblin went that way again.",
+             "1550 e49 warren_delved/15: Grub by grub and stone by stone, the Gub Horde dug the warrens of "
+             "Gnashgut below the reach of daylight. {@rg4 @s7 civilization=c4 depth=1 telling=7} [causes e37]",
+             "1690 e56 deep_woken/60: In the stinking deep tunnels of Gnashgut, the Gub Horde woke the Eyeless "
+             "of Gnashgut, a host of eyeless things from under the stone.",
+             "1690 e57 hold_lost/70: The Eyeless of Gnashgut boiled up out of the burrows into Gnashgut of the "
+             "Gub Horde; 412 died, and 618 fled. {@rg4 @s7 monster=m5 civilization=c4 lair=si8 dead=412 "
+             "survivors=618 telling=3} [causes e56]"}) {
         const std::string head(l);
         CAPTURE(head);
         const std::string got = starting(f, head.substr(0, head.find(' ', head.find(' ') + 1) + 1));
@@ -197,7 +197,7 @@ TEST_CASE("P5-07 10 items 2 to 5: sealed in, a mine's depth and sealing, lost to
     CHECK(has(f, "  m5 The Eyeless of Gnashgut: Ysgarth, awake, lair The Nest of Gnashgut (si8) in Gor Heath (rg4), "
                  "since 1690 e56, raids 0, killed 0, hoard 0"));
     CHECK(has(f, "  si1 The Mines of Gimlin: mine in Iron Downs (rg5) at 50 50, since 400 e13, of The Hold of Durn "
-                 "(c2), at Gimlin (s5), depth 3; ended 1500 e43 lost"));
+                 "(c2), at Gimlin (s5), depth 3; ended 1500 e41 lost"));
     CHECK(has(f, "  si3 The Mines of Kazad Rune: mine in Kazad Fells (rg2) at 20 20, since 450 e15, of The Hold of Durn "
                  "(c2), at Kazad Rune (s2), depth 2, sealed 1150 e30; ended 1600 e51 lost"));
     CHECK(has(f, "  si5 The Warrens of Durak: lair in The Grey Fells (rg3) at 30 30, since 1200 e31, at Kazmar (s3); open"));
@@ -238,8 +238,10 @@ TEST_CASE("P5-07 10 item 6, 12 item 4: milestones at most one per kind; the alli
 TEST_CASE("P5-07 10 item 7: the fourteen [stats] keys (r2: six more) appended in order, with H19's values") {
     SKIP_UNLESS_READY();
     const auto st = hrtest::stats_list(text(HistoryLevel::full));
-    REQUIRE(st.size() >= 14U);
-    CHECK(std::vector<std::pair<std::string, std::int64_t>>(st.end() - 14, st.end()) == stats_want());
+    // P5-08 10 item 8 appends its keys after these: the fourteen start at mines_deepened
+    const auto first = std::find_if(st.begin(), st.end(), [](const auto& kv) { return kv.first == "mines_deepened"; });
+    REQUIRE(st.end() - first >= 14);
+    CHECK(std::vector<std::pair<std::string, std::int64_t>>(first, first + 14) == stats_want());
 }
 
 TEST_CASE("P5-07 11.1, 16 item 12: the timeline's mine_depth_at and sealed_year, the monster state; groups; symbol") {
@@ -285,7 +287,7 @@ TEST_CASE("P5-07 11.1, 16 item 12: the timeline's mine_depth_at and sealed_year,
     CHECK(in::event_group("warren_delved") == in::EventGroup::settlements);   // r2
     CHECK(in::event_group("warren_sealed") == in::EventGroup::monsters);
     CHECK(in::event_group("ally_aided_hold") == in::EventGroup::alliances);
-    CHECK(in::ALL_GROUPS == 0x1FFU);
+    CHECK(in::ALL_GROUPS == 0x3FFU);   // P5-08 11.1: gods = 9
     CHECK(in::event_symbol("hold_lost") == in::EventSymbol::sack);
     CHECK(in::event_symbol("deep_woken") == in::EventSymbol::plain);
     CHECK(in::event_symbol("deep_sealed") == in::EventSymbol::plain);

@@ -242,7 +242,7 @@ inline std::vector<std::string> violations(const World& w, bool name_rulers = tr
              {"monster_slain_by_hero", "hero", "slayer"}, {"hero_slain", "figure", "civilization"}}) {
         for (const std::int64_t e : w.of(k)) {
             const auto it = w.figs.find(w.one(e, fr));
-            if (it == w.figs.end() || it->second.role != 4 || it->second.civ != w.one(e, cr) ||
+            if (it == w.figs.end() || (it->second.role != 4 && it->second.role != 6) || it->second.civ != w.one(e, cr) ||   // P5-08: a champion (role 6) hunts and may fall as a hero does
                 it->second.start_event > e || (it->second.death_event != 0 && it->second.death_event < e)) {
                 out.push_back("6: " + k + " e" + s(e) + " names no living hero of its realm");
             }
@@ -299,10 +299,14 @@ inline std::vector<std::string> violations(const World& w, bool name_rulers = tr
             out.push_back("9: tower si" + s(sid) + " is not a site of its caster's realm");
         }
     }
+    // P5-08 12.6: a caster who took a tower up (tower_taken_up) writes there too
+    std::set<std::pair<std::int64_t, std::int64_t>> taken_up;
+    for (const std::int64_t e : w.of("tower_taken_up")) taken_up.emplace(w.one(e, "figure"), w.one(e, "site"));
     for (const auto& b : w.books) {
         ++books_of[I(b, 2)];
         const auto st = w.sites.find(I(b, 3));
-        if (st == w.sites.end() || I(st->second, 2) != 4 || w.one(I(st->second, 10), "figure") != I(b, 2)) {
+        if (st == w.sites.end() || I(st->second, 2) != 4 ||
+            (w.one(I(st->second, 10), "figure") != I(b, 2) && taken_up.count({I(b, 2), I(b, 3)}) == 0U)) {
             out.push_back("9: book " + s(I(b, 0)) + " is not at its author's tower");
         }
     }

@@ -47,6 +47,7 @@ Never regenerate the golden file to make a C++ test pass.
 
 import hashlib
 import os
+import re
 import sqlite3
 import sys
 import tomllib
@@ -250,6 +251,25 @@ def ent(t, i):
 def evs(i):
     return ("ev", None, 0, i)
 
+TAG_TYPES = {"fa": 7, "si": 9, "g": 2, "f": 6, "m": 8, "c": 3, "s": 4}
+TAGGED_RE = re.compile(r"(?:(?<= )|^)(fa|si|g|f|m|c|s)(\d+) (.+?)(?= e\d+(?!\d)| in si\d+ | since \d+ )|(?<= )e(\d+)(?!\d)")
+
+
+def tagged_line(t_):
+    """P5-08: a realm line of the report's text as segments (lit, tagged entity, event reference)."""
+    segs, at = [], 0
+    for m in TAGGED_RE.finditer(t_):
+        if m.start() > at:
+            segs.append(lit(t_[at:m.start()]))
+        if m.group(4) is not None:
+            segs.append(evs(int(m.group(4))))
+        else:
+            segs.append(("tg", "%s%s %s" % (m.group(1), m.group(2), m.group(3)), TAG_TYPES[m.group(1)], int(m.group(2))))
+        at = m.end()
+    if at < len(t_):
+        segs.append(lit(t_[at:]))
+    return segs
+
 
 def sen(i):
     return ("sen", None, 0, i)
@@ -353,8 +373,10 @@ class Browser:
 
     # --- 4.5 select ---------------------------------------------------------------------------------------
 
-    def select(self, civ=0, settlement=0, region=0, from_year=-1, to_year=-1, groups=ALL_GROUPS,
+    def select(self, civ=0, settlement=0, region=0, from_year=-1, to_year=-1, groups=None,
                summary_only=True):
+        if groups is None:   # read at the call: use_groups() rebinds ALL_GROUPS after import (0.30.0: 0x3FF)
+            groups = ALL_GROUPS
         for t, i, have in ((CIV, civ, self.civ_ids), (SETTLEMENT, settlement, self.settlement_ids),
                            (REGION, region, self.region_ids)):
             if i and i not in have:
@@ -536,6 +558,11 @@ class Browser:
                     o.append(segs)
                 else:
                     o.append([lit(t_)])
+        if prr.V11 and (level == "full" or len(w.t["civilization"]) <= prr.SUMMARY_LINES_CIVS):
+            # P5-08 10 item 4 and 12.1 item 2: the gods, faith and deep lines, after the allies and before the rulers;
+            # the entities named in them are tagged segments (links), the event ids event segments
+            for t_ in prr.p508().realm_lines(w.t, cid) + prr.deep_line(w, cid):
+                o.append(tagged_line(t_))
         if prr.V8 and (level == "full" or len(w.t["civilization"]) <= prr.SUMMARY_LINES_CIVS):
             # P5-06 10.3: the rulers lines (as the C++ BlockLines: the figure references are entity segments)
             rulers = sorted((x for x in w.t["figure"] if x[3] == 1 and x[6] == cid), key=lambda x: x[15])

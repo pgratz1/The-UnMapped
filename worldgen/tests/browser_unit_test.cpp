@@ -191,6 +191,11 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
         {EventGroup::settlements, {"delving_deepened", "warren_delved"}},
         {EventGroup::monsters, {"deep_woken", "deep_sealed", "hold_lost", "warren_sealed"}},
         {EventGroup::alliances, {"ally_aided_hold"}},
+        // P5-08 11.1: kinds 100 to 108 in the new group gods (code 9); 109 and 110 in figures
+        {EventGroup::gods,
+         {"divine_bless", "divine_curse", "divine_champion", "divine_monster", "divine_mark", "cult_founded",
+          "cult_spread", "cult_adopted", "cult_suppressed"}},
+        {EventGroup::figures, {"tower_taken_up", "tower_abandoned"}},
     };
     std::size_t n = 0;
     for (const auto& [g, keys] : table) {
@@ -200,7 +205,7 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 110U);   // P5-04 8.1; P5-06 11.3: fourteen more; P5-07 8.1: seven more
+    CHECK(n == 110U);   // P5-04 8.1; P5-06 11.3: fourteen more; P5-07 8.1: seven more; P5-08 11.1: eleven more
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
     REQUIRE(kinds.size() == 110U);
@@ -221,7 +226,7 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
     CHECK(static_cast<int>(EventGroup::other) == 4);
     CHECK(static_cast<int>(EventGroup::monsters) == 5);
     CHECK(static_cast<int>(EventGroup::peoples) == 6);   // P5-03 lead ruling 4: kinds 57 to 62
-    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0x1FF);   // P5-06 (figures = 8)
+    CHECK(static_cast<int>(brapi::ALL_GROUPS) == 0x3FF);   // P5-06 (figures = 8); P5-08 (gods = 9)
     CHECK(brapi::event_group_word(static_cast<EventGroup>(7)) == "alliances");
     CHECK(brapi::event_group_word(EventGroup::peoples) == "peoples");
     CHECK(brapi::event_group_word(EventGroup::realms) == "realms");

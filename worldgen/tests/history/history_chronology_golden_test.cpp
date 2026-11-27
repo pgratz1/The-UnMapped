@@ -134,7 +134,8 @@ TEST_CASE("P3-03 14.4 item 22: the golden file holds every case the spec lists")
     CHECK(item(c, "years") == "0 2074 3242 4243 4969 5596");
     // r3 (0.17.0): P3-02 11.6's seed-42 gods (7.1 lists r4's: Krok, Kruu); unchanged by the short word list
     // of 0.18.0 ("mold" stays on it).
-    CHECK(item(c, "gods") == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
+    CHECK(item(c, "gods") == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1|7:Muug'murk:0|8:Drulihai:0|9:Bagit:0|"
+                        "10:Ouwi:0|11:Naecend:0|12:Maeglith:0|13:Sneegib:2|14:Edearbuck:1|15:Ashedsock:0");  // 0.30.0: the nine of the pantheon follow the six creators (golden, from the reference)
 }
 
 TEST_CASE("P3-03 14.4 item 22: seam cases through chronology_stage") {

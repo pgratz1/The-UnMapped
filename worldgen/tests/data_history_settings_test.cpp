@@ -183,6 +183,7 @@ TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race o
     f["history/alliances.toml"] = std::string(history_data::ALLIANCES_TOML);   // P5-04 4.2: a required fixed id
     f["history/figures.toml"] = std::string(history_data::FIGURES_TOML);   // P5-06: a required fixed id
     history_data::add_monster_files(f);   // P5-02 4.1 to 4.3: required kinds and fixed id (dragon and ogre load)
+    history_data::add_pantheon_files(f);   // P5-08 4.1, 4.2: the kind god and history.pantheon
     const Load l = load(f);
     INFO(dump(l));
     REQUIRE(l.ok());

@@ -511,10 +511,13 @@ inline std::vector<std::string> figure_violations(const World& w, const std::vec
             continue;
         }
         const std::int64_t ee = at(t4, 12), ending = at(t4, 13);
-        if ((ending != 4 && ending != 5) || x.ev.count(ee) == 0U || r.year(ee) != at(t4, 11)) {
+        // P5-08 12.6 (generator 0.30.0): ending 7, the lapse of the line of masters, is written with a tower_abandoned
+        if ((ending != 4 && ending != 5 && ending != 7) || x.ev.count(ee) == 0U || r.year(ee) != at(t4, 11) ||
+            (ending == 7 && r.kind(ee) != "tower_abandoned")) {
             out.push_back("19: tower si" + s(id) + " ending " + s(ending) + " e" + s(ee));
             continue;
         }
+        if (ending == 7) continue;   // its quiet years after the master's death: the P5-08 reference's check 13
         if (ending == 5) {
             if (x.civ.count(c) == 0U || at(*x.civ.at(c), 9) != ee) out.push_back("19: tower si" + s(id) + " ending 5 not by its realm's end");
             continue;

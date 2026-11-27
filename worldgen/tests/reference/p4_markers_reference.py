@@ -233,7 +233,7 @@ def event_symbol(key):
     """key: bytes. P5-06 11.1: battle_led is a battle at 0.27.0."""
     if key == b"battle_led" and v027():
         return BATTLE
-    if key == b"hold_lost" and GENERATOR_VERSION == "0.29.0":   # P5-07 11.1: a lost hold is a sack's symbol
+    if key == b"hold_lost" and GENERATOR_VERSION in ("0.29.0", "0.30.0"):   # P5-07 11.1: a lost hold is a sack's symbol
         return SACK
     return SYMBOL_KEYS.get(key, PLAIN)
 

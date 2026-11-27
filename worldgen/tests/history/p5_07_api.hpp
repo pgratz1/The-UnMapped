@@ -46,7 +46,7 @@ inline constexpr const char* GENERATOR_SPEC = "0.29.0";            // header
 inline constexpr std::int64_t SCHEMA_SPEC = 13;                    // 9
 inline constexpr std::int64_t STREAMS_SPEC = 107;                  // 3: nine appended after hist.alliances.renew (r2)
 inline constexpr std::int64_t KINDS_SPEC = 99;                     // 8.1: 93 to 99 (r2)
-inline constexpr const char* REPORT_HEADER_SPEC = "# worldgen history v10";   // 10 item 1
+inline constexpr const char* REPORT_HEADER_SPEC = "# worldgen history v11";   // 10 item 1 (v10 at 0.29.0; v11 from 0.30.0, P5-08 10)
 inline constexpr std::int64_t WAKE_DEEP = 3;                       // 9: monster_kind.wake 3 deep
 inline constexpr std::int64_t K_DELVING = 93, K_WOKEN = 94, K_SEALED = 95, K_LOST = 96;   // 8.1
 inline constexpr std::int64_t K_AIDED = 97, K_WARREN_DELVED = 98, K_WARREN_SEALED = 99;   // 8.1 (r2)

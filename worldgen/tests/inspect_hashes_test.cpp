@@ -336,12 +336,12 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
     CHECK(tables.value()[3].row_count == 0U);
     CHECK(tables.value()[6].name == "climate");
     CHECK(tables.value()[6].row_count == 0U);
-    CHECK(tables.value()[17].name == "layer");
-    CHECK(tables.value()[17].row_count == 3U);
-    CHECK(tables.value()[18].name == "meta");
-    CHECK(tables.value()[18].row_count == 17U);
-    CHECK(tables.value()[21].name == "pass");
-    CHECK(tables.value()[21].row_count == 0U);
+    CHECK(tables.value()[18].name == "layer");
+    CHECK(tables.value()[18].row_count == 3U);
+    CHECK(tables.value()[19].name == "meta");
+    CHECK(tables.value()[19].row_count == 17U);
+    CHECK(tables.value()[22].name == "pass");
+    CHECK(tables.value()[22].row_count == 0U);
 
     CHECK(w.table_columns("meta").value() == std::vector<std::string>{"key", "value"});
     CHECK(w.table_columns("layer").value() ==
@@ -398,6 +398,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("table"), text("event_kind_value"), text("event_kind_value"), text(p004::DDL_EVENT_KIND_VALUE)},
         {text("table"), text("event_participant"), text("event_participant"), text(p004::DDL_EVENT_PARTICIPANT)},
         {text("table"), text("event_value"), text("event_value"), text(p004::DDL_EVENT_VALUE)},
+        {text("table"), text("faction"), text("faction"), text(p004::DDL_FACTION)},   // P5-08 9
         {text("table"), text("figure"), text("figure"), text(p004::DDL_FIGURE)},   // P5-06 9.1
         {text("table"), text("god"), text("god"), text(p004::DDL_GOD)},
         {text("table"), text("layer"), text("layer"), text(p004::DDL_LAYER)},
@@ -429,7 +430,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
                  ++visited;
              })
                 .ok());
-    CHECK(visited == 43);  // 36 tables and 7 automatic indexes (schema 10)
+    CHECK(visited == 44);  // 37 tables and 7 automatic indexes (schema 14)
     CHECK(std::string(worldgen::db::sqlite_library_version()) == sqlite3_libversion());
 }
 
@@ -479,7 +480,7 @@ TEST_CASE("reader raw rows: primary-key order with BINARY collation, composite k
     REQUIRE(d.ok());
     REQUIRE(d.value().tables.size() == 38);  // schema 12's 34 and pair
     CHECK(d.value().tables[22].name == "pair");
-    CHECK(d.value().tables[23].digest == e.digest());
+    CHECK(d.value().tables[22].digest == e.digest());   // the same index as the name above (a stale 23 after part 2)
     // The schema hash now covers the new table too (and is no longer the P0 one).
     CHECK(d.value().schema != p004::p0_schema_hash());
 }

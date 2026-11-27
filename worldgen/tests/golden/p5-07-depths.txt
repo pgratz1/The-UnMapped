@@ -4,20 +4,20 @@
 # depths-forced (size 0: a conflict stress geography; worldgen/tests/data/depths/depths-forced.toml) also has
 # path forced_seal <year> <monster> <seal event> and path no_take <year> <monster> <settlement> (the replay's log).
 case depths-small-0-512 0 512 depths-small
-table site eaba276d46f2e9a0986fe5faf25c868ec56604cfd2b40ee2801ff4bc6640dde4
-table monster 614cb1207fb510fca5cadf3a9ce19b6b3f5805e369c24c84a361e7e2612a7dbd
-table event 4d405aa52bd647d0520f7fa8b0858517e2b8264c6a332b692c3f780fd63ed481
-table event_value 6fd5dffadee8c3fec481a1ee71a8966e79bfb08c1c24c4d4ecc3646bcd6e3510
-stat mines_deepened 17
-stat mines_deepest 5
-stat deep_woken 6
-stat deep_sealed 2
-stat holds_lost 9
-stat deep_flights 1
+table site 6f5ace030ae16d24f4237eb8796aa2f7a9afbeb16ff5873ba58bf57dc14f3902
+table monster dc1647df95346089749f533dd051fed6d4d246e08f119d73348a668d1e7898e6
+table event 974fd623ad851ab0f656d34740a993ec4b2e53b5c6ef08bfbb30b9ea1262ee7a
+table event_value 65d872de1d5eb289c6c90ae01645f8d22f7641b61c287e73230598d4b5c39446
+stat mines_deepened 14
+stat mines_deepest 4
+stat deep_woken 7
+stat deep_sealed 1
+stat holds_lost 8
+stat deep_flights 3
 stat realms_lost_to_deep 0
 stat deep_alive 5
-stat warrens_delved 11
-stat warrens_deepest 3
+stat warrens_delved 15
+stat warrens_deepest 4
 stat warrens_woken 2
 stat warrens_sealed 1
 stat deep_aided 0
@@ -80,43 +80,43 @@ stat warrens_sealed 0
 stat deep_aided 0
 stat wakings_aided 0
 case depths-small-4-512 4 512 depths-small
-table site 6cb5f7930e53808bbac655b81ebc5e9738799c976e3575c266b6875cb9d9e873
-table monster beb0447d016ff02c4777bcdac8a6fca94238b8d35dceebc5e31ab74b09d0725f
-table event 35f7e752ccbe2e173657d78ca8fd87b02f7aa7f49f077ca59c8eca322dbc33c7
-table event_value dec1ba2a8dc5b9b1d9e3073d500fdce2aec0efc3cdeb7f5f2e21953d32a4f70b
-stat mines_deepened 3
-stat mines_deepest 1
-stat deep_woken 4
-stat deep_sealed 1
-stat holds_lost 4
-stat deep_flights 3
+table site 53e1c007e60aeec2c5dcedcf967ba5c4bff4974c175d7c374309e96dcf4a258d
+table monster 8c4575c79370afc4a48a1c8c9b463c7c76a43fea0e847aafbec63258bff1d652
+table event f81befe10cb362988fba78e8792f016fa743a230fa6e55380723039351b1be49
+table event_value 6854c2520a419c2207ef6d6b20db21332760a37ddbe684a2a714efb610570921
+stat mines_deepened 11
+stat mines_deepest 3
+stat deep_woken 6
+stat deep_sealed 0
+stat holds_lost 14
+stat deep_flights 8
 stat realms_lost_to_deep 1
-stat deep_alive 4
-stat warrens_delved 8
+stat deep_alive 5
+stat warrens_delved 13
 stat warrens_deepest 1
-stat warrens_woken 3
-stat warrens_sealed 1
+stat warrens_woken 5
+stat warrens_sealed 0
 stat deep_aided 0
 stat wakings_aided 0
 case depths-small-5-512 5 512 depths-small
-table site 23ede07146ce4be60c0a09ca4510856b67a903c84f9414794f967f928bb92a44
-table monster bb32dce0586c87bb37b807c7a7bb27bda133b63a4c9fd3f6e1cf418aaf3b0925
-table event 51d4efda9c02d20e746218e1d44f9d438c68c837f03195fba288d88b10c894b0
-table event_value 02fdc794ad0d9d5ec9bf33e64f64f2f45e02f3ab08a10bfbb94b999f1cd5ca42
-stat mines_deepened 10
-stat mines_deepest 2
+table site d1caeaa7efbafd3dab7144b213550995c873e35b2b5510341cc9bf374b7e00f3
+table monster c4cc245e5f749137648fd51358f0a077c9a389761ebc1372866deb26a68466c6
+table event 34c10e9418e8eae0a6b37d1505999e69e7ac25f8a1df884e4b07a58e9d00b0bf
+table event_value 3e1234d1fe16bc493500e97350083cb94dd6f1abf96374888e06c7a223d2b678
+stat mines_deepened 19
+stat mines_deepest 5
 stat deep_woken 5
 stat deep_sealed 1
 stat holds_lost 5
 stat deep_flights 4
 stat realms_lost_to_deep 0
 stat deep_alive 5
-stat warrens_delved 2
+stat warrens_delved 0
 stat warrens_deepest 0
-stat warrens_woken 1
+stat warrens_woken 0
 stat warrens_sealed 0
-stat deep_aided 0
-stat wakings_aided 0
+stat deep_aided 2
+stat wakings_aided 1
 case depths-small-6-512 6 512 depths-small
 table site 4a2e5278425ed4fe9aa9d9ebecea8aacd95fbaa305a014c670c6c28dacaf9943
 table monster 7e2f5255fd0d3a4506591eee2217c7e2be9e650fd9a168352819928785d54d81
@@ -239,10 +239,10 @@ path no_take 952 11 5
 path no_take 1115 10 5
 path no_take 1177 10 5
 case depths-forced-39 39 0 depths-forced
-table site 167f4c81c9d4c63a3a96d8b3b7699d2b13ccd9ae1dcf8e57145c163bedcf3640
-table monster ee0227de43cfe3c7dcff46eeb30c79d4ae2b794e3b4628fdebee3bc99231f3a4
-table event 9ff6d3d53aaa3cc7289fcc318fde47e73c6c588cb7a58258959da41da12c66b2
-table event_value 8fcd92707b2717912e6580628d3ce5fe9fe4b11651e9892b5de83293ee5e960d
+table site b626f7960eab8fb2c946edb6d1e089e1c6e51fee770240f9bd4725bf915f41dc
+table monster 435c4f8d3ad78782dd331272b05c3e3ae291a4abfc119f09d47c00a013a7f723
+table event 49d4b750c9c802728ee7c4401f7a16db48c2fcb6a4fadcec3e4ab60ee2eb9d53
+table event_value 575f0de2829c24f69bad1c7cb63d89054d3e892e04ae06e8922cd75511d715be
 stat mines_deepened 7
 stat mines_deepest 1
 stat deep_woken 3
@@ -258,21 +258,6 @@ stat warrens_sealed 0
 stat deep_aided 0
 stat wakings_aided 0
 path forced_seal 49 8 38
-path no_take 848 14 2
 path no_take 852 14 2
 path no_take 871 14 2
 path no_take 4129 14 2
-path no_take 4139 14 2
-path no_take 4141 14 2
-path no_take 4163 14 2
-path no_take 4173 14 2
-path no_take 4180 14 2
-path no_take 4195 14 2
-path no_take 4197 14 2
-path no_take 4207 14 2
-path no_take 4208 14 2
-path no_take 4209 14 2
-path no_take 4210 14 2
-path no_take 4215 14 2
-path no_take 5950 14 2
-path no_take 5970 14 2

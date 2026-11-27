@@ -67,7 +67,7 @@ TEST_CASE("P5-06 10.1, 10.2, 18.1 item 14: H17 [figures] at full and at summary"
     CHECK(s[0] == "# worldgen history v11");
     const std::vector<std::string> want_full = {
         "[figures]",
-        "figures: 20; rulers 13, claimants 2, generals 2, heroes 2, casters 1; alive at the end 7",
+        "figures: 20; rulers 13, claimants 2, generals 2, heroes 2, casters 1, champions 0, prophets 0; alive at the end 7",
         "  f1 Aldric the Founder: ruler of The Kingdom of Cear (c5), Human, 300-380, reigned 300-380 (reign 1, "
         "steady); died 380 e24",
         "  f2 Dain the Victorious: ruler of The Hold of Durn (c3), Dwarven, 520-640, reigned 590-640 (reign 13, "
