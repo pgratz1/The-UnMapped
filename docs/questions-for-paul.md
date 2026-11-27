@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 0, decided 202, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 1, decided 202, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,7 +16,13 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None.
 
-No open questions. (2026-11-26: Paul answered the four questions of P5-07 mountain depths; the rows are in section 2.)
+### Not blocking
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-07-5 | You said of a realm falling to the deep "8% sounds right". The bound I set was "at most 8% of dwarven realms, at least one fall in 200 worlds". As calibrated, single holds fall often (in about 20 of 100 worlds, up to four in one world) but a whole realm ended in only 1 of 200 worlds, about 0.3% of dwarven realms. Did you mean 8% as a ceiling, or should about 8% of dwarven realms end this way? | Recommended: keep it as built for P5-07 (a lost realm is a rare legend; lost holds are common) and, if you want it nearer 8%, raise it in the next stage that changes world bytes (P5-08), since it means a retune of how far the deep spreads after a first hold falls. | `docs/reviews/p5-07-calibration.md`, second calibration (DP5) | |
+
+(2026-11-26: Paul answered the first four questions of P5-07 mountain depths; the rows are in section 2.)
 
 (2026-11-25: Paul answered the two rows on monsters and lairs and on spoils; they are in section 2.)
 
