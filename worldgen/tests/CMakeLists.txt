@@ -494,7 +494,8 @@ target_sources(worldgen-tests PRIVATE
 target_sources(worldgen-tests PRIVATE
     history/history_alliances_p504a_unit_test.cpp
     history/history_alliances_p504a_data_test.cpp
-    history/history_alliances_p504a_property_test.cpp
+    history/history_alliances_p504a_property_a_test.cpp
+    history/history_alliances_p504a_property_b_test.cpp
     history/history_relations_p504a_test.cpp
     history/history_figures_p504a_test.cpp
     history/history_report_v9_test.cpp
@@ -510,7 +511,9 @@ target_sources(worldgen-tests PRIVATE
 target_sources(worldgen-tests PRIVATE
     history/history_depths_unit_test.cpp
     history/history_depths_data_test.cpp
-    history/history_depths_property_test.cpp
+    history/history_depths_property_a_test.cpp
+    history/history_depths_property_b_test.cpp
+    history/history_depths_property_c_test.cpp
     history/history_depths_reader_test.cpp
     history/history_depths_report_test.cpp
     history/history_depths_golden_test.cpp
@@ -665,13 +668,18 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD relations-golden 100 "*history_relations_golden_test.cpp"
     SHARD relations-p504a 100 "*history_relations_p504a_test.cpp"
     SHARD relations 70 "*history_relations_p503a_test.cpp,*history_relations_partb_test.cpp,*history_relations_reader_test.cpp,*history_relations_reads_test.cpp,*history_relations_ledger_test.cpp,*history_relations_data_test.cpp,*history_relations_unit_test.cpp,*history_relations_seams_test.cpp,*history_relations_report_test.cpp"
-    SHARD alliances-p504a 210 "*history_alliances_p504a_property_test.cpp"
+    SHARD alliances-p504a-a 70 "*history_alliances_p504a_property_a_test.cpp"
+    SHARD alliances-p504a-b 60 "*history_alliances_p504a_property_b_test.cpp"
     SHARD alliances-property 120 "*history_alliances_property_test.cpp"
     SHARD alliances 35 "*history_alliances_catalogue_test.cpp,*history_alliances_data_test.cpp,*history_alliances_golden_test.cpp,*history_alliances_h16_test.cpp,*history_alliances_p504a_data_test.cpp,*history_alliances_p504a_unit_test.cpp"
     SHARD figures-property 185 "*history_figures_property_test.cpp"
     SHARD figures-p504a 175 "*history_figures_p504a_test.cpp"
     SHARD figures 50 "*history_figures_golden_test.cpp,*history_figures_h17_test.cpp,*history_figures_reader_test.cpp,*history_figures_unit_test.cpp,*history_figures_views_test.cpp"
-    SHARD depths 30 "*depths_*"
+    SHARD depths-property-a 80 "*history_depths_property_a_test.cpp"
+    SHARD depths-property-b 80 "*history_depths_property_b_test.cpp"
+    SHARD depths-property-c 80 "*history_depths_property_c_test.cpp"
+    SHARD depths-golden 70 "*history_depths_golden_test.cpp"
+    SHARD depths 20 "*history_depths_data_test.cpp,*history_depths_forced_test.cpp,*history_depths_reader_test.cpp,*history_depths_report_test.cpp,*history_depths_unit_test.cpp"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
