@@ -163,7 +163,7 @@ When champion is ineligible its weight is 0 and the kind draw is unchanged (no n
 of reads: war first, then monsters; either suffices.
 
 Measured with the rule (gcc, seeds 0-39 at 1024, `game/data`; seeds 0-7 byte-identical with clang): 20
-`divine_champion` (was more before the rule), 18 of 40 worlds with a champion, 6 of 20 champions fight (30%; PN5
+`divine_champion` (no before-rule count on this seed set), 18 of 40 worlds with a champion, 6 of 20 champions fight (30%; PN5
 needs 50%). Acts 100-104: bless 156, curse 164, champion 20, monster 95, mark 111. Diagnosis: champions live about 25
 to 35 years and only 6 of 20 saw a war declaration of their realm in their life; a champion raised during an open war
 is not appointed to it (P5-06 6.6 appoints at a declaration only), and a realm's own hero hunts before its champion.
