@@ -1627,6 +1627,7 @@ class Alliances:
         self.shares = {}
         self.sellers0 = set()
         self.log = []             # (year, what, ...) for the checks (not state)
+        self.renewals_capped = 0  # P5-08 12.5: quiet renewals made by renew_written_max (a statistic, not state)
 
     # --- the AllianceView (7.1): the records until this subsystem drops them (reading A7)
     def allied(self, a, b):
@@ -1637,6 +1638,18 @@ class Alliances:
 
     def trade_partners(self, c):
         return sum(1 for x, y in self.trades if c in (x, y))
+
+    def partners(self, c):
+        """P5-08 7.4: AllianceView::partners(c): every civilization with an open alliance or trade with c, ascending,
+        with its opening event (the alliance's when both; 0 for an origin alliance)."""
+        out = {}
+        for (x, y), rec in self.trades.items():
+            if c in (x, y):
+                out[y if x == c else x] = rec["event"]
+        for (x, y), rec in self.alliances.items():
+            if c in (x, y):
+                out[y if x == c else x] = 0 if rec.get("origin") else rec["event"]
+        return sorted(out.items())
 
     def sellers(self):
         return {c for (c, _R) in self.mines}
@@ -2039,13 +2052,18 @@ class Alliances:
         foe = rs[basis][1] if basis in (COMMON_ENEMY, FEAR) else 0
         notable = [x for x in (rec.get("fought"), rec.get("shared"),
                                rs[basis][0] if basis != rec["basis_R"] else None) if x]
-        if notable and self.budget(k[0]):
+        cap = t.get("renew_written_max", 0) if _pcr().FLAGS.get("p508", False) else 0
+        capped = bool(notable) and cap > 0 and rec.get("written", 0) >= cap   # P5-08 12.5
+        if capped:
+            self.renewals_capped += 1
+        if notable and not capped and self.budget(k[0]):
             e = w.append("alliance_renewed",
                          participants=(("ally_a", CIV, k[0]), ("ally_b", CIV, k[1])) +
                          ((("foe", CIV, foe),) if foe else ()), values=(basis,),
                          causes=tuple(sorted(set(notable) | {rec["renew_event"]})))
             rec["renew_event"], rec["basis_R"], rec["fought"], rec["shared"] = e, basis, None, None
             rec["renew_year"] = w.year
+            rec["written"] = rec.get("written", 0) + 1
             self.credit(k[0], k[1], t["renew_memory"], e)
             self.log.append((w.year, "renewed", k, d, e))
         else:

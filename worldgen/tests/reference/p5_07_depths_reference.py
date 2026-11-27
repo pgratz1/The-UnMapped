@@ -131,6 +131,11 @@ def deep_on():
     return _pcr().FLAGS.get("deep", False)
 
 
+def p508_on():
+    """P5-08 12.2 to 12.4 and 12.7 (generator 0.30.0): the conflict flag p508."""
+    return _pcr().FLAGS.get("p508", False)
+
+
 # ---------------------------------------------------------------------------
 # Formulas (6.2 to 6.7, 6.3), each as the spec writes it
 # ---------------------------------------------------------------------------
@@ -192,6 +197,9 @@ def forge_factor(f, forge_strength_permille, forge_depth_permille, D, forged):
 
 
 def telling_delve(site, depth):
+    """6.2; P5-08 12.3 (0.30.0): (s + 4 x d) mod 9."""
+    if p508_on():
+        return (site + 4 * depth) % 9
     return (site + depth) % 3
 
 
@@ -228,7 +236,19 @@ def aid_strength(P_q, levy_permille, prowess_permille):
 
 
 def telling_warren_delved(settlement, depth):
+    """r2 6.10; P5-08 12.3 (0.30.0): (t + 4 x d) mod 9."""
+    if p508_on():
+        return (settlement + 4 * depth) % 9
     return (settlement + depth) % 3
+
+
+def stir_ppm(deep_wake_ppm, d, M, L, stir_permille, warren_wake_permille=None):
+    """P5-08 12.2: min(10^6, deep_wake_ppm[d - 1] x M div 1000 x L x deep_stir_permille div 1000), a warren's also
+    x deep_warren_wake_permille div 1000 (the spec's order of operations, left to right)."""
+    p = deep_wake_ppm[d - 1] * M // 1000 * L * stir_permille // 1000
+    if warren_wake_permille is not None:
+        p = p * warren_wake_permille // 1000
+    return min(1000000, p)
 
 
 def telling_aid(monster, ally):
@@ -252,7 +272,7 @@ class Deep:
         self.m = m
         self.w = m.w
         self.t = m.t
-        for s in STREAMS:
+        for s in STREAMS + ("hist.deep.stir", "hist.deep.warren_stir"):   # P5-08 12.2: streams 119, 120
             self.w.keys[s] = cr.stream_key(m.inp.seed, s)
         self.depth = {}           # site -> 0 to 3
         self.woken = set()        # sites that have woken a horror
@@ -269,6 +289,11 @@ class Deep:
         self.warren_sealed = set()
         self.last_warren = {}     # settlement -> its last warren_delved
         self.from_warren = set()
+        # P5-08 12.2: the stirring flags (mine site ids, warren settlement ids), cleared at the next Q4
+        self.stirring = set()
+        self.stirring_warren = set()
+        self._last_phase = None
+        self.first_flare = False
         self.log = []             # (year, what, ids...) for checks
 
     # --- reads (7.1, 7.2)
@@ -311,6 +336,9 @@ class Deep:
 
     # --- 6.1 steps
     def t4(self):
+        w = self.w
+        self.first_flare = w.phase_kind == pe.FLARE and w.phase != self._last_phase
+        self._last_phase = w.phase
         self.deepen(quiet=False)
         if R2:
             self.delve_warrens(quiet=False)
@@ -320,6 +348,58 @@ class Deep:
         self.deepen(quiet=True)
         if R2:
             self.delve_warrens(quiet=True)
+        if p508_on():
+            self.stir()
+
+    def stirred_now(self, last_event):
+        """P5-08 12.2: the first tick year of a flare-up whose trigger is the candidate's last deepening."""
+        return self.first_flare and self.w.phase_trigger == last_event and last_event != 0
+
+    # --- P5-08 12.2: the deep stirs in quiet ages
+    def stir(self):
+        w, t, m = self.w, self.t, self.m
+        self.stirring.clear()
+        self.stirring_warren.clear()
+        L = w.years
+        sp = t.get("deep_stir_permille", 0)
+        for s in self.mines():
+            if m.pending_flare != 0:
+                return
+            sid = s["id"]
+            if s["ending"] != OPEN or sid in self.woken or sid in self.sealed_site:
+                continue
+            d = self.depth.get(sid, 0)
+            c = s["founder"]
+            if d < 1 or not self.civ_ok(c) or self.town_ok(s, c) is None:
+                continue
+            p = stir_ppm(t["deep_wake_ppm"], d, m.M, L, sp)
+            if pp.chance_ppm(w.draw("hist.deep.stir", sid, 0, 0), p):
+                self.stirring.add(sid)
+                m.pending_flare = self.last_delve[sid]
+                self.log.append((w.year, "stir", sid, self.last_delve[sid]))
+                return
+        if not R2:
+            return
+        for tid in range(1, len(w.settlements) + 1):
+            if m.pending_flare != 0:
+                return
+            tt = w.stl(tid)
+            if not w.standing(tt) or not w.visible(tt):
+                continue
+            c = self.warren_delver.get(tid, 0)
+            if not c or tt["owner_civ"] != c or not self.civ_ok(c):
+                continue
+            if tid in self.warren_woken or tid in self.warren_sealed:
+                continue
+            d = self.warren_depth.get(tid, 0)
+            if d < 1:
+                continue
+            p = stir_ppm(t["deep_wake_ppm"], d, m.M, L, sp, t["deep_warren_wake_permille"])
+            if pp.chance_ppm(w.draw("hist.deep.warren_stir", tid, 0, 0), p):
+                self.stirring_warren.add(tid)
+                m.pending_flare = self.last_warren[tid]
+                self.log.append((w.year, "stir warren", tid, self.last_warren[tid]))
+                return
 
     # --- r2 6.10 warren delving
     def region_ok(self, rid):
@@ -423,7 +503,9 @@ class Deep:
             K = [k for k in self.deep_kinds() if self.living_of(k) < self.m.kind(k)["max_alive"]]
             if not K:
                 continue
-            if not pp.chance_ppm(w.draw("hist.deep.wake", sid, 0, 0), wake_ppm(t["deep_wake_ppm"], d, self.m.M)):
+            certain = sid in self.stirring and self.stirred_now(self.last_delve.get(sid, 0))   # P5-08 12.2
+            if not certain and not pp.chance_ppm(w.draw("hist.deep.wake", sid, 0, 0),
+                                                 wake_ppm(t["deep_wake_ppm"], d, self.m.M)):
                 continue
             ws = [self.m.kind(k)["wake_rate"] for k in K]
             if sum(ws) == 0:
@@ -449,7 +531,8 @@ class Deep:
             if not K:
                 continue
             p = warren_wake_ppm(t["deep_wake_ppm"], d, self.m.M, t["deep_warren_wake_permille"])
-            if not pp.chance_ppm(w.draw("hist.deep.warren_wake", tid, 0, 0), p):
+            certain = tid in self.stirring_warren and self.stirred_now(self.last_warren.get(tid, 0))   # P5-08 12.2
+            if not certain and not pp.chance_ppm(w.draw("hist.deep.warren_wake", tid, 0, 0), p):
                 continue
             ws = [self.m.kind(k)["wake_rate"] for k in K]
             if sum(ws) == 0:
@@ -508,9 +591,11 @@ class Deep:
         u = pnr.pick(w.draw("hist.deep.gate", mid, 0, 0), 1000)
         fall = not sealed_at(u, odds)
         forced = False
+        gate_plan = None
         if fall and self.last_refuge(c, tt):
             _dead, V = take_toll(P, t["deep_toll_permille"])
-            if self.flight_plan(c, tt, V, region) is None:
+            gate_plan = self.flight_plan(c, tt, V, region)
+            if gate_plan is None:
                 fall, forced = False, True   # "there was nowhere to flee"
         lid = len(m.sites) + 1
         if lid > p502.SITES_MAX:
@@ -540,6 +625,10 @@ class Deep:
         self.takes[mid] = 0
         self.woken_event[mid] = e
         self.log.append((Y, "woken", sid, mid, k, d, S, odds, u, forced, tt["id"], warren, len(A)))
+        if p508_on():   # P5-08 12.4: the outcome first (citing only the waking), then the aids citing both
+            outcome = self.outcome(mid, s, sid, c, tt, region, lid, warren, fall, forced, e, (), gate_plan)
+            self.aids(A, mid, c, tt, (e, outcome))
+            return
         # r2 6.11: one ally_aided_hold per ally in A, ascending, each followed by its credit
         aids = []
         rel = w.race_relations
@@ -572,15 +661,56 @@ class Deep:
         took = self.take(mid, tt, e, tuple(aids))
         assert took, "6.5: a fall that cannot happen is a seal"
 
+    def aids(self, A, mid, c, tt, causes):
+        """P5-08 12.4: one ally_aided_hold per ally in A, ascending, each followed by its credit."""
+        w, t = self.w, self.t
+        rel = w.race_relations
+        for a, q, _Sa in A:
+            ea = w.append("ally_aided_hold", region=tt["region"], settlement=tt["id"],
+                          participants=(("ally", CIV, a), ("partner", CIV, c), ("monster", MONSTER, mid),
+                                        ("origin", SETTLEMENT, q)), values=(telling_aid(mid, a),),
+                          causes=tuple(sorted(set(causes))))
+            ra, rc = w.race_c(a), w.race_c(c)
+            if ra != rc and rel is not None:
+                rel.credit(ra, rc, t["deep_aid_memory"], ea)
+            self.log.append((w.year, "aid", mid, a, q, ea))
+
+    def outcome(self, mid, s, sid, c, tt, region, lid, warren, fall, forced, e, aids, gate_plan):
+        """6.5's seal or 6.6's take at a waking; returns the outcome event (P5-08 12.4, 12.7 A1: the gate's plan)."""
+        w, m = self.w, self.m
+        if not fall:
+            mon = m.monsters[mid - 1]
+            if warren:
+                e2 = w.append("warren_sealed", region=region, settlement=tt["id"],
+                              participants=(("civilization", CIV, c), ("monster", MONSTER, mid), ("lair", SITE, lid)),
+                              values=(telling_sealed(mid),), causes=(e,) + tuple(aids))
+                self.warren_sealed.add(tt["id"])
+            else:
+                e2 = w.append("deep_sealed", region=region, settlement=tt["id"],
+                              participants=(("civilization", CIV, c), ("monster", MONSTER, mid), ("site", SITE, sid),
+                                            ("lair", SITE, lid)),
+                              values=(telling_sealed(mid),), causes=(e,) + tuple(aids))
+                self.sealed_site.add(sid)
+            mon["status"], mon["sleeping"], mon["drive_until"] = ASLEEP, e2, NEVER
+            self.sealed.add(mid)
+            self.log.append((w.year, "sealed", sid, mid, e2, forced, warren))
+            return e2
+        n0 = len(w.events)
+        took = self.take(mid, tt, e, tuple(aids), plan_given=gate_plan, at_waking=True)
+        assert took, "6.5: a fall that cannot happen is a seal"
+        return next(x["id"] for x in w.events[n0:] if x["key"] == "hold_lost")
+
     # --- 6.6 the take
-    def take(self, mid, tt, cause, aids=()):
+    def take(self, mid, tt, cause, aids=(), plan_given=None, at_waking=False):
         w, t, m = self.w, self.t, self.m
         c = self.waking_realm[mid]
         mon = m.monsters[mid - 1]
         P = tt["population"]
         dead, V = take_toll(P, t["deep_toll_permille"])
         plan = None
-        if self.last_refuge(c, tt):
+        if at_waking and p508_on() and plan_given is not None:
+            plan = plan_given   # P5-08 12.7 A1: the plan computed at the gate, not recomputed
+        elif self.last_refuge(c, tt):
             plan = self.flight_plan(c, tt, V, m.lair_region(mon))
             if plan is None:
                 self.log.append((w.year, "no take", mid, tt["id"]))
@@ -610,6 +740,8 @@ class Deep:
             return
         rc = self.waking_realm.get(mid, 0)
         alive = rc != 0 and w.civ(rc)["ended_year"] is None
+        if p508_on():   # P5-08 12.7 A2: a later take also needs the waking realm visible
+            alive = alive and w.visible(w.civ(rc))
         h = m.geo.hops(m.lair_region(mon)).get(tt["region"])
         if not may_take_later(self.takes.get(mid, 0), t["deep_takes_max"], h, t["deep_reach_hops"], tt["owner_civ"],
                               rc, alive, False):
@@ -732,8 +864,9 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None, delv
     aid_max = t.get("deep_aid_max", 2)
     aids_of = {}
     for e in x.of("ally_aided_hold"):
-        cs = r.causes.get(e, [])
-        aids_of.setdefault(cs[0] if len(cs) == 1 else 0, []).append(e)
+        cs = sorted(r.causes.get(e, []))
+        # P5-08 12.4: an aid cites its waking and the outcome (the waking is the smaller id)
+        aids_of.setdefault(cs[0] if len(cs) == 1 or (p508_on() and len(cs) == 2) else 0, []).append(e)
     per_stl = {}
     for e in x.of("warren_delved"):
         per_stl.setdefault(r.ev[e][6], []).append(e)
@@ -861,7 +994,7 @@ def violations(res, borders, tuning, mining_of_race, E, races_present=None, delv
         first = count[mid] == 1
         if first:
             w0 = [y for y in woken if x.one(y, "monster") == mid][:1]
-            if cs != w0 + (aids_of.get(w0[0], []) if w0 else []):
+            if cs != w0 + ([] if p508_on() else (aids_of.get(w0[0], []) if w0 else [])):
                 out.append("5: first hold_lost e%d causes %s" % (e, cs))
         else:
             raid = cs[0] if len(cs) == 1 else 0
@@ -926,14 +1059,23 @@ def outcome_violations(x, r, e, mid, lair, aids, aid_max, warren):
     first = nxt[0] if nxt else e
     between_others = [y for y in sorted(r.ev) if e < y < first and
                       any(p[2] == MONSTER and p[3] != mid for p in r.parts.get(y, []))]
-    outcome = [y for y in nxt if r.causes.get(y, []) == [e] + list(aids)]
+    if p508_on():
+        # P5-08 12.4 (invariant 12): the outcome cites only the waking; each aid follows it and cites both
+        outcome = [y for y in nxt if r.causes.get(y, []) == [e]]
+    else:
+        outcome = [y for y in nxt if r.causes.get(y, []) == [e] + list(aids)]
     if len(outcome) != 1 or between_others or outcome[0] != first:
         out.append("3: deep_woken e%d outcome %s" % (e, outcome))
         return out
     k = r.kind_of(outcome[0])
     if k not in (seal, "hold_lost"):
         out.append("3: deep_woken e%d outcome e%d is a %s" % (e, outcome[0], k))
-    if any(not e < a < outcome[0] for a in aids):
+    if p508_on():
+        for a_ in aids:
+            if not a_ > outcome[0] or sorted(r.causes.get(a_, [])) != sorted({e, outcome[0]}):
+                out.append("P5-08 12: aid e%d of waking e%d does not follow and cite its outcome e%d" % (
+                    a_, e, outcome[0]))
+    elif any(not e < a < outcome[0] for a in aids):
         out.append("3: deep_woken e%d aids %s not between it and its outcome" % (e, aids))
     if len(aids) > aid_max:
         out.append("14: deep_woken e%d has %d aids, above deep_aid_max %d" % (e, len(aids), aid_max))
@@ -970,6 +1112,14 @@ def _life_end(r, tid, after, delver=None):
         elif k == "civ_conquered" and delver is not None and any(
                 p[2] == CIV and p[3] == delver for p in r.parts.get(y, [])):
             ends.append(y)
+        elif delver is not None and (r.ev[y][6] == tid or any(p[2] == SETTLEMENT and p[3] == tid
+                                                              for p in r.parts.get(y, []))):
+            # P5-07 validation D1: a settlement can leave its delver without being named (a civ_seceded lists one
+            # settlement and a count). Any later event that names the settlement with civilization participants none
+            # of which is the delver shows that it had left the delver by then.
+            civs = [p[3] for p in r.parts.get(y, []) if p[2] == CIV]
+            if civs and delver not in civs:
+                ends.append(y)
     ends = [y for y in ends if y > after]
     return min(ends) if ends else None
 
