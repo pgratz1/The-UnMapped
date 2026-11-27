@@ -1,0 +1,14 @@
+# P5-08 fixture `pantheon-creators` (spec 4.1 "a required kind whose directory may hold no definition (then the
+# pantheon is the creators alone)"; 16 item 2's world with no god definitions): pantheon-small with the god kind
+# empty. Only the creators act (the record history.pantheon.creator); god ids stop at the number of races.
+
+base = "pantheon-small"
+no_gods = true
+paths = ["bless", "curse"]
+
+[[case]]
+seed = 0
+span = 2000
+races = "all"
+civs = "auto"
+intensity = "normal"

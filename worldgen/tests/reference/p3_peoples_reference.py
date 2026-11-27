@@ -134,7 +134,7 @@ FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
 FLAGS_027 = ("nofade",)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0")   # 0.21.0, 0.22.0, 0.28.0, 0.29.0: no peoples rule
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")   # 0.21.0, 0.22.0, 0.28.0 to 0.30.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -347,6 +347,8 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 110:   # P5-08 8.1 (0.30.0): kinds 100 to 110
+        return pe.COMPILED_030
     if len(pe.COMPILED) == 99:   # P5-07 8.1 (0.29.0): kinds 93 to 99
         return pe.COMPILED_029
     if len(pe.COMPILED) == 92 and getattr(pe, "RENDER_R28", False):   # P5-04a 14.4 (0.28.0): ten value rows
@@ -1215,7 +1217,11 @@ class World(pe.World):
         return self.wild.growth_permille(rid) if self.wild is not None else 1000
 
     def shunned(self, rid):
-        return self.wild is not None and self.wild.shunned(rid)
+        """P5-02 7.2, and P5-08 7.1: a region shunned by the divine view (a profane shrine) in the step's year."""
+        if self.wild is not None and self.wild.shunned(rid):
+            return True
+        dv = getattr(self, "divine", None)
+        return dv is not None and dv.shunned(rid, self.year)
 
     def grown(self, s, cs):
         """9.1: one year of growth or decline of s with share cs (r6: the target T_s = min(C_s, kind_cap)).
@@ -1236,6 +1242,10 @@ class World(pe.World):
                 d = (p * g * G * (cs - p) + 500 * 1000 * cs) // (1000 * 1000 * cs)
                 if g > 0:
                     d = max(1, d)
+                dv = getattr(self, "divine", None)
+                if dv is not None and d > 0:
+                    # P5-08 7.1 (reading P-R2): the positive term, after its floor of 1, times (1000 + growth) div 1000
+                    d = d * (1000 + dv.growth_permille(s["owner_civ"], s["id"], self.year)) // 1000
                 return min(p + d, cap)
             if p > ts:
                 return p - max(1, (p - ts) * self.t["decline_permille"] // 1000)

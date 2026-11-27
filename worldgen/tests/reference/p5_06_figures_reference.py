@@ -59,7 +59,13 @@ KIND_ID = {k: i for i, k in KINDS}
 FIGURE_KIND_KEYS = tuple(k for _i, k in KINDS)
 CIV, SETTLEMENT, REGION, FIGURE, MONSTER, SITE = 3, 4, 5, 6, 8, 9
 RULER, CLAIMANT, GENERAL, HERO, CASTER = 1, 2, 3, 4, 5                  # 9.1 role
-ROLE_WORDS = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster"}
+ROLE_WORDS = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster", 6: "champion", 7: "prophet"}
+CHAMPION, PROPHET = 6, 7                                                # P5-08 9: figure.role 6 and 7
+
+
+def p508_on():
+    """P5-08 (generator 0.30.0): champions and prophets (7.5) and the tower follow-ups (12.6)."""
+    return _pcr().FLAGS.get("p508", False)
 ALIVE, EXILE, DIED, FELL, SLAIN, FELL_WITH_REALM = 1, 2, 3, 4, 5, 6       # 9.1 status
 TEMPERS = ("steady", "warlike", "peaceable", "grasping", "just")         # 9.1 temper 0 to 4
 HOW_AGE, HOW_CRISIS, HOW_EXILE = 0, 1, 2                                 # 8.1 how
@@ -551,9 +557,50 @@ class Figures:
 
     def hero_of(self, c):
         f = self.hero.get(c, 0)
+        if not f and p508_on():
+            f = self.champion_of(c)   # P5-08 7.5: c's hero, else its champion
         if not f:
             return (0, 0, 0)
         return (f, self.t["hero_hunt_permille"], self.t["hero_might_permille"])
+
+    # --- P5-08 7.5: the FigureView reads and the divine seam
+    def champion_of(self, c):
+        for f in self.figs:
+            if f["role"] == CHAMPION and f["civ"] == c and self.alive(f["id"]):
+                return f["id"]
+        return 0
+
+    def caster_of(self, c):
+        for f in self.figs:
+            if f["role"] == CASTER and f["civ"] == c and self.alive(f["id"]):
+                return f["id"]
+        return 0
+
+    def ruler_figure(self, c):
+        """The reigning recorded ruler of c (0 none)."""
+        L = self.lines.get(c)
+        if L is None or not L.get("f"):
+            return 0
+        f = L["f"]
+        return f if self.alive(f) and self.fig(f)["role"] == RULER else 0
+
+    def next_figure_id(self):
+        return len(self.figs) + 1
+
+    def raise_divine(self, fid, role, c, event, epithet):
+        """P5-08 7.5: the champion (role 6, hero ages, skill_max) or prophet (role 7, caster ages) with id fid."""
+        t = self.t
+        if fid != self.next_figure_id() or role not in (CHAMPION, PROPHET):
+            _pcr().fatal("history: figures: raise_divine: figure %d is not the next id" % fid)
+        if role == CHAMPION:
+            f = self.non_ruler(role, c, t["hero_age_permille"], t["hero_age_span_permille"])
+            f["skill"] = t["skill_max"]
+        else:
+            f = self.non_ruler(role, c, t["caster_age_permille"], t["caster_age_span_permille"])
+        f["start_event"] = event
+        f["epithet"] = epithet
+        self.log.append((self.w.year, "divine figure", c, fid, role, event))
+        return f
 
     def figure_exists(self, f):
         return 1 <= f <= len(self.figs)
@@ -795,6 +842,9 @@ class Figures:
             elif k in ("deep_woken", "deep_sealed") and _pcr().FLAGS.get("deep", False):
                 # P5-07 6.9: P5-06 6.4 rule 3 gains the deeds deep_woken and deep_sealed (role civilization)
                 self.name_by_deed(_one(w, ev, "civilization"), e)
+            elif k in ("cult_adopted", "cult_suppressed") and p508_on():
+                # P5-08 6.5: P5-06 6.4 rule 3 gains cult_adopted and cult_suppressed (role civilization)
+                self.name_by_deed(_one(w, ev, "civilization"), e)
             elif k in ("peace", "war_won"):
                 self.tally(_one(w, ev, "winner"), "wars_won")
             elif k == "civ_conquered":
@@ -996,11 +1046,26 @@ class Figures:
         w, t = self.w, self.t
         kw = self.wars[war]
         r = self.civ(c)["race"]
+        Y = w.year
+        serving = {g for k in self.wars.values() for g in k["gen"].values() if g}
+        ch = self.champion_of(c) if p508_on() else 0
+        if ch and ch not in serving:
+            # P5-08 7.5: a living champion not serving another war is appointed, with no appointment draw (reading
+            # P-R7: again 1 when it has served before; its start_event stays its divine_champion)
+            f = self.fig(ch)
+            again = 1 if f.get("served") else 0
+            f["served"] = True
+            e = w.append("general_appointed", region=w.war_of(war)["goal"],
+                         participants=(("figure", FIGURE, ch), ("civilization", CIV, c), ("enemy", CIV, enemy)),
+                         values=(again,), causes=(war,))
+            w.open_rel((FIGURE, ch, CIV, c, "served"), e)
+            kw["gen"][c] = ch
+            kw["vacant"][c] = False
+            self.log.append((Y, "general", war, c, ch, again))
+            return True
         p = self.dat.race[r]["general"] * t["general_scale_permille"] // 1000
         if not chance_pm(self.D("hist.figures.appoint", war, c, kw["v"][c]), p):
             return False
-        Y = w.year
-        serving = {g for k in self.wars.values() for g in k["gen"].values() if g}
         window = self.lam(r) * t["career_permille"] // 1000
         cands = [f for f in self.figs if f["role"] == GENERAL and f["civ"] == c and self.alive(f["id"])
                  and f["id"] not in serving and Y - f["office_from"] <= window]
@@ -1132,6 +1197,8 @@ class Figures:
             if not cv["capital"]:
                 continue
             ts = w.stl(cv["capital"])
+            if p508_on() and self.take_up(c, ts):
+                continue   # P5-08 12.6 item 1: the new caster took up an open tower of c
             if self.r28:   # P5-04a 21.4: one library per settlement ever
                 library = ts["kind"] == 4 and not any(s["kind"] == SITE_TOWER and s["settlement"] == ts["id"]
                                                       for s in m.sites)
@@ -1156,17 +1223,49 @@ class Figures:
             f = self.non_ruler(CASTER, c, t["caster_age_permille"], t["caster_age_span_permille"])
             sid = len(m.sites) + 1
             name = self.tower_name(f, sid, library)
+            causes = (max(ts["founding_event"], cv["founding_event"]),)
+            if p508_on():   # P5-08 12.6 item 2: also the death event of c's last caster, ascending
+                last = [g for g in self.figs[:-1] if g["role"] == CASTER and g["civ"] == c and g["death_event"]]
+                if last:
+                    causes = tuple(sorted(set(causes) | {last[-1]["death_event"]}))
             e = w.append("tower_founded", region=ts["region"], settlement=ts["id"] if library else 0,
                          participants=(("figure", FIGURE, f["id"]), ("civilization", CIV, c), ("site", SITE, sid)),
-                         values=(1 if library else 0,), causes=(max(ts["founding_event"], cv["founding_event"]),))
+                         values=(1 if library else 0,), causes=causes)
             f["start_event"], f["tower"] = e, sid
             self.open_site(dict(id=sid, name=name, kind=SITE_TOWER, region=ts["region"], x=cell[0], y=cell[1],
                                 settlement=ts["id"] if library else 0, founder=c, monster=0, origin_year=w.year,
                                 origin_event=e, ended_year=None, ending_event=0, ending=0, hostile=None))
             self.log.append((w.year, "tower", c, f["id"], sid, library))
 
+    def master_of(self, sid):
+        """P5-08 12.6: the site's master, the last caster whose mastered site it is (0 none)."""
+        ms = [f for f in self.figs if f["role"] == CASTER and f["tower"] == sid]
+        return ms[-1] if ms else None
+
+    def take_up(self, c, ts):
+        """P5-08 12.6 item 1: the rise of a caster of c at its seat ts when ts holds an open kind 4 site of c, or
+        ts's region holds one: the smallest id is taken up (tower_taken_up); True when it was."""
+        w, t = self.w, self.t
+        m = w.monsters
+        open4 = [x for x in sorted(m.sites, key=lambda x: x["id"]) if x["kind"] == SITE_TOWER and x["ending"] == 0
+                 and x["ended_year"] is None and x["founder"] == c and
+                 (x["settlement"] == ts["id"] or x["region"] == ts["region"])]   # reading P-R8
+        if not open4:
+            return False
+        site = open4[0]
+        prev = self.master_of(site["id"])
+        f = self.non_ruler(CASTER, c, t["caster_age_permille"], t["caster_age_span_permille"])
+        cause = (prev["death_event"],) if prev is not None and prev["death_event"] else ()
+        e = w.append("tower_taken_up", region=site["region"], settlement=site["settlement"],
+                     participants=(("figure", FIGURE, f["id"]), ("civilization", CIV, c), ("site", SITE, site["id"])),
+                     causes=cause)
+        f["start_event"], f["tower"] = e, site["id"]
+        self.log.append((w.year, "taken up", c, f["id"], site["id"], e))
+        return True
+
     def tower_endings(self):
-        """P5-04a 21.4: each open kind 4 site ascending by id ends when its realm fell (5) or it lost the land (4)."""
+        """P5-04a 21.4: each open kind 4 site ascending by id ends when its realm fell (5) or it lost the land (4);
+        P5-08 12.6 item 3: after those tests, it lapses (7) when its master died tower_lapse_years ago."""
         w = self.w
         m = w.monsters
         for site in sorted(m.sites, key=lambda s: s["id"]):
@@ -1183,10 +1282,23 @@ class Figures:
                 elif st["owner_civ"] != c:
                     ev, ending = st["owner_event"], 4
                 else:
-                    continue
+                    ev = None
             elif w.owner[R][0] != c:
                 ev, ending = w.owner[R][1], 4
             else:
+                ev = None
+            if ev is None:
+                lapse = self.t.get("tower_lapse_years", 0) if p508_on() else 0
+                mf = self.master_of(site["id"]) if lapse > 0 else None
+                if mf is None or self.alive(mf["id"]) or mf["died"] is None or w.year < mf["died"] + lapse:
+                    continue
+                if self.quiet() and w.quiet_events_left(c) <= 0:
+                    continue   # Q4: it waits
+                e7 = w.append("tower_abandoned", region=R, settlement=t_id,
+                              participants=(("site", SITE, site["id"]), ("civilization", CIV, c),
+                                            ("figure", FIGURE, mf["id"])), causes=(mf["death_event"],))
+                m.end_site(site["id"], e7, 7, year=w.year)
+                self.log.append((w.year, "tower-abandoned", site["id"], e7))
                 continue
             # The engine's reading (P5-04a integration part 3; spec 21.4 is silent): an ending event older than the
             # site (a tower raised in a region its realm did not own) waits for the next change of owner, so that
@@ -1348,6 +1460,8 @@ class Figures:
             [f for f in self.figs if self.alive(f["id"])]
         borne = {}
         for f in order:
+            if f["role"] in (CHAMPION, PROPHET) and p508_on():
+                continue   # P5-08 6.5: 6.10's epithets skip champions and prophets
             text, how = epithet_of(ROLE_WORDS[f["role"]], self.deed_values(f), self.slayer_text(f),
                                    self.t["epithets"], borne, self.t["epithet_repeat_max"])
             f["epithet"] = text

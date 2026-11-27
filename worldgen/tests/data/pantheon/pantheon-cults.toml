@@ -1,0 +1,38 @@
+# P5-08 fixture `pantheon-cults` (spec 6.7 to 6.10; 16 item 6): a cult's whole life. pantheon-small with every act
+# founding a cult, spread along every alliance and trade at once (alliances-small's quick links are not needed: the
+# stress worlds trade), and faith, suppression and hiding at high rates, so that cults are founded by a champion, a
+# caster, a ruler and a prophet, spread, are taken as faith (with the rival gods' wrath), are suppressed into hiding
+# and to their end, end with their realms, and lose temples to ruin and to a new owner (reference replay).
+
+base = "pantheon-small"
+paths = ["founded", "prophet founder", "cult_spread", "cult_adopted", "cult_suppressed", "hidden", "ended suppressed"]
+
+[pantheon]
+cult_found_permille = 1000
+cult_fear_permille = 1000
+cult_spread_permille = 1000
+affinity_permille = { same = 1000, near = 1000, opposed = 1000 }
+adopt_permille = 600
+suppress_permille = 400
+hide_permille = 500
+
+[[case]]
+seed = 3
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+
+[[case]]
+seed = 6
+span = 2000
+races = "all"
+civs = "auto"
+intensity = "turbulent"
+
+[[case]]
+seed = 9
+span = 6000
+races = "all"
+civs = "4"
+intensity = "normal"

@@ -3729,6 +3729,314 @@ KINDS_029["history"] = ("history", dict(
                    for x in ((f, ("forge_depth_permille", INT)) if f[0] == "arms_strength_permille" else (f,)))))
 
 
+
+# ---------------------------------------------------------------------------
+# P5-08 (generator 0.30.0, docs/specs/p5-08-pantheon-cults.md r1): the data kind god (4.1, the nine shipped gods), the
+# tuning history.pantheon (4.2), history.chronology.creator_title, the five culture forms (4.4), the follow-up fields
+# of 12 (history.monsters.deep_stir_permille, history.alliances.renew_written_max, history.figures.tower_lapse_years),
+# the report entries 100 to 110 and the changed templates (8.2, 12.3, 12.4, 12.6). The engineer writes game/data and
+# both fixture roots; until then a 0.29.0 root on disk is read at 0.30.0 with these listings filled in
+# (FALLBACK_030_USED). Reading P-R1: the spec gives no position for the follow-up fields; they are appended last.
+# ---------------------------------------------------------------------------
+GOD_DEED_030 = REC((("kind", STR), ("role", STR), ("points", INT), ("who", STR), ("against", STR)))
+GOD_030 = (("name_culture", STR), ("camp", STR), ("domain", STR), ("title", STR),
+           ("favour", REC((("bless", INT), ("champion", INT), ("mark", INT)))),
+           ("wrath", REC((("curse", INT), ("monster", INT), ("mark", INT)))),
+           ("bless", STR), ("curse", STR), ("monsters", ARR(STR)), ("deeds", ARR(GOD_DEED_030)))
+
+
+def _deeds(text):
+    """'kind.role +points who [against role]; ...' (4.3's written form) -> [deed records]."""
+    out = []
+    for item in text.split(";"):
+        w = item.split()
+        if not w:
+            continue
+        kind, role = w[0].split(".")
+        out.append(dict(kind=kind, role=role, points=int(w[1].replace("−", "-")), who=w[2],
+                        against=w[4] if len(w) > 4 else ""))
+    return out
+
+
+# 4.1 and 4.3: def id -> (name culture, camp, domain, title, favour b/c/m, wrath c/m/m, bless, curse, monsters, deeds)
+GODS_030 = {
+    "conquest": ("orcish", "evil", "war", "the Red Banner", (400, 500, 100), (700, 0, 300), "valour", "defeat", (),
+                 "civ_conquered.conqueror +100 kin; war_won.winner +30 kin; sacked.attacker +15 kin; "
+                 "peace.loser -30 kin; tribute.payer -20 kin; truce.parties -20 kin"),
+    "craft": ("dwarven", "neutral", "craft", "the Hammer Under the Mountain", (600, 200, 200), (700, 0, 300), "valour",
+              "defeat", (), "mine_opened.civilization +25 kin; delving_deepened.civilization +15 kin; "
+              "arms_sold.seller +10 any; deep_sealed.civilization +30 any; deep_woken.civilization -40 any"),
+    "death": ("goblin", "evil", "death", "the Hollow Keeper", (400, 0, 600), (300, 500, 200), "valour", "pestilence",
+              ("undead",), "sacked.attacker +20 any; blight.civilization +30 any; battle_led.winner +5 any; "
+              "monster_slain.slayer -30 any; monster_slain_by_hero.slayer -40 any"),
+    "harvest": ("faerie", "good", "harvest", "the Giver of Harvests", (700, 0, 300), (700, 0, 300), "plenty",
+                "withering", (), "became_town.civilization +10 kin; became_city.civilization +15 kin; "
+                "trade_opened.partner_a +10 kin; trade_opened.partner_b +10 kin; blight.civilization -80 any; "
+                "sacked.attacker -30 any"),
+    "lore": ("elven", "good", "lore", "the Lamp of the Wise", (500, 200, 300), (600, 0, 400), "plenty", "withering", (),
+             "tower_founded.civilization +30 any; book_written.civilization +20 any; blight.civilization -60 any"),
+    "oaths": ("elven", "good", "oaths", "the Keeper of Oaths", (400, 400, 200), (700, 0, 300), "valour", "defeat", (),
+              "alliance_formed.ally_a +15 any; alliance_formed.ally_b +15 any; spoils_shared.principal +25 any; "
+              "ally_joined_war.ally +20 any; alliance_betrayed.betrayed +40 any; alliance_betrayed.betrayer -150 any; "
+              "spoils_withheld.principal -50 any; ally_refused.ally -25 any"),
+    "ruin": ("goblin", "evil", "ruin", "the Burner of Halls", (500, 300, 200), (400, 400, 200), "valour", "pestilence",
+             ("dragon", "giant"), "sacked.attacker +40 kin; settlement_captured.attacker +15 kin; truce.parties -20 kin; "
+             "trade_opened.partner_a -10 kin; trade_opened.partner_b -10 kin; became_city.civilization -15 foe"),
+    "war": ("human", "neutral", "war", "the Shield of Battles", (400, 500, 100), (700, 0, 300), "valour", "defeat", (),
+            "battle.winner +10 any; battle_led.winner +15 any; allied_battle.winner +10 any; war_won.winner +25 any; "
+            "ally_refused.ally -30 any; ally_withdrew.ally -30 any"),
+    "wild": ("human", "neutral", "wild", "the Hunter in the Green", (500, 0, 500), (300, 500, 200), "plenty",
+             "withering", ("troll", "ogre", "wyvern"), "colony_founded.founder -8 any; became_city.civilization -20 any; "
+             "mine_opened.civilization -15 any; monster_slain.slayer -25 any; settlement_abandoned.civilization +15 any; "
+             "outpost_abandoned.civilization +10 any"),
+}
+CREATOR_DEEDS_030 = ("sacked.attacker -60 any against defender; settlement_captured.attacker -25 any against defender; "
+                     "civ_conquered.conqueror -120 any against civilization; war_won.winner +30 kin; "
+                     "monster_slain.slayer +25 kin; monster_slain_by_hero.slayer +35 kin; "
+                     "became_city.civilization +20 kin; deep_sealed.civilization +40 kin; refuge_held.defender +30 kin")
+
+
+def god_def_030(k):
+    nc, camp, dom, title, fav, wr, bless, curse, mons, deeds = GODS_030[k]
+    return dict(name_culture=nc, camp=camp, domain=dom, title=title,
+                favour=dict(bless=fav[0], champion=fav[1], mark=fav[2]),
+                wrath=dict(curse=wr[0], monster=wr[1], mark=wr[2]), bless=bless, curse=curse, monsters=list(mons),
+                deeds=_deeds(deeds))
+
+
+def _toml_value(v):
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, int):
+        return str(v)
+    if isinstance(v, str):
+        return '"%s"' % v
+    if isinstance(v, (list, tuple)):
+        return "[" + ", ".join(_toml_value(x) for x in v) + "]"
+    if isinstance(v, dict):
+        return "{ " + ", ".join("%s = %s" % (a, _toml_value(b)) for a, b in v.items()) + " }"
+    raise TypeError(v)
+
+
+def god_toml_030(k):
+    """The file game/data/gods/<k>.toml as the spec's listing gives it (fields in 4.1's order)."""
+    d = god_def_030(k)
+    lines = ["[god.%s]" % k] + ["%s = %s" % (n, _toml_value(d[n])) for n, _t in GOD_030]
+    return "\n".join(lines) + "\n"
+
+
+PANTHEON_TEMPERS_030 = ("steady", "warlike", "peaceable", "grasping", "just")
+# 4.2 in order: (name, type, low, high, start); type I int, R record of the named fields
+PANTHEON_030 = (
+    ("activity_permille", ("distant", "normal", "meddling"), 0, 10000, (300, 1000, 2500)),
+    ("regard_max", None, 1, 100000, 400), ("regard_fade_per_century", None, 0, 100000, 20),
+    ("regard_memory_years", None, 1, 100000, 300), ("contributions_max", None, 1, 64, 8),
+    ("act_threshold", None, 1, 100000, 100), ("act_permille", None, 0, 1000, 150),
+    ("god_rest_years", None, 0, 10000, 30), ("pair_rest_years", None, 0, 10000, 100),
+    ("flare_regard", None, 1, 100000, 200), ("flare_permille", None, 0, 1000, 100),
+    ("bless_years", None, 1, 1000, 50), ("curse_years", None, 1, 1000, 50),
+    ("plenty_growth_permille", None, 0, 1000, 300), ("withering_growth_permille", None, 0, 1000, 500),
+    ("valour_permille", None, 0, 500, 50), ("defeat_permille", None, 0, 500, 60),
+    ("pestilence_toll_permille", None, 0, 1000, 120), ("send_hops", None, 0, 8, 2),
+    ("sacred_growth_permille", None, 0, 1000, 200), ("profane_years", None, 0, 10000, 300),
+    ("champion_epithet", "S", None, None, "Chosen of {god}"),
+    ("cult_found_permille", None, 0, 1000, 250), ("cult_fear_permille", None, 0, 1000, 500),
+    ("cult_spread_permille", None, 0, 1000, 20),
+    ("affinity_permille", ("same", "near", "opposed"), 0, 1000, (1000, 500, 100)),
+    ("adopt_regard", None, 0, 100000, 50), ("adopt_permille", None, 0, 1000, 15),
+    ("suppress_permille", None, 0, 1000, 10),
+    ("temper_adopt_permille", PANTHEON_TEMPERS_030, 0, 4000, (1000, 500, 1500, 700, 1000)),
+    ("temper_suppress_permille", PANTHEON_TEMPERS_030, 0, 4000, (1000, 1500, 500, 1000, 1300)),
+    ("faith_points", None, 0, 100000, 60), ("rival_faith_points", None, 0, 100000, 40),
+    ("suppress_points", None, 0, 100000, 120), ("hide_permille", None, 0, 1000, 400),
+    ("sanctum_hops", None, 0, 8, 3),
+    ("creator", "C", None, None, None),
+)
+CREATOR_030 = dict(favour=dict(bless=500, champion=300, mark=200), wrath=dict(curse=700, monster=0, mark=300),
+                   bless="plenty", curse="pestilence", monsters=[], deeds=_deeds(CREATOR_DEEDS_030))
+# Code defaults (4.2): a tuning built in code is inert
+PANTHEON_CODE_DEFAULTS_030 = dict(act_permille=0, cult_found_permille=0, flare_permille=0)
+
+
+def pantheon_shipped_030():
+    out = {}
+    for n, t, _lo, _hi, v in PANTHEON_030:
+        if n == "creator":
+            out[n] = copy.deepcopy(CREATOR_030)
+        elif isinstance(t, tuple):
+            out[n] = dict(zip(t, v))
+        else:
+            out[n] = v
+    return out
+
+
+def _pantheon_schema_030():
+    out = []
+    for n, t, _lo, _hi, _v in PANTHEON_030:
+        if n == "creator":
+            out.append((n, REC((("favour", GOD_030[4][1]), ("wrath", GOD_030[5][1]), ("bless", STR), ("curse", STR),
+                                ("monsters", ARR(STR)), ("deeds", ARR(GOD_DEED_030))))))
+        elif t == "S":
+            out.append((n, STR))
+        elif isinstance(t, tuple):
+            out.append((n, REC(tuple((x, INT) for x in t))))
+        else:
+            out.append((n, INT))
+    return tuple(out)
+
+
+PANTHEON_SCHEMA_030 = _pantheon_schema_030()
+CREATOR_TITLE_030 = "the Maker of {plural}"
+# 12.2, 12.5, 12.6: (definition, field, low, high, start, code default)
+FOLLOWUP_FIELDS_030 = (("monsters", "deep_stir_permille", 0, 1000, 1000, 0),
+                       ("alliances", "renew_written_max", 0, 100, 3, 0),
+                       ("figures", "tower_lapse_years", 0, 10000, 200, 0))
+# 4.4: culture -> (cult_forms, temple_forms, sanctum_forms, sacred_forms, profane_forms)
+CULTURE_FORMS_030 = {
+    "dwarven": (["The Hammer of {god}", "The Oathsworn of {god}"], ["The Hall of {god}", "The Deep Shrine of {god}"],
+                ["The Sealed Hall of {god}"], ["The Hallowed Stone of {god}"], ["The Shunned Delving of {god}"]),
+    "elven": (["The Children of {god}", "The Starward Circle of {god}"], ["The House of {god}", "The White Fane of {god}"],
+              ["The Hidden Fane of {god}"], ["The Blessed Grove of {god}"], ["The Withered Grove of {god}"]),
+    "faerie": (["The Dreamers of {god}", "The Hidden Ring of {god}"], ["The Bower of {god}", "The Moon-Glade of {god}"],
+               ["The Lost Bower of {god}"], ["The Shining Ring of {god}"], ["The Black Ring of {god}"]),
+    "goblin": (["The Teeth of {god}", "The Grovellers of {god}"], ["The Pit of {god}", "The Bone-House of {god}"],
+               ["The Secret Pit of {god}"], ["The Fat Stone of {god}"], ["The Stinking Ground of {god}"]),
+    "human": (["The Brotherhood of {god}", "The Order of {god}"], ["The Temple of {god}", "The Sanctuary of {god}"],
+              ["The Hidden Sanctum of {god}"], ["The Holy Ground of {god}"], ["The Cursed Ground of {god}"]),
+    "orcish": (["The Blood of {god}", "The Howlers of {god}"], ["The Blood-Hall of {god}", "The War-Fane of {god}"],
+               ["The Black Cave of {god}"], ["The Red Stone of {god}"], ["The Ashen Field of {god}"]),
+}
+CULTURE_FORM_FIELDS_030 = ("cult_forms", "temple_forms", "sanctum_forms", "sacred_forms", "profane_forms")
+CULTURE_NAMING_030 = REC(CULTURE_NAMING_027[1] + tuple((n, ARR(STR)) for n in CULTURE_FORM_FIELDS_030))
+# 8.1, 8.2: the report entries 100 to 110 (key, salience, template)
+CAUSE_WORDS_LIST_030 = (
+    "sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,"
+    "battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,"
+    "monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,"
+    "deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,"
+    "tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,"
+    "arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,"
+    "book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,"
+    "ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,"
+    "ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,"
+    "settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,"
+    "cult_adopted=a faith taken up,cult_suppressed=its faithful put down")
+REPORT_ENTRIES_030 = (
+    ("divine_bless", 55, "{@causes:WORDS|Pleased by |, }{actor:titled}{telling? blessed| smiled upon| set its hand "
+                         "over}{effect?| the fields of| the arms of} {civilization}{years?| for a year| for # years}."),
+    ("divine_curse", 60, "{@causes:WORDS|Angered by |, }{actor:titled}{effect?| sent a pestilence upon| withered the "
+                         "fields of| turned the fortunes of war against} {civilization}{dead?|; one died|; # died}."),
+    ("divine_champion", 55, "{@causes:WORDS|Pleased by |, }{actor:titled}{telling? raised up| chose| set its mark "
+                            "upon} {figure} as the champion of {civilization}."),
+    ("divine_monster", 60, "{@causes:WORDS|Angered by |, }{actor:titled}{telling? sent| loosed| woke} {monster}, "
+                           "{monster:kind}, against {civilization}."),
+    ("divine_mark", 45, "{@causes:WORDS|After |, }{actor:titled}{profane? cursed| hallowed} the ground of {site}."),
+    ("cult_founded", 50, "{telling?In the name of |Calling upon |Sworn to }{god:titled}, {founder} founded {faction} "
+                         "at {site} in {@settlement}."),
+    ("cult_spread", 25, "{faction} spread from {from} into {civilization}{@causes:trade_opened=the roads of trade,"
+                        "alliance_formed=the bonds of alliance| along |}."),
+    ("cult_adopted", 45, "{civilization}{civilization:under} took {faction} as the faith of the realm."),
+    ("cult_suppressed", 50, "{civilization}{civilization:under} put down {faction}{hidden?, and its faithful fled "
+                            "into hiding|}."),
+    ("tower_taken_up", 20, "{@causes:figure_died=the death of its last master|After |, }{figure} of {civilization} "
+                           "became master of {site}."),
+    ("tower_abandoned", 25, "{@causes:figure_died=the death of its last master|After |, }{site} of {civilization} "
+                            "stood empty."),
+)
+REPORT_ENTRIES_030 = tuple((k, s, t.replace("WORDS", CAUSE_WORDS_LIST_030)) for k, s, t in REPORT_ENTRIES_030)
+# Reading P-R20: 8.2 writes the two-word choices of divine_mark (profane) and cult_suppressed (hidden) as "w0 for 0",
+# but P3-04 8.4's two-word rule is "w0 for 1, w1 otherwise", so the spec's text would render its samples inverted;
+# the listing above swaps the two words so that the samples of 8.2 come out (a finding for the spec writer).
+SPEC_TWO_WORD_030 = {"divine_mark": ("{profane? hallowed| cursed}", "{profane? cursed| hallowed}"),
+                     "cult_suppressed": ("{hidden?|, and its faithful fled into hiding}",
+                                         "{hidden?, and its faithful fled into hiding|}")}
+# 12.3, 12.4, 12.6: the changed templates
+TEMPLATES_030 = {
+    "delving_deepened": (
+        "{telling?Following a rich seam, |Year upon year, |By hammer and lamp, |Chasing the silver down, |Shaft by shaft, "
+        "|Heedless of the old warnings, |With new picks from the forge, |Through a hard generation, |Singing the old "
+        "delving songs, }{civilization} {depth?worked|sank the shafts of|drove the halls of|broke the floor of} {site} "
+        "{depth?deeper|below the reach of daylight|down to the mountain's roots|into the oldest dark beneath the world}"
+        "{telling?, and struck a vein of silver|, and broke into a cavern of crystal|, and felt a cold breath rise from "
+        "below|, and found the bones of an older people|, and heard hammering where none worked|, and struck black "
+        "iron|, and found a lake no light had touched|, and lost a crew to a sudden fall|, and found gold in the dark}."),
+    "warren_delved": (
+        "{telling?Ever greedy for the dark, |Squabbling and scraping, |Grub by grub and stone by stone, |Whipped on by "
+        "their chiefs, |Stealing each other's picks, |Gnawing like rats, |Chasing a rumour of gold, |Fleeing the "
+        "daylight, |In fits of greed and spite, }{civilization} dug the warrens of {@settlement} {depth?deeper|below the "
+        "reach of daylight|down among the mountain's roots|into the oldest dark beneath the world}{telling?, and ate "
+        "what they found there|, and found a nest of blind worms|, and lost a dozen in a fall|, and fought over a lump "
+        "of silver|, and found old bones to gnaw|, and heard something breathing|, and struck a cold black water|, and "
+        "found a passage no goblin had cut|, and came up shrieking}."),
+    "hold_lost": (
+        "{@causes:monster_raid=the raids|After |, }{monster}{telling? came up out of the deep into| rose from below "
+        "into| broke out of the deeps into| boiled up out of the burrows into| came up the goblins' own tunnels into| "
+        "rose under the warrens of} {@settlement}{telling?, and tore it from|, and wrested it from|, and took it from|, "
+        "and took it from|, and took it from|, and tore it from} {civilization}; {dead?no one died|one died|# died}"
+        "{survivors?, and none escaped|, and one escaped|, and # fled}."),
+    "ally_aided_hold": (
+        "{telling?Answering its ally's call, |Bound by old oaths, |Unbidden, }{ally}{ally:under}{telling? sent warriors "
+        "from | marched out of | hurried its people from }{origin} to stand with {partner} at the gate of "
+        "{@settlement} against {monster}{@causes:deep_sealed=and the gate held,warren_sealed=and the tunnels were "
+        "closed|, |}{@causes:hold_lost=but the hold fell all the same|, |}."),
+}
+TOWER_FOUNDED_PREFIX_030 = "{@causes:figure_died=the death of the last master|After |, }"
+FALLBACK_030_USED = set()
+
+
+def history_030(defs):
+    """The 0.30.0 additions on a 0.29.0 history definition set (fills only what is absent; returns True if any)."""
+    used = False
+    if "pantheon" not in defs and any(k in defs for k in ("chronology", "report")):
+        defs["pantheon"] = pantheon_shipped_030()
+        used = True
+    ch = defs.get("chronology")
+    if ch is not None and "creator_title" not in ch:
+        defs["chronology"] = dict(ch, creator_title=CREATOR_TITLE_030)
+        used = True
+    for did, field, _lo, _hi, start, _code in FOLLOWUP_FIELDS_030:
+        d = defs.get(did)
+        if d is not None and field not in d:
+            defs[did] = dict(d, **{field: start})
+            used = True
+    rp = defs.get("report")
+    if rp is not None and not any(e["kind"] == "divine_bless" for e in rp["events"]):
+        evs = []
+        for e in rp["events"]:
+            e = dict(e)
+            if e["kind"] in TEMPLATES_030:
+                e["template"] = TEMPLATES_030[e["kind"]]
+            elif e["kind"] == "tower_founded" and not e["template"].startswith("{@causes:"):
+                e["template"] = TOWER_FOUNDED_PREFIX_030 + e["template"]
+            evs.append(e)
+        evs += [dict(kind=k, salience=s, template=t) for k, s, t in REPORT_ENTRIES_030]
+        defs["report"] = dict(rp, events=evs)
+        used = True
+    return used
+
+
+def culture_030(defs):
+    """4.4: the five culture forms appended after regnal_permille (fills only what is absent)."""
+    used = False
+    for did in list(defs):
+        nm = defs[did].get("naming")
+        if nm is None or "cult_forms" in nm or did not in CULTURE_FORMS_030:
+            continue
+        defs[did] = dict(defs[did], naming=dict(nm, **dict(zip(CULTURE_FORM_FIELDS_030, CULTURE_FORMS_030[did]))))
+        used = True
+    return used
+
+
+KINDS_030 = dict(KINDS_029)
+KINDS_030["god"] = ("gods", GOD_030)
+KINDS_030["culture"] = ("cultures", (("race", STR), ("name", STR), ("naming", CULTURE_NAMING_030)))
+_H029 = KINDS_029["history"][1]
+_FOLLOW = {d: tuple((f, INT) for dd, f, *_ in FOLLOWUP_FIELDS_030 if dd == d) for d in ("monsters", "alliances", "figures")}
+KINDS_030["history"] = ("history", dict(
+    _H029, pantheon=PANTHEON_SCHEMA_030, chronology=_H029["chronology"] + (("creator_title", STR),),
+    monsters=_H029["monsters"] + _FOLLOW["monsters"], alliances=_H029["alliances"] + _FOLLOW["alliances"],
+    figures=_H029["figures"] + _FOLLOW["figures"]))
+
 def book_title_ok(s):
     """4.2 grammar book_title: ASCII letters, single spaces, ' and -, starting with an upper-case letter; at most
     48 bytes (string(48, book_title))."""
@@ -3892,7 +4200,7 @@ def pre_027(path, kind):
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")
 
 
 def at_least(v):
@@ -3902,8 +4210,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") else ("culture", "history", "race")
-    if v == "0.29.0":   # P5-07: the 0.28.0 files with the listings of 4 and 8.2 filled in (load_root)
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0") else ("culture", "history", "race")
+    if v == "0.30.0":   # P5-08: the 0.29.0 files with the listings of 4 and 8.2 filled in (load_root, history_030)
+        KINDS, SPEC_FILES = KINDS_030, SPEC_FILES_027
+    elif v == "0.29.0":   # P5-07: the 0.28.0 files with the listings of 4 and 8.2 filled in (load_root)
         KINDS, SPEC_FILES = KINDS_029, SPEC_FILES_027
     elif v == "0.28.0":
         KINDS, SPEC_FILES = KINDS_028, SPEC_FILES_027
@@ -4061,7 +4371,7 @@ def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     # P5-07 adds to the history and monster files only; a 0.28.0 directory is read at 0.29.0 with the listings filled in
     # (load_root), so 0.29.0 and 0.28.0 count as the same files of every kind
-    a, b = ("0.28.0" if x == "0.29.0" else x for x in (a, b))
+    a, b = ("0.28.0" if x in ("0.29.0", "0.30.0") else x for x in (a, b))   # P5-08 likewise (history_030)
     if kind in ("race", "culture", "beast", "monster"):   # P5-04a changes the history files (and dragon's values)
         a, b = ("0.27.0" if x == "0.28.0" else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
@@ -4215,6 +4525,11 @@ def load_root(root, kinds=None, from_spec=False):
     content = {}
     for kind in kinds:
         files = read_kind_files(root, kind, from_spec)
+        if files is None and kind == "god" and DATA_VERSION == "0.30.0":
+            # P5-08 4.1: the nine shipped gods (the engineer writes game/data/gods and both fixture roots); a root
+            # without the directory is read with the spec's listing (FALLBACK_030_USED)
+            FALLBACK_030_USED.add(os.path.join(root, "gods"))
+            files = [(k + ".toml", god_toml_030(k)) for k in sorted(GODS_030, key=lambda x: x.encode())]
         if files is None:
             raise DataError("%s: the directory of kind '%s' is missing" % (root, kind))
         defs = {}
@@ -4237,16 +4552,20 @@ def load_root(root, kinds=None, from_spec=False):
         if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
             # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
             defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
-        if DATA_VERSION in ("0.28.0", "0.29.0") and kind == "history":
+        if DATA_VERSION in ("0.28.0", "0.29.0", "0.30.0") and kind == "history":
             # P5-04a: a root without the 0.28.0 fields (the 0.27.0 data on disk before integration) is read with the
             # shipped values of 14 filled in; recorded in FALLBACK_028_USED (the C++ loader refuses such a root)
             for did, new in NEW_FIELDS_028.items():
                 if did in defs and any(n not in defs[did] for n, _, _, _ in new):
                     FALLBACK_028_USED.add(os.path.join(root, "history", did))
                     defs[did] = dict(defs[did], **{n: v for n, _, _, v in new if n not in defs[did]})
-        if DATA_VERSION == "0.29.0" and kind == "history" and history_029(defs):
+        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "history" and history_029(defs):
             FALLBACK_029_USED.add(os.path.join(root, "history"))
-        if DATA_VERSION == "0.29.0" and kind == "race":
+        if DATA_VERSION == "0.30.0" and kind == "history" and history_030(defs):
+            FALLBACK_030_USED.add(os.path.join(root, "history"))
+        if DATA_VERSION == "0.30.0" and kind == "culture" and culture_030(defs):
+            FALLBACK_030_USED.add(os.path.join(root, "cultures"))
+        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "race":
             # r2 4.5: delving_permille is optional (absent counts 0). The shipped root before the engineer's data
             # (no deep_years in its monsters.toml) is read with 4.5's shipped values; the fixture roots leave it out (0)
             shipped = os.path.normpath(os.path.abspath(root)).endswith(os.path.join("game", "data")) and \
@@ -4257,7 +4576,7 @@ def load_root(root, kinds=None, from_spec=False):
                     if shipped and v:
                         FALLBACK_029_USED.add(os.path.join(root, "races", did))
                     defs[did] = dict(defs[did], delving_permille=v)
-        if DATA_VERSION == "0.29.0" and kind == "monster" and not any(k in defs for k in DEEP_IDS_029) and defs:
+        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "monster" and not any(k in defs for k in DEEP_IDS_029) and defs:
             FALLBACK_029_USED.add(os.path.join(root, "monsters"))
             for k in DEEP_IDS_029:
                 defs[k] = copy.deepcopy(DEEP_KINDS_029[k])

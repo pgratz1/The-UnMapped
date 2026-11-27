@@ -291,6 +291,8 @@ class Monsters:
             live_w = [m for m in live if self.kind(m["kind"])["wake"] != "deep"]
         else:
             live_w = live
+        if getattr(self.w, "pantheon", None) is not None:   # P5-08 7.3: a sent monster stands outside L_world
+            live_w = [m for m in live_w if self.w.events[m["born_event"] - 1]["key"] != "divine_monster"]
         return (len(live_w) < self.L_world() and sum(1 for m in live if m["kind"] == k) < kd["max_alive"]
                 and not self.open_lair_in(rid))
 
@@ -1222,6 +1224,11 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     # rule and their monsters outside the world cap (6.4 "Caps"); a deep monster's first event is its deep_woken
     deep = {k for k, (_key, kd) in enumerate(kinds, 1) if kd["wake"] == "deep"}
     mkinds = MONSTER_EVENT_KINDS + (DEEP_EVENT_KINDS if "hold_lost" in x.kid else ())
+    # P5-08 13 item 14: a monster sent by a god (divine_monster, kind 103) is born of that event, awake, outside the
+    # world cap; its divine_monster is its appearance and the waking its raids cite
+    div = ("divine_monster",) if "divine_monster" in x.kid else ()
+    mkinds = mkinds + div
+    sent = {x.role(e[0], "monster")[0] for e in x.events_of(*div)} if div else set()
     R = R if R is not None else len(res.get("region", [])) or len({b for bb in borders for b in bb[:2]})
     Lw = max(1, R * tuning["living_permille"] // 1000)
     # 1
@@ -1244,7 +1251,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
         if len(regs) != len(set(regs)):
             out.append("3: two open lairs in one region at e%d" % e)
         alive = [m for m in x.monsters if m[5] <= e and (m[7] == 0 or e < m[7])]
-        if sum(1 for m in alive if m[2] not in deep) > Lw:
+        if sum(1 for m in alive if m[2] not in deep and m[0] not in sent) > Lw:
             out.append("3: %d living monsters at e%d above %d" % (len(alive), e, Lw))
         for k, (_key, kd) in enumerate(kinds, 1):
             if sum(1 for m in alive if m[2] == k) > kd["max_alive"]:
@@ -1256,7 +1263,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
             by_m.setdefault(mid, []).append(e)
     for m in x.monsters:
         evs = by_m.get(m[0], [])
-        app = [e for e in evs if x.key[e[3]] in ("monster_appeared", "undead_rose", "deep_woken")]
+        app = [e for e in evs if x.key[e[3]] in ("monster_appeared", "undead_rose", "deep_woken") + div]
         if m[2] in deep and evs and x.key[evs[0][3]] != "deep_woken":
             out.append("4: deep monster %d first event e%d is not its deep_woken" % (m[0], evs[0][0]))
         if [e[0] for e in app] != [m[5]]:
@@ -1352,9 +1359,9 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
                    "monster_slain_by_hero": ("monster_raid",), "hero_slain": ("monster_raid",),
                    "monster_woke": ("monster_slept",
                    "monster_driven_off"), "monster_slept": ("monster_appeared", "undead_rose", "monster_woke",
-                                                            "deep_woken"),
+                                                            "deep_woken") + div,
                    "settlement_overrun": ("monster_raid",), "monster_slain": ("monster_raid",),
-                   "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose"),
+                   "monster_driven_off": ("monster_raid",), "monster_died": ("monster_appeared", "undead_rose") + div,
                    "outpost_built": ("war_declared", "ally_joined_war")}   # P5-04 7.6: a joined war row's event
     for k, allowed in cause_kinds.items():
         for e in x.events_of(k):
@@ -1364,7 +1371,7 @@ def invariant_violations(res, kinds, tuning, E, borders, R=None, quiet_max=3, qu
     # P5-03 9.1 (P5-03a 12 item 4): a raid cites its monster's waking event and at most one earlier raid of the
     # monster on the same settlement within raid_chain_years (before P5-03: the waking event alone)
     waking = {}
-    for e in x.events_of("monster_appeared", "undead_rose", "monster_woke", "deep_woken"):
+    for e in x.events_of("monster_appeared", "undead_rose", "monster_woke", "deep_woken", *div):
         for mid in x.role(e[0], "monster"):
             waking.setdefault(mid, set()).add(e[0])
     chain = tuning.get("raid_chain_years")

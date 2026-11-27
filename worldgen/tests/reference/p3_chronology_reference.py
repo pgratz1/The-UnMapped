@@ -137,6 +137,8 @@ def data_from_root(root):
     tuning = dict(jitter=fx_raw(ch["awakening_jitter_frac"]), gap=ch["awakening_min_gap_years"],
                   form=ch["age_name_form"])
     d = Data(races, cultures, biomes, tuning)
+    d.root = root   # P5-08 6.1: the pantheon's god definitions are read from the same root
+    d.creator_title = ch.get("creator_title", "the Maker of {plural}")   # P5-08 4.2 (code default the start)
     # P3-02 r5 11.2 (0.17.0): the effective filter, the union of every
     # name_filter definition; empty for 0.16.0 data.
     d.filter = pnr.EMPTY_FILTER
@@ -430,8 +432,18 @@ def chronology(data, p, seed, region_names, stage_entry=True):
         c = data.culture_number[cid]
         name, t = pnr.make_name(data.cultures[cid]["naming"], cid, "god", seed, c, r["order"], registry,
                                 filt=getattr(data, "filter", pnr.EMPTY_FILTER))
-        gods.append((r["order"], name, CAMPS[r["camp"]]))
+        if pdr.at_least("0.30.0"):   # P5-08 6.1 C5: domain 1 (creation), the creator title, race = the race id
+            gods.append((r["order"], name, CAMPS[r["camp"]], 1,
+                         getattr(data, "creator_title", "the Maker of {plural}").replace("{plural}", r["plural"]),
+                         r["order"]))
+        else:
+            gods.append((r["order"], name, CAMPS[r["camp"]]))
         attempts.append(t)
+    if pdr.at_least("0.30.0"):   # P5-08 6.1 C5a and 8.1 item 4: the rest of the pantheon, named after the creators
+        import p5_08_pantheon_reference as p508
+        for row, t in p508.pantheon_god_rows(data, seed, registry):
+            gods.append(row)
+            attempts.append(t)
     races = []
     race_biome = []
     for r in data.races:

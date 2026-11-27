@@ -171,6 +171,10 @@ FLAGS = dict(
                         # (p5_07_depths_reference.py, installed on the monsters subsystem), the forge's depth in the
                         # force (6.3), the deeds of 6.9, schema 13
     a1_units=False,     # P5-07 7.5 (P5-04a audit A1): a quiet renewal credits units, no contribution
+    # P5-08 (generator 0.30.0)
+    pantheon=False,     # P5-08 5 to 7: the pantheon subsystem after the figures (p5_08_pantheon_reference.Pantheon),
+                        # its DivineView on peoples and conflict, the interventions of T5, the third tension source
+    p508=False,         # P5-08 12: the follow-ups in monsters (12.2 to 12.4, 12.7), alliances (12.5), figures (12.6)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -186,8 +190,9 @@ FLAGS_026 = ("alliances",)   # P5-04 (generator 0.26.0): the replay of 6 and 7
 FLAGS_027 = ("figures", "riders")   # P5-06 (generator 0.27.0)
 FLAGS_028 = ("p504a",)               # P5-04a (generator 0.28.0)
 FLAGS_029 = ("deep", "a1_units")    # P5-07 (generator 0.29.0)
+FLAGS_030 = ("pantheon", "p508")    # P5-08 (generator 0.30.0)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")
 VERSION_EXPLICIT = False   # P5-07 12 item 3: --version given; check-world otherwise reads the world's version
 
 
@@ -201,6 +206,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_030:
+        return i >= 14
     if k in FLAGS_029:
         return i >= 13
     if k in FLAGS_028:
@@ -598,6 +605,8 @@ class Data(pp.Data):
         self.relations = hist.get("relations")   # P5-03 4.2 (0.24.0); an older root has none
         self.alliances = hist.get("alliances")   # P5-04 4.2 (0.26.0); an older root has none
         self.figures = hist.get("figures")       # P5-06 4.4 (0.27.0); an older root has none
+        self.pantheon = hist.get("pantheon")     # P5-08 4.2 (0.30.0); an older root has none
+        self.gods = (pdr.load_root(root, kinds=("god",))["god"] if pdr.at_least("0.30.0") else [])   # P5-08 4.1
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -645,6 +654,8 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d.relations = copy.deepcopy(getattr(dat, "relations", None))
     d.alliances = copy.deepcopy(getattr(dat, "alliances", None))
     d.figures = copy.deepcopy(getattr(dat, "figures", None))
+    d.pantheon = copy.deepcopy(getattr(dat, "pantheon", None))
+    d.gods = copy.deepcopy(getattr(dat, "gods", []))
     return d
 
 
@@ -861,6 +872,14 @@ class World(pp.World):
         if conflict and FLAGS["figures"] and getattr(dat, "figures", None) is not None:
             import p5_06_figures_reference as p506
             self.figures = p506.Figures(self, dat, inp)
+        # P5-08: the pantheon subsystem after the figures (p5_08_pantheon_reference.Pantheon); its DivineView on
+        # peoples (growth, shunned) and conflict (force)
+        self.pantheon = None
+        self.divine = None
+        if conflict and FLAGS["pantheon"]:
+            import p5_08_pantheon_reference as p508
+            self.pantheon = p508.Pantheon(self, dat, inp)
+            self.divine = self.pantheon
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -887,7 +906,11 @@ class World(pp.World):
             self.race_relations.t4()
         if self.figures is not None:
             self.figures.t4()                # T4: figures (after relations; alliances has no T4)
+        if self.pantheon is not None:
+            self.pantheon.t4()               # T4: pantheon (P5-08 6.12 item 3: last)
         self.begin()                         # T5
+        if self.pantheon is not None:
+            self.pantheon.t5()               # T5: the interventions (P5-08 6.3, 7.6)
         self.begin()                         # T6
         if self.conflict_on:
             self.c_t6()
@@ -932,6 +955,8 @@ class World(pp.World):
             self.alliances.q4()             # Q4: alliances (after relations)
         if self.figures is not None:
             self.figures.q4()               # Q4: figures (after alliances)
+        if self.pantheon is not None:
+            self.pantheon.q4()              # Q4: pantheon (after figures)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -1400,6 +1425,8 @@ class World(pp.World):
         if FLAGS["muster"]:
             f = f * self.muster(c) // 1000         # r9 20.6 item 1
         f = self.strengthened(f, c)                # P5-04 7.5: before the bound check
+        if getattr(self, "pantheon", None) is not None:   # P5-08 7.1: after 7.5's and P5-07 6.3's factors
+            f = f * (1000 + self.pantheon.force_permille(c, self.year)) // 1000
         if f > (1 << 40):
             fatal("history: bound: conflict force of civilization %d exceeds 2^40" % c)
         return f
@@ -1734,7 +1761,11 @@ class World(pp.World):
         if self.monsters is not None:
             v2, e2 = self.monsters.tension(start, length)
             if v2 > v:
-                return v2, e2
+                v, e = v2, e2
+        if self.pantheon is not None:   # P5-08 6.6: the third source; the first source is kept on a tie
+            v3, e3 = self.pantheon.tension(start, length)
+            if v3 > v:
+                v, e = v3, e3
         return v, e
 
     def tension(self, start, length):
@@ -2763,6 +2794,11 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
             res["race_relation"] = w.race_relations.race_relation_rows()
             res["settlement_race"] = w.race_relations.settlement_race_rows()
         pe.with_ending(res)
+    if w.pantheon is not None:   # schema 14 (P5-08 9): the faction rows, written at the end; god rows of 6.1
+        res["faction"] = w.pantheon.faction_rows()
+        res["god"] = [tuple(g) for g in inp.gods]
+    elif pe.RENDER_R30:
+        res["faction"] = []
     if w.figures is not None:   # schema 12 (P5-06 9.1, 9.3): the figure and book rows, written at the end
         res["figure"] = w.figures.figure_rows()
         res["book"] = w.figures.book_rows()
