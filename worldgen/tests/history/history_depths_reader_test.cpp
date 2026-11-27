@@ -307,7 +307,7 @@ TEST_CASE("P5-07 9: a schema 12 world (as 0.28.0 writes) is refused with the ver
                                            "'schema_version';");
     auto r = db::WorldReader::open(p12);
     REQUIRE_FALSE(r.ok());
-    CHECK(r.error().message.find("world schema version 12, this build reads 13") != std::string::npos);
+    CHECK(r.error().message.find("world schema version 12, this build reads 14") != std::string::npos);
 }
 
 }  // TEST_SUITE

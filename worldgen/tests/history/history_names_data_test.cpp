@@ -119,7 +119,8 @@ std::string culture_toml(std::string_view id, std::string_view race, std::string
             std::istringstream in(e.bytes);
             std::string line;
             while (std::getline(in, line)) {
-                for (const char* key : {"person_forms", "tower_forms", "library_forms", "book_titles", "regnal_permille"}) {
+                for (const char* key : {"person_forms", "tower_forms", "library_forms", "book_titles", "regnal_permille",
+                                        "cult_forms", "temple_forms", "sanctum_forms", "sacred_forms", "profane_forms"}) {
                     if (line.rfind(std::string(key) + " =", 0) == 0) o << line << "\n";
                 }
             }

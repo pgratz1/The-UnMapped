@@ -360,7 +360,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         // worldgen/tests/data/geo-small/": byte for byte, file by file.
         // P3-08 (0.17.0): name_filters/ and placenames/ too (P3-02 r5 11.2, P1-06 r3 4.1).
         // P5-02 4.1, 4.2 (0.23.0): beasts/ and monsters/ too.
-        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames", "beasts", "monsters"}) {
+        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames", "beasts", "monsters", "gods"}) {
             const wd::MemoryDirectory shipped = directory_from_disk(source_root() / "game" / "data", d);
             const wd::MemoryDirectory copy = directory_from_disk(source_root() / base, d);
             REQUIRE(copy.entries.size() == shipped.entries.size());

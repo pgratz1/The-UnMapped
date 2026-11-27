@@ -104,9 +104,9 @@ DEFAULT_INPUTS_028 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.28.0 histories (P5-04a integration: build-inputs)
 DEFAULT_INPUTS_029 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p507-int",
                                   "report-inputs")   # 0.29.0 histories (P5-07 integration part 2: build-inputs)
-DEFAULT_INPUTS_030 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p508-int",
+DEFAULT_INPUTS_030 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p508-int2",
                                   "report-inputs")   # 0.30.0 histories (P5-08 integration part 2: build-inputs)
-GENERATOR_VERSION = "0.29.0"
+GENERATOR_VERSION = "0.30.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
@@ -278,7 +278,7 @@ def use_version(v):
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.29.0")   # P5-07 integration part 2: 0.29.0 by default (--version 0.28.0 serves the 0.28.0 text)
+use_version("0.30.0")   # P5-08 integration part 2: 0.30.0 by default (--version 0.29.0 serves the 0.29.0 text)
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -3375,9 +3375,14 @@ def build_input(src, dst):
             for t, n in (("figure", 19), ("book", 6)):
                 c.execute('DELETE FROM "%s"' % t)
                 c.executemany('INSERT INTO "%s" VALUES (%s)' % (t, ",".join("?" * n)), [tuple(r) for r in res[t]])
+        if V11:   # schema 14 (P5-08 9): table faction, rewritten from the replay (a 0.30.0 source has it)
+            assert c.execute("SELECT 1 FROM sqlite_master WHERE name = 'faction'").fetchone(), "a schema 14 source"
+            c.execute('DELETE FROM "faction"')
+            c.executemany('INSERT INTO "faction" VALUES (%s)' % ",".join("?" * 13),
+                          [tuple(None if (i == 9 and v == -1) else v for i, v in enumerate(r)) for r in res["faction"]])
         for t in pchr.TABLES:
             c.execute('DELETE FROM "%s"' % t)
-            n = pchr.COLUMNS[t]
+            n = pchr.columns(t)
             c.executemany('INSERT INTO "%s" VALUES (%s)' % (t, ",".join("?" * n)), [tuple(r) for r in chron[t]])
         for t in pcr.TABLES:
             c.execute('DELETE FROM "%s"' % t)

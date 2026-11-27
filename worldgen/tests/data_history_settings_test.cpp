@@ -315,7 +315,7 @@ TEST_CASE("P3-01 6.2: world.divine_script is refused until P5, for a value of an
     for (const char* v : {"\"script.lua\"", "\"\"", "\"0123456789abcdef\"", "1", "true", "[\"a\"]", "{ path = \"a\" }"}) {
         CAPTURE(std::string_view(v));
         CHECK(only_error(std::string("divine_script = ") + v).message ==
-              "'world.divine_script' is not supported yet: divine scripts need phase P5");
+              "'world.divine_script': divine scripts are not supported yet");
     }
     // A float gets the loader's floating-point message only.
     const wd::LoadError f = only_error("divine_script = 1.5");

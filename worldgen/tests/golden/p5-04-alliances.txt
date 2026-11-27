@@ -4,186 +4,186 @@
 # <case> events <n> <sha256 of the event rows of kinds 63 to 78>; participants, causes, values of those events
 # <case> sites mine <n> <sha256 of the kind 3 site rows>
 # <case> stat <key> <value>   (P5-04 10.5's [stats] keys)
-civs4-seed-0-1024 rows alliance 47 ac75878d2e678363072e7b4e8486d6790128bd1d38ac2e372fa4f08e9031187b
-civs4-seed-0-1024 rows trade 44 79033d5697b907d3f933833d0f9eaf16d19d3bc74f6f8e4171b1507ea4e237bf
-civs4-seed-0-1024 rows war_joined 47 7fac79912134e905737492ab474a1a94cba6caa216f64f247f2b3a77c9c46026
-civs4-seed-0-1024 events 381 0be79420e2f4c5f080281c388f48693673d0fc3c4cc9cb34df8d76250b1c502f
-civs4-seed-0-1024 participants d7f97b0cb78eecafc06d01734098fa0087c15579f3ab7de3c91cbbb552bf5051
-civs4-seed-0-1024 causes 25034994f26fb9a4bdc0e44036f2152deee48760591ab065a6f07fd6ec2298e2
-civs4-seed-0-1024 values 8e4667b1eaaee988746b361c8c9f7ceb05ecac544676d287393dcdce4c93dc8a
-civs4-seed-0-1024 sites mine 4 88ad0f9b7d73ddbdf2ace10d71e49632e01b68165ad930f19b3e608c1bbf6a0f
+civs4-seed-0-1024 rows alliance 47 ec205462fb3f5075b8a0b8ea5ef7b795cccbaa7f4113327e2b570f22e80c9a61
+civs4-seed-0-1024 rows trade 51 bf49208ce0a4779ad9c14251fb16b0d0ec9dd0b8f02e91beac4d7539e85c4026
+civs4-seed-0-1024 rows war_joined 56 994cfdc55654de9e5ffc7da71963f1fa3fa74031da262c8ca5802b21de967858
+civs4-seed-0-1024 events 365 0bdc25fe52249b100256f7765a288e76874e05ee8d01837e0467ec444ba7c03a
+civs4-seed-0-1024 participants 4d6095f25d24cfbd3c91112582557c288db58c61a26c97243f3b37feaebfb30a
+civs4-seed-0-1024 causes 4eb9367bb90ed2e2ff439ac4eb13049144dda67d99718aff453ae3099706f896
+civs4-seed-0-1024 values 3367baa472b110cdce35b2502dcebcc550c696eaedb24c41af05cb37ad9c0196
+civs4-seed-0-1024 sites mine 8 cba206110b4a8a65631d1a4115e07e79614f9e277a1ef5f5580d94811d8e08ee
 civs4-seed-0-1024 stat alliances_formed 47
-civs4-seed-0-1024 stat alliances_standing 28
-civs4-seed-0-1024 stat alliances_cross_race 23
+civs4-seed-0-1024 stat alliances_standing 24
+civs4-seed-0-1024 stat alliances_cross_race 28
 civs4-seed-0-1024 stat alliances_origin 9
 civs4-seed-0-1024 stat alliances_lapsed 1
-civs4-seed-0-1024 stat alliances_broken 8
-civs4-seed-0-1024 stat alliances_betrayed 0
-civs4-seed-0-1024 stat alliances_ended_with_realm 5
-civs4-seed-0-1024 stat alliances_years_median 510
-civs4-seed-0-1024 stat allies_joined 47
+civs4-seed-0-1024 stat alliances_broken 6
+civs4-seed-0-1024 stat alliances_betrayed 2
+civs4-seed-0-1024 stat alliances_ended_with_realm 12
+civs4-seed-0-1024 stat alliances_years_median 283
+civs4-seed-0-1024 stat allies_joined 56
 civs4-seed-0-1024 stat allies_joined_defence 38
-civs4-seed-0-1024 stat allies_refused 35
-civs4-seed-0-1024 stat allies_withdrew 5
-civs4-seed-0-1024 stat wars_with_ally 34
-civs4-seed-0-1024 stat allied_battles 85
-civs4-seed-0-1024 stat bloc_share_max_permille 332
+civs4-seed-0-1024 stat allies_refused 40
+civs4-seed-0-1024 stat allies_withdrew 13
+civs4-seed-0-1024 stat wars_with_ally 40
+civs4-seed-0-1024 stat allied_battles 130
+civs4-seed-0-1024 stat bloc_share_max_permille 351
 civs4-seed-0-1024 stat bloc_over_800_years 0
-civs4-seed-0-1024 stat trade_opened 44
-civs4-seed-0-1024 stat trade_standing 33
-civs4-seed-0-1024 stat trade_broken 7
-civs4-seed-0-1024 stat alliances_spurned 5
-civs4-seed-0-1024 stat spoils_owed 13
-civs4-seed-0-1024 stat spoils_granted 8
+civs4-seed-0-1024 stat trade_opened 51
+civs4-seed-0-1024 stat trade_standing 29
+civs4-seed-0-1024 stat trade_broken 9
+civs4-seed-0-1024 stat alliances_spurned 2
+civs4-seed-0-1024 stat spoils_owed 16
+civs4-seed-0-1024 stat spoils_granted 11
 civs4-seed-0-1024 stat spoils_withheld 5
-civs4-seed-0-1024 stat spoils_granted_permille 615
-civs4-seed-0-1024 stat spoils_people_owed 4520
-civs4-seed-0-1024 stat mines_opened 4
-civs4-seed-0-1024 stat mines_open 3
-civs4-seed-0-1024 stat arms_sold 8
-civs4-seed-0-1024 stat arms_buyers_at_end 5
-civs4-seed-12-1024 rows alliance 59 598b3314fe5941a8895036ea086e51bb63b3d237efd6156ccd73385ee758b20b
-civs4-seed-12-1024 rows trade 66 63d81a5ace048756ee5e49cc5599c8e25a9f73e91f10cdd21201facc06c2fc4f
-civs4-seed-12-1024 rows war_joined 73 a3a1cdcc723f9b2d3da5de5cda4520c8ee5389adfdcce0535f80e81cecbfbe45
-civs4-seed-12-1024 events 570 042d4eeb8bf20bd9b2d7196ab6cf39e0af181eb1663d0204dbf7d4a535d6b73e
-civs4-seed-12-1024 participants 3d3b6699b92c181ccf9f1e6b76d96970e9079efb6a9cd2dd07d32763c63380b4
-civs4-seed-12-1024 causes d0b7d9a6376e876c0d1dd7c254e432209e5febba7dc39e3f25addf78baac9f75
-civs4-seed-12-1024 values efb3fa9a78ebec2c9330910c269e1bd0e60732ba8af27399d6a1e7536ffc51df
-civs4-seed-12-1024 sites mine 5 effe9910c38c2b15159b9af202fc142fefe659151b89a0f37e66fafdabe878e3
-civs4-seed-12-1024 stat alliances_formed 59
-civs4-seed-12-1024 stat alliances_standing 14
-civs4-seed-12-1024 stat alliances_cross_race 20
-civs4-seed-12-1024 stat alliances_origin 9
-civs4-seed-12-1024 stat alliances_lapsed 2
-civs4-seed-12-1024 stat alliances_broken 17
-civs4-seed-12-1024 stat alliances_betrayed 4
-civs4-seed-12-1024 stat alliances_ended_with_realm 18
-civs4-seed-12-1024 stat alliances_years_median 473
-civs4-seed-12-1024 stat allies_joined 73
-civs4-seed-12-1024 stat allies_joined_defence 60
-civs4-seed-12-1024 stat allies_refused 65
-civs4-seed-12-1024 stat allies_withdrew 20
-civs4-seed-12-1024 stat wars_with_ally 49
-civs4-seed-12-1024 stat allied_battles 162
-civs4-seed-12-1024 stat bloc_share_max_permille 560
+civs4-seed-0-1024 stat spoils_granted_permille 687
+civs4-seed-0-1024 stat spoils_people_owed 7471
+civs4-seed-0-1024 stat mines_opened 8
+civs4-seed-0-1024 stat mines_open 4
+civs4-seed-0-1024 stat arms_sold 13
+civs4-seed-0-1024 stat arms_buyers_at_end 8
+civs4-seed-12-1024 rows alliance 66 345068a87f2df8fac275889551c97d1674c81425a5387c16e88b98d665c0c3bf
+civs4-seed-12-1024 rows trade 77 43e9439cd351d44aed0e6fe7a788615e042859ec40e43e662f8611c063ad6c66
+civs4-seed-12-1024 rows war_joined 94 c30b819775c4746ec1da99e6dd4e76ccadd679ed6712fa450c4f593b66e55c0d
+civs4-seed-12-1024 events 598 f7dbf3d7319affc66b516ee2fd4d006b95de7b44c156e74550d3f7c9d949dfcc
+civs4-seed-12-1024 participants 22559d02455029ba815c8b70d886ff2dfc215217cf5260385bdc75e5a4147fb7
+civs4-seed-12-1024 causes 273414fd2161d3212d7267038cb84e806bf5d6453d2b45027632fb4b2ca53395
+civs4-seed-12-1024 values 3708d2257c74bcf416e2be5a8ba68927e2b0641cee09f16841010c044d512a3f
+civs4-seed-12-1024 sites mine 7 f559b5239b907bdb1c30893494591d725c0af29d4197afe24f9841c21266ed37
+civs4-seed-12-1024 stat alliances_formed 66
+civs4-seed-12-1024 stat alliances_standing 27
+civs4-seed-12-1024 stat alliances_cross_race 25
+civs4-seed-12-1024 stat alliances_origin 8
+civs4-seed-12-1024 stat alliances_lapsed 0
+civs4-seed-12-1024 stat alliances_broken 21
+civs4-seed-12-1024 stat alliances_betrayed 2
+civs4-seed-12-1024 stat alliances_ended_with_realm 11
+civs4-seed-12-1024 stat alliances_years_median 619
+civs4-seed-12-1024 stat allies_joined 94
+civs4-seed-12-1024 stat allies_joined_defence 82
+civs4-seed-12-1024 stat allies_refused 87
+civs4-seed-12-1024 stat allies_withdrew 21
+civs4-seed-12-1024 stat wars_with_ally 73
+civs4-seed-12-1024 stat allied_battles 219
+civs4-seed-12-1024 stat bloc_share_max_permille 540
 civs4-seed-12-1024 stat bloc_over_800_years 0
-civs4-seed-12-1024 stat trade_opened 66
-civs4-seed-12-1024 stat trade_standing 18
-civs4-seed-12-1024 stat trade_broken 20
-civs4-seed-12-1024 stat alliances_spurned 4
-civs4-seed-12-1024 stat spoils_owed 16
-civs4-seed-12-1024 stat spoils_granted 11
-civs4-seed-12-1024 stat spoils_withheld 5
-civs4-seed-12-1024 stat spoils_granted_permille 687
-civs4-seed-12-1024 stat spoils_people_owed 6636
-civs4-seed-12-1024 stat mines_opened 5
+civs4-seed-12-1024 stat trade_opened 77
+civs4-seed-12-1024 stat trade_standing 36
+civs4-seed-12-1024 stat trade_broken 25
+civs4-seed-12-1024 stat alliances_spurned 5
+civs4-seed-12-1024 stat spoils_owed 24
+civs4-seed-12-1024 stat spoils_granted 16
+civs4-seed-12-1024 stat spoils_withheld 8
+civs4-seed-12-1024 stat spoils_granted_permille 666
+civs4-seed-12-1024 stat spoils_people_owed 9601
+civs4-seed-12-1024 stat mines_opened 7
 civs4-seed-12-1024 stat mines_open 3
-civs4-seed-12-1024 stat arms_sold 7
-civs4-seed-12-1024 stat arms_buyers_at_end 4
-civs4-seed-3-1024 rows alliance 58 a4984f7daa782173cc18ffd22132e343c562b3dedac989e4f22706b0503d394e
-civs4-seed-3-1024 rows trade 50 7622aea36e589e20aba1ab90d580394f51ae6373b0ba4671db174d467f8a0b9b
-civs4-seed-3-1024 rows war_joined 60 3afe6d2367546270e41d20dff40cd82ecd0416b7e88ecdc5f02d975b3aebb66f
-civs4-seed-3-1024 events 497 ccbe52db1ba579355bef2e7ac53dc728c67c19b8cdb3a441da7e11aefa3805b5
-civs4-seed-3-1024 participants dd30543b3c48ad1332cdbacb3322bf71d4816203f3f31e7d1e69d190a867f55e
-civs4-seed-3-1024 causes f18fb1398a60b5085bb9199b9bf0df27f20d9c09c35f2dea44c88b432eaae8d2
-civs4-seed-3-1024 values fa7a57b5a68bc1181365aca23f24af6fd203c2807caad1a200a9e237571de659
-civs4-seed-3-1024 sites mine 6 249ce22ec0499e1c9bf7335ef235effae94b7d040942948dccadfcff8f84d7a3
-civs4-seed-3-1024 stat alliances_formed 58
-civs4-seed-3-1024 stat alliances_standing 21
-civs4-seed-3-1024 stat alliances_cross_race 31
-civs4-seed-3-1024 stat alliances_origin 6
-civs4-seed-3-1024 stat alliances_lapsed 0
-civs4-seed-3-1024 stat alliances_broken 19
-civs4-seed-3-1024 stat alliances_betrayed 1
+civs4-seed-12-1024 stat arms_sold 8
+civs4-seed-12-1024 stat arms_buyers_at_end 5
+civs4-seed-3-1024 rows alliance 54 8b8590df02126432b0b51b485e8bf766bd9a84349401d6807d20d23fccb16a16
+civs4-seed-3-1024 rows trade 53 909ae183f3d4b94320b3f3e8d1e9347c13d7e1f639d7c9bde85fcbb0471c9d5e
+civs4-seed-3-1024 rows war_joined 91 a46cc38ed3d6e1fafe76f090d31f8543655eb0409945e771b50ed097ec7b2f75
+civs4-seed-3-1024 events 464 00307cb5a9bc6a5213e50e4a8977a3a11c4e8854705e8b5d16340d5d1a82fd83
+civs4-seed-3-1024 participants 52818676a3a182f2c4e10d2c1f471acc91a928ed245107ba411bb437fc085ad5
+civs4-seed-3-1024 causes af0c5ea6248239484173c95d0d60ee0468136ff8726be4298f84eef39130317f
+civs4-seed-3-1024 values 75b904ad60c3d7dbaa705ae28645f1be292b34becdf1c5e9fa61cb72b1879fb0
+civs4-seed-3-1024 sites mine 4 3cb643c22e4034feb05be78140d557298cd67fc8f15520fd6d3e71fb6f2bcfe4
+civs4-seed-3-1024 stat alliances_formed 54
+civs4-seed-3-1024 stat alliances_standing 20
+civs4-seed-3-1024 stat alliances_cross_race 26
+civs4-seed-3-1024 stat alliances_origin 5
+civs4-seed-3-1024 stat alliances_lapsed 2
+civs4-seed-3-1024 stat alliances_broken 15
+civs4-seed-3-1024 stat alliances_betrayed 2
 civs4-seed-3-1024 stat alliances_ended_with_realm 14
-civs4-seed-3-1024 stat alliances_years_median 320
-civs4-seed-3-1024 stat allies_joined 60
-civs4-seed-3-1024 stat allies_joined_defence 50
-civs4-seed-3-1024 stat allies_refused 63
-civs4-seed-3-1024 stat allies_withdrew 9
-civs4-seed-3-1024 stat wars_with_ally 44
-civs4-seed-3-1024 stat allied_battles 99
-civs4-seed-3-1024 stat bloc_share_max_permille 470
+civs4-seed-3-1024 stat alliances_years_median 327
+civs4-seed-3-1024 stat allies_joined 91
+civs4-seed-3-1024 stat allies_joined_defence 79
+civs4-seed-3-1024 stat allies_refused 60
+civs4-seed-3-1024 stat allies_withdrew 20
+civs4-seed-3-1024 stat wars_with_ally 63
+civs4-seed-3-1024 stat allied_battles 210
+civs4-seed-3-1024 stat bloc_share_max_permille 508
 civs4-seed-3-1024 stat bloc_over_800_years 0
-civs4-seed-3-1024 stat trade_opened 50
-civs4-seed-3-1024 stat trade_standing 25
-civs4-seed-3-1024 stat trade_broken 9
-civs4-seed-3-1024 stat alliances_spurned 3
-civs4-seed-3-1024 stat spoils_owed 13
-civs4-seed-3-1024 stat spoils_granted 8
-civs4-seed-3-1024 stat spoils_withheld 5
-civs4-seed-3-1024 stat spoils_granted_permille 615
-civs4-seed-3-1024 stat spoils_people_owed 5011
-civs4-seed-3-1024 stat mines_opened 6
-civs4-seed-3-1024 stat mines_open 4
-civs4-seed-3-1024 stat arms_sold 11
-civs4-seed-3-1024 stat arms_buyers_at_end 5
-civs4-seed-7-1024 rows alliance 44 8a433d4e4ab797637bf580a7acf2bbed2809bf2dae2f9edaaccacf4770fff85f
-civs4-seed-7-1024 rows trade 50 6d670a50ebd2550cef99259539324700b9930d0eb1a5483a0c11d395c12acbf3
-civs4-seed-7-1024 rows war_joined 53 51c369e46daed07363d94c9b6a9de938007234f705807cf60083f4b2d1f31432
-civs4-seed-7-1024 events 387 1c3b914d8ecb68560de139cc38ed116d71d522046600597b512b4ed3b73cf347
-civs4-seed-7-1024 participants b4505c518d5083011a8c82db76a7540a804c0a29b05c466532a43c5e0ff02e35
-civs4-seed-7-1024 causes c43e3bcc33b5709f89cf69ee3c720f8ab6dfe77991026707eef307bd7efe7d76
-civs4-seed-7-1024 values a021f1dbfda28a45f845c2328daba9a947e7614ede4eab74c36bb4437490060b
-civs4-seed-7-1024 sites mine 6 e0075fcf9f747d1094c4982f10360e9281bff8bc7e1d34d27933318de335564d
-civs4-seed-7-1024 stat alliances_formed 44
-civs4-seed-7-1024 stat alliances_standing 26
-civs4-seed-7-1024 stat alliances_cross_race 25
+civs4-seed-3-1024 stat trade_opened 53
+civs4-seed-3-1024 stat trade_standing 26
+civs4-seed-3-1024 stat trade_broken 13
+civs4-seed-3-1024 stat alliances_spurned 1
+civs4-seed-3-1024 stat spoils_owed 16
+civs4-seed-3-1024 stat spoils_granted 15
+civs4-seed-3-1024 stat spoils_withheld 1
+civs4-seed-3-1024 stat spoils_granted_permille 937
+civs4-seed-3-1024 stat spoils_people_owed 8546
+civs4-seed-3-1024 stat mines_opened 4
+civs4-seed-3-1024 stat mines_open 2
+civs4-seed-3-1024 stat arms_sold 8
+civs4-seed-3-1024 stat arms_buyers_at_end 3
+civs4-seed-7-1024 rows alliance 48 d65ed3683baa3249acb703419e11151b551480c9062d80a4f40ee7f5a6e3e522
+civs4-seed-7-1024 rows trade 45 22639cf51c228a61fb21694a1c634c1f88b4a2bbca09e91f9bd1a2df99bc3bff
+civs4-seed-7-1024 rows war_joined 53 ce2b0ddb2c78b8c1db4d6bacdb3c2aefde53010492d22e189017972d341a8ca4
+civs4-seed-7-1024 events 302 f62fca6d7e59ef515276be6ca47a7f761da697f6bdcb21cf51eb25bed5865fc7
+civs4-seed-7-1024 participants 77aeec3d3edcb05cf1391c6b452c174017191859d89dd1cf92e42db34e8f3850
+civs4-seed-7-1024 causes ae87b3f4840e460e0160d5d66628265dd12f11a216f528aede7439489e23a31e
+civs4-seed-7-1024 values 0b8398e33d972e938209359cd3b7f9ca374fab9a94fbc51a472a66b164dc04e0
+civs4-seed-7-1024 sites mine 5 67503da896bbd5a2784106453ad89afd2c5944b8f24ab69e106a3b4eb1707e74
+civs4-seed-7-1024 stat alliances_formed 48
+civs4-seed-7-1024 stat alliances_standing 22
+civs4-seed-7-1024 stat alliances_cross_race 28
 civs4-seed-7-1024 stat alliances_origin 6
-civs4-seed-7-1024 stat alliances_lapsed 1
-civs4-seed-7-1024 stat alliances_broken 6
-civs4-seed-7-1024 stat alliances_betrayed 2
-civs4-seed-7-1024 stat alliances_ended_with_realm 4
-civs4-seed-7-1024 stat alliances_years_median 897
+civs4-seed-7-1024 stat alliances_lapsed 4
+civs4-seed-7-1024 stat alliances_broken 11
+civs4-seed-7-1024 stat alliances_betrayed 0
+civs4-seed-7-1024 stat alliances_ended_with_realm 7
+civs4-seed-7-1024 stat alliances_years_median 450
 civs4-seed-7-1024 stat allies_joined 53
-civs4-seed-7-1024 stat allies_joined_defence 46
-civs4-seed-7-1024 stat allies_refused 21
-civs4-seed-7-1024 stat allies_withdrew 5
+civs4-seed-7-1024 stat allies_joined_defence 39
+civs4-seed-7-1024 stat allies_refused 38
+civs4-seed-7-1024 stat allies_withdrew 9
 civs4-seed-7-1024 stat wars_with_ally 31
-civs4-seed-7-1024 stat allied_battles 85
-civs4-seed-7-1024 stat bloc_share_max_permille 389
+civs4-seed-7-1024 stat allied_battles 84
+civs4-seed-7-1024 stat bloc_share_max_permille 302
 civs4-seed-7-1024 stat bloc_over_800_years 0
-civs4-seed-7-1024 stat trade_opened 50
-civs4-seed-7-1024 stat trade_standing 33
-civs4-seed-7-1024 stat trade_broken 11
-civs4-seed-7-1024 stat alliances_spurned 5
-civs4-seed-7-1024 stat spoils_owed 20
-civs4-seed-7-1024 stat spoils_granted 13
-civs4-seed-7-1024 stat spoils_withheld 7
-civs4-seed-7-1024 stat spoils_granted_permille 650
-civs4-seed-7-1024 stat spoils_people_owed 10993
-civs4-seed-7-1024 stat mines_opened 6
-civs4-seed-7-1024 stat mines_open 6
-civs4-seed-7-1024 stat arms_sold 19
-civs4-seed-7-1024 stat arms_buyers_at_end 8
-geo-phrase-512 rows alliance 8 33e19f74cd19d9e9b11757734b949154d29ab87706439ca27e0eaa6d72d3f88b
-geo-phrase-512 rows trade 12 661c04b84c98c6995ccc6dba79093e9ee102abf0e7b34ad989bb290dbd322e53
-geo-phrase-512 rows war_joined 5 e682fbed20156b4cd086985aa5ef4b90746701a9777500f98e0851c60128a959
-geo-phrase-512 events 65 942e4c09fc5eb4d8eb687b5de0dcc4d0f9f57980b6669d29cdc1cdfecdc2844a
-geo-phrase-512 participants d35c8f93cf1b95aad4886fb866205dbbbd7699cbcd5bf6220682b0257ef7dc1c
-geo-phrase-512 causes 3bb7ad4dc516800a7faf2ff50dcf10c013b95aa8a31e58f32acd11cc873ba6dc
-geo-phrase-512 values 347f27eafe14801ded5febe18cceef1ae7eb57f9c8088125275f23a09577f9aa
-geo-phrase-512 sites mine 2 943c0fa2ae0981d033979d549acc204221f77b64bcab0744c8fc18964b30c7cd
-geo-phrase-512 stat alliances_formed 8
-geo-phrase-512 stat alliances_standing 7
+civs4-seed-7-1024 stat trade_opened 45
+civs4-seed-7-1024 stat trade_standing 30
+civs4-seed-7-1024 stat trade_broken 3
+civs4-seed-7-1024 stat alliances_spurned 4
+civs4-seed-7-1024 stat spoils_owed 14
+civs4-seed-7-1024 stat spoils_granted 9
+civs4-seed-7-1024 stat spoils_withheld 5
+civs4-seed-7-1024 stat spoils_granted_permille 642
+civs4-seed-7-1024 stat spoils_people_owed 8598
+civs4-seed-7-1024 stat mines_opened 5
+civs4-seed-7-1024 stat mines_open 4
+civs4-seed-7-1024 stat arms_sold 6
+civs4-seed-7-1024 stat arms_buyers_at_end 5
+geo-phrase-512 rows alliance 6 a0abd9e4fa40b38bf2f37167bffa45aaf195cf9a59819cd5dafe0c402559824e
+geo-phrase-512 rows trade 9 141d6d993fd23296adf9d35526c4c4fb6536bea180fae36eda15591983680f9c
+geo-phrase-512 rows war_joined 4 5e64b7353f6ca139a5be5d0a03f1cc83da7321a70cb1e803eff91e2ade037dbc
+geo-phrase-512 events 41 6b227dfcc4e4357ff134f1f17c8300aa4d2dd6f63b0cdd6fd56337c76ef6dc00
+geo-phrase-512 participants fe4fbf2b8d28e70a1f6d3f748ca00c47e066e697da0a77399fda6a001fcd76cb
+geo-phrase-512 causes a1a6a27e25f13cca09974d0c07aee1fc393371b0ad25b0f393bb4918c34de03d
+geo-phrase-512 values 66620119c18518bbc8c77d8c39d707e195020e8beba38f375472e8d4db285af3
+geo-phrase-512 sites mine 2 2311fd18dc48eabc17423bb8d1845419520a2ad513fecd2fdb936d30749b6e7c
+geo-phrase-512 stat alliances_formed 6
+geo-phrase-512 stat alliances_standing 6
 geo-phrase-512 stat alliances_cross_race 6
 geo-phrase-512 stat alliances_origin 1
 geo-phrase-512 stat alliances_lapsed 0
-geo-phrase-512 stat alliances_broken 1
+geo-phrase-512 stat alliances_broken 0
 geo-phrase-512 stat alliances_betrayed 0
 geo-phrase-512 stat alliances_ended_with_realm 0
-geo-phrase-512 stat alliances_years_median 164
-geo-phrase-512 stat allies_joined 5
-geo-phrase-512 stat allies_joined_defence 5
-geo-phrase-512 stat allies_refused 5
-geo-phrase-512 stat allies_withdrew 3
+geo-phrase-512 stat alliances_years_median -
+geo-phrase-512 stat allies_joined 4
+geo-phrase-512 stat allies_joined_defence 4
+geo-phrase-512 stat allies_refused 1
+geo-phrase-512 stat allies_withdrew 2
 geo-phrase-512 stat wars_with_ally 4
-geo-phrase-512 stat allied_battles 8
-geo-phrase-512 stat bloc_share_max_permille 536
+geo-phrase-512 stat allied_battles 7
+geo-phrase-512 stat bloc_share_max_permille 613
 geo-phrase-512 stat bloc_over_800_years 0
-geo-phrase-512 stat trade_opened 12
-geo-phrase-512 stat trade_standing 9
-geo-phrase-512 stat trade_broken 3
+geo-phrase-512 stat trade_opened 9
+geo-phrase-512 stat trade_standing 8
+geo-phrase-512 stat trade_broken 1
 geo-phrase-512 stat alliances_spurned 0
 geo-phrase-512 stat spoils_owed 0
 geo-phrase-512 stat spoils_granted 0
@@ -191,168 +191,168 @@ geo-phrase-512 stat spoils_withheld 0
 geo-phrase-512 stat spoils_granted_permille -
 geo-phrase-512 stat spoils_people_owed 0
 geo-phrase-512 stat mines_opened 2
-geo-phrase-512 stat mines_open 1
-geo-phrase-512 stat arms_sold 7
+geo-phrase-512 stat mines_open 2
+geo-phrase-512 stat arms_sold 5
 geo-phrase-512 stat arms_buyers_at_end 4
-geo-seed-0-512 rows alliance 5 93f101cf467b37ccaf1d63447f59fc4814cf27570695877e3d5ce6642d24f6b0
-geo-seed-0-512 rows trade 7 889d4058a6e7b992c1847af3519b03bc932279c295e6326fbd33c30ad2a8d1d2
-geo-seed-0-512 rows war_joined 4 ecaee4f9dfa34ba81e7aad331e0cdcc42376a28b4aaacfa3375878ff1935a979
-geo-seed-0-512 events 30 f88ac6d4fa9ba61e36e0c68109db7d043ae5b37233f17d738f7256847acff8cb
-geo-seed-0-512 participants 57fa553f73fdc7cf2800ff0e0fa00de10cd314d72102f64d7f8dcd3f16439466
-geo-seed-0-512 causes 4164b118e337e65b56d00d6352d96364b3d8b11fc79df9c40ded5d89753917ed
-geo-seed-0-512 values e4c98583d271768890bdb835c663ce3c117b1c45ecb999861fb2b6c905af8fe7
-geo-seed-0-512 sites mine 1 cc1d88f19b9ad9354c7506b2c1bcf806fc8e223160183cadb0cd235757202070
-geo-seed-0-512 stat alliances_formed 5
+geo-seed-0-512 rows alliance 4 16750583a3b7476558ac3926b4d5a35a76bb25447974fe346c9388ca732c6136
+geo-seed-0-512 rows trade 6 cd2370a8cd9e9ca476f5b89b829265fddc72d60af48b027395728771c27bb278
+geo-seed-0-512 rows war_joined 2 bfea415e9c8fc7441b37841c2823b06e8f3b02df44bda53b6e71db8f6521331a
+geo-seed-0-512 events 26 29b5b0a388e504f160fdc75661198428d9f4096a5301170161cdcb997e147e39
+geo-seed-0-512 participants 7b2fd9a64717dc3572dc7865a2b3b511fc2c5e584a9c6ad19aa2ea82ac3821e0
+geo-seed-0-512 causes d864cbd1c432ad64c260d52acdecd4574bf5babfa9ffeac597e893b0f02ce050
+geo-seed-0-512 values 5a32c12bd383bfdc1dd3278c619d8426e37a46d41d5aab5754f87c35e5225b51
+geo-seed-0-512 sites mine 2 2d8509bde82f8e0b22b767c3c69f8d85d36fa959b5504d01687610c612466272
+geo-seed-0-512 stat alliances_formed 4
 geo-seed-0-512 stat alliances_standing 4
-geo-seed-0-512 stat alliances_cross_race 5
+geo-seed-0-512 stat alliances_cross_race 4
 geo-seed-0-512 stat alliances_origin 1
 geo-seed-0-512 stat alliances_lapsed 0
 geo-seed-0-512 stat alliances_broken 0
 geo-seed-0-512 stat alliances_betrayed 0
 geo-seed-0-512 stat alliances_ended_with_realm 0
-geo-seed-0-512 stat alliances_years_median 1500
-geo-seed-0-512 stat allies_joined 4
-geo-seed-0-512 stat allies_joined_defence 4
-geo-seed-0-512 stat allies_refused 0
+geo-seed-0-512 stat alliances_years_median -
+geo-seed-0-512 stat allies_joined 2
+geo-seed-0-512 stat allies_joined_defence 2
+geo-seed-0-512 stat allies_refused 1
 geo-seed-0-512 stat allies_withdrew 1
-geo-seed-0-512 stat wars_with_ally 4
-geo-seed-0-512 stat allied_battles 6
-geo-seed-0-512 stat bloc_share_max_permille 361
+geo-seed-0-512 stat wars_with_ally 2
+geo-seed-0-512 stat allied_battles 7
+geo-seed-0-512 stat bloc_share_max_permille 452
 geo-seed-0-512 stat bloc_over_800_years 0
-geo-seed-0-512 stat trade_opened 7
-geo-seed-0-512 stat trade_standing 6
+geo-seed-0-512 stat trade_opened 6
+geo-seed-0-512 stat trade_standing 5
 geo-seed-0-512 stat trade_broken 1
-geo-seed-0-512 stat alliances_spurned 1
-geo-seed-0-512 stat spoils_owed 1
+geo-seed-0-512 stat alliances_spurned 0
+geo-seed-0-512 stat spoils_owed 0
 geo-seed-0-512 stat spoils_granted 0
-geo-seed-0-512 stat spoils_withheld 1
-geo-seed-0-512 stat spoils_granted_permille 0
-geo-seed-0-512 stat spoils_people_owed 120
-geo-seed-0-512 stat mines_opened 1
-geo-seed-0-512 stat mines_open 1
+geo-seed-0-512 stat spoils_withheld 0
+geo-seed-0-512 stat spoils_granted_permille -
+geo-seed-0-512 stat spoils_people_owed 0
+geo-seed-0-512 stat mines_opened 2
+geo-seed-0-512 stat mines_open 2
 geo-seed-0-512 stat arms_sold 4
 geo-seed-0-512 stat arms_buyers_at_end 4
-geo-seed-1-1024 rows alliance 14 c6ce4e4ab7492af1ca9db75c6ab7dde62167fa27e1d99752771143c63d1c8612
-geo-seed-1-1024 rows trade 15 051f290ad7696c837953cd05815e981d5db751e66dc291c42b7664f0d49efa38
-geo-seed-1-1024 rows war_joined 14 7e7e677724607eba3a9f0c98258c0600dca855f3e911c41330763acb28587a71
-geo-seed-1-1024 events 114 0a4ee92cdc040f9e25bcd1ec0c7922d1b7c0ae43488ead8b990c643aa3962fda
-geo-seed-1-1024 participants 1dbf7ce446cce91a10b75c3a2c618d39d60394d8b12a07dd87fadb8a60ece3ea
-geo-seed-1-1024 causes f19057c866056e57ac738d4a6162ab043d15c2820807bc7f7bb831a089ec4156
-geo-seed-1-1024 values 00c5a0c29ab09ff1e0a26a94ceb0ca5691bb27aeecf8219d3d9fcdb466cc0add
-geo-seed-1-1024 sites mine 6 040ad2afdd1bfb9b4ae8e41cc1d2b5e33804051f119a1ded115f8e6d91ca6fc9
-geo-seed-1-1024 stat alliances_formed 14
-geo-seed-1-1024 stat alliances_standing 10
-geo-seed-1-1024 stat alliances_cross_race 5
+geo-seed-1-1024 rows alliance 19 5a901c89d9950df7e6aafe951929b9c46380de9000b5de02a5fb3eaebb75e989
+geo-seed-1-1024 rows trade 25 ed72c4f22ac608b2da796760729a568b54fc6e69d06dad1ca5864a581cfec168
+geo-seed-1-1024 rows war_joined 15 afe762c8d7d56f72262b0c9b56c7d0a512eacbda3ec2aa54b4078ef0ad1d50ad
+geo-seed-1-1024 events 115 02d7ffc85efb6e20195616643f68a5ecdf06e54fe7336a3889f17f928da84f60
+geo-seed-1-1024 participants adf0f444f72cf3a553ec257c248eb6e17939f3ac8914fcee32fa293b3c94cdfa
+geo-seed-1-1024 causes 856cadeb597d6503722371d609b3af74c2c597db60d50a917d6d3c0f0a516d35
+geo-seed-1-1024 values 323fa1635b9c209d3c3d8903195ee263ad025de9a7fc98f811e833ede86c3c23
+geo-seed-1-1024 sites mine 5 6e90fdc605357b79efda3ce557953af09d21aa160d1470b6a3f895804f301e91
+geo-seed-1-1024 stat alliances_formed 19
+geo-seed-1-1024 stat alliances_standing 8
+geo-seed-1-1024 stat alliances_cross_race 7
 geo-seed-1-1024 stat alliances_origin 1
 geo-seed-1-1024 stat alliances_lapsed 0
 geo-seed-1-1024 stat alliances_broken 2
-geo-seed-1-1024 stat alliances_betrayed 2
-geo-seed-1-1024 stat alliances_ended_with_realm 0
-geo-seed-1-1024 stat alliances_years_median 643
-geo-seed-1-1024 stat allies_joined 14
-geo-seed-1-1024 stat allies_joined_defence 11
-geo-seed-1-1024 stat allies_refused 8
+geo-seed-1-1024 stat alliances_betrayed 3
+geo-seed-1-1024 stat alliances_ended_with_realm 4
+geo-seed-1-1024 stat alliances_years_median 779
+geo-seed-1-1024 stat allies_joined 15
+geo-seed-1-1024 stat allies_joined_defence 9
+geo-seed-1-1024 stat allies_refused 13
 geo-seed-1-1024 stat allies_withdrew 0
-geo-seed-1-1024 stat wars_with_ally 13
-geo-seed-1-1024 stat allied_battles 20
-geo-seed-1-1024 stat bloc_share_max_permille 337
+geo-seed-1-1024 stat wars_with_ally 11
+geo-seed-1-1024 stat allied_battles 14
+geo-seed-1-1024 stat bloc_share_max_permille 281
 geo-seed-1-1024 stat bloc_over_800_years 0
-geo-seed-1-1024 stat trade_opened 15
-geo-seed-1-1024 stat trade_standing 11
-geo-seed-1-1024 stat trade_broken 4
-geo-seed-1-1024 stat alliances_spurned 0
-geo-seed-1-1024 stat spoils_owed 1
-geo-seed-1-1024 stat spoils_granted 1
-geo-seed-1-1024 stat spoils_withheld 0
-geo-seed-1-1024 stat spoils_granted_permille 1000
-geo-seed-1-1024 stat spoils_people_owed 69
-geo-seed-1-1024 stat mines_opened 6
-geo-seed-1-1024 stat mines_open 1
-geo-seed-1-1024 stat arms_sold 0
-geo-seed-1-1024 stat arms_buyers_at_end 0
-geo-seed-42-512 rows alliance 19 a34e5639806676b5f57d256e6928976832573234fbd3c3619f4ed52114345393
-geo-seed-42-512 rows trade 25 1b6e355378a8016adb855a242b02dd7467eecdf8f91514c236f331eb3e40ba0e
-geo-seed-42-512 rows war_joined 28 1f287020142a42a6d68c02615611549950e1071a5718d0d7efd0de57ba7073b9
-geo-seed-42-512 events 208 817e7a95fe907c6a9c2437a6e7b693da441e41cb8343220ece0768975605afa6
-geo-seed-42-512 participants 349b7737e66e321a62c7e18437a7530182271286b95d5d1641b5f356c0e4e2c5
-geo-seed-42-512 causes ace577088ce9e7de745bb0363ea9f4a226ec2cc79e60c471fa7220aa7c3bf59a
-geo-seed-42-512 values 9c626c1b623df34d65b8af6a9d499abd47ca0473a6ba05bd1121d7e8b96860cd
-geo-seed-42-512 sites mine 5 acdf239544f2e7b982395b7231dbb50d707afde910521888486c8746bb5a679c
-geo-seed-42-512 stat alliances_formed 19
-geo-seed-42-512 stat alliances_standing 8
-geo-seed-42-512 stat alliances_cross_race 12
+geo-seed-1-1024 stat trade_opened 25
+geo-seed-1-1024 stat trade_standing 10
+geo-seed-1-1024 stat trade_broken 9
+geo-seed-1-1024 stat alliances_spurned 2
+geo-seed-1-1024 stat spoils_owed 4
+geo-seed-1-1024 stat spoils_granted 2
+geo-seed-1-1024 stat spoils_withheld 2
+geo-seed-1-1024 stat spoils_granted_permille 500
+geo-seed-1-1024 stat spoils_people_owed 1562
+geo-seed-1-1024 stat mines_opened 5
+geo-seed-1-1024 stat mines_open 2
+geo-seed-1-1024 stat arms_sold 3
+geo-seed-1-1024 stat arms_buyers_at_end 1
+geo-seed-42-512 rows alliance 15 c4091134a903449858ff20c2cebc303afb2dc898e8d0760776df71fc9763f09b
+geo-seed-42-512 rows trade 16 e82677c8fe2b46ad21c6da10619bd4dab734a4ca03f74b4e53c07fce659add2e
+geo-seed-42-512 rows war_joined 19 4d6618917983629ec93c4a71b8b0bc5a46073d68e400b4f01c0592988583cd57
+geo-seed-42-512 events 124 3b67e1c3e8beb095416f7283e1de641b6fd18cb9775ee36ba65fcf82f081a473
+geo-seed-42-512 participants c9c94324c9f89a088b9dbb5b9e0a5d1aed86638141998f0be3cbb1a7e9994668
+geo-seed-42-512 causes b535dc478a88c9403cab6a08b807ae5d3edc67c4cfb3e6fc0bf6948ef7ac510d
+geo-seed-42-512 values 6f7c65370d098b6e572fbe96f2e7798e8da7b6b287b3a979275896e1839c7255
+geo-seed-42-512 sites mine 1 7b42b9942e32511f3435a540edd0a3875c592ff38115e54f0302f81e3063a861
+geo-seed-42-512 stat alliances_formed 15
+geo-seed-42-512 stat alliances_standing 11
+geo-seed-42-512 stat alliances_cross_race 10
 geo-seed-42-512 stat alliances_origin 2
 geo-seed-42-512 stat alliances_lapsed 0
-geo-seed-42-512 stat alliances_broken 4
-geo-seed-42-512 stat alliances_betrayed 2
-geo-seed-42-512 stat alliances_ended_with_realm 4
-geo-seed-42-512 stat alliances_years_median 280
-geo-seed-42-512 stat allies_joined 28
-geo-seed-42-512 stat allies_joined_defence 25
-geo-seed-42-512 stat allies_refused 20
-geo-seed-42-512 stat allies_withdrew 9
-geo-seed-42-512 stat wars_with_ally 23
-geo-seed-42-512 stat allied_battles 48
-geo-seed-42-512 stat bloc_share_max_permille 570
+geo-seed-42-512 stat alliances_broken 3
+geo-seed-42-512 stat alliances_betrayed 0
+geo-seed-42-512 stat alliances_ended_with_realm 0
+geo-seed-42-512 stat alliances_years_median 955
+geo-seed-42-512 stat allies_joined 19
+geo-seed-42-512 stat allies_joined_defence 16
+geo-seed-42-512 stat allies_refused 15
+geo-seed-42-512 stat allies_withdrew 10
+geo-seed-42-512 stat wars_with_ally 15
+geo-seed-42-512 stat allied_battles 45
+geo-seed-42-512 stat bloc_share_max_permille 498
 geo-seed-42-512 stat bloc_over_800_years 0
-geo-seed-42-512 stat trade_opened 25
-geo-seed-42-512 stat trade_standing 12
-geo-seed-42-512 stat trade_broken 8
+geo-seed-42-512 stat trade_opened 16
+geo-seed-42-512 stat trade_standing 13
+geo-seed-42-512 stat trade_broken 3
 geo-seed-42-512 stat alliances_spurned 1
-geo-seed-42-512 stat spoils_owed 6
-geo-seed-42-512 stat spoils_granted 3
-geo-seed-42-512 stat spoils_withheld 3
-geo-seed-42-512 stat spoils_granted_permille 500
-geo-seed-42-512 stat spoils_people_owed 878
-geo-seed-42-512 stat mines_opened 5
+geo-seed-42-512 stat spoils_owed 3
+geo-seed-42-512 stat spoils_granted 1
+geo-seed-42-512 stat spoils_withheld 2
+geo-seed-42-512 stat spoils_granted_permille 333
+geo-seed-42-512 stat spoils_people_owed 396
+geo-seed-42-512 stat mines_opened 1
 geo-seed-42-512 stat mines_open 1
-geo-seed-42-512 stat arms_sold 5
+geo-seed-42-512 stat arms_sold 6
 geo-seed-42-512 stat arms_buyers_at_end 4
-hist-dense-1024 rows alliance 16 093a7cbaca4e06c6f7268eca570d9241dfa7ab1e59b6cc053268ca59ce0080b9
-hist-dense-1024 rows trade 18 8effe19571bd23d0bacdfe9f44ea2a4ed94948a58e714f93b491c32a83ed1416
-hist-dense-1024 rows war_joined 9 6b922830b92b7b52e7df8f553be899f50f183b9d9e9e2a8fc6d262ba242de578
-hist-dense-1024 events 72 5062237348151c153466af36b831210664c3238c0ddc46eeeb05bd372e5797cd
-hist-dense-1024 participants cc4b5a112bffe8f49eef54235d408b08e9715b7cdac0cbd65b8a9594d812f3f4
-hist-dense-1024 causes 843a93ed3f179b9daa1f6dc542b77cc1027ebe9f38c70c1cc013155e6c738a8d
-hist-dense-1024 values deebf09fe57eed9165e6cbe7c224113fbadb8cfc33c260c11b5b7229ac89dc5f
-hist-dense-1024 sites mine 2 3859551c656dd9aac5492ca89404a7bd4d5e31870faf82482fdb29e647ab64ab
-hist-dense-1024 stat alliances_formed 16
-hist-dense-1024 stat alliances_standing 10
-hist-dense-1024 stat alliances_cross_race 10
+hist-dense-1024 rows alliance 17 2c51c9bd1f4d0cf2e4cdbdc0c713e604c8e0e01a0586bf5d7c159b7ac4ec639e
+hist-dense-1024 rows trade 20 8612c60faef6fc57ddf25b6d02453833cde6ae21cef7d8b623b9bb3a6c3099d5
+hist-dense-1024 rows war_joined 12 e46fa953bd56e0ecf4a82f37936676451f3e7a97e55738834ef779b575a9a47a
+hist-dense-1024 events 83 e5d7f67fbf24035e5a52cbd16a7b18b2d1b8a524d8934676049bf3236e9f415c
+hist-dense-1024 participants 627e6df64271d680498f0a00f73cb4ac11dff523a3bab5c80493efa35867efa3
+hist-dense-1024 causes 56eb90ce247c7e8dbf99d62d8e24a8f2e0ea58a43a36897fef635fb13e70b7b7
+hist-dense-1024 values 94167eaf290396eca4397c77d43ac8926496696ee013f30d4e37e5900c9894c7
+hist-dense-1024 sites mine 2 256f3262014f52a7b93ea571fe3e3b16e59fb39a0971af4053ce3c8be5afa064
+hist-dense-1024 stat alliances_formed 17
+hist-dense-1024 stat alliances_standing 14
+hist-dense-1024 stat alliances_cross_race 12
 hist-dense-1024 stat alliances_origin 2
-hist-dense-1024 stat alliances_lapsed 3
-hist-dense-1024 stat alliances_broken 0
+hist-dense-1024 stat alliances_lapsed 0
+hist-dense-1024 stat alliances_broken 2
 hist-dense-1024 stat alliances_betrayed 1
-hist-dense-1024 stat alliances_ended_with_realm 2
-hist-dense-1024 stat alliances_years_median 150
-hist-dense-1024 stat allies_joined 9
-hist-dense-1024 stat allies_joined_defence 8
-hist-dense-1024 stat allies_refused 3
-hist-dense-1024 stat allies_withdrew 0
-hist-dense-1024 stat wars_with_ally 7
-hist-dense-1024 stat allied_battles 7
-hist-dense-1024 stat bloc_share_max_permille 421
+hist-dense-1024 stat alliances_ended_with_realm 0
+hist-dense-1024 stat alliances_years_median 783
+hist-dense-1024 stat allies_joined 12
+hist-dense-1024 stat allies_joined_defence 11
+hist-dense-1024 stat allies_refused 7
+hist-dense-1024 stat allies_withdrew 1
+hist-dense-1024 stat wars_with_ally 9
+hist-dense-1024 stat allied_battles 18
+hist-dense-1024 stat bloc_share_max_permille 345
 hist-dense-1024 stat bloc_over_800_years 0
-hist-dense-1024 stat trade_opened 18
-hist-dense-1024 stat trade_standing 12
+hist-dense-1024 stat trade_opened 20
+hist-dense-1024 stat trade_standing 16
 hist-dense-1024 stat trade_broken 4
 hist-dense-1024 stat alliances_spurned 0
-hist-dense-1024 stat spoils_owed 4
-hist-dense-1024 stat spoils_granted 4
+hist-dense-1024 stat spoils_owed 0
+hist-dense-1024 stat spoils_granted 0
 hist-dense-1024 stat spoils_withheld 0
-hist-dense-1024 stat spoils_granted_permille 1000
-hist-dense-1024 stat spoils_people_owed 1035
+hist-dense-1024 stat spoils_granted_permille -
+hist-dense-1024 stat spoils_people_owed 0
 hist-dense-1024 stat mines_opened 2
-hist-dense-1024 stat mines_open 2
-hist-dense-1024 stat arms_sold 3
+hist-dense-1024 stat mines_open 1
+hist-dense-1024 stat arms_sold 4
 hist-dense-1024 stat arms_buyers_at_end 3
 hist-races-elf-orc-1024 rows alliance 1 f2294a349a40bb8f8c7c416c62cd591fc4f485e7255459bfc5b4bdda0a759183
 hist-races-elf-orc-1024 rows trade 1 09a93c36bd0daed0131ec9b357c22e895567f47bffcce1fd1d4becc92e23c9e4
 hist-races-elf-orc-1024 rows war_joined 2 0a681e34b2df2fefb2fd2a0ffe5ae009bae3cc2e0640dbc5d38a79b7224501dd
-hist-races-elf-orc-1024 events 10 5a9b114736def82f34840dac50032a94b08a4027f342c10a394bd4ba4e92dd9d
-hist-races-elf-orc-1024 participants 054c63a5e44bfc3e6c2f61746626b1d822b59539525594714e6bb59341933cb3
-hist-races-elf-orc-1024 causes 360670502c86dc50d0d6936d12780d42007db6613b6fb230778a278ee54b9a8b
-hist-races-elf-orc-1024 values 2be19457b16ab8a7015a96f9b235267db2916a9a65cb304972b3a7bb51018ad5
+hist-races-elf-orc-1024 events 9 3c2809f5aa9ffbaadea6d2cb84f0199bdffbd7a54262ff0f4ea343d036e310f6
+hist-races-elf-orc-1024 participants 38b5b479c00e816611295b5fb3bdbd51c57010e4f8f44742d4f2a62dc01b9882
+hist-races-elf-orc-1024 causes 17aee0b365c328d2a53610b2150abe8127e92477c84fafc31108bc3e3401d59d
+hist-races-elf-orc-1024 values fac091c5ecc07536f850beaee4aa0ce29230b1177393b8e71d750f14d8542479
 hist-races-elf-orc-1024 sites mine 0 18d8d609947c6b82b9607704ae40d3317038e709238514de750b5c7411ba4c20
 hist-races-elf-orc-1024 stat alliances_formed 1
 hist-races-elf-orc-1024 stat alliances_standing 1
@@ -384,33 +384,33 @@ hist-races-elf-orc-1024 stat mines_opened 0
 hist-races-elf-orc-1024 stat mines_open 0
 hist-races-elf-orc-1024 stat arms_sold 0
 hist-races-elf-orc-1024 stat arms_buyers_at_end 0
-hist-span-2000-512 rows alliance 7 6b4f54d529ad1551013e8528c1c1931d219d39acdd75bbfe67fa5deb22084452
-hist-span-2000-512 rows trade 6 0ad6a9ce503fea4523e0bdc193b65ae67ab96632d980cc6b70b6953992543691
-hist-span-2000-512 rows war_joined 5 6daff045ad1596d551a51dd826183b4c8820a98e0b0bb84dc3487a63e506072b
-hist-span-2000-512 events 36 c31b165c47fba537ddc1f67d84c5b7416a053a7996ad6cf0551af2b872940e68
-hist-span-2000-512 participants 5f6d2c8c1a47acf39e704fc80f4b1dae51cfe9bd0d895b18ed83025b720955ac
-hist-span-2000-512 causes 410dc6d612b1c8bc609192ee6d9db06c533d784e1b0ec4f625ad44a008ffb6d1
-hist-span-2000-512 values bc6877046aee8cbe70e3e93b97267e21629d4c9cab7517f4245b64a2730ef091
-hist-span-2000-512 sites mine 1 bff02622ca9091755fead8c6d964708795c6a3f0298039d64d56e08782eac227
-hist-span-2000-512 stat alliances_formed 7
-hist-span-2000-512 stat alliances_standing 6
-hist-span-2000-512 stat alliances_cross_race 6
-hist-span-2000-512 stat alliances_origin 1
+hist-span-2000-512 rows alliance 9 bab488162576769e7e6389626be98454a8e167433ea1e533644079fbde747450
+hist-span-2000-512 rows trade 9 6d12f75e7c4b0868a6fc84a0622d7826dab7f60ac9d8f42d67bbb13080ff278f
+hist-span-2000-512 rows war_joined 8 9bc95e9d44d898ce925b1a3016c87601655d41ae1cfcfd4bd801bb64b6d9aa31
+hist-span-2000-512 events 43 98ccba1dc62ad83a03038977ef43663f4854cb8e95736286be46080fd1d1ada9
+hist-span-2000-512 participants aa95d9028ad175d7937609d1b43c992becea5a29ce897cd97b7a6c4539bb8132
+hist-span-2000-512 causes dc0344482531be490dd1d3facbb10c4964dc8efc47cae2d356474a070398fc4a
+hist-span-2000-512 values ed40c8b2d4de702cfc30162ee7438b5049f05636f9177b3b6247feabf5550e63
+hist-span-2000-512 sites mine 1 462e9c853d1503ab46cef1616be88a35ba38b073b5ce190d13b846cf75d47e4c
+hist-span-2000-512 stat alliances_formed 9
+hist-span-2000-512 stat alliances_standing 8
+hist-span-2000-512 stat alliances_cross_race 7
+hist-span-2000-512 stat alliances_origin 2
 hist-span-2000-512 stat alliances_lapsed 0
-hist-span-2000-512 stat alliances_broken 0
+hist-span-2000-512 stat alliances_broken 1
 hist-span-2000-512 stat alliances_betrayed 0
-hist-span-2000-512 stat alliances_ended_with_realm 1
-hist-span-2000-512 stat alliances_years_median 1044
-hist-span-2000-512 stat allies_joined 5
-hist-span-2000-512 stat allies_joined_defence 5
-hist-span-2000-512 stat allies_refused 2
+hist-span-2000-512 stat alliances_ended_with_realm 0
+hist-span-2000-512 stat alliances_years_median 1638
+hist-span-2000-512 stat allies_joined 8
+hist-span-2000-512 stat allies_joined_defence 8
+hist-span-2000-512 stat allies_refused 3
 hist-span-2000-512 stat allies_withdrew 1
-hist-span-2000-512 stat wars_with_ally 3
-hist-span-2000-512 stat allied_battles 6
+hist-span-2000-512 stat wars_with_ally 5
+hist-span-2000-512 stat allied_battles 10
 hist-span-2000-512 stat bloc_share_max_permille 383
 hist-span-2000-512 stat bloc_over_800_years 0
-hist-span-2000-512 stat trade_opened 6
-hist-span-2000-512 stat trade_standing 5
+hist-span-2000-512 stat trade_opened 9
+hist-span-2000-512 stat trade_standing 9
 hist-span-2000-512 stat trade_broken 0
 hist-span-2000-512 stat alliances_spurned 0
 hist-span-2000-512 stat spoils_owed 0
@@ -419,37 +419,37 @@ hist-span-2000-512 stat spoils_withheld 0
 hist-span-2000-512 stat spoils_granted_permille -
 hist-span-2000-512 stat spoils_people_owed 0
 hist-span-2000-512 stat mines_opened 1
-hist-span-2000-512 stat mines_open 1
-hist-span-2000-512 stat arms_sold 3
-hist-span-2000-512 stat arms_buyers_at_end 3
-sample-42-1024 rows alliance 15 42fdafc5374b9cf7894187d058f91609854bbcdaaf97ac7da337956788e449fe
-sample-42-1024 rows trade 14 147c8f11a7c9e078cffaa0a939af56c8ef74f29e08964964ca6734368c8fa0c3
-sample-42-1024 rows war_joined 6 5939892a294e0b1a26ec28d5f594c1d8063fe0a7afb85c43b19c9085cd107174
-sample-42-1024 events 58 f1f8ab5fbda8114eb96a6efb0a9c314e1c381a4380872198bf7ae3c6db036846
-sample-42-1024 participants 3c16420f9c423ca2dec660a73a8fc8f8470b010b76615ed8e08986f7d0702c97
-sample-42-1024 causes 65eecaa82ca7dd575ffbae618d591ae27fdfc9b8bcf457e85662efa4aa06e625
-sample-42-1024 values 0d8553876b150505fa29972c43ec728650270446bd62f393aaf0b2d0fa988cf7
-sample-42-1024 sites mine 1 c8f9e236cd435f5815bfd7d0eb85991a07906abb77df9a140d86ece93e8436ec
+hist-span-2000-512 stat mines_open 0
+hist-span-2000-512 stat arms_sold 2
+hist-span-2000-512 stat arms_buyers_at_end 0
+sample-42-1024 rows alliance 15 1514951942afeab25e9c98f4f661b390590c290ade098596c95498b3498c7c79
+sample-42-1024 rows trade 17 278f1e750a9dae33d4e02dd820727dd23a6f2dc7356b0f6943a2acf3de7fb9f6
+sample-42-1024 rows war_joined 1 5bb0e4f611372975a133803dc3e3370d46e6aa168d2a5c400e985b477138d1e0
+sample-42-1024 events 53 088002cc98f55eaf5f0e76add66195ecbf7d3f4df1e6869bd9fb76607b8bd885
+sample-42-1024 participants 6846e2cb7ff5243a4c5fb25d69016596018161fb59eae1d986eb64c732dc481a
+sample-42-1024 causes b6882361d07415cd868b588fd1b17ab0c9879dbf94ff5355ae7ef0a37aa4f6bd
+sample-42-1024 values 1e5cffe2df34fd0f2cab1d20c2bbe59f588f7a4fc51edcc6f58bd72782a7131e
+sample-42-1024 sites mine 1 005814235a2ca587a7c7e18cd986173f1276f989a02d185f5bbe92402002a331
 sample-42-1024 stat alliances_formed 15
-sample-42-1024 stat alliances_standing 10
-sample-42-1024 stat alliances_cross_race 10
+sample-42-1024 stat alliances_standing 11
+sample-42-1024 stat alliances_cross_race 8
 sample-42-1024 stat alliances_origin 2
 sample-42-1024 stat alliances_lapsed 2
 sample-42-1024 stat alliances_broken 0
-sample-42-1024 stat alliances_betrayed 0
-sample-42-1024 stat alliances_ended_with_realm 3
+sample-42-1024 stat alliances_betrayed 1
+sample-42-1024 stat alliances_ended_with_realm 1
 sample-42-1024 stat alliances_years_median 150
-sample-42-1024 stat allies_joined 6
-sample-42-1024 stat allies_joined_defence 5
-sample-42-1024 stat allies_refused 4
+sample-42-1024 stat allies_joined 1
+sample-42-1024 stat allies_joined_defence 1
+sample-42-1024 stat allies_refused 3
 sample-42-1024 stat allies_withdrew 1
-sample-42-1024 stat wars_with_ally 6
-sample-42-1024 stat allied_battles 9
-sample-42-1024 stat bloc_share_max_permille 340
+sample-42-1024 stat wars_with_ally 1
+sample-42-1024 stat allied_battles 4
+sample-42-1024 stat bloc_share_max_permille 360
 sample-42-1024 stat bloc_over_800_years 0
-sample-42-1024 stat trade_opened 14
-sample-42-1024 stat trade_standing 10
-sample-42-1024 stat trade_broken 1
+sample-42-1024 stat trade_opened 17
+sample-42-1024 stat trade_standing 11
+sample-42-1024 stat trade_broken 5
 sample-42-1024 stat alliances_spurned 0
 sample-42-1024 stat spoils_owed 0
 sample-42-1024 stat spoils_granted 0
@@ -460,41 +460,41 @@ sample-42-1024 stat mines_opened 1
 sample-42-1024 stat mines_open 0
 sample-42-1024 stat arms_sold 1
 sample-42-1024 stat arms_buyers_at_end 0
-seed-0-1024 rows alliance 8 99c4cf08286667c6e5b73e3cb74d54e3499f863841ab3ee5b851f3034d2021e4
-seed-0-1024 rows trade 8 946327102b0157043bdafe49e57a772c76aba09c6e6a2bcd7e4049bbc315da0c
-seed-0-1024 rows war_joined 2 7e9c559ca981b91dd758934c99b126e4f5086a1a3d5ca804b0351c6c48f9a89d
-seed-0-1024 events 38 5cd6c2696d06b673db70e7d2cf6ea0f5e2b39ebfa5493848a0430e08297bc44b
-seed-0-1024 participants 1bf2044e0ea8f0f95e74bb29d92114fd68b5531450c80b7b480cbfa54ce057d3
-seed-0-1024 causes 558723568a4a6d6a717e315e5f8116a7211cda1abb628d2cbac18ddaeb19a2c4
-seed-0-1024 values 9496b06deb89fe7f6a79bb3e3ef341af8ab7dcbb587f874f413cdcb47c3d9906
-seed-0-1024 sites mine 7 d2b55b5af36c700e34421f328f7e27e76f8cf3e4b6c909d215206cd0ddb28699
-seed-0-1024 stat alliances_formed 8
-seed-0-1024 stat alliances_standing 7
+seed-0-1024 rows alliance 9 032efa1f09d61a637a8e5a830253d24cfe35845efd8a20de3532b0b70c6c05b7
+seed-0-1024 rows trade 10 c71545ce950922cbf821cb19953e6fdbcaff4e50b94cbaf9b646d731caefbe68
+seed-0-1024 rows war_joined 2 33d5a2db5e5a3e63d34c3738e168b2da1489a7a5b9a3558e1145951138e9b872
+seed-0-1024 events 37 cb0dc6f5f3d465cfcc754491086dcfc5f49c9fa85bdef8dcf6a08e57ce16810b
+seed-0-1024 participants 7442dc9e46d3f8b84ee42b76a6e6bc87a43a578aa1c29489165731034f77c33d
+seed-0-1024 causes d0cce775d4f447d888e67712f2152d549e0066d6d84f43656f6ca94d9a7bc888
+seed-0-1024 values 42ff37c60e68ffebd6571151bbdfd8f86e5fd71d8fb82f946bbc1f6c703c46ab
+seed-0-1024 sites mine 6 d30308e41adfc0f597f3decd91b75246bf91faed154e27272ba85e33809108cb
+seed-0-1024 stat alliances_formed 9
+seed-0-1024 stat alliances_standing 9
 seed-0-1024 stat alliances_cross_race 7
-seed-0-1024 stat alliances_origin 1
+seed-0-1024 stat alliances_origin 2
 seed-0-1024 stat alliances_lapsed 0
-seed-0-1024 stat alliances_broken 1
+seed-0-1024 stat alliances_broken 0
 seed-0-1024 stat alliances_betrayed 0
 seed-0-1024 stat alliances_ended_with_realm 0
-seed-0-1024 stat alliances_years_median 338
+seed-0-1024 stat alliances_years_median -
 seed-0-1024 stat allies_joined 2
 seed-0-1024 stat allies_joined_defence 2
-seed-0-1024 stat allies_refused 3
-seed-0-1024 stat allies_withdrew 1
+seed-0-1024 stat allies_refused 0
+seed-0-1024 stat allies_withdrew 0
 seed-0-1024 stat wars_with_ally 2
-seed-0-1024 stat allied_battles 2
-seed-0-1024 stat bloc_share_max_permille 274
+seed-0-1024 stat allied_battles 5
+seed-0-1024 stat bloc_share_max_permille 215
 seed-0-1024 stat bloc_over_800_years 0
-seed-0-1024 stat trade_opened 8
-seed-0-1024 stat trade_standing 7
-seed-0-1024 stat trade_broken 1
+seed-0-1024 stat trade_opened 10
+seed-0-1024 stat trade_standing 8
+seed-0-1024 stat trade_broken 2
 seed-0-1024 stat alliances_spurned 0
 seed-0-1024 stat spoils_owed 0
 seed-0-1024 stat spoils_granted 0
 seed-0-1024 stat spoils_withheld 0
 seed-0-1024 stat spoils_granted_permille -
 seed-0-1024 stat spoils_people_owed 0
-seed-0-1024 stat mines_opened 7
-seed-0-1024 stat mines_open 5
+seed-0-1024 stat mines_opened 6
+seed-0-1024 stat mines_open 3
 seed-0-1024 stat arms_sold 4
 seed-0-1024 stat arms_buyers_at_end 2

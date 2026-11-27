@@ -340,8 +340,8 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
           "5581fd52962688495270ba4181991fb8d7a4d66dfd6e620b779e314e43818709");   // p3-01-data.txt game/data at 0.28.0 (P5-04a, p3_data_reference.py golden --version 0.28.0)
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.29.0");   // P5-06
-    CHECK(worldgen::db::SCHEMA_VERSION == 13);
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.30.0");   // P5-06
+    CHECK(worldgen::db::SCHEMA_VERSION == 14);
 }
 
 TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold the 0.26.0 data") {

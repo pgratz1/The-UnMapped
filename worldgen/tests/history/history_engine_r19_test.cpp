@@ -238,7 +238,7 @@ TEST_CASE("P3-04 r19 22.1, 22.4 item 1: one number per clause as 21.1; the claus
 
 TEST_CASE("P3-04 r19 22.2: kinds 41 claim_dropped and 42 refuge_hidden in the compiled catalogue") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P3-04 r21 23.2 (0.22.0): kind 43 appended; P5-02 10.1: 44 to 55
+    REQUIRE(c.kinds.size() == 110U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;  // P3-04 r21 23.2 (0.22.0): kind 43 appended; P5-02 10.1: 44 to 55
     const auto& k41 = c.kinds[40];
     CHECK(k41.id == 41);
     CHECK(k41.key == "claim_dropped");

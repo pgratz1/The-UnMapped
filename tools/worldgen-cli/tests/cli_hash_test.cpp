@@ -109,7 +109,7 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 41);  // 34 tables since schema 10 (P5-03 16.1)
+    REQUIRE(lines.size() == 42);  // 37 tables since schema 14 (P5-08 9)
     const auto ramp = p004::ramp_cells();
     const auto hash = p004::hash_cells(42);
     const auto noise = p004::noise_cells(42);
@@ -125,9 +125,9 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     for (std::size_t k = 0; k < want.size(); ++k) {
         CHECK(lines[2 + k] == "table " + want[k].first + " " + to_hex(want[k].second));
     }
-    CHECK(lines[38] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));   // schema 10: 34 tables
-    CHECK(lines[39] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
-    CHECK(lines[40] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
+    CHECK(lines[39] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));   // schema 10: 34 tables
+    CHECK(lines[40] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
+    CHECK(lines[41] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
 }
 
 TEST_CASE("cli 12.5: layer hash is codec-independent") {
@@ -145,12 +145,12 @@ TEST_CASE("cli 12.5: layer hash is codec-independent") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 40);  // thirty-four tables since schema 10 (P5-03 16.1)
+    REQUIRE(lines.size() == 41);  // thirty-seven tables since schema 14 (P5-08 9)
     const std::string expected = to_hex(p004::layer_hash_i16(7, 5, cells));
-    CHECK(lines[23] == "table pass " + to_hex(p004::empty_pass_table_hash()));
-    CHECK(lines[38] == "layer test.raw " + expected);   // schema 10: 34 tables
-    CHECK(lines[39] == "layer test.varint " + expected);
-    CHECK(lines[20] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(9, "", "test_fixture"))));
+    CHECK(lines[24] == "table pass " + to_hex(p004::empty_pass_table_hash()));
+    CHECK(lines[39] == "layer test.raw " + expected);   // schema 10: 34 tables
+    CHECK(lines[40] == "layer test.varint " + expected);
+    CHECK(lines[21] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(9, "", "test_fixture"))));
 }
 
 TEST_CASE("cli 12.5: --expect") {

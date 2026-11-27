@@ -47,7 +47,7 @@ import p3_peoples_reference as pp  # noqa: E402
 import p3_data_reference as pdr  # noqa: E402
 
 GOLDEN = os.path.join(pe.REPO, "worldgen", "tests", "golden", "p5-07-depths.txt")
-VERSION = "0.29.0"
+VERSION = "0.30.0"
 # 3: appended to core/streams.hpp after hist.alliances.renew (the 98th), in this order (103 streams)
 STREAMS = ("hist.deep.delve", "hist.deep.wake", "hist.deep.kind", "hist.deep.gate", "hist.deep.take",
            # r2: appended after hist.deep.take (107 streams)
@@ -1262,6 +1262,8 @@ def reader_problems(res):
             if key in r.vkeys.get(r.ev[e][3], {}):
                 v = x.val(e, key)
                 lo, hi = (0, 5) if key == "telling" and k in wide else ranges.get(key, (0, None))
+                if key == "telling" and k == "delving_deepened":
+                    hi = 8   # P5-08 12.3: 0 to 8 (a reader range)
                 if v < lo or (hi is not None and v > hi):
                     E(e, "value %s %d outside %d to %s" % (key, v, lo, hi if hi is not None else "max"))
         if k == "deep_woken" and x.one(e, "site") == 0:
@@ -1313,6 +1315,8 @@ def reader_problems(res):
                 if key in r.vkeys.get(r.ev[e][3], {}):
                     v = x.val(e, key)
                     lo, hi = ranges[key]
+                    if key == "telling" and k == "warren_delved":
+                        hi = 8   # P5-08 12.3
                     if v < lo or v > hi:
                         E(e, "value %s %d outside %d to %d" % (key, v, lo, hi))
         if k == "warren_delved":

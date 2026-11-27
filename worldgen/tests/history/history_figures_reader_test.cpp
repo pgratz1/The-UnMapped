@@ -141,7 +141,7 @@ TEST_CASE("P5-06 9.4: book, relation and event rows refused with their messages;
                                            "'schema_version';");
     auto r = db::WorldReader::open(p11);
     REQUIRE_FALSE(r.ok());
-    CHECK(r.error().message.find("world schema version 11, this build reads 13") != std::string::npos);
+    CHECK(r.error().message.find("world schema version 11, this build reads 14") != std::string::npos);
 }
 
 }  // TEST_SUITE

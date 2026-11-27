@@ -923,27 +923,27 @@ TEST_CASE("P1-06 r3 4.1, 10.5 data: the fixture roots hold byte-identical copies
 
 TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after geo.regions.cost, 52 names") {
     const auto& names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 107U)  /* P5-04 3: five hist.alliances streams (0.26.0) */;  // P5-03a 2: hist.relations.settlers; P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
+    CHECK(names.size() == 120U)  /* P5-04 3: five hist.alliances streams (0.26.0) */;  // P5-03a 2: hist.relations.settlers; P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0); P5-12 3 two; P5-02 3 sixteen
     // P5-12 3 (0.22.0): hist.renaming.chance and hist.renaming.name appended after hist.conflict.toll, in that order;
     // P5-02 3 (0.23.0) fifteen more after them, then (r1) hist.monsters.raid_target.
     // P5-03 3 (0.24.0): hist.beasts.bold_kind, hist.monsters.fear, hist.peoples.abandon_loss, hist.relations.expel.
     // P5-03a 2 (0.25.0): hist.relations.settlers after hist.relations.expel.
     // P5-04 3 (0.26.0): hist.alliances.form, .join, .trade, .spoils and .mine after hist.relations.settlers.
-    CHECK(names[names.size() - 54] == "hist.conflict.toll");
-    CHECK(names[names.size() - 53] == "hist.renaming.chance");
-    CHECK(names[names.size() - 52] == "hist.renaming.name");
-    CHECK(names[names.size() - 36] == "hist.monsters.raid_target");
-    CHECK(names[names.size() - 32] == "hist.relations.expel");
-    CHECK(names[names.size() - 31] == "hist.relations.settlers");
-    CHECK(names[names.size() - 30] == "hist.alliances.form");
-    CHECK(names[names.size() - 29] == "hist.alliances.join");
-    CHECK(names[names.size() - 28] == "hist.alliances.trade");
-    CHECK(names[names.size() - 27] == "hist.alliances.spoils");
-    CHECK(names[names.size() - 26] == "hist.alliances.mine");
-    CHECK(names[names.size() - 10] == "hist.alliances.renew");   // P5-04a 3 (0.28.0)
-    CHECK(names[names.size() - 9] == "hist.deep.delve");   // P5-07 r2 3 (0.29.0): nine streams last
-    CHECK(names[names.size() - 1] == "hist.deep.warren_kind");
-    CHECK(names[names.size() - 11] == "hist.monsters.hero_fall");   // P5-06 3 (0.27.0): fifteen after hist.alliances.mine
+    CHECK(names[names.size() - 67] == "hist.conflict.toll");
+    CHECK(names[names.size() - 66] == "hist.renaming.chance");
+    CHECK(names[names.size() - 65] == "hist.renaming.name");
+    CHECK(names[names.size() - 49] == "hist.monsters.raid_target");
+    CHECK(names[names.size() - 45] == "hist.relations.expel");
+    CHECK(names[names.size() - 44] == "hist.relations.settlers");
+    CHECK(names[names.size() - 43] == "hist.alliances.form");
+    CHECK(names[names.size() - 42] == "hist.alliances.join");
+    CHECK(names[names.size() - 41] == "hist.alliances.trade");
+    CHECK(names[names.size() - 40] == "hist.alliances.spoils");
+    CHECK(names[names.size() - 39] == "hist.alliances.mine");
+    CHECK(names[names.size() - 23] == "hist.alliances.renew");   // P5-04a 3 (0.28.0)
+    CHECK(names[names.size() - 22] == "hist.deep.delve");   // P5-07 r2 3 (0.29.0): nine streams last
+    CHECK(names[names.size() - 14] == "hist.deep.warren_kind");
+    CHECK(names[names.size() - 24] == "hist.monsters.hero_fall");   // P5-06 3 (0.27.0): fifteen after hist.alliances.mine
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "geo.regions.cost") {

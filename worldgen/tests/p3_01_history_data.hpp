@@ -498,6 +498,7 @@ inline constexpr std::string_view CHRONOLOGY_TOML = R"([history.chronology]
 awakening_jitter_frac = "0.01"
 awakening_min_gap_years = 100
 age_name_form = "The Age of {plural}"
+creator_title = "the Maker of {plural}"
 )";
 
 // --- history.engine and history.report (P3-04 4.1, 4.2; every root carries
@@ -608,17 +609,29 @@ events = [
   { kind = "hero_rose", salience = 25, template = "{quiet?After the raids of |After the raids of |When, after # quiet years, }{monster}{quiet?|| raided again}, {figure} of {civilization} took up the hunt." },
   { kind = "monster_slain_by_hero", salience = 55, template = "{hero} of {slayer} hunted down and slew {monster}{monster:aside}{monster:where}." },
   { kind = "hero_slain", salience = 45, template = "{figure} of {civilization} was slain hunting {monster}{monster:where}." },
-  { kind = "tower_founded", salience = 40, template = "{figure} of {civilization} {library?founded|raised} {site} in {@region}." },
+  { kind = "tower_founded", salience = 40, template = "{@causes:figure_died=the death of the last master|After |, }{figure} of {civilization} {library?founded|raised} {site} in {@region}." },
   { kind = "book_written", salience = 30, template = "{figure} wrote {@book} at {site}." },
   { kind = "blight", salience = 50, template = "The workings of {figure} at {site} went awry, and a blight fell on {@region}; {dead?no one|one|#} died." },
   # P5-07 8.2 (generator 0.29.0): kinds 93 to 96.
-  { kind = "delving_deepened", salience = 15, template = "{telling?Following a rich seam, |Year upon year, |By hammer and lamp, }{civilization} delved {site} {depth?deeper|below the reach of daylight|into the roots of the mountain|into the oldest dark beneath the world}." },
+  { kind = "delving_deepened", salience = 15, template = "{telling?Following a rich seam, |Year upon year, |By hammer and lamp, |Chasing the silver down, |Shaft by shaft, |Heedless of the old warnings, |With new picks from the forge, |Through a hard generation, |Singing the old delving songs, }{civilization} {depth?worked|sank the shafts of|drove the halls of|broke the floor of} {site} {depth?deeper|below the reach of daylight|down to the mountain's roots|into the oldest dark beneath the world}{telling?, and struck a vein of silver|, and broke into a cavern of crystal|, and felt a cold breath rise from below|, and found the bones of an older people|, and heard hammering where none worked|, and struck black iron|, and found a lake no light had touched|, and lost a crew to a sudden fall|, and found gold in the dark}." },
   { kind = "deep_woken", salience = 60, template = "{telling?Delving too deep beneath |In the deepest halls under |Where the last seam ran out beneath |Burrowing ever deeper under |Digging after grubs and glitter beneath |In the stinking deep tunnels of }{@settlement}, {civilization}{civilization:under}{telling? woke | woke | broke into the old dark and woke | woke | blundered into the old dark and woke | woke }{monster}, {monster:kind}." },
   { kind = "deep_sealed", salience = 50, template = "{telling?|Holding the gate at great cost, |With stone and rune, }{civilization}{civilization:under}{telling? sealed | walled | shut }{monster}{telling? in the deeps of | up beneath | away below }{site}{telling?||, and the deep ways were closed}." },
-  { kind = "hold_lost", salience = 70, template = "{@causes:monster_raid=the raids|After |, }{monster}{telling? came up out of the deep and took | rose from below and overran | broke out of the deeps into | boiled up out of the burrows into | came up the goblins' own tunnels into | rose under the warrens of }{@settlement} of {civilization}; {dead?no one died|one died|# died}{survivors?, and none escaped|, and one escaped|, and # fled}." },
-  { kind = "ally_aided_hold", salience = 40, template = "{telling?Answering its ally's call, |Bound by old oaths, |Unbidden, }{ally}{ally:under}{telling? sent warriors from | marched out of | hurried its people from }{origin} to stand with {partner} at the gate of {@settlement} against {monster}." },
-  { kind = "warren_delved", salience = 15, template = "{telling?Ever greedy for the dark, |Squabbling and scraping, |Grub by grub and stone by stone, }{civilization} dug the warrens of {@settlement} {depth?deeper|below the reach of daylight|down among the mountain's roots|into the oldest dark beneath the world}." },
+  { kind = "hold_lost", salience = 70, template = "{@causes:monster_raid=the raids|After |, }{monster}{telling? came up out of the deep into| rose from below into| broke out of the deeps into| boiled up out of the burrows into| came up the goblins' own tunnels into| rose under the warrens of} {@settlement}{telling?, and tore it from|, and wrested it from|, and took it from|, and took it from|, and took it from|, and tore it from} {civilization}; {dead?no one died|one died|# died}{survivors?, and none escaped|, and one escaped|, and # fled}." },
+  { kind = "ally_aided_hold", salience = 40, template = "{telling?Answering its ally's call, |Bound by old oaths, |Unbidden, }{ally}{ally:under}{telling? sent warriors from | marched out of | hurried its people from }{origin} to stand with {partner} at the gate of {@settlement} against {monster}{@causes:deep_sealed=and the gate held,warren_sealed=and the tunnels were closed|, |}{@causes:hold_lost=but the hold fell all the same|, |}." },
+  { kind = "warren_delved", salience = 15, template = "{telling?Ever greedy for the dark, |Squabbling and scraping, |Grub by grub and stone by stone, |Whipped on by their chiefs, |Stealing each other's picks, |Gnawing like rats, |Chasing a rumour of gold, |Fleeing the daylight, |In fits of greed and spite, }{civilization} dug the warrens of {@settlement} {depth?deeper|below the reach of daylight|down among the mountain's roots|into the oldest dark beneath the world}{telling?, and ate what they found there|, and found a nest of blind worms|, and lost a dozen in a fall|, and fought over a lump of silver|, and found old bones to gnaw|, and heard something breathing|, and struck a cold black water|, and found a passage no goblin had cut|, and came up shrieking}." },
   { kind = "warren_sealed", salience = 50, template = "{telling?|Shrieking and stabbing in the dark, |With rockfall and fire, }{civilization}{civilization:under}{telling? caved in the tunnels over | blocked the deep ways against | buried }{monster}{telling? beneath | under | deep below }{@settlement}{telling?||, and no goblin went that way again}." },
+  # P5-08 8.2 (generator 0.30.0): kinds 100 to 110.
+  { kind = "divine_bless", salience = 55, template = "{@causes:sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,cult_adopted=a faith taken up,cult_suppressed=its faithful put down|Pleased by |, }{actor:titled}{telling? blessed| smiled upon| set its hand over}{effect?| the fields of| the arms of} {civilization}{years?| for a year| for # years}." },
+  { kind = "divine_curse", salience = 60, template = "{@causes:sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,cult_adopted=a faith taken up,cult_suppressed=its faithful put down|Angered by |, }{actor:titled}{effect?| sent a pestilence upon| withered the fields of| turned the fortunes of war against} {civilization}{dead?|; one died|; # died}." },
+  { kind = "divine_champion", salience = 55, template = "{@causes:sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,cult_adopted=a faith taken up,cult_suppressed=its faithful put down|Pleased by |, }{actor:titled}{telling? raised up| chose| set its mark upon} {figure} as the champion of {civilization}." },
+  { kind = "divine_monster", salience = 60, template = "{@causes:sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,cult_adopted=a faith taken up,cult_suppressed=its faithful put down|Angered by |, }{actor:titled}{telling? sent| loosed| woke} {monster}, {monster:kind}, against {civilization}." },
+  { kind = "divine_mark", salience = 45, template = "{@causes:sacked=the sack of a city,settlement_captured=a city taken,civ_conquered=a realm conquered,war_won=a war won,battle=a battle won,battle_led=a battle won,allied_battle=a battle won,monster_slain=a monster slain,monster_slain_by_hero=a monster slain,became_city=a city grown great,became_town=a town grown,deep_sealed=the deep sealed,deep_woken=greed in the deep,refuge_held=a refuge held,peace=a peace made,tribute=tribute paid,truce=a truce made,mine_opened=a mine opened,delving_deepened=deep delving,arms_sold=arms sold,blight=a blighted land,trade_opened=trade opened,tower_founded=a tower raised,book_written=a book written,alliance_formed=an oath sworn,spoils_shared=spoils shared,ally_joined_war=an ally's faith kept,alliance_betrayed=an oath broken,spoils_withheld=spoils withheld,ally_refused=a call to arms refused,ally_withdrew=an ally's flight,colony_founded=the felling of the wild,settlement_abandoned=land given back to the wild,outpost_abandoned=land given back to the wild,cult_adopted=a faith taken up,cult_suppressed=its faithful put down|After |, }{actor:titled}{profane? cursed| hallowed} the ground of {site}." },
+  { kind = "cult_founded", salience = 50, template = "{telling?In the name of |Calling upon |Sworn to }{god:titled}, {founder} founded {faction} at {site} in {@settlement}." },
+  { kind = "cult_spread", salience = 25, template = "{faction} spread from {from} into {civilization}{@causes:trade_opened=the roads of trade,alliance_formed=the bonds of alliance| along |}." },
+  { kind = "cult_adopted", salience = 45, template = "{civilization}{civilization:under} took {faction} as the faith of the realm." },
+  { kind = "cult_suppressed", salience = 50, template = "{civilization}{civilization:under} put down {faction}{hidden?, and its faithful fled into hiding|}." },
+  { kind = "tower_taken_up", salience = 20, template = "{@causes:figure_died=the death of its last master|After |, }{figure} of {civilization} became master of {site}." },
+  { kind = "tower_abandoned", salience = 25, template = "{@causes:figure_died=the death of its last master|After |, }{site} of {civilization} stood empty." },
 ]
 )";
 
@@ -814,6 +827,8 @@ deep_aid_hops = 2
 deep_aid_levy_permille = 500
 deep_aid_max = 2
 deep_aid_memory = 30
+# P5-08 12.2 (generator 0.30.0): the deep stirs in quiet steps (0: off).
+deep_stir_permille = 700
 )";
 
 inline constexpr std::string_view BEAST_BEAR_TOML = R"(# Beast species (spec P5-02 4.1). Generator 0.24.0.
@@ -1336,6 +1351,8 @@ epithet_repeat_max = 2
 # P5-04a 14.2a (generator 0.28.0), in this order.
 tower_spacing_permille = 30
 hero_return_years = 100
+# P5-08 12.6 (generator 0.30.0): a tower without a master lapses after these years (0: never).
+tower_lapse_years = 200
 )";
 
 inline constexpr std::string_view ALLIANCES_TOML = R"(# Alliances, trade and the dwarves' mines and arms (spec P5-04 4.2).
@@ -1412,6 +1429,8 @@ excused_memory = 15
 refuse_grudge = 80
 betray_cooled_disposition = 0
 betray_weak_permille = 500
+# P5-08 12.5 (generator 0.30.0): written renewals per alliance (0: no cap).
+renew_written_max = 1
 )";
 
 inline constexpr std::string_view PEOPLES_TOML = R"([history.peoples]
@@ -1509,11 +1528,65 @@ inline const std::vector<CultureListing>& culture_listings() {
     return v;
 }
 
+// P5-08 6.7 (generator 0.30.0): the five naming fields of cults, shrines and temples of each culture.
+inline std::string_view cult_forms_of(std::string_view id) {
+    if (id == "dwarven") {
+        return R"(cult_forms = ["The Hammer of {god}", "The Oathsworn of {god}"]
+temple_forms = ["The Hall of {god}", "The Deep Shrine of {god}"]
+sanctum_forms = ["The Sealed Hall of {god}"]
+sacred_forms = ["The Hallowed Stone of {god}"]
+profane_forms = ["The Shunned Delving of {god}"]
+)";
+    }
+    if (id == "elven") {
+        return R"(cult_forms = ["The Children of {god}", "The Starward Circle of {god}"]
+temple_forms = ["The House of {god}", "The White Fane of {god}"]
+sanctum_forms = ["The Hidden Fane of {god}"]
+sacred_forms = ["The Blessed Grove of {god}"]
+profane_forms = ["The Withered Grove of {god}"]
+)";
+    }
+    if (id == "faerie") {
+        return R"(cult_forms = ["The Dreamers of {god}", "The Hidden Ring of {god}"]
+temple_forms = ["The Bower of {god}", "The Moon-Glade of {god}"]
+sanctum_forms = ["The Lost Bower of {god}"]
+sacred_forms = ["The Shining Ring of {god}"]
+profane_forms = ["The Black Ring of {god}"]
+)";
+    }
+    if (id == "goblin") {
+        return R"(cult_forms = ["The Teeth of {god}", "The Grovellers of {god}"]
+temple_forms = ["The Pit of {god}", "The Bone-House of {god}"]
+sanctum_forms = ["The Secret Pit of {god}"]
+sacred_forms = ["The Fat Stone of {god}"]
+profane_forms = ["The Stinking Ground of {god}"]
+)";
+    }
+    if (id == "human") {
+        return R"(cult_forms = ["The Brotherhood of {god}", "The Order of {god}"]
+temple_forms = ["The Temple of {god}", "The Sanctuary of {god}"]
+sanctum_forms = ["The Hidden Sanctum of {god}"]
+sacred_forms = ["The Holy Ground of {god}"]
+profane_forms = ["The Cursed Ground of {god}"]
+)";
+    }
+    if (id == "orcish") {
+        return R"(cult_forms = ["The Blood of {god}", "The Howlers of {god}"]
+temple_forms = ["The Blood-Hall of {god}", "The War-Fane of {god}"]
+sanctum_forms = ["The Black Cave of {god}"]
+sacred_forms = ["The Red Stone of {god}"]
+profane_forms = ["The Ashen Field of {god}"]
+)";
+    }
+    return "";
+}
+
 // The file text of culture `id`: "[culture.<id>]", race, name, a blank line,
 // "[culture.<id>.naming]" (line 5) and the naming block.
 inline std::string culture_toml(const CultureListing& c) {
     return "[culture." + std::string(c.id) + "]\nrace = \"" + std::string(c.race) + "\"\nname = \"" +
-           std::string(c.name) + "\"\n\n[culture." + std::string(c.id) + ".naming]\n" + std::string(c.naming);
+           std::string(c.name) + "\"\n\n[culture." + std::string(c.id) + ".naming]\n" + std::string(c.naming) +
+           std::string(cult_forms_of(c.id));
 }
 
 // --- The files as a map: "<directory>/<file name>" -> text --------------------------
@@ -1553,6 +1626,257 @@ inline void prune_monster_files(Files& f) {
     }
 }
 
+
+// P5-08 (generator 0.30.0): history.pantheon and the nine gods, the shipped files.
+inline constexpr std::string_view PANTHEON_TOML = R"(# P5-08 4.2 (generator 0.30.0): the pantheon. Regard from deeds, the gods'
+# acts (bless, curse, champion, monster, mark), their effects and the cults.
+[history.pantheon]
+activity_permille = { distant = 300, normal = 1000, meddling = 2500 }
+regard_max = 400
+regard_fade_per_century = 8
+regard_memory_years = 300
+contributions_max = 8
+act_threshold = 70
+act_permille = 14
+god_rest_years = 20
+pair_rest_years = 80
+flare_regard = 130
+flare_permille = 100
+bless_years = 50
+curse_years = 50
+plenty_growth_permille = 800
+withering_growth_permille = 500
+valour_permille = 50
+defeat_permille = 60
+pestilence_toll_permille = 50
+send_hops = 3
+sacred_growth_permille = 200
+profane_years = 300
+champion_epithet = "Chosen of {god}"
+cult_found_permille = 400
+cult_fear_permille = 700
+cult_spread_permille = 20
+affinity_permille = { same = 1000, near = 500, opposed = 100 }
+adopt_regard = 50
+adopt_permille = 15
+suppress_permille = 8
+temper_adopt_permille = { steady = 1000, warlike = 500, peaceable = 1500, grasping = 700, just = 1000 }
+temper_suppress_permille = { steady = 1000, warlike = 1500, peaceable = 500, grasping = 1000, just = 1300 }
+faith_points = 60
+rival_faith_points = 40
+suppress_points = 120
+hide_permille = 800
+sanctum_hops = 3
+
+[history.pantheon.creator]
+favour = { bless = 400, champion = 450, mark = 150 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "plenty"
+curse = "pestilence"
+monsters = []
+deeds = [
+    { kind = "sacked", role = "attacker", points = -60, who = "any", against = "defender" },
+    { kind = "settlement_captured", role = "attacker", points = -25, who = "any", against = "defender" },
+    { kind = "civ_conquered", role = "conqueror", points = -120, who = "any", against = "civilization" },
+    { kind = "war_won", role = "winner", points = 30, who = "kin", against = "" },
+    { kind = "monster_slain", role = "slayer", points = 25, who = "kin", against = "" },
+    { kind = "monster_slain_by_hero", role = "slayer", points = 35, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = 20, who = "kin", against = "" },
+    { kind = "deep_sealed", role = "civilization", points = 40, who = "kin", against = "" },
+    { kind = "refuge_held", role = "defender", points = 30, who = "kin", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_CONQUEST_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.conquest]
+name_culture = "orcish"
+camp = "evil"
+domain = "war"
+title = "the Red Banner"
+favour = { bless = 120, champion = 1000, mark = 30 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "civ_conquered", role = "conqueror", points = 100, who = "kin", against = "" },
+    { kind = "war_won", role = "winner", points = 30, who = "kin", against = "" },
+    { kind = "sacked", role = "attacker", points = 15, who = "kin", against = "" },
+    { kind = "peace", role = "loser", points = -30, who = "kin", against = "" },
+    { kind = "tribute", role = "payer", points = -20, who = "kin", against = "" },
+    { kind = "truce", role = "parties", points = -20, who = "kin", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_CRAFT_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.craft]
+name_culture = "dwarven"
+camp = "neutral"
+domain = "craft"
+title = "the Hammer Under the Mountain"
+favour = { bless = 150, champion = 1000, mark = 45 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "mine_opened", role = "civilization", points = 25, who = "kin", against = "" },
+    { kind = "delving_deepened", role = "civilization", points = 15, who = "kin", against = "" },
+    { kind = "arms_sold", role = "seller", points = 10, who = "any", against = "" },
+    { kind = "deep_sealed", role = "civilization", points = 30, who = "any", against = "" },
+    { kind = "deep_woken", role = "civilization", points = -40, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_DEATH_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.death]
+name_culture = "goblin"
+camp = "evil"
+domain = "death"
+title = "the Hollow Keeper"
+favour = { bless = 120, champion = 1000, mark = 180 }
+wrath = { curse = 300, monster = 350, mark = 200 }
+bless = "valour"
+curse = "pestilence"
+monsters = ["undead"]
+deeds = [
+    { kind = "sacked", role = "attacker", points = 20, who = "any", against = "" },
+    { kind = "blight", role = "civilization", points = 30, who = "any", against = "" },
+    { kind = "battle_led", role = "winner", points = 5, who = "any", against = "" },
+    { kind = "monster_slain", role = "slayer", points = -30, who = "any", against = "" },
+    { kind = "monster_slain_by_hero", role = "slayer", points = -40, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_HARVEST_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.harvest]
+name_culture = "faerie"
+camp = "good"
+domain = "harvest"
+title = "the Giver of Harvests"
+favour = { bless = 210, champion = 1000, mark = 90 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "plenty"
+curse = "withering"
+monsters = []
+deeds = [
+    { kind = "became_town", role = "civilization", points = 20, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = 30, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_a", points = 20, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_b", points = 20, who = "kin", against = "" },
+    { kind = "blight", role = "civilization", points = -80, who = "any", against = "" },
+    { kind = "sacked", role = "attacker", points = -30, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_LORE_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.lore]
+name_culture = "elven"
+camp = "good"
+domain = "lore"
+title = "the Lamp of the Wise"
+favour = { bless = 120, champion = 1000, mark = 75 }
+wrath = { curse = 600, monster = 0, mark = 400 }
+bless = "plenty"
+curse = "withering"
+monsters = []
+deeds = [
+    { kind = "tower_founded", role = "civilization", points = 60, who = "any", against = "" },
+    { kind = "book_written", role = "civilization", points = 40, who = "any", against = "" },
+    { kind = "blight", role = "civilization", points = -60, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_OATHS_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.oaths]
+name_culture = "elven"
+camp = "good"
+domain = "oaths"
+title = "the Keeper of Oaths"
+favour = { bless = 90, champion = 1000, mark = 60 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "alliance_formed", role = "ally_a", points = 30, who = "any", against = "" },
+    { kind = "alliance_formed", role = "ally_b", points = 30, who = "any", against = "" },
+    { kind = "spoils_shared", role = "principal", points = 25, who = "any", against = "" },
+    { kind = "ally_joined_war", role = "ally", points = 20, who = "any", against = "" },
+    { kind = "alliance_betrayed", role = "betrayed", points = 40, who = "any", against = "" },
+    { kind = "alliance_betrayed", role = "betrayer", points = -150, who = "any", against = "" },
+    { kind = "spoils_withheld", role = "principal", points = -50, who = "any", against = "" },
+    { kind = "ally_refused", role = "ally", points = -25, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_RUIN_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.ruin]
+name_culture = "goblin"
+camp = "evil"
+domain = "ruin"
+title = "the Burner of Halls"
+favour = { bless = 120, champion = 1000, mark = 45 }
+wrath = { curse = 400, monster = 350, mark = 200 }
+bless = "valour"
+curse = "pestilence"
+monsters = ["dragon", "giant"]
+deeds = [
+    { kind = "sacked", role = "attacker", points = 40, who = "kin", against = "" },
+    { kind = "settlement_captured", role = "attacker", points = 15, who = "kin", against = "" },
+    { kind = "truce", role = "parties", points = -40, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_a", points = -10, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_b", points = -10, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = -15, who = "foe", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_WAR_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.war]
+name_culture = "human"
+camp = "neutral"
+domain = "war"
+title = "the Shield of Battles"
+favour = { bless = 120, champion = 1000, mark = 30 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "battle", role = "winner", points = 10, who = "any", against = "" },
+    { kind = "battle_led", role = "winner", points = 15, who = "any", against = "" },
+    { kind = "allied_battle", role = "winner", points = 10, who = "any", against = "" },
+    { kind = "war_won", role = "winner", points = 25, who = "any", against = "" },
+    { kind = "ally_refused", role = "ally", points = -30, who = "any", against = "" },
+    { kind = "ally_withdrew", role = "ally", points = -30, who = "any", against = "" },
+]
+)";
+inline constexpr std::string_view GOD_WILD_TOML = R"(# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.wild]
+name_culture = "human"
+camp = "neutral"
+domain = "wild"
+title = "the Hunter in the Green"
+favour = { bless = 150, champion = 1000, mark = 150 }
+wrath = { curse = 300, monster = 350, mark = 200 }
+bless = "plenty"
+curse = "withering"
+monsters = ["troll", "ogre", "wyvern"]
+deeds = [
+    { kind = "colony_founded", role = "founder", points = -15, who = "any", against = "" },
+    { kind = "became_city", role = "civilization", points = -20, who = "any", against = "" },
+    { kind = "mine_opened", role = "civilization", points = -30, who = "any", against = "" },
+    { kind = "monster_slain", role = "slayer", points = -40, who = "any", against = "" },
+    { kind = "settlement_abandoned", role = "civilization", points = 15, who = "any", against = "" },
+    { kind = "outpost_abandoned", role = "civilization", points = 10, who = "any", against = "" },
+]
+)";
+
+inline void add_pantheon_files(std::map<std::string, std::string>& f) {
+    f["history/pantheon.toml"] = std::string(PANTHEON_TOML);
+    f["gods/conquest.toml"] = std::string(GOD_CONQUEST_TOML);
+    f["gods/craft.toml"] = std::string(GOD_CRAFT_TOML);
+    f["gods/death.toml"] = std::string(GOD_DEATH_TOML);
+    f["gods/harvest.toml"] = std::string(GOD_HARVEST_TOML);
+    f["gods/lore.toml"] = std::string(GOD_LORE_TOML);
+    f["gods/oaths.toml"] = std::string(GOD_OATHS_TOML);
+    f["gods/ruin.toml"] = std::string(GOD_RUIN_TOML);
+    f["gods/war.toml"] = std::string(GOD_WAR_TOML);
+    f["gods/wild.toml"] = std::string(GOD_WILD_TOML);
+}
+
 inline Files shipped_files() {
     Files f;
     f["races/dwarf.toml"] = std::string(DWARF_TOML);
@@ -1574,6 +1898,7 @@ inline Files shipped_files() {
     f["history/figures.toml"] = std::string(FIGURES_TOML);   // P5-06
     f["history/alliances.toml"] = std::string(ALLIANCES_TOML);   // P5-04 4.2
     add_monster_files(f);   // P5-02 4.1 to 4.3
+    add_pantheon_files(f);   // P5-08 4.1, 4.2
     return f;
 }
 
@@ -1584,6 +1909,7 @@ inline std::string_view kind_of_directory(std::string_view directory) {
     if (directory == "history") return "history";
     if (directory == "beasts") return "beast";      // P5-02 4.1
     if (directory == "monsters") return "monster";  // P5-02 4.2
+    if (directory == "gods") return "god";          // P5-08 4.1
     return {};
 }
 

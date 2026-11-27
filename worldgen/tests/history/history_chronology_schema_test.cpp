@@ -38,7 +38,9 @@ const char* const DDL_RACE_BIOME =
 const char* const DDL_CULTURE =
     "CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INTEGER NOT "
     "NULL) STRICT";
-const char* const DDL_GOD = "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT";
+const char* const DDL_GOD =
+    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL, domain INTEGER NOT NULL, "
+    "title TEXT NOT NULL, race INTEGER NOT NULL) STRICT";
 const char* const DDL_AGE =
     "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER "
     "NOT NULL, name TEXT NOT NULL) STRICT";
@@ -89,9 +91,9 @@ TEST_SUITE("chronology") {
 // --- 14.1 item 7 ------------------------------------------------------------------------------
 
 TEST_CASE("P3-03 5.1, 14.1 item 7: SCHEMA_VERSION 6 and the five statements after region_biome's, byte for byte") {
-    CHECK(chrono_api::schema_version() == 13);   // P5-02 11.1
+    CHECK(chrono_api::schema_version() == 14);   // P5-02 11.1
     const std::vector<std::string> ddl = chrono_api::ddl_statements();
-    REQUIRE(ddl.size() == 36U);   // P5-03 16.1: two more;  // P3-04 9.1: thirteen more after age's; region_name (schema 8, P3-04 r21 23.4); five of P5-02 11.1 (schema 9)
+    REQUIRE(ddl.size() == 37U);   // P5-03 16.1: two more;  // P3-04 9.1: thirteen more after age's; region_name (schema 8, P3-04 r21 23.4); five of P5-02 11.1 (schema 9)
     CHECK(ddl[7].rfind("CREATE TABLE region_biome ", 0) == 0U);
     CHECK(ddl[8] == DDL_RACE);
     CHECK(ddl[9] == DDL_RACE_BIOME);
@@ -109,8 +111,8 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA page_count") ==
           std::vector<std::vector<std::string>>{{std::to_string(EMPTY_WORLD_PAGES)}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"13"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"13"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"14"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"14"}});
     for (const std::string& t : five_tables()) {
         CAPTURE(t);
         CHECK(db.rows("SELECT count(*) FROM " + t) == std::vector<std::vector<std::string>>{{"0"}});
@@ -122,7 +124,7 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     CHECK(keys == required_keys());
     // The statements are stored in execution order, ninth to thirteenth.
     const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' ORDER BY rowid");
-    REQUIRE(sql.size() == 36U);   // P5-03 16.1: schema 10
+    REQUIRE(sql.size() == 37U);   // P5-03 16.1: schema 10
     CHECK(sql[8] == std::vector<std::string>{"race", DDL_RACE});
     CHECK(sql[9] == std::vector<std::string>{"race_biome", DDL_RACE_BIOME});
     CHECK(sql[10] == std::vector<std::string>{"culture", DDL_CULTURE});
@@ -132,7 +134,7 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_culture_1"}, {"sqlite_autoindex_race_1"}});
 }
 
-TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema version 5, this build reads 13") {
+TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema version 5, this build reads 14") {
     dbtest::TempDir dir("chronology-v5");
     for (const char* sql : {"PRAGMA user_version = 5", "UPDATE meta SET value = '5' WHERE key = 'schema_version'"}) {
         CAPTURE(std::string_view(sql));
@@ -141,7 +143,7 @@ TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema ver
         const auto r = worldgen::db::WorldReader::open(path);
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == worldgen::db::ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 5, this build reads 13");
+        CHECK(r.error().message == "world schema version 5, this build reads 14");
     }
 }
 

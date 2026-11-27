@@ -1255,7 +1255,10 @@ def main(argv):
         i = argv.index("--version")
         v = argv[i + 1]
         argv = argv[:i] + argv[i + 2:]
+        if v == "0.30.0":
+            import p5_08_pantheon_reference  # noqa: F401  (its import serves data 0.27.0; the version is set after it)
         pnr.use_version(v)
+        pdr.use_version(v)   # P5-08: 0.30.0 reads the god kind and the creator title
         _SHIPPED = None
         DEFAULT_INPUTS = INPUTS_BY_VERSION.get(v, INPUTS_BY_VERSION["0.18.0"])
         INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0") else DEFAULT_INPUTS

@@ -77,7 +77,8 @@ inline constexpr std::string_view DDL_CULTURE =
     "CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INT"
     "EGER NOT NULL) STRICT";
 inline constexpr std::string_view DDL_GOD =
-    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT";
+    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL, domain INTEGER NOT NULL, "
+    "title TEXT NOT NULL, race INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view DDL_AGE =
     "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_ye"
     "ar INTEGER NOT NULL, name TEXT NOT NULL) STRICT";
@@ -174,6 +175,12 @@ inline constexpr std::string_view DDL_FIGURE =
 inline constexpr std::string_view DDL_BOOK =
     "CREATE TABLE book (id INTEGER PRIMARY KEY, title TEXT NOT NULL, author INTEGER NOT NULL, site INTEGER NOT NULL, "
     "year INTEGER NOT NULL, event INTEGER NOT NULL) STRICT";
+// The table of P5-08 9 (schema 14), byte for byte.
+inline constexpr std::string_view DDL_FACTION =
+    "CREATE TABLE faction (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, civ INTEGER NOT NULL, "
+    "god INTEGER NOT NULL, founder INTEGER NOT NULL, seat INTEGER NOT NULL, founded_year INTEGER NOT NULL, "
+    "founding_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL, ending INTEGER NOT NULL, "
+    "status INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -287,7 +294,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.29.0"},
+        {"generator_version", "0.30.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -298,7 +305,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
         {"param.map_size", std::string(map_size)},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "13"},   // P5-03 16.1; P5-04 9.2
+        {"schema_version", "14"},   // P5-03 16.1; P5-04 9.2
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -382,7 +389,7 @@ inline worldgen::Sha256Digest empty_region_biome_table_hash() { return empty_tab
 inline worldgen::Sha256Digest empty_race_table_hash() { return empty_table_hash(12); }
 inline worldgen::Sha256Digest empty_race_biome_table_hash() { return empty_table_hash(3); }
 inline worldgen::Sha256Digest empty_culture_table_hash() { return empty_table_hash(4); }
-inline worldgen::Sha256Digest empty_god_table_hash() { return empty_table_hash(3); }
+inline worldgen::Sha256Digest empty_god_table_hash() { return empty_table_hash(6); }   // schema 14: domain, title, race
 inline worldgen::Sha256Digest empty_age_table_hash() { return empty_table_hash(5); }
 // The thirteen history tables with no rows (schema 7), by column count.
 inline worldgen::Sha256Digest empty_event_kind_table_hash() { return empty_table_hash(7); }
@@ -412,6 +419,7 @@ inline worldgen::Sha256Digest empty_settlement_race_table_hash() { return empty_
 // the two tables of P5-06 (schema 12) with no rows.
 inline worldgen::Sha256Digest empty_figure_table_hash() { return empty_table_hash(19); }
 inline worldgen::Sha256Digest empty_book_table_hash() { return empty_table_hash(6); }
+inline worldgen::Sha256Digest empty_faction_table_hash() { return empty_table_hash(13); }   // schema 14
 
 // schema of every world at schema version 8 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
@@ -453,6 +461,7 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     table("event_kind_value", DDL_EVENT_KIND_VALUE);
     table("event_participant", DDL_EVENT_PARTICIPANT);
     table("event_value", DDL_EVENT_VALUE);
+    table("faction", DDL_FACTION);   // P5-08 9
     table("figure", DDL_FIGURE);   // P5-06 9.1
     table("god", DDL_GOD);
     table("layer", DDL_LAYER);
@@ -497,6 +506,7 @@ inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_t
         {"event_kind_value", empty_event_kind_value_table_hash()},
         {"event_participant", empty_event_participant_table_hash()},
         {"event_value", empty_event_value_table_hash()},
+        {"faction", empty_faction_table_hash()},   // P5-08 9
         {"figure", empty_figure_table_hash()},   // P5-06 9.1
         {"god", empty_god_table_hash()},
         {"layer", layer},
@@ -554,7 +564,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.29.0\n"
+    "generator_version = 0.30.0\n"
     "history_end_year = 6000\n"
     "param.civs_per_race = auto\n"
     "param.divine_activity = normal\n"
@@ -565,7 +575,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "param.map_size = 1024\n"
     "param.monster_pressure = normal\n"
     "param.races = elf,goblin,dwarf,faerie,human,orc\n"
-    "schema_version = 13\n"
+    "schema_version = 14\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
@@ -583,7 +593,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "event_kind_role = 0\n"
     "event_kind_value = 0\n"
     "event_participant = 0\n"
-    "event_value = 0\nfigure = 0\n"
+    "event_value = 0\nfaction = 0\nfigure = 0\n"
     "god = 0\n"
     "layer = 0\n"
     "meta = 17\n"

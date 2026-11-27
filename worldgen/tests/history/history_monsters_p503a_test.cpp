@@ -190,7 +190,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-03a 10.4: kinds 57, 60 and 62 gain sealed; standing, majority; standing, years (seq after the old)") {
     const auto& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 99U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
+    REQUIRE(c.kinds.size() == 110U)  /* P5-04 8.1 (0.26.0): kinds 63 to 78 */;
     CHECK(values_of(c.kinds[56]) == "disposition,band,sealed");
     CHECK(values_of(c.kinds[59]) == "share,standing,majority");
     CHECK(values_of(c.kinds[61]) == "people,standing,years");

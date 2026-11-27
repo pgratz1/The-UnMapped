@@ -6,47 +6,110 @@
 # 1024) are added at integration with --inputs.
 case pantheon-activity-7 7 0 pantheon-activity
 table god 4c486bef8aed24201d38810c09c01363dda5a44651c8d7aa538882c529cde634
-table faction fee6857db5e1db6f9ab307a9e48726226468ccdaec08909723a7269ae49e3850
-table site eeb48b2d051ce0b8242b62bf0e14ce088807a6864ec26a46e723e1eb72962887
-table figure c361659ccf5e2470408b3ccb8026b14966a078967d590049254572cc8a6b0ef2
-table event 009452f0d998e7269c2bbeba33479249b35998acd11a90294fd55cfa39a63891
-table event_value a2a52517576ddd42ee885a3d5626e5537e6c19203daf3c20e56ae66c4f4d7a21
-stat divine_acts 37
-stat divine_bless 14
-stat divine_curse 8
-stat divine_champion 8
-stat divine_monster 1
-stat divine_mark 6
-stat divine_good 4
-stat divine_neutral 20
-stat divine_evil 13
+table faction 5abce46e1fc5426091d3f3fdef265ffdab0aa273f1aa7fc29d8ed17b5300cdf5
+table site 70093ae4c3938b7155f5d030766e49ec70a2fd4e51542f9a35bc2fe04c01a127
+table figure f8b8261a64c7876e72786a9c9a17c5551d7e962e530c5effe099bb05d62e55d2
+table event 2783ebf2210b80b1ccfa8db16252537c462ef8d741e5c19ab0deff92dd2d5055
+table event_value 7410b33bb8238a55a763e609b371fcc537cdcafad191d5d4a444e1a8e7550de1
+stat divine_acts 44
+stat divine_bless 12
+stat divine_curse 11
+stat divine_champion 10
+stat divine_monster 2
+stat divine_mark 9
+stat divine_good 10
+stat divine_neutral 18
+stat divine_evil 16
 stat divine_creators 16
-stat divine_flares 4
-stat divine_dead 1634
-stat cults_founded 7
-stat cults_spread 27
-stat cults_adopted 7
-stat cults_suppressed 0
-stat cults_hidden 0
-stat cults_present 6
-stat cult_founders_prophets 6
-stat shrines_sacred 1
-stat shrines_profane 5
-stat temples 10
+stat divine_flares 6
+stat divine_dead 883
+stat cults_founded 12
+stat cults_spread 45
+stat cults_adopted 9
+stat cults_suppressed 12
+stat cults_hidden 1
+stat cults_present 8
+stat cult_founders_prophets 5
+stat shrines_sacred 7
+stat shrines_profane 2
+stat temples 15
 stat towers_taken_up 0
 stat towers_abandoned 4
-stat renewals_capped 0
+stat renewals_capped 2
 stat deep_stirred 0
 path bless
 path caster founder
 path certain act
 path champion
 path champion fought
+path champion founder
 path cult_adopted
 path cult_spread
+path cult_suppressed
+path curse
+path ended fell
+path faith without temple
+path flare
+path founded
+path hidden
+path mark
+path mark at a settlement
+path monster
+path pestilence
+path plenty
+path profane mark
+path prophet founder
+path renewal capped
+path ruler founder
+path sacred mark
+path temple lost
+path temple suppressed
+path tower_abandoned
+path valour
+case pantheon-activity-7 7 0 pantheon-activity
+table god 4c486bef8aed24201d38810c09c01363dda5a44651c8d7aa538882c529cde634
+table faction f9c5d3ae7991c07941365feef5d8a83891e76c7db0af39b5e12d20332ce689ed
+table site e4b96172fd38b062e9220fe41a5ac88454871c8e7cb1347ce29ca5ecf459626d
+table figure 1ece7d1a036fe7fddf58d1e099411fe3520148facf468f3d14b0d6643968e096
+table event 5dca9ba986195934ee74920e4aa838f8dfc2163a203acaa53cc08ac5786b1f32
+table event_value 1915831ca9f5ccaa974572a7cea4c8c8416f2dc08e1a617908ca3bb72a53e127
+stat divine_acts 132
+stat divine_bless 33
+stat divine_curse 66
+stat divine_champion 13
+stat divine_monster 9
+stat divine_mark 11
+stat divine_good 48
+stat divine_neutral 29
+stat divine_evil 55
+stat divine_creators 16
+stat divine_flares 10
+stat divine_dead 1089
+stat cults_founded 11
+stat cults_spread 221
+stat cults_adopted 8
+stat cults_suppressed 173
+stat cults_hidden 0
+stat cults_present 11
+stat cult_founders_prophets 5
+stat shrines_sacred 2
+stat shrines_profane 9
+stat temples 14
+stat towers_taken_up 0
+stat towers_abandoned 8
+stat renewals_capped 7
+stat deep_stirred 0
+path bless
+path caster founder
+path certain act
+path champion
+path champion fought
+path champion founder
+path cult_adopted
+path cult_spread
+path cult_suppressed
 path curse
 path defeat
-path ended fell
 path faith without temple
 path flare
 path founded
@@ -57,49 +120,51 @@ path pestilence
 path plenty
 path profane mark
 path prophet founder
+path renewal capped
+path ruler founder
 path sacred mark
 path temple lost
 path tower_abandoned
 path valour
+path withering
 case pantheon-activity-7 7 0 pantheon-activity
 table god 4c486bef8aed24201d38810c09c01363dda5a44651c8d7aa538882c529cde634
-table faction e7b22dfdaf4eff128111a166279e4f9bc8f75e9fab64a639d6296c4b28ed44f1
-table site 3af30772544896f020fef36a84f873beff1c676fa7130eb83a1fcf30e8142cea
-table figure 656f12a83cd6917814cc4cf903fb2974a1fed6251e4e26e814a5cf41eecd9ee3
-table event b3230f39f9be7d3a28e173611ccfd250238ed9e6ec45839d03a301f4d800ea33
-table event_value 2fd56e1b0050d60779b525ec23fef97b19126efcd7531c6a694a1c1a7f0daf1c
-stat divine_acts 97
-stat divine_bless 18
-stat divine_curse 54
-stat divine_champion 8
-stat divine_monster 6
-stat divine_mark 11
-stat divine_good 23
-stat divine_neutral 22
-stat divine_evil 52
-stat divine_creators 30
-stat divine_flares 6
-stat divine_dead 3638
-stat cults_founded 12
-stat cults_spread 116
-stat cults_adopted 4
-stat cults_suppressed 108
+table faction 88d9ef6c8ef08b26a61f8e8b04bf613a9c794a91fc830633c8e05eadbecc955a
+table site be7c1c9be018cb83ebce24526016442288b3f3d5cb198e51f5914280a8261d5a
+table figure fbbb9209dd7677c782379f013af81e007f5291fb308488cf355236b5214acada
+table event 85c8c3452986c17283d02a204706511fac0518eff83cf50c9715fb87ebdfb66f
+table event_value 9fd16ec5151943fe281e55ee56f501985b605981060329b47451040513f7a5b9
+stat divine_acts 193
+stat divine_bless 89
+stat divine_curse 51
+stat divine_champion 25
+stat divine_monster 11
+stat divine_mark 17
+stat divine_good 44
+stat divine_neutral 65
+stat divine_evil 84
+stat divine_creators 45
+stat divine_flares 2
+stat divine_dead 2563
+stat cults_founded 17
+stat cults_spread 29
+stat cults_adopted 6
+stat cults_suppressed 8
 stat cults_hidden 2
-stat cults_present 7
-stat cult_founders_prophets 5
-stat shrines_sacred 4
-stat shrines_profane 7
-stat temples 12
-stat towers_taken_up 0
-stat towers_abandoned 4
-stat renewals_capped 0
+stat cults_present 9
+stat cult_founders_prophets 12
+stat shrines_sacred 7
+stat shrines_profane 10
+stat temples 19
+stat towers_taken_up 1
+stat towers_abandoned 8
+stat renewals_capped 3
 stat deep_stirred 1
 path bless
 path caster founder
 path certain act
 path champion
 path champion fought
-path champion founder
 path cult_adopted
 path cult_spread
 path cult_suppressed
@@ -118,93 +183,35 @@ path pestilence
 path plenty
 path profane mark
 path prophet founder
+path renewal capped
 path ruler founder
 path sacred mark
 path stir
 path temple lost
 path temple suppressed
 path tower_abandoned
-path valour
-path withering
-case pantheon-activity-7 7 0 pantheon-activity
-table god 4c486bef8aed24201d38810c09c01363dda5a44651c8d7aa538882c529cde634
-table faction e315f155a18bd1656b72b0d90037f97f6f343f73482650b4ada3aed144b72b52
-table site 55c66f2643b12a289a9d2f5d47e1324f94bf0a26eb926fcf810af80b9961a9d9
-table figure 6540523539bb5bcff1a77da40e5c88965347129de51113de7da76372265e41f4
-table event 4bca78ec69d632bb77b065c995f354cd4c60ad732849d0c0b262ce0f0ed237d8
-table event_value d3be8330a9ab68f12b72f83b85d0571abc6cdcbe2456d1b13796f7c5d9a9343e
-stat divine_acts 103
-stat divine_bless 26
-stat divine_curse 48
-stat divine_champion 16
-stat divine_monster 1
-stat divine_mark 12
-stat divine_good 35
-stat divine_neutral 32
-stat divine_evil 36
-stat divine_creators 26
-stat divine_flares 0
-stat divine_dead 3818
-stat cults_founded 10
-stat cults_spread 44
-stat cults_adopted 7
-stat cults_suppressed 33
-stat cults_hidden 1
-stat cults_present 8
-stat cult_founders_prophets 4
-stat shrines_sacred 5
-stat shrines_profane 7
-stat temples 12
-stat towers_taken_up 0
-stat towers_abandoned 5
-stat renewals_capped 0
-stat deep_stirred 0
-path bless
-path caster founder
-path champion
-path champion fought
-path cult_adopted
-path cult_spread
-path cult_suppressed
-path curse
-path defeat
-path ended fell
-path faith without temple
-path founded
-path hidden
-path mark
-path mark at a settlement
-path monster
-path pestilence
-path plenty
-path profane mark
-path prophet founder
-path ruler founder
-path sacred mark
-path temple lost
-path temple suppressed
-path tower_abandoned
+path tower_taken_up
 path valour
 path withering
 case pantheon-acts-0 0 0 pantheon-acts
 table god 6d056d1ad33ea0f360780c9e3851008ca3b7aac3dd591c506540d7543089d160
 table faction b0bd73e6922c0d2496dbcb99eac08eb5870090e59f6e06b1eb477d540002a5cd
-table site ea95c48095d629e4e82100aff4c32eda82e2410c8b88727bcc771a6c3def139c
-table figure 06e62228268598fd5bb4a0300910e0cccf47cb87de32e1422b195bf485fe655a
-table event b5452d8667a1ced915f617e71b46437069255939b4de1c4e2b36200a3e9eb3ab
-table event_value f16bdb339287ff8f873e17d98335c99506145496cf5a818552387f7ead0687c9
-stat divine_acts 27
-stat divine_bless 15
-stat divine_curse 5
-stat divine_champion 4
+table site 814b19b2539912aa955c1e9350b29504981df54d4c2c9477efa9c49d690531ec
+table figure 2bbf3a006bce50a5fb069f20ebbdd0961e2f74426d212cc48814b48acd1c4e76
+table event e7255d6a5208d9cd2ac7ec849aed2daaaacdfd1530ce4327fe1b0e5959135b82
+table event_value 167b6270136118f4d96f2978ef09e047e882b62ca78437e68e69bd5ecb179de5
+stat divine_acts 65
+stat divine_bless 31
+stat divine_curse 11
+stat divine_champion 14
 stat divine_monster 1
-stat divine_mark 2
-stat divine_good 2
-stat divine_neutral 17
-stat divine_evil 8
-stat divine_creators 6
+stat divine_mark 8
+stat divine_good 22
+stat divine_neutral 31
+stat divine_evil 12
+stat divine_creators 11
 stat divine_flares 0
-stat divine_dead 1039
+stat divine_dead 397
 stat cults_founded 0
 stat cults_spread 0
 stat cults_adopted 0
@@ -212,8 +219,8 @@ stat cults_suppressed 0
 stat cults_hidden 0
 stat cults_present 0
 stat cult_founders_prophets 0
-stat shrines_sacred 2
-stat shrines_profane 0
+stat shrines_sacred 6
+stat shrines_profane 2
 stat temples 0
 stat towers_taken_up 0
 stat towers_abandoned 0
@@ -223,31 +230,35 @@ path bless
 path champion
 path champion fought
 path curse
+path defeat
 path mark
+path mark at a settlement
 path monster
 path pestilence
 path plenty
+path profane mark
 path sacred mark
 path valour
+path withering
 case pantheon-acts-1 1 0 pantheon-acts
 table god 1de51e6c2ed49be242390b9e4683a3b4f73c4b41aa540786d60846a731db9ec1
 table faction b0bd73e6922c0d2496dbcb99eac08eb5870090e59f6e06b1eb477d540002a5cd
-table site 350720bc07ba068717b925a02d4372b008cff748783b3814975f6ff2eaa576b1
-table figure 6d2f4403377ed854ccd186454827435ad2619d508aaf88460da2fbddd03ab480
-table event 31a4cd7548a39dc5a8a0d5cd6b5d2cf651596262aaf90fffb4eff151fd1fff24
-table event_value a84f74d15824ad73ae45155a2e5551675fcbff649925aabdb00ffa47733845f3
-stat divine_acts 112
-stat divine_bless 81
-stat divine_curse 4
-stat divine_champion 22
-stat divine_monster 1
+table site d769d5181d25252720911f47ca9a4967475686cfd85074c21aaa3b27c7a5bf6d
+table figure c6adbb0143d31425c587e46a0168143d146b72af4ed4711f6b06304274e5f7be
+table event b56a5a1bc74d6280d3af1720e230adf36d81a698d489ebe1be20aba4d0349559
+table event_value a78d6b0af63f70fe8a45bdda8d27b484c229c903a2c795c646b4b3baa60144ba
+stat divine_acts 109
+stat divine_bless 74
+stat divine_curse 7
+stat divine_champion 21
+stat divine_monster 3
 stat divine_mark 4
-stat divine_good 18
-stat divine_neutral 73
-stat divine_evil 21
-stat divine_creators 46
+stat divine_good 26
+stat divine_neutral 64
+stat divine_evil 19
+stat divine_creators 43
 stat divine_flares 0
-stat divine_dead 0
+stat divine_dead 1646
 stat cults_founded 0
 stat cults_spread 0
 stat cults_adopted 0
@@ -270,6 +281,7 @@ path defeat
 path mark
 path mark at a settlement
 path monster
+path pestilence
 path plenty
 path renewal capped
 path sacred mark
@@ -278,22 +290,22 @@ path valour
 case pantheon-acts-5 5 0 pantheon-acts
 table god c0ce893a3ab569077f965209ab651ecff981d0b361ff8bd9b1afb13a17cc61fa
 table faction b0bd73e6922c0d2496dbcb99eac08eb5870090e59f6e06b1eb477d540002a5cd
-table site ce9875e01a385aefa1d16a14f40608c0db9aa16c624de995cab002db8abd55e3
-table figure dea6f261b55368178c06c062cd79668e36d210549e43bb017fbe66dde0b6251a
-table event a742c441ca7f8fa66c66624eda7e412e50db66a4a50222669c30057e7eb79201
-table event_value 766106f5ed69af10db52e331840a8bee70586ab2495e3dca655a087f07aeb7cf
-stat divine_acts 222
-stat divine_bless 112
-stat divine_curse 43
-stat divine_champion 50
-stat divine_monster 4
-stat divine_mark 13
-stat divine_good 12
-stat divine_neutral 138
-stat divine_evil 72
-stat divine_creators 47
+table site c6ad6f8201191023ec6648ade999a40380a05d0d9d4322cf2abcb35b59d33a16
+table figure 52bbd591baf25d9360dff52cee25d654459182fc5e7229dce8e27298005824bf
+table event b38ef6809a60800c5044c269c8eb809dc047507a6da59e48b3073e7ff24666aa
+table event_value c94913cc7ebd3d3ab74683e7fd57e9449ad4002ac5f2c36d5d457f49e2f42a94
+stat divine_acts 241
+stat divine_bless 138
+stat divine_curse 42
+stat divine_champion 42
+stat divine_monster 2
+stat divine_mark 17
+stat divine_good 37
+stat divine_neutral 129
+stat divine_evil 75
+stat divine_creators 48
 stat divine_flares 0
-stat divine_dead 5879
+stat divine_dead 2275
 stat cults_founded 0
 stat cults_spread 0
 stat cults_adopted 0
@@ -301,13 +313,13 @@ stat cults_suppressed 0
 stat cults_hidden 0
 stat cults_present 0
 stat cult_founders_prophets 0
-stat shrines_sacred 8
-stat shrines_profane 5
+stat shrines_sacred 11
+stat shrines_profane 6
 stat temples 0
 stat towers_taken_up 0
-stat towers_abandoned 0
-stat renewals_capped 0
-stat deep_stirred 0
+stat towers_abandoned 2
+stat renewals_capped 15
+stat deep_stirred 1
 path bless
 path champion
 path champion fought
@@ -319,36 +331,40 @@ path monster
 path pestilence
 path plenty
 path profane mark
+path renewal capped
 path sacred mark
+path stir
+path tower_abandoned
 path valour
+path withering
 case pantheon-creators-0 0 0 pantheon-creators
 table god 3df12066d8c0bcb23e89ae7b5fc93fc84757f8ac99c5f825e2e7dd6c97248e4f
-table faction 03cba93db22983d8306c340eb0c462030af2dd6634073e61b9c7788405fbd7fc
-table site 3c62b2336b318732afbe6241c41553f2d37b806b49370b819ec0d7a6603ebc4b
-table figure 57537d910e1901ebae4ee5362f4b28e8f8e6f5c451f7d7a66cb60e059e274492
-table event a6e8c28f32f79c4b5d36830e2659c373220ca167269c3ff190faa6dd644937b0
-table event_value aef17c05214fe04f11517baa9817ab1dd89e0ef042ba02189c08ebfe0785d7b3
-stat divine_acts 16
+table faction 354e1464e0b23756dbbb9b19ed7025cdde10051890d3d5adba8d7a6b61065b57
+table site 9ed41a0dfd034a84d3e68ca479cbacd45b423a86e8e188b83b46db2d7d5c63fb
+table figure f97052f54aa575be50cf34c24bcb93d60290b8dd4be9591159d968fc51c62111
+table event b4b3e46768d26fcaa610db555136304fc483de1df2daeddd7dd6da3506865f8b
+table event_value ec02b4dcd632687f3bee287aec6eceeaf832217d535ff855c0af0c6439281c1f
+stat divine_acts 23
 stat divine_bless 5
-stat divine_curse 7
-stat divine_champion 2
+stat divine_curse 12
+stat divine_champion 3
 stat divine_monster 0
-stat divine_mark 2
-stat divine_good 6
-stat divine_neutral 4
-stat divine_evil 6
-stat divine_creators 16
+stat divine_mark 3
+stat divine_good 8
+stat divine_neutral 2
+stat divine_evil 13
+stat divine_creators 23
 stat divine_flares 0
-stat divine_dead 1537
+stat divine_dead 509
 stat cults_founded 4
-stat cults_spread 13
-stat cults_adopted 4
-stat cults_suppressed 0
-stat cults_hidden 0
-stat cults_present 4
-stat cult_founders_prophets 3
-stat shrines_sacred 1
-stat shrines_profane 1
+stat cults_spread 17
+stat cults_adopted 3
+stat cults_suppressed 6
+stat cults_hidden 1
+stat cults_present 3
+stat cult_founders_prophets 2
+stat shrines_sacred 0
+stat shrines_profane 3
 stat temples 4
 stat towers_taken_up 0
 stat towers_abandoned 0
@@ -357,50 +373,52 @@ stat deep_stirred 0
 path bless
 path champion
 path champion fought
-path champion founder
 path cult_adopted
 path cult_spread
+path cult_suppressed
 path curse
 path faith without temple
 path founded
+path hidden
 path mark
 path mark at a settlement
 path pestilence
 path plenty
 path profane mark
 path prophet founder
-path sacred mark
+path ruler founder
+path temple suppressed
 case pantheon-cults-3 3 0 pantheon-cults
 table god 7380ae73da416820e09250208ce9c57cfb51e49c41bd4f82e649f73e86f660d4
-table faction 9b5456920e81ec5b972e96b55c2a620dacb3e14a39969dfe61806a1a9f07c89f
-table site e36f0f7a40e4641a527b3d402f8e537f6d92febde052e44bec5e47a081f729d6
-table figure 6bb6777136072c43f6c6844c84c335348d5bf6e2263c9f1e3c9f7ce854bce455
-table event e781271b7d7b78cbc880177145fafae777e09fd2a0b6d8a6898def6e4cbee34c
-table event_value a5024115bbcedec5e5c9cb3f37704413e24c1e70fa4ead63ab095bb099ba5c58
-stat divine_acts 331
-stat divine_bless 29
-stat divine_curse 277
-stat divine_champion 11
+table faction c8f1e33f46ed73d253fe769b5727ceb7a568baa8e1648437bc00796a7cfe7e4e
+table site 6d27bf7ba686dda2a40e3be37e012194e31a79ea8e027b4c4491a260f887c5b0
+table figure 940205225566f4e0058b1bdfc41b79bec60ac3bfb753a2b143ffe837ac347e1f
+table event f2f14158e014be276d9746ba7afcc6ab9c547856c674b63e4d4e39739277e25b
+table event_value 74a399f9c0d8fe4de9af6ec27c2881abc3805e92ea450f1fdb08be20ad52b286
+stat divine_acts 444
+stat divine_bless 46
+stat divine_curse 372
+stat divine_champion 12
 stat divine_monster 5
 stat divine_mark 9
-stat divine_good 67
-stat divine_neutral 31
-stat divine_evil 233
-stat divine_creators 54
-stat divine_flares 13
-stat divine_dead 3432
-stat cults_founded 8
-stat cults_spread 1018
+stat divine_good 245
+stat divine_neutral 35
+stat divine_evil 164
+stat divine_creators 170
+stat divine_flares 14
+stat divine_dead 4510
+stat cults_founded 9
+stat cults_spread 1458
 stat cults_adopted 5
-stat cults_suppressed 1003
+stat cults_suppressed 1422
 stat cults_hidden 0
-stat cults_present 8
-stat cult_founders_prophets 4
-stat shrines_sacred 1
-stat shrines_profane 8
-stat temples 8
+stat cults_present 9
+stat cult_founders_prophets 3
+stat shrines_sacred 3
+stat shrines_profane 6
+stat temples 9
 stat towers_taken_up 1
-stat towers_abandoned 4
+stat towers_abandoned 3
 stat renewals_capped 0
 stat deep_stirred 0
 path bless
@@ -433,31 +451,31 @@ path valour
 path withering
 case pantheon-cults-6 6 0 pantheon-cults
 table god 02ba764b0e045aed61003b3834555c1ff8e8b052ccc6b910642fab5484abd93f
-table faction c0d8dfd52a589b2b0dc668b7de0de2acdba074065132d73027517d35abd19e2a
-table site 2196ab5128f3fae1af96747d60bbd91784fb5e22ba5332564e4fad1c00fc4766
-table figure be13b825a282ce390cf1f1a6eb4cc8e41a59a6f0bace6a591287244004393989
-table event ef0859ba8b535dca536284c78496dca49825218decaaf3d4023b352ef68b4eaf
-table event_value 55ed64dc9fce86ee2cfe9d8a6d6d04a4f9d62047fa4f034e32eca6ac1e16e780
-stat divine_acts 38
-stat divine_bless 13
-stat divine_curse 13
-stat divine_champion 5
+table faction a86e36daadb20c00a9f1da6d10d63eccb6b55544ee6357aa4d457d461db84d20
+table site 72d1a523d35e663930f9457bb44df288bee3789bac251d9e3e1875fd6a31eb79
+table figure ff12fc62da16daa400b260e32ac0289aea6cd6ccc1fa8b8555e4917ee671cc33
+table event b4aa307cf9abb67a928e47ab7ca1f0bd0f688861a1850bd5837051c41263282a
+table event_value e979b21ec5df635aec759c4f29c0c8084d478b676e800c72587302ca441f07b3
+stat divine_acts 62
+stat divine_bless 16
+stat divine_curse 25
+stat divine_champion 12
 stat divine_monster 2
-stat divine_mark 5
-stat divine_good 14
-stat divine_neutral 11
-stat divine_evil 13
-stat divine_creators 13
+stat divine_mark 7
+stat divine_good 18
+stat divine_neutral 19
+stat divine_evil 25
+stat divine_creators 17
 stat divine_flares 0
-stat divine_dead 1585
+stat divine_dead 558
 stat cults_founded 8
-stat cults_spread 0
-stat cults_adopted 4
-stat cults_suppressed 4
-stat cults_hidden 2
-stat cults_present 3
-stat cult_founders_prophets 3
-stat shrines_sacred 3
+stat cults_spread 9
+stat cults_adopted 6
+stat cults_suppressed 0
+stat cults_hidden 0
+stat cults_present 4
+stat cult_founders_prophets 4
+stat shrines_sacred 5
 stat shrines_profane 2
 stat temples 8
 stat towers_taken_up 0
@@ -469,14 +487,12 @@ path champion
 path champion fought
 path champion founder
 path cult_adopted
-path cult_suppressed
+path cult_spread
 path curse
 path defeat
 path ended fell
-path ended suppressed
 path faith without temple
 path founded
-path hidden
 path mark
 path mark at a settlement
 path monster
@@ -487,38 +503,37 @@ path prophet founder
 path ruler founder
 path sacred mark
 path temple lost
-path temple suppressed
 path valour
 path withering
 case pantheon-cults-9 9 0 pantheon-cults
 table god 93b85f19693c2470fd1e235428e831770ba7973c5e76ac086f11807f718db4cc
-table faction b600e1051204f84824ca35fdd945df65108e31403f9fb18e695dd1b190a0c929
-table site 3d8d210a146f7bc7793e311a856c777f5b070fa87e14ebe664a4116b5db4ced9
-table figure 839a2878112e2bac2a16deaf4882414fc1dc016d79b578c8ba394060767f11d4
-table event 71dd1330b610806a8bf20c1721768385d32753e42dacb056e79422b6be173b36
-table event_value e44c678d5b4d2dd253dd57ed4ad8e02a8f1ee899896dd1f1f5ce6298017c0a6e
-stat divine_acts 50
-stat divine_bless 20
-stat divine_curse 15
-stat divine_champion 11
-stat divine_monster 1
-stat divine_mark 3
-stat divine_good 12
-stat divine_neutral 23
-stat divine_evil 15
+table faction d266534424c72bb3d8f3b18291d8f6d90ffb2afcc6efd53ff29c095664707777
+table site 94744a25f9a8e24b5292178a91ea5127b2f67a9aa0be3743d1964b8df1286b31
+table figure 40ea39dcff6ac7eedf684bb21cdab36a9f0860e00001315a094818b9ff98b4d9
+table event ed6d8fae84b6b1ce4da11bcfe26cce253a09f948ed1c07be115bd627ef16e43a
+table event_value 09bb033405383d321a012cd30ac9c2f9dea72bf60881c8353098afa4b168e1b6
+stat divine_acts 68
+stat divine_bless 30
+stat divine_curse 19
+stat divine_champion 12
+stat divine_monster 2
+stat divine_mark 5
+stat divine_good 18
+stat divine_neutral 28
+stat divine_evil 22
 stat divine_creators 13
 stat divine_flares 0
-stat divine_dead 224
-stat cults_founded 6
-stat cults_spread 6
+stat divine_dead 225
+stat cults_founded 7
+stat cults_spread 7
 stat cults_adopted 5
 stat cults_suppressed 0
 stat cults_hidden 0
-stat cults_present 6
-stat cult_founders_prophets 2
-stat shrines_sacred 0
+stat cults_present 7
+stat cult_founders_prophets 3
+stat shrines_sacred 2
 stat shrines_profane 3
-stat temples 6
+stat temples 7
 stat towers_taken_up 0
 stat towers_abandoned 2
 stat renewals_capped 0
@@ -542,99 +557,44 @@ path plenty
 path profane mark
 path prophet founder
 path ruler founder
+path sacred mark
 path stir
 path temple lost
 path tower_abandoned
 path valour
 path withering
-case pantheon-flare-2 2 0 pantheon-flare
-table god 1faad83f5bf2c2961ca087c61da3d7186d1603bd081b37cb5522d578ba21cdd4
-table faction 12085e45558c65d964faeea2f25fe2a206990014aee6a21ccd4706067e47519b
-table site 88c6516e13abcc3a7e3ff3bb9f6d9502f059cab4e48749d8aa2151d2c500567f
-table figure 5b969b7393da657093a68228520d3f98bb3e235f942b66faee93e0b874c91980
-table event f731d9e05e97793bb7baefed22dbe3b986dacc4277b6558d61a0941525b619b8
-table event_value aee229b9b76d3bff357cb62122737fde6b2f5324a9ee3c5a6140cdd50e1f00bd
-stat divine_acts 12
-stat divine_bless 4
-stat divine_curse 3
-stat divine_champion 3
-stat divine_monster 1
-stat divine_mark 1
-stat divine_good 3
-stat divine_neutral 5
-stat divine_evil 4
-stat divine_creators 1
-stat divine_flares 12
-stat divine_dead 203
-stat cults_founded 2
-stat cults_spread 6
-stat cults_adopted 3
-stat cults_suppressed 0
-stat cults_hidden 0
-stat cults_present 2
-stat cult_founders_prophets 1
-stat shrines_sacred 1
-stat shrines_profane 0
-stat temples 4
+case pantheon-cults-0 0 0 pantheon-cults
+table god 6d056d1ad33ea0f360780c9e3851008ca3b7aac3dd591c506540d7543089d160
+table faction 142187d6e47c4b6fb97e9426b59144c53948bb8e705b3542f9c953c9ee7695ec
+table site e4820955ad29a835b3f0bceb249e45e56f9754ca92f76d799de4f567f23c7ae4
+table figure 31a98175f0fcd1c700ff02d33635e0f318825a46f9d3e4e4c1f62b04e9d94fff
+table event 251b9b9b3dcbd1f2bb83885a2bc87626aac1f90982d8d307411c8ef073a48196
+table event_value aef0227539548d1b051891d483fce9eebd8cff2ca0359a8dd2b169e846f9b9cd
+stat divine_acts 243
+stat divine_bless 90
+stat divine_curse 74
+stat divine_champion 55
+stat divine_monster 3
+stat divine_mark 21
+stat divine_good 36
+stat divine_neutral 91
+stat divine_evil 116
+stat divine_creators 39
+stat divine_flares 1
+stat divine_dead 4193
+stat cults_founded 17
+stat cults_spread 66
+stat cults_adopted 8
+stat cults_suppressed 6
+stat cults_hidden 4
+stat cults_present 11
+stat cult_founders_prophets 7
+stat shrines_sacred 11
+stat shrines_profane 10
+stat temples 20
 stat towers_taken_up 0
-stat towers_abandoned 4
-stat renewals_capped 22
-stat deep_stirred 0
-path bless
-path caster founder
-path certain act
-path champion
-path champion fought
-path cult_adopted
-path cult_spread
-path curse
-path defeat
-path faith without temple
-path flare
-path founded
-path mark
-path mark at a settlement
-path monster
-path pestilence
-path plenty
-path prophet founder
-path renewal capped
-path sacred mark
-path temple lost
-path tower_abandoned
-path valour
-case pantheon-flare-12 12 0 pantheon-flare
-table god 4f9369c309f1237bb1bf0f31a390ce01f0e4ffb59e859464b0dc35756687c878
-table faction 61bde1ea0d5e3d653b343afad55c2d8d45c349c670e2c5b6972ef34134f5c5ea
-table site 66b8780533194bd81e8180b2072d5fcac93003da189f29da31004380155eac82
-table figure 789929953c44b8ff165ad08f61573f56734018b9e9d3508ce9891ba866c0efab
-table event 1cbb641eabfe4729c2818b8824255f64292edf4fef371ad6fa6d500110bed267
-table event_value deaa8afdc47983b89ee2d9edf3561e950a83fa3a61d062c2f9ff19978069a15e
-stat divine_acts 26
-stat divine_bless 3
-stat divine_curse 14
-stat divine_champion 5
-stat divine_monster 0
-stat divine_mark 4
-stat divine_good 8
-stat divine_neutral 5
-stat divine_evil 13
-stat divine_creators 13
-stat divine_flares 26
-stat divine_dead 3449
-stat cults_founded 9
-stat cults_spread 230
-stat cults_adopted 5
-stat cults_suppressed 202
-stat cults_hidden 1
-stat cults_present 6
-stat cult_founders_prophets 4
-stat shrines_sacred 1
-stat shrines_profane 3
-stat temples 10
-stat towers_taken_up 2
-stat towers_abandoned 2
-stat renewals_capped 3
+stat towers_abandoned 0
+stat renewals_capped 0
 stat deep_stirred 0
 path bless
 path certain act
@@ -646,7 +606,125 @@ path cult_spread
 path cult_suppressed
 path curse
 path defeat
-path ended fell
+path ended suppressed
+path faith without temple
+path flare
+path founded
+path hidden
+path mark
+path mark at a settlement
+path monster
+path pestilence
+path plenty
+path profane mark
+path prophet founder
+path ruler founder
+path sacred mark
+path temple lost
+path temple suppressed
+path valour
+path withering
+case pantheon-flare-2 2 0 pantheon-flare
+table god 1faad83f5bf2c2961ca087c61da3d7186d1603bd081b37cb5522d578ba21cdd4
+table faction ed9e3c8e5d0163d5a777e98cec416ecbbd9434c8b05752078ce0d51d88ba17f5
+table site 84610acf8deeb8cce05d38fcbc223d3d04c81ac1a519bfb99e954606caaca100
+table figure 1cd293376a45383c2f091e7107762d53e66ee93a61bae58c0b31aefd2e743920
+table event 8bc6955b6bcb81b31dc97c284ceede993538dc5ad8f39e1b37d27686b0c56072
+table event_value 14a56e01cd423c44f872e20aeff83aa727042fcdb3cbed7b0b545c488c7d28df
+stat divine_acts 30
+stat divine_bless 13
+stat divine_curse 9
+stat divine_champion 1
+stat divine_monster 4
+stat divine_mark 3
+stat divine_good 12
+stat divine_neutral 8
+stat divine_evil 10
+stat divine_creators 6
+stat divine_flares 30
+stat divine_dead 886
+stat cults_founded 11
+stat cults_spread 15
+stat cults_adopted 4
+stat cults_suppressed 3
+stat cults_hidden 1
+stat cults_present 8
+stat cult_founders_prophets 8
+stat shrines_sacred 2
+stat shrines_profane 1
+stat temples 12
+stat towers_taken_up 0
+stat towers_abandoned 3
+stat renewals_capped 0
+stat deep_stirred 0
+path bless
+path caster founder
+path certain act
+path champion
+path champion founder
+path cult_adopted
+path cult_spread
+path cult_suppressed
+path curse
+path ended suppressed
+path faith without temple
+path flare
+path founded
+path hidden
+path mark
+path mark at a settlement
+path monster
+path pestilence
+path plenty
+path profane mark
+path prophet founder
+path ruler founder
+path sacred mark
+path temple lost
+path temple suppressed
+path tower_abandoned
+path valour
+path withering
+case pantheon-flare-12 12 0 pantheon-flare
+table god 4f9369c309f1237bb1bf0f31a390ce01f0e4ffb59e859464b0dc35756687c878
+table faction 72f553be0d4d0b03bc750a9a27334fb8dff9f012b8800faf9b0bc5ad54a3d5e5
+table site 0ee61cb310b89a48974d78011cf4449de0bad35f707e2d5a355ca4302cf0c64f
+table figure a16f61858365feb114b69da2be05d5be780932cd5bb7f20d755f111dc0e88be1
+table event 461bcabfd4afc81ae0bbb98f671e4b9a604624379e9f23b04f2abefb97a0090b
+table event_value 2c4c40b68a045e3a239c858b33c387a64a0dbaee069d60cf2bbfaa97ce33cc6a
+stat divine_acts 27
+stat divine_bless 6
+stat divine_curse 17
+stat divine_champion 0
+stat divine_monster 0
+stat divine_mark 4
+stat divine_good 7
+stat divine_neutral 9
+stat divine_evil 11
+stat divine_creators 13
+stat divine_flares 27
+stat divine_dead 1937
+stat cults_founded 7
+stat cults_spread 217
+stat cults_adopted 8
+stat cults_suppressed 185
+stat cults_hidden 1
+stat cults_present 6
+stat cult_founders_prophets 5
+stat shrines_sacred 3
+stat shrines_profane 1
+stat temples 11
+stat towers_taken_up 2
+stat towers_abandoned 2
+stat renewals_capped 14
+stat deep_stirred 0
+path bless
+path certain act
+path cult_adopted
+path cult_spread
+path cult_suppressed
+path curse
+path defeat
 path faith without temple
 path flare
 path founded
@@ -668,36 +746,36 @@ path valour
 path withering
 case pantheon-followups-1 1 0 pantheon-followups
 table god 1de51e6c2ed49be242390b9e4683a3b4f73c4b41aa540786d60846a731db9ec1
-table faction 87800d940e483fb4a1c27a95bc2efd31ec291d402bbf638e0539516e70e65370
-table site 297f136f1348e8051aed297c6c3ab5aafe7aae0f7be56bda5c24e586a6bff4de
-table figure ececdf1b4dfc50fbcd0007cc16307ce66a96f5202bede13b91bd09757170e3fd
-table event 215203ecc3158fe6b62591afa8c9b6ab3357e5d3dd8381aca6e58681df170b1d
-table event_value f3820ce749bd9ed903cbf56f8cd40df3fcc4c218bcb91f505e0bbc5434ae99c4
-stat divine_acts 233
-stat divine_bless 48
-stat divine_curse 154
-stat divine_champion 23
-stat divine_monster 2
+table faction ead12a5f987b7ad23e81f9054941046b3f3234e5494a8c7e176ef8b3133ac9c2
+table site ddd2251f98bb1284b6d85a879832767a32de6fa9db6ce1fb45ad1862f186afcd
+table figure c771682ce39afbdcbd22c26c2300d0d3f076c972ca76db28496942da690d2306
+table event 2df392720ebd16e37439723e98111a87b3c9c70a4fa6b69086437f2e035adb29
+table event_value bca40244572e904d3910ed4bc874541a3c022748d96981b97ee7098e3d52a708
+stat divine_acts 269
+stat divine_bless 63
+stat divine_curse 174
+stat divine_champion 22
+stat divine_monster 4
 stat divine_mark 6
-stat divine_good 86
-stat divine_neutral 46
-stat divine_evil 101
-stat divine_creators 133
+stat divine_good 133
+stat divine_neutral 50
+stat divine_evil 86
+stat divine_creators 152
 stat divine_flares 7
-stat divine_dead 21615
-stat cults_founded 7
-stat cults_spread 188
+stat divine_dead 23944
+stat cults_founded 12
+stat cults_spread 221
 stat cults_adopted 6
-stat cults_suppressed 159
-stat cults_hidden 0
-stat cults_present 7
-stat cult_founders_prophets 1
-stat shrines_sacred 3
-stat shrines_profane 3
-stat temples 7
+stat cults_suppressed 193
+stat cults_hidden 1
+stat cults_present 8
+stat cult_founders_prophets 4
+stat shrines_sacred 4
+stat shrines_profane 2
+stat temples 13
 stat towers_taken_up 0
 stat towers_abandoned 4
-stat renewals_capped 13
+stat renewals_capped 4
 stat deep_stirred 0
 path bless
 path caster founder
@@ -710,9 +788,11 @@ path cult_spread
 path cult_suppressed
 path curse
 path defeat
+path ended suppressed
 path faith without temple
 path flare
 path founded
+path hidden
 path mark
 path mark at a settlement
 path monster
@@ -724,43 +804,104 @@ path renewal capped
 path ruler founder
 path sacred mark
 path temple lost
+path temple suppressed
 path tower_abandoned
 path valour
 path withering
 case pantheon-followups-13 13 0 pantheon-followups
 table god 15878d3e2d4c03b2bd8479bf332ab0912aa7734011593d5dee8836c38fa8d7e1
-table faction 5348e61ece904bbc414cf512e57a8d208ca8449cf94e79f5cfe2af7b476103d7
-table site 375e62b6003decf5790fdb03b0ad290dfb134cd68a5c4273cc7da3b64a1b75bb
-table figure e7eff4c32db0df4409788e173de2924a79343454d0539201d9a93c4d0c20e186
-table event a4e2cf6c885f5c074c58becb78fe93d422458ba8f544cd019331a36218e8a861
-table event_value 78848314f50310a4cd661dcf33991ad0778a519e6ea76575a6149eaca387ba57
-stat divine_acts 115
-stat divine_bless 34
-stat divine_curse 42
-stat divine_champion 20
-stat divine_monster 7
-stat divine_mark 12
+table faction 40746798d37a33628d4d2ca5380e370957cac199ea0e6d6741a94b5645798f18
+table site eac701f39f119c24d410a66d65f26e903ca7b34ed4444ca78eabd0ede364af28
+table figure d3e07181d9304b1cb59016903e649d098315b1b6e17c4dbcc3235c8648728d0e
+table event b4557dbc1c54f5092fc1ff5558ce8eaee526d01461481d4b1eb874dd1ece3541
+table event_value 3e1a5795284d3df929722b8f98742dedab1a3c3fc2affaf1a1fbe3351f8d3b29
+stat divine_acts 145
+stat divine_bless 58
+stat divine_curse 34
+stat divine_champion 28
+stat divine_monster 9
+stat divine_mark 16
 stat divine_good 30
-stat divine_neutral 37
-stat divine_evil 48
-stat divine_creators 34
+stat divine_neutral 62
+stat divine_evil 53
+stat divine_creators 28
 stat divine_flares 0
-stat divine_dead 3568
-stat cults_founded 16
-stat cults_spread 7
-stat cults_adopted 9
-stat cults_suppressed 4
-stat cults_hidden 1
-stat cults_present 7
-stat cult_founders_prophets 8
+stat divine_dead 982
+stat cults_founded 14
+stat cults_spread 12
+stat cults_adopted 10
+stat cults_suppressed 0
+stat cults_hidden 0
+stat cults_present 10
+stat cult_founders_prophets 7
 stat shrines_sacred 5
-stat shrines_profane 7
-stat temples 16
+stat shrines_profane 11
+stat temples 14
 stat towers_taken_up 0
-stat towers_abandoned 3
+stat towers_abandoned 5
 stat renewals_capped 0
-stat deep_stirred 2
+stat deep_stirred 0
 path bless
+path caster founder
+path champion
+path champion fought
+path champion founder
+path cult_adopted
+path cult_spread
+path curse
+path defeat
+path ended fell
+path faith without temple
+path founded
+path mark
+path mark at a settlement
+path monster
+path pestilence
+path plenty
+path profane mark
+path prophet founder
+path ruler founder
+path sacred mark
+path temple lost
+path tower_abandoned
+path valour
+path withering
+case pantheon-report-16 16 0 pantheon-report
+table god fd38998757d8003b4daa66cccc32a5bc2d25842cc7ef66f53b2d33b6dda6edcc
+table faction 960d43827a76f0fd09d979b8f49311af6d377878b0756fc1c0839f4c2238af7d
+table site 1ed005b8966fcab8e13e643ffa317df4ae6a193acd2bb1b63315c60da8cdf9bd
+table figure 09e3db7fefc4cf8cfbdb1588e52e842bcfb09b705176aa33c5151328a73b820f
+table event b15b3c8d9ab2892cd7bc18d6c091748d7effb0b0acdd9a94daf87ca251024824
+table event_value 02eea17e05217c2ece0c00dae1d6a2dc1f622be14be99395524eda983caf7d3e
+stat divine_acts 204
+stat divine_bless 86
+stat divine_curse 57
+stat divine_champion 33
+stat divine_monster 6
+stat divine_mark 22
+stat divine_good 41
+stat divine_neutral 79
+stat divine_evil 84
+stat divine_creators 45
+stat divine_flares 2
+stat divine_dead 2589
+stat cults_founded 15
+stat cults_spread 61
+stat cults_adopted 10
+stat cults_suppressed 6
+stat cults_hidden 1
+stat cults_present 11
+stat cult_founders_prophets 4
+stat shrines_sacred 9
+stat shrines_profane 13
+stat temples 18
+stat towers_taken_up 7
+stat towers_abandoned 6
+stat renewals_capped 0
+stat deep_stirred 3
+path bless
+path caster founder
+path certain act
 path champion
 path champion fought
 path champion founder
@@ -772,6 +913,7 @@ path defeat
 path ended fell
 path ended suppressed
 path faith without temple
+path flare
 path founded
 path hidden
 path mark
@@ -787,5 +929,369 @@ path stir
 path temple lost
 path temple suppressed
 path tower_abandoned
+path tower_taken_up
 path valour
 path withering
+case pantheon-small-0-512 0 512 pantheon-small
+table god 6d056d1ad33ea0f360780c9e3851008ca3b7aac3dd591c506540d7543089d160
+table faction 692bc14cb5b8758a1a9fbae7d281f263a93f07a67249da99c697a01d115e7987
+table site 2feca41e30dedd3db9086fbcaa7f8659ced9d740032500e9c59e77e8b0f79d89
+table figure 5f5b65e63a93f6da9dabe526ab67d027d2b79135f61058bd6e69a987298192d1
+table event fc58ce28450ba0c395eae6803c44b1c1750e4808bb6382e487c84884f2caa596
+table event_value 8fd6a8423b491045060eeffeac5087c7c7114d04729824da773d6ef8cf9fd14e
+stat divine_acts 202
+stat divine_bless 71
+stat divine_curse 84
+stat divine_champion 21
+stat divine_monster 9
+stat divine_mark 17
+stat divine_good 59
+stat divine_neutral 67
+stat divine_evil 76
+stat divine_creators 65
+stat divine_flares 0
+stat divine_dead 7169
+stat cults_founded 19
+stat cults_spread 60
+stat cults_adopted 6
+stat cults_suppressed 21
+stat cults_hidden 4
+stat cults_present 10
+stat cult_founders_prophets 3
+stat shrines_sacred 9
+stat shrines_profane 8
+stat temples 21
+stat towers_taken_up 0
+stat towers_abandoned 1
+stat renewals_capped 1
+stat deep_stirred 0
+case pantheon-small-1-512 1 512 pantheon-small
+table god 1de51e6c2ed49be242390b9e4683a3b4f73c4b41aa540786d60846a731db9ec1
+table faction 8a1c5510f6241b48dfe69dd1cb04cb69c59aabfb86ed4af5c4b29d72f1da65dd
+table site 0d9ae3585a04ace12f011c2842f14788dd5453f4fb48e62edc6e78e1a0c4f28f
+table figure d68c3d81e3d6374bebec3cbb4fae85b296d85e3f308083d0ec785b22860a8b1a
+table event c09162ed9b8f49a0eb983a33ac3882525ab833f5dae3a749471bafe2b44f3893
+table event_value 6b77ab332b0773bc349d819dca2516763c6cd6a14dc0f984a1dd016e3253905c
+stat divine_acts 283
+stat divine_bless 107
+stat divine_curse 106
+stat divine_champion 29
+stat divine_monster 11
+stat divine_mark 30
+stat divine_good 78
+stat divine_neutral 82
+stat divine_evil 123
+stat divine_creators 97
+stat divine_flares 0
+stat divine_dead 15620
+stat cults_founded 18
+stat cults_spread 50
+stat cults_adopted 5
+stat cults_suppressed 22
+stat cults_hidden 3
+stat cults_present 11
+stat cult_founders_prophets 7
+stat shrines_sacred 11
+stat shrines_profane 19
+stat temples 18
+stat towers_taken_up 0
+stat towers_abandoned 2
+stat renewals_capped 15
+stat deep_stirred 0
+case pantheon-small-2-512 2 512 pantheon-small
+table god 1faad83f5bf2c2961ca087c61da3d7186d1603bd081b37cb5522d578ba21cdd4
+table faction a1506602572f2cb09d36d737f685920ac19d4cbb092811b1da94734ec58b5d32
+table site 73023c961ec3b8529d43cf5e99de55414b00370c4cf987053f38e1dd776548b0
+table figure 1e05246a654d66ce158c703ffa8295e80e4bcec36ee59c54dccbcd3cd157adbc
+table event 0c98c11b10854857e6b059b15dcd3e6eb45ce582a839c37c5dd8e92e7a4879c8
+table event_value 47ccf33b28a3c7c881a340770362b454c17d6f989c4116f77153ff946791cf60
+stat divine_acts 135
+stat divine_bless 51
+stat divine_curse 49
+stat divine_champion 12
+stat divine_monster 8
+stat divine_mark 15
+stat divine_good 32
+stat divine_neutral 47
+stat divine_evil 56
+stat divine_creators 46
+stat divine_flares 1
+stat divine_dead 4304
+stat cults_founded 17
+stat cults_spread 7
+stat cults_adopted 8
+stat cults_suppressed 3
+stat cults_hidden 1
+stat cults_present 14
+stat cult_founders_prophets 11
+stat shrines_sacred 6
+stat shrines_profane 9
+stat temples 18
+stat towers_taken_up 0
+stat towers_abandoned 1
+stat renewals_capped 0
+stat deep_stirred 0
+case pantheon-small-3-512 3 512 pantheon-small
+table god 7380ae73da416820e09250208ce9c57cfb51e49c41bd4f82e649f73e86f660d4
+table faction 6d025eeebfa9ee74169b022bc1f34ab6cdb548b4d180ea3bd3fdb71b67f5b91d
+table site 624c9aec9c0b8ea1e42345f3ec281b4f3b46cf1c080b675a768cedc0de741772
+table figure ba1adb9ea361d8fa7dca17a85a99155e9e5033fdc3f72f67f3ae1a6e400551ca
+table event 419486c0b63deb9398467f98123f085c09ef0fb7fed8163b1747d79cc4c8aa96
+table event_value b11d734180311343f925e636ccdfbee454a96978203b17504c92da3ee2b71b90
+stat divine_acts 467
+stat divine_bless 97
+stat divine_curse 299
+stat divine_champion 35
+stat divine_monster 12
+stat divine_mark 24
+stat divine_good 114
+stat divine_neutral 83
+stat divine_evil 270
+stat divine_creators 197
+stat divine_flares 4
+stat divine_dead 11897
+stat cults_founded 18
+stat cults_spread 301
+stat cults_adopted 7
+stat cults_suppressed 245
+stat cults_hidden 3
+stat cults_present 11
+stat cult_founders_prophets 10
+stat shrines_sacred 5
+stat shrines_profane 19
+stat temples 21
+stat towers_taken_up 0
+stat towers_abandoned 5
+stat renewals_capped 31
+stat deep_stirred 0
+case pantheon-small-4-512 4 512 pantheon-small
+table god 3b48a8352207c67e7bf1dd2297eafb83e1be0cc2e1734d28f7e91634ee7256a9
+table faction 04bf11c50e80a683c58a05d172d7eb5568c2bedacf9f85d3e87cb6807355edee
+table site 755944c1601d6dadb631bc65136879bbb69431dd99e81f1a1a032fc2c33e432b
+table figure b81fd68806408c5d1d8bfd1d97baa5e28db81b200b8872e5a4b74ea518712dbf
+table event 90669d931134ce123316ee7ef28a31632623fdf70c4a8d86b995b7be5f7e0acc
+table event_value 91695d07392f22c845de9b340cafb3b3881cb0b178d75f23174ce0240418afa2
+stat divine_acts 480
+stat divine_bless 108
+stat divine_curse 304
+stat divine_champion 30
+stat divine_monster 10
+stat divine_mark 28
+stat divine_good 199
+stat divine_neutral 77
+stat divine_evil 204
+stat divine_creators 122
+stat divine_flares 5
+stat divine_dead 13648
+stat cults_founded 15
+stat cults_spread 387
+stat cults_adopted 9
+stat cults_suppressed 282
+stat cults_hidden 2
+stat cults_present 12
+stat cult_founders_prophets 6
+stat shrines_sacred 10
+stat shrines_profane 18
+stat temples 18
+stat towers_taken_up 0
+stat towers_abandoned 4
+stat renewals_capped 17
+stat deep_stirred 0
+case pantheon-small-5-512 5 512 pantheon-small
+table god c0ce893a3ab569077f965209ab651ecff981d0b361ff8bd9b1afb13a17cc61fa
+table faction a7274402131a4533b024da69edf867daf287d99bbbf4b69eb95ca39dc780b6cf
+table site cdfabc774cbbe2bb4f60f375fd0c77d73916190febc0ccd6c22ce604c3c70f79
+table figure babc5c2aa632e4485ddc75ae1ce5704d72609cc2306dbda8c550bc38e0e4988c
+table event 0da6c628b88d4ec4a1330361e47ce3cf9996c7154f6a37dff7ef9d68a89d7b44
+table event_value b601c9a3dd71f315db15771ba167898465f95944669144569817d53ebb40db74
+stat divine_acts 328
+stat divine_bless 118
+stat divine_curse 143
+stat divine_champion 25
+stat divine_monster 16
+stat divine_mark 26
+stat divine_good 106
+stat divine_neutral 112
+stat divine_evil 110
+stat divine_creators 118
+stat divine_flares 2
+stat divine_dead 20360
+stat cults_founded 19
+stat cults_spread 115
+stat cults_adopted 7
+stat cults_suppressed 74
+stat cults_hidden 3
+stat cults_present 12
+stat cult_founders_prophets 9
+stat shrines_sacred 6
+stat shrines_profane 20
+stat temples 21
+stat towers_taken_up 0
+stat towers_abandoned 1
+stat renewals_capped 12
+stat deep_stirred 0
+case pantheon-small-6-512 6 512 pantheon-small
+table god 02ba764b0e045aed61003b3834555c1ff8e8b052ccc6b910642fab5484abd93f
+table faction e65fcd0a3e47cdf0f82f42b2d212d9be41144e00e2d098941ca89fc76e661558
+table site ab09d65d8bd7ebfdedafe9d84f72f62bf35d09585aad138b055c1fd9367b6c0d
+table figure 93a8515c290d98cf19094118f6e01ea62e9fddea1002e5fc4b9744aa43bae39b
+table event 059c41c033617a72715b5e213de898a4a9ba56e7c6f6729bfb493620c75ee577
+table event_value 1dd08b21034c21474cd7987710fbd0ec8ce07f6699aac2032ab231272d720125
+stat divine_acts 378
+stat divine_bless 71
+stat divine_curse 251
+stat divine_champion 21
+stat divine_monster 16
+stat divine_mark 19
+stat divine_good 68
+stat divine_neutral 56
+stat divine_evil 254
+stat divine_creators 118
+stat divine_flares 3
+stat divine_dead 19152
+stat cults_founded 26
+stat cults_spread 247
+stat cults_adopted 5
+stat cults_suppressed 213
+stat cults_hidden 1
+stat cults_present 13
+stat cult_founders_prophets 12
+stat shrines_sacred 8
+stat shrines_profane 11
+stat temples 28
+stat towers_taken_up 0
+stat towers_abandoned 2
+stat renewals_capped 15
+stat deep_stirred 0
+case pantheon-small-7-512 7 512 pantheon-small
+table god 4c486bef8aed24201d38810c09c01363dda5a44651c8d7aa538882c529cde634
+table faction 3a0ee30b7cc7672b0459a7be41360b7bc8a0bfb10f4a799dce0e687f0ebf6164
+table site 2b610210c5b97f63b2dc34bd5ad5252f0759c4fa512e60e4d249cfa1dd5c5863
+table figure c88ec2e5d16d4ec8a5ca69b8417989e1796bb0436be54cabf6ad283857787a89
+table event 7626da19a02f8f6164b2b44ab275cb4ea37bf986d81efafe9bfcc51a28ccfbe5
+table event_value 9680b70af8a008010be00006080cadd873acb580cfbb7d6849a85de342a1f2db
+stat divine_acts 745
+stat divine_bless 152
+stat divine_curse 494
+stat divine_champion 44
+stat divine_monster 23
+stat divine_mark 32
+stat divine_good 399
+stat divine_neutral 119
+stat divine_evil 227
+stat divine_creators 200
+stat divine_flares 22
+stat divine_dead 25287
+stat cults_founded 27
+stat cults_spread 723
+stat cults_adopted 8
+stat cults_suppressed 653
+stat cults_hidden 3
+stat cults_present 11
+stat cult_founders_prophets 10
+stat shrines_sacred 11
+stat shrines_profane 21
+stat temples 28
+stat towers_taken_up 0
+stat towers_abandoned 8
+stat renewals_capped 7
+stat deep_stirred 0
+case pantheon-small-8-512 8 512 pantheon-small
+table god 8356d596f68dc418fb83bbaa664468bae04fd3a37b6bd259331b2dd9606e26cb
+table faction cffdd56e7500f2a70f6999ad630ded34ae5ec4b5487010cf5bfc74bb78ae9349
+table site 44a1ed7e3e6c93f22acdb5defac6df3021ed6dac86552788d8ee59edfc765707
+table figure b54ca70fe4c49b3e2f812f8c658eef092d0ed95fe87e4dd8821aafcbc64efe2b
+table event b6216af4be4cfe3dd9961eb97453b14df348b5e77db648793eae3ca27a9e8779
+table event_value bec1c1be2a6db7ffea8aed346b7cd54d37323dc0bc30cec328e569380ac36380
+stat divine_acts 356
+stat divine_bless 145
+stat divine_curse 123
+stat divine_champion 53
+stat divine_monster 10
+stat divine_mark 25
+stat divine_good 85
+stat divine_neutral 122
+stat divine_evil 149
+stat divine_creators 90
+stat divine_flares 0
+stat divine_dead 11912
+stat cults_founded 25
+stat cults_spread 29
+stat cults_adopted 10
+stat cults_suppressed 12
+stat cults_hidden 7
+stat cults_present 7
+stat cult_founders_prophets 10
+stat shrines_sacred 6
+stat shrines_profane 19
+stat temples 27
+stat towers_taken_up 0
+stat towers_abandoned 4
+stat renewals_capped 0
+stat deep_stirred 0
+case pantheon-small-9-512 9 512 pantheon-small
+table god 93b85f19693c2470fd1e235428e831770ba7973c5e76ac086f11807f718db4cc
+table faction 3a60e96ab495d530ac0e4213b605059a55c5396fef7be8700df8a2c7b042c2e5
+table site 2b6478093ad2d412e87f2a2a288164ebe9040a9cf4049826033faa9b6c2bce9d
+table figure e1b3b73eb087672fff7e9e4039083a8a5b07c720576d22e36ea723f89ed2e422
+table event dbc0171364fc98c8acef67f8219922d45a9da920886f2c579c92f2a377ca2c4a
+table event_value 0caa1f69e01bd21b8c66e3452267a39fc5bccd817d530a7ae065dd5a939b7f39
+stat divine_acts 554
+stat divine_bless 155
+stat divine_curse 310
+stat divine_champion 45
+stat divine_monster 12
+stat divine_mark 32
+stat divine_good 178
+stat divine_neutral 145
+stat divine_evil 231
+stat divine_creators 144
+stat divine_flares 6
+stat divine_dead 15072
+stat cults_founded 15
+stat cults_spread 425
+stat cults_adopted 9
+stat cults_suppressed 301
+stat cults_hidden 0
+stat cults_present 14
+stat cult_founders_prophets 2
+stat shrines_sacred 12
+stat shrines_profane 20
+stat temples 18
+stat towers_taken_up 0
+stat towers_abandoned 3
+stat renewals_capped 0
+stat deep_stirred 0
+case shipped-42-1024 42 1024 shipped
+table god e8b017e33cefe49e72f59aaa747d8a43a592a504633f8327254bcac6095b337e
+table faction 093ccf98d428760b9df48d468e931c98ae8baec48b74cef9b8e3afc43da030e4
+table site 508f2f295f539eacb308dae38abcf982d53d1591bc3f348faf54c6d657dc2eba
+table figure 91fab6b999ed3fb19c029de124524855cb9531161aedc3ae5d8ae286cb3dc5e7
+table event b0fcb2d879c86d28504898e474a28262b1aadd5d99fe960b0fc5ffd9e2e8b709
+table event_value 01e3a95b9c691027a70148cb4c3b1ac5042d84f35a22dd925b3d9dd3d8e37225
+stat divine_acts 12
+stat divine_bless 5
+stat divine_curse 3
+stat divine_champion 1
+stat divine_monster 1
+stat divine_mark 2
+stat divine_good 5
+stat divine_neutral 5
+stat divine_evil 2
+stat divine_creators 3
+stat divine_flares 2
+stat divine_dead 1220
+stat cults_founded 4
+stat cults_spread 17
+stat cults_adopted 4
+stat cults_suppressed 0
+stat cults_hidden 0
+stat cults_present 4
+stat cult_founders_prophets 3
+stat shrines_sacred 1
+stat shrines_profane 1
+stat temples 7
+stat towers_taken_up 1
+stat towers_abandoned 7
+stat renewals_capped 1
+stat deep_stirred 0

@@ -91,17 +91,24 @@ INPUTS = tl.INPUTS_P5_06
 GENERATOR_VERSION = "0.28.0"
 MINE_GLYPH = 19   # 16 + site kind 3
 TOWER_GLYPH = 20  # 16 + site kind 4 (P5-06 11.4)
+SHRINE_GLYPH, TEMPLE_GLYPH, SANCTUM_GLYPH = 21, 22, 23   # 16 + site kinds 5 to 7 (P5-08 11.1)
+SHRINE_FILL, TEMPLE_FILL, SANCTUM_FILL = (215, 180, 40), (225, 215, 190), (120, 20, 40)
 TOWER_FILL = (120, 60, 180)   # MARKER_TOWER
 OLD_RUIN_YEARS = 1500   # P5-06 25.1 (e)
 
 
 def v027():
-    return GENERATOR_VERSION in ("0.27.0", "0.28.0", "0.29.0")
+    return GENERATOR_VERSION in ("0.27.0", "0.28.0", "0.29.0", "0.30.0")
+
+
+def v030():
+    """P5-08 11.1: shrines (kind 5), temples (6) and sanctums (7) are marker entries (the options are all on)."""
+    return GENERATOR_VERSION == "0.30.0"
 
 
 def site_kinds():
     """The site kinds that are marker entries: none before 0.26.0, mines at 0.26.0, mines and towers at 0.27.0."""
-    return (3, 4) if v027() else (3,) if GENERATOR_VERSION == "0.26.0" else ()
+    return (3, 4, 5, 6, 7) if v030() else (3, 4) if v027() else (3,) if GENERATOR_VERSION == "0.26.0" else ()
 # Glyph and colour rules: "p4-05" (default) is P4-05 r1 12.1 F3 (ruin radius 4, a thick X; faded radius 3 with a
 # halo around its fill) and F5 (plague ring (0, 190, 120)); "p4-04" is P4-04 r2 5.3 and 3.4 as first recorded
 # (`--rules p4-04 golden -` reproduces the 0.23.0 file of P5-02 byte for byte).
@@ -142,8 +149,11 @@ def use_version(v):
     elif v == "0.29.0":   # P5-07 11.1 (no new glyph; hold_lost a sack symbol)
         GENERATOR_VERSION = "0.29.0"
         prr.use_version("0.29.0")
+    elif v == "0.30.0":   # P5-08 11.1: glyphs 21 to 23 (the grids are the engine's, reading K8), kinds 100 to 110 plain
+        GENERATOR_VERSION = "0.30.0"
+        prr.use_version("0.30.0")
     elif v not in ("0.27.0", "0.28.0"):
-        raise SystemExit("--version: 0.22.0 to 0.29.0")
+        raise SystemExit("--version: 0.22.0 to 0.30.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """
@@ -194,6 +204,7 @@ K5  P5-06 11.4 "the glyph dump gains `glyph tower 3` ... at its end, after P5-04
 K6  P5-06 25.1 (e): an old ruin is an entry with status 3 at Y, R(s) != -1 (3.3) and Y - R(s) >= 1500; its type is
     `faded` (the dump's type word), its status, ruined year and ruin event stay a ruin's; the option `faded` and
     draw position (3) apply as to a status 4 entry. Invariant 3 accordingly.
+K8  P5-08 11.1: the grids of glyphs 21 to 23 are read from the engine (cross, house, diamond: the spec gives no cells).
 K7  P5-06 25.1 (e) "the year list gains the years R(s) + 1500 <= E of every ruin": R(s) of every settlement ever
     ruined (M11), the fixtures' faded rows included.
 """
@@ -491,6 +502,39 @@ def glyph(base, declining=False, capital=False):
         rows = MINE_ROWS
         cells = [{"H": 1, "F": 2, ".": 0}[ch] for row in rows for ch in row]
         return 3, cells
+    if base in (SHRINE_GLYPH, TEMPLE_GLYPH, SANCTUM_GLYPH) and v030() and not declining and not capital:
+        # P5-08 11.1, reading K8 (the grids are the engine's: the spec names a cross, a house and a diamond but gives
+        # no cells): radius 3; class 2 fill, 3 ink.
+        radius, n = 3, 7
+        cells = [0] * (n * n)
+
+        def put(dx, dy, c):
+            cells[(dy + radius) * n + dx + radius] = c
+        if base == SHRINE_GLYPH:   # fill dx = 0, -2 <= dy <= 2 and (+-1, -1); the halo of fill
+            for dy in range(-2, 3):
+                put(0, dy, 2)
+            put(-1, -1, 2)
+            put(1, -1, 2)
+            return radius, halo(radius, cells, 2)
+        if base == TEMPLE_GLYPH:   # ink (0, -2), (+-1, -1), (+-2, 0..2); fill (0, -1), |dx| <= 1 and 0 <= dy <= 2
+            put(0, -2, 3)
+            put(-1, -1, 3)
+            put(1, -1, 3)
+            put(0, -1, 2)
+            for dy in range(0, 3):
+                put(-2, dy, 3)
+                put(2, dy, 3)
+                for dx in range(-1, 2):
+                    put(dx, dy, 2)
+            return radius, halo(radius, cells)
+        for dy in range(-2, 3):   # the sanctum: ink |dx| + |dy| = 2, fill below
+            for dx in range(-2, 3):
+                d = abs(dx) + abs(dy)
+                if d == 2:
+                    put(dx, dy, 3)
+                elif d < 2:
+                    put(dx, dy, 2)
+        return radius, halo(radius, cells)
     if base == TOWER_GLYPH and v027():   # P5-06 11.4: fill dx = 0, -1 <= dy <= 1; ink (|dx| = 1, -1 <= dy <= 2) or
         # (dx = 0, dy = -2 or 2); then the halo rule; radius 3
         radius, n = 3, 7
@@ -531,13 +575,20 @@ def site_offset(x):
     settlement) (-7, -7), a tower in the wild (0, 0)."""
     if x["kind"] == 4:
         return (-SITE_OFFSET, -SITE_OFFSET) if x["settlement"] else (0, 0)
+    if x["kind"] == 5:   # P5-08 11.1: a shrine at a settlement one cell to its lower right, in the wild at its cell
+        return (SITE_OFFSET, SITE_OFFSET) if x["settlement"] else (0, 0)
+    if x["kind"] == 6:
+        return (-SITE_OFFSET, SITE_OFFSET)
+    if x["kind"] == 7:
+        return (0, 0)
     return (SITE_OFFSET, -SITE_OFFSET)
 
 
 def glyph_name(base, declining=False, capital=False):
     if base in KIND_WORD:
         return KIND_WORD[base] + (" declining" if declining else "") + (" capital" if capital else "")
-    return {8: "ruin", 9: "faded", 10: "pass", 11: "ring", MINE_GLYPH: "mine", TOWER_GLYPH: "tower"}[base]
+    return {8: "ruin", 9: "faded", 10: "pass", 11: "ring", MINE_GLYPH: "mine", TOWER_GLYPH: "tower",
+            SHRINE_GLYPH: "shrine", TEMPLE_GLYPH: "temple", SANCTUM_GLYPH: "sanctum"}[base]
 
 
 def glyph_keys():
@@ -597,8 +648,10 @@ def draw_list(m, colours):
     # P5-06 11.4: the towers among them (ascending site id), each at its offset
     for x in sorted(m.get("sites", ()), key=lambda x: x["site"]):
         dx, dy = site_offset(x)
-        key, col = ((TOWER_GLYPH, False, False), TOWER_FILL) if x["kind"] == 4 else ((MINE_GLYPH, False, False),
-                                                                                     MINE_FILL)
+        key, col = {4: ((TOWER_GLYPH, False, False), TOWER_FILL), 5: ((SHRINE_GLYPH, False, False), SHRINE_FILL),
+                    6: ((TEMPLE_GLYPH, False, False), TEMPLE_FILL),
+                    7: ((SANCTUM_GLYPH, False, False), SANCTUM_FILL)}.get(x["kind"], ((MINE_GLYPH, False, False),
+                                                                                       MINE_FILL))
         out.append((x["x"] + dx, x["y"] + dy, key, col))
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and not s["capital"]]
     out += [(s["x"], s["y"], glyph_of(s), fill(s)) for s in ss if s["type"] == "standing" and s["capital"]]

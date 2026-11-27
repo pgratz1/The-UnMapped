@@ -162,12 +162,26 @@ GROUP_KEYS_029 = dict(GROUP_KEYS_027)
 GROUP_KEYS_029.update({1: GROUP_KEYS_027[1] + ("delving_deepened", "warren_delved"),
                        5: GROUP_KEYS_027[5] + ("deep_woken", "deep_sealed", "hold_lost", "warren_sealed"),
                        7: GROUP_KEYS_027[7] + ("ally_aided_hold",)})   # r2: 97 alliances, 98 settlements, 99 monsters
+# P5-08 11.1 (generator 0.30.0): kinds 100 to 108 in the new tenth group `gods` = 9; 109 and 110 in `figures`;
+# ALL_GROUPS 0x3FF
+GROUP_KEYS_030 = dict(GROUP_KEYS_029)
+GROUP_KEYS_030.update({8: GROUP_KEYS_029[8] + ("tower_taken_up", "tower_abandoned"),
+                       9: ("divine_bless", "divine_curse", "divine_champion", "divine_monster", "divine_mark",
+                           "cult_founded", "cult_spread", "cult_adopted", "cult_suppressed")})
 GROUP_VERSION = "0.27.0"
 
 
 def use_groups(v):
     global GROUP_KEYS, GROUP_OF, ALL_GROUPS, GROUP_VERSION, GROUP_WORDS
     GROUP_VERSION = v
+    if v == "0.30.0":
+        GROUP_KEYS = GROUP_KEYS_030
+        GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters", "peoples", "alliances",
+                       "figures", "gods")
+        GROUP_OF = {k: g for g, ks in GROUP_KEYS.items() for k in ks}
+        ALL_GROUPS = 0x3FF
+        assert sum(len(x) for x in GROUP_KEYS.values()) == 110 and len(GROUP_OF) == 110
+        return
     if v == "0.29.0":
         GROUP_KEYS = GROUP_KEYS_029
         GROUP_WORDS = ("realms", "settlements", "war", "calamity", "other", "monsters", "peoples", "alliances",
@@ -1232,8 +1246,12 @@ def main(argv):
             prr.use_version("0.29.0")
             use_groups("0.29.0")
             GENERATOR_VERSION = "0.29.0"
+        elif v == "0.30.0":   # P5-08 11.1: the group `gods`
+            prr.use_version("0.30.0")
+            use_groups("0.30.0")
+            GENERATOR_VERSION = "0.30.0"
         elif v not in ("0.27.0", "0.28.0"):
-            raise SystemExit("--version: 0.23.0 to 0.29.0")
+            raise SystemExit("--version: 0.23.0 to 0.30.0")
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if rest[1] == "groups":

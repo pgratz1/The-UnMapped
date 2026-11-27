@@ -200,10 +200,10 @@ TEST_CASE("P4-05 10.2 item 2: event_group for every key of 4.4, every compiled k
             ++n;
         }
     }
-    CHECK(n == 99U);   // P5-04 8.1; P5-06 11.3: fourteen more; P5-07 8.1: seven more
+    CHECK(n == 110U);   // P5-04 8.1; P5-06 11.3: fourteen more; P5-07 8.1: seven more
     // every compiled kind has a row: none falls to other (10.2 item 2), P5-02's kinds 44 to 55 in monsters
     const auto& kinds = worldgen::history::compiled_event_catalogue().kinds;
-    REQUIRE(kinds.size() == 99U);
+    REQUIRE(kinds.size() == 110U);
     for (const auto& k : kinds) {
         CAPTURE(k.key);
         CHECK(brapi::event_group(k.key) != EventGroup::other);

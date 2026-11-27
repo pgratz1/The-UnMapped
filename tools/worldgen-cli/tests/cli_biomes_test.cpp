@@ -311,7 +311,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     REQUIRE(r.exit_code == EXIT_OK);
     const std::string& t = r.out;
     CHECK(contains(t, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 12\nbook = 0\ncivilization = 0\nclimate = 1\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 11\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = "));
-    CHECK(contains(t, "\nschema_version = 13\n"));
+    CHECK(contains(t, "\nschema_version = 14\n"));
     CHECK(contains(t, "\nwind_toward = SE\ntemp_offset_c = 2.0\ntemperature_c = "));
     // P1-04 9's example line for 512 seed 0 (ten keys in code order).
     CHECK(contains(t, "\nbiome_share = temperate_forest:0.5810 grassland:0.1447 marsh:0.0068 highland_moor:0.0882 "
@@ -362,7 +362,7 @@ TEST_CASE("cli P1-04 3: --until none, --until hydrology and the test pattern hav
         CHECK(contains(r.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\n"));
         CHECK_FALSE(contains(r.out, "wind_toward"));
         CHECK_FALSE(contains(r.out, "temp_offset_c"));
-        CHECK(contains(r.out, "\nschema_version = 13\n"));
+        CHECK(contains(r.out, "\nschema_version = 14\n"));
     }
 }
 
@@ -421,7 +421,7 @@ TEST_CASE("cli P1-03 3, P0-02 amendment 16: a schema-3 world is refused by repor
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code != EXIT_OK);
         CHECK(r.out.empty());
-        CHECK(contains(r.err, "world schema version 3, this build reads 13"));
+        CHECK(contains(r.err, "world schema version 3, this build reads 14"));
     }
     CHECK_FALSE(fs::exists(w.sb.file("schema3.png")));
     // Plain `hash` hashes the file's bytes without opening it as a world

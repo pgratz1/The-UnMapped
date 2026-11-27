@@ -1147,7 +1147,7 @@ def fixture_ddl():
 def fixture_meta(meta):
     """READINGS F5: a 0.27.0 fixture is the 0.26.0 one with meta generator_version 0.27.0 and schema_version 12."""
     if r7():
-        meta = dict(meta, generator_version=prr.GENERATOR_VERSION, schema_version="13" if prr.V10 else "12")
+        meta = dict(meta, generator_version=prr.GENERATOR_VERSION, schema_version="14" if prr.V11 else "13" if prr.V10 else "12")
     return meta
 
 

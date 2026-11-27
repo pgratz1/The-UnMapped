@@ -94,8 +94,8 @@ void check_corruptions(const std::vector<Corruption>& cases) {
 TEST_SUITE("history-report") {
 
 TEST_CASE("P3-07 r21 26.1: H12 is v3 at both levels") {
-    CHECK(hrtest::lines_of(text(HistoryLevel::summary)).front() == "# worldgen history v10");   // P5-02 12.1; P5-03a 9.1
-    CHECK(hrtest::lines_of(text(HistoryLevel::full)).front() == "# worldgen history v10");
+    CHECK(hrtest::lines_of(text(HistoryLevel::summary)).front() == "# worldgen history v11");   // P5-02 12.1; P5-03a 9.1
+    CHECK(hrtest::lines_of(text(HistoryLevel::full)).front() == "# worldgen history v11");
 }
 
 TEST_CASE("P3-07 r21 26.2, 26.8 item 2: renamed regions, a region renamed twice and one once") {

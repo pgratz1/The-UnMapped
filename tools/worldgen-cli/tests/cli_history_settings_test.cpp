@@ -275,7 +275,7 @@ TEST_CASE("cli P3-01 6.2: --divine-script is always refused") {
     Sandbox sb;
     const fs::path script = sb.file("script.txt");
     write_text(script, "nothing\n");
-    const std::string message = "--divine-script is not supported yet: divine scripts need phase P5";
+    const std::string message = "--divine-script: divine scripts are not supported yet";
     usage(sb, {"--divine-script", u8(script)}, message);
     usage(sb, {"--divine-script", u8(sb.file("missing.txt"))}, message);
     usage(sb, {"--divine-script", ""}, message);
@@ -406,7 +406,7 @@ TEST_CASE("cli P3-01 6.2, 8.2 test 7: settings-file errors are input errors at t
         {"history_span = 1999", "16", "'world.history_span' is 1999; expected an integer from 2000 to 12000"},
         {"history_span = 12001", "16", "'world.history_span' is 12001; expected an integer from 2000 to 12000"},
         {"civs_per_race = 5", "17", "'world.civs_per_race' is 5; expected \"auto\" or an integer from 1 to 4"},
-        {"divine_script = \"x.lua\"", "17", "'world.divine_script' is not supported yet: divine scripts need phase P5"},
+        {"divine_script = \"x.lua\"", "17", "'world.divine_script': divine scripts are not supported yet"},
         {"races = [\"elf\", \"elf\"]", "17", "'world.races[1]' is \"elf\", which is already listed"},
         {"history = 6000", "11",
          "unknown key 'world.history'; expected seed, seed_phrase, map_size, history_span, history_detail, civs_per_race, "
@@ -547,7 +547,7 @@ TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.22.0 
     Sandbox sb;
     const ProcessResult v = sb.cli({"--version"});
     REQUIRE(v.exit_code == EXIT_OK);
-    CHECK(v.out == std::string("worldgen-cli 0.29.0 schema 13 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.30.0 schema 14 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 }
 
 TEST_CASE("cli P3-01 7: the shipped data the CLI reads by default has the golden content hash") {
