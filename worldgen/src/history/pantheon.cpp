@@ -212,9 +212,11 @@ void PantheonSubsystem::prepare(const StepContext& ctx) {
         GodState g;
         g.id = row.id;
         g.camp = row.camp;
-        g.race = row.race;
         g.name = row.name;
-        if (row.race != 0) {
+        // 9: rows 1 ... n (n = race rows) are the creators, race = id.
+        const bool creator = row.id <= static_cast<std::int64_t>(in.races.size());
+        g.race = creator ? (row.race != 0 ? row.race : row.id) : 0;
+        if (creator) {
             g.acts = &tuning_.creator;
         } else {
             if (pantheon_index >= static_cast<std::int64_t>(defs_.size())) {

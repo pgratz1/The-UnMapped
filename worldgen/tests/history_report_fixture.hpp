@@ -207,7 +207,7 @@ inline Fixture load_fixture(const std::string& name) {
         fx.cultures.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), i64(*r->get(3))});
     }
     for (const toml::array* r : detail::rows(doc, "god")) {
-        fx.gods.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2))});
+        fx.gods.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), 1, std::string(), i64(*r->get(0))});
     }
     for (const toml::array* r : detail::rows(doc, "age")) {
         fx.ages.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), str(*r->get(4))});

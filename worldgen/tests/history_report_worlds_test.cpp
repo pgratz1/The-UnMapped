@@ -262,7 +262,7 @@ hrtest::Fixture large_fixture() {
     }
     fx.race_rows = {{1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1}};
     fx.cultures = {{1, "human", "Human", 1}};
-    fx.gods = {{1, "Wealstuld", 1}};
+    fx.gods = {{1, "Wealstuld", 1, 1, "the Maker of Humans", 1}};
     fx.ages = {{1, 1, 0, 5999, "The Age of Humans"}};
     fx.phases = {{1, 1, 1, 0, 149, 1}, {2, 1, 2, 150, 5899, 0}, {3, 1, 4, 5900, 5999, 0}};
     fx.kinds = {{1, "awakening", 0, 1, 0, 100, "{creator} awakened the {race:plural} in {@region}."},

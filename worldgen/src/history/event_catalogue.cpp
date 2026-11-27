@@ -2600,7 +2600,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             return at + "ending " + int_text(r.ending) + " is not 0, 4, 7 or 8 for a temple";
         }
         if ((r.kind <= 2) && r.ending > 6) {
-            return at + "ending " + int_text(r.ending) + " outside 0 to 6 for a lair or outpost";
+            return at + "ending " + int_text(r.ending) + " outside 0 to 6";  // the message of P5-02 11.4
         }
     }
     // monster.

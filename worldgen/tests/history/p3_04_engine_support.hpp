@@ -678,7 +678,7 @@ inline eng::HistoryInputs inputs_for(const std::vector<std::int64_t>& starts, st
         in.cultures.push_back(db::CultureRow{r.id, r.key, r.name, r.race});
     }
     for (const auto& r : c.gods) {
-        in.gods.push_back(db::GodRow{r.id, r.name, r.camp});
+        in.gods.push_back(db::GodRow{r.id, r.name, r.camp, 1, std::string(), r.id});
     }
     for (std::size_t i = 0; i < c.ages.size(); ++i) {
         const std::int64_t end = i + 1 < starts.size() ? starts[i + 1] - 1 : span - 1;
