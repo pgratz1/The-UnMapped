@@ -156,6 +156,7 @@ public:
     void write_settlement_race(const db::SettlementRaceRow& row);
     void write_figure(const db::FigureRow& row);  // schema 12 (P5-06)
     void write_book(const db::BookRow& row);
+    void write_faction(const db::FactionRow& row);  // schema 14 (P5-08)
 
 private:
     friend class detail::Pipeline;

@@ -45,6 +45,7 @@ struct HistoryKeys {
     // schema 12 (P5-06)
     std::int64_t figure = 0;
     std::int64_t book = 0;
+    std::int64_t faction = 0;  // schema 14 (P5-08)
 };
 
 struct WriterState {

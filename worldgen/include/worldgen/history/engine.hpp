@@ -385,6 +385,8 @@ struct HistoryResult {
     // history stage, empty from run_engine.
     std::vector<db::FigureRow> figures;
     std::vector<db::BookRow> books;
+    // P5-08 9 (schema 14): the pantheon subsystem's cults.
+    std::vector<db::FactionRow> factions;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

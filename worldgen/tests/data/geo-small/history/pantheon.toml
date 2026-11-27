@@ -1,0 +1,57 @@
+# P5-08 4.2 (generator 0.30.0): the pantheon. Regard from deeds, the gods'
+# acts (bless, curse, champion, monster, mark), their effects and the cults.
+[history.pantheon]
+activity_permille = { distant = 300, normal = 1000, meddling = 2500 }
+regard_max = 400
+regard_fade_per_century = 20
+regard_memory_years = 300
+contributions_max = 8
+act_threshold = 100
+act_permille = 150
+god_rest_years = 30
+pair_rest_years = 100
+flare_regard = 200
+flare_permille = 100
+bless_years = 50
+curse_years = 50
+plenty_growth_permille = 300
+withering_growth_permille = 500
+valour_permille = 50
+defeat_permille = 60
+pestilence_toll_permille = 120
+send_hops = 2
+sacred_growth_permille = 200
+profane_years = 300
+champion_epithet = "Chosen of {god}"
+cult_found_permille = 250
+cult_fear_permille = 500
+cult_spread_permille = 20
+affinity_permille = { same = 1000, near = 500, opposed = 100 }
+adopt_regard = 50
+adopt_permille = 15
+suppress_permille = 10
+temper_adopt_permille = { steady = 1000, warlike = 500, peaceable = 1500, grasping = 700, just = 1000 }
+temper_suppress_permille = { steady = 1000, warlike = 1500, peaceable = 500, grasping = 1000, just = 1300 }
+faith_points = 60
+rival_faith_points = 40
+suppress_points = 120
+hide_permille = 400
+sanctum_hops = 3
+
+[history.pantheon.creator]
+favour = { bless = 500, champion = 300, mark = 200 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "plenty"
+curse = "pestilence"
+monsters = []
+deeds = [
+    { kind = "sacked", role = "attacker", points = -60, who = "any", against = "defender" },
+    { kind = "settlement_captured", role = "attacker", points = -25, who = "any", against = "defender" },
+    { kind = "civ_conquered", role = "conqueror", points = -120, who = "any", against = "civilization" },
+    { kind = "war_won", role = "winner", points = 30, who = "kin", against = "" },
+    { kind = "monster_slain", role = "slayer", points = 25, who = "kin", against = "" },
+    { kind = "monster_slain_by_hero", role = "slayer", points = 35, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = 20, who = "kin", against = "" },
+    { kind = "deep_sealed", role = "civilization", points = 40, who = "kin", against = "" },
+    { kind = "refuge_held", role = "defender", points = 30, who = "kin", against = "" },
+]

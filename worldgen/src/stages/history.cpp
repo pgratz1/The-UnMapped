@@ -153,6 +153,7 @@ void write_history_result(StageContext& context, const HistoryResult& r) {
     // schema 12 (P5-06 9.1, 9.3)
     for (const db::FigureRow& row : r.figures) context.write_figure(row);
     for (const db::BookRow& row : r.books) context.write_book(row);
+    for (const db::FactionRow& row : r.factions) context.write_faction(row);  // schema 14 (P5-08 9)
 }
 
 void run_history(StageContext& context) {

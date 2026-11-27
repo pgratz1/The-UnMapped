@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <map>
 #include <optional>
 #include <set>
@@ -486,8 +487,10 @@ Schema report_event_schema() {
         // P3-10: 512 bytes (P3-04 4.2 says 256; the cause lists of P3-05 r12
         // 22.3 make the templates of kinds 16 and 31 longer). P5-03a (a
         // reading): 1024, since the cause lists of 3.5 and 7.3 make the
-        // templates of kinds 58 and 59 longer than 512.
-        Field::required("template", Type::string(1024)),
+        // templates of kinds 58 and 59 longer than 512. P5-08 (a reading):
+        // 2048, since the cause words of 8.2 make kinds 100 to 104 longer
+        // than 1024.
+        Field::required("template", Type::string(2048)),
     });
 }
 
@@ -1099,6 +1102,7 @@ Schema culture_naming_schema() {
         return Type::array(Type::string(8, syllable_grammar()), min_len, max_len);
     };
     const auto forms = [] { return Type::array(Type::string(48, name_form_grammar()), 1, 8); };
+    const auto god_forms = [] { return Type::array(Type::string(48, god_form_string_grammar()), 1, 8); };
     return Schema(std::vector<Field>{
         Field::required("onsets", syllables(1, 64)),
         Field::required("nuclei", syllables(1, 64)),
@@ -1119,6 +1123,12 @@ Schema culture_naming_schema() {
         Field::required("library_forms", forms()),
         Field::required("book_titles", Type::array(Type::string(48, book_title_grammar()), 4, 32)),
         Field::required("regnal_permille", Type::integer(0, 1000)),
+        // P5-08 4.4 (generator 0.30.0).
+        Field::required("cult_forms", god_forms()),
+        Field::required("temple_forms", god_forms()),
+        Field::required("sanctum_forms", god_forms()),
+        Field::required("sacred_forms", god_forms()),
+        Field::required("profane_forms", god_forms()),
     });
 }
 
@@ -1146,6 +1156,7 @@ Schema history_chronology_schema() {
         Field::required("awakening_jitter_frac", Type::fixed("0", "0.05")),
         Field::required("awakening_min_gap_years", Type::integer(1, 2000)),
         Field::required("age_name_form", Type::string(64)),
+        Field::required("creator_title", Type::string(40, creator_title_string_grammar())),  // P5-08 4.2
     };
     std::vector<Check> checks{
         Check{"chronology_age_name_form", [](const Record& r) { return check_chronology_age_name_form(r); }},
@@ -1757,6 +1768,313 @@ Schema history_figures_schema() {
                           return "epithets[" + uint_text(k) + "]: substantial " + int_text(sub) + " is below min " +
                                  int_text(e.get_int("min"));
                       }
+                  }
+                  return std::nullopt;
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+// --- god and history.pantheon (P5-08 4.1 to 4.4) ------------------------------------
+
+namespace {
+
+constexpr std::string_view GOD_PLACEHOLDER = "{god}";
+constexpr std::string_view PLURAL_PLACEHOLDER = "{plural}";
+
+// 4.1 god_title: "the " followed by ASCII letters, single spaces, ' and -;
+// with `plural`, the slot {plural} exactly once among them (4.2, the
+// chronology's creator_title).
+bool god_title_ok(std::string_view text, bool plural) noexcept {
+    constexpr std::string_view THE = "the ";
+    if (text.size() <= THE.size() || text.substr(0, THE.size()) != THE || text.back() == ' ') {
+        return false;
+    }
+    std::size_t slots = 0;
+    std::size_t i = THE.size();
+    if (text[i] == ' ') {
+        return false;
+    }
+    while (i < text.size()) {
+        const char c = text[i];
+        if (c == '{') {
+            if (!plural || text.substr(i, PLURAL_PLACEHOLDER.size()) != PLURAL_PLACEHOLDER) {
+                return false;
+            }
+            ++slots;
+            i += PLURAL_PLACEHOLDER.size();
+            continue;
+        }
+        if (c == ' ') {
+            if (i + 1 < text.size() && text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!is_ascii_letter(c) && !is_separator(c)) {
+            return false;
+        }
+        ++i;
+    }
+    return plural ? slots == 1 : true;
+}
+
+bool is_valid_god_title(std::string_view text) noexcept {
+    return god_title_ok(text, false);
+}
+
+bool is_valid_creator_title(std::string_view text) noexcept {
+    return god_title_ok(text, true);
+}
+
+// 4.4 god_form: name_form's grammar with the slot {god} exactly once in
+// place of {root}.
+bool is_valid_god_form(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    std::size_t slots = 0;
+    std::size_t i = 0;
+    while (i < text.size()) {
+        const char c = text[i];
+        if (c == '{') {
+            if (text.substr(i, GOD_PLACEHOLDER.size()) != GOD_PLACEHOLDER) {
+                return false;
+            }
+            ++slots;
+            i += GOD_PLACEHOLDER.size();
+            continue;
+        }
+        if (c == ' ') {
+            if (i + 1 < text.size() && text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!is_ascii_letter(c) && !is_separator(c)) {
+            return false;
+        }
+        ++i;
+    }
+    return slots == 1;
+}
+
+StringGrammar god_title_grammar() noexcept {
+    return StringGrammar{"a god title ('the ' then ASCII letters, single spaces, ' and -)", &is_valid_god_title};
+}
+
+StringGrammar creator_title_grammar() noexcept {
+    return StringGrammar{"a creator title ('the ' then ASCII letters, single spaces, ' and -, with {plural} once)",
+                         &is_valid_creator_title};
+}
+
+StringGrammar god_form_grammar() noexcept {
+    return StringGrammar{"a god form (letters, spaces, ' and -, with exactly one {god})", &is_valid_god_form};
+}
+
+Schema weights_schema(std::initializer_list<std::string_view> names) {
+    std::vector<Field> fields;
+    for (const std::string_view n : names) {
+        fields.push_back(Field::required(std::string(n), Type::integer(0, 1000)));
+    }
+    return Schema(std::move(fields));
+}
+
+// 4.3: a deed.
+Schema deed_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("kind", Type::string(32)),
+        Field::required("role", Type::string(32)),
+        Field::required("points", Type::integer(-1000, 1000)),
+        Field::required("who", Type::enumeration({"kin", "any", "foe"})),
+        Field::required("against", Type::string(32)),
+    });
+}
+
+// The fields of 4.1 from favour on, shared by a god definition and the
+// pantheon tuning's creator record.
+std::vector<Field> god_act_fields() {
+    return std::vector<Field>{
+        Field::required("favour", Type::record(weights_schema({"bless", "champion", "mark"}))),
+        Field::required("wrath", Type::record(weights_schema({"curse", "monster", "mark"}))),
+        Field::required("bless", Type::enumeration({"plenty", "valour"})),
+        Field::required("curse", Type::enumeration({"pestilence", "withering", "defeat"})),
+        Field::required("monsters", Type::array(Type::string(32), 0, 8)),
+        Field::required("deeds", Type::array(Type::record(deed_schema()), 0, 32)),
+    };
+}
+
+std::optional<std::string> check_weights(const Record& r, std::string_view field,
+                                         std::initializer_list<std::string_view> names, std::string_view message) {
+    const Record& w = r.get_record(field);
+    for (const std::string_view n : names) {
+        if (w.get_int(n) != 0) {
+            return std::nullopt;
+        }
+    }
+    return std::string(message);
+}
+
+bool civ_role_of(const history::KindDef& kind, std::string_view role) {
+    const history::RoleDef* d = kind.find_role(role);
+    return d != nullptr && d->type == history::EntityType::civilization;
+}
+
+// 4.3 pantheon_deed_*: the first failing deed of the check.
+enum class DeedCheck : std::uint8_t { kind, role, against, points, foe };
+
+std::optional<std::string> check_deeds(const Record& r, DeedCheck which) {
+    const std::vector<Value>& list = r.get_array("deeds");
+    const history::EventCatalogue& catalogue = history::compiled_event_catalogue();
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        const Record& d = list[i].as_record();
+        const std::string at = "deeds[" + uint_text(i) + "]: ";
+        const std::string& k = d.get_string("kind");
+        const history::KindDef* kind = catalogue.find(k);
+        const std::string& role = d.get_string("role");
+        const std::string& against = d.get_string("against");
+        switch (which) {
+            case DeedCheck::kind:
+                if (kind == nullptr) {
+                    return at + "kind " + k + " is unknown";
+                }
+                break;
+            case DeedCheck::role:
+                if (kind != nullptr && !civ_role_of(*kind, role)) {
+                    return at + "role " + role + " of " + k + " is not a civilization role";
+                }
+                if (kind != nullptr && !against.empty() && !civ_role_of(*kind, against)) {
+                    return at + "role " + against + " of " + k + " is not a civilization role";
+                }
+                break;
+            case DeedCheck::against:
+                if (!against.empty() && against == role) {
+                    return at + "against " + against + " is the deed's own role";
+                }
+                break;
+            case DeedCheck::points:
+                if (d.get_int("points") == 0) {
+                    return at + "points must not be 0";
+                }
+                break;
+            case DeedCheck::foe:
+                if (d.get_string("who") == "foe" && d.get_int("points") >= 0) {
+                    return at + "a deed for foes must be negative";
+                }
+                break;
+        }
+    }
+    return std::nullopt;
+}
+
+std::vector<Check> god_act_checks() {
+    return std::vector<Check>{
+        Check{"god_favour_weights",
+              [](const Record& r) {
+                  return check_weights(r, "favour", {"bless", "champion", "mark"}, "favour weights must not all be 0");
+              }},
+        Check{"god_wrath_weights",
+              [](const Record& r) {
+                  return check_weights(r, "wrath", {"curse", "monster", "mark"}, "wrath weights must not all be 0");
+              }},
+        Check{"god_monster_weight",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_record("wrath").get_int("monster") > 0 && r.get_array("monsters").empty()) {
+                      return std::string("wrath.monster needs monsters");
+                  }
+                  return std::nullopt;
+              }},
+        Check{"pantheon_deed_kind", [](const Record& r) { return check_deeds(r, DeedCheck::kind); }},
+        Check{"pantheon_deed_role", [](const Record& r) { return check_deeds(r, DeedCheck::role); }},
+        Check{"pantheon_deed_against", [](const Record& r) { return check_deeds(r, DeedCheck::against); }},
+        Check{"pantheon_deed_points", [](const Record& r) { return check_deeds(r, DeedCheck::points); }},
+        Check{"pantheon_deed_foe", [](const Record& r) { return check_deeds(r, DeedCheck::foe); }},
+    };
+}
+
+}  // namespace
+
+StringGrammar god_form_string_grammar() noexcept {
+    return god_form_grammar();
+}
+
+StringGrammar creator_title_string_grammar() noexcept {
+    return creator_title_grammar();
+}
+
+Schema god_schema() {
+    std::vector<Field> fields{
+        Field::required("name_culture", Type::string(32)),
+        Field::required("camp", Type::enumeration({"good", "neutral", "evil"})),
+        Field::required("domain", Type::enumeration({"war", "death", "harvest", "craft", "wild", "oaths", "lore", "ruin"})),
+        Field::required("title", Type::string(40, god_title_grammar())),
+    };
+    for (Field& f : god_act_fields()) {
+        fields.push_back(std::move(f));
+    }
+    return Schema(std::move(fields), god_act_checks());
+}
+
+Schema history_pantheon_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    const auto rec = [](std::initializer_list<std::string_view> names, std::int64_t min, std::int64_t max) {
+        std::vector<Field> f;
+        for (const std::string_view n : names) {
+            f.push_back(Field::required(std::string(n), Type::integer(min, max)));
+        }
+        return Type::record(Schema(std::move(f)));
+    };
+    std::vector<Field> fields{
+        Field::required("activity_permille", rec({"distant", "normal", "meddling"}, 0, 10000)),
+        i("regard_max", 1, 100000),
+        i("regard_fade_per_century", 0, 100000),
+        i("regard_memory_years", 1, 100000),
+        i("contributions_max", 1, 64),
+        i("act_threshold", 1, 100000),
+        i("act_permille", 0, 1000),
+        i("god_rest_years", 0, 10000),
+        i("pair_rest_years", 0, 10000),
+        i("flare_regard", 1, 100000),
+        i("flare_permille", 0, 1000),
+        i("bless_years", 1, 1000),
+        i("curse_years", 1, 1000),
+        i("plenty_growth_permille", 0, 1000),
+        i("withering_growth_permille", 0, 1000),
+        i("valour_permille", 0, 500),
+        i("defeat_permille", 0, 500),
+        i("pestilence_toll_permille", 0, 1000),
+        i("send_hops", 0, 8),
+        i("sacred_growth_permille", 0, 1000),
+        i("profane_years", 0, 10000),
+        Field::required("champion_epithet", Type::string(24, god_form_grammar())),
+        i("cult_found_permille", 0, 1000),
+        i("cult_fear_permille", 0, 1000),
+        i("cult_spread_permille", 0, 1000),
+        Field::required("affinity_permille", rec({"same", "near", "opposed"}, 0, 1000)),
+        i("adopt_regard", 0, 100000),
+        i("adopt_permille", 0, 1000),
+        i("suppress_permille", 0, 1000),
+        Field::required("temper_adopt_permille", Type::record(temper_schema(0, 4000))),
+        Field::required("temper_suppress_permille", Type::record(temper_schema(0, 4000))),
+        i("faith_points", 0, 100000),
+        i("rival_faith_points", 0, 100000),
+        i("suppress_points", 0, 100000),
+        i("hide_permille", 0, 1000),
+        i("sanctum_hops", 0, 8),
+        Field::required("creator", Type::record(Schema(god_act_fields(), god_act_checks()))),
+    };
+    std::vector<Check> checks{
+        Check{"pantheon_flare_above_act",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("flare_regard") < r.get_int("act_threshold")) {
+                      return "flare_regard " + int_text(r.get_int("flare_regard")) + " is below act_threshold " +
+                             int_text(r.get_int("act_threshold"));
+                  }
+                  return std::nullopt;
+              }},
+        Check{"pantheon_act_below_max",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("act_threshold") > r.get_int("regard_max")) {
+                      return "act_threshold " + int_text(r.get_int("act_threshold")) + " is above regard_max " +
+                             int_text(r.get_int("regard_max"));
                   }
                   return std::nullopt;
               }},

@@ -1,0 +1,19 @@
+# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.conquest]
+name_culture = "orcish"
+camp = "evil"
+domain = "war"
+title = "the Red Banner"
+favour = { bless = 400, champion = 500, mark = 100 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "civ_conquered", role = "conqueror", points = 100, who = "kin", against = "" },
+    { kind = "war_won", role = "winner", points = 30, who = "kin", against = "" },
+    { kind = "sacked", role = "attacker", points = 15, who = "kin", against = "" },
+    { kind = "peace", role = "loser", points = -30, who = "kin", against = "" },
+    { kind = "tribute", role = "payer", points = -20, who = "kin", against = "" },
+    { kind = "truce", role = "parties", points = -20, who = "kin", against = "" },
+]

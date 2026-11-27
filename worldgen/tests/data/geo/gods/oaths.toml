@@ -1,0 +1,21 @@
+# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.oaths]
+name_culture = "elven"
+camp = "good"
+domain = "oaths"
+title = "the Keeper of Oaths"
+favour = { bless = 400, champion = 400, mark = 200 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "alliance_formed", role = "ally_a", points = 15, who = "any", against = "" },
+    { kind = "alliance_formed", role = "ally_b", points = 15, who = "any", against = "" },
+    { kind = "spoils_shared", role = "principal", points = 25, who = "any", against = "" },
+    { kind = "ally_joined_war", role = "ally", points = 20, who = "any", against = "" },
+    { kind = "alliance_betrayed", role = "betrayed", points = 40, who = "any", against = "" },
+    { kind = "alliance_betrayed", role = "betrayer", points = -150, who = "any", against = "" },
+    { kind = "spoils_withheld", role = "principal", points = -50, who = "any", against = "" },
+    { kind = "ally_refused", role = "ally", points = -25, who = "any", against = "" },
+]

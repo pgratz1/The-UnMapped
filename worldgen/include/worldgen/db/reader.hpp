@@ -251,5 +251,7 @@ private:
 // Schema 12 (P5-06 9.1, 9.3): tables figure and book, in primary-key order.
 [[nodiscard]] Result<std::vector<FigureRow>> read_figure_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<BookRow>> read_book_rows(const WorldReader& world);
+// Schema 14 (P5-08 9): table faction, in primary-key order.
+[[nodiscard]] Result<std::vector<FactionRow>> read_faction_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

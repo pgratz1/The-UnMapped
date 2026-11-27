@@ -220,6 +220,12 @@ public:
     [[nodiscard]] std::int64_t ruler_at_event(std::int64_t civ, std::int64_t event) const noexcept;
     [[nodiscard]] const std::string* book_title_of_event(std::int64_t event) const noexcept;
 
+    // P5-08 9 (schema 14): the god rows and faction rows as read; a god's
+    // title (nullptr when the god does not exist).
+    [[nodiscard]] std::span<const db::GodRow> god_rows() const noexcept { return god_rows_; }
+    [[nodiscard]] std::span<const db::FactionRow> faction_rows() const noexcept { return faction_rows_; }
+    [[nodiscard]] const std::string* god_title(std::int64_t id) const noexcept;
+
 private:
     struct MonsterNames {
         std::string name;
@@ -266,6 +272,11 @@ private:
     };
     std::vector<Reign> reigns_;
     std::vector<std::pair<std::int64_t, std::string>> book_titles_;
+    // P5-08 (schema 14).
+    std::vector<db::GodRow> god_rows_;
+    std::vector<std::pair<std::int64_t, std::string>> god_titles_;  // ascending id
+    std::vector<db::FactionRow> faction_rows_;
+    std::vector<std::pair<std::int64_t, std::string>> factions_;     // ascending id
 };
 
 // P3-07 r21 26.6: the first problem of the region_name rows (primary-key

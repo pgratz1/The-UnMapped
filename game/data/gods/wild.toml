@@ -1,0 +1,19 @@
+# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.wild]
+name_culture = "human"
+camp = "neutral"
+domain = "wild"
+title = "the Hunter in the Green"
+favour = { bless = 500, champion = 0, mark = 500 }
+wrath = { curse = 300, monster = 500, mark = 200 }
+bless = "plenty"
+curse = "withering"
+monsters = ["troll", "ogre", "wyvern"]
+deeds = [
+    { kind = "colony_founded", role = "founder", points = -8, who = "any", against = "" },
+    { kind = "became_city", role = "civilization", points = -20, who = "any", against = "" },
+    { kind = "mine_opened", role = "civilization", points = -15, who = "any", against = "" },
+    { kind = "monster_slain", role = "slayer", points = -25, who = "any", against = "" },
+    { kind = "settlement_abandoned", role = "civilization", points = 15, who = "any", against = "" },
+    { kind = "outpost_abandoned", role = "civilization", points = 10, who = "any", against = "" },
+]

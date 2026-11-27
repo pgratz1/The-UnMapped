@@ -421,6 +421,7 @@ inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 inline constexpr std::string_view HISTORY_CONFLICT_ID = "conflict";  // P3-06 12.1
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
 inline constexpr std::string_view HISTORY_FIGURES_ID = "figures";  // P5-06 4.4 (generator 0.27.0)
+inline constexpr std::string_view HISTORY_PANTHEON_ID = "pantheon";  // P5-08 4.2 (generator 0.30.0)
 inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
 inline constexpr std::string_view HISTORY_RELATIONS_ID = "relations";  // P5-03 4.2 (generator 0.24.0)
 inline constexpr std::string_view HISTORY_MONSTERS_ID = "monsters";  // P5-02 4.3 (generator 0.23.0)
@@ -459,6 +460,20 @@ inline constexpr std::string_view MONSTER_DIRECTORY = "monsters";
 [[nodiscard]] Schema history_relations_schema();
 [[nodiscard]] Schema history_alliances_schema();  // P5-04 4.2
 [[nodiscard]] Schema history_figures_schema();    // P5-06 4.4
+
+// P5-08 4.1 (generator 0.30.0): kind god (gods/), required, open ids; its
+// schema (4.1, with the checks god_favour_weights, god_wrath_weights,
+// god_monster_weight and pantheon_deed_*), and definition
+// history.pantheon (4.2, checks pantheon_flare_above_act and
+// pantheon_act_below_max). god_culture and god_monsters are checked by
+// history::check_history_data.
+inline constexpr std::string_view GOD_KIND = "god";
+inline constexpr std::string_view GOD_DIRECTORY = "gods";
+[[nodiscard]] Schema god_schema();
+[[nodiscard]] Schema history_pantheon_schema();
+// The grammars god_form (4.4) and creator_title (4.2).
+[[nodiscard]] StringGrammar god_form_string_grammar() noexcept;
+[[nodiscard]] StringGrammar creator_title_string_grammar() noexcept;
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);

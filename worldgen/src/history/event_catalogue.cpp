@@ -364,6 +364,38 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{98, "warren_delved", true, 1, 1, {civ(1, "civilization")}, {"depth", "telling"}, 0, {}});
     c.kinds.push_back(KindDef{99, "warren_sealed", true, 1, 1, {civ(1, "civilization"), mon(2), site_role(3, "lair")},
                               {"telling"}, 0, {}});
+    // P5-08 8.1 (generator 0.30.0): kinds 100 to 110, the pantheon and cults.
+    const auto god = [](std::int64_t seq, std::string_view name) { return role(seq, name, EntityType::god, 1, 1); };
+    const auto faction = [](std::int64_t seq) { return role(seq, "faction", EntityType::faction, 1, 1); };
+    c.kinds.push_back(KindDef{100, "divine_bless", false, 1, 0, {god(1, "actor"), civ(2, "civilization")},
+                              {"effect", "years", "telling", "divine_script"}, 0, {}});
+    c.kinds.push_back(KindDef{101, "divine_curse", false, 1, 0, {god(1, "actor"), civ(2, "civilization")},
+                              {"effect", "dead", "years", "telling", "divine_script"}, 0, {}});
+    c.kinds.push_back(KindDef{102, "divine_champion", false, 1, 0,
+                              {god(1, "actor"), fig(2, "figure"), civ(3, "civilization")}, {"telling", "divine_script"},
+                              0, {}});
+    c.kinds.push_back(KindDef{103, "divine_monster", false, 1, 0,
+                              {god(1, "actor"), mon(2), civ(3, "civilization"), site_role(4, "lair")},
+                              {"telling", "divine_script"}, 0, {}});
+    c.kinds.push_back(KindDef{104, "divine_mark", false, 1, 2,
+                              {god(1, "actor"), civ(2, "civilization"), site_role(3, "site")},
+                              {"profane", "telling", "divine_script"}, 0, {}});
+    c.kinds.push_back(KindDef{105, "cult_founded", true, 1, 1,
+                              {faction(1), god(2, "god"), civ(3, "civilization"), fig(4, "founder"),
+                               site_role(5, "site")},
+                              {"telling"}, 0, {}});
+    c.kinds.push_back(KindDef{106, "cult_spread", true, 1, 0,
+                              {faction(1), god(2, "god"), civ(3, "civilization"), civ(4, "from")}, {}, 0, {}});
+    c.kinds.push_back(KindDef{107, "cult_adopted", true, 1, 1,
+                              {faction(1), god(2, "god"), civ(3, "civilization"), site_role(4, "site", 0, 1)}, {}, 0,
+                              {}});
+    c.kinds.push_back(KindDef{108, "cult_suppressed", true, 1, 0,
+                              {faction(1), god(2, "god"), civ(3, "civilization"), site_role(4, "sanctum", 0, 1)},
+                              {"hidden"}, 0, {}});
+    c.kinds.push_back(KindDef{109, "tower_taken_up", true, 1, 2,
+                              {fig(1, "figure"), civ(2, "civilization"), site_role(3, "site")}, {}, 0, {}});
+    c.kinds.push_back(KindDef{110, "tower_abandoned", true, 1, 2,
+                              {site_role(1, "site"), civ(2, "civilization"), fig(3, "figure")}, {}, 0, {}});
     return c;
 }
 
@@ -428,7 +460,8 @@ enum class TokenType : std::uint8_t {
 // kind: P5-02 10.3; raid: P5-03 9.5; its, aside, where: P5-03a 7.1.
 // under: P5-06 7.9.
 // died: P5-04a 10 item 5.
-enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against, under, died };
+// titled: P5-08 8.2.
+enum class Form : std::uint8_t { name, plural, adjective, all, kind, raid, its, aside, where, with, against, under, died, titled };
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -672,6 +705,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::against;
         } else if (*form == "under") {  // P5-06 7.9
             out.form = Form::under;
+        } else if (*form == "titled") {  // P5-08 8.2
+            out.form = Form::titled;
         } else {
             return unknown;
         }
@@ -688,6 +723,9 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if ((out.form == Form::its || out.form == Form::aside || out.form == Form::where || out.form == Form::died) &&
         r->type != EntityType::monster) {
         return "form '" + std::string(*form) + "' needs a monster role" + where;
+    }
+    if (out.form == Form::titled && r->type != EntityType::god) {
+        return "form 'titled' needs a god role" + where;
     }
     if (out.form == Form::under && r->type != EntityType::figure && r->type != EntityType::civilization) {
         return "form 'under' needs a figure or civilization role" + where;
@@ -1060,6 +1098,8 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         }
         for (const db::GodRow& r : read(db::read_god_rows(world), db::GOD_TABLE)) {
             v.gods_.emplace_back(r.id, r.name);
+            v.god_titles_.emplace_back(r.id, r.title);  // schema 14
+            v.god_rows_.push_back(r);
         }
         std::vector<std::pair<std::int64_t, std::int64_t>> civ_endings;  // P5-04 9.1: (id, ending_event)
         for (const db::CivilizationRow& r : read(db::read_civilization_rows(world), db::CIVILIZATION_TABLE)) {
@@ -1116,6 +1156,15 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         };
         if (!ascending(v.figures_)) {
             v.figures_.clear();  // P5-06 9.4 F1 reports the row
+        }
+        // P5-08 9 (schema 14): factions by name.
+        v.faction_rows_ = read(db::read_faction_rows(world), db::FACTION_TABLE);
+        for (const db::FactionRow& r : v.faction_rows_) {
+            v.factions_.emplace_back(r.id, r.name);
+        }
+        if (!ascending(v.factions_) || !ascending(v.god_titles_)) {
+            v.factions_.clear();  // the pantheon checks report the row
+            v.god_titles_.clear();
         }
         if (!ascending(v.beast_plurals_) || !ascending(v.monster_kind_nouns_) || !ascending(v.monsters_) ||
             !ascending(v.sites_)) {
@@ -1405,9 +1454,13 @@ const std::string* HistoryView::name(EntityType type, std::int64_t id) const noe
         }
         case EntityType::site: return find_by_id(sites_, id);
         case EntityType::figure: return find_by_id(figures_, id);  // P5-06 7.9: the display name
-        case EntityType::faction: return nullptr;
+        case EntityType::faction: return find_by_id(factions_, id);  // P5-08 9: faction.name
     }
     return nullptr;
+}
+
+const std::string* HistoryView::god_title(std::int64_t id) const noexcept {
+    return find_by_id(god_titles_, id);
 }
 
 std::int64_t HistoryView::ruler_at_event(std::int64_t civ, std::int64_t event) const noexcept {
@@ -3250,6 +3303,15 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         monster_form(p.entity_id, t.form);  // P5-03a 7.1, P5-04a 10 item 5
                     } else if (t.form == Form::name) {
                         append_name(name_of(p, t.form), static_cast<EntityType>(p.entity_type), p.entity_id);
+                    } else if (t.form == Form::titled) {
+                        // P5-08 8.2: the god's name, a space and its title.
+                        append_name(name_of(p, Form::name), EntityType::god, p.entity_id);
+                        const std::string* title = view.god_title(p.entity_id);
+                        if (title == nullptr) {
+                            fail(at + "no title for god " + int_text(p.entity_id));
+                        }
+                        out += " ";
+                        out += *title;
                     } else if (t.form == Form::raid) {
                         out += name_of(p, t.form);  // P5-03 9.5: a phrase, no link
                     } else {

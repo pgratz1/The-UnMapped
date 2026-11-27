@@ -1,0 +1,19 @@
+# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.harvest]
+name_culture = "faerie"
+camp = "good"
+domain = "harvest"
+title = "the Giver of Harvests"
+favour = { bless = 700, champion = 0, mark = 300 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "plenty"
+curse = "withering"
+monsters = []
+deeds = [
+    { kind = "became_town", role = "civilization", points = 10, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = 15, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_a", points = 10, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_b", points = 10, who = "kin", against = "" },
+    { kind = "blight", role = "civilization", points = -80, who = "any", against = "" },
+    { kind = "sacked", role = "attacker", points = -30, who = "any", against = "" },
+]

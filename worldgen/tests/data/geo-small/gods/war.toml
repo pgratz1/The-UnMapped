@@ -1,0 +1,19 @@
+# P5-08 4.1 (generator 0.30.0): a god of the pantheon.
+[god.war]
+name_culture = "human"
+camp = "neutral"
+domain = "war"
+title = "the Shield of Battles"
+favour = { bless = 400, champion = 500, mark = 100 }
+wrath = { curse = 700, monster = 0, mark = 300 }
+bless = "valour"
+curse = "defeat"
+monsters = []
+deeds = [
+    { kind = "battle", role = "winner", points = 10, who = "any", against = "" },
+    { kind = "battle_led", role = "winner", points = 15, who = "any", against = "" },
+    { kind = "allied_battle", role = "winner", points = 10, who = "any", against = "" },
+    { kind = "war_won", role = "winner", points = 25, who = "any", against = "" },
+    { kind = "ally_refused", role = "ally", points = -30, who = "any", against = "" },
+    { kind = "ally_withdrew", role = "ally", points = -30, who = "any", against = "" },
+]

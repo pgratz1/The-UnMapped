@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
+#include <string>
 #include <optional>
 #include <utility>
 
@@ -126,6 +128,28 @@ std::int64_t camp_code(const std::string& camp) {
     fail("chronology: race camp '" + camp + "' is not good, neutral or evil");
 }
 
+// P5-08 9: the domain codes 2 (war) to 9 (ruin) of a pantheon god.
+std::int64_t god_domain_code(const std::string& domain) {
+    static constexpr std::string_view DOMAINS[] = {"war", "death", "harvest", "craft", "wild", "oaths", "lore", "ruin"};
+    for (std::size_t i = 0; i < std::size(DOMAINS); ++i) {
+        if (DOMAINS[i] == domain) {
+            return static_cast<std::int64_t>(i) + 2;
+        }
+    }
+    fail("chronology: god domain '" + domain + "' is not known");
+}
+
+// P5-08 6.1: the creator_title with {plural} replaced.
+std::string creator_title_text(std::string_view form, std::string_view plural) {
+    constexpr std::string_view SLOT = "{plural}";
+    std::string out(form);
+    const std::size_t at = out.find(SLOT);
+    if (at != std::string::npos) {
+        out.replace(at, SLOT.size(), plural);
+    }
+    return out;
+}
+
 // culture.id: 1, 2, ... in canonical id order (the kind's definition order).
 std::int64_t culture_number(const data::ContentSet& content, std::string_view culture_id) {
     const data::KindContent* cultures = content.find_kind(data::CULTURE_KIND);
@@ -178,6 +202,9 @@ ChronologyTuning chronology_tuning_from(const data::ContentSet& content) {
     t.awakening_jitter_frac = d->record.get_fx("awakening_jitter_frac");
     t.awakening_min_gap_years = d->record.get_int("awakening_min_gap_years");
     t.age_name_form = d->record.get_string("age_name_form");
+    if (d->record.find("creator_title") != nullptr) {
+        t.creator_title = d->record.get_string("creator_title");  // P5-08 4.2
+    }
     return t;
 }
 
@@ -326,8 +353,33 @@ ChronologyResult chronology_stage(const data::ContentSet& content, const history
         history::NameChoice choice =
             history::choose_name(naming, filter, culture_id, history::NameKind::god, seed,
                                  static_cast<std::uint64_t>(culture), static_cast<std::uint64_t>(id), registry);
-        out.gods.push_back(db::GodRow{id, choice.name, camp_code(r->record.get_string("camp"))});
+        // P5-08 6.1 C5: domain 1 (creation), the creator title, the race.
+        db::GodRow god{id, choice.name, camp_code(r->record.get_string("camp")), 1,
+                       creator_title_text(tuning.creator_title, r->record.get_string("plural")), id};
+        out.gods.push_back(std::move(god));
         out.god_names.push_back(std::move(choice));
+    }
+
+    // P5-08 6.1 C5a (8.1 item 4): the rest of the pantheon, ids n + 1, ...
+    // in canonical id order of the god definitions, named after the creators.
+    if (const data::KindContent* gods = content.find_kind(data::GOD_KIND)) {
+        const auto n = static_cast<std::int64_t>(races.size());
+        for (std::size_t i = 0; i < gods->definitions.size(); ++i) {
+            const data::Definition& d = gods->definitions[i];
+            const std::int64_t id = n + static_cast<std::int64_t>(i) + 1;
+            const std::string& culture_id = d.record.get_string("name_culture");
+            const std::int64_t culture = culture_number(content, culture_id);
+            const data::Definition* culture_def = content.find(data::CULTURE_KIND, culture_id);
+            const history::CultureNaming naming =
+                history::culture_naming_from(culture_def->record.get_record("naming"));
+            history::NameChoice choice =
+                history::choose_name(naming, filter, culture_id, history::NameKind::god, seed,
+                                     static_cast<std::uint64_t>(culture), static_cast<std::uint64_t>(id), registry);
+            db::GodRow god{id, choice.name, camp_code(d.record.get_string("camp")),
+                           god_domain_code(d.record.get_string("domain")), d.record.get_string("title"), 0};
+            out.gods.push_back(std::move(god));
+            out.god_names.push_back(std::move(choice));
+        }
     }
 
     if (const data::KindContent* cultures = content.find_kind(data::CULTURE_KIND)) {

@@ -38,6 +38,8 @@ struct ChronologyTuning {
     Fx awakening_jitter_frac;               // fx(0, 0.05)
     std::int64_t awakening_min_gap_years = 0;  // int(1, 2000)
     std::string age_name_form;              // string(64), named check chronology_age_name_form
+    // P5-08 4.2 (generator 0.30.0): a creator's title, {plural} once.
+    std::string creator_title = "the Maker of {plural}";
 
     friend bool operator==(const ChronologyTuning&, const ChronologyTuning&) = default;
 };

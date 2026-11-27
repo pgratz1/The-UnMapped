@@ -625,6 +625,7 @@ KindRegistry builtin_kinds() {
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
                                             IdSchema{std::string(HISTORY_FIGURES_ID), history_figures_schema()},
                                             IdSchema{std::string(HISTORY_MONSTERS_ID), history_monsters_schema()},
+                                            IdSchema{std::string(HISTORY_PANTHEON_ID), history_pantheon_schema()},
                                             IdSchema{std::string(HISTORY_PEOPLES_ID), history_peoples_schema()},
                                             IdSchema{std::string(HISTORY_RELATIONS_ID), history_relations_schema()},
                                             IdSchema{std::string(HISTORY_RENAMING_ID), history_renaming_schema()},
@@ -645,6 +646,9 @@ KindRegistry builtin_kinds() {
     // open ids.
     registry.add(Kind{std::string(BEAST_KIND), std::string(BEAST_DIRECTORY), true, beast_schema()});
     registry.add(Kind{std::string(MONSTER_KIND), std::string(MONSTER_DIRECTORY), true, monster_schema()});
+    // P5-08 4.1 (generator 0.30.0): kind god, required, open ids; its
+    // directory may hold no definition.
+    registry.add(Kind{std::string(GOD_KIND), std::string(GOD_DIRECTORY), true, god_schema()});
     return registry;
 }
 

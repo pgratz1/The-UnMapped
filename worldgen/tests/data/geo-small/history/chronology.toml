@@ -2,3 +2,4 @@
 awakening_jitter_frac = "0.01"
 awakening_min_gap_years = 100
 age_name_form = "The Age of {plural}"
+creator_title = "the Maker of {plural}"

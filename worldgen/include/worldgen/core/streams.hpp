@@ -177,8 +177,22 @@ inline constexpr std::string_view hist_deep_aid = "hist.deep.aid";
 inline constexpr std::string_view hist_deep_warren_delve = "hist.deep.warren_delve";
 inline constexpr std::string_view hist_deep_warren_wake = "hist.deep.warren_wake";
 inline constexpr std::string_view hist_deep_warren_kind = "hist.deep.warren_kind";
+// P5-08 3 (generator 0.30.0): the pantheon and cults, and the deep's stir (12.2).
+inline constexpr std::string_view hist_pantheon_act = "hist.pantheon.act";
+inline constexpr std::string_view hist_pantheon_kind = "hist.pantheon.kind";
+inline constexpr std::string_view hist_pantheon_flare = "hist.pantheon.flare";
+inline constexpr std::string_view hist_pantheon_monster_kind = "hist.pantheon.monster_kind";
+inline constexpr std::string_view hist_pantheon_site_name = "hist.pantheon.site_name";
+inline constexpr std::string_view hist_pantheon_cult_found = "hist.pantheon.cult_found";
+inline constexpr std::string_view hist_pantheon_cult_name = "hist.pantheon.cult_name";
+inline constexpr std::string_view hist_pantheon_cult_spread = "hist.pantheon.cult_spread";
+inline constexpr std::string_view hist_pantheon_adopt = "hist.pantheon.adopt";
+inline constexpr std::string_view hist_pantheon_suppress = "hist.pantheon.suppress";
+inline constexpr std::string_view hist_pantheon_hide = "hist.pantheon.hide";
+inline constexpr std::string_view hist_deep_stir = "hist.deep.stir";
+inline constexpr std::string_view hist_deep_warren_stir = "hist.deep.warren_stir";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 107> all_stream_names = {
+inline constexpr std::array<std::string_view, 120> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -286,6 +300,19 @@ inline constexpr std::array<std::string_view, 107> all_stream_names = {
     hist_deep_warren_delve,
     hist_deep_warren_wake,
     hist_deep_warren_kind,
+    hist_pantheon_act,
+    hist_pantheon_kind,
+    hist_pantheon_flare,
+    hist_pantheon_monster_kind,
+    hist_pantheon_site_name,
+    hist_pantheon_cult_found,
+    hist_pantheon_cult_name,
+    hist_pantheon_cult_spread,
+    hist_pantheon_adopt,
+    hist_pantheon_suppress,
+    hist_pantheon_hide,
+    hist_deep_stir,
+    hist_deep_warren_stir,
 };
 
 }  // namespace worldgen::streams

@@ -228,6 +228,9 @@ Result<std::vector<GodRow>> read_god_rows(const WorldReader& world) {
         r.id = c.integer();
         r.name = c.text();
         r.camp = c.integer();
+        r.domain = c.integer();  // schema 14
+        r.title = c.text();
+        r.race = c.integer();
         return r;
     });
 }
@@ -573,6 +576,27 @@ Result<std::vector<BookRow>> read_book_rows(const WorldReader& world) {
         r.site = c.integer();
         r.year = c.integer();
         r.event = c.integer();
+        return r;
+    });
+}
+
+// Schema 14 (P5-08 9).
+Result<std::vector<FactionRow>> read_faction_rows(const WorldReader& world) {
+    return read_rows<FactionRow>(world, FACTION_TABLE, [](Columns& c) {
+        FactionRow r;
+        r.id = c.integer();
+        r.name = c.text();
+        r.kind = c.integer();
+        r.civ = c.integer();
+        r.god = c.integer();
+        r.founder = c.integer();
+        r.seat = c.integer();
+        r.founded_year = c.integer();
+        r.founding_event = c.integer();
+        r.ended_year = c.nullable_integer();
+        r.ending_event = c.integer();
+        r.ending = c.integer();
+        r.status = c.integer();
         return r;
     });
 }

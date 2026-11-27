@@ -58,8 +58,10 @@ namespace worldgen {
 // follow-ups: spoils that sour, refusals and betrayals with a motive, notable
 // renewals, the turn cool-down, towers apart and ended); 0.28.0 until P5-07
 // (mountain depths: deepening mines, deep horrors, sealed and lost holds,
-// kinds 93 to 96, schema 13 with monster_kind.wake 3); now 0.29.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.29.0";
+// kinds 93 to 96, schema 13 with monster_kind.wake 3); 0.29.0 until P5-08
+// (the pantheon, divine interventions and cults, kinds 100 to 110, schema 14
+// with the god columns and table faction); now 0.30.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.30.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

@@ -205,6 +205,42 @@ void check_race_origin_allies(const data::ContentSet& content, const data::Defin
     }
 }
 
+// P5-08 4.1: god_monsters, the first failing entry of a god definition or
+// of the pantheon tuning's creator record.
+void check_god_monster_list(const data::ContentSet& content, const data::Record& record, std::string_view directory,
+                            std::string_view kind, const std::string& id, std::vector<data::LoadError>& out) {
+    const std::vector<data::Value>& list = record.get_array("monsters");
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        const std::string& m = list[i].as_string();
+        const data::Definition* def = content.find(data::MONSTER_KIND, m);
+        const bool ok = def != nullptr && (def->record.get_string("wake") == "wild" ||
+                                           def->record.get_string("wake") == "dead");
+        if (!ok) {
+            out.push_back(monster_error(directory, "god_monsters", kind, id,
+                                        "monsters[" + db::format_u64(i) + "] " + m + " is not a wild or dead monster"));
+            return;
+        }
+    }
+}
+
+// P5-08 4.1: god_culture and god_monsters.
+void check_gods(const data::ContentSet& content, std::vector<data::LoadError>& out) {
+    if (const data::KindContent* defs = content.find_kind(data::GOD_KIND)) {
+        for (const data::Definition& d : defs->definitions) {
+            const std::string& c = d.record.get_string("name_culture");
+            if (content.find(data::CULTURE_KIND, c) == nullptr) {
+                out.push_back(monster_error(data::GOD_DIRECTORY, "god_culture", data::GOD_KIND, d.id,
+                                            "name_culture " + c + " is not a culture"));
+            }
+            check_god_monster_list(content, d.record, data::GOD_DIRECTORY, data::GOD_KIND, d.id, out);
+        }
+    }
+    if (const data::Definition* t = content.find(data::HISTORY_KIND, data::HISTORY_PANTHEON_ID)) {
+        check_god_monster_list(content, t->record.get_record("creator"), data::HISTORY_DIRECTORY, data::HISTORY_KIND,
+                               t->id, out);
+    }
+}
+
 }  // namespace
 
 std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective) {
@@ -247,6 +283,7 @@ std::vector<data::LoadError> check_history_data(const data::ContentSet& content)
     check_habitat_biomes(content, data::BEAST_DIRECTORY, data::BEAST_KIND, "beast_habitat_biomes", "habitat", out);
     check_habitat_biomes(content, data::MONSTER_DIRECTORY, data::MONSTER_KIND, "monster_biomes", "biomes", out);
     check_monster_cultures(content, out);
+    check_gods(content, out);  // P5-08 4.1
     data::sort_errors(out);
     return out;
 }

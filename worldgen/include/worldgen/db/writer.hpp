@@ -201,6 +201,12 @@ struct GodRow {
     std::int64_t id = 0;
     std::string name;
     std::int64_t camp = 0;
+    // Schema 14 (P5-08 9): 1 creation, 2 war, 3 death, 4 harvest, 5 craft,
+    // 6 wild, 7 oaths, 8 lore, 9 ruin; the title; the race it made (0 for
+    // the rest of the pantheon).
+    std::int64_t domain = 1;
+    std::string title;
+    std::int64_t race = 0;
 
     friend bool operator==(const GodRow&, const GodRow&) = default;
 };
@@ -509,6 +515,25 @@ struct BookRow {
     friend bool operator==(const BookRow&, const BookRow&) = default;
 };
 
+// One row of table faction (P5-08 9, schema 14).
+struct FactionRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t kind = 1;  // 1 cult
+    std::int64_t civ = 0;
+    std::int64_t god = 0;
+    std::int64_t founder = 0;
+    std::int64_t seat = 0;
+    std::int64_t founded_year = 0;
+    std::int64_t founding_event = 0;
+    std::optional<std::int64_t> ended_year;
+    std::int64_t ending_event = 0;
+    std::int64_t ending = 0;  // 0 not ended, 1 suppressed, 2 its realms fell
+    std::int64_t status = 1;  // 1 present, 2 hidden, 3 ended
+
+    friend bool operator==(const FactionRow&, const FactionRow&) = default;
+};
+
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
 // while open.
 struct RelationRow {
@@ -629,6 +654,8 @@ public:
     // The tables of P5-06 (schema 12): rows in ascending id.
     void write_figure(const FigureRow& row);
     void write_book(const BookRow& row);
+    // Table faction (P5-08, schema 14): rows in ascending id.
+    void write_faction(const FactionRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

@@ -263,6 +263,10 @@ void StageContext::write_book(const db::BookRow& row) {
     state_->stage.write_book(row);
 }
 
+void StageContext::write_faction(const db::FactionRow& row) {
+    state_->stage.write_faction(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

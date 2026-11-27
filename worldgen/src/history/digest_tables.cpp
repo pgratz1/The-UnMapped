@@ -131,10 +131,10 @@ void read_biomes(HistoryTables& t, const Rows& rows) {
 }
 
 void read_gods(HistoryTables& t, const Rows& rows) {
-    static constexpr std::size_t TEXT[] = {1};
+    static constexpr std::size_t TEXT[] = {1, 4};
     for (const Row& r : rows) {
-        check_shape(db::GOD_TABLE, r, 3, TEXT);
-        t.gods.push_back(db::GodRow{i64(r, 0), r[1].bytes, i64(r, 2)});
+        check_shape(db::GOD_TABLE, r, 6, TEXT);  // schema 14 (P5-08 9): domain, title, race
+        t.gods.push_back(db::GodRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), r[4].bytes, i64(r, 5)});
     }
 }
 

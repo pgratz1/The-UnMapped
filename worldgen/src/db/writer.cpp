@@ -735,11 +735,17 @@ void StageWriter::write_god(const GodRow& row) {
     }
     require_next_id("write_god", "god", row.id, state_->last_god_id);
     require_camp("write_god", row.camp);
-    const std::int64_t ints[1] = {row.camp};
-    insert_row(state_->db.get(), "INSERT INTO god (id, name, camp) VALUES (?1, ?2, ?3)", 3, ints,
+    if (row.domain < 1 || row.domain > 9) {
+        fatal("StageWriter::write_god: domain is not 1 to 9");
+    }
+    const std::int64_t ints[2] = {row.camp, row.domain};
+    insert_row(state_->db.get(),
+               "INSERT INTO god (id, name, camp, domain, title, race) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", 3, ints,
                [&row](detail::Statement& stmt) {
                    int rc = stmt.bind_int64(1, row.id);
                    if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(5, row.title);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(6, row.race);
                    return rc;
                },
                "god row " + format_i64(row.id));
@@ -1157,6 +1163,29 @@ void StageWriter::write_book(const BookRow& row) {
                },
                "book row " + format_i64(row.id));
     state_->history_keys.book = row.id;
+}
+
+void StageWriter::write_faction(const FactionRow& row) {
+    require_open(state_, "write_faction");
+    require_next_id("write_faction", "faction", row.id, state_->history_keys.faction);
+    const std::int64_t mid[7] = {row.kind, row.civ, row.god, row.founder, row.seat, row.founded_year,
+                                 row.founding_event};
+    const std::int64_t tail[3] = {row.ending_event, row.ending, row.status};
+    insert_row(state_->db.get(),
+               "INSERT INTO faction (id, name, kind, civ, god, founder, seat, founded_year, founding_event, ended_year, "
+               "ending_event, ending, status) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+               3, mid,
+               [&row, &tail](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 10, row.ended_year);
+                   for (int i = 0; rc == SQLITE_OK && i < 3; ++i) {
+                       rc = stmt.bind_int64(11 + i, tail[static_cast<std::size_t>(i)]);
+                   }
+                   return rc;
+               },
+               "faction row " + format_i64(row.id));
+    state_->history_keys.faction = row.id;
 }
 
 void StageWriter::write_region_name(const RegionNameRow& row) {

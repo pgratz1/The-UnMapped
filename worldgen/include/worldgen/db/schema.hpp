@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 13;
+inline constexpr std::int64_t SCHEMA_VERSION = 14;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -120,7 +120,8 @@ inline constexpr std::string_view DDL_CULTURE =
     "CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INTEGER NOT "
     "NULL) STRICT";
 inline constexpr std::string_view DDL_GOD =
-    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT";
+    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL, domain INTEGER NOT NULL, "
+    "title TEXT NOT NULL, race INTEGER NOT NULL) STRICT";  // schema 14 (P5-08 9): domain, title, race
 inline constexpr std::string_view DDL_AGE =
     "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER "
     "NOT NULL, name TEXT NOT NULL) STRICT";
@@ -276,13 +277,24 @@ inline constexpr std::string_view DDL_BOOK =
 inline constexpr std::string_view FIGURE_TABLE = "figure";
 inline constexpr std::string_view BOOK_TABLE = "book";
 
+// DDL of table faction (P5-08 9, schema version 14), executed after book:
+// the cults (kind 1), written by the history stage in ascending id, empty
+// when it did not run. Nullable column: ended_year.
+inline constexpr std::string_view DDL_FACTION =
+    "CREATE TABLE faction (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, civ INTEGER NOT NULL, "
+    "god INTEGER NOT NULL, founder INTEGER NOT NULL, seat INTEGER NOT NULL, founded_year INTEGER NOT NULL, "
+    "founding_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL, ending INTEGER NOT NULL, "
+    "status INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view FACTION_TABLE = "faction";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
 // history tables of P3-04 9.1; schema 8: then region_name; schema 9: then
 // beast, monster_kind, beast_population, monster, site; schema 10: then
-// race_relation, settlement_race; schema 12: then figure, book).
-inline constexpr std::array<std::string_view, 36> DDL_STATEMENTS = {
+// race_relation, settlement_race; schema 12: then figure, book; schema 14:
+// then faction).
+inline constexpr std::array<std::string_view, 37> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -294,7 +306,8 @@ inline constexpr std::array<std::string_view, 36> DDL_STATEMENTS = {
     DDL_REGION_CONTROL, DDL_RELATION,        DDL_REGION_NAME,
     DDL_BEAST,          DDL_MONSTER_KIND,    DDL_BEAST_POPULATION,
     DDL_MONSTER,        DDL_SITE,            DDL_RACE_RELATION,
-    DDL_SETTLEMENT_RACE, DDL_FIGURE,         DDL_BOOK};
+    DDL_SETTLEMENT_RACE, DDL_FIGURE,         DDL_BOOK,
+    DDL_FACTION};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------
