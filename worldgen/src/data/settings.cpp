@@ -236,7 +236,7 @@ void parse_divine_script(const Node& node, std::string_view path, ErrorList& err
     if (detail::is_rejected_scalar(node)) {
         return;
     }
-    errors.add(path, node.position, "'world.divine_script' is not supported yet: divine scripts need phase P5");
+    errors.add(path, node.position, "'world.divine_script': divine scripts are not supported yet");
 }
 
 void parse_world(const Node& world, std::string_view path, ErrorList& errors, Settings& out) {

@@ -539,7 +539,12 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             const bool civ_role_kind = k == "deep_woken" || k == "deep_sealed" || k == "cult_adopted" ||
                                        k == "cult_suppressed";
             const std::int64_t c = ctx.event_participant(e, civ_role_kind ? "civilization" : "principal");
-            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year) {
+            // P5-08 (reading): the pantheon runs after the figures, so a cult
+            // event of a quiet step is read in the next step; a reign that
+            // began after the event's year is not the event's ruler.
+            const bool reign_after = line(c).has && ctx.event_year(e) < line(c).reign.start;
+            if (line(c).has && line(c).reign.figure == 0 && tuning_.name_rulers && !ctx.state().civ(c).ended_year &&
+                !reign_after) {
                 const std::int64_t f = name_reign(ctx, c, e);
                 ctx.state().open_relation(figure_civ_key(f, c, "ruled"), e);
             }
@@ -581,6 +586,20 @@ void FiguresSubsystem::read_log(StepContext& ctx) {
             h.death_event = e;
             h.death_region = ctx.event_region(e);
             h.death_settlement = 0;
+            // P5-08 7.5: a champion slain while it commands stands down.
+            if (h.serving != 0) {
+                const auto it = wars_.find(h.serving);
+                if (it != wars_.end()) {
+                    for (std::size_t s = 0; s < 2; ++s) {
+                        if (it->second.general[s] == f) {
+                            it->second.general[s] = 0;
+                            it->second.vacant[s] = true;
+                        }
+                    }
+                }
+                figure(f).serving = 0;
+                close_relations_of(ctx, f, e);
+            }
             if (h.civ >= 1 && static_cast<std::size_t>(h.civ) <= hero_.size() &&
                 hero_[static_cast<std::size_t>(h.civ - 1)] == f) {
                 hero_[static_cast<std::size_t>(h.civ - 1)] = 0;

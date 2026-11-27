@@ -40,7 +40,8 @@ struct HistorySectionResult {
 // db::HISTORY_TABLES), each in primary-key order as visited.
 struct HistoryTables {
     // Schema 8 (P3-04 r21 23.4): index 13 is table region_name.
-    std::array<std::vector<std::vector<db::ColumnValue>>, 23> rows;  // schema 9: + beast, monster_kind, beast_population, monster, site; 10: + race_relation, settlement_race
+    std::array<std::vector<std::vector<db::ColumnValue>>, 24> rows;  // 14: + faction (index 23)
+     // schema 9: + beast, monster_kind, beast_population, monster, site; 10: + race_relation, settlement_race
     // The rows of table race (P3-03), id order: the per-race keys of P3-05
     // 15.4.
     std::vector<std::vector<db::ColumnValue>> races;

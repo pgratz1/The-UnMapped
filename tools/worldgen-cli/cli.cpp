@@ -172,14 +172,14 @@ constexpr std::string_view GENERATE_USAGE =
     "                      low, normal or high (default normal)\n"
     "  --divine-activity A distant, normal or meddling (default normal)\n"
     "  --divine-script FILE\n"
-    "                      not supported yet: divine scripts need phase P5\n"
+    "                      refused: divine scripts are not supported yet\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
     "\n"
     "The history settings are recorded in every world. The chronology stage uses\n"
     "the span and the races; the history stage uses the span, the detail, the\n"
-    "civilizations per race and the event intensity. The monster pressure and\n"
-    "the divine activity take effect with later history subsystems (phase P5).\n"
+    "civilizations per race, the event intensity, the monster pressure and the\n"
+    "divine activity (how often the gods act).\n"
     "--test-pattern records them and writes no history.\n"
     "\n"
     "Prints the absolute path of the written file.\n";
@@ -542,7 +542,7 @@ HistoryFlags parse_history_flags(const Options& options) {
     flags.divine_activity =
         parse_enum_option(options, "divine-activity", "distant, normal or meddling", &data::parse_divine_activity);
     if (options.value("divine-script") != nullptr) {
-        usage_error("--divine-script is not supported yet: divine scripts need phase P5");
+        usage_error("--divine-script: divine scripts are not supported yet");  // P5-08 6.11
     }
     return flags;
 }

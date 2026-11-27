@@ -354,6 +354,25 @@ struct FigureTables {
 };
 [[nodiscard]] std::optional<std::string> figure_tables_problem(const FigureTables& t);
 
+// P5-08 9 (schema 14): the first problem of the tables god and faction, of
+// the sites of kinds 5 to 7, the figures of roles 6 and 7 and the events of
+// kinds 100 to 110, in the order of 9's reader checks, or std::nullopt.
+// Called by both readers after their figure checks. Spans in primary-key
+// order as read; civ_ids ascending.
+struct PantheonTables {
+    std::span<const db::GodRow> gods;
+    std::span<const db::RaceRow> races;
+    std::span<const db::FactionRow> factions;
+    std::span<const db::FigureRow> figures;
+    std::span<const db::SiteRow> sites;
+    std::span<const std::int64_t> civ_ids;
+    std::span<const db::EventRow> events;
+    std::span<const db::EventParticipantRow> participants;
+    std::span<const db::EventValueRow> values;
+    const EventCatalogue* catalogue = nullptr;
+};
+[[nodiscard]] std::optional<std::string> pantheon_tables_problem(const PantheonTables& t);
+
 // P5-06 9.4: the role words ruler, claimant, general, hero, caster (roles 1
 // to 5), "?" otherwise; the temper words steady, warlike, peaceable,
 // grasping, just (0 to 4).

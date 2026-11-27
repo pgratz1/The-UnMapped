@@ -26,7 +26,7 @@ struct Shape {
     std::size_t nullable;
 };
 
-constexpr std::array<Shape, 23> SHAPES = {{
+constexpr std::array<Shape, 24> SHAPES = {{
     {db::EVENT_KIND_TABLE, 7, {1, 6, 7, 7}, 7},
     {db::EVENT_KIND_ROLE_TABLE, 6, {2, 6, 6, 6}, 6},
     {db::EVENT_KIND_VALUE_TABLE, 3, {2, 3, 3, 3}, 3},
@@ -50,6 +50,7 @@ constexpr std::array<Shape, 23> SHAPES = {{
     {db::SETTLEMENT_RACE_TABLE, 5, {5, 5, 5, 5}, 5},
     {db::FIGURE_TABLE, 19, {1, 2, 19, 19}, 10},  // schema 12 (P5-06 9.1)
     {db::BOOK_TABLE, 6, {1, 6, 6, 6}, 6},
+    {db::FACTION_TABLE, 13, {1, 13, 13, 13}, 9},  // schema 14 (P5-08 9)
 }};
 
 std::string row_at(const std::vector<db::ColumnValue>& row) {

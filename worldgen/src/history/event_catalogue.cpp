@@ -1390,6 +1390,21 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             if (std::optional<std::string> why = figure_tables_problem(ft)) {
                 view_fail(*why);
             }
+            // P5-08 9 (schema 14), after P5-06's checks.
+            PantheonTables pt;
+            pt.gods = v.god_rows_;
+            pt.races = race_rows;
+            pt.factions = v.faction_rows_;
+            pt.figures = v.figure_rows_;
+            pt.sites = v.site_rows_;
+            pt.civ_ids = civ_ids;
+            pt.events = event_rows;
+            pt.participants = participants;
+            pt.values = values;
+            pt.catalogue = &v.catalogue_;
+            if (std::optional<std::string> why = pantheon_tables_problem(pt)) {
+                view_fail(*why);
+            }
             for (const db::RelationRow& r : relation_rows) {
                 if (r.kind == "ruled" && r.a_type == static_cast<std::int64_t>(EntityType::figure) &&
                     r.b_type == static_cast<std::int64_t>(EntityType::civilization)) {
@@ -2511,7 +2526,7 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
         if (r.id != static_cast<std::int64_t>(i) + 1) {
             return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
         }
-        if (r.kind < 1 || r.kind > 4) return at + "kind " + int_text(r.kind) + " is not 1, 2, 3 or 4";
+        if (r.kind < 1 || r.kind > 7) return at + "kind " + int_text(r.kind) + " not 1 to 7";  // P5-08 9
         if (!sorted_has(t.region_ids, r.region)) return at + "unknown region " + int_text(r.region);
         if (r.x < 0 || r.y < 0 || r.x >= t.map_size || r.y >= t.map_size) {
             return at + "cell " + int_text(r.x) + " " + int_text(r.y) + " outside the map";
@@ -2533,15 +2548,28 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "mine with a monster";
             if (r.settlement == 0) return at + "mine without a settlement";
-        } else {  // P5-06 9.4: a tower
+        } else if (r.kind == 4) {  // P5-06 9.4: a tower
             if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
             if (r.monster != 0) return at + "tower with a monster";
+        } else {  // P5-08 9: a shrine, temple or sanctum
+            if (!sorted_has(t.civ_ids, r.founder_civ)) return at + "unknown civilization " + int_text(r.founder_civ);
+            if (r.monster != 0) return at + "shrine, temple or sanctum with a monster";
+            if (r.kind == 6 && r.settlement == 0) return at + "temple without a settlement";
+            if (r.kind == 7 && r.settlement != 0) return at + "sanctum with a settlement";
         }
         if (r.origin_year < 0 || r.origin_year > t.end_year - 1) return at + "origin_year " + int_text(r.origin_year) + range;
         const std::string_view ok = kind_key(r.origin_event);
-        const bool origin_ok = (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
-                                ok == "deep_woken" || ok == "outpost_built" || ok == "mine_opened" || ok == "tower_founded") &&
-                               year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
+        // P5-08 9: a lair's origin may be a divine_monster; a shrine's is its
+        // divine_mark, a temple's a cult_founded or cult_adopted, a sanctum's
+        // a cult_suppressed (checked again by pantheon_tables_problem).
+        const bool kind_origin =
+            r.kind == 5   ? ok == "divine_mark"
+            : r.kind == 6 ? (ok == "cult_founded" || ok == "cult_adopted")
+            : r.kind == 7 ? ok == "cult_suppressed"
+                          : (ok == "monster_appeared" || ok == "undead_rose" || ok == "settlement_overrun" ||
+                             ok == "deep_woken" || ok == "outpost_built" || ok == "mine_opened" ||
+                             ok == "tower_founded" || (r.kind == 1 && ok == "divine_monster"));
+        const bool origin_ok = kind_origin && year_of(r.origin_event) == r.origin_year && names_site(r.origin_event, r.id);
         if (!origin_ok) {
             return at + "origin_event " + int_text(r.origin_event) + " is not an event of its year naming this site";
         }
@@ -2558,12 +2586,21 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
                        int_text(*r.ended_year);
             }
         }
-        if (r.ending < 0 || r.ending > 6) return at + "ending " + int_text(r.ending) + " outside 0 to 6";
+        if (r.ending < 0 || r.ending > 8) return at + "ending " + int_text(r.ending) + " outside 0 to 8";  // P5-08 9
         if (r.kind == 3 && r.ending != 0 && r.ending != 4 && r.ending != 5) {
             return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a mine";
         }
-        if (r.kind == 4 && r.ending != 0 && r.ending != 4 && r.ending != 5) {  // P5-04a 21.4
-            return at + "ending " + int_text(r.ending) + " is not 0, 4 or 5 for a tower";
+        if (r.kind == 4 && r.ending != 0 && r.ending != 4 && r.ending != 5 && r.ending != 7) {  // P5-04a 21.4, P5-08 9
+            return at + "ending " + int_text(r.ending) + " is not 0, 4, 5 or 7 for a tower";
+        }
+        if ((r.kind == 5 || r.kind == 7) && r.ending != 0) {  // P5-08 9
+            return at + "ending " + int_text(r.ending) + " is not 0 for a " + (r.kind == 5 ? "shrine" : "sanctum");
+        }
+        if (r.kind == 6 && r.ending != 0 && r.ending != 4 && r.ending != 7 && r.ending != 8) {
+            return at + "ending " + int_text(r.ending) + " is not 0, 4, 7 or 8 for a temple";
+        }
+        if ((r.kind <= 2) && r.ending > 6) {
+            return at + "ending " + int_text(r.ending) + " outside 0 to 6 for a lair or outpost";
         }
     }
     // monster.
@@ -2587,8 +2624,9 @@ std::optional<std::string> monster_tables_problem(const MonsterTables& t) {
                       participant(r.born_event, "monster") == r.id)) {
             return at + "born_event " + int_text(r.born_event) + " is not the waking of this monster";
         }
-        if (!deep && !((bk == "monster_appeared" || bk == "undead_rose") && year_of(r.born_event) == r.born &&
-                       participant(r.born_event, "monster") == r.id)) {
+        // P5-08 9: or a divine_monster naming it, for a kind with wake 1 or 2.
+        if (!deep && !((bk == "monster_appeared" || bk == "undead_rose" || bk == "divine_monster") &&
+                       year_of(r.born_event) == r.born && participant(r.born_event, "monster") == r.id)) {
             return at + "born_event " + int_text(r.born_event) + " is not the appearance of this monster in year " +
                    int_text(r.born);
         }
@@ -2686,6 +2724,8 @@ std::string_view figure_role_word(std::int64_t role) noexcept {
         case 3: return "general";
         case 4: return "hero";
         case 5: return "caster";
+        case 6: return "champion";  // P5-08 9
+        case 7: return "prophet";
         default: return "?";
     }
 }
@@ -2730,8 +2770,8 @@ bool is_epithet_text(std::string_view text) noexcept {
             if (text[i + 1] == ' ') {
                 return false;
             }
-        } else if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-')) {
-            return false;
+        } else if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '-' || c == '\'')) {
+            return false;  // P5-08 (reading): a champion's epithet holds a god's name, which may hold '
         }
     }
     return true;
@@ -2810,7 +2850,7 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
         }
         if (!is_entity_name(r.name)) return at + "name is not a name";
         if (!is_epithet_text(r.epithet)) return at + "epithet is not an epithet";
-        if (r.role < 1 || r.role > 5) return at + "role " + int_text(r.role) + " outside 1 to 5";
+        if (r.role < 1 || r.role > 7) return at + "role " + int_text(r.role) + " outside 1 to 7";  // P5-08 9
         const db::RaceRow* race = nullptr;
         for (const db::RaceRow& x : t.races) {
             race = x.id == r.race ? &x : race;
@@ -2882,10 +2922,10 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
         earlier.push_back(r.id);
         if (r.temper < 0 || r.temper > 4) return at + "temper " + int_text(r.temper) + " outside 0 to 4";
         if (r.temper != 0 && r.role != 1) return at + "temper " + int_text(r.temper) + " of a " + word;
-        if (r.role == 3 && (r.skill < 1 || r.skill > 1000)) {
+        if ((r.role == 3 || r.role == 6) && (r.skill < 1 || r.skill > 1000)) {  // P5-08 7.5: a champion's skill
             return at + "skill " + int_text(r.skill) + " outside 1 to 1000";
         }
-        if (r.skill != 0 && r.role != 3) return at + "skill " + int_text(r.skill) + " of a " + word;
+        if (r.skill != 0 && r.role != 3 && r.role != 6) return at + "skill " + int_text(r.skill) + " of a " + word;
         if (r.status == 2 && r.role != 2) return at + "in exile but not a claimant";
     }
     // book (K1 to K6).
@@ -2947,7 +2987,8 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
             }
             ruled_of[r.b_id].push_back(&r);
         } else if (r.kind == "served") {
-            const bool ok = a != nullptr && a->role == 3 && a->civ == r.b_id && sk == "general_appointed" &&
+            const bool ok = a != nullptr && (a->role == 3 || a->role == 6) && a->civ == r.b_id &&
+                            sk == "general_appointed" &&
                             participant(r.since_event, "figure") == r.a_id &&
                             participant(r.since_event, "civilization") == r.b_id;
             if (!ok) {
@@ -2958,7 +2999,7 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
                 // Engineer's reading: search_abandoned ends a war too (P3-06 r10 20.17).
                 const bool ends = uk == "peace" || uk == "war_won" || uk == "truce" || uk == "civ_conquered" ||
                                   uk == "civ_ended" || uk == "search_abandoned" ||
-                                  ((uk == "fell_in_battle" || uk == "figure_died") &&
+                                  ((uk == "fell_in_battle" || uk == "figure_died" || uk == "hero_slain") &&
                                    participant(r.until_event, "figure") == r.a_id) ||
                                   (r.until_event != 0 && r.until_event == ending_of(r.b_id));
                 if (!ends) {
@@ -3109,6 +3150,203 @@ std::size_t clause_cuts(std::string_view literal) noexcept {
 }
 
 }  // namespace
+
+// --- P5-08 9: the pantheon's reader checks ------------------------------------------------------
+
+std::optional<std::string> pantheon_tables_problem(const PantheonTables& t) {
+    if (t.catalogue == nullptr) {
+        return std::nullopt;
+    }
+    const EventCatalogue& cat = *t.catalogue;
+    const auto n_events = static_cast<std::int64_t>(t.events.size());
+    const auto kind_key = [&](std::int64_t event) -> std::string_view {
+        if (event < 1 || event > n_events) {
+            return {};
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        return k != nullptr ? std::string_view(k->key) : std::string_view();
+    };
+    const auto year_of = [&](std::int64_t event) -> std::optional<std::int64_t> {
+        if (event < 1 || event > n_events) {
+            return std::nullopt;
+        }
+        return t.events[static_cast<std::size_t>(event - 1)].year;
+    };
+    std::vector<std::pair<std::size_t, std::size_t>> parts(t.events.size(), {0, 0});
+    for (std::size_t i = 0; i < t.participants.size(); ++i) {
+        const std::int64_t e = t.participants[i].event;
+        if (e >= 1 && e <= n_events) {
+            auto& r = parts[static_cast<std::size_t>(e - 1)];
+            if (r.first == r.second) {
+                r = {i, i};
+            }
+            r.second = i + 1;
+        }
+    }
+    const auto participant = [&](std::int64_t event, std::string_view role) -> std::int64_t {
+        if (event < 1 || event > n_events) {
+            return 0;
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        const RoleDef* r = k != nullptr ? k->find_role(role) : nullptr;
+        if (r == nullptr) {
+            return 0;
+        }
+        const auto [a, b] = parts[static_cast<std::size_t>(event - 1)];
+        for (std::size_t i = a; i < b; ++i) {
+            if (t.participants[i].role == r->seq) {
+                return t.participants[i].entity_id;
+            }
+        }
+        return 0;
+    };
+    const auto value = [&](std::int64_t event, std::string_view key) -> std::int64_t {
+        if (event < 1 || event > n_events) {
+            return 0;
+        }
+        const KindDef* k = cat.find_id(t.events[static_cast<std::size_t>(event - 1)].kind);
+        const std::int64_t seq = k != nullptr ? k->value_seq(key) : 0;
+        for (const db::EventValueRow& v : t.values) {  // a few rows per cult: linear is enough
+            if (v.event == event && v.seq == seq) {
+                return v.value;
+            }
+        }
+        return 0;
+    };
+    // god.
+    const auto n_races = static_cast<std::int64_t>(t.races.size());
+    for (std::size_t i = 0; i < t.gods.size(); ++i) {
+        const db::GodRow& g = t.gods[i];
+        const std::string at = "corrupt table 'god': row " + int_text(g.id) + ": ";
+        if (g.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(g.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (g.camp < 0 || g.camp > 2) return at + "camp " + int_text(g.camp) + " outside 0 to 2";
+        if (g.id <= n_races) {
+            const db::RaceRow& r = t.races[static_cast<std::size_t>(g.id - 1)];
+            if (g.race != g.id || g.domain != 1 || g.camp != r.camp) {
+                return at + "a creator with race " + int_text(g.race) + ", domain " + int_text(g.domain) +
+                       " and camp " + int_text(g.camp);
+            }
+        } else {
+            if (g.race != 0) return at + "race " + int_text(g.race) + " for a pantheon god";
+            if (g.domain < 2 || g.domain > 9) return at + "domain " + int_text(g.domain) + " not 2 to 9 for a pantheon god";
+        }
+    }
+    const auto n_gods = static_cast<std::int64_t>(t.gods.size());
+    const auto n_sites = static_cast<std::int64_t>(t.sites.size());
+    const auto n_figures = static_cast<std::int64_t>(t.figures.size());
+    const auto site_of = [&](std::int64_t id) -> const db::SiteRow* {
+        return id >= 1 && id <= n_sites ? &t.sites[static_cast<std::size_t>(id - 1)] : nullptr;
+    };
+    // faction.
+    const auto n_factions = static_cast<std::int64_t>(t.factions.size());
+    std::vector<std::int64_t> hidden_by(t.factions.size(), 0);  // cult_suppressed with hidden 1, per faction
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "cult_suppressed" && value(e.id, "hidden") == 1) {
+            const std::int64_t k = participant(e.id, "faction");
+            if (k >= 1 && k <= n_factions) {
+                hidden_by[static_cast<std::size_t>(k - 1)] += 1;
+            }
+        }
+    }
+    for (std::size_t i = 0; i < t.factions.size(); ++i) {
+        const db::FactionRow& r = t.factions[i];
+        const std::string at = "corrupt table 'faction': row " + int_text(r.id) + ": ";
+        if (r.id != static_cast<std::int64_t>(i) + 1) {
+            return at + "id " + int_text(r.id) + " is not " + int_text(static_cast<std::int64_t>(i) + 1);
+        }
+        if (!is_entity_name(r.name)) return at + "name is not a name";
+        if (r.kind != 1) return at + "kind " + int_text(r.kind) + " is not 1";
+        if (r.god < 1 || r.god > n_gods) return at + "god " + int_text(r.god) + " is not a god";
+        if (!sorted_has(t.civ_ids, r.civ)) return at + "unknown civilization " + int_text(r.civ);
+        if (r.founder < 1 || r.founder > n_figures) return at + "founder " + int_text(r.founder) + " is not a figure";
+        const db::SiteRow* seat = site_of(r.seat);
+        if (seat == nullptr || seat->kind != 6 || seat->origin_event != r.founding_event) {
+            return at + "seat " + int_text(r.seat) + " is not the temple of its founding";
+        }
+        if (kind_key(r.founding_event) != "cult_founded" || participant(r.founding_event, "faction") != r.id ||
+            year_of(r.founding_event) != r.founded_year) {
+            return at + "founding_event " + int_text(r.founding_event) + " is not its cult_founded";
+        }
+        if (r.status < 1 || r.status > 3) return at + "status " + int_text(r.status) + " outside 1 to 3";
+        const bool ended = r.status == 3;
+        if (ended != r.ended_year.has_value() || ended != (r.ending != 0) || ended != (r.ending_event != 0)) {
+            return at + "end columns disagree";
+        }
+        if (ended && (r.ending < 1 || r.ending > 2)) return at + "ending " + int_text(r.ending) + " outside 1 to 2";
+        if (ended && year_of(r.ending_event) != r.ended_year) {
+            return at + "ending_event " + int_text(r.ending_event) + " is not of year " + int_text(*r.ended_year);
+        }
+        if ((r.status == 2) != (hidden_by[i] > 0)) return at + "faction " + int_text(r.id) + " hidden without a sanctum";
+    }
+    // site: kinds 5 to 7 (the origin kinds are checked by monster_tables_problem).
+    for (const db::SiteRow& r : t.sites) {
+        const std::string at = "corrupt table 'site': row " + int_text(r.id) + ": ";
+        if (r.kind == 5 && participant(r.origin_event, "site") != r.id) {
+            return at + "origin_event " + int_text(r.origin_event) + " is not a divine_mark naming it";
+        }
+        if (r.kind == 6 && participant(r.origin_event, "site") != r.id) {
+            return at + "origin_event " + int_text(r.origin_event) + " is not a founding or faith naming it";
+        }
+        if (r.kind == 7 && participant(r.origin_event, "sanctum") != r.id) {
+            return at + "origin_event " + int_text(r.origin_event) + " is not a cult_suppressed naming it as sanctum";
+        }
+    }
+    // figure: roles 6 and 7.
+    for (const db::FigureRow& r : t.figures) {
+        const std::string at = "corrupt table 'figure': row " + int_text(r.id) + ": ";
+        if (r.role == 6 && !(kind_key(r.start_event) == "divine_champion" && participant(r.start_event, "figure") == r.id)) {
+            return at + "start_event " + int_text(r.start_event) + " is not a divine_champion naming it";
+        }
+        if (r.role == 7 && !(kind_key(r.start_event) == "cult_founded" && participant(r.start_event, "founder") == r.id)) {
+            return at + "start_event " + int_text(r.start_event) + " is not a cult_founded naming it as founder";
+        }
+    }
+    // Events.
+    for (const db::EventRow& e : t.events) {
+        const std::string_view k = kind_key(e.id);
+        const std::string at = "corrupt table 'event': row " + int_text(e.id) + ": ";
+        if (k == "cult_spread" || k == "cult_adopted" || k == "cult_suppressed") {
+            const std::int64_t f = participant(e.id, "faction");
+            if (f < 1 || f > n_factions || t.factions[static_cast<std::size_t>(f - 1)].founding_event >= e.id) {
+                return at + std::string(k) + " of faction " + int_text(f) + " before its founding";
+            }
+        }
+        if (k == "tower_abandoned") {
+            const db::SiteRow* s = site_of(participant(e.id, "site"));
+            if (s == nullptr || s->kind != 4 || s->ending != 7 || s->ending_event != e.id) {
+                return at + "tower_abandoned does not end its tower with 7";
+            }
+        }
+    }
+    for (const db::EventValueRow& v : t.values) {
+        const std::string_view k = kind_key(v.event);
+        const KindDef* kind = cat.find(k);
+        if (kind == nullptr || kind->id < 100 || kind->id > 110 || v.seq < 1 ||
+            v.seq > static_cast<std::int64_t>(kind->values.size())) {
+            continue;
+        }
+        const std::string& key = kind->values[static_cast<std::size_t>(v.seq - 1)];
+        std::int64_t lo = 0;
+        std::int64_t hi = std::numeric_limits<std::int64_t>::max();
+        if (key == "effect") {
+            lo = 1;
+            hi = k == "divine_bless" ? 2 : 3;
+        } else if (key == "telling") {
+            hi = 2;
+        } else if (key == "divine_script") {
+            hi = 0;  // a generated world has no divine script (6.11)
+        } else if (key == "profane" || key == "hidden") {
+            hi = 1;
+        }
+        if (v.value < lo || v.value > hi) {
+            return "corrupt table 'event_value': row (" + int_text(v.event) + ", " + int_text(v.seq) + "): " + key + " " +
+                   int_text(v.value) + " outside " + int_text(lo) + " to " + int_text(hi);
+        }
+    }
+    return std::nullopt;
+}
 
 std::string render_event(const HistoryView& view, std::int64_t event_id) {
     return render_event_linked(view, event_id).text;

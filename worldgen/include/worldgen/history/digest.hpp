@@ -131,6 +131,8 @@ struct HistoryTables {
     // Schema 12 (P5-06 9.1, 9.3): tables figure and book.
     std::vector<db::FigureRow> figures;
     std::vector<db::BookRow> books;
+    // Schema 14 (P5-08 9): table faction.
+    std::vector<db::FactionRow> factions;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };

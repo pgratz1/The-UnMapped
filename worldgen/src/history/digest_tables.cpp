@@ -215,6 +215,11 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
     for (const Row& r : h.rows[22]) {
         t.books.push_back(db::BookRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5)});
     }
+    // Schema 14 (P5-08 9).
+    for (const Row& r : h.rows[23]) {
+        t.factions.push_back(db::FactionRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
+                                            i64(r, 7), i64(r, 8), opt(r, 9), i64(r, 10), i64(r, 11), i64(r, 12)});
+    }
 }
 
 // --- The checks of 5.3 ------------------------------------------------------
@@ -694,6 +699,21 @@ private:
         ft.catalogue = &cat;
         ft.end_year = e_;
         if (std::optional<std::string> why = figure_tables_problem(ft)) {
+            throw Corrupt{*why};
+        }
+        // P5-08 9 (schema 14), after P5-06's checks.
+        PantheonTables pt;
+        pt.gods = t_.gods;
+        pt.races = t_.races;
+        pt.factions = t_.factions;
+        pt.figures = t_.figures;
+        pt.sites = t_.sites;
+        pt.civ_ids = civ_ids;
+        pt.events = events;
+        pt.participants = participants;
+        pt.values = values;
+        pt.catalogue = &cat;
+        if (std::optional<std::string> why = pantheon_tables_problem(pt)) {
             throw Corrupt{*why};
         }
     }
