@@ -1,0 +1,33 @@
+# P5-08 fixture `pantheon-followups` (spec 12.2, 12.5, 12.6; 16 item 12): pantheon-small with the deep's stir certain
+# whenever its chance is drawn (deep_stir_permille 1000, the depths-small deep years), a short tower lapse and the
+# renewal cap at 1, so that a tower abandoned and a capped renewal appear (a stir and a take-up appear in pantheon-small itself: stress seeds 9 and 1) (reference
+# replay). The acts are left as pantheon-small's.
+
+base = "pantheon-small"
+paths = ["tower_abandoned", "renewal capped"]
+
+[monsters]
+deep_years = [5, 10, 20]
+deep_delve_permille = 1000
+deep_wake_ppm = [0, 2000, 6000]
+deep_stir_permille = 1000
+
+[alliances]
+renew_written_max = 1
+
+[figures]
+tower_lapse_years = 20
+
+[[case]]
+seed = 1
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+
+[[case]]
+seed = 13
+span = 6000
+races = "all"
+civs = "4"
+intensity = "turbulent"

@@ -1,0 +1,39 @@
+# P5-08 fixture `pantheon-acts` (spec docs/specs/p5-08-pantheon-cults.md r1, 6.3 to 6.5; 16 items 4 and 5). Read by
+# worldgen/tests/reference/p5_08_pantheon_reference.py (fixtures, golden) and the C++ tests of
+# worldgen/tests/history/history_pantheon_*_test.cpp; its lines in golden/p5-08-pantheon.txt are the reference's.
+#
+# Every kind of act and every effect: pantheon-small (4.1, in memory: monsters-small on the conflict stress data with
+# act_threshold 30, act_permille 1000, the short rests and certain cults) with no cult founded, so that the acts are
+# not crowded out by faith and suppression, and the rests at their minimum. The five kinds, both blessings, the
+# curses (pestilence and defeat; a withering appears in pantheon-small), both marks (one at a settlement), a sent monster and a champion appear on these seeds (reference
+# replay). On the conflict stress geographies (the reference's make_synthetic(seed); settings as given).
+
+base = "pantheon-small"
+paths = ["bless", "curse", "champion", "monster", "mark", "plenty", "valour", "pestilence", "defeat",
+         "sacred mark", "profane mark"]
+
+[pantheon]
+cult_found_permille = 0
+god_rest_years = 0
+pair_rest_years = 0
+
+[[case]]
+seed = 0
+span = 2000
+races = "all"
+civs = "auto"
+intensity = "normal"
+
+[[case]]
+seed = 1
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "turbulent"
+
+[[case]]
+seed = 5
+span = 6000
+races = "all"
+civs = "4"
+intensity = "normal"

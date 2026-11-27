@@ -1,0 +1,33 @@
+# P5-08 fixture `pantheon-activity` (spec 4.2 activity_permille, PN2; 16 item 14's settings): pantheon-small at the
+# three --divine-activity levels on one geography, with act_permille 100 so that A matters (p = min(1000, 100 x A div
+# 1000): 30, 100, 250 per mille). The C++ test checks distant <= normal <= meddling in acts on these cases.
+
+base = "pantheon-small"
+paths = ["bless"]
+
+[pantheon]
+act_permille = 100
+
+[[case]]
+seed = 7
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+activity = "distant"
+
+[[case]]
+seed = 7
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+activity = "normal"
+
+[[case]]
+seed = 7
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+activity = "meddling"

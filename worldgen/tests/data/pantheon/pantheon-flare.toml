@@ -1,0 +1,26 @@
+# P5-08 fixture `pantheon-flare` (spec 6.6; 16 item 4, `certain` after a gods' flare-up and not after another
+# source's): pantheon-small with no yearly act (act_permille 0), so that every act is one a flare-up made certain;
+# flare_regard at act_threshold. Every act of these runs is in the first tick year of a flare-up whose trigger is its
+# lead deed (reference replay; the C++ property test checks it from rows).
+
+base = "pantheon-small"
+paths = ["flare", "certain act"]
+
+[pantheon]
+act_permille = 0
+flare_regard = 30
+flare_permille = 1000
+
+[[case]]
+seed = 2
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "calm"
+
+[[case]]
+seed = 12
+span = 6000
+races = "all"
+civs = "4"
+intensity = "normal"
