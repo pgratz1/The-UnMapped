@@ -256,6 +256,9 @@ public:
         std::int64_t settlement = 0, founder_civ = 0, monster = 0;
         std::int64_t origin_year = 0, origin_event = 0;
     };
+    // P5-08 6.3: some awake monster that c could hunt this year under
+    // 6.4.2's test (a raid on c remembered, c's hunters in reach).
+    [[nodiscard]] bool huntable_by(const StepContext& context, std::int64_t civ) const;
     [[nodiscard]] std::int64_t next_site_id() const noexcept { return static_cast<std::int64_t>(sites_.size()) + 1; }
     // FatalError unless spec.id == next_site_id() and spec.kind is 3 or 4.
     // end_site_seam: FatalError unless the site is an open mine or tower (kind
@@ -400,6 +403,8 @@ private:
     [[nodiscard]] std::string place_name(const StepContext& context, std::size_t kind, std::int64_t monster,
                                          std::int64_t region, std::int64_t settlement, std::string& root);
     void hunts(StepContext& context, std::int64_t monster);
+    [[nodiscard]] std::int64_t hunt_levy(const StepContext& context, std::int64_t monster, std::int64_t civ) const;
+    [[nodiscard]] std::int64_t hunt_prowess(const State& state, std::int64_t civ) const;
     void deaths_of_age_quiet(StepContext& context);
     // P5-07 6.2 to 6.7 (monsters_deep.cpp).
     void deepen(StepContext& context);

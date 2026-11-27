@@ -112,6 +112,7 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     pantheon.set_sites(&monsters);
     pantheon.set_figures(&figures);
     pantheon.set_alliances(&alliances);
+    pantheon.set_conflict(&conflict);
     peoples.set_divine(&pantheon);
     conflict.set_divine(&pantheon);
     history::EngineConfig config;

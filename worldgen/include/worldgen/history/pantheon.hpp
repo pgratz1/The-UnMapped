@@ -35,6 +35,7 @@
 namespace worldgen::history {
 
 class AllianceView;
+class ConflictSubsystem;
 class FiguresSubsystem;
 class MonstersSubsystem;
 class PeoplesSubsystem;
@@ -150,6 +151,8 @@ public:
     void set_sites(MonstersSubsystem* monsters) noexcept { sites_ = monsters; }
     void set_figures(FiguresSubsystem* figures) noexcept { figures_ = figures; }
     void set_alliances(const AllianceView* alliances) noexcept { alliances_ = alliances; }
+    // 6.3 champion eligibility: open wars (nullptr: no war counts).
+    void set_conflict(const ConflictSubsystem* conflict) noexcept { conflict_ = conflict; }
 
     [[nodiscard]] std::span<const Step> steps() const override;  // T4, Q4
     void run(StepContext& context) override;
@@ -254,6 +257,7 @@ private:
     [[nodiscard]] std::array<std::int64_t, 3> kind_weights(const StepContext& context, std::int64_t g, std::int64_t c,
                                                            bool favourable) const;
     [[nodiscard]] bool eligible(const StepContext& context, std::size_t kind, std::int64_t g, std::int64_t c) const;
+    [[nodiscard]] bool champion_work(const StepContext& context, std::int64_t c) const;
     [[nodiscard]] std::int64_t home_region(const StepContext& context, std::int64_t c) const;
     [[nodiscard]] std::int64_t capital_region(const StepContext& context, std::int64_t c) const;
     [[nodiscard]] std::vector<std::size_t> sendable_kinds(std::int64_t g) const;
@@ -287,6 +291,7 @@ private:
     MonstersSubsystem* sites_ = nullptr;
     FiguresSubsystem* figures_ = nullptr;
     const AllianceView* alliances_ = nullptr;
+    const ConflictSubsystem* conflict_ = nullptr;
     PantheonTuning tuning_;
     std::vector<PantheonGodDef> defs_;
     bool prepared_ = false;

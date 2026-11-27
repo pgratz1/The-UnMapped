@@ -246,7 +246,7 @@ At most one intervention a year. ρ is 6.4's region of the kind. **Eligibility**
 | --- | --- |
 | bless | always |
 | curse | c has a standing visible capital (pestilence reads its region) |
-| champion | c has no living champion (role 6) and the figures seam is set |
+| champion | c has no living champion (role 6), the figures seam is set, and c has work for a champion in year Y: c is a side or an open joined ally of an open war, or some awake, unsealed monster remembers a raid on c within `hunt_memory_years` and c's hunters against it (P5-02 6.4.2, before any hero) are above 0 |
 | monster | g has a `monsters` kind with living count < `max_alive` and 6.4's lair search finds a region |
 | mark | 6.4's place exists |
 
@@ -575,7 +575,7 @@ A notable renewal is written only while its alliance row has fewer than `history
 1. `god`: rows 1 … n creators as P3-03 C5 with domain 1; rows n + 1 … the pantheon in canonical id order with their data's camp, domain and title; names distinct from every region and age name and from each other.
 2. Every act (100 to 104) is in a tick year; `divine_script` 0; one to three causes, each an event of a deed of its god (4.3) whose receiver was its civilization, all of one sign (positive for bless, champion and a sacred mark, negative for curse, monster and a profane mark), within `regard_memory_years`; at most one act per year; a god's acts at least `god_rest_years` apart, a pair's at least `pair_rest_years`.
 3. No act favours a foe of its god; no wrathful act targets a realm whose faith is its god's cult at the act.
-4. A pestilence's `dead` equals the population lost by c's settlements of the capital region in that event; a `divine_monster`'s monster is born of it, awake, of a kind in its god's `monsters`, its lair within `send_hops` of c's capital region; a `divine_champion`'s figure has role 6, civilization c and `start_event` the act; a `divine_mark`'s site is of kind 5 with `origin_event` the act, and no settlement has two shrines.
+4. A pestilence's `dead` equals the population lost by c's settlements of the capital region in that event; a `divine_monster`'s monster is born of it, awake, of a kind in its god's `monsters`, its lair within `send_hops` of c's capital region; a `divine_champion`'s figure has role 6, civilization c and `start_event` the act, and in the act's year c was at war (an open war as a side or open joined ally) or an awake monster c could hunt under P5-02 6.4.2 existed (6.3); a `divine_mark`'s site is of kind 5 with `origin_event` the act, and no settlement has two shrines.
 5. Every cult: founded by a `cult_founded` citing an act of its god on its founding realm, one year or more after the act (a later step); its founder a figure alive at the founding (a role 7 founder created by it); its seat a temple at a settlement of the founding realm; at most one live cult per god at every year's end.
 6. `cult_in`(k, a) opens only by `cult_founded` or `cult_spread`; a `cult_spread` cites k's founding and its `from` realm had `cult_in` and an open alliance or trade with a at the event; at most one spread per cult per step.
 7. At most one `faith_of` per realm in force; `faith_of`(k, c) only while `cult_in`(k, c) is open; no `cult_suppressed` of a realm's own faith; a suppression's realm satisfies 6.9's hostility rule at the event.

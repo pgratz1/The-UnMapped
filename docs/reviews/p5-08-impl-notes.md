@@ -141,3 +141,29 @@ abandoned 1 to 5 a world, taken up 0 or 1 (FU3); `divine_flares` 0 in all 16 wor
 hidden cult in these 16; a tower lapses before a new caster can take it up (T3 order: endings, then rises). Stir:
 `deep_stirred` 0 or 1 a world. **For the auditor:** the T4 phase tracking in monsters (`phase_seen_`), the gate plan
 copied into the take, the order of aid events after the outcome's flight events, `towers_` updates in `die()`.
+
+## Champion needs work (lead ruling after calibration miss 1, PN5; 2026-11-27)
+
+Spec 6.3, row champion, gains a third condition, tested at the time the source chooses the act (and again by
+`apply`, which runs in the same step with the same state), by `PantheonSubsystem::champion_work(ctx, c)`:
+
+1. **War:** `ConflictSubsystem::open_wars_of(c) > 0`, i.e. some war record with `open` true in which c is the attacker
+   or the defender, or appears among the war's allies with its joined record `open` (P5-04 7.6). Closed wars and
+   closed joined records do not count. The pantheon reads conflict through the new `set_conflict` (stage wiring in
+   `src/stages/history.cpp`; without it no war counts, as in the test seam).
+2. **Monster:** `MonstersSubsystem::huntable_by(ctx, c)`: c is a civilization id in range, not ended and visible, and
+   some monster, by ascending id, has status `awake` and is not sealed, holds a raid memory with `civ == c` and
+   `Y - year <= hunt_memory_years`, and `floor(hunt_levy(m, c) * hunt_prowess(c) / 1000) > 0`. `hunt_levy` and
+   `hunt_prowess` are the code `hunts()` itself now calls (extracted, no change of bytes there): the levy is the sum of
+   `floor(population * hunt_levy_permille / 1000)` over c's standing, visible settlements whose region is within
+   `hunt_hops` of the monster; prowess is the race's `prowess_permille`, else 1000. A hero only multiplies strength,
+   so the test before a hero is exact. The hunt's yearly chance is not part of the test.
+
+When champion is ineligible its weight is 0 and the kind draw is unchanged (no new draw, stream or field). The order
+of reads: war first, then monsters; either suffices.
+
+Measured with the rule (gcc, seeds 0-39 at 1024, `game/data`; seeds 0-7 byte-identical with clang): 20
+`divine_champion` (was more before the rule), 18 of 40 worlds with a champion, 6 of 20 champions fight (30%; PN5
+needs 50%). Acts 100-104: bless 156, curse 164, champion 20, monster 95, mark 111. Diagnosis: champions live about 25
+to 35 years and only 6 of 20 saw a war declaration of their realm in their life; a champion raised during an open war
+is not appointed to it (P5-06 6.6 appoints at a declaration only), and a realm's own hero hunts before its champion.

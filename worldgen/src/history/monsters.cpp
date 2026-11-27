@@ -1514,6 +1514,58 @@ void MonstersSubsystem::overrun(StepContext& ctx, std::int64_t id, std::int64_t 
     ++stats_.overruns;
 }
 
+// 6.4.2: the hunters of c against monster id (levy of c's standing visible
+// settlements within hunt_hops).
+std::int64_t MonstersSubsystem::hunt_levy(const StepContext& ctx, std::int64_t id, std::int64_t c) const {
+    const State& state = ctx.state();
+    std::int64_t hunters = 0;
+    for (std::int64_t sid = 1; sid <= settlement_count(state); ++sid) {
+        const Settlement& u = state.settlement(sid);
+        if (!standing(u) || !ctx.visible(u) || u.owner_civ != c || u.region < 1 || u.region > region_count_) {
+            continue;
+        }
+        const std::int64_t h = monster(id).hops[static_cast<std::size_t>(u.region - 1)];
+        if (h >= 0 && h <= tuning_.hunt_hops) {
+            hunters = checked_add(hunters, floor_div(checked_mul(u.population, tuning_.hunt_levy_permille), 1000));
+        }
+    }
+    return hunters;
+}
+
+// 6.4.2: c's prowess per mille in a hunt (1000 when its race has none).
+std::int64_t MonstersSubsystem::hunt_prowess(const State& state, std::int64_t c) const {
+    std::int64_t prowess = 1000;
+    for (const auto& [race, value] : prowess_) {
+        prowess = race == state.civ(c).race ? value : prowess;
+    }
+    return prowess;
+}
+
+// P5-08 6.3 (lead ruling, champion eligibility): some living, awake, unsealed
+// monster that hunts() would let c hunt this year: it remembers a raid on c
+// within hunt_memory_years, c is alive and visible, and c's base strength
+// against it is above 0 (a hero only multiplies it). Ascending monster ids.
+bool MonstersSubsystem::huntable_by(const StepContext& ctx, std::int64_t c) const {
+    const State& state = ctx.state();
+    if (c < 1 || c > civ_count(state) || state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
+        return false;
+    }
+    const auto n = static_cast<std::int64_t>(monsters_.size());
+    for (std::int64_t id = 1; id <= n; ++id) {
+        const Monster& m = monster(id);
+        if (m.status != MonsterStatus::awake || m.sealed) {
+            continue;
+        }
+        const bool remembered = std::any_of(m.raids.begin(), m.raids.end(), [&](const RaidMemory& r) {
+            return r.civ == c && ctx.year() - r.year <= tuning_.hunt_memory_years;
+        });
+        if (remembered && floor_div(checked_mul(hunt_levy(ctx, id, c), hunt_prowess(state, c)), 1000) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
     State& state = ctx.state();
     const std::vector<RaidMemory> raids = monster(id).raids;  // a copy: the loop may end the monster
@@ -1541,22 +1593,8 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
             checked_add(checked_add(tuning_.hunt_permille,
                                     checked_mul(std::max<std::int64_t>(0, r_c - 1), tuning_.hunt_raid_permille)),
                         hero.hunt_permille));
-        std::int64_t hunters = 0;
-        for (std::int64_t sid = 1; sid <= settlement_count(state); ++sid) {
-            const Settlement& u = state.settlement(sid);
-            if (!standing(u) || !ctx.visible(u) || u.owner_civ != c || u.region < 1 || u.region > region_count_) {
-                continue;
-            }
-            const std::int64_t h = monster(id).hops[static_cast<std::size_t>(u.region - 1)];
-            if (h >= 0 && h <= tuning_.hunt_hops) {
-                hunters = checked_add(hunters, floor_div(checked_mul(u.population, tuning_.hunt_levy_permille), 1000));
-            }
-        }
-        std::int64_t prowess = 1000;
-        for (const auto& [race, value] : prowess_) {
-            prowess = race == state.civ(c).race ? value : prowess;
-        }
-        std::int64_t strength = floor_div(checked_mul(hunters, prowess), 1000);
+        const std::int64_t hunters = hunt_levy(ctx, id, c);
+        std::int64_t strength = floor_div(checked_mul(hunters, hunt_prowess(state, c)), 1000);
         strength = floor_div(checked_mul(strength, checked_add(1000, hero.might_permille)), 1000);
         if (strength == 0) {
             continue;

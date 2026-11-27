@@ -20,6 +20,7 @@
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/streams.hpp"
 #include "worldgen/data/schema.hpp"
+#include "worldgen/history/conflict.hpp"
 #include "worldgen/history/draw.hpp"
 #include "worldgen/history/figures.hpp"
 #include "worldgen/history/monsters.hpp"
@@ -569,11 +570,21 @@ std::optional<PantheonSubsystem::Place> PantheonSubsystem::mark_place(const Step
     return Place{region, cell->x, cell->y, 0};
 }
 
+// 6.3 (lead ruling): c has work for a champion in year Y: c is a side or an
+// open joined ally of an open war, or an awake monster that c could hunt
+// under P5-02 6.4.2 (MonstersSubsystem::huntable_by) exists.
+bool PantheonSubsystem::champion_work(const StepContext& ctx, std::int64_t c) const {
+    if (conflict_ != nullptr && conflict_->open_wars_of(c) > 0) {
+        return true;
+    }
+    return sites_ != nullptr && sites_->huntable_by(ctx, c);
+}
+
 bool PantheonSubsystem::eligible(const StepContext& ctx, std::size_t kind, std::int64_t g, std::int64_t c) const {
     switch (kind) {
         case BLESS: return true;
         case CURSE: return capital_region(ctx, c) != 0;
-        case CHAMPION: return figures_ != nullptr && figures_->champion_of(c) == 0;
+        case CHAMPION: return figures_ != nullptr && figures_->champion_of(c) == 0 && champion_work(ctx, c);
         case MONSTER: return !sendable_kinds(g).empty() && lair_region(ctx, c) != 0;
         case MARK: {
             const auto it = pairs_.find({g, c});
