@@ -20,7 +20,7 @@ It links `worldgen` through its public headers and nothing else of it; `worldgen
 
 **Why godot-cpp 10.0.0.** Since version 10, godot-cpp is versioned separately from Godot. Its README (https://github.com/godotengine/godot-cpp/blob/10.0.0-stable/README.md) says: "Using the `api_version` parameter (see below), godot-cpp v10 can target Godot 4.3 or later", and "GDExtensions targeting an earlier version of Godot should work in later minor versions, but not vice-versa." 10.0.0-stable (2026-09-15) is its newest release and ships `extension_api-4-7.json`. That file equals the API dumped from the pinned 4.7.2 editor in every section except the version header, and the interface JSON is byte-identical (`extern/README.md`, Notes). Terrain3D v1.1.0 itself builds against a godot-cpp master commit from 2026-03 (submodule `60b5a419`), so it does not pin a godot-cpp tag that we could share.
 
-Terrain3D is not integrated now; it only decides the version (milestone 2 confirms it).
+Terrain3D v1.1.0-stable is vendored in `extern/terrain3d/` and built by our CMake against godot-cpp 10.0.0 with a force-included compatibility header and one edited line (`extern/README.md`); it is used by the 3D terrain preview ("Terrain preview" below).
 
 ## Getting the pinned editor
 
@@ -79,6 +79,9 @@ Godot loads an extension from a `.gdextension` file inside the project, and writ
   bin/                    real folder: the extension's output directory
     libunmapped_gdext.so  (Windows: unmapped_gdext.dll)
   .godot/                 real folder: Godot's cache
+  addons/terrain_3d/      real folder, only with -DUNMAPPED_BUILD_TERRAIN3D=ON (spec V3D-01 3.4)
+    terrain.gdextension   generated from gdext/terrain3d/terrain.gdextension.in
+    bin/libterrain3d.so   (Windows: terrain3d.dll), the plug-in's output directory
 ```
 
 - The library is built straight into `<build>/game/bin/`. `game/unmapped.gdextension` names it as `res://bin/libunmapped_gdext.so` (Linux) and `res://bin/unmapped_gdext.dll` (Windows), relative to the project, so the committed file is the same on every machine.
@@ -101,6 +104,7 @@ All in `gdext/src/`, registered at the scene level:
 | `ViewerModel` | `RefCounted` | The model of the viewer screen: the open world, its views (every layer, then every composite), the selected view, decoded layers and images; `get_view_count()`, `get_view_info(i)` (kind `layer` or `composite`, name, group, unit, size, element type, palette), `select_view(i)`, `get_view_image(i)`; `get_legend()` and `get_legend_title()` for the selected view; `describe_cell(x, y)`, one line with the cell, its value in display units, its biome and region names and, with history, who holds the region in the current year; signals `world_opened`, `world_open_failed`, `world_closed`, `view_selected`, `view_failed`, `year_changed`, `view_image_changed`, `markers_changed`. The history methods of spec P4-03 3.2 and the marker methods of spec P4-04 8.1 (below). No Controls; a VR view can use it as is. |
 | `LayerMapView` | `Control` | Presentation: draws one layer image with nearest filtering (as tiles of 128 x 128 cells, each its own texture; an image redrawn in place uploads only the tiles that changed), pan (drag with left or middle button), zoom about the cursor (wheel), fit (double click); signal `cell_hovered(x, y)`. Given the same `Image` again (redrawn in place) it updates its texture and keeps pan and zoom. Draws the markers above the image (`set_markers(markers, glyphs)`, P4-04 8.4) and hit-tests them under the mouse (signal `marker_hovered(index)`, -1 for none; `get_marker_screen_position(index)`). |
 | `YearMarks` | `Control` | Presentation: the marks under the year slider (P4-03 4.5), one line per awakening, phase start and the present; its tooltip names the nearest mark. |
+| `TerrainPreview` | `Node3D` | The 3D terrain preview (spec V3D-01): root of `game/viewer3d/terrain_preview.tscn`. See "Terrain preview" below. |
 | `ViewerScreen` | `Control` | The flat view: root of `game/viewer/viewer.tscn`; finds its parts by unique name, wires them to a `ViewerModel`, reads the command line, runs the headless check and `--bench`. The layer list shows every view under group headings, Composites first (Terrain, Water, Climate, Biomes, Resources, Regions, Other follow); a world opens on the first entry. The legend panel shows the selected view's colours; the line under the map describes the cell under the mouse; the year bar under the map sets the year. |
 
 `HistoryState` (`gdext/src/viewer/history_state.hpp`, C++ only, not registered) is what the model holds of the history: worldgen's `LoadedHistory` (`load_history`, read once when a world opens), the civilization colours (`civilization_colours`), the current year Y with its `YearState`, the holder vector and fill of the territory image (`territory_holders`, `territory_fill`), the `TerritoryBase` once built, and the holder vector the image was last drawn with, which alone decides whether a year change redraws the image. It holds no Godot types.
@@ -204,3 +208,76 @@ CTest test `gdext-headless-check`, registered when the option is on, tests are b
 Playback (P4-06 11): P0 without history (controls disabled, methods false, keys inert, no ticker); P1 at open (stopped, speed 10, skip on, ticker on, the speeds, default span [0, E]); then, after the browser checks, P2 to P10, with the check's own copy of the timing rule over its own stop years (the chronicle lines of `history-summary.txt` / `history.txt`, its own `Timeline`'s holder changes, the starts of `[phases]`): P2 plain years, P3 the cases C1 to C4 call by call, P4 a civilization's story and its wars, P5 the ticker at both levels (and the 5 + `... and <n> more` cut), P6 the flashes, P7 pausing, resuming, a speed change, `select_event`, stop and reopening, P8 the keys, P9 `parse_play_options` over 29 argument lists, P10 the layout at 1280 x 800 and 1600 x 1000 (slider width, year bar inside `MapArea`, ticker inside the map view within 40 %). Then three runs of the viewer on the real world with `--headless --fixed-fps 30`: R1 `--play 0 200 --speed 100 --quit-at-end --play-log` (exit 0, ascending year lines from 0, `finished at 200 after <n> frames`), R2 the same with identical lines, R3 `--play 0 <E + 1> --quit-at-end` (exit 1 and the refusal text).
 
 It fails unless every step exits 0 and the viewer prints `UNMAPPED-CHECK: PASS` for each world. It takes about 35 seconds (`linux-gcc-release`; the playback checks about 2 s, R1 to R3 about 1 s each). Run it alone with `ctest --preset <preset> -R gdext-headless-check -V`.
+
+## Terrain preview
+
+The 3D terrain preview of spec `docs/specs/v3d-01-terrain-preview.md`: a world's `elevation` layer as Terrain3D terrain at one vertex per 16 m cell (true scale, map centred on the origin, region size 256), coloured by the `biome` layer with table `biome`'s colours, an opaque sea plane at 0 m, lakes flat at their surface, and a fly camera. It is the scene `res://viewer3d/terrain_preview.tscn`; the 2D viewer (`viewer.tscn`, the main scene) is unchanged.
+
+Code: `gdext/src/terrain/`. `terrain_data` (layout, height and colour buffers, cell and world coordinates, ground samples, the HUD line) and `fly_state` (the camera rules of spec 8.2) are plain C++ without Godot types, built as the static library `unmapped_terrain_core` that the extension and the unit tests link. `TerrainPreview` opens the world through `WorldFile`, copies the buffers into three `Image`s (height and control `FORMAT_RF`, colour `FORMAT_RGBA8`) and creates the `Terrain3D` node through Godot's `ClassDB`: `unmapped_gdext` never links Terrain3D, so the class is used only when the plug-in is in the run copy, and without it the preview shows the sea plane and says so. `terrain_check` is the check below.
+
+### Building
+
+The plug-in is the CMake option `UNMAPPED_BUILD_TERRAIN3D` (default OFF; configure refuses it without `UNMAPPED_BUILD_GDEXT=ON`). With it off, the build, the run copy (no `addons/`) and the test list are as before, apart from the preview's own sources and tests, which are built with the extension.
+
+```
+cmake --preset linux-gcc-release -DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_BUILD_TERRAIN3D=ON
+cmake --build --preset linux-gcc-release
+ctest --preset linux-gcc-release -R gdext
+```
+
+The plug-in adds 15 sources to the build.
+
+### Flying over a world
+
+```
+B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-release
+GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64
+OUT=~/.cache/the-unmapped/out
+"$B/tools/worldgen-cli/worldgen-cli" generate --seed 42 --map-size 1024 --out $OUT/seed42-1024.db
+"$GODOT" --path "$B/game" res://viewer3d/terrain_preview.tscn -- $OUT/seed42-1024.db
+```
+
+Maps of 512, 1024 and 2048 cells are accepted. The camera starts above cell (N/2, 7N/8), 300 m above the highest peak, looking north at pitch -25. Keys: W/S forward and back along the view, A/D sideways, E/Q up and down, Shift x4, mouse wheel or `-`/`=` speed (10 to 2000 m/s), right mouse button held to look, arrow keys to turn, R back to the start, H hides the HUD, Escape releases the mouse. "Open world..." opens another file. The HUD shows the cell, the position in metres east and south of the centre, the altitude and height above ground, the ground's elevation (and a lake's surface), the biome and region names, the speed and the frame rate.
+
+Options after the world path: `--at <x> <y>`, `--alt <m>`, `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`. A top-down view to compare with the 2D map: `--at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/top.png` on a 1024 world, against `worldgen-cli render --db <world> --composite biomes`.
+
+### Checks
+
+- `gdext-terrain-tests` (doctest, no Godot; built with the extension and tests): U1 to U6 of spec 9.1.
+- `gdext-terrain-check` (registered with `gdext-headless-check`, Terrain3D on or off; `gdext/cmake/terrain_check.cmake`, about 13 s): generates a 512 world (seed 49) and a 1024 world (seed 1) with `--until regions` and renders their `biome` layer, a 512 world with `--until elevation` and the test pattern, then runs the preview headless on each with `--check` (T1 to T8 of spec 9.2: layout and images; every height against the check's own formula; every colour against `biome.png`; the start and the HUD at four places; with Terrain3D its region locations and `get_height` and `get_color` at 32 points; without it, the status, sea and camera; 300 frames of scripted flight above the ground). The 512 world runs a second time with `--no-terrain3d`. Terrain3D instantiates and answers `get_height` and `get_color` under `--headless`, so T6 runs in CI. Both Godot checks hold `RESOURCE_LOCK godot-run-copy`, since both import the same run copy.
+
+### By hand on a GPU (spec 9.3)
+
+After the commands of "Flying over a world", for 512, 1024 and 2048 worlds:
+
+| Id | Look for |
+| --- | --- |
+| G1 | no checkerboard; land in biome colours; sea a flat plane to the horizon |
+| G2 | a top-down screenshot (above) matches the `biomes` composite in layout: north at the top, coasts, lakes and mountains in the same places, not mirrored |
+| G3 | the HUD's `ground` at three cells equals the 2D viewer's hover elevation at the same cells (`--hover x y` in the 2D viewer; `--at x y` here) |
+| G4 | no cracks or steps at region edges (X or Z a multiple of 4096 m); no flicker where low coast meets the sea plane |
+| G5 | lakes flat and lake-blue, level with their shores; no hole or spike |
+| G6 | every control; the camera never enters the ground when diving at 2000 m/s with Shift |
+| G7 | at 2048, a flight from the south edge to the north edge shows the whole map with no missing region |
+
+Checked by the engineer on 2026-11-27 (Linux, RTX 4090 Laptop GPU, Vulkan Forward+), non-interactively: G1 (the sky's ground colour is set to the sea's, so the sea reads to the horizon; the plane's edge at 24 N m shows as a slight change of tone), G2 (seed 42 at 1024), G4 and G5 by eye in screenshots, no Terrain3D or shader error on stderr. G3, G6 and G7 need a person at the controls.
+
+### Bench
+
+`--bench` prints (spec 10; headless only the first two lines, and `first frame` there runs to the next process frame, since nothing is drawn):
+
+```
+UNMAPPED-TERRAIN-BENCH: map <N>, open <ms> ms, layers <ms> ms, buffers <ms> ms, images <ms> ms, import <ms> ms, first frame <ms> ms
+UNMAPPED-TERRAIN-BENCH: memory static <MB> MB, video <MB> MB, regions <k>
+UNMAPPED-TERRAIN-BENCH: flight <s> s at 1000 m/s: frames <n>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>
+```
+
+Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, Linux, a laptop with an RTX 4090 Laptop GPU (Vulkan, NVIDIA driver), 1600 x 900 window:
+
+| N | open | layers | buffers | images | import | first frame | static memory | regions | flight frames | mean | max | over 11.1 / 16.7 / 33.3 ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 0.5 ms | 1.6 ms | 1.1 ms | 1.0 ms | 4.6 ms | 44 ms | 65.5 MB | 4 | 29,301 in 8.2 s | 0.3 ms | 55 ms | 1 / 1 / 1 |
+| 1024 | 0.5 ms | 6.7 ms | 4.4 ms | 5.0 ms | 22 ms | 45 ms | 84.6 MB | 16 | 45,667 in 16.4 s | 0.4 ms | 56 ms | 1 / 1 / 1 |
+| 2048 | 0.7 ms | 28 ms | 20 ms | 20 ms | 86 ms | 46 ms | 160.7 MB | 64 | 82,821 in 32.8 s | 0.4 ms | 61 ms | 1 / 1 / 1 |
+
+The one slow frame of each flight is its first. Video memory reads 0.0 MB on this machine: the rendering server reports no video, texture or buffer memory with the NVIDIA Vulkan driver, so spec V17 (video memory grows with the regions in use) is not measured.

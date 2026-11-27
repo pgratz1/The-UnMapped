@@ -14,7 +14,11 @@
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/environment.hpp>
 #include <godot_cpp/classes/performance.hpp>
+#include <godot_cpp/classes/procedural_sky_material.hpp>
+#include <godot_cpp/classes/sky.hpp>
+#include <godot_cpp/classes/world_environment.hpp>
 #include <godot_cpp/classes/plane_mesh.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
@@ -495,6 +499,18 @@ void TerrainPreview::place_sea() {
     sea_->set_mesh(plane);
     sea_->set_position(godot::Vector3(0.0f, 0.0f, 0.0f));
     camera_->set_far(side);
+    // Beyond the plane the sky's ground shows below the horizon; give it the
+    // sea's colour so the sea reads as reaching the horizon (9.3 G1).
+    if (auto* env_node = godot::Object::cast_to<godot::WorldEnvironment>(get_node_or_null("WorldEnvironment"))) {
+        const godot::Ref<godot::Environment> env = env_node->get_environment();
+        if (env.is_valid() && env->get_sky().is_valid()) {
+            const godot::Ref<godot::ProceduralSkyMaterial> sky = env->get_sky()->get_material();
+            if (sky.is_valid()) {
+                sky->set_ground_bottom_color(rgb_colour(scene_.sea_rgb));
+                sky->set_ground_horizon_color(rgb_colour(scene_.sea_rgb));
+            }
+        }
+    }
 }
 
 void TerrainPreview::place_start() {
@@ -585,6 +601,21 @@ void TerrainPreview::after_load() {
     }
 }
 
+namespace {
+
+// Video memory in use: the rendering server's total, or where the driver
+// reports none (seen with the NVIDIA Vulkan driver), its texture and buffer
+// counts.
+std::uint64_t video_memory_bytes() {
+    godot::RenderingServer* rs = godot::RenderingServer::get_singleton();
+    const std::uint64_t total = rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_VIDEO_MEM_USED);
+    const std::uint64_t parts = rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_TEXTURE_MEM_USED) +
+                                rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_BUFFER_MEM_USED);
+    return std::max(total, parts);
+}
+
+}  // namespace
+
 void TerrainPreview::bench_first_frame() {
     first_frame_usec_ = now_usec() - import_end_usec_;
     const int n = scene_.layout->n;
@@ -604,7 +635,7 @@ void TerrainPreview::bench_first_frame() {
     godot::UtilityFunctions::print(
         "UNMAPPED-TERRAIN-BENCH: memory static ",
         to_godot(terrain::one_decimal(perf->get_monitor(godot::Performance::MEMORY_STATIC) / mb)), " MB, video ",
-        to_godot(terrain::one_decimal(perf->get_monitor(godot::Performance::RENDER_VIDEO_MEM_USED) / mb)),
+        to_godot(terrain::one_decimal(static_cast<double>(video_memory_bytes()) / mb)),
         " MB, regions ", regions);
     if (is_headless()) {
         get_tree()->quit(0);

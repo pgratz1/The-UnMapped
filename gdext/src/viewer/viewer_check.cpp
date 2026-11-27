@@ -1908,7 +1908,7 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
         }
     }
     const int64_t d0 = r1 >= 0 ? r1 + old_years : -1;
-    const auto is_old_at = [old_years](const ReportSettlement& s, int64_t year) {
+    const auto is_old_at = [](const ReportSettlement& s, int64_t year) {
         return s.status == "ruined" && s.ruined >= 0 && year - s.ruined >= old_years;
     };
     int64_t faded_lines = 0;

@@ -160,7 +160,9 @@ jobs:
           fi
 
   # The Godot extension (P2): one release preset per platform with
-  # -DUNMAPPED_BUILD_GDEXT=ON. Separate from the build matrix so that those
+  # -DUNMAPPED_BUILD_GDEXT=ON and -DUNMAPPED_BUILD_TERRAIN3D=ON (the vendored
+  # Terrain3D plug-in and the 3D terrain preview, spec V3D-01 11). Separate
+  # from the build matrix so that those
   # seven jobs and compare-hashes keep their speed and their preset list.
   # Fails if the headless check is not registered (e.g. the editor was not
   # found), since an unregistered test would otherwise pass silently.
@@ -237,7 +239,7 @@ jobs:
           echo "UNMAPPED_GODOT_PATH=$godot" >> "$GITHUB_ENV"
           "$godot" --headless --version
 
-      # One cache per preset, compiler version and godot-cpp tree. It is
+      # One cache per preset, compiler version, godot-cpp and Terrain3D tree. It is
       # saved once per key (keys are immutable); later runs restore it, and a
       # changed godot-cpp or compiler starts from the newest older cache.
       - name: Restore the compiler cache (Linux)
@@ -245,7 +247,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/ccache
-          key: ccache-${{ matrix.preset }}-${{ steps.versions.outputs.compiler }}-${{ hashFiles('extern/godot-cpp/**') }}
+          key: ccache-${{ matrix.preset }}-${{ steps.versions.outputs.compiler }}-${{ hashFiles('extern/godot-cpp/**') }}-${{ hashFiles('extern/terrain3d/**', 'extern/terrain3d-compat/**') }}
           restore-keys: |
             ccache-${{ matrix.preset }}-${{ steps.versions.outputs.compiler }}-
 
@@ -255,17 +257,19 @@ jobs:
           ccache_opt=
           if [ "$RUNNER_OS" = Windows ]; then ccache_opt=-DUNMAPPED_USE_CCACHE=OFF; fi
           cmake --preset "${{ matrix.preset }}" -B "$BUILD_DIR" \
-            -DUNMAPPED_BUILD_GDEXT=ON "-DUNMAPPED_GODOT=$UNMAPPED_GODOT_PATH" $ccache_opt
+            -DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_BUILD_TERRAIN3D=ON "-DUNMAPPED_GODOT=$UNMAPPED_GODOT_PATH" $ccache_opt
 
-      # Checked before the long build: configure registers the test only
+      # Checked before the long build: configure registers the checks only
       # when it finds an editor of the pinned version.
-      - name: Check that the headless check is registered
+      - name: Check that the headless and terrain checks are registered
         run: |
           ctest --test-dir "$BUILD_DIR" -N | tr -d '\r' | tee "$RUNNER_TEMP/test-list.txt"
-          if ! grep -Eq '^ *Test +#[0-9]+: gdext-headless-check$' "$RUNNER_TEMP/test-list.txt"; then
-            echo "::error title=gdext-headless-check missing::configure did not register gdext-headless-check (see the configure log for the gdext: lines)"
-            exit 1
-          fi
+          for t in gdext-headless-check gdext-terrain-check gdext-terrain-tests; do
+            if ! grep -Eq "^ *Test +#[0-9]+: $t\$" "$RUNNER_TEMP/test-list.txt"; then
+              echo "::error title=$t missing::configure did not register $t (see the configure log for the gdext: lines)"
+              exit 1
+            fi
+          done
 
       - name: Build
         id: build
@@ -283,9 +287,13 @@ jobs:
         if: always() && steps.build.outcome == 'success'
         run: ctest --preset "${{ matrix.preset }}" --test-dir "$BUILD_DIR" -R '^gdext-headless-check$' -V --no-tests=error
 
+      - name: Terrain check log
+        if: always() && steps.build.outcome == 'success'
+        run: ctest --preset "${{ matrix.preset }}" --test-dir "$BUILD_DIR" -R '^gdext-terrain-check$' -V --no-tests=error
+
       - name: Show the run copy of the Godot project
         if: failure() && steps.build.outcome != 'skipped'
-        run: ls -la "$BUILD_DIR/game" "$BUILD_DIR/game/bin" "$BUILD_DIR/game/.godot" || true
+        run: ls -la "$BUILD_DIR/game" "$BUILD_DIR/game/bin" "$BUILD_DIR/game/.godot" "$BUILD_DIR/game/addons/terrain_3d" "$BUILD_DIR/game/addons/terrain_3d/bin" || true
 
       # Shows whether each entry is a junction, a symbolic link or a copy.
       - name: Show the links of the run copy (Windows)
@@ -322,6 +330,15 @@ jobs:
         with:
           name: gdext-headless-check-${{ matrix.preset }}
           path: ${{ env.BUILD_DIR }}/gdext/headless-check
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload the terrain check files
+        if: failure() && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gdext-terrain-check-${{ matrix.preset }}
+          path: ${{ env.BUILD_DIR }}/gdext/terrain-check
           if-no-files-found: ignore
           retention-days: 14
 

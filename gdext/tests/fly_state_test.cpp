@@ -2,11 +2,24 @@
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
+#include <cmath>
+
 #include <cmath>
 
 #include "terrain/fly_state.hpp"
 
 using namespace unmapped::terrain;
+
+namespace {
+
+// |a - b| within a relative 1e-5 (at least 1e-5 absolute), in float.
+bool near(float a, float b) {
+    const float scale = std::max(1.0f, std::max(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= 1e-5f * scale;
+}
+
+}  // namespace
 
 namespace {
 
@@ -31,8 +44,8 @@ TEST_CASE("U6 forward at heading 0 and 90, boost") {
     in.forward = 1;
     step(s, in, 1.0f, flat, BOUND);
     CHECK(std::abs(s.z + 200.0f) <= 0.01f);
-    CHECK(s.x == doctest::Approx(0.0f));
-    CHECK(s.y == doctest::Approx(1000.0f));
+    CHECK(near(s.x, 0.0f));
+    CHECK(near(s.y, 1000.0f));
 
     s = at_altitude(1000.0f);
     s.heading_deg = 90.0f;
@@ -43,7 +56,7 @@ TEST_CASE("U6 forward at heading 0 and 90, boost") {
     s = at_altitude(1000.0f);
     in.boost = true;
     step(s, in, 1.0f, flat, BOUND);
-    CHECK(s.z == doctest::Approx(-800.0f));
+    CHECK(near(s.z, -800.0f));
 }
 
 TEST_CASE("U6 strafe and climb") {
@@ -51,11 +64,11 @@ TEST_CASE("U6 strafe and climb") {
     FlyInput in;
     in.right = 1;
     step(s, in, 1.0f, flat, BOUND);
-    CHECK(s.x == doctest::Approx(200.0f));
+    CHECK(near(s.x, 200.0f));
     in = {};
     in.up = 1;
     step(s, in, 0.5f, flat, BOUND);
-    CHECK(s.y == doctest::Approx(1100.0f));
+    CHECK(near(s.y, 1100.0f));
 }
 
 TEST_CASE("U6 pitch clamps, heading wraps") {
@@ -70,10 +83,10 @@ TEST_CASE("U6 pitch clamps, heading wraps") {
     in = {};
     in.yaw_deg = 370.0f;
     step(s, in, 0.0f, flat, BOUND);
-    CHECK(s.heading_deg == doctest::Approx(10.0f));
+    CHECK(near(s.heading_deg, 10.0f));
     in.yaw_deg = -20.0f;
     step(s, in, 0.0f, flat, BOUND);
-    CHECK(s.heading_deg == doctest::Approx(350.0f));
+    CHECK(near(s.heading_deg, 350.0f));
     CHECK(s.heading_deg >= 0.0f);
     CHECK(s.heading_deg < 360.0f);
 }
@@ -134,7 +147,7 @@ TEST_CASE("camera rotation") {
     s.heading_deg = 90.0f;
     s.pitch_deg = -25.0f;
     const Rotation r = camera_rotation(s);
-    CHECK(r.x == doctest::Approx(-0.4363323f));
-    CHECK(r.y == doctest::Approx(-1.5707963f));
+    CHECK(near(r.x, -0.4363323f));
+    CHECK(near(r.y, -1.5707963f));
     CHECK(r.z == 0.0f);
 }

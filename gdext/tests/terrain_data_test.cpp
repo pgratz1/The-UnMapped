@@ -3,6 +3,9 @@
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
+#include <cmath>
+
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -11,6 +14,16 @@
 #include "terrain/terrain_data.hpp"
 
 using namespace unmapped::terrain;
+
+namespace {
+
+// |a - b| within a relative 1e-5 (at least 1e-5 absolute), in float.
+bool near(float a, float b) {
+    const float scale = std::max(1.0f, std::max(std::abs(a), std::abs(b)));
+    return std::abs(a - b) <= 1e-5f * scale;
+}
+
+}  // namespace
 
 namespace {
 
@@ -165,21 +178,21 @@ TEST_CASE("U5 ground_clamp and sample_bilinear") {
     at(n - 1, n - 1) = 70.0f;
     const Vec2 v = cell_to_world(layout, 10, 20);
     // At a vertex.
-    CHECK(sample_bilinear(layout, h, v.x, v.z) == doctest::Approx(100.0f));
+    CHECK(near(sample_bilinear(layout, h, v.x, v.z), 100.0f));
     CHECK(ground_clamp(layout, h, v.x, v.z) == 400.0f);
     // Cell midpoint.
-    CHECK(sample_bilinear(layout, h, v.x + 8.0f, v.z + 8.0f) == doctest::Approx(250.0f));
+    CHECK(near(sample_bilinear(layout, h, v.x + 8.0f, v.z + 8.0f), 250.0f));
     CHECK(ground_clamp(layout, h, v.x + 8.0f, v.z + 8.0f) == 400.0f);
     // Edge midpoint.
-    CHECK(sample_bilinear(layout, h, v.x + 8.0f, v.z) == doctest::Approx(150.0f));
+    CHECK(near(sample_bilinear(layout, h, v.x + 8.0f, v.z), 150.0f));
     // Outside the map: clamped to the edge.
-    CHECK(sample_bilinear(layout, h, -100000.0f, -100000.0f) == doctest::Approx(50.0f));
+    CHECK(near(sample_bilinear(layout, h, -100000.0f, -100000.0f), 50.0f));
     CHECK(ground_clamp(layout, h, -100000.0f, -100000.0f) == 50.0f);
-    CHECK(sample_bilinear(layout, h, 100000.0f, 100000.0f) == doctest::Approx(70.0f));
+    CHECK(near(sample_bilinear(layout, h, 100000.0f, 100000.0f), 70.0f));
     CHECK(ground_clamp(layout, h, 100000.0f, 100000.0f) == 70.0f);
     // The last vertex itself (i = n - 2 with fu = 1).
     const Vec2 last = cell_to_world(layout, n - 1, n - 1);
-    CHECK(sample_bilinear(layout, h, last.x, last.z) == doctest::Approx(70.0f));
+    CHECK(near(sample_bilinear(layout, h, last.x, last.z), 70.0f));
 }
 
 TEST_CASE("one_decimal") {

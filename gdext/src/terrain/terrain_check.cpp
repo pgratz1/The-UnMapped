@@ -205,7 +205,7 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
                 layout.region_count == n / 256 && layout.origin == -8.0f * static_cast<float>(n),
             "T1 layout of " + godot::String::num_int64(n) + ": regions " + godot::String::num_int64(layout.region_min) +
                 " to " + godot::String::num_int64(layout.region_min + layout.region_count - 1) + ", origin " +
-                godot::String::num(layout.origin));
+                godot::String::num(static_cast<double>(layout.origin)));
     const godot::Ref<godot::Image> hi = preview.height_image();
     const godot::Ref<godot::Image> ci = preview.control_image();
     const godot::Ref<godot::Image> co = preview.colour_image();
@@ -391,9 +391,9 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
                 colour_bad += dc <= 1.0f / 255.0f + 1e-6f ? 0 : 1;
             }
             c.check(height_bad == 0, "T6 get_height at " + godot::String::num_int64(static_cast<int64_t>(points.size())) +
-                                         " points within 0.001 m (worst " + godot::String::num(worst_h, 4) + ")");
+                                         " points within 0.001 m (worst " + godot::String::num(static_cast<double>(worst_h), 4) + ")");
             c.check(colour_bad == 0, "T6 get_color at the same points within 1/255 (worst " +
-                                         godot::String::num(worst_c * 255.0f, 3) + "/255)");
+                                         godot::String::num(static_cast<double>(worst_c * 255.0f), 3) + "/255)");
         }
     } else {
         c.check(terrains.empty() && preview.terrain_node() == nullptr, "T7 no Terrain3D node");
@@ -432,6 +432,27 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
         }
         c.check(ok, "T8 300 frames above ground_clamp + 2 (lowest margin " +
                         to_godot(decimal1(static_cast<double>(lowest_margin))) + " m)");
+    }
+
+    // V16: opening a world again replaces the first (one Terrain3D node,
+    // the same heights read back).
+    if (want_present) {
+        const int centre = (n / 2) * n + n / 2;
+        const float want_h = own.h[static_cast<std::size_t>(centre)];
+        const bool reopened = preview.open_world(options.world_path);
+        int count = 0;
+        for (int32_t i = 0; i < preview.get_child_count(); ++i) {
+            count += preview.get_child(i)->get_class() == "Terrain3D" ? 1 : 0;
+        }
+        bool height_ok = false;
+        if (reopened && preview.terrain_node() != nullptr) {
+            godot::Object* data = preview.terrain_node()->call("get_data");
+            if (data != nullptr) {
+                const double h = data->call("get_height", godot::Vector3(own.X(n / 2), 0.0f, own.Z(n / 2)));
+                height_ok = std::abs(static_cast<float>(h) - want_h) <= 0.001f;
+            }
+        }
+        c.check(reopened && count == 1 && height_ok, "T6 reopening the world leaves one Terrain3D node with its heights");
     }
 
     godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
