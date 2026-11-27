@@ -4,14 +4,14 @@ name_culture = "elven"
 camp = "good"
 domain = "oaths"
 title = "the Keeper of Oaths"
-favour = { bless = 400, champion = 400, mark = 200 }
+favour = { bless = 300, champion = 500, mark = 200 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "valour"
 curse = "defeat"
 monsters = []
 deeds = [
-    { kind = "alliance_formed", role = "ally_a", points = 15, who = "any", against = "" },
-    { kind = "alliance_formed", role = "ally_b", points = 15, who = "any", against = "" },
+    { kind = "alliance_formed", role = "ally_a", points = 30, who = "any", against = "" },
+    { kind = "alliance_formed", role = "ally_b", points = 30, who = "any", against = "" },
     { kind = "spoils_shared", role = "principal", points = 25, who = "any", against = "" },
     { kind = "ally_joined_war", role = "ally", points = 20, who = "any", against = "" },
     { kind = "alliance_betrayed", role = "betrayed", points = 40, who = "any", against = "" },

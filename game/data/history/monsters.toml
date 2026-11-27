@@ -55,11 +55,11 @@ deep_reach_hops = 2
 # P5-07 r2 4.2: goblin deep warrens (6.10) and allies' aid at the gate (6.11).
 deep_warren_population_min = 3200
 deep_warren_ore_min = 500
-deep_warren_wake_permille = 200
+deep_warren_wake_permille = 300
 deep_aid_permille = 500
 deep_aid_hops = 2
 deep_aid_levy_permille = 500
 deep_aid_max = 2
 deep_aid_memory = 30
 # P5-08 12.2 (generator 0.30.0): the deep stirs in quiet steps (0: off).
-deep_stir_permille = 1000
+deep_stir_permille = 700

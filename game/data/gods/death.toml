@@ -5,7 +5,7 @@ camp = "evil"
 domain = "death"
 title = "the Hollow Keeper"
 favour = { bless = 400, champion = 0, mark = 600 }
-wrath = { curse = 300, monster = 500, mark = 200 }
+wrath = { curse = 300, monster = 600, mark = 200 }
 bless = "valour"
 curse = "pestilence"
 monsters = ["undead"]

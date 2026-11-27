@@ -10,10 +10,10 @@ bless = "plenty"
 curse = "withering"
 monsters = []
 deeds = [
-    { kind = "became_town", role = "civilization", points = 10, who = "kin", against = "" },
-    { kind = "became_city", role = "civilization", points = 15, who = "kin", against = "" },
-    { kind = "trade_opened", role = "partner_a", points = 10, who = "kin", against = "" },
-    { kind = "trade_opened", role = "partner_b", points = 10, who = "kin", against = "" },
+    { kind = "became_town", role = "civilization", points = 20, who = "kin", against = "" },
+    { kind = "became_city", role = "civilization", points = 30, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_a", points = 20, who = "kin", against = "" },
+    { kind = "trade_opened", role = "partner_b", points = 20, who = "kin", against = "" },
     { kind = "blight", role = "civilization", points = -80, who = "any", against = "" },
     { kind = "sacked", role = "attacker", points = -30, who = "any", against = "" },
 ]

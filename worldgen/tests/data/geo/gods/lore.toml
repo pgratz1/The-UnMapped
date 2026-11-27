@@ -4,13 +4,13 @@ name_culture = "elven"
 camp = "good"
 domain = "lore"
 title = "the Lamp of the Wise"
-favour = { bless = 500, champion = 200, mark = 300 }
+favour = { bless = 400, champion = 350, mark = 250 }
 wrath = { curse = 600, monster = 0, mark = 400 }
 bless = "plenty"
 curse = "withering"
 monsters = []
 deeds = [
-    { kind = "tower_founded", role = "civilization", points = 30, who = "any", against = "" },
-    { kind = "book_written", role = "civilization", points = 20, who = "any", against = "" },
+    { kind = "tower_founded", role = "civilization", points = 60, who = "any", against = "" },
+    { kind = "book_written", role = "civilization", points = 40, who = "any", against = "" },
     { kind = "blight", role = "civilization", points = -60, who = "any", against = "" },
 ]

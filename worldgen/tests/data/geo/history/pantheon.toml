@@ -3,43 +3,43 @@
 [history.pantheon]
 activity_permille = { distant = 300, normal = 1000, meddling = 2500 }
 regard_max = 400
-regard_fade_per_century = 20
+regard_fade_per_century = 8
 regard_memory_years = 300
 contributions_max = 8
-act_threshold = 100
-act_permille = 150
-god_rest_years = 30
-pair_rest_years = 100
-flare_regard = 200
+act_threshold = 70
+act_permille = 14
+god_rest_years = 20
+pair_rest_years = 80
+flare_regard = 130
 flare_permille = 100
 bless_years = 50
 curse_years = 50
-plenty_growth_permille = 300
+plenty_growth_permille = 550
 withering_growth_permille = 500
 valour_permille = 50
 defeat_permille = 60
-pestilence_toll_permille = 120
-send_hops = 2
+pestilence_toll_permille = 80
+send_hops = 3
 sacred_growth_permille = 200
 profane_years = 300
 champion_epithet = "Chosen of {god}"
-cult_found_permille = 250
-cult_fear_permille = 500
+cult_found_permille = 400
+cult_fear_permille = 700
 cult_spread_permille = 20
 affinity_permille = { same = 1000, near = 500, opposed = 100 }
 adopt_regard = 50
 adopt_permille = 15
-suppress_permille = 10
+suppress_permille = 8
 temper_adopt_permille = { steady = 1000, warlike = 500, peaceable = 1500, grasping = 700, just = 1000 }
 temper_suppress_permille = { steady = 1000, warlike = 1500, peaceable = 500, grasping = 1000, just = 1300 }
 faith_points = 60
 rival_faith_points = 40
 suppress_points = 120
-hide_permille = 400
+hide_permille = 800
 sanctum_hops = 3
 
 [history.pantheon.creator]
-favour = { bless = 500, champion = 300, mark = 200 }
+favour = { bless = 400, champion = 450, mark = 150 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "plenty"
 curse = "pestilence"

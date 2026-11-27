@@ -4,15 +4,15 @@ name_culture = "goblin"
 camp = "evil"
 domain = "ruin"
 title = "the Burner of Halls"
-favour = { bless = 500, champion = 300, mark = 200 }
-wrath = { curse = 400, monster = 400, mark = 200 }
+favour = { bless = 400, champion = 450, mark = 150 }
+wrath = { curse = 400, monster = 600, mark = 200 }
 bless = "valour"
 curse = "pestilence"
 monsters = ["dragon", "giant"]
 deeds = [
     { kind = "sacked", role = "attacker", points = 40, who = "kin", against = "" },
     { kind = "settlement_captured", role = "attacker", points = 15, who = "kin", against = "" },
-    { kind = "truce", role = "parties", points = -20, who = "kin", against = "" },
+    { kind = "truce", role = "parties", points = -40, who = "kin", against = "" },
     { kind = "trade_opened", role = "partner_a", points = -10, who = "kin", against = "" },
     { kind = "trade_opened", role = "partner_b", points = -10, who = "kin", against = "" },
     { kind = "became_city", role = "civilization", points = -15, who = "foe", against = "" },
