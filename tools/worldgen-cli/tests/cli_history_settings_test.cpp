@@ -349,8 +349,8 @@ TEST_CASE("cli P0-04 amendment 22: generate --help says which history settings a
         "\n"
         "The history settings are recorded in every world. The chronology stage uses\n"
         "the span and the races; the history stage uses the span, the detail, the\n"
-        "civilizations per race and the event intensity. The monster pressure and\n"
-        "the divine activity take effect with later history subsystems (phase P5).\n"
+        "civilizations per race, the event intensity, the monster pressure and the\n"
+        "divine activity (how often the gods act).\n"
         "--test-pattern records them and writes no history.\n"
         "\n";
     CHECK(contains(r.out, paragraph));

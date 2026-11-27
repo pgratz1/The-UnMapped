@@ -132,7 +132,7 @@ TEST_CASE("P3-04 6.6 W4: participants") {
     g.region = 1;
     g.participants = {{"race", EntityType::race, 7}, {"creator", EntityType::god, 1}};  // no race row 7
     CHECK(prefixed(tick(g), p + "awakening): "));
-    g.participants = {{"race", EntityType::race, 1}, {"creator", EntityType::god, 9}};  // no god row 9
+    g.participants = {{"race", EntityType::race, 1}, {"creator", EntityType::god, 99}};  // no god row 99 (P5-08: nine pantheon gods follow the creators)
     CHECK(prefixed(tick(g), p + "awakening): "));
 }
 

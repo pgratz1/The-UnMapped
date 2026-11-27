@@ -66,7 +66,8 @@ inline std::int64_t forge_factor(std::int64_t f, std::int64_t strength, std::int
     return forged ? f * (1000 + strength + depth_permille * D) / 1000 : f;
 }
 // 8.1: telling, a function of ids.
-inline std::int64_t telling_delve(std::int64_t site, std::int64_t depth) { return (site + depth) % 3; }
+// P5-08 12.3 (0.30.0, reading P-R23): (s + 4 x d) mod 9 with d the old depth (the event's depth value is d + 1)
+inline std::int64_t telling_delve(std::int64_t site, std::int64_t depth) { return (site + 4 * (depth - 1)) % 9; }
 inline std::int64_t telling_woken(std::int64_t monster) { return monster % 3; }
 inline std::int64_t telling_sealed(std::int64_t monster) { return (monster + 1) % 3; }
 inline std::int64_t telling_lost(std::int64_t monster, std::int64_t settlement) { return (monster + settlement) % 3; }
@@ -84,7 +85,7 @@ inline std::int64_t aid_permille(std::int64_t aid, std::int64_t join) { return a
 inline std::int64_t aid_strength(std::int64_t P, std::int64_t levy, std::int64_t prowess) {
     return P * levy / 1000 * prowess / 1000;
 }
-inline std::int64_t telling_warren_delved(std::int64_t settlement, std::int64_t depth) { return (settlement + depth) % 3; }
+inline std::int64_t telling_warren_delved(std::int64_t settlement, std::int64_t depth) { return (settlement + 4 * (depth - 1)) % 9; }   // P5-08 12.3
 inline std::int64_t telling_aid(std::int64_t monster, std::int64_t ally) { return (monster + ally) % 3; }
 // 11.1 mine_depth_word, as the spec lists it.
 inline std::string depth_word(std::int64_t d) {

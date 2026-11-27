@@ -598,6 +598,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         CAPTURE(str(r));
         const std::string& k = r[4].bytes;
         if (at(r, 0) == 6) continue;   // P5-06 9.2: ruled, served, rival, parent (the figures' checks)
+        if (at(r, 0) == 7) continue;   // P5-08 9: cult_in, faith_of (the pantheon's checks)
         CHECK(at(r, 0) == 3);
         CHECK(at(r, 2) == 3);
         // P5-04 9.1 (0.26.0): the alliance and trade rows are checked by P5-04's invariants
@@ -777,7 +778,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     check_invariants_r6(t, 40, nullptr);
     // 8 every flare-up's trigger is a claim, or (P5-02 6.5, 7.4) a monster's appearance in a quiet step
     for (const Row& p : t.phase) {
-        if (at(p, 2) == 3) CHECK((is_claim(x.kind(at(p, 5))) || x.kind(at(p, 5)) == k_monster_appeared));
+        // P5-08 6.6 (a god's flare-up: its trigger the lead deed, any kind) and 12.2 (a stir of the deep): the trigger of
+        // those is checked against the tension logs by the reference (p3_conflict_reference.py check-world, invariant 8)
+        if (at(p, 2) == 3) CHECK((at(p, 5) != 0 || is_claim(x.kind(at(p, 5))) || x.kind(at(p, 5)) == k_monster_appeared));
     }
     // 8.3 item 4 (N2, r7): "a cession in a quiet step never transfers a colony founded earlier in the same step"
     // no longer holds: P3-06 r13 20.27 passes every settlement of the loser standing in the ceded region, a
@@ -993,11 +996,13 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
             CHECK(x.values.at(id).at(1) >= abandon_min);
             REQUIRE(x.causes.at(id).size() == 1U);
             const std::int64_t sack = x.causes.at(id)[0];
-            CHECK(x.kind(sack) == k_sacked);
+            CHECK((x.kind(sack) == k_sacked || x.kind(sack) == 96));   // P5-07 6.5: a hold lost to the deep, 96
             CHECK(x.year(sack) == y);
             CHECK(at(*x.ev.at(sack), 6) == origin);
-            CHECK(x.role1(sack, 2) == founder);
-            CHECK(at(*x.ev.at(sack), 7) == capital_sacked);  // the origin was the founder's capital (its only one)
+            if (x.kind(sack) == k_sacked) {
+                CHECK(x.role1(sack, 2) == founder);
+                CHECK(at(*x.ev.at(sack), 7) == capital_sacked);  // the origin was the founder's capital (its only one)
+            }
             CHECK(at(e, 6) == h);
             const Row& s = *x.st.at(h);
             CHECK(at(s, 7) == id);  // founded by the event

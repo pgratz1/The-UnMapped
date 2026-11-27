@@ -2041,12 +2041,14 @@ inline const std::vector<std::string_view>& naming_fields() {
                                                      "civilization_forms", "settlement_forms",
                                                      "site_forms",   // P5-02 4.4
                                                      "person_forms", "tower_forms", "library_forms", "book_titles",
-                                                     "regnal_permille"};   // P5-06 (generator 0.27.0)
+                                                     "regnal_permille",   // P5-06 (generator 0.27.0)
+                                                     "cult_forms", "temple_forms", "sanctum_forms", "sacred_forms",
+                                                     "profane_forms"};   // P5-08 6.7 (generator 0.30.0)
     return v;
 }
 inline const std::vector<std::string_view>& chronology_fields() {
     static const std::vector<std::string_view> v = {"awakening_jitter_frac", "awakening_min_gap_years",
-                                                    "age_name_form"};
+                                                    "age_name_form", "creator_title"};   // P5-08 6.1
     return v;
 }
 

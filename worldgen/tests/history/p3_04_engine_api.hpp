@@ -102,6 +102,7 @@ using h::TensionSource;
 using h::Intervention;           // GUESS: in engine.hpp
 using h::InterventionSource;     // GUESS: in engine.hpp
 using h::EmptyInterventionSource;  // GUESS: in engine.hpp
+using h::InterventionApplier;       // P5-08 7.6
 
 // --- Test-owned rows ---------------------------------------------------------------------------
 

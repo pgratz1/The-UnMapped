@@ -52,7 +52,7 @@ using eng::Tables;
 // bytes) is the spec writer's measurement with Python's SQLite 3.46.1 and
 // is UNCONFIRMED with the vendored SQLite; the engineer records the
 // confirmed figure in 16.5, and this is the one constant to change.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 47;   // 45 at schema 10 (P5-03 16.1: two tables);   // P5-02 11.1 (r1): 35 + the roots of five tables and two indexes + one sqlite_schema page
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 48;   // 45 at schema 10 (P5-03 16.1: two tables);   // P5-02 11.1 (r1): 35 + the roots of five tables and two indexes + one sqlite_schema page
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 // The thirteen tables of 9.1 in DDL order, and in hash --detail order.
@@ -794,8 +794,15 @@ inline std::int64_t change(eng::StepContext& ctx, std::int64_t civ = 0, std::int
 }
 
 // An engine configuration with owned parts.
+// P5-08 7.6: an applier that writes nothing (a source of the tests that returns acts needs one).
+class NoApplier final : public eng::InterventionApplier {
+public:
+    void apply(eng::StepContext&, const eng::Intervention&) override {}
+};
+
 struct Config {
     std::unique_ptr<eng::AwakeningHandler> handler = std::make_unique<TestHandler>();
+    std::unique_ptr<eng::InterventionApplier> applier;   // null: the source returns nothing
     std::vector<eng::Subsystem*> subsystems;
     std::vector<std::unique_ptr<eng::TensionSource>> owned_tension;
     std::vector<eng::TensionSource*> tension;
@@ -812,6 +819,7 @@ struct Config {
         c.subsystems = subsystems;
         c.tension = tension;
         c.interventions = interventions.get();
+        c.applier = applier.get();
         c.catalogue = &catalogue;
         return c;
     }

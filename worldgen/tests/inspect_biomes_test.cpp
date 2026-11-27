@@ -109,7 +109,7 @@ TEST_CASE("P1-04 9, 10.1 test 10: biome_share and biome_patches on a hand-made 6
     CHECK(ends_with(text, "\nbiome_share = " + share + "\nbiome_patches = 7\n"));
     // [tables], ascending name: biome, climate, layer, meta, pass and the
     // three region tables of schema 5.
-    CHECK(text.find("\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 12\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 2\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = "
+    CHECK(text.find("\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 12\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 2\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = "
                     "0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\n") != std::string::npos);
     // No climate row: no wind_toward, no temp_offset_c.
     CHECK(text.find("wind_toward") == std::string::npos);

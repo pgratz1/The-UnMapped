@@ -317,7 +317,8 @@ std::vector<std::string> violations(const Tables& t, bool quarter = true) {
         std::int64_t appearances = 0, overruns = 0, slain = 0, died = 0;
         for (const Row* e : events_of_monster[id]) {
             const std::int64_t kd = at(*e, 3);
-            if (kd == k.at("monster_appeared") || kd == k.at("undead_rose") || (k.count("deep_woken") != 0U && kd == k.at("deep_woken"))) {
+            if (kd == k.at("monster_appeared") || kd == k.at("undead_rose") || (k.count("deep_woken") != 0U && kd == k.at("deep_woken")) ||
+                (k.count("divine_monster") != 0U && kd == k.at("divine_monster"))) {   // P5-08: a monster sent by a god
                 ++appearances;
                 if (at(*e, 0) != at(m, 5)) out.push_back("4: monster " + std::to_string(id) + " appears twice");
             }

@@ -32,7 +32,7 @@ const char* const BASE_ROWS =
     "(4, 'faerie', 'Faerie', 'Faeries', 'Faerie', 0, 400, 100, 3, 0, NULL, 4),"
     "(5, 'human', 'Human', 'Humans', 'Human', 1, 70, 25, 5, 0, NULL, 5),"
     "(6, 'orc', 'Orc', 'Orcs', 'Orcish', 2, 50, 18, 6, 1, 5000, 6);"
-    "INSERT INTO god VALUES (1, 'Aa', 0), (2, 'Bb', 2), (3, 'Cc', 1), (4, 'Dd', 0), (5, 'Ee', 1), (6, 'Ff', 2);"
+    "INSERT INTO god VALUES (1, 'Aa', 0, 1, '', 1), (2, 'Bb', 2, 1, '', 2), (3, 'Cc', 1, 1, '', 3), (4, 'Dd', 0, 1, '', 4), (5, 'Ee', 1, 1, '', 5), (6, 'Ff', 2, 1, '', 6);"
     "INSERT INTO age VALUES (1, 1, 0, 2999, 'The Age of Elves'), (2, 3, 3000, 4999, 'The Age of Dwarves'),"
     "(3, 6, 5000, 5999, 'The Age of Orcs');";
 
@@ -144,7 +144,7 @@ TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 32 tables (schema 9, P5-0
     REQUIRE(r.ok());
     const std::string tables = section(r.value(), "[tables]");
     CHECK(tables ==
-          "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\n"
+          "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\n"
           "race_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\n"
           "relation = 0\n"
           "settlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n");

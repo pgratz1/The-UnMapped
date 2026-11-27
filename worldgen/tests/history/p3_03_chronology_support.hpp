@@ -74,7 +74,7 @@ inline constexpr std::int64_t ONE_RAW = std::int64_t{1} << 32;
 // and running VACUUM INTO with the vendored 3.54.1 amalgamation (page size
 // 4096, the defines of extern/CMakeLists.txt); the engineer's confirmation
 // on the real writer is still due. Every test reads the figure from here.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 47;   // 45 at schema 10 (P5-03 16.1: two tables);  // 18 at schema 6; 34 from schema 7 (P3-04 9.6); 43 at schema 9 (P5-02 11.1 r1)
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 48;   // 45 at schema 10 (P5-03 16.1: two tables);  // 18 at schema 6; 34 from schema 7 (P3-04 9.6); 43 at schema 9 (P5-02 11.1 r1)
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 inline const std::vector<std::string>& six() {
@@ -531,11 +531,14 @@ inline std::map<std::string, std::string> table_hashes(const Rows& r) {
         out["culture"] = h.hex();
     }
     {
-        TableHasher h(3);
+        TableHasher h(6);
         for (const GodRow& x : r.gods) {
             h.integer(x.id);
             h.text(x.name);
             h.integer(x.camp);
+            h.integer(x.domain);
+            h.text(x.title);
+            h.integer(x.race);
         }
         out["god"] = h.hex();
     }
@@ -905,8 +908,8 @@ inline Rows rows_of_world(const worldgen::db::WorldReader& r) {
         out.cultures.push_back(CultureRow{int_of(x[0]), text_of(x[1]), text_of(x[2]), int_of(x[3])});
     }
     for (const auto& x : rows_of(r, "god")) {
-        REQUIRE(x.size() == 3U);
-        out.gods.push_back(GodRow{int_of(x[0]), text_of(x[1]), int_of(x[2])});
+        REQUIRE(x.size() == 6U);
+        out.gods.push_back(GodRow{int_of(x[0]), text_of(x[1]), int_of(x[2]), int_of(x[3]), text_of(x[4]), int_of(x[5])});
     }
     for (const auto& x : rows_of(r, "age")) {
         REQUIRE(x.size() == 5U);

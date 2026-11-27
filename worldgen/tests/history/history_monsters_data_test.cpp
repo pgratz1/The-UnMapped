@@ -324,9 +324,10 @@ TEST_CASE("P5-02 4.3, 4.4, 4.5: history.monsters, site_forms and ghost_* shipped
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& t = definition(*l.content, "history", "monsters").record;
     // pressure first; r1 4.3: prey_*; P5-03 9.4: 8; P5-03a 10.2: undead_dead_permille last
-    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U + 1U + 16U);   // P5-07 4.2: sixteen deep_* fields last
-    CHECK(t.name_at(t.size() - 17U) == "undead_regions_ref");
-    CHECK(t.name_at(t.size() - 1U) == "deep_aid_memory");
+    REQUIRE(t.size() == tuning_fields().size() + 1U + 5U + 8U + 1U + 1U + 17U);   // P5-07 4.2: sixteen deep_* fields, P5-08 12.2: deep_stir_permille last
+    CHECK(t.name_at(t.size() - 18U) == "undead_regions_ref");
+    CHECK(t.name_at(t.size() - 2U) == "deep_aid_memory");
+    CHECK(t.name_at(t.size() - 1U) == "deep_stir_permille");
     CHECK(t.get_int("undead_dead_permille") == 28);
     CHECK(t.name_at(0) == "pressure");
     const wd::Record& p = t.value_at(0).as_record();

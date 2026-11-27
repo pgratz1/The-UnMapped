@@ -143,9 +143,9 @@ TEST_CASE("P5-03a 10.2: undead_min_dead 1000 and undead_dead_permille int(0, 100
     const Load l = load(p503a::files_025());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     const wd::Record& r = record_of(*l.content, "monsters");
-    REQUIRE(r.size() >= 19U);   // P5-07 4.2 (0.29.0): sixteen deep_* fields after undead_regions_ref
-    CHECK(r.name_at(r.size() - 19U) == "overrun_people_ref");
-    CHECK(r.name_at(r.size() - 18U) == "undead_dead_permille");
+    REQUIRE(r.size() >= 20U);   // P5-07 4.2 (0.29.0): sixteen deep_* fields after undead_regions_ref
+    CHECK(r.name_at(r.size() - 20U) == "overrun_people_ref");
+    CHECK(r.name_at(r.size() - 19U) == "undead_dead_permille");
     CHECK(r.get_int("undead_dead_permille") == 28);
     CHECK(r.get_int("undead_min_dead") == 1000);
     const std::string p = "history/monsters.toml";

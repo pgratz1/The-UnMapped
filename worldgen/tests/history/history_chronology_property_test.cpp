@@ -159,8 +159,8 @@ void check_invariants(const Rows& r, const Params& p, const std::vector<std::str
     }
     CHECK(r.ages.front().start_year == 0);
     // 5: gods
-    REQUIRE(r.gods.size() == listed.size());
-    for (std::size_t i = 0; i < r.gods.size(); ++i) {
+    REQUIRE(r.gods.size() == listed.size() + 9U);   // P5-08 6.1: the nine pantheon gods follow the creators
+    for (std::size_t i = 0; i < listed.size(); ++i) {
         CHECK(r.gods[i].id == static_cast<std::int64_t>(i + 1));
         CHECK(r.gods[i].camp == camp_code(listed[i]->camp));
     }

@@ -520,6 +520,7 @@ TEST_CASE("P3-03 9.2, 14.1 item 11: the five table lines of hash --detail; NULL 
                                             "event_kind_value",
                                             "event_participant",
                                             "event_value",
+                                            "faction",
                                             "figure",
                                             "god",
                                             "layer",

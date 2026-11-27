@@ -497,6 +497,14 @@ inline Fixture load_fixture(const std::string& name) {
     std::sort(fx.race_rows.begin(), fx.race_rows.end(), by([](const db::RaceRow& r) { return r.id; }));
     std::sort(fx.cultures.begin(), fx.cultures.end(), by([](const db::CultureRow& r) { return r.id; }));
     std::sort(fx.gods.begin(), fx.gods.end(), by([](const db::GodRow& r) { return r.id; }));
+    // A creator's camp is its race's (the reader's check of 9: a hand-made fixture's three-column rows had any camp).
+    for (db::GodRow& g : fx.gods) {
+        for (const db::RaceRow& r : fx.race_rows) {
+            if (r.id == g.id && g.race == g.id) {
+                g.camp = r.camp;
+            }
+        }
+    }
     std::sort(fx.ages.begin(), fx.ages.end(), by([](const db::AgeRow& r) { return r.id; }));
     std::sort(fx.phases.begin(), fx.phases.end(), by([](const db::PhaseRow& r) { return r.id; }));
     std::sort(fx.civilizations.begin(), fx.civilizations.end(), by([](const db::CivilizationRow& r) { return r.id; }));

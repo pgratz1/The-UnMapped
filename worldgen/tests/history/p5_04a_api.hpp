@@ -27,10 +27,10 @@ namespace p504a_api {
 
 namespace wd = worldgen::data;
 
-inline constexpr const char* GENERATOR_SPEC = "0.29.0";            // header
-inline constexpr std::int64_t SCHEMA_SPEC = 13;                    // header (13 at 0.29.0)
+inline constexpr const char* GENERATOR_SPEC = "0.30.0";            // header
+inline constexpr std::int64_t SCHEMA_SPEC = 14;                    // header (13 at 0.29.0)
 inline constexpr std::int64_t STREAMS_SPEC = 107;                   // 2: hist.alliances.renew, the 98th
-inline constexpr std::int64_t KINDS_SPEC = 99;                     // no kind added
+inline constexpr std::int64_t KINDS_SPEC = 110;                    // no kind added
 inline constexpr const char* REPORT_HEADER_SPEC = "# worldgen history v11";   // 12.1
 inline constexpr std::int64_t SUMMARY_MILESTONE_SALIENCE_SPEC = 40;           // 12.2 (digest.hpp)
 

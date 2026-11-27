@@ -34,11 +34,11 @@ namespace p506api {
 namespace h = worldgen::history;
 namespace ins = worldgen::inspect;
 
-inline constexpr std::int64_t SCHEMA_SPEC = 13;                    // 9.4
-inline constexpr const char* GENERATOR_SPEC = "0.29.0";            // header
+inline constexpr std::int64_t SCHEMA_SPEC = 14;                    // 9.4
+inline constexpr const char* GENERATOR_SPEC = "0.30.0";            // header
 inline constexpr std::int64_t STREAMS_SPEC = 107;                   // 3
 inline constexpr std::int64_t KINDS_SPEC = 99;                     // 8.1
-inline constexpr std::uint32_t ALL_GROUPS_SPEC = 0x1FF;            // 11.3
+inline constexpr std::uint32_t ALL_GROUPS_SPEC = 0x3FF;            // 11.3
 inline constexpr std::uint8_t GROUP_FIGURES = 8;                   // 11.3
 inline constexpr std::uint8_t GLYPH_TOWER_SPEC = 20;               // 11.4: 16 + site kind 4
 inline constexpr std::int64_t SUMMARY_FIGURES_MAX_SPEC = 6;        // 10.2

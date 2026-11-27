@@ -458,17 +458,18 @@ TEST_CASE("fixed-id kinds: the production registry holds worldgen with the imple
     const wd::KindRegistry builtin = wd::builtin_kinds();
     // P3-08 (0.17.0): name_filter and placename between history and race. P5-02 4.1, 4.2 (0.23.0): the
     // required open kinds beast (first, before biome) and monster (between history and name_filter).
-    REQUIRE(builtin.kinds().size() == 9U);
+    REQUIRE(builtin.kinds().size() == 10U);
     CHECK(builtin.kinds()[0].name == "beast");
     CHECK(builtin.kinds()[1].name == "biome");
     CHECK(builtin.kinds()[2].name == "culture");
-    CHECK(builtin.kinds()[3].name == "history");
-    CHECK(builtin.kinds()[3].has_fixed_ids());
-    CHECK(builtin.kinds()[4].name == "monster");
-    CHECK(builtin.kinds()[5].name == "name_filter");
-    CHECK(builtin.kinds()[6].name == "placename");
-    CHECK(builtin.kinds()[7].name == "race");
-    const wd::Kind& k = builtin.kinds()[8];
+    CHECK(builtin.kinds()[3].name == "god");   // P5-08 4.1 (0.30.0)
+    CHECK(builtin.kinds()[4].name == "history");
+    CHECK(builtin.kinds()[4].has_fixed_ids());
+    CHECK(builtin.kinds()[5].name == "monster");
+    CHECK(builtin.kinds()[6].name == "name_filter");
+    CHECK(builtin.kinds()[7].name == "placename");
+    CHECK(builtin.kinds()[8].name == "race");
+    const wd::Kind& k = builtin.kinds()[9];
     CHECK(k.name == "worldgen");
     CHECK(k.directory == "worldgen");
     CHECK(k.required);

@@ -234,7 +234,7 @@ TEST_CASE("P5-03 9.4: the new history.monsters fields after prey_might_max_permi
         if (r.name_at(i) == "prey_might_max_permille") at = i;
     }
     // P5-06 4.5: undead_regions_ref is appended after undead_dead_permille (the one + 1U)
-    REQUIRE(at + p503data::monsters_fields_024().size() + p503a::new_monsters_fields().size() + 1U + 1U + 16U == r.size());   // P5-07: sixteen deep_* fields
+    REQUIRE(at + p503data::monsters_fields_024().size() + p503a::new_monsters_fields().size() + 1U + 1U + 17U == r.size());   // P5-07: sixteen deep_* fields
     for (std::size_t i = 0; i < p503data::monsters_fields_024().size(); ++i) {
         CHECK(r.name_at(at + 1 + i) == p503data::monsters_fields_024()[i].name);
         CHECK(r.get_int(p503data::monsters_fields_024()[i].name) == p503data::monsters_fields_024()[i].shipped);

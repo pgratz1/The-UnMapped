@@ -293,11 +293,18 @@ inline wd::Value tempers_of(std::int64_t v) {
 // (neutral), so that the zero figures tuning, whose reigns still draw tempers, equals "no figures subsystem" at 0.28.0.
 inline wd::ContentSet figures_zero_of(const wd::ContentSet& base0) {
     const wd::ContentSet base = with_history(base0, "alliances", {{"grasping_join_permille", V(1000)}});
-    return with_history(base, "figures",
-                        {{"name_rulers", wd::Value::boolean(false)}, {"general_scale_permille", V(0)},
-                         {"hero_scale_permille", V(0)}, {"caster_ppm", V(0)}, {"exile_permille", V(0)},
-                         {"short_reign_split_permille", V(0)}, {"temper_strain_permille", tempers_of(1000)},
-                         {"temper_allied_permille", tempers_of(1000)}, {"temper_spoils_permille", tempers_of(0)}});
+    const wd::ContentSet fig =
+        with_history(base, "figures",
+                     {{"name_rulers", wd::Value::boolean(false)}, {"general_scale_permille", V(0)},
+                      {"hero_scale_permille", V(0)}, {"caster_ppm", V(0)}, {"exile_permille", V(0)},
+                      {"short_reign_split_permille", V(0)}, {"temper_strain_permille", tempers_of(1000)},
+                      {"temper_allied_permille", tempers_of(1000)}, {"temper_spoils_permille", tempers_of(0)},
+                      {"tower_lapse_years", V(0)}});   // P5-08 12.6: no lapse
+    // P5-08 (0.30.0): and the pantheon at its zero (no activity: no regard acts, no cults; the configurations
+    // "without" a subsystem build no pantheon either).
+    wd::Record activity;
+    for (const char* a : {"distant", "normal", "meddling"}) activity.add(a, V(0));
+    return with_history(fig, "pantheon", {{"activity_permille", wd::Value::record(std::move(activity))}});
 }
 inline wd::ContentSet alliances_zero_of(const wd::ContentSet& base) {
     return figures_zero_of(without_origin_allies(

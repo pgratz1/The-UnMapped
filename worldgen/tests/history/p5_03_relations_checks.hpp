@@ -656,6 +656,7 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         const std::string k = x.kind_of(e);
         if (k == "monster_raid") raids_of[x.part(e, 1)].push_back(e);
         if (k == "monster_appeared" || k == "undead_rose" || k == "monster_woke" || k == "deep_woken") wakings[x.part(e, 1)].push_back(e);
+        if (k == "divine_monster") wakings[x.part(e, 2)].push_back(e);   // P5-08 6.3: a monster sent by a god (role 2)
     }
     std::int64_t chained = 0;
     for (const auto& [mid, rs] : raids_of) {

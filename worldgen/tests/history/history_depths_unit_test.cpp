@@ -120,9 +120,10 @@ TEST_CASE("P5-07 6.7: the take chance; a later take only of the waking realm, in
 }
 
 TEST_CASE("P5-07 8.1: the tellings are functions of ids; 11.1 the depth words") {
-    CHECK(telling_delve(7, 1) == 2);
-    CHECK(telling_delve(7, 2) == 0);
-    CHECK(telling_delve(7, 3) == 1);
+    // P5-08 12.3 (0.30.0): (s + 4 x (depth - 1)) mod 9
+    CHECK(telling_delve(7, 1) == 7);
+    CHECK(telling_delve(7, 2) == 2);
+    CHECK(telling_delve(7, 3) == 6);
     CHECK(telling_woken(14) == 2);
     CHECK(telling_sealed(14) == 0);
     CHECK(telling_lost(14, 40) == 0);
@@ -157,9 +158,9 @@ TEST_CASE("P5-07 r2 6.10: a warren's deepening chance (goblins 300), Q4's p x L;
     CHECK(warren_wake_ppm({0, 0, 1000000}, 3, 10000, 500) == 1000000);   // the min over the whole product
     CHECK(warren_wake_ppm({0, 200000, 600000}, 3, 1000, 1000) == 600000);   // depths-small
     // 8.1: a warren's tellings
-    CHECK(telling_warren_delved(7, 1) == 2);
-    CHECK(telling_warren_delved(7, 2) == 0);
-    CHECK(telling_warren_delved(7, 3) == 1);
+    CHECK(telling_warren_delved(7, 1) == 7);   // P5-08 12.3: (t + 4 x (depth - 1)) mod 9
+    CHECK(telling_warren_delved(7, 2) == 2);
+    CHECK(telling_warren_delved(7, 3) == 6);
     CHECK(3 + telling_woken(4) == 4);
     CHECK(telling_lost(5, 7) + 3 == 3);
 }

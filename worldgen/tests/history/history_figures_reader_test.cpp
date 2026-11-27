@@ -102,7 +102,7 @@ TEST_CASE("P5-06 9.4: the generated figures-small world loads; each damaged figu
     refused("F1", fig(last, "id = " + n(last + 100)), F(last + 100) + "id " + n(last + 100) + " is not " + n(last));
     refused("F2", fig(b.ruler, "name = 'x1'"), F(b.ruler) + "name is not a name");
     refused("F3", fig(b.ruler, "epithet = ' the Old'"), F(b.ruler) + "epithet is not an epithet");
-    refused("F4", fig(b.ruler, "role = 6"), F(b.ruler) + "role 6 outside 1 to 5");
+    refused("F4", fig(b.ruler, "role = 8"), F(b.ruler) + "role 8 outside 1 to 7");
     refused("F5", fig(b.ruler, "race = 99"), F(b.ruler) + "unknown race 99");
     refused("F6", fig(b.ruler, "culture = 99"), F(b.ruler) + "unknown culture 99");
     refused("F7", fig(b.ruler, "civ = 9999"), F(b.ruler) + "unknown civilization 9999");

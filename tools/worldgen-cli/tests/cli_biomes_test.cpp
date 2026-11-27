@@ -310,7 +310,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const std::string& t = r.out;
-    CHECK(contains(t, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 12\nbook = 0\ncivilization = 0\nclimate = 1\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 11\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = "));
+    CHECK(contains(t, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 12\nbook = 0\ncivilization = 0\nclimate = 1\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 11\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = "));
     CHECK(contains(t, "\nschema_version = 14\n"));
     CHECK(contains(t, "\nwind_toward = SE\ntemp_offset_c = 2.0\ntemperature_c = "));
     // P1-04 9's example line for 512 seed 0 (ten keys in code order).
@@ -340,7 +340,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     // The climate world: one climate row, empty biome table, no biome keys.
     const ProcessResult c = w.sb.cli({"report", "--db", u8(w.climate)});
     REQUIRE(c.exit_code == EXIT_OK);
-    CHECK(contains(c.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 1\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 10\n"));
+    CHECK(contains(c.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 1\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 10\n"));
     CHECK(contains(c.out, "\nwind_toward = SE\ntemp_offset_c = 2.0\n"));
     CHECK_FALSE(contains(c.out, "biome_share"));
 }

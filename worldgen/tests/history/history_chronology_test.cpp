@@ -37,12 +37,21 @@ std::vector<std::int64_t> years_of_rows(const Rows& r) {
     return y;
 }
 
+// The creators' names: the first rows, one per race (P5-08 6.1: nine pantheon gods follow them from 0.30.0).
 std::vector<std::string> god_names(const Rows& r) {
     std::vector<std::string> out;
     for (const GodRow& g : r.gods) {
-        out.push_back(g.name);
+        if (g.race != 0) {
+            out.push_back(g.name);
+        }
     }
     return out;
+}
+
+// True when `choices` ("id:name:attempt|...") starts with the entries of `want` (the creators') and goes on only
+// with further entries.
+bool starts_with_entries(const std::string& choices, const std::string& want) {
+    return choices.rfind(want, 0) == 0 && (choices.size() == want.size() || choices[want.size()] == '|');
 }
 
 std::string stage_error(const Params& p, const wd::ContentSet& c = shipped()) {
@@ -95,7 +104,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42, span 6000: K_aw, base, u, pick, d an
           "4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs");
     CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
-    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
+    CHECK(starts_with_entries(chrono_api::god_choices(shipped(), Params{}, 42, {}), "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1"));
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
@@ -156,7 +165,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1
     CHECK(ages_text(r.ages) == "1:1:0:5601:The Age of Elves|2:6:5602:5999:The Age of Orcs");
     CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Sluskat", "Nonthom", "Vyia", "Bulwan", "A'ghaz"});
     CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Vyia:0|5:Bulwan:0|6:A'ghaz:0");
-    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Vyia:0|5:Bulwan:0|6:A'ghaz:0");
+    CHECK(starts_with_entries(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}), "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Vyia:0|5:Bulwan:0|6:A'ghaz:0"));
     REQUIRE(r.races.size() == 6U);
     for (std::size_t i = 1; i <= 4; ++i) {
         CAPTURE(i);
@@ -190,13 +199,13 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: collisions with preloaded region names") {
     for (std::size_t i = 1; i < 6; ++i) {
         CHECK(r.ages[i].name.find(" II") == std::string::npos);
     }
-    REQUIRE(r.gods.size() == 6U);
+    REQUIRE(r.gods.size() == 15U);   // P5-08: six creators and nine pantheon gods
     CHECK(r.gods[0].name == "Mical");
     CHECK(r.gods[1].name == "Krokzit");  // r3: the r5 goblin god no longer meets the region "Krok"
     const std::string replay = replay_gods(r, 42, regions, shipped());
     CHECK(replay.substr(0, replay.find("|3:")) == "1:Mical:2|2:Krokzit:0");
     const std::string choices = chrono_api::god_choices(shipped(), Params{}, 42, regions);
-    CHECK(choices == replay);
+    CHECK(choices.substr(0, replay.size()) == replay);
     CHECK(choices.substr(0, choices.find("|3:")) == "1:Mical:2|2:Krokzit:0");
     // Every name of the world is distinct (invariant 8).
     std::set<std::string> all(regions.begin(), regions.end());

@@ -110,8 +110,8 @@ TEST_CASE("P5-04 4.2: history.alliances loads: 54 int fields in order at the sta
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(h::check_history_data(*l.content).empty());
     const wd::Record& r = record_of(*l.content, "history", "alliances");
-    REQUIRE(r.size() == p504data::alliances_fields().size() + 1U + 15U);   // P5-04a 14.1: 15 appended after mine_forms
-    REQUIRE(r.size() == 70U);
+    REQUIRE(r.size() == p504data::alliances_fields().size() + 1U + 16U);   // P5-04a 14.1: 15 appended after mine_forms; P5-08 12.5: renew_written_max
+    REQUIRE(r.size() == 71U);
     for (std::size_t i = 0; i < p504data::alliances_fields().size(); ++i) {
         const p504data::Field& f = p504data::alliances_fields()[i];
         CAPTURE(std::string(f.name));
@@ -339,7 +339,7 @@ TEST_CASE("P5-04 4: the 0.26.0 listing hashes to the reference's game/data value
     const Load l = load(p504data::files_026());
     REQUIRE_MESSAGE(l.ok(), dump(l));
     CHECK(worldgen::data::content_hash_hex(*l.content) ==
-          "5581fd52962688495270ba4181991fb8d7a4d66dfd6e620b779e314e43818709");   // p3-01-data.txt game/data at 0.28.0 (P5-04a, p3_data_reference.py golden --version 0.28.0)
+          "29471d7c951368e991c9387bf7ebce860ba4db926584fd813e1e51c2f0b5cb1c");   // p3-01-data.txt game/data at 0.30.0 (p3_data_reference.py golden --version 0.30.0)
     CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.30.0");   // P5-06
     CHECK(worldgen::db::SCHEMA_VERSION == 14);
 }
@@ -354,7 +354,7 @@ TEST_CASE("P5-04 4.1 to 4.3: the shipped game/data and both fixture roots hold t
         CHECK(h::check_history_data(*l.content).empty());
         const wd::Definition* d = p503check::definition(*l.content, "history", "alliances");
         REQUIRE(d != nullptr);
-        CHECK(d->record.size() == 70U);   // P5-04a: 55 + 15
+        CHECK(d->record.size() == 71U);   // P5-04a: 55 + 15; P5-08: renew_written_max
         for (const p504data::Field& f : p504data::alliances_fields()) CHECK(d->record.find(std::string(f.name)) != nullptr);
         CHECK(record_of(*l.content, "history", "conflict").find("arms_strength_permille") != nullptr);
         CHECK(record_of(*l.content, "race", "elf").find("origin_allies") != nullptr);

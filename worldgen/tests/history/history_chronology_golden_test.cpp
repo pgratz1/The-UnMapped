@@ -65,7 +65,9 @@ void check_rows(const GoldenCase& c, const Rows& rows, const Params& p, const st
         from = bar + 1;
     }
     CHECK(names == want_names);
-    CHECK(replay_gods(rows, c.seed, regions, shipped()) == want);
+    // P5-08 (0.30.0): the creators' attempts replayed by the test; the nine pantheon gods follow them in the record.
+    const std::string creators = replay_gods(rows, c.seed, regions, shipped());
+    CHECK(want.substr(0, creators.size()) == creators);
     // The stage's own record of each choice (ChronologyResult::god_names).
     CHECK(chrono_api::god_choices(shipped(), p, c.seed, regions) == want);
     const std::map<std::string, std::string> h = table_hashes(rows);

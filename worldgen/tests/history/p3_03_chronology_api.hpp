@@ -235,6 +235,9 @@ struct GodRow {
     std::int64_t id = 0;
     std::string name;
     std::int64_t camp = 0;
+    std::int64_t domain = 1;      // schema 14 (P5-08 9)
+    std::string title;
+    std::int64_t race = 0;
     friend bool operator==(const GodRow&, const GodRow&) = default;
 };
 struct AgeRow {
@@ -269,7 +272,7 @@ inline Rows stage(const wd::ContentSet& c, const Params& p, std::uint64_t seed,
         out.cultures.push_back(CultureRow{x.id, std::string(x.key), std::string(x.name), x.race});
     }
     for (const auto& x : r.gods) {
-        out.gods.push_back(GodRow{x.id, std::string(x.name), x.camp});
+        out.gods.push_back(GodRow{x.id, std::string(x.name), x.camp, x.domain, std::string(x.title), x.race});
     }
     for (const auto& x : r.ages) {
         out.ages.push_back(AgeRow{x.id, x.race, x.start_year, x.end_year, std::string(x.name)});

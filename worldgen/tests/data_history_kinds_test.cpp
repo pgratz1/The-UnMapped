@@ -209,12 +209,12 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 10U);   // figures (P5-06);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 11U);   // pantheon (P5-08 4.2); figures (P5-06);   // alliances (P5-04 4.2);  // relations (P5-03 4.2); chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
     CHECK(history->definitions[0].id == "alliances");   // P5-04 4.2: ids in byte order
     const wd::Definition& chrono = history->definitions[1];
     CHECK(chrono.id == "chronology");
-    REQUIRE(chrono.record.size() == 3U);
-    for (std::size_t f = 0; f < 3; ++f) {
+    REQUIRE(chrono.record.size() == 4U);   // P5-08 6.1: creator_title
+    for (std::size_t f = 0; f < 4; ++f) {
         CHECK(chrono.record.name_at(f) == history_data::chronology_fields()[f]);
     }
     CHECK(chrono.record.get_fx("awakening_jitter_frac").raw() == history_data::CHRONOLOGY_JITTER_RAW);
@@ -229,7 +229,7 @@ void check_shipped_values(const wd::ContentSet& c) {
 TEST_CASE("P3-01 3-5: the production registry holds race, culture and history beside biome and worldgen") {
     const wd::KindRegistry r = wd::builtin_kinds();
     const auto& kinds = r.kinds();
-    REQUIRE(kinds.size() == 9U);
+    REQUIRE(kinds.size() == 10U);
     // Ascending name (P0-03 7.1): the encoding order of P3-01 7; from
     // generator 0.17.0 name_filter (P3-02 r5 11.2) and placename (P1-06 r3
     // 4.1) between history and race (P3-01 r8 (4)); from 0.23.0 beast (first)
@@ -237,35 +237,36 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(kinds[0].name == "beast");
     CHECK(kinds[1].name == "biome");
     CHECK(kinds[2].name == "culture");
-    CHECK(kinds[3].name == "history");
-    CHECK(kinds[4].name == "monster");
-    CHECK(kinds[5].name == "name_filter");
-    CHECK(kinds[6].name == "placename");
-    CHECK(kinds[7].name == "race");
-    CHECK(kinds[8].name == "worldgen");
+    CHECK(kinds[3].name == "god");
+    CHECK(kinds[4].name == "history");
+    CHECK(kinds[5].name == "monster");
+    CHECK(kinds[6].name == "name_filter");
+    CHECK(kinds[7].name == "placename");
+    CHECK(kinds[8].name == "race");
+    CHECK(kinds[9].name == "worldgen");
     CHECK(kinds[0].directory == "beasts");
     CHECK(kinds[0].required);
     CHECK_FALSE(kinds[0].has_fixed_ids());
-    CHECK(kinds[4].directory == "monsters");
-    CHECK(kinds[4].required);
-    CHECK_FALSE(kinds[4].has_fixed_ids());
-    CHECK(kinds[5].directory == "name_filters");
+    CHECK(kinds[5].directory == "monsters");
     CHECK(kinds[5].required);
     CHECK_FALSE(kinds[5].has_fixed_ids());
-    CHECK(kinds[6].directory == "placenames");
+    CHECK(kinds[6].directory == "name_filters");
     CHECK(kinds[6].required);
     CHECK_FALSE(kinds[6].has_fixed_ids());
+    CHECK(kinds[7].directory == "placenames");
+    CHECK(kinds[7].required);
+    CHECK_FALSE(kinds[7].has_fixed_ids());
 
     const wd::Kind& culture = kinds[2];
     CHECK(culture.directory == "cultures");
     CHECK(culture.required);
     CHECK_FALSE(culture.has_fixed_ids());
 
-    const wd::Kind& history = kinds[3];
+    const wd::Kind& history = kinds[4];
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 10U);   // P5-06: figures;   // P5-04 4.2: alliances  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+    REQUIRE(history.id_schemas.size() == 11U);   // P5-08: pantheon;   // P5-06: figures;   // P5-04 4.2: alliances  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
                                                // renaming P5-12 (r16 5.4); monsters P5-02 4.3; relations P5-03 4.2
     CHECK(history.id_schemas[0].id == "alliances");   // P5-04 4.2
     CHECK(history.id_schemas[1].id == "chronology");
@@ -273,10 +274,11 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.id_schemas[3].id == "engine");
     CHECK(history.id_schemas[4].id == "figures");   // P5-06
     CHECK(history.id_schemas[5].id == "monsters");
-    CHECK(history.id_schemas[6].id == "peoples");
-    CHECK(history.id_schemas[7].id == "relations");   // P5-03 4.2
-    CHECK(history.id_schemas[8].id == "renaming");
-    CHECK(history.id_schemas[9].id == "report");
+    CHECK(history.id_schemas[6].id == "pantheon");   // P5-08 4.2
+    CHECK(history.id_schemas[7].id == "peoples");
+    CHECK(history.id_schemas[8].id == "relations");   // P5-03 4.2
+    CHECK(history.id_schemas[9].id == "renaming");
+    CHECK(history.id_schemas[10].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -298,7 +300,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine")->checks()[2].name == "engine_flare_min");
     CHECK(history.schema_for("engine")->checks()[3].name == "engine_phase_budget");
 
-    const wd::Kind& race = kinds[7];
+    const wd::Kind& race = kinds[8];
     CHECK(race.directory == "races");
     CHECK(race.required);
     CHECK_FALSE(race.has_fixed_ids());

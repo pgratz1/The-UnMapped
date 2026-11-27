@@ -2580,7 +2580,8 @@ def expand_fixture(fx):
             rows["book"] = sorted(tuple(r) for r in tb.get("book", []))
         if V11:   # schema 14 (P5-08 9): a three-column god row is a creator (domain 1, no title, race = id), as the
             # C++ builder; faction as given (-1 is NULL in ended_year)
-            rows["god"] = [tuple(g) if len(g) >= 6 else tuple(g[:3]) + (1, "", g[0]) for g in rows["god"]]
+            rows["god"] = [tuple(g) if len(g) >= 6 else (g[0], g[1], rows["race"][g[0] - 1][5], 1, "", g[0])
+                           for g in rows["god"]]   # a creator's camp is its race's (the readers' check of P5-08 9)
             rows["faction"] = sorted(tuple(None if (i == 9 and v == -1) else v for i, v in enumerate(r))
                                      for r in tb.get("faction", []))
     kinds, kroles, kvalues = [], [], []

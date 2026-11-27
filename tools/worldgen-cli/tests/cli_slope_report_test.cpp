@@ -44,7 +44,7 @@ TEST_CASE("cli 10.3: report on the slope world, byte for byte") {
     for (const auto& [k, v] : p004::meta_rows(0, {}, "test_fixture")) {
         expected += v.empty() ? k + " =\n" : k + " = " + v + "\n";
     }
-    expected += "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 1\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\nelevation i16 7x6 codec=1 bytes=" +
+    expected += "[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 1\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nregion_name = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\nsettlement_race = 0\nsite = 0\n[layers]\nelevation i16 7x6 codec=1 bytes=" +
                 std::to_string(worldgen::db::encode_layer_blob(g).size()) + " min=-40 max=5400\n" +
                 p100::with_empty_pass_lines(p100::SLOPE_GEOGRAPHY);
     CHECK(r.out == expected);

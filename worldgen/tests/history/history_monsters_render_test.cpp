@@ -319,7 +319,7 @@ TEST_CASE("P5-02 11.4: the scene loads; each damaged site row is refused with it
     const std::string head = "corrupt table 'site': row ";
     refused("site-id", "UPDATE site SET id = " + n(s.s0 + 16) + " WHERE id = " + s6 + ";",
             head + n(s.s0 + 16) + ": id " + n(s.s0 + 16) + " is not " + s6);
-    refused("site-kind", "UPDATE site SET kind = 5 WHERE id = " + s1 + ";", head + s1 + ": kind 5 is not 1, 2, 3 or 4");   // P5-04 9.2: 3 a mine; P5-06: 4 a tower
+    refused("site-kind", "UPDATE site SET kind = 8 WHERE id = " + s1 + ";", head + s1 + ": kind 8 not 1 to 7");   // P5-04 9.2: 3 a mine; P5-06: 4 a tower
     refused("site-region", "UPDATE site SET region = 999999 WHERE id = " + s1 + ";",
             head + s1 + ": unknown region 999999");
     refused("site-cell", "UPDATE site SET x = 512, y = 0 WHERE id = " + s1 + ";",

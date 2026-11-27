@@ -282,7 +282,7 @@ TEST_CASE("P5-04 9.1, 9.2: H16 loads; each corruption refused with its message")
     refused("no-ally", "DELETE FROM event_participant WHERE event = 50 AND seq = 3;", "allied_battle without an ally");
     refused("spoils-war", "DELETE FROM event_cause WHERE event = 53 AND cause = 51;", "spoils without its war");
     // 9.2 the site kind mine (P5-02 11.4's line, amended)
-    refused("site-kind", "UPDATE site SET kind = 5 WHERE id = 1;", "kind 5 is not 1, 2, 3 or 4");   // P5-06: 4 is a tower
+    refused("site-kind", "UPDATE site SET kind = 8 WHERE id = 1;", "kind 8 not 1 to 7");   // P5-06: 4 is a tower
     refused("mine-monster", "UPDATE site SET monster = 1 WHERE id = 1;", "mine with a monster");
     refused("mine-settlement", "UPDATE site SET settlement = 0 WHERE id = 1;", "mine without a settlement");
     refused("mine-civ", "UPDATE site SET founder_civ = 99 WHERE id = 1;", "unknown civilization 99");

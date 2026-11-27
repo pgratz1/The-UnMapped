@@ -30,7 +30,7 @@ const char* const BASE_ROWS =
     "(4, 'faerie', 'Faerie', 'Faeries', 'Faerie', 0, 400, 100, 3, 0, NULL, 4),"
     "(5, 'human', 'Human', 'Humans', 'Human', 1, 70, 25, 5, 0, NULL, 5),"
     "(6, 'orc', 'Orc', 'Orcs', 'Orcish', 2, 50, 18, 6, 1, 5000, 6);"
-    "INSERT INTO god VALUES (1, 'Aa', 0), (2, 'Bb', 2), (3, 'Cc', 1), (4, 'Dd', 0), (5, 'Ee', 1), (6, 'Ff', 2);"
+    "INSERT INTO god VALUES (1, 'Aa', 0, 1, '', 1), (2, 'Bb', 2, 1, '', 2), (3, 'Cc', 1, 1, '', 3), (4, 'Dd', 0, 1, '', 4), (5, 'Ee', 1, 1, '', 5), (6, 'Ff', 2, 1, '', 6);"
     "INSERT INTO age VALUES (1, 1, 0, 2999, 'The Age of Elves'), (2, 3, 3000, 4999, 'The Age of Dwarves'),"
     "(3, 6, 5000, 5999, 'The Age of Orcs');"
     "INSERT INTO event_kind VALUES (1, 'awakening', 0, 1, 0, 100, 'a'), (2, 'civ_founded', 1, 1, 0, 80, 'b'),"
@@ -125,7 +125,7 @@ TEST_CASE("P3-04 11.1, 16.1 item 13: [history] of a hand-made world, after [chro
     for (const char ch : tables) {
         n += ch == '\n' ? 1 : 0;
     }
-    CHECK(n == 37U);  // header + 36 (P5-06: figure, book); header + 34 (P5-03 16.3: race_relations, settlement_races)
+    CHECK(n == 38U);  // header + 37 (P5-08: faction); header + 36 (P5-06: figure, book); header + 34 (P5-03 16.3: race_relations, settlement_races)
     for (const std::string& t : hash_tables()) {
         CHECK_MESSAGE(tables.find("\n" + t + " = ") != std::string::npos, t);
     }

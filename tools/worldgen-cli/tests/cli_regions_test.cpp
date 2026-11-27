@@ -222,7 +222,7 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
     }
     CHECK(tables == std::vector<std::string>{"age", "beast", "beast_population", "biome", "book", "civilization", "climate", "culture", "event", "event_cause",
                                              "event_kind", "event_kind_role", "event_kind_value", "event_participant",
-                                             "event_value", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
+                                             "event_value", "faction", "figure", "god", "layer", "meta", "monster", "monster_kind", "pass", "phase", "race",
                                              "race_biome", "race_relation", "region", "region_biome", "region_border",
                                              "region_control", "region_name", "relation", "settlement",
                                              "settlement_census", "settlement_race", "site"});
@@ -311,7 +311,7 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     CHECK(read_bytes(e).size() == 196608U);   // 47 pages at schema 12 (P5-06; 45 pages at schema 10) at schema 10 (P5-03a 12 item 5)
     const ProcessResult re = w.sb.cli({"report", "--db", u8(e)});
     REQUIRE(re.exit_code == EXIT_OK);
-    CHECK(contains(re.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\n"
+    CHECK(contains(re.out, "\n[tables]\nage = 0\nbeast = 0\nbeast_population = 0\nbiome = 0\nbook = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\nfaction = 0\nfigure = 0\ngod = 0\nlayer = 0\nmeta = 17\nmonster = 0\nmonster_kind = 0\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nrace_relation = 0\nregion = 0\n"
                            "region_biome = 0\nregion_border = 0\n"));
 }
 

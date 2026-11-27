@@ -195,8 +195,10 @@ TEST_CASE("P3-04 r10 8.4: a body with four words is an unknown placeholder; the 
     // P5-04a 8.5 (0.28.0): two to eight words are valid; nine words are refused with their count
     CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d|e}").has_value());
     CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h}").has_value());
-    CHECK(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h|i}") ==
-          std::optional<std::string>("choice of 9 words at byte 0"));
+    // P5-07 12.3 (0.29.0): nine words are valid too (the deepening lines); ten are refused with their count
+    CHECK_FALSE(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h|i}").has_value());
+    CHECK(eng::template_problem(k, "{n?a|b|c|d|e|f|g|h|i|j}") ==
+          std::optional<std::string>("choice of 10 words at byte 0"));
     CHECK(eng::template_problem(k, "x {m?a|b|c}") == std::optional<std::string>("unknown placeholder '{m?a|b|c}' at byte 2"));
     // The shipped templates of 0.17.0 that use the form parse (P3-04 r10 4.2, P3-05 r6 11, P3-06 r7 11).
     for (const ReportEntry& e : shipped_report()) {
