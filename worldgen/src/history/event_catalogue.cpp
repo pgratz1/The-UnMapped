@@ -2939,6 +2939,13 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
     // book (K1 to K6).
     const auto n_sites = static_cast<std::int64_t>(t.sites.size());
     std::set<std::int64_t> book_events;
+    // P5-08 12.6: a caster who took a tower up writes there too.
+    std::set<std::pair<std::int64_t, std::int64_t>> taken_up;  // (figure, site)
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "tower_taken_up") {
+            taken_up.emplace(participant(e.id, "figure"), participant(e.id, "site"));
+        }
+    }
     for (std::size_t i = 0; i < t.books.size(); ++i) {
         const db::BookRow& r = t.books[i];
         const std::string at = "corrupt table 'book': row " + int_text(r.id) + ": ";
@@ -2952,7 +2959,8 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
             r.site >= 1 && r.site <= n_sites && t.sites[static_cast<std::size_t>(r.site - 1)].id == r.site
                 ? &t.sites[static_cast<std::size_t>(r.site - 1)]
                 : nullptr;
-        if (site == nullptr || site->kind != 4 || participant(site->origin_event, "figure") != r.author) {
+        if (site == nullptr || site->kind != 4 ||
+            (participant(site->origin_event, "figure") != r.author && taken_up.count({r.author, r.site}) == 0)) {
             return at + "site " + int_text(r.site) + " is not the author's tower";
         }
         const std::optional<std::int64_t> ey = year_of(r.event);

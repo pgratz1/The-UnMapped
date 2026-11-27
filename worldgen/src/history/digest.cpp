@@ -450,6 +450,8 @@ struct Kinds {
     Id standing_changed = 0, people_expelled = 0;
     // P5-06: kinds 79 to 92 the digest reads.
     Id battle_led = 0, succession_disputed = 0, exiled = 0, fell_in_battle = 0;
+    // P5-08 12.1: the deep's kinds pinned in the summary set, and the aid.
+    Id deep_woken = 0, deep_sealed = 0, warren_sealed = 0, hold_lost = 0, ally_aided_hold = 0;
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -513,6 +515,15 @@ struct Kinds {
         succession_disputed = id("succession_disputed");
         exiled = id("exiled");
         fell_in_battle = id("fell_in_battle");
+        deep_woken = id("deep_woken");  // P5-08 12.1
+        deep_sealed = id("deep_sealed");
+        warren_sealed = id("warren_sealed");
+        hold_lost = id("hold_lost");
+        ally_aided_hold = id("ally_aided_hold");
+    }
+    // P5-08 12.1: the kinds of the deep in F.
+    [[nodiscard]] bool deep_pinned(Id k) const noexcept {
+        return k == deep_woken || k == deep_sealed || k == warren_sealed || k == hold_lost;
     }
     // 25.2: the calamity kinds of the summary's cap.
     [[nodiscard]] bool calamity(Id k) const noexcept {
@@ -1228,6 +1239,10 @@ private:
         }
         // r21 26.5 item 1: every renaming e caused.
         add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
+        // P5-08 12.1 item 1: the aid citing an outcome of a waking.
+        if (k == kinds_.deep_sealed || k == kinds_.warren_sealed || k == kinds_.hold_lost) {
+            add_effects(e, [this](Id x) { return x == kinds_.ally_aided_hold; });
+        }
         // P5-06 10.3: a disputed succession is a companion of the crisis and
         // of the secession it cites, and brings its exile (reading: the
         // exile is named a companion of the dispute, which is itself only a
@@ -1433,6 +1448,14 @@ private:
                 add(e.row.id);
             }
         }
+        // P5-08 12.1 item 1: F gains every event of the deep, with its unit.
+        for (const HistoryView::Event& e : events_) {
+            if (kinds_.deep_pinned(e.row.kind)) {
+                for (const Id u : unit(e.row.id)) {
+                    add(u);
+                }
+            }
+        }
         // P5-03 10.1: the floor starts as F with the stories of the told
         // monsters, each with its unit.
         for (const Id e : stories_) {
@@ -1626,6 +1649,126 @@ private:
         figure_stats();     // P5-06 10.5
         followup_stats();   // P5-04a 12.6
         deep_stats();       // P5-07 10 item 7
+        pantheon_stats();   // P5-08 10 item 8
+    }
+
+    // P5-08 10 item 8: appended at the end, in this order (full only).
+    // renewals_capped is not printed (lead ruling: no stored row tells a
+    // capped renewal); deep_stirred counts the flare-up phases whose trigger
+    // is a deepening (only a stir makes one the trigger).
+    void pantheon_stats() {
+        const std::array<Id, 5> acts = {kind_id("divine_bless"), kind_id("divine_curse"), kind_id("divine_champion"),
+                                        kind_id("divine_monster"), kind_id("divine_mark")};
+        const Id founded = kind_id("cult_founded"), spread = kind_id("cult_spread");
+        const Id adopted = kind_id("cult_adopted"), suppressed = kind_id("cult_suppressed");
+        const Id taken = kind_id("tower_taken_up"), abandoned = kind_id("tower_abandoned");
+        const Id delved = kind_id("delving_deepened"), wdelved = kind_id("warren_delved");
+        std::array<std::int64_t, 5> by_kind{};
+        std::array<std::int64_t, 3> by_camp{};
+        std::int64_t creators = 0, dead = 0, n_founded = 0, n_spread = 0, n_adopted = 0, n_suppressed = 0;
+        std::int64_t n_taken = 0, n_abandoned = 0;
+        const std::span<const db::GodRow> gods = view_.god_rows();
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            for (std::size_t i = 0; i < acts.size(); ++i) {
+                if (k != acts[i]) {
+                    continue;
+                }
+                ++by_kind[i];
+                const Id g = role_entity(e, "actor");
+                for (const db::GodRow& row : gods) {
+                    if (row.id == g) {
+                        if (row.camp >= 0 && row.camp <= 2) {
+                            ++by_camp[static_cast<std::size_t>(row.camp)];
+                        }
+                        creators += row.race != 0 ? 1 : 0;
+                    }
+                }
+                if (i == 1) {
+                    const std::int64_t d = std::max<std::int64_t>(0, value_of(e, "dead"));
+                    dead = dead > std::numeric_limits<std::int64_t>::max() - d ? std::numeric_limits<std::int64_t>::max()
+                                                                              : dead + d;
+                }
+            }
+            n_founded += k == founded ? 1 : 0;
+            n_spread += k == spread ? 1 : 0;
+            n_adopted += k == adopted ? 1 : 0;
+            n_suppressed += k == suppressed ? 1 : 0;
+            n_taken += k == taken ? 1 : 0;
+            n_abandoned += k == abandoned ? 1 : 0;
+        }
+        std::int64_t flares = 0, stirred = 0;
+        for (const db::PhaseRow& p : t_.phases) {
+            if (p.kind != 3 || p.trigger_event < 1 || static_cast<std::size_t>(p.trigger_event) > events_.size()) {
+                continue;
+            }
+            const Id tk = kind(p.trigger_event);
+            stirred += tk == delved || tk == wdelved ? 1 : 0;
+            flares += divine_flare(p) ? 1 : 0;
+        }
+        std::int64_t hidden = 0, present = 0, prophets = 0;
+        for (const db::FactionRow& f : t_.factions) {
+            hidden += f.status == 2 ? 1 : 0;
+            present += f.status == 1 ? 1 : 0;
+            for (const db::FigureRow& r : t_.figures) {
+                prophets += r.id == f.founder && r.role == 7 ? 1 : 0;
+            }
+        }
+        std::int64_t sacred = 0, profane = 0, temples = 0;
+        for (const db::SiteRow& x : t_.sites) {
+            if (x.kind == 5 && x.origin_event >= 1 && static_cast<std::size_t>(x.origin_event) <= events_.size()) {
+                const bool is_profane = value_of(events_[static_cast<std::size_t>(x.origin_event - 1)], "profane") == 1;
+                profane += is_profane ? 1 : 0;
+                sacred += is_profane ? 0 : 1;
+            }
+            temples += x.kind == 6 ? 1 : 0;
+        }
+        std::int64_t total = 0;
+        for (const std::int64_t n : by_kind) {
+            total += n;
+        }
+        put("divine_acts", total);
+        put("divine_bless", by_kind[0]);
+        put("divine_curse", by_kind[1]);
+        put("divine_champion", by_kind[2]);
+        put("divine_monster", by_kind[3]);
+        put("divine_mark", by_kind[4]);
+        put("divine_good", by_camp[0]);
+        put("divine_neutral", by_camp[1]);
+        put("divine_evil", by_camp[2]);
+        put("divine_creators", creators);
+        put("divine_flares", flares);
+        put("divine_dead", dead);
+        put("cults_founded", n_founded);
+        put("cults_spread", n_spread);
+        put("cults_adopted", n_adopted);
+        put("cults_suppressed", n_suppressed);
+        put("cults_hidden", hidden);
+        put("cults_present", present);
+        put("cult_founders_prophets", prophets);
+        put("shrines_sacred", sacred);
+        put("shrines_profane", profane);
+        put("temples", temples);
+        put("towers_taken_up", n_taken);
+        put("towers_abandoned", n_abandoned);
+        put("deep_stirred", stirred);
+    }
+
+    // P5-08 10 item 2: a flare-up phase (kind 3) whose trigger is a cause of
+    // an act (kinds 100 to 104) of the phase's first year.
+    [[nodiscard]] bool divine_flare(const db::PhaseRow& p) const {
+        const KindDef* first = view_.catalogue().find("divine_bless");
+        const KindDef* last = view_.catalogue().find("divine_mark");
+        if (first == nullptr || last == nullptr) {
+            return false;
+        }
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.year == p.start_year && e.row.kind >= first->id && e.row.kind <= last->id &&
+                std::find(e.causes.begin(), e.causes.end(), p.trigger_event) != e.causes.end()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // P5-07 10 item 7: appended at the end, in this order (full only).

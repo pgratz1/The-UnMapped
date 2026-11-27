@@ -341,6 +341,300 @@ std::vector<BlockLine> rulers_lines(const HistoryView& v, const history::History
     return out;
 }
 
+// --- P5-08 10: gods, cults and the deep as block lines --------------------------
+
+// The first participant of `role` (by key) of e, or 0.
+Id event_role(const HistoryView& v, const HistoryView::Event& e, std::string_view role) {
+    const history::KindDef* k = v.catalogue().find_id(e.row.kind);
+    const history::RoleDef* r = k != nullptr ? k->find_role(role) : nullptr;
+    if (r == nullptr) {
+        return 0;
+    }
+    for (const db::EventParticipantRow& p : e.participants) {  // seq order
+        if (p.role == r->seq) {
+            return p.entity_id;
+        }
+    }
+    return 0;
+}
+
+// The value of key `key` of e, or `none`.
+std::int64_t event_value(const HistoryView& v, const HistoryView::Event& e, std::string_view key, std::int64_t none) {
+    const history::KindDef* k = v.catalogue().find_id(e.row.kind);
+    const std::int64_t seq = k != nullptr ? k->value_seq(key) : 0;
+    return seq >= 1 && static_cast<std::size_t>(seq) <= e.values.size() ? e.values[static_cast<std::size_t>(seq - 1)]
+                                                                        : none;
+}
+
+// "<tag> <name>" with the view's name (empty when it has none).
+Segment named(const HistoryView& v, Id type, Id id) {
+    const std::optional<EntityType> et = history::entity_type_from_code(type);
+    const std::string* n = et ? v.name(*et, id) : nullptr;
+    return tagged_ref(type, id, n != nullptr ? *n : std::string());
+}
+
+Id kind_id_of(const HistoryView& v, std::string_view key) {
+    const history::KindDef* k = v.catalogue().find(key);
+    return k != nullptr ? k->id : -1;
+}
+
+constexpr std::array<std::string_view, 9> DOMAIN = {"creation", "war",   "death", "harvest", "craft",
+                                                    "wild",     "oaths", "lore",  "ruin"};
+constexpr std::array<std::string_view, 5> ACT_KEYS = {"divine_bless", "divine_curse", "divine_champion",
+                                                      "divine_monster", "divine_mark"};
+constexpr std::array<std::string_view, 5> ACT_WORDS = {"bless", "curse", "champion", "monster", "mark"};
+
+// Per god id (index id): its acts by kind in the order of 8.1.
+std::vector<std::array<std::int64_t, 5>> acts_by_god(const HistoryView& v) {
+    std::array<Id, 5> kinds{};
+    for (std::size_t i = 0; i < kinds.size(); ++i) {
+        kinds[i] = kind_id_of(v, ACT_KEYS[i]);
+    }
+    Id max_god = 0;
+    for (const db::GodRow& g : v.god_rows()) {
+        max_god = std::max(max_god, g.id);
+    }
+    std::vector<std::array<std::int64_t, 5>> out(static_cast<std::size_t>(max_god) + 1, std::array<std::int64_t, 5>{});
+    for (const HistoryView::Event& e : v.events()) {
+        for (std::size_t i = 0; i < kinds.size(); ++i) {
+            if (e.row.kind != kinds[i]) {
+                continue;
+            }
+            const Id g = event_role(v, e, "actor");
+            if (g >= 1 && g <= max_god) {
+                ++out[static_cast<std::size_t>(g)][i];
+            }
+        }
+    }
+    return out;
+}
+
+std::int64_t total_of(const std::array<std::int64_t, 5>& a) {
+    std::int64_t n = 0;
+    for (const std::int64_t x : a) {
+        n += x;
+    }
+    return n;
+}
+
+// The cult of god g with the largest id, or nullptr.
+const db::FactionRow* cult_of_god(const history::HistoryTables& t, Id g) {
+    const db::FactionRow* out = nullptr;
+    for (const db::FactionRow& f : t.factions) {
+        out = f.god == g ? &f : out;
+    }
+    return out;
+}
+
+// 10 item 2: "g<id> <name> <title> (<camp>, <domain>): acts <n>[ (<kind>
+// <k>, ...)][; cult fa<id> <name>]".
+BlockLine god_line(const history::HistoryTables& t, const db::GodRow& g,
+                   const std::array<std::int64_t, 5>& acts) {
+    BlockLine l{tagged_ref(2, g.id, g.name), lit(" "), txt(g.title),
+                lit(" (" + std::string(word(CAMP, g.camp, 0)) + ", " + std::string(word(DOMAIN, g.domain, 1)) +
+                    "): acts " + num(total_of(acts)))};
+    std::string kinds;
+    for (std::size_t i = 0; i < acts.size(); ++i) {
+        if (acts[i] > 0) {
+            kinds += (kinds.empty() ? " (" : ", ") + std::string(ACT_WORDS[i]) + " " + num(acts[i]);
+        }
+    }
+    if (!kinds.empty()) {
+        l.push_back(lit(kinds + ")"));
+    }
+    if (const db::FactionRow* f = cult_of_god(t, g.id)) {
+        l.push_back(lit("; cult "));
+        l.push_back(tagged_ref(7, f->id, f->name));
+    }
+    return l;
+}
+
+// The relation rows of `kind` with faction f as a, open at E or closed by
+// the cult's ending event, by (since, b).
+std::vector<const db::RelationRow*> cult_rows(const history::HistoryTables& t, const db::FactionRow& f,
+                                              std::string_view kind) {
+    std::vector<const db::RelationRow*> rows;
+    for (const db::RelationRow& r : t.relations) {
+        if (r.kind == kind && r.a_type == 7 && r.a_id == f.id &&
+            (!r.until || (f.ending_event != 0 && r.until_event == f.ending_event))) {
+            rows.push_back(&r);
+        }
+    }
+    std::stable_sort(rows.begin(), rows.end(), [](const db::RelationRow* a, const db::RelationRow* b) {
+        return a->since != b->since ? a->since < b->since : a->b_id < b->b_id;
+    });
+    return rows;
+}
+
+// 10 item 3: "fa<id> <name>, of g<id> <name>: founded <year> e<id> by f<id>
+// <name> at si<id> <temple> in s<id> <name>; in <realms>[; faith of
+// <realms>]; <end part>".
+BlockLine cult_line(const HistoryView& v, const history::HistoryTables& t, const db::FactionRow& f) {
+    BlockLine l{tagged_ref(7, f.id, f.name), lit(", of "), named(v, 2, f.god),
+                lit(": founded " + num(f.founded_year) + " "), event_ref(f.founding_event), lit(" by "),
+                named(v, 6, f.founder), lit(" at "), named(v, 9, f.seat)};
+    const Id seat_settlement = f.seat >= 1 && static_cast<std::uint64_t>(f.seat) <= t.sites.size()
+                                   ? t.sites[static_cast<std::size_t>(f.seat - 1)].settlement
+                                   : 0;
+    if (seat_settlement != 0) {
+        l.push_back(lit(" in "));
+        l.push_back(named(v, 4, seat_settlement));
+    }
+    const std::vector<const db::RelationRow*> in = cult_rows(t, f, "cult_in");
+    l.push_back(lit(in.empty() ? "; in none" : "; in "));
+    for (std::size_t k = 0; k < in.size(); ++k) {
+        if (k > 0) {
+            l.push_back(lit(", "));
+        }
+        l.push_back(named(v, 3, in[k]->b_id));
+    }
+    const std::vector<const db::RelationRow*> faith = cult_rows(t, f, "faith_of");
+    for (std::size_t k = 0; k < faith.size(); ++k) {
+        l.push_back(lit(k == 0 ? "; faith of " : ", "));
+        l.push_back(named(v, 3, faith[k]->b_id));
+        l.push_back(lit(" since " + num(faith[k]->since)));
+    }
+    if (f.status == 1) {
+        l.push_back(lit("; present"));
+    } else if (f.status == 2) {
+        // The cult_suppressed naming it with hidden 1 (9: exactly one).
+        const Id suppressed = kind_id_of(v, "cult_suppressed");
+        for (const HistoryView::Event& e : v.events()) {
+            if (e.row.kind == suppressed && event_role(v, e, "faction") == f.id &&
+                event_value(v, e, "hidden", 0) == 1) {
+                l.push_back(lit("; hidden at "));
+                l.push_back(named(v, 9, event_role(v, e, "sanctum")));
+                l.push_back(lit(" since " + num(e.row.year) + " "));
+                l.push_back(event_ref(e.row.id));
+                break;
+            }
+        }
+    } else {
+        l.push_back(lit("; ended " + num(f.ended_year.value_or(0)) + " "));
+        l.push_back(event_ref(f.ending_event));
+        l.push_back(lit(f.ending == 1 ? " suppressed" : " its realms fell"));
+    }
+    return l;
+}
+
+// A part "<head><entry>[, <entry>...][ and <n> more]" of at most
+// REALM_PART_MAX entries, each "<segment> e<id>" (10 item 4, 12.1 item 2).
+constexpr std::size_t REALM_PART_MAX = 4;
+struct PartEntry {
+    BlockLine what;
+    Id event = 0;
+};
+void append_part(BlockLine& l, bool& first, std::string_view head, const std::vector<PartEntry>& entries) {
+    if (entries.empty()) {
+        return;
+    }
+    l.push_back(lit(std::string(first ? "" : "; ") + std::string(head)));
+    first = false;
+    for (std::size_t k = 0; k < entries.size() && k < REALM_PART_MAX; ++k) {
+        if (k > 0) {
+            l.push_back(lit(", "));
+        }
+        l.insert(l.end(), entries[k].what.begin(), entries[k].what.end());
+        l.push_back(lit(" "));
+        l.push_back(event_ref(entries[k].event));
+    }
+    if (entries.size() > REALM_PART_MAX) {
+        l.push_back(lit(" and " + num(static_cast<std::int64_t>(entries.size() - REALM_PART_MAX)) + " more"));
+    }
+}
+
+// 10 item 4: "  gods: blessed by ...; cursed by ...; champion ...; sent ...;
+// marked ..."; empty when no act names the realm.
+BlockLine realm_gods_line(const HistoryView& v, Id c) {
+    std::array<Id, 5> kinds{};
+    for (std::size_t i = 0; i < kinds.size(); ++i) {
+        kinds[i] = kind_id_of(v, ACT_KEYS[i]);
+    }
+    std::array<std::vector<PartEntry>, 5> parts;
+    for (const HistoryView::Event& e : v.events()) {
+        for (std::size_t i = 0; i < kinds.size(); ++i) {
+            if (e.row.kind != kinds[i] || event_role(v, e, "civilization") != c) {
+                continue;
+            }
+            const Id who = i == 2 ? event_role(v, e, "figure") : i == 3 ? event_role(v, e, "monster")
+                                                               : i == 4 ? event_role(v, e, "site")
+                                                                        : event_role(v, e, "actor");
+            const Id type = i == 2 ? 6 : i == 3 ? 8 : i == 4 ? 9 : 2;
+            parts[i].push_back(PartEntry{BlockLine{named(v, type, who)}, e.row.id});
+        }
+    }
+    BlockLine l{lit("  gods: ")};
+    bool first = true;
+    static constexpr std::array<std::string_view, 5> HEADS = {"blessed by ", "cursed by ", "champion ", "sent ",
+                                                              "marked "};
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        append_part(l, first, HEADS[i], parts[i]);
+    }
+    return first ? BlockLine{} : l;
+}
+
+// 10 item 4: "  faith: fa<id> <name> since <year> e<id>[, ...]"; empty when
+// the realm never had one.
+BlockLine realm_faith_line(const HistoryView& v, const history::HistoryTables& t, Id c) {
+    std::vector<const db::RelationRow*> rows;
+    for (const db::RelationRow& r : t.relations) {
+        if (r.kind == "faith_of" && r.b_type == 3 && r.b_id == c) {
+            rows.push_back(&r);
+        }
+    }
+    std::stable_sort(rows.begin(), rows.end(), [](const db::RelationRow* a, const db::RelationRow* b) {
+        return a->since != b->since ? a->since < b->since : a->a_id < b->a_id;
+    });
+    if (rows.empty()) {
+        return {};
+    }
+    BlockLine l{lit("  faith: ")};
+    for (std::size_t k = 0; k < rows.size(); ++k) {
+        if (k > 0) {
+            l.push_back(lit(", "));
+        }
+        l.push_back(named(v, 7, rows[k]->a_id));
+        l.push_back(lit(" since " + num(rows[k]->since) + " "));
+        l.push_back(event_ref(rows[k]->since_event));
+    }
+    return l;
+}
+
+// P5-08 12.1 item 2: "  deep: woke ...; sealed ... in ...; lost ...; aided
+// ...; aided by ..."; empty when the deep never touched the realm.
+BlockLine realm_deep_line(const HistoryView& v, Id c) {
+    const Id woken = kind_id_of(v, "deep_woken"), sealed = kind_id_of(v, "deep_sealed");
+    const Id wsealed = kind_id_of(v, "warren_sealed"), lost = kind_id_of(v, "hold_lost");
+    const Id aided = kind_id_of(v, "ally_aided_hold");
+    std::array<std::vector<PartEntry>, 5> parts;
+    for (const HistoryView::Event& e : v.events()) {
+        const Id k = e.row.kind;
+        if (k == woken && event_role(v, e, "civilization") == c) {
+            parts[0].push_back(PartEntry{BlockLine{named(v, 8, event_role(v, e, "monster"))}, e.row.id});
+        } else if ((k == sealed || k == wsealed) && event_role(v, e, "civilization") == c) {
+            parts[1].push_back(PartEntry{BlockLine{named(v, 8, event_role(v, e, "monster")), lit(" in "),
+                                                   named(v, 9, event_role(v, e, "lair"))},
+                                         e.row.id});
+        } else if (k == lost && event_role(v, e, "civilization") == c) {
+            parts[2].push_back(PartEntry{BlockLine{named(v, 4, e.row.settlement)}, e.row.id});
+        } else if (k == aided) {
+            if (event_role(v, e, "ally") == c) {
+                parts[3].push_back(PartEntry{BlockLine{named(v, 3, event_role(v, e, "partner"))}, e.row.id});
+            }
+            if (event_role(v, e, "partner") == c) {
+                parts[4].push_back(PartEntry{BlockLine{named(v, 3, event_role(v, e, "ally"))}, e.row.id});
+            }
+        }
+    }
+    BlockLine l{lit("  deep: ")};
+    bool first = true;
+    static constexpr std::array<std::string_view, 5> HEADS = {"woke ", "sealed ", "lost ", "aided ", "aided by "};
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        append_part(l, first, HEADS[i], parts[i]);
+    }
+    return first ? BlockLine{} : l;
+}
+
 // The lines of one civilization's block (6.6 with 24.5, 25.3 to 25.5), the
 // report's former Report::civilization written as segments.
 class BlockBuilder {
@@ -424,6 +718,15 @@ public:
             add(std::move(l));
         }
         allies(c);  // P5-04 10.3
+        // P5-08 10 item 4, 12.1 item 2: gods, faith and the deep; at summary
+        // not with more than SUMMARY_LINES_CIVS civilizations.
+        if (!summary || static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
+            for (BlockLine l : {realm_gods_line(v_, c.id), realm_faith_line(v_, t_, c.id), realm_deep_line(v_, c.id)}) {
+                if (!l.empty()) {
+                    add(std::move(l));
+                }
+            }
+        }
         // P5-06 10.3: the rulers, after the allies; at summary not at all
         // with more than SUMMARY_LINES_CIVS civilizations.
         if (!summary || static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
@@ -565,7 +868,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V10));  // P5-07 10 item 1
+        line(std::string(HISTORY_REPORT_HEADER_V11));  // P5-08 10 item 1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -587,6 +890,8 @@ public:
         peoples();   // P5-03 17.2
         alliances();  // P5-04 10.2
         figures();    // P5-06 10.2
+        pantheon();   // P5-08 10 item 2
+        cults();      // P5-08 10 item 3
         stats();
         return std::move(out_);
     }
@@ -1022,7 +1327,15 @@ private:
                     shown.push_back(&m);
                 }
             }
-            std::stable_sort(shown.begin(), shown.end(), [](const db::MonsterRow* a, const db::MonsterRow* b) {
+            // P5-08 12.1 item 3: the awake, then the sealed, then the other
+            // asleep; each by hoard.
+            const auto rank = [&sealed](const db::MonsterRow* m) {
+                return m->status == 1 ? 0 : sealed[static_cast<std::size_t>(m->id - 1)] != 0 ? 1 : 2;
+            };
+            std::stable_sort(shown.begin(), shown.end(), [&rank](const db::MonsterRow* a, const db::MonsterRow* b) {
+                if (rank(a) != rank(b)) {
+                    return rank(a) < rank(b);
+                }
                 return a->hoard != b->hoard ? a->hoard > b->hoard : a->id < b->id;
             });
             // P5-04a 21.5 item 2: every living monster before any ended one,
@@ -1091,20 +1404,25 @@ private:
     // P5-02 12.5: [sites].
     void sites() {
         line("[sites]");
-        std::int64_t open = 0, lairs = 0, outposts = 0, mines = 0, towers = 0;
+        std::int64_t open = 0, lairs = 0, outposts = 0, mines = 0, towers = 0, shrines = 0, temples = 0, sanctums = 0;
         for (const db::SiteRow& x : t_.sites) {
             open += x.ended_year ? 0 : 1;
             lairs += x.kind == 1 ? 1 : 0;
             outposts += x.kind == 2 ? 1 : 0;
             mines += x.kind == 3 ? 1 : 0;   // P5-04 10.6
             towers += x.kind == 4 ? 1 : 0;  // P5-06 10.4
+            shrines += x.kind == 5 ? 1 : 0;  // P5-08 10 item 6
+            temples += x.kind == 6 ? 1 : 0;
+            sanctums += x.kind == 7 ? 1 : 0;
         }
         line("sites: " + num(static_cast<std::int64_t>(t_.sites.size())) + "; open " + num(open) + "; lairs " +
-             num(lairs) + ", outposts " + num(outposts) + ", mines " + num(mines) + ", towers " + num(towers));
+             num(lairs) + ", outposts " + num(outposts) + ", mines " + num(mines) + ", towers " + num(towers) +
+             ", shrines " + num(shrines) + ", temples " + num(temples) + ", sanctums " + num(sanctums));
         if (level_ != HistoryLevel::full) {
             return;
         }
-        static constexpr std::array<std::string_view, 6> ENDING = {"slain", "died", "moved", "lost", "fell", "quiet"};
+        static constexpr std::array<std::string_view, 8> ENDING = {"slain", "died", "moved",     "lost",
+                                                                   "fell",  "quiet", "abandoned", "suppressed"};
         // P5-07 10 item 3: per mine its final depth and its sealing event.
         std::vector<std::int64_t> depth(t_.sites.size(), 0);
         std::vector<const HistoryView::Event*> sealing(t_.sites.size(), nullptr);
@@ -1131,9 +1449,22 @@ private:
             const std::string_view what = x.kind == 1   ? "lair"
                                           : x.kind == 2 ? "outpost"
                                           : x.kind == 3 ? "mine"
+                                          : x.kind == 5 ? "shrine"  // P5-08 10 item 6
+                                          : x.kind == 6 ? "temple"
+                                          : x.kind == 7 ? "sanctum"
                                           : x.settlement != 0 ? "library"
                                                               : "tower";
-            std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + ": " + std::string(what) + " in " +
+            // P5-08 10 item 6: sacred or profane after a shrine's name, the
+            // cult after a temple's or a sanctum's.
+            std::string after;
+            if (const HistoryView::Event* o = x.kind >= 5 ? v_.event(x.origin_event) : nullptr) {
+                if (x.kind == 5) {
+                    after = value_of(*o, "profane", 0) == 1 ? ", profane" : ", sacred";
+                } else {
+                    after = ", of " + ref(7, role_of(*o, "faction"));
+                }
+            }
+            std::string l = "  si" + num(x.id) + " " + escape_history_text(x.name) + after + ": " + std::string(what) + " in " +
                             region(x.region) + " at " + num(x.x) + " " + num(x.y) + ", since " + num(x.origin_year) +
                             " e" + num(x.origin_event);
             if (x.founder_civ != 0) {
@@ -1813,17 +2144,18 @@ private:
 
     void figures() {
         line("[figures]");
-        std::array<std::int64_t, 6> by_role{};
+        std::array<std::int64_t, 8> by_role{};
         std::int64_t alive = 0;
         for (const db::FigureRow& f : t_.figures) {
-            if (f.role >= 1 && f.role <= 5) {
+            if (f.role >= 1 && f.role <= 7) {  // P5-08 10 item 7
                 ++by_role[static_cast<std::size_t>(f.role)];
             }
             alive += (f.status == 1 || f.status == 2) ? 1 : 0;
         }
         const auto n = static_cast<std::int64_t>(t_.figures.size());
         line("figures: " + num(n) + "; rulers " + num(by_role[1]) + ", claimants " + num(by_role[2]) + ", generals " +
-             num(by_role[3]) + ", heroes " + num(by_role[4]) + ", casters " + num(by_role[5]) + "; alive at the end " +
+             num(by_role[3]) + ", heroes " + num(by_role[4]) + ", casters " + num(by_role[5]) + ", champions " +
+             num(by_role[6]) + ", prophets " + num(by_role[7]) + "; alive at the end " +
              num(alive));
         const bool full = level_ == HistoryLevel::full;
         if (!full && static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS) {
@@ -1906,6 +2238,87 @@ private:
         }
         std::stable_sort(chosen.begin(), chosen.end(), order);
         return chosen;
+    }
+
+    // --- [pantheon] and [cults] (P5-08 10 items 2, 3) ------------------------
+
+    void pantheon() {
+        line("[pantheon]");
+        const std::vector<std::array<std::int64_t, 5>> acts = acts_by_god(v_);
+        std::array<std::int64_t, 5> all{};
+        for (const std::array<std::int64_t, 5>& a : acts) {
+            for (std::size_t i = 0; i < all.size(); ++i) {
+                all[i] += a[i];
+            }
+        }
+        std::int64_t flares = 0;
+        for (const auto& [key, value] : d_.stats) {
+            flares = key == "divine_flares" ? value : flares;
+        }
+        const std::span<const db::GodRow> gods = v_.god_rows();
+        line("gods: " + num(static_cast<std::int64_t>(gods.size())) + "; acts: " + num(total_of(all)) + " (bless " +
+             num(all[0]) + ", curse " + num(all[1]) + ", champion " + num(all[2]) + ", monster " + num(all[3]) +
+             ", mark " + num(all[4]) + "); flares: " + num(flares));
+        const auto acts_of = [&acts](const db::GodRow& g) {
+            return g.id >= 1 && static_cast<std::size_t>(g.id) < acts.size() ? acts[static_cast<std::size_t>(g.id)]
+                                                                              : std::array<std::int64_t, 5>{};
+        };
+        std::vector<const db::GodRow*> shown;
+        for (const db::GodRow& g : gods) {
+            if (level_ == HistoryLevel::full || total_of(acts_of(g)) > 0 || cult_of_god(t_, g.id) != nullptr) {
+                shown.push_back(&g);
+            }
+        }
+        std::int64_t more = 0;
+        if (level_ == HistoryLevel::summary) {
+            std::stable_sort(shown.begin(), shown.end(), [&acts_of](const db::GodRow* a, const db::GodRow* b) {
+                const std::int64_t na = total_of(acts_of(*a));
+                const std::int64_t nb = total_of(acts_of(*b));
+                return na != nb ? na > nb : a->id < b->id;
+            });
+            if (shown.size() > history::SUMMARY_GODS_MAX) {
+                more = static_cast<std::int64_t>(shown.size() - history::SUMMARY_GODS_MAX);
+                shown.resize(history::SUMMARY_GODS_MAX);
+            }
+        }
+        for (const db::GodRow* g : shown) {
+            line("  " + block_line_report_text(v_, god_line(t_, *g, acts_of(*g))));
+        }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
+    }
+
+    void cults() {
+        line("[cults]");
+        std::array<std::int64_t, 4> by_status{};
+        for (const db::FactionRow& f : t_.factions) {
+            if (f.status >= 1 && f.status <= 3) {
+                ++by_status[static_cast<std::size_t>(f.status)];
+            }
+        }
+        line("cults: " + num(static_cast<std::int64_t>(t_.factions.size())) + " (present " + num(by_status[1]) +
+             ", hidden " + num(by_status[2]) + ", ended " + num(by_status[3]) + ")");
+        std::vector<const db::FactionRow*> shown;
+        for (const db::FactionRow& f : t_.factions) {
+            shown.push_back(&f);
+        }
+        std::int64_t more = 0;
+        if (level_ == HistoryLevel::summary) {
+            std::stable_sort(shown.begin(), shown.end(), [](const db::FactionRow* a, const db::FactionRow* b) {
+                return a->status != b->status ? a->status < b->status : a->id < b->id;
+            });
+            if (shown.size() > history::SUMMARY_CULTS_MAX) {
+                more = static_cast<std::int64_t>(shown.size() - history::SUMMARY_CULTS_MAX);
+                shown.resize(history::SUMMARY_CULTS_MAX);
+            }
+        }
+        for (const db::FactionRow* f : shown) {
+            line("  " + block_line_report_text(v_, cult_line(v_, t_, *f)));
+        }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
     }
 
     void stats() {
@@ -2002,6 +2415,25 @@ std::vector<BlockLine> figure_block(const HistoryView& view, const history::Hist
         }
     }
     return out;
+}
+
+std::vector<BlockLine> god_block(const HistoryView& view, const history::HistoryTables& tables, std::int64_t god) {
+    for (const db::GodRow& g : view.god_rows()) {
+        if (g.id == god) {
+            const std::vector<std::array<std::int64_t, 5>> acts = acts_by_god(view);
+            return {god_line(tables, g, acts[static_cast<std::size_t>(g.id)])};
+        }
+    }
+    throw FatalError("god_block: no god " + num(god));
+}
+
+std::vector<BlockLine> cult_block(const HistoryView& view, const history::HistoryTables& tables, std::int64_t faction) {
+    for (const db::FactionRow& f : tables.factions) {
+        if (f.id == faction) {
+            return {cult_line(view, tables, f)};
+        }
+    }
+    throw FatalError("cult_block: no cult " + num(faction));
 }
 
 std::string block_line_report_text(const HistoryView& view, const BlockLine& line) {

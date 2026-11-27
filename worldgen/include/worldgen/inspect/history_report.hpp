@@ -48,6 +48,8 @@ inline constexpr std::string_view HISTORY_REPORT_HEADER_V8 = "# worldgen history
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V9 = "# worldgen history v9";
 // P5-07 10 (generator 0.29.0): format v10, the one written.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V10 = "# worldgen history v10";
+// P5-08 10 (generator 0.30.0): format v11, the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V11 = "# worldgen history v11";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 
@@ -107,6 +109,14 @@ using BlockLine = std::vector<Segment>;
                                                   const history::HistoryTables& tables,
                                                   const history::HistoryDigest& digest, std::int64_t figure,
                                                   HistoryLevel level);
+
+// P5-08 11.1: the lines of god `god` (its [pantheon] line, without the two
+// leading spaces) and of cult `faction` (its [cults] line) for the browser.
+// FatalError "god_block: no god <g>", "cult_block: no cult <k>".
+[[nodiscard]] std::vector<BlockLine> god_block(const history::HistoryView& view, const history::HistoryTables& tables,
+                                               std::int64_t god);
+[[nodiscard]] std::vector<BlockLine> cult_block(const history::HistoryView& view, const history::HistoryTables& tables,
+                                                std::int64_t faction);
 
 // The report form of a line (before the report's trailing-space rule):
 // literal as is; text escape_history_text(text); entity

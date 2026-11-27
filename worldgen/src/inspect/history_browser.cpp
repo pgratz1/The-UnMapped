@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 99> GROUPS = {{
+constexpr std::array<GroupRow, 110> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -150,6 +150,19 @@ constexpr std::array<GroupRow, 99> GROUPS = {{
     {"ally_aided_hold", EventGroup::alliances},
     {"warren_delved", EventGroup::settlements},
     {"warren_sealed", EventGroup::monsters},
+    // P5-08 11.1: kinds 100 to 108 in the new group gods (code 9); the
+    // tower's take-up and lapse with the figures.
+    {"divine_bless", EventGroup::gods},
+    {"divine_curse", EventGroup::gods},
+    {"divine_champion", EventGroup::gods},
+    {"divine_monster", EventGroup::gods},
+    {"divine_mark", EventGroup::gods},
+    {"cult_founded", EventGroup::gods},
+    {"cult_spread", EventGroup::gods},
+    {"cult_adopted", EventGroup::gods},
+    {"cult_suppressed", EventGroup::gods},
+    {"tower_taken_up", EventGroup::figures},
+    {"tower_abandoned", EventGroup::figures},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -206,6 +219,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::peoples: return "peoples";
         case EventGroup::alliances: return "alliances";
         case EventGroup::figures: return "figures";
+        case EventGroup::gods: return "gods";
     }
     return "other";
 }
@@ -435,6 +449,34 @@ std::vector<history::LinkedText> BrowserIndex::figure_block(const LoadedHistory&
     }
     std::vector<history::LinkedText> out;
     for (const BlockLine& line : inspect::figure_block(history.view, history.tables, digest_, figure, level)) {
+        out.push_back(block_line_display(history.view, line));
+    }
+    return out;
+}
+
+std::vector<history::LinkedText> BrowserIndex::god_block(const LoadedHistory& history, std::int64_t god) const {
+    check_history(history);
+    bool known = false;
+    for (const db::GodRow& g : history.view.god_rows()) {
+        known = known || g.id == god;
+    }
+    if (!known) {
+        browser_fatal("no god " + num(god));
+    }
+    std::vector<history::LinkedText> out;
+    for (const BlockLine& line : inspect::god_block(history.view, history.tables, god)) {
+        out.push_back(block_line_display(history.view, line));
+    }
+    return out;
+}
+
+std::vector<history::LinkedText> BrowserIndex::cult_block(const LoadedHistory& history, std::int64_t faction) const {
+    check_history(history);
+    if (faction < 1 || static_cast<std::uint64_t>(faction) > history.tables.factions.size()) {
+        browser_fatal("no cult " + num(faction));
+    }
+    std::vector<history::LinkedText> out;
+    for (const BlockLine& line : inspect::cult_block(history.view, history.tables, faction)) {
         out.push_back(block_line_display(history.view, line));
     }
     return out;

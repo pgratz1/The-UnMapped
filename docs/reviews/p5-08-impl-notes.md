@@ -86,3 +86,58 @@ Draw order in `interventions` (act, then kind) and in `apply` (monster kind); th
 `pairs_` is a `std::map` keyed (god, civ) and dropped by realm the step after its end; `cult_in_`/`faith_of_` mirror
 State's rows so no loop runs over `relations()`; `place_name` touches the shared name registry (order: cult name, then
 temple name; shrine and sanctum names at their events); `create_sent` names after the event is appended.
+
+## Parts D and E (second engineer, 2026-11-27)
+
+**D.** `monsters_deep.cpp`: `mine_candidate`/`warren_candidate` (6.4's test, shared), `deep_stir` (Q4 after the
+delvings, streams 119/120, `history.monsters.deep_stir_permille` 1000), the certain waking in T4 of the flare's first
+year (`phase_start_` as pantheon's), `deep_wake_at(..., certain)`; tellings `(s + 4d) mod 9` (d the old depth, as
+P5-07 160); waking order woken, outcome (citing the waking only), then aids citing (waking, outcome), each with its
+credit; `deep_take(..., const DeepFlightPlan*)` returns its `hold_lost` id and uses the gate's plan (A1); later takes
+need the waking realm visible (A2). `alliances.cpp`: `renew_written_max` 3, per-row `written_renewals`, a capped
+renewal is quiet (units, R unchanged). `figures.cpp`: `take_up_tower` (kind 109), the lapse in `tower_endings`
+(kind 110, ending 7, Q4 waits for budget), `tower_lapse_years` 200, the fresh tower's extra cause, `TowerSite` keeps
+master and death. Templates 93, 96, 97, 98, `tower_founded` in all three `report.toml`; readers: 93/98 telling 0-8,
+97 must cite its outcome, a book may be written at a tower taken up; choices of up to 9 words.
+**Switching the stir off:** `deep_stir_permille = 0` in `game/data/history/monsters.toml` (no stir draw, no flare).
+
+**E.** Header v11 (CLI help too); `[pantheon]`, `[cults]` after `[figures]`; realm lines `gods:`, `faith:`, `deep:`
+after `allies:` (not at summary above 16 realms); 12.1 F pinning (kinds 94, 95, 96, 99 with units; 97 in the unit of
+its outcome); `[monsters]` summary awake, sealed, asleep; `[sites]` counts and lines for kinds 5-7, endings 7, 8;
+`[figures]` champions, prophets; 25 stats; `god_block`/`cult_block` (report and `BrowserIndex`), group `gods` = 9,
+`ALL_GROUPS` 0x3FF; timeline `faith_at`, `cults_in_at`, `cult_status_at`, `divine_effect_at`; markers glyphs 21-23
+(cross, house, diamond), `MarkerOptions::shrines`/`temples`, `shrine_word`; `docs/specs/schema.md` per spec 22.
+
+**Readings.** (1) Ruling 1: `{profane? cursed| hallowed}` and `{hidden?, and its faithful fled into hiding|}`.
+(2) The stirring candidate wakes before the other candidates; "still a candidate" is 6.4's test only (a later
+deepening does not cancel it). (3) Ruling 3: `renewals_capped` is not printed; `deep_stirred` is printed as the flare
+phases whose trigger is a `delving_deepened` or `warren_delved` (only a stir makes one the trigger; a stir whose flare
+lost to another source is not counted). (4) Take-up candidates need a dead master (`master_death` != 0). (5) A shrine
+line reads `si<id> <name>, sacred: shrine in ...`; a temple's `, of <cult> (fa<id>):`. (6) `in` and `faith of` list
+rows open at E or closed by the cult's ending event, by (since, id); `in none` when empty; `faith of` left out when
+empty; realm `faith:` lists every row ever, by since. (7) `and <n> more` in `[pantheon]` counts the qualifying gods
+past 8 (not all gods); `[cults]` the cults past 6. (8) `divine_flares` is computed in the digest and printed in the
+`[pantheon]` head at both levels. (9) Browser: no god/faction filter fields were added to `EventFilter` (viewer work).
+(10) Glyph offsets: a shrine at a settlement (+7, +7), a temple (-7, +7), wild shrine and sanctum (0, 0).
+
+**Verification.** GCC and Clang release clean; both lint commands clean. 16 worlds (1024, `game/data`; seeds 0-11,
+0-1 meddling, 0-1 distant): world hashes and both reports byte-identical GCC vs Clang. Summary lines: w0 589, w1 692,
+w2 654, w3 570, w4 607, w5 701, w6 614, w7 585, w8 684, w9 557, w10 583, w11 656, m0 585, m1 711, d0 563, d1 698
+(T18 median <= 700: 609.5).
+
+Excerpts (seed 2, 9, 8 summary):
+```
+  g12 Civono the Keeper of Oaths (good, oaths): acts 4 (curse 3, mark 1); cult fa3 The Grovellers of Civono
+  fa1 The Children of Gagg-Sneegg, of g2 Gagg-Sneegg: founded 4210 e392 by f27 Ithorsa at si21 The White Fane of Gagg-Sneegg in s1 Ciegliel; in c1 The House of Ithasfa; ended 4252 e432 suppressed
+  gods: blessed by g13 Kibgank e984; cursed by g2 Gagg-Sneegg e549, g12 Civono e620, g1 Saeriemi e965; champion f19 Geeb Chosen of Stamedock e252, ...
+  faith: fa3 The Grovellers of Civono since 5025 e632
+  deep: woke m8 Throunmaik the Deep-Coiled e620; sealed m8 Throunmaik the Deep-Coiled in si22 The Coils of Throunmaik e621; aided by c7 The Shywi Court e622
+5501 e622 ally_aided_hold/40: Answering its ally's call, the Shywi Court sent warriors from Maeth Hollow to stand with the Hold of Thraidba at the gate of Brormu Deep against Throunmaik the Deep-Coiled, and the gate held.
+5903 e1547 tower_taken_up/20: After the death of its last master, Tentgeald of the Bild League became master of Deald's Tower.
+```
+
+**For calibration.** `alliance_renewed` still 30 in three of 16 worlds (cap 3 per row; FU2 median 9.5 here); towers
+abandoned 1 to 5 a world, taken up 0 or 1 (FU3); `divine_flares` 0 in all 16 worlds; no `divine_monster` and no
+hidden cult in these 16; a tower lapses before a new caster can take it up (T3 order: endings, then rises). Stir:
+`deep_stirred` 0 or 1 a world. **For the auditor:** the T4 phase tracking in monsters (`phase_seen_`), the gate plan
+copied into the take, the order of aid events after the outcome's flight events, `towers_` updates in `die()`.

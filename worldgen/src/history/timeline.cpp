@@ -6,6 +6,7 @@
 #include <tuple>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <new>
 #include <optional>
@@ -533,7 +534,121 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             return a.from != b.from ? a.from < b.from : a.figure < b.figure;
         });
     }
+    // P5-08 11.1: cults and the divine effects.
+    t.factions_ = tables.factions;
+    for (std::size_t i = 0; i < t.factions_.size(); ++i) {
+        if (t.factions_[i].id != static_cast<std::int64_t>(i) + 1) {
+            timeline_fatal("faction " + num(t.factions_[i].id) + " out of order");
+        }
+    }
+    t.faction_hidden_.assign(t.factions_.size(), -1);
+    t.divine_effects_.assign(t.civ_founded_.size(), {});
+    {
+        const EventCatalogue& catalogue = view.catalogue();
+        const KindDef* bless = catalogue.find("divine_bless");
+        const KindDef* curse = catalogue.find("divine_curse");
+        const KindDef* suppressed = catalogue.find("cult_suppressed");
+        const auto value = [](const KindDef& k, const HistoryView::Event& e, std::string_view key) -> std::int64_t {
+            const std::int64_t seq = k.value_seq(key);
+            return seq >= 1 && static_cast<std::size_t>(seq) <= e.values.size() ? e.values[static_cast<std::size_t>(seq - 1)]
+                                                                                : 0;
+        };
+        const auto role = [](const KindDef& k, const HistoryView::Event& e, std::string_view key) -> std::int64_t {
+            const RoleDef* r = k.find_role(key);
+            for (const db::EventParticipantRow& p : e.participants) {
+                if (r != nullptr && p.role == r->seq) {
+                    return p.entity_id;
+                }
+            }
+            return 0;
+        };
+        for (const HistoryView::Event& e : view.events()) {
+            const std::int64_t k = e.row.kind;
+            if ((bless != nullptr && k == bless->id) || (curse != nullptr && k == curse->id)) {
+                const KindDef& kd = k == bless->id ? *bless : *curse;
+                const std::int64_t effect = value(kd, e, "effect");
+                const std::int64_t bit = &kd == bless ? (effect == 1 ? 1 : effect == 2 ? 4 : 0)
+                                                      : (effect == 2 ? 2 : effect == 3 ? 8 : 0);
+                const std::optional<std::size_t> c = index_of(role(kd, e, "civilization"), t.divine_effects_.size());
+                if (bit != 0 && c) {
+                    const std::int64_t years = std::max<std::int64_t>(0, value(kd, e, "years"));
+                    const std::int64_t until = e.row.year > std::numeric_limits<std::int64_t>::max() - years
+                                                   ? std::numeric_limits<std::int64_t>::max()
+                                                   : e.row.year + years;
+                    t.divine_effects_[*c].emplace_back(e.row.year, until, bit);
+                }
+            } else if (suppressed != nullptr && k == suppressed->id && value(*suppressed, e, "hidden") == 1) {
+                const std::optional<std::size_t> f = index_of(role(*suppressed, e, "faction"), t.faction_hidden_.size());
+                if (f && t.faction_hidden_[*f] < 0) {
+                    t.faction_hidden_[*f] = e.row.year;
+                }
+            }
+        }
+    }
     return t;
+}
+
+// --- Cults and the divine effects (P5-08 11.1) --------------------------------------
+
+std::int64_t Timeline::faith_at(std::int64_t civ, std::int64_t year) const {
+    require_year(year);
+    if (!index_of(civ, civ_founded_.size())) {
+        timeline_fatal("no civilization " + num(civ));
+    }
+    std::int64_t out = 0;
+    for (const db::RelationRow& r : relations_) {
+        if (r.kind == "faith_of" && r.b_id == civ && r.since <= year && (!r.until || year < *r.until)) {
+            out = r.a_id;
+        }
+    }
+    return out;
+}
+
+std::vector<std::int64_t> Timeline::cults_in_at(std::int64_t civ, std::int64_t year) const {
+    require_year(year);
+    if (!index_of(civ, civ_founded_.size())) {
+        timeline_fatal("no civilization " + num(civ));
+    }
+    std::vector<std::int64_t> out;
+    for (const db::RelationRow& r : relations_) {
+        if (r.kind == "cult_in" && r.b_id == civ && r.since <= year && (!r.until || year < *r.until)) {
+            out.push_back(r.a_id);
+        }
+    }
+    std::stable_sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
+    return out;
+}
+
+std::int64_t Timeline::cult_status_at(std::int64_t faction, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(faction, factions_.size());
+    if (!i) {
+        timeline_fatal("no faction " + num(faction));
+    }
+    const db::FactionRow& f = factions_[*i];
+    if (year < f.founded_year) {
+        return 0;
+    }
+    if (f.ended_year && year >= *f.ended_year) {
+        return 3;
+    }
+    return faction_hidden_[*i] >= 0 && year >= faction_hidden_[*i] ? 2 : 1;
+}
+
+std::int64_t Timeline::divine_effect_at(std::int64_t civ, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> c = index_of(civ, divine_effects_.size());
+    if (!c) {
+        timeline_fatal("no civilization " + num(civ));
+    }
+    std::int64_t bits = 0;
+    for (const auto& [from, until, bit] : divine_effects_[*c]) {
+        if (from <= year && year < until) {
+            bits |= bit;
+        }
+    }
+    return bits;
 }
 
 // --- Answers (6.2) -----------------------------------------------------------

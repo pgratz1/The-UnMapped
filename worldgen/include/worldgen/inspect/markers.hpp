@@ -40,6 +40,9 @@ struct MarkerOptions {
     bool events = true;
     bool passes = true;
     bool sites = true;  // P5-04 11.3
+    // P5-08 11.1: shrines (kind 5), and temples with sanctums (kinds 6, 7).
+    bool shrines = true;
+    bool temples = true;
 };
 
 struct SettlementMarker {
@@ -74,6 +77,15 @@ inline constexpr std::uint8_t GLYPH_MINE = 19;   // 16 + kind 3
 inline constexpr std::uint8_t GLYPH_TOWER = 20;  // 16 + kind 4 (P5-06 11.4)
 inline constexpr Rgb MARKER_MINE{60, 60, 60};
 inline constexpr Rgb MARKER_TOWER{120, 60, 180};
+// P5-08 11.1: shrine, temple, sanctum (16 + kind); a shrine at a settlement
+// is drawn one glyph cell to its lower right, a temple one to the lower left
+// of its settlement; a shrine in the wild and a sanctum at their own cell.
+inline constexpr std::uint8_t GLYPH_SHRINE = 21;
+inline constexpr std::uint8_t GLYPH_TEMPLE = 22;
+inline constexpr std::uint8_t GLYPH_SANCTUM = 23;
+inline constexpr Rgb MARKER_SHRINE{215, 180, 40};
+inline constexpr Rgb MARKER_TEMPLE{225, 215, 190};
+inline constexpr Rgb MARKER_SANCTUM{120, 20, 40};
 // The mine glyph is drawn one glyph cell (7 cells) to the upper right of
 // the site's cell, so that a town does not hide its own mine; a library's
 // one glyph cell to the upper left of its settlement; a tower in the wild
@@ -87,8 +99,12 @@ inline constexpr std::int64_t OLD_RUIN_YEARS = 1500;
 // a mine (+7, -7), a library (-7, -7), a tower in the wild (0, 0).
 [[nodiscard]] std::array<std::int64_t, 2> site_glyph_offset(const SiteMarker& site) noexcept;
 // The glyph key of a site entry: GLYPH_MINE for kind 3, GLYPH_TOWER for kind
-// 4, base 0 otherwise.
+// 4, (P5-08) GLYPH_SHRINE, GLYPH_TEMPLE, GLYPH_SANCTUM for kinds 5 to 7,
+// base 0 otherwise. Offsets (P5-08): a shrine at a settlement (+7, +7), a
+// temple (-7, +7), a shrine in the wild and a sanctum (0, 0).
 [[nodiscard]] std::uint8_t site_glyph_base(const SiteMarker& site) noexcept;
+// P5-08 11.1: the shrine hover's words, "holy to" or "cursed by".
+[[nodiscard]] std::string_view shrine_word(bool profane) noexcept;
 
 struct YearMarkers {
     std::int64_t year = 0;

@@ -176,6 +176,19 @@ public:
     [[nodiscard]] std::vector<std::int64_t> generals_of(std::int64_t civ, std::int64_t year) const;
     [[nodiscard]] FigureState figure_at(std::int64_t figure, std::int64_t year) const;
     [[nodiscard]] std::size_t figure_count() const noexcept { return figures_.size(); }
+    // P5-08 11.1: the faction of the faith_of row of civ in force at Y (since
+    // <= Y < until, or open), 0 none; the factions with a cult_in row of civ
+    // in force at Y, ascending; a cult's status at Y (0 not founded, 1
+    // present, 2 hidden from its hiding cult_suppressed's year, 3 ended from
+    // its ended_year); the divine effects on civ at Y (bit 1 plenty, 2
+    // withering, 4 valour, 8 defeat: kinds 100 and 101 of year y with
+    // y <= Y < y + years). FatalError "timeline: no civilization <c>",
+    // "timeline: no faction <k>" for an id the world does not have.
+    [[nodiscard]] std::int64_t faith_at(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> cults_in_at(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] std::int64_t cult_status_at(std::int64_t faction, std::int64_t year) const;
+    [[nodiscard]] std::int64_t divine_effect_at(std::int64_t civ, std::int64_t year) const;
+    [[nodiscard]] std::size_t faction_count() const noexcept { return factions_.size(); }
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 
@@ -284,6 +297,12 @@ private:
         std::int64_t from = 0, to = 0, figure = 0;
     };
     std::vector<db::FigureRow> figures_;
+    // P5-08 11.1: the faction rows (index id - 1), the year each went into
+    // hiding (-1 never), and per civilization its divine effects (from,
+    // until exclusive, bit) in event order.
+    std::vector<db::FactionRow> factions_;
+    std::vector<std::int64_t> faction_hidden_;
+    std::vector<std::vector<std::tuple<std::int64_t, std::int64_t, std::int64_t>>> divine_effects_;
     std::vector<std::int64_t> figure_exiled_;
     std::vector<std::vector<std::int64_t>> figure_events_;
     std::vector<std::vector<Term>> civ_rulers_;

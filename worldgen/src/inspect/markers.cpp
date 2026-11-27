@@ -485,7 +485,10 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
     if (options.sites) {
         for (const std::int64_t id : history.timeline.sites_existing(year)) {
             const history::SiteState s = history.timeline.site_at(id, year);
-            if ((s.kind == 3 || s.kind == 4) && s.open) {
+            // P5-08 11.1: shrines, temples and sanctums by their options.
+            const bool shown = s.kind == 3 || s.kind == 4 || (s.kind == 5 && options.shrines) ||
+                               ((s.kind == 6 || s.kind == 7) && options.temples);
+            if (shown && s.open) {
                 out.sites.push_back(SiteMarker{id, s.x, s.y, s.kind, s.founder, s.settlement});
             }
         }
@@ -759,6 +762,58 @@ Glyph tower_glyph() {
     return std::move(g).take();
 }
 
+// P5-08 11.1: the shrine, a standing cross: fill where dx = 0 and
+// -2 <= dy <= 2 or dy = -1 and |dx| = 1; then the halo rule on fill.
+Glyph shrine_glyph() {
+    GlyphGrid g(3);
+    for (std::int32_t dy = -2; dy <= 2; ++dy) {
+        g.set(0, dy, GLYPH_FILL);
+    }
+    g.set(-1, -1, GLYPH_FILL);
+    g.set(1, -1, GLYPH_FILL);
+    g.halo(GLYPH_FILL);
+    return std::move(g).take();
+}
+
+// P5-08 11.1: the temple, a house with a pointed roof: ink at (0, -2),
+// (-1, -1), (1, -1), and the sides |dx| = 2 for 0 <= dy <= 2 with the roof
+// ends (-2, 0) and (2, 0); fill where |dx| <= 1 and 0 <= dy <= 2 and at
+// (0, -1); then the halo rule.
+Glyph temple_glyph() {
+    GlyphGrid g(3);
+    g.set(0, -2, GLYPH_INK);
+    g.set(-1, -1, GLYPH_INK);
+    g.set(1, -1, GLYPH_INK);
+    g.set(0, -1, GLYPH_FILL);
+    for (std::int32_t dy = 0; dy <= 2; ++dy) {
+        g.set(-2, dy, GLYPH_INK);
+        g.set(2, dy, GLYPH_INK);
+        for (std::int32_t dx = -1; dx <= 1; ++dx) {
+            g.set(dx, dy, GLYPH_FILL);
+        }
+    }
+    g.halo();
+    return std::move(g).take();
+}
+
+// P5-08 11.1: the sanctum, a diamond: ink where |dx| + |dy| = 2, fill where
+// |dx| + |dy| <= 1; then the halo rule.
+Glyph sanctum_glyph() {
+    GlyphGrid g(3);
+    for (std::int32_t dy = -2; dy <= 2; ++dy) {
+        for (std::int32_t dx = -2; dx <= 2; ++dx) {
+            const std::int32_t d = iabs(dx) + iabs(dy);
+            if (d == 2) {
+                g.set(dx, dy, GLYPH_INK);
+            } else if (d < 2) {
+                g.set(dx, dy, GLYPH_FILL);
+            }
+        }
+    }
+    g.halo();
+    return std::move(g).take();
+}
+
 std::string key_text(GlyphKey key) {
     return "base " + num(key.base) + (key.declining ? " declining" : "") + (key.capital ? " capital" : "");
 }
@@ -774,6 +829,15 @@ Glyph marker_glyph(GlyphKey key) {
     }
     if (key.base == GLYPH_TOWER && !key.declining && !key.capital) {
         return tower_glyph();  // P5-06 11.4
+    }
+    if (key.base == GLYPH_SHRINE && !key.declining && !key.capital) {
+        return shrine_glyph();  // P5-08 11.1
+    }
+    if (key.base == GLYPH_TEMPLE && !key.declining && !key.capital) {
+        return temple_glyph();
+    }
+    if (key.base == GLYPH_SANCTUM && !key.declining && !key.capital) {
+        return sanctum_glyph();
     }
     if (key.declining || key.capital || (key.base < 8 || key.base > 11)) {
         throw FatalError("marker_glyph: no glyph for " + key_text(key));
@@ -812,11 +876,32 @@ std::array<std::int64_t, 2> site_glyph_offset(const SiteMarker& site) noexcept {
         return site.settlement != 0 ? std::array<std::int64_t, 2>{-SITE_GLYPH_OFFSET, -SITE_GLYPH_OFFSET}
                                     : std::array<std::int64_t, 2>{0, 0};
     }
+    if (site.kind == 5) {  // P5-08 11.1
+        return site.settlement != 0 ? std::array<std::int64_t, 2>{SITE_GLYPH_OFFSET, SITE_GLYPH_OFFSET}
+                                    : std::array<std::int64_t, 2>{0, 0};
+    }
+    if (site.kind == 6) {
+        return {-SITE_GLYPH_OFFSET, SITE_GLYPH_OFFSET};
+    }
+    if (site.kind == 7) {
+        return {0, 0};
+    }
     return {SITE_GLYPH_OFFSET, -SITE_GLYPH_OFFSET};
 }
 
 std::uint8_t site_glyph_base(const SiteMarker& site) noexcept {
-    return site.kind == 3 ? GLYPH_MINE : site.kind == 4 ? GLYPH_TOWER : std::uint8_t{0};
+    switch (site.kind) {
+        case 3: return GLYPH_MINE;
+        case 4: return GLYPH_TOWER;
+        case 5: return GLYPH_SHRINE;  // P5-08 11.1
+        case 6: return GLYPH_TEMPLE;
+        case 7: return GLYPH_SANCTUM;
+        default: return 0;
+    }
+}
+
+std::string_view shrine_word(bool profane) noexcept {
+    return profane ? "cursed by" : "holy to";
 }
 
 // --- Drawing (section 6) ---------------------------------------------------------
@@ -854,10 +939,13 @@ private:
         if (key.base == GLYPH_TOWER && !key.declining && !key.capital) {
             return 25U;  // P5-06 11.4
         }
+        if (key.base >= GLYPH_SHRINE && key.base <= GLYPH_SANCTUM && !key.declining && !key.capital) {
+            return 26U + static_cast<std::size_t>(key.base - GLYPH_SHRINE);  // P5-08 11.1
+        }
         (void)marker_glyph(key);  // throws its FatalError
         draw_fatal("no glyph for base " + num(key.base));
     }
-    std::array<std::optional<Glyph>, 26> glyphs_;
+    std::array<std::optional<Glyph>, 29> glyphs_;
 };
 
 class Canvas {
@@ -969,8 +1057,12 @@ void draw_markers(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_
                     continue;
                 }
                 const std::array<std::int64_t, 2> d = site_glyph_offset(s);
-                canvas.draw(glyphs.get(GlyphKey{base, false, false}), s.x + d[0], s.y + d[1],
-                            base == GLYPH_TOWER ? MARKER_TOWER : MARKER_MINE);
+                const Rgb fill = base == GLYPH_TOWER     ? MARKER_TOWER
+                                 : base == GLYPH_SHRINE  ? MARKER_SHRINE
+                                 : base == GLYPH_TEMPLE  ? MARKER_TEMPLE
+                                 : base == GLYPH_SANCTUM ? MARKER_SANCTUM
+                                                         : MARKER_MINE;
+                canvas.draw(glyphs.get(GlyphKey{base, false, false}), s.x + d[0], s.y + d[1], fill);
             }
         }
         for (const SettlementMarker& m : markers.settlements) {

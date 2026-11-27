@@ -67,6 +67,9 @@ inline constexpr std::size_t SUMMARY_MIXED_MAX = 3;
 inline constexpr std::int64_t SUMMARY_ALLIANCES_MAX = 10;
 // P5-06 10.2 (format v8): the figures of note listed in [figures] at summary.
 inline constexpr std::size_t SUMMARY_FIGURES_MAX = 6;
+// P5-08 10 items 2, 3 (format v11): the gods and cults listed at summary.
+inline constexpr std::size_t SUMMARY_GODS_MAX = 8;
+inline constexpr std::size_t SUMMARY_CULTS_MAX = 6;
 // P5-06 25.2: a calamity is major when it ended a settlement or took at
 // least this share (per mille) of its realm's people; at most this many
 // major calamities are in the summary set always.

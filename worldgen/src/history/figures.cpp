@@ -1473,7 +1473,7 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         const std::int64_t last_death = last_caster_death_[static_cast<std::size_t>(c - 1)];
         if (last_death != 0 && last_death != e.causes.front()) {
             e.causes.push_back(last_death);
-            std::sort(e.causes.begin(), e.causes.end());
+            std::stable_sort(e.causes.begin(), e.causes.end());
         }
         const std::int64_t ev = ctx.append(e);
         MonstersSubsystem::SiteSpec spec;

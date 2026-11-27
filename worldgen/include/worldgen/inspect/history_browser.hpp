@@ -36,15 +36,16 @@ enum class EventGroup : std::uint8_t {
     monsters = 5,
     peoples = 6,
     alliances = 7,
-    figures = 8
+    figures = 8,
+    gods = 9  // P5-08 11.1: kinds 100 to 108
 };
-inline constexpr std::uint32_t ALL_GROUPS = 0x1FF;
+inline constexpr std::uint32_t ALL_GROUPS = 0x3FF;
 
 // The group of a kind key, compared as bytes; other for a key 4.4 does not
 // name. P5-02's kinds 44 to 55 are in monsters (section 9).
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;
 // "realms", "settlements", "war", "calamity", "other", "monsters",
-// "peoples", "alliances", "figures".
+// "peoples", "alliances", "figures", "gods".
 [[nodiscard]] std::string_view event_group_word(EventGroup group) noexcept;
 
 // --- The browser index (4.5) ------------------------------------------------
@@ -137,6 +138,13 @@ public:
     // `level`. FatalError "browser: no figure <f>", "browser: bad level".
     [[nodiscard]] std::vector<history::LinkedText> figure_block(const history::LoadedHistory& history,
                                                                 std::int64_t figure, HistoryLevel level) const;
+    // P5-08 11.1: block_line_display of god_block (its [pantheon] line) and
+    // of cult_block (its [cults] line). FatalError "browser: no god <g>",
+    // "browser: no cult <k>".
+    [[nodiscard]] std::vector<history::LinkedText> god_block(const history::LoadedHistory& history,
+                                                             std::int64_t god) const;
+    [[nodiscard]] std::vector<history::LinkedText> cult_block(const history::LoadedHistory& history,
+                                                              std::int64_t faction) const;
     // "<span>  <sentence>[ (<note>)]", unescaped; span "<year>" or
     // "<year>-<end_year>". FatalError "browser: no event <e>".
     [[nodiscard]] std::string row_text(const history::LoadedHistory& history, std::int64_t event) const;
