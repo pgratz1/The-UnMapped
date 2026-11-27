@@ -104,6 +104,8 @@ DEFAULT_INPUTS_028 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapp
                                   "report-inputs")   # 0.28.0 histories (P5-04a integration: build-inputs)
 DEFAULT_INPUTS_029 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p507-int",
                                   "report-inputs")   # 0.29.0 histories (P5-07 integration part 2: build-inputs)
+DEFAULT_INPUTS_030 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p508-int",
+                                  "report-inputs")   # 0.30.0 histories (P5-08 integration part 2: build-inputs)
 GENERATOR_VERSION = "0.29.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
@@ -116,13 +118,15 @@ V7 = True   # P5-04 10 (format v7, generator 0.26.0, schema 11); V7 implies V6's
 V8 = True   # P5-06 10, 25.1 (d), 25.2 (format v8, generator 0.27.0, schema 12); V8 implies V7's rules
 V9 = False  # P5-04a 12, 21.5 (format v9, generator 0.28.0, schema 12); V9 implies V8's rules (use_version("0.28.0"))
 V10 = False  # P5-07 10 (format v10, generator 0.29.0, schema 13); V10 implies V9's rules (use_version("0.29.0"))
+V11 = False  # P5-08 10, 12.1 (format v11, generator 0.30.0, schema 14); V11 implies V10's rules (use_version("0.30.0"))
 SUMMARY_MILESTONE_SALIENCE = 40   # P5-04a 12.2 (digest.hpp)
 SUMMARY_MILESTONES_V9 = 3         # P5-04a 12.2: the three with the largest salience
 # P5-06 10.2, 25.2: constants of P3-07 section 8 (digest.hpp)
 SUMMARY_FIGURES_MAX = 6
 SUMMARY_CALAMITY_MAJOR_PERMILLE, SUMMARY_CALAMITY_MAJOR_MAX = 100, 8
 TEMPER_WORD = {0: "steady", 1: "warlike", 2: "peaceable", 3: "grasping", 4: "just"}   # P5-06 9.1, 10.2
-FIGURE_ROLE_WORD = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster"}
+FIGURE_ROLE_WORD = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster", 6: "champion",
+                    7: "prophet"}   # P5-08 10 item 7
 FIGURE = 6
 # P5-03a 9.5: a constant of digest.hpp (the first settlement_mixed events of distinct race pairs in the summary set)
 SUMMARY_MIXED_MAX = 3
@@ -250,22 +254,25 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, V9, V10, DEFAULT_INPUTS, SUMMARY_STATS
-    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0"):
+    global GENERATOR_VERSION, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0",
+                 "0.30.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V6 = v in ("0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V7 = v in ("0.26.0", "0.27.0", "0.28.0", "0.29.0")
-    V8 = v in ("0.27.0", "0.28.0", "0.29.0")
-    V9 = v in ("0.28.0", "0.29.0")
-    V10 = v == "0.29.0"
+    later = ("0.30.0",)
+    V2 = v in ("0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V3 = v in ("0.22.0", "0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V4 = v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V5 = v in ("0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V6 = v in ("0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V7 = v in ("0.26.0", "0.27.0", "0.28.0", "0.29.0") + later
+    V8 = v in ("0.27.0", "0.28.0", "0.29.0") + later
+    V9 = v in ("0.28.0", "0.29.0") + later
+    V10 = v in ("0.29.0",) + later
+    V11 = v == "0.30.0"
     p504.V10 = V10
-    DEFAULT_INPUTS = DEFAULT_INPUTS_029 if V10 else DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
+    DEFAULT_INPUTS = DEFAULT_INPUTS_030 if V11 else DEFAULT_INPUTS_029 if V10 else DEFAULT_INPUTS_028 if V9 else DEFAULT_INPUTS_027 if V8 else DEFAULT_INPUTS_026 if V7 else DEFAULT_INPUTS_025 if V6 else DEFAULT_INPUTS_024 if V5 else DEFAULT_INPUTS_023 if V4 else DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else \
         INPUTS_020
     SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
@@ -321,7 +328,8 @@ def load_world(path):
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
         t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ()) +
              (pe.NEW_TABLES_023 if V4 else ())}
-        for name in (pe.NEW_TABLES_024 if V5 else ()) + (("figure", "book") if V8 else ()):
+        for name in (pe.NEW_TABLES_024 if V5 else ()) + (("figure", "book") if V8 else ()) + \
+                (("faction",) if V11 else ()):
             # a world before schema 10 (12 for figure and book) has none (read as empty)
             have = conn.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (name,)).fetchone()
             t[name] = pk_rows(conn, name)[1] if have else []
@@ -455,6 +463,10 @@ class World:
             self.res["book"] = t.get("book", [])
             self.figure = {f[0]: f for f in self.res["figure"]}
             self.book = self.res["book"]
+        self.faction = {}
+        if V11:   # P5-08 9: factions (entity type 7)
+            self.res["faction"] = t.get("faction", [])
+            self.faction = {f[0]: f for f in self.res["faction"]}
         self.joined = set()
         if V7:
             aj = self.K["ally_joined_war"]
@@ -508,6 +520,8 @@ class World:
             return self.monster[i][1] if i in self.monster else None
         if V4 and typ == SITE:
             return self.site[i][1] if i in self.site else None
+        if V11 and typ == pe.FACTION:   # P5-08 9: a faction's name (entity type 7)
+            return self.faction[i][1] if i in self.faction else None
         if V8 and typ == FIGURE:   # P5-06 10.1: the display name
             f = self.figure.get(i)
             return pe.figure_display_name(f[1], f[16], f[2]) if f is not None else None
@@ -804,6 +818,10 @@ class Frames:
                 out |= {x for x in self.kids.get(eid, []) if w.ev[x][3] in spoils}
             if k == K["alliance_betrayed"]:
                 out |= {c for c in w.causes.get(eid, []) if w.ev[c][3] == K["war_declared"]}
+        if V11:   # P5-08 12.1 item 1: the ally_aided_hold events citing an outcome are companions in its unit
+            K, k = w.K, w.ev[eid][3]
+            if k in kset(w, ("deep_sealed", "warren_sealed", "hold_lost")):
+                out |= {x for x in self.kids.get(eid, []) if w.ev[x][3] == K["ally_aided_hold"]}
         if V8:   # P5-06 10.3: a disputed succession with the crisis and the secession it cites, the exile with it
             K, k = w.K, w.ev[eid][3]
             exiles = lambda x: {y for y in self.kids.get(x, []) if w.ev[y][3] == K["exiled"]}  # noqa: E731
@@ -867,6 +885,10 @@ def summary24(w, fr, candidates_only=False, budget=None):
     F = {e[0] for e in w.t["event"] if e[3] == quiet}
     if V2:   # 25.6: every flare_up whose phase has at least one war_declared
         F |= flare_ups_with_war(w)
+    if V11:   # P5-08 12.1 item 1: every waking, seal and lost hold, whatever its salience, with its unit
+        for x in sorted(e[0] for e in w.t["event"] if e[3] in kset(w, ("deep_woken", "deep_sealed", "warren_sealed",
+                                                                         "hold_lost"))):
+            F |= {x} | fr.unit(x)
     civ_race = {c[0]: c[2] for c in w.t["civilization"]}
 
     def involves(age, eid):
@@ -1175,10 +1197,14 @@ def rulers_lines(w, c, level):
 def figures_lines(w, level):
     """P5-06 10.2: [figures]."""
     fs = w.t["figure"]
-    by = {k: sum(1 for x in fs if x[3] == k) for k in range(1, 6)}
+    by = {k: sum(1 for x in fs if x[3] == k) for k in range(1, 8)}
     alive = sum(1 for x in fs if x[14] in (1, 2))
-    o = ["[figures]", "figures: %d; rulers %d, claimants %d, generals %d, heroes %d, casters %d; alive at the end %d"
-         % (len(fs), by[1], by[2], by[3], by[4], by[5], alive)]
+    if V11:   # P5-08 10 item 7: champions and prophets in the role counts
+        o = ["[figures]", "figures: %d; rulers %d, claimants %d, generals %d, heroes %d, casters %d, champions %d, "
+             "prophets %d; alive at the end %d" % (len(fs), by[1], by[2], by[3], by[4], by[5], by[6], by[7], alive)]
+    else:
+        o = ["[figures]", "figures: %d; rulers %d, claimants %d, generals %d, heroes %d, casters %d; alive at the end "
+             "%d" % (len(fs), by[1], by[2], by[3], by[4], by[5], alive)]
     if level != "full" and len(w.t["civilization"]) > SUMMARY_LINES_CIVS:
         return o
     deeds = figure_deeds(w)
@@ -1383,7 +1409,7 @@ def report(w, level):
 def outside_lines(w, d, level):
     """The report's lines before [chronicle] and from [civilizations] on (12.9's O at level summary)."""
     t = w.t
-    o = ["# worldgen history v10" if V10 else "# worldgen history v9" if V9 else "# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
+    o = ["# worldgen history v11" if V11 else "# worldgen history v10" if V10 else "# worldgen history v9" if V9 else "# worldgen history v8" if V8 else "# worldgen history v7" if V7 else "# worldgen history v6" if V6 else "# worldgen history v5" if V5 else "# worldgen history v4" if V4 else "# worldgen history v3" if V3 else
          "# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
     m = w.meta
     o.append("[settings]")
@@ -1432,6 +1458,9 @@ def outside_lines(w, d, level):
         post += p504.alliances_block(alliance_world(w), level, v9=V9)
     if V8:   # P5-06 10.2: after [alliances]
         post += figures_lines(w, level)
+    if V11:   # P5-08 10 items 2, 3: [pantheon] and [cults] after [figures]
+        post += ["[pantheon]"] + p508().pantheon_block(w.t, level)
+        post += ["[cults]"] + p508().cults_block(w.t, level)
     post.append("[stats]")
     post += ["%s = %s" % kv for kv in stats(w, d) if not (V2 and level == "summary" and kv[0] not in SUMMARY_STATS)]
     return o, post
@@ -1648,9 +1677,54 @@ def civ_block(w, d, c, level):
         o.append("    %s e%d %s: %s" % (span(e), x, w.kind_key[e[3]], with_note(w.sentence(x), note(w, x, cid))))
     if V7:   # P5-04 10.3: appended at the end of the block
         o += (p504.civ_alliance_lines_v9 if V9 else p504.civ_alliance_lines)(alliance_world(w), cid, level)
+    if V11 and (level == "full" or len(w.t["civilization"]) <= SUMMARY_LINES_CIVS):
+        # P5-08 10 item 4 and 12.1 item 2 (reading P-R26 of the integration, the engine's: after the allies lines,
+        # in the order gods, faith, deep, before the rulers)
+        o += p508().realm_lines(w.t, cid)
+        o += deep_line(w, cid)
     if V8 and (level == "full" or len(w.t["civilization"]) <= SUMMARY_LINES_CIVS):   # P5-06 10.3, after the allies
         o += rulers_lines(w, c, level)
     return o
+
+
+def p508():
+    import p5_08_pantheon_reference as m
+    return m
+
+
+def deep_line(w, cid):
+    """P5-08 12.1 item 2: `  deep: woke ...; sealed ... in ...; lost ...; aided ...; aided by ...`."""
+    def mon(e):
+        m = first_role(w, e, "monster")
+        return "m%d %s" % (m, w.monster[m][1])
+
+    def civ(c):
+        return "c%d %s" % (c, w.civ[c][1])
+
+    def ids(key):
+        return [e[0] for e in _kind_events(w, key)]
+
+    parts = []
+    woke = [e for e in ids("deep_woken") if first_role(w, e, "civilization") == cid]
+    sealed = [e for e in ids("deep_sealed") + ids("warren_sealed")
+              if first_role(w, e, "civilization") == cid]
+    lost = [e for e in ids("hold_lost") if first_role(w, e, "civilization") == cid]
+    aided = [e for e in ids("ally_aided_hold") if first_role(w, e, "ally") == cid]
+    aided_by = [e for e in ids("ally_aided_hold") if first_role(w, e, "partner") == cid]
+    lim = p508()._parts_limited
+    if woke:
+        parts.append("woke " + lim(["%s e%d" % (mon(e), e) for e in sorted(woke)]))
+    if sealed:
+        parts.append("sealed " + lim(["%s in si%d %s e%d" % (mon(e), first_role(w, e, "lair"),
+                                                             w.site[first_role(w, e, "lair")][1], e)
+                                      for e in sorted(sealed)]))
+    if lost:
+        parts.append("lost " + lim(["s%d %s e%d" % (w.ev[e][6], w.settlement[w.ev[e][6]][1], e) for e in sorted(lost)]))
+    if aided:
+        parts.append("aided " + lim(["%s e%d" % (civ(first_role(w, e, "partner")), e) for e in sorted(aided)]))
+    if aided_by:
+        parts.append("aided by " + lim(["%s e%d" % (civ(first_role(w, e, "ally")), e) for e in sorted(aided_by)]))
+    return ["  deep: " + "; ".join(parts)] if parts else []
 
 
 def adversary_lines(w, cid, rel):
@@ -1839,7 +1913,8 @@ def beast_totals_line(w):
 
 
 MONSTER_STATUS = {1: "awake", 2: "asleep", 3: "slain", 4: "died"}
-SITE_ENDING_WORD = {1: "slain", 2: "died", 3: "moved", 4: "lost", 5: "fell", 6: "quiet"}
+SITE_ENDING_WORD = {1: "slain", 2: "died", 3: "moved", 4: "lost", 5: "fell", 6: "quiet", 7: "abandoned",
+                    8: "suppressed"}   # P5-08 9: 7 and 8
 
 
 def monster_raids(w, floor0=False):
@@ -2005,6 +2080,12 @@ def monster_lines(w, level):
         shown, more = [], 0
     else:
         alive = sorted((m for m in ms if m[9] in (1, 2)), key=lambda m: (-m[10], m[0]))
+        if V11:   # P5-08 12.1 item 3: the awake, then the sealed, then the other asleep (each as before)
+            def grp(m):
+                if m[9] == 1:
+                    return 0
+                return 1 if last_sleep_kind(w, m[0]) in ("deep_sealed", "warren_sealed") else 2
+            alive = sorted(alive, key=lambda m: (grp(m), -m[10], m[0]))
         shown, more = alive[:SUMMARY_MONSTER_LINES], max(0, len(alive) - SUMMARY_MONSTER_LINES)
         if V9:   # P5-04a 21.5 item 2: every living monster first (at most 4), then the ended notable ones
             cap = SUMMARY_MONSTER_LINES + SUMMARY_MONSTER_ENDED_LINES
@@ -2047,9 +2128,27 @@ def site_lines(w, level):
         o[1] += ", mines %d" % sum(1 for x in ss if x[2] == 3)
     if V8:   # P5-06 10.4
         o[1] += ", towers %d" % sum(1 for x in ss if x[2] == 4)
+    if V11:   # P5-08 10 item 6
+        o[1] += ", shrines %d, temples %d, sanctums %d" % tuple(sum(1 for x in ss if x[2] == k) for k in (5, 6, 7))
     if level != "full":
         return o
     for x in ss:
+        if V11 and x[2] in (5, 6, 7):   # P5-08 10 item 6: as lairs and towers, the sacred word or the cult after
+            if x[2] == 5:
+                after = ", profane" if _val(w, x[10], "profane") == 1 else ", sacred"
+            else:
+                k = first_role(w, x[10], "faction")
+                after = ", of %s" % w.ref(pe.FACTION, k) if k else ""   # reading P-R28 (the engine's)
+            line = "  si%d %s%s: %s in %s at %d %d, since %d e%d" % (
+                x[0], x[1], after, {5: "shrine", 6: "temple", 7: "sanctum"}[x[2]], w.ref(REGION, x[3]), x[4], x[5],
+                x[9], x[10])
+            if x[7]:
+                line += ", of %s" % w.ref(CIV, x[7])
+            if x[6]:
+                line += ", at %s" % w.ref(SETTLEMENT, x[6])
+            line += "; open" if x[13] == 0 else "; ended %d e%d %s" % (x[11], x[12], SITE_ENDING_WORD[x[13]])
+            o.append(line)
+            continue
         if V8 and x[2] == 4:   # P5-06 10.4: a tower, or a library when it stands in a settlement
             line = "  si%d %s: %s in %s at %d %d, since %d e%d, of %s, by %s" % (
                 x[0], x[1], "library" if x[6] else "tower", w.ref(REGION, x[3]), x[4], x[5], x[9], x[10],
@@ -2361,7 +2460,17 @@ def stats(w, d):
     if V10:   # P5-07 10 item 7, appended (full only)
         import p5_07_depths_reference as p507
         o += p507.stats_of_tables(w.t)
+    if V11:   # P5-08 10 item 8, appended (full only); renewals_capped is not in rows (F3 of the tests notes; the
+        # engine's reading 3: not printed); deep_stirred from rows (the flare-ups whose trigger is a delving)
+        o += [kv for kv in p508().stats_of_tables(w.t, 0, deep_stirred_of(w)) if kv[0] != "renewals_capped"]
     return o
+
+
+def deep_stirred_of(w):
+    """P5-08 10 item 8 (the engine's reading 3): the flare-up phases whose trigger is a delving_deepened or a
+    warren_delved (only a stir makes one the trigger)."""
+    ks = kset(w, ("delving_deepened", "warren_delved"))
+    return sum(1 for p in w.t["phase"] if p[2] == 3 and p[5] and w.ev[p[5]][3] in ks)
 
 
 def alliance_world(w):
@@ -2400,10 +2509,11 @@ FIXTURE_NAMES_V7 = FIXTURE_NAMES_V6 + ("h16-alliances",)   # P5-04 18.1 item 16
 FIXTURE_NAMES_V8 = FIXTURE_NAMES_V7 + ("h17-figures",)   # P5-06 18.1 item 14
 FIXTURE_NAMES_V9 = FIXTURE_NAMES_V8 + ("h18-v9",)   # P5-04a 16 item 12 (the spec's "H17"; reading R10)
 FIXTURE_NAMES_V10 = FIXTURE_NAMES_V9 + ("h19-v10",)   # P5-07 16 item 11 (the spec's "H18"; reading D-R1)
+FIXTURE_NAMES_V11 = FIXTURE_NAMES_V10 + ("h20-v11",)   # P5-08 16 item 11
 
 
 def fixture_names():
-    return FIXTURE_NAMES_V10 if V10 else FIXTURE_NAMES_V9 if V9 else FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
+    return FIXTURE_NAMES_V11 if V11 else FIXTURE_NAMES_V10 if V10 else FIXTURE_NAMES_V9 if V9 else FIXTURE_NAMES_V8 if V8 else FIXTURE_NAMES_V7 if V7 else FIXTURE_NAMES_V6 if V6 else FIXTURE_NAMES_V5 if V5 else FIXTURE_NAMES_V4 if V4 else FIXTURE_NAMES_V3 if V3 else FIXTURE_NAMES_V2 if V2 else FIXTURE_NAMES
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -2468,6 +2578,11 @@ def expand_fixture(fx):
             rows["figure"] = sorted(tuple(None if (i == 10 and v == -1) else v for i, v in enumerate(r))
                                     for r in tb.get("figure", []))
             rows["book"] = sorted(tuple(r) for r in tb.get("book", []))
+        if V11:   # schema 14 (P5-08 9): a three-column god row is a creator (domain 1, no title, race = id), as the
+            # C++ builder; faction as given (-1 is NULL in ended_year)
+            rows["god"] = [tuple(g) if len(g) >= 6 else tuple(g[:3]) + (1, "", g[0]) for g in rows["god"]]
+            rows["faction"] = sorted(tuple(None if (i == 9 and v == -1) else v for i, v in enumerate(r))
+                                     for r in tb.get("faction", []))
     kinds, kroles, kvalues = [], [], []
     by_key = {}
     for i, k in enumerate(fx.get("kind", [])):
@@ -2519,7 +2634,7 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "13" if V10 else "12" if V8 else "11" if V7 else "10" if V5 else "9" if V4 else "8" if V3 else "7",
+            "param.races": m["races"], "schema_version": "14" if V11 else "13" if V10 else "12" if V8 else "11" if V7 else "10" if V5 else "9" if V4 else "8" if V3 else "7",
             "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows

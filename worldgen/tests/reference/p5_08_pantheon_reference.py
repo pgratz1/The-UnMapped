@@ -150,6 +150,24 @@ P-R20 (8.2, P3-04 8.4) The two-word choices {profane? hallowed| cursed} and {hid
      SPEC_TWO_WORD_030); the C++ tests expect the samples.
 P-R21 (6.2, 6.3) A contribution older than regard_memory_years at the act is not cited and does not make a pair a
      candidate (add drops old contributions only when a new one comes to the pair).
+Integration (docs/reviews/p5-08-integration-notes.md; the engine's readings where the spec is silent):
+P-R22 (6.5, P5-06 6.4 rule 3) A cult_adopted or cult_suppressed read by figures in a later step names no ruler when
+     the reign began after the event's year (the pantheon runs after the figures).
+P-R23 (12.3) The tellings' d is P5-07 160's d, the old depth: (s + 4 (depth - 1)) mod 9 of the value depth.
+P-R24 (12.6 item 4) A book and a blight cite the event that made the site the caster's own: its tower_founded or
+     its tower_taken_up (the caster's start_event).
+P-R25 (7.1) The divine force factor stands after P5-04 7.5's and P5-07 6.3's factors wherever they apply: the force
+     and the local force of P3-06 r9 20.6 (invariant 10: in every battle).
+P-R26 (10 item 4, 12.1 item 2) The realm lines come after the allies lines in the order gods, faith, deep, before
+     the rulers lines.
+P-R27 (10 item 3) "in" and "faith of" list the rows open at E or closed by the cult's ending event, by (since, id);
+     `in none` when empty; the faith part is left out when empty.
+P-R28 (10 item 6) A temple's or sanctum's cult reads `, of <name> (fa<id>)` after the site's name; a shrine's
+     `, sacred` or `, profane`.
+Lead rulings mirrored (PN5, docs/reviews/p5-08-impl-notes.md, last two entries): a champion needs work (an open war
+     of c as a side or an open joined ally, or a huntable monster) when chosen; a champion is c's hunter ahead of its
+     hero; at its raising it commands the first open war of c with no general on c's side, else waits on each such
+     side for its general's death of age (p5_06_figures_reference.champion_to_war, vacancies).
 """
 
 
@@ -171,6 +189,15 @@ def _p506():
 # ---------------------------------------------------------------------------
 # Formulas (6.2 to 6.9), each as the spec writes it
 # ---------------------------------------------------------------------------
+
+# P5-08 integration (engine defect E2): False is 6.8's text ("a creator: r_a = its race", reading P-R11); True replays
+# the 0.30.0 engine, which compares camps for a creator too. A diagnostic switch only.
+AFFINITY_BY_CAMP = False
+# P5-08 integration (engine defect E4): False is 6.12 item 4 (entities created in the step are invisible: a cult
+# founded in a step neither spreads nor is adopted in it, reading P-R9); True replays the 0.30.0 engine, which spreads
+# a cult, and decides its faith and suppression, in the step of its founding. A diagnostic switch only.
+NEW_CULT_ACTIVE = False
+
 
 def clamp(v, lo, hi):
     return max(lo, min(hi, v))
@@ -731,13 +758,23 @@ class Pantheon:
         if kind == "curse":
             return self.standing_capital(c) is not None
         if kind == "champion":
-            return w.figures is not None and w.figures.champion_of(c) == 0
+            return w.figures is not None and w.figures.champion_of(c) == 0 and self.champion_work(c)
         if kind == "monster":
             return bool(self.monster_kinds_of(g)) and self.lair_region_for_sent(
                 self.capital_region(c), self.t["send_hops"]) != 0
         if kind == "mark":
             return self.mark_place(c, e_star) is not None
         return False
+
+    def champion_work(self, c):
+        """6.3 (lead ruling PN5, first): c is a side or an open joined ally of an open war (P5-04 7.6), or some awake,
+        unsealed monster remembers a raid on c within hunt_memory_years and c's hunters against it (P5-02 6.4.2, the
+        levy times the prowess, before any hero) are above 0. War first, then the monsters, by ascending id."""
+        w = self.w
+        if w.open_wars_of(c) > 0:
+            return True
+        m = w.monsters
+        return m is not None and m.huntable_by(c)
 
     def interventions(self):
         """6.3 the source: [] or [(year, god, kind, civilization, region, scripted)]; pure (draws only)."""
@@ -897,8 +934,12 @@ class Pantheon:
             self.log.append((w.year, "flare", g, c, e_star))
 
     def tension(self, start, length):
-        """6.6: pure."""
-        return (self.threshold, self.pending_flare) if self.pending_flare else (0, 0)
+        """6.6: pure (the log is the checks' record of what the source reported)."""
+        v = (self.threshold, self.pending_flare) if self.pending_flare else (0, 0)
+        if not hasattr(self, "tension_log"):
+            self.tension_log = []
+        self.tension_log.append((start, v[0], v[1]))
+        return v
 
     # --- 6.7 foundings
     def foundings(self, quiet):
@@ -978,7 +1019,7 @@ class Pantheon:
     def affinity(self, g, a):
         gd = self.gods[g]
         aff = self.t["affinity_permille"]
-        if gd["race"]:
+        if gd["race"] and not AFFINITY_BY_CAMP:
             same = self.w.race_c(a) == gd["race"]
         else:
             same = gd["camp"] == self.civ_camp(a)
@@ -993,7 +1034,7 @@ class Pantheon:
             return
         for cult in list(self.cults):
             k = cult["id"]
-            if cult["status"] != PRESENT or cult["serial"] == w.serial:
+            if cult["status"] != PRESENT or (cult["serial"] == w.serial and not NEW_CULT_ACTIVE):
                 continue
             g = cult["god"]
             for a in w.avc():
@@ -1033,7 +1074,7 @@ class Pantheon:
             if key not in w.relations:
                 continue
             cult = self.cults[k - 1]
-            if cult["serial"] == w.serial or not self.alive_visible(c):
+            if (cult["serial"] == w.serial and not NEW_CULT_ACTIVE) or not self.alive_visible(c):
                 continue
             g = cult["god"]
             if quiet and w.quiet_events_left(c) <= 0:
@@ -1368,6 +1409,18 @@ def violations(res, gods_data, tuning, creator_title=None, region_names=(), age_
             f = x.figures.get(x.one(e, "figure"))
             if f is None or f[3] != CHAMPION or f[6] != c or f[9] != e:
                 out.append("4: divine_champion e%d figure %s" % (e, x.one(e, "figure")))
+            # 4 (lead ruling PN5): work for a champion in the act's year, as a necessary condition on rows: a war row
+            # of c (a principal's or a joined ally's) open in year Y, or a raid on c by a monster not ended before Y
+            # (within hunt_memory_years when the tuning carries `_hunt_memory_years`)
+            Y = x.year[e]
+            war = any(q[4] == "war" and c in (q[1], q[3]) and q[5] <= Y and (q[6] is None or q[6] >= Y)
+                      for q in x.rel)
+            mem = t.get("_hunt_memory_years")
+            raid = any(x.one(m, "civilization") == c and x.year[m] <= Y and (mem is None or Y - x.year[m] <= mem) and
+                       (x.monsters.get(x.one(m, "monster"), (0,) * 7)[6] is None or
+                        x.monsters[x.one(m, "monster")][6] >= Y) for m in x.of("monster_raid"))
+            if not (war or raid):
+                out.append("4: divine_champion e%d: c%d had no open war and no raid by a living monster" % (e, c))
         if k == "divine_mark":
             s = x.sites.get(x.one(e, "site"))
             if s is None or s[2] != SHRINE or s[10] != e:
@@ -1604,16 +1657,21 @@ def cults_block(res, level="full"):
     for f in fs:
         k = f[0]
         g = x.gods.get(f[4], (0, "?"))
-        fig = x.figures.get(f[5], (0, "?"))
+        fig = x.figures.get(f[5])
+        fig = (f[5], pe.figure_display_name(fig[1], fig[16], fig[2]) if fig is not None else "?")   # P5-06 10.1
         seat = x.sites.get(f[6], (0, "?", 0, 0, 0, 0, 0))
         t = r.stl.get(seat[6], (0, "?"))
         end_e = f[10] if f[12] == ENDED else (0 if f[12] == PRESENT else 0)
         ins = [q for q in cult_in if q[1] == k and (q[8] == 0 or (end_e and q[8] == end_e))]
         s = "  fa%d %s, of g%d %s: founded %d e%d by f%d %s at si%d %s in s%d %s" % (
             k, f[1], f[4], g[1], f[7], f[8], f[5], fig[1], f[6], seat[1], seat[6], t[1])
-        if ins:
-            s += "; in " + ", ".join("c%d %s" % (q[3], r.civ[q[3]][1]) for q in sorted(ins, key=lambda q: q[3]))
-        fa = [q for q in faith if q[1] == k]
+        if ins:   # reading P-R27 (the engine's; 10 item 3 gives no order): by (since, civilization id)
+            s += "; in " + ", ".join("c%d %s" % (q[3], r.civ[q[3]][1]) for q in sorted(ins, key=lambda q: (q[5], q[3])))
+        else:   # P-R27: `in none` when no row qualifies (the faith part is left out when empty)
+            s += "; in none"
+        # reading P-R27 (the engine's; 10 item 3 is silent): the faith_of rows open at E or closed by the cult's
+        # ending event, as for "in"
+        fa = [q for q in faith if q[1] == k and (q[8] == 0 or (end_e and q[8] == end_e))]
         if fa:
             s += "; faith of " + ", ".join("c%d %s since %d" % (q[3], r.civ[q[3]][1], q[5])
                                            for q in sorted(fa, key=lambda q: (q[5], q[3])))
@@ -1636,6 +1694,12 @@ def cults_block(res, level="full"):
     return lines
 
 
+def _fig_name(x, f):
+    """P5-06 10.1: a figure's display name (with its regnal number and epithet)."""
+    r = x.figures.get(f)
+    return pe.figure_display_name(r[1], r[16], r[2]) if r is not None else "?"
+
+
 def _parts_limited(items, cap=4):
     if len(items) <= cap:
         return ", ".join(items)
@@ -1652,7 +1716,7 @@ def realm_lines(res, c):
     groups = (("blessed by", "divine_bless", lambda e: "g%d %s e%d" % (x.one(e, "actor"), gname[x.one(e, "actor")], e)),
               ("cursed by", "divine_curse", lambda e: "g%d %s e%d" % (x.one(e, "actor"), gname[x.one(e, "actor")], e)),
               ("champion", "divine_champion", lambda e: "f%d %s e%d" % (
-                  x.one(e, "figure"), x.figures.get(x.one(e, "figure"), (0, "?"))[1], e)),
+                  x.one(e, "figure"), _fig_name(x, x.one(e, "figure")), e)),
               ("sent", "divine_monster", lambda e: "m%d %s e%d" % (
                   x.one(e, "monster"), x.monsters.get(x.one(e, "monster"), (0, "?"))[1], e)),
               ("marked", "divine_mark", lambda e: "si%d %s e%d" % (
@@ -1847,7 +1911,8 @@ def run_problems(res, inp, dat):
     p = w.pantheon
     out = []
     gods = list(dat.gods)
-    t = dict(p.t, _tower_lapse_years=(dat.figures or {}).get("tower_lapse_years", 0))
+    t = dict(p.t, _tower_lapse_years=(dat.figures or {}).get("tower_lapse_years", 0),
+             _hunt_memory_years=w.monsters.t["hunt_memory_years"] if w.monsters is not None else None)
     rows = dict(res)
     rows["region_border"] = [(b["a"], b["b"]) for b in inp.borders]
     races = {r[0]: r for r in inp.races}
@@ -1992,8 +2057,9 @@ def check_units(c):
     c.eq("12.2 stir ppm capped", p507.stir_ppm([0, 150, 600000], 3, 1600, 25, 1000), 1000000)
     c.eq("12.2 stir 0 at deep_stir_permille 0", p507.stir_ppm([0, 150, 600], 3, 1000, 50, 0), 0)
     with _pcr().rules(VERSION):
-        c.eq("12.3 telling (s + 4 d) mod 9", [p507.telling_delve(7, d) for d in (1, 2, 3)], [2, 6, 1])
-        c.eq("12.3 warren telling (t + 4 d) mod 9", [p507.telling_warren_delved(5, d) for d in (1, 2, 3)], [0, 4, 8])
+        # the argument is the event's depth value d + 1 (P-R23: 12.3's d is the old depth of P5-07 160)
+        c.eq("12.3 telling (s + 4 d) mod 9", [p507.telling_delve(7, d + 1) for d in (1, 2, 3)], [2, 6, 1])
+        c.eq("12.3 warren telling (t + 4 d) mod 9", [p507.telling_warren_delved(5, d + 1) for d in (1, 2, 3)], [0, 4, 8])
     c.eq("11.1 shrine_word", (SHRINE_WORD[False], SHRINE_WORD[True]), ("holy to", "cursed by"))
     c.eq("11.1 group gods 9, ALL_GROUPS 0x3FF", (GROUP_GODS, ALL_GROUPS), (9, 1023))
     c.eq("3 streams: 107 + 13", 107 + len(STREAMS) + len(DEEP_STREAMS), STREAM_COUNT)
@@ -2045,8 +2111,10 @@ def check_data(c):
     h = dict(root["history"])
     c.eq("4.2 the history root has pantheon and creator_title", ("pantheon" in h, h["chronology"]["creator_title"]),
          (True, "the Maker of {plural}"))
-    c.eq("12 follow-up starts", (h["monsters"]["deep_stir_permille"], h["alliances"]["renew_written_max"],
-                                 h["figures"]["tower_lapse_years"]), (1000, 3, 200))
+    # 12.2, 12.5, 12.6: the shipped values within the fields' ranges (the starts 1000, 3 and 200 were moved by the
+    # calibration: deep_stir_permille 700 at 0.30.0)
+    c.ok("12 follow-up fields in range", 0 <= h["monsters"]["deep_stir_permille"] <= 1000 and
+         0 <= h["alliances"]["renew_written_max"] <= 100 and 0 <= h["figures"]["tower_lapse_years"] <= 10000)
 
 
 def check_render(c):
@@ -2279,7 +2347,9 @@ def cmd_check_world(argv):
         c = Checker()
         c.eq("%s schema_version" % path, meta.get("schema_version"), str(SCHEMA))
         races = {r[0]: r for r in rows.get("race", [])}
-        t = dict(dat.pantheon or pdr.pantheon_shipped_030(), _tower_lapse_years=dat.figures.get("tower_lapse_years", 0))
+        mt = getattr(getattr(dat, "base", None), "monsters_tuning", None) or {}
+        t = dict(dat.pantheon or pdr.pantheon_shipped_030(), _tower_lapse_years=dat.figures.get("tower_lapse_years", 0),
+                 _hunt_memory_years=mt.get("hunt_memory_years"))
         creator_title = dat.chron.creator_title if hasattr(dat.chron, "creator_title") else None
         for v in violations(rows, list(dat.gods), t, creator_title, [r[1] for r in rows.get("region", [])],
                             [a[4] for a in rows.get("age", [])], races):

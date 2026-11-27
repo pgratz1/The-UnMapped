@@ -97,6 +97,10 @@ ONE = 1 << 32
 # weights, famine_ppm 1250, plague_spread_permille 100, templates) come from
 # the data root (p3_data_reference.py).
 # ---------------------------------------------------------------------------
+# P5-08 integration (engine defect E1): False is 7.1's text (the growth term d times the factor, then the cap of
+# P3-05 9.1); True replays the 0.30.0 engine, which multiplies the increment after the cap. A diagnostic switch only.
+GROWTH_OF_CAPPED_INCREMENT = False
+
 FLAGS = dict(
     cell=True,          # 6.2: the per-race cell term, no seed-cell rule for a race with one
     fortress_cell=True,  # 8.4: a founding with a cell term on a cell with walk_area 0 is a fortress
@@ -1244,8 +1248,15 @@ class World(pe.World):
                     d = max(1, d)
                 dv = getattr(self, "divine", None)
                 if dv is not None and d > 0:
+                    gp = dv.growth_permille(s["owner_civ"], s["id"], self.year)
+                    if GROWTH_OF_CAPPED_INCREMENT:
+                        # the 0.30.0 engine's form (engine defect E1 of the P5-08 integration notes): the increment
+                        # after the cap, min(P + d, cap) - P, times the factor, capped again
+                        if gp != 0:
+                            return max(p, min(cap, p + (min(p + d, cap) - p) * (1000 + gp) // 1000))
+                        return min(p + d, cap)
                     # P5-08 7.1 (reading P-R2): the positive term, after its floor of 1, times (1000 + growth) div 1000
-                    d = d * (1000 + dv.growth_permille(s["owner_civ"], s["id"], self.year)) // 1000
+                    d = d * (1000 + gp) // 1000
                 return min(p + d, cap)
             if p > ts:
                 return p - max(1, (p - ts) * self.t["decline_permille"] // 1000)
@@ -2452,7 +2463,7 @@ def check_invariants(c, res, inp, w, label):
         "capital_moved": ab, "civ_ended": ab, "ruin_faded": ab,
         "settlement_dwindled": blows + (("colony_founded",) if FLAGS["memory"] else ()),   # r12 22.2 item 3
     }
-    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029)}   # P5-04, P5-06, P5-07: kinds 63 to 99 named
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029) + tuple(pe.KINDS_030)}   # P5-04, P5-06, P5-07, P5-08: kinds 63 to 99 named
     for e in res["event"]:
         key = keys[e[3]]
         cs = causes.get(e[0], [])
@@ -2603,7 +2614,7 @@ def check_r12_invariants(c, res, w, label, kind, ev, vals, causes, base):
     reds = {"famine", "plague", "plague_outbreak", "plague_spread", "succession_crisis", "battle", "battle_at_pass",
             "tribute", "colony_founded", "allied_battle",   # allied_battle: P5-04 11.1 (no older world has it)
             "battle_led", "blight"}   # P5-06 11.1, 6.8 (no older world has them)
-    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029)}   # P5-04, P5-06, P5-07
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029) + tuple(pe.KINDS_030)}   # P5-04, P5-06, P5-07, P5-08
     for e in res["event"]:
         if keys[e[3]] in ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to"):
             for x in causes.get(e[0], []):
@@ -2899,7 +2910,7 @@ settlements standing 90 ruined 1 faded 0
 
 def chronicle_lines(res, inp):
     """15.2's line form: <span> e<id> <kind>/<salience>: <sentence> [causes ...]."""
-    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029)}   # P5-04, P5-06, P5-07: kinds 63 to 99 named
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029) + tuple(pe.KINDS_030)}   # P5-04, P5-06, P5-07, P5-08: kinds 63 to 99 named
     causes = {}
     for (e, c) in res["event_cause"]:
         causes.setdefault(e, []).append(c)
@@ -2914,7 +2925,7 @@ def chronicle_lines(res, inp):
 
 
 def kind_counts(res):
-    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029)}   # P5-04, P5-06, P5-07: kinds 63 to 99 named
+    keys = {k["id"]: k["key"] for k in tuple(COMPILED) + tuple(pe.KINDS_026) + tuple(pe.KINDS_027) + tuple(pe.KINDS_029) + tuple(pe.KINDS_030)}   # P5-04, P5-06, P5-07, P5-08: kinds 63 to 99 named
     out = {}
     for e in res["event"]:
         out[keys[e[3]]] = out.get(keys[e[3]], 0) + 1
@@ -4217,7 +4228,7 @@ def cmd_check_world(argv):
     if "chronology" in stages:
         for t in pchr.TABLES:
             got, _ = pchr.world_table_hash(conn, t)
-            c.eq("table %s" % t, got, pchr.table_hash(pchr.COLUMNS[t], chron[t]))
+            c.eq("table %s" % t, got, pchr.table_hash(pchr.columns(t), chron[t]))
     if "history" in stages:
         res = history_stage(dat, inp)
         want = table_hashes(res)

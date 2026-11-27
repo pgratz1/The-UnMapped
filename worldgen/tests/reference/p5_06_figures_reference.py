@@ -557,8 +557,8 @@ class Figures:
 
     def hero_of(self, c):
         f = self.hero.get(c, 0)
-        if not f and p508_on():
-            f = self.champion_of(c)   # P5-08 7.5: c's hero, else its champion
+        if p508_on() and self.champion_of(c):
+            f = self.champion_of(c)   # P5-08 7.5 (lead ruling PN5, second): c's living champion first, else its hero
         if not f:
             return (0, 0, 0)
         return (f, self.t["hero_hunt_permille"], self.t["hero_might_permille"])
@@ -600,7 +600,47 @@ class Figures:
         f["start_event"] = event
         f["epithet"] = epithet
         self.log.append((self.w.year, "divine figure", c, fid, role, event))
+        if role == CHAMPION:
+            self.champion_to_war(fid, c, event)
         return f
+
+    def champion_to_war(self, ch, c, event):
+        """P5-08 7.5 (lead ruling PN5, second): at its raising the champion commands the first open war (ascending
+        id, attacker side then defender) where c is a principal and the side has no general (causes: the war and the
+        divine_champion); when no such side is free, every such side waits for its general's death (vacancies)."""
+        w = self.w
+        if self.civ(c)["ended_year"] is not None:
+            return
+        waits = []
+        for war in sorted(self.wars):
+            kw = self.wars[war]
+            if not w.war_open(war):
+                continue
+            for side, en in ((kw["a"], kw["b"]), (kw["b"], kw["a"])):
+                if side != c:
+                    continue
+                if not kw["gen"][side]:
+                    self.appoint_champion(war, side, en, ch, event)
+                    return
+                waits.append((war, side))
+        for war, side in waits:
+            self.wars[war]["waits"][side] = True
+
+    def appoint_champion(self, war, c, enemy, ch, extra_cause=0):
+        """P5-08 7.5: a champion appointed general with no draw (reading P-R7: again 1 when it has served before)."""
+        w = self.w
+        kw = self.wars[war]
+        f = self.fig(ch)
+        again = 1 if f.get("served") else 0
+        f["served"] = True
+        e = w.append("general_appointed", region=w.war_of(war)["goal"],
+                     participants=(("figure", FIGURE, ch), ("civilization", CIV, c), ("enemy", CIV, enemy)),
+                     values=(again,), causes=tuple(sorted((war,) + ((extra_cause,) if extra_cause else ()))))
+        w.open_rel((FIGURE, ch, CIV, c, "served"), e)
+        kw["gen"][c] = ch
+        kw["vacant"][c] = False
+        kw.setdefault("waits", {})[c] = False
+        self.log.append((w.year, "general", war, c, ch, again))
 
     def figure_exists(self, f):
         return 1 <= f <= len(self.figs)
@@ -843,8 +883,13 @@ class Figures:
                 # P5-07 6.9: P5-06 6.4 rule 3 gains the deeds deep_woken and deep_sealed (role civilization)
                 self.name_by_deed(_one(w, ev, "civilization"), e)
             elif k in ("cult_adopted", "cult_suppressed") and p508_on():
-                # P5-08 6.5: P5-06 6.4 rule 3 gains cult_adopted and cult_suppressed (role civilization)
-                self.name_by_deed(_one(w, ev, "civilization"), e)
+                # P5-08 6.5: P5-06 6.4 rule 3 gains cult_adopted and cult_suppressed (role civilization). Reading
+                # P-R22 (integration, the engine's): the pantheon runs after the figures, so a cult event of a quiet
+                # step is read in the next step; a reign that began after the event's year is not its ruler.
+                c = _one(w, ev, "civilization")
+                L = self.lines.get(c)
+                if L is None or ev["year"] >= L["s"]:
+                    self.name_by_deed(c, e)
             elif k in ("peace", "war_won"):
                 self.tally(_one(w, ev, "winner"), "wars_won")
             elif k == "civ_conquered":
@@ -1035,7 +1080,8 @@ class Figures:
     # --- 6.6 generals
     def declared(self, e, a, b):
         w = self.w
-        self.wars[e] = dict(a=a, b=b, gen={a: 0, b: 0}, v={a: 0, b: 0}, vacant={a: False, b: False})
+        self.wars[e] = dict(a=a, b=b, gen={a: 0, b: 0}, v={a: 0, b: 0}, vacant={a: False, b: False},
+                            waits={a: False, b: False})
         if self.quiet():
             return
         for c, en in ((a, b), (b, a)):
@@ -1052,16 +1098,7 @@ class Figures:
         if ch and ch not in serving:
             # P5-08 7.5: a living champion not serving another war is appointed, with no appointment draw (reading
             # P-R7: again 1 when it has served before; its start_event stays its divine_champion)
-            f = self.fig(ch)
-            again = 1 if f.get("served") else 0
-            f["served"] = True
-            e = w.append("general_appointed", region=w.war_of(war)["goal"],
-                         participants=(("figure", FIGURE, ch), ("civilization", CIV, c), ("enemy", CIV, enemy)),
-                         values=(again,), causes=(war,))
-            w.open_rel((FIGURE, ch, CIV, c, "served"), e)
-            kw["gen"][c] = ch
-            kw["vacant"][c] = False
-            self.log.append((Y, "general", war, c, ch, again))
+            self.appoint_champion(war, c, enemy, ch)
             return True
         p = self.dat.race[r]["general"] * t["general_scale_permille"] // 1000
         if not chance_pm(self.D("hist.figures.appoint", war, c, kw["v"][c]), p):
@@ -1086,6 +1123,7 @@ class Figures:
         w.open_rel((FIGURE, f["id"], CIV, c, "served"), e)
         kw["gen"][c] = f["id"]
         kw["vacant"][c] = False
+        kw.setdefault("waits", {})[c] = False   # P5-08 7.5: any appointment of the side clears the wait
         self.log.append((Y, "general", war, c, f["id"], again))
         return True
 
@@ -1096,7 +1134,19 @@ class Figures:
             if not w.war_open(war):
                 continue
             for c, en in ((kw["a"], kw["b"]), (kw["b"], kw["a"])):
-                if kw["vacant"][c] and not kw["gen"][c]:
+                waits = kw.setdefault("waits", {}).get(c, False)
+                if waits and kw["gen"][c]:
+                    continue   # P5-08 7.5: the general still serves
+                if waits and not kw["vacant"][c]:
+                    # P5-08 7.5 (lead ruling PN5, second): the general died of age; the waiting champion takes the
+                    # post once, with no draw
+                    kw["waits"][c] = False
+                    ch = self.champion_of(c)
+                    if ch and not any(g == ch for k in self.wars.values() for g in k["gen"].values()) and \
+                            self.civ(c)["ended_year"] is None:
+                        self.appoint_champion(war, c, en, ch)
+                    continue
+                if kw["vacant"][c] and not kw["gen"][c] and self.civ(c)["ended_year"] is None:
                     kw["v"][c] += 1
                     self.appoint(war, c, en)
 
@@ -1373,7 +1423,9 @@ class Figures:
             title = T[start] + " " + roman(j)
         w.registry.add(title)
         site = w.monsters.site(f["tower"])
-        causes = {site["origin_event"]}
+        # P5-08 12.6 item 4 (reading P-R24 of the integration, the engine's): the book cites the event that made the
+        # site the caster's own (its tower_founded, or its tower_taken_up), which is the caster's start_event
+        causes = {f["start_event"] if p508_on() else site["origin_event"]}
         mine = [b for b in self.books if b["author"] == f["id"]]
         if mine:
             causes.add(mine[-1]["event"])
@@ -1404,7 +1456,8 @@ class Figures:
                     hit.append((u["id"], dead))
             e = w.append("blight", region=R, participants=(("figure", FIGURE, f["id"]), ("civilization", CIV, f["civ"]),
                                                            ("site", SITE, f["tower"])),
-                         values=(sum(d for _u, d in hit),), causes=(site["origin_event"],))
+                         values=(sum(d for _u, d in hit),),
+                         causes=(f["start_event"] if p508_on() else site["origin_event"],))   # P-R24
             for u, _d in hit:
                 w.last_red[u] = e      # note_reduction
             f["blights"] += 1

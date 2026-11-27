@@ -545,6 +545,7 @@ KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_027})
 # P5-07 8.1 (0.29.0): kinds 93 to 99 likewise
 KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_029})
 KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_029})
+KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_030})   # P5-08: kinds 100 to 110
 K = KIND_ID
 # r19 23.2 / P3-07 r14 23 item 1: wherever a rule, invariant, statistic or report reads a claim, kinds 20 and 39
 # are read alike; a cession of invariants (13), (17), the units and the companions is kind 29 or 40. Kinds 39 and
@@ -1222,7 +1223,7 @@ class World(pp.World):
         """7.5: the trade, forge and arms factors, in this order, each with floor division."""
         al = self.alliances
         if al is None:
-            return f
+            return self.divine_force(f, c)
         t = self.ct
         f = f * (1000 + t["trade_strength_permille"] * min(al.trade_partners(c), t["trade_strength_max"])) // 1000
         if FLAGS["deep"] and al.forged(c):   # P5-07 6.3: the depth of c's deepest open mine
@@ -1231,7 +1232,16 @@ class World(pp.World):
         else:
             f = f * (1000 + t["forge_strength_permille"] * (1 if al.forged(c) else 0)) // 1000
         f = f * (1000 + t["arms_strength_permille"] * (1 if al.arms(c) else 0)) // 1000
-        return f
+        return self.divine_force(f, c)
+
+    def divine_force(self, f, c):
+        """P5-08 7.1: after P5-04 7.5's and P5-07 6.3's factors, so wherever they apply (the force and the local force
+        of r9 20.6; reading P-R25 of the integration, the engine's, and invariant 10's "in every battle")."""
+        pan = getattr(self, "pantheon", None)
+        if pan is None:
+            return f
+        d = pan.force_permille(c, self.year)
+        return f if d == 0 else f * (1000 + d) // 1000
 
     def forge_depth(self, c):
         """P5-07 7.1: AllianceView::forge_depth(c), the largest mine_depth over c's open mines (0 none)."""
@@ -1424,9 +1434,7 @@ class World(pp.World):
         f = levy * self.pd.race[self.race_c(c)]["prowess"] // 1000
         if FLAGS["muster"]:
             f = f * self.muster(c) // 1000         # r9 20.6 item 1
-        f = self.strengthened(f, c)                # P5-04 7.5: before the bound check
-        if getattr(self, "pantheon", None) is not None:   # P5-08 7.1: after 7.5's and P5-07 6.3's factors
-            f = f * (1000 + self.pantheon.force_permille(c, self.year)) // 1000
+        f = self.strengthened(f, c)                # P5-04 7.5 and P5-08 7.1: before the bound check
         if f > (1 << 40):
             fatal("history: bound: conflict force of civilization %d exceeds 2^40" % c)
         return f
@@ -3462,6 +3470,8 @@ def check_peoples_invariants(c, res, inp, w, label):
         red += ("allied_battle",)
     if FLAGS["figures"]:   # P5-06 11.1: battle_led a battle; 6.8: a blight is a reduction (note_reduction)
         red += ("battle_led", "blight")
+    if FLAGS["pantheon"]:   # P5-08 6.4: a pestilence is a reduction (note_reduction)
+        red += ("divine_curse",)
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
@@ -3537,6 +3547,8 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for r in rel:
         if FLAGS["figures"] and r[0] == FIGURE:
             continue   # P5-06 9.2: ruled, served, rival, parent (checked by p5_06_figures_reference's 9.4 and 13)
+        if FLAGS["pantheon"] and r[0] == 7:
+            continue   # P5-08 9: cult_in, faith_of (checked by p5_08_pantheon_reference's 13 items 6 and 7)
         lab = "%s inv 1 relation %s" % (label, r)
         c.true(lab + " types", r[0] == CIV and r[2] == CIV)
         al = FLAGS["alliances"]
@@ -3736,6 +3748,20 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     for r in res["phase"]:
         if r[2] != FLARE:
             continue
+        pan = getattr(w, "pantheon", None)
+        if FLAGS["pantheon"] and pan is not None and r[5]:
+            # P5-08 6.6: the third tension source (a god's flare-up, its trigger the lead deed e*); 12.2: a stir of the
+            # deep through the monsters' source (its trigger the stirring candidate's last delving)
+            plog = {s: (v, e) for (s, v, e) in getattr(pan, "tension_log", [])}
+            mlog = {s: (v, e) for (s, v, e) in w.monsters.tension_log} if w.monsters is not None else {}
+            prev = [s for s in log if s < r[3]]
+            if prev and plog.get(max(prev)) == (thr, r[5]) and log[max(prev)][0] < thr and \
+                    mlog.get(max(prev), (0, 0))[0] < thr:
+                continue
+            if prev and w.events[r[5] - 1]["key"] in ("delving_deepened", "warren_delved"):
+                c.true("%s inv 8 (P5-08 12.2) flare-up %d: a stir, the monsters' tension above conflict's" % (
+                    label, r[0]), mlog.get(max(prev)) == (thr, r[5]) and log[max(prev)][0] < thr)
+                continue
         if FLAGS["monsters"] and r[5] and w.events[r[5] - 1]["key"] == "monster_appeared":
             # P5-02 6.5: the second tension source; its trigger is a flare kind's appearance in a quiet step
             mlog = {s: (v, e) for (s, v, e) in w.monsters.tension_log}
@@ -7611,7 +7637,7 @@ def cmd_check_world(argv):
         # P5-07 12 item 3: without --version the world's own generator version selects the rules
         use_version(meta["generator_version"])
         dat = data(opt(argv, "--data", "game/data"))
-    want_schema = "13" if FLAGS["deep"] else "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    want_schema = "14" if FLAGS["pantheon"] else "13" if FLAGS["deep"] else "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))
@@ -7623,7 +7649,7 @@ def cmd_check_world(argv):
     if "chronology" in stages:
         for t in pchr.TABLES:
             got, _ = pchr.world_table_hash(conn, t)
-            c.eq("table %s" % t, got, pchr.table_hash(pchr.COLUMNS[t], chron[t]))
+            c.eq("table %s" % t, got, pchr.table_hash(pchr.columns(t), chron[t]))
     if "history" in stages:
         res = history_stage(dat, inp)
         want = table_hashes(res)

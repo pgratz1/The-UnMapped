@@ -1,108 +1,112 @@
 # P5-08 16 item 11: lines the v11 report of H20 (h20-v11.toml) must contain, `<level> <line>`; written
 # by worldgen/tests/reference/p5_08_h20_fixture.py from the reference's rows (never from C++ output).
-full gods: 15; acts: 191 (bless 57, curse 84, champion 28, monster 3, mark 19); flares: 0
-full   g1 Osien the Maker of Elves (good, creation): acts 7 (curse 5, mark 2); cult fa6 The Teeth of Osien
-full   g2 Kroneet the Maker of Goblins (evil, creation): acts 24 (curse 21, champion 1, mark 2); cult fa3 The Teeth of Kroneet
-full   g3 Thramdomm the Maker of Dwarves (neutral, creation): acts 2 (bless 1, curse 1); cult fa10 The Teeth of Thramdomm
-full   g4 Vietwou the Maker of Faeries (good, creation): acts 8 (bless 2, curse 5, champion 1); cult fa12 The Hidden Ring of Vietwou
-full   g5 Tealdtim the Maker of Humans (neutral, creation): acts 2 (curse 2); cult fa14 The Teeth of Tealdtim
-full   g6 Og'ghal the Maker of Orcs (evil, creation): acts 4 (curse 4); cult fa16 The Grovellers of Og'ghal
-full   g7 Boghkoz the Red Banner (evil, war): acts 23 (bless 7, curse 11, champion 4, mark 1); cult fa5 The Teeth of Boghkoz
-full   g8 Garinnond the Hammer Under the Mountain (neutral, craft): acts 1 (mark 1)
-full   g9 Nuk-Drub the Hollow Keeper (evil, death): acts 27 (bless 9, curse 9, monster 2, mark 7); cult fa2 The Grovellers of Nuk-Drub
-full   g10 Eeta the Giver of Harvests (good, harvest): acts 9 (curse 9); cult fa11 The Hammer of Eeta
-full   g11 Enele the Lamp of the Wise (good, lore): acts 3 (bless 1, curse 2); cult fa13 The Grovellers of Enele
-full   g12 Olelie the Keeper of Oaths (good, oaths): acts 8 (bless 1, curse 5, champion 1, mark 1); cult fa15 The Teeth of Olelie
-full   g13 Skoskrozz the Burner of Halls (evil, ruin): acts 15 (bless 3, curse 8, monster 1, mark 3); cult fa9 The Grovellers of Skoskrozz
-full   g14 Brilseas the Shield of Battles (neutral, war): acts 56 (bless 32, curse 1, champion 21, mark 2); cult fa4 The Starward Circle of Brilseas
-full   g15 Dirhil the Hunter in the Green (neutral, wild): acts 2 (bless 1, curse 1); cult fa7 The Teeth of Dirhil
-full cults: 16 (present 10, hidden 2, ended 4)
-full   fa1 The Teeth of Brilseas, of g14 Brilseas: founded 859 e103 by f11 Bugg-Zok at si12 The Pit of Brilseas in s5 Sligg Pit; in c2 The Nux-Slurk Horde; faith of c2 The Nux-Slurk Horde since 864; ended 870 e176 its realms fell
-full   fa2 The Grovellers of Nuk-Drub, of g9 Nuk-Drub: founded 868 e155 by f13 Kreezz at si14 The Bone-House of Nuk-Drub in s8 Nork-Girk; in c6 The Hold of Hirnai, c8 The Drirk Mob, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; faith of c5 The Warrens of Beeb since 869, c8 The Drirk Mob since 1560; present
-full   fa3 The Teeth of Kroneet, of g2 Kroneet: founded 897 e197 by f15 Kikub at si16 The Bone-House of Kroneet in s10 Greegg Hole; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-full   fa4 The Starward Circle of Brilseas, of g14 Brilseas: founded 998 e216 by f17 Rafeitha at si18 The House of Brilseas in s2 Gloe; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c8 The Drirk Mob, c9 The Siavia Ring, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; faith of c1 The Realm of Rathenn since 1000, c6 The Hold of Hirnai since 1180; present
-full   fa5 The Teeth of Boghkoz, of g7 Boghkoz: founded 999 e224 by f18 Biskark at si19 The Bone-House of Boghkoz in s11 Skugitch Hole; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-full   fa6 The Teeth of Osien, of g1 Osien: founded 1000 e226 by f16 Skox at si21 The Pit of Osien in s6 Naxskrark Hole; in c3 The Grotch Mob; faith of c3 The Grotch Mob since 1002; ended 1287 e694 its realms fell
-full   fa7 The Teeth of Dirhil, of g15 Dirhil: founded 1006 e254 by f22 Gib at si24 The Bone-House of Dirhil in s7 Geesnot Pit; in c4 The Krabdreex Horde; faith of c4 The Krabdreex Horde since 1009; ended 1130 e505 its realms fell
-full   fa8 The Grovellers of Eeta, of g10 Eeta: founded 1007 e259 by f16 Skox at si25 The Bone-House of Eeta in s13 Kiksnux Hole; in c3 The Grotch Mob; ended 1096 e342 suppressed
-full   fa9 The Grovellers of Skoskrozz, of g13 Skoskrozz: founded 1135 e526 by f43 Snonizz at si37 The Pit of Skoskrozz in s7 Geesnot Pit; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-full   fa10 The Teeth of Thramdomm, of g3 Thramdomm: founded 1170 e584 by f50 Beezz at si41 The Bone-House of Thramdomm in s18 Skrug; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c8 The Drirk Mob, c9 The Siavia Ring, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-full   fa11 The Hammer of Eeta, of g10 Eeta: founded 1422 e797 by f72 Noukthu at si49 The Deep Shrine of Eeta in s13 Kiksnux Hole; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c9 The Siavia Ring, c11 The Kingdom of Mock; present
-full   fa12 The Hidden Ring of Vietwou, of g4 Vietwou: founded 1487 e888 by f85 Wath at si52 The Moon-Glade of Vietwou in s26 Lissvi; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c9 The Siavia Ring, c11 The Kingdom of Mock; faith of c9 The Siavia Ring since 1488; present
-full   fa13 The Grovellers of Enele, of g11 Enele: founded 1567 e1029 by f96 Greeb-Sliz at si60 The Pit of Enele in s12 Skudreegg; hidden at si61 The Secret Pit of Enele since 1593 e1040
-full   fa14 The Teeth of Tealdtim, of g5 Tealdtim: founded 1788 e1256 by f113 Skriskrank at si64 The Bone-House of Tealdtim in s12 Skudreegg; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c8 The Drirk Mob, c9 The Siavia Ring, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-full   fa15 The Teeth of Olelie, of g12 Olelie: founded 1926 e1599 by f144 Grink at si70 The Bone-House of Olelie in s21 Skrukbeenk Pit; hidden at si72 The Secret Pit of Olelie since 1930 e1623
-full   fa16 The Grovellers of Og'ghal, of g6 Og'ghal: founded 1928 e1614 by f144 Grink at si71 The Bone-House of Og'ghal in s30 Thush; in c8 The Drirk Mob, c15 The Am'uruuk Horde; present
-summary gods: 15; acts: 191 (bless 57, curse 84, champion 28, monster 3, mark 19); flares: 0
-summary   g14 Brilseas the Shield of Battles (neutral, war): acts 56 (bless 32, curse 1, champion 21, mark 2); cult fa4 The Starward Circle of Brilseas
-summary   g9 Nuk-Drub the Hollow Keeper (evil, death): acts 27 (bless 9, curse 9, monster 2, mark 7); cult fa2 The Grovellers of Nuk-Drub
-summary   g2 Kroneet the Maker of Goblins (evil, creation): acts 24 (curse 21, champion 1, mark 2); cult fa3 The Teeth of Kroneet
-summary   g7 Boghkoz the Red Banner (evil, war): acts 23 (bless 7, curse 11, champion 4, mark 1); cult fa5 The Teeth of Boghkoz
-summary   g13 Skoskrozz the Burner of Halls (evil, ruin): acts 15 (bless 3, curse 8, monster 1, mark 3); cult fa9 The Grovellers of Skoskrozz
-summary   g10 Eeta the Giver of Harvests (good, harvest): acts 9 (curse 9); cult fa11 The Hammer of Eeta
-summary   g4 Vietwou the Maker of Faeries (good, creation): acts 8 (bless 2, curse 5, champion 1); cult fa12 The Hidden Ring of Vietwou
-summary   g12 Olelie the Keeper of Oaths (good, oaths): acts 8 (bless 1, curse 5, champion 1, mark 1); cult fa15 The Teeth of Olelie
+full gods: 15; acts: 204 (bless 81, curse 59, champion 35, monster 7, mark 22); flares: 2
+full   g1 Glaefae the Maker of Elves (good, creation): acts 3 (bless 1, curse 2)
+full   g2 Slirkdreeb the Maker of Goblins (evil, creation): acts 22 (bless 6, curse 14, mark 2); cult fa6 The Grovellers of Slirkdreeb
+full   g3 Gourktair the Maker of Dwarves (neutral, creation): acts 7 (bless 5, curse 1, mark 1); cult fa9 The Hammer of Gourktair
+full   g4 Vosieflou the Maker of Faeries (good, creation): acts 6 (bless 3, curse 3); cult fa14 The Dreamers of Vosieflou
+full   g5 Reldruld the Maker of Humans (neutral, creation): acts 4 (bless 2, champion 1, mark 1); cult fa15 The Order of Reldruld
+full   g6 Krakhgrark the Maker of Orcs (evil, creation): acts 3 (curse 2, mark 1)
+full   g7 Grug'thak the Red Banner (evil, war): acts 19 (bless 9, curse 6, champion 3, mark 1); cult fa2 The Teeth of Grug'thak
+full   g8 Timtho the Hammer Under the Mountain (neutral, craft): acts 9 (bless 5, champion 3, mark 1); cult fa7 The Oathsworn of Timtho
+full   g9 Greeskix the Hollow Keeper (evil, death): acts 21 (bless 10, curse 3, champion 3, monster 2, mark 3); cult fa10 The Grovellers of Greeskix
+full   g10 Oalae the Giver of Harvests (good, harvest): acts 7 (curse 5, mark 2); cult fa11 The Oathsworn of Oalae
+full   g11 Lielvae the Lamp of the Wise (good, lore): acts 13 (bless 8, curse 3, champion 1, mark 1); cult fa1 The Starward Circle of Lielvae
+full   g12 Vocaecie the Keeper of Oaths (good, oaths): acts 11 (bless 2, curse 9); cult fa13 The Grovellers of Vocaecie
+full   g13 Slak-Snat the Burner of Halls (evil, ruin): acts 21 (bless 4, curse 9, champion 1, monster 3, mark 4); cult fa5 The Teeth of Slak-Snat
+full   g14 Cimhent the Shield of Battles (neutral, war): acts 48 (bless 26, champion 22); cult fa3 The Grovellers of Cimhent
+full   g15 Soldtord the Hunter in the Green (neutral, wild): acts 10 (curse 2, champion 1, monster 2, mark 5); cult fa8 The Hammer of Soldtord
+full cults: 15 (present 11, hidden 1, ended 3)
+full   fa1 The Starward Circle of Lielvae, of g11 Lielvae: founded 20 e13 by f2 Thaegli the Learned at si4 The House of Lielvae in s1 Condle; in c1 The Realm of Releli, c15 The Waewo Court, c9 Clan Mammni, c18 The Kingdom of Asham; faith of c1 The Realm of Releli since 21; present
+full   fa2 The Teeth of Grug'thak, of g7 Grug'thak: founded 715 e92 by f13 Skreegg at si14 The Bone-House of Grug'thak in s4 Gneezz Pit; in c2 The Nuzzsnuzz Mob, c19 The Warrens of Skrak, c22 Clan Gha, c23 The Snux Mob; faith of c2 The Nuzzsnuzz Mob since 717; present
+full   fa3 The Grovellers of Cimhent, of g14 Cimhent: founded 883 e215 by f29 Gneet Chosen of Cimhent at si19 The Pit of Cimhent in s5 Zoxskrork; in c3 The Sleenk Mob, c21 The Kaash Horde, c18 The Kingdom of Asham, c9 Clan Mammni, c1 The Realm of Releli, c15 The Waewo Court; faith of c3 The Sleenk Mob since 884, c21 The Kaash Horde since 1887; present
+full   fa4 The Teeth of Soldtord, of g15 Soldtord: founded 999 e320 by f42 Bazkrok at si26 The Bone-House of Soldtord in s18 Kreedrugg Pit; in c5 The Warrens of Nub; faith of c5 The Warrens of Nub since 1005; ended 1110 e436 its realms fell
+full   fa5 The Teeth of Slak-Snat, of g13 Slak-Snat: founded 1001 e331 by f37 Krubeez at si28 The Pit of Slak-Snat in s13 Krark; in c3 The Sleenk Mob, c21 The Kaash Horde, c18 The Kingdom of Asham, c9 Clan Mammni; present
+full   fa6 The Grovellers of Slirkdreeb, of g2 Slirkdreeb: founded 1004 e344 by f44 Krukotch the Conqueror at si29 The Bone-House of Slirkdreeb in s9 Kat-Skrag; in c2 The Nuzzsnuzz Mob, c19 The Warrens of Skrak, c22 Clan Gha, c23 The Snux Mob; present
+full   fa7 The Oathsworn of Timtho, of g8 Timtho: founded 1114 e444 by f49 Galibrim at si36 The Hall of Timtho in s21 Thurk; in c9 Clan Mammni, c18 The Kingdom of Asham, c21 The Kaash Horde, c3 The Sleenk Mob, c1 The Realm of Releli, c15 The Waewo Court; faith of c9 Clan Mammni since 1118; present
+full   fa8 The Hammer of Soldtord, of g15 Soldtord: founded 1115 e449 by f48 Throlido at si37 The Deep Shrine of Soldtord in s20 Kadin Hold; in c8 Clan Tarn; faith of c8 Clan Tarn since 1118; ended 1181 e615 its realms fell
+full   fa9 The Hammer of Gourktair, of g3 Gourktair: founded 1182 e627 by f78 Nardbali the Conqueror at si45 The Hall of Gourktair in s15 Gax Pit; in c9 Clan Mammni, c18 The Kingdom of Asham, c21 The Kaash Horde, c3 The Sleenk Mob, c1 The Realm of Releli, c15 The Waewo Court; present
+full   fa10 The Grovellers of Greeskix, of g9 Greeskix: founded 1188 e662 by f82 Baz at si47 The Bone-House of Greeskix in s20 Kadin Hold; in c2 The Nuzzsnuzz Mob, c19 The Warrens of Skrak, c22 Clan Gha, c23 The Snux Mob; present
+full   fa11 The Oathsworn of Oalae, of g10 Oalae: founded 1223 e725 by f78 Nardbali the Conqueror at si51 The Deep Shrine of Oalae in s25 Hordgrodin; in c9 Clan Mammni, c18 The Kingdom of Asham, c1 The Realm of Releli, c15 The Waewo Court; present
+full   fa12 The Teeth of Vocaecie, of g12 Vocaecie: founded 1386 e756 by f87 Skreeneek the Faithless at si52 The Pit of Vocaecie in s6 Drogux Hole; in c2 The Nuzzsnuzz Mob; ended 1387 e761 suppressed
+full   fa13 The Grovellers of Vocaecie, of g12 Vocaecie: founded 1396 e779 by f91 Nisnagg at si54 The Bone-House of Vocaecie in s6 Drogux Hole; in none; hidden at si55 The Secret Pit of Vocaecie since 1405 e794
+full   fa14 The Dreamers of Vosieflou, of g4 Vosieflou: founded 1429 e880 by f101 Faemiatwo at si62 The Bower of Vosieflou in s26 Fiatwae; in c15 The Waewo Court, c1 The Realm of Releli, c9 Clan Mammni, c18 The Kingdom of Asham; faith of c15 The Waewo Court since 1431; present
+full   fa15 The Order of Reldruld, of g5 Reldruld: founded 1744 e1097 by f117 Ashirment at si74 The Sanctuary of Reldruld in s29 Ashemguld; in c18 The Kingdom of Asham, c9 Clan Mammni, c21 The Kaash Horde, c3 The Sleenk Mob, c1 The Realm of Releli, c15 The Waewo Court; faith of c18 The Kingdom of Asham since 1746; present
+summary gods: 15; acts: 204 (bless 81, curse 59, champion 35, monster 7, mark 22); flares: 2
+summary   g14 Cimhent the Shield of Battles (neutral, war): acts 48 (bless 26, champion 22); cult fa3 The Grovellers of Cimhent
+summary   g2 Slirkdreeb the Maker of Goblins (evil, creation): acts 22 (bless 6, curse 14, mark 2); cult fa6 The Grovellers of Slirkdreeb
+summary   g9 Greeskix the Hollow Keeper (evil, death): acts 21 (bless 10, curse 3, champion 3, monster 2, mark 3); cult fa10 The Grovellers of Greeskix
+summary   g13 Slak-Snat the Burner of Halls (evil, ruin): acts 21 (bless 4, curse 9, champion 1, monster 3, mark 4); cult fa5 The Teeth of Slak-Snat
+summary   g7 Grug'thak the Red Banner (evil, war): acts 19 (bless 9, curse 6, champion 3, mark 1); cult fa2 The Teeth of Grug'thak
+summary   g11 Lielvae the Lamp of the Wise (good, lore): acts 13 (bless 8, curse 3, champion 1, mark 1); cult fa1 The Starward Circle of Lielvae
+summary   g12 Vocaecie the Keeper of Oaths (good, oaths): acts 11 (bless 2, curse 9); cult fa13 The Grovellers of Vocaecie
+summary   g15 Soldtord the Hunter in the Green (neutral, wild): acts 10 (curse 2, champion 1, monster 2, mark 5); cult fa8 The Hammer of Soldtord
 summary   and 7 more
-summary cults: 16 (present 10, hidden 2, ended 4)
-summary   fa2 The Grovellers of Nuk-Drub, of g9 Nuk-Drub: founded 868 e155 by f13 Kreezz at si14 The Bone-House of Nuk-Drub in s8 Nork-Girk; in c6 The Hold of Hirnai, c8 The Drirk Mob, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; faith of c5 The Warrens of Beeb since 869, c8 The Drirk Mob since 1560; present
-summary   fa3 The Teeth of Kroneet, of g2 Kroneet: founded 897 e197 by f15 Kikub at si16 The Bone-House of Kroneet in s10 Greegg Hole; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-summary   fa4 The Starward Circle of Brilseas, of g14 Brilseas: founded 998 e216 by f17 Rafeitha at si18 The House of Brilseas in s2 Gloe; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c8 The Drirk Mob, c9 The Siavia Ring, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; faith of c1 The Realm of Rathenn since 1000, c6 The Hold of Hirnai since 1180; present
-summary   fa5 The Teeth of Boghkoz, of g7 Boghkoz: founded 999 e224 by f18 Biskark at si19 The Bone-House of Boghkoz in s11 Skugitch Hole; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-summary   fa9 The Grovellers of Skoskrozz, of g13 Skoskrozz: founded 1135 e526 by f43 Snonizz at si37 The Pit of Skoskrozz in s7 Geesnot Pit; in c6 The Hold of Hirnai, c8 The Drirk Mob, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-summary   fa10 The Teeth of Thramdomm, of g3 Thramdomm: founded 1170 e584 by f50 Beezz at si41 The Bone-House of Thramdomm in s18 Skrug; in c1 The Realm of Rathenn, c6 The Hold of Hirnai, c8 The Drirk Mob, c9 The Siavia Ring, c11 The Kingdom of Mock, c15 The Am'uruuk Horde, c18 The Warband of Uld'ghagh; present
-summary   and 10 more
-full   gods: blessed by g14 Brilseas e215, g12 Olelie e765, g11 Enele e828; cursed by g12 Olelie e566, g9 Nuk-Drub e1236, g9 Nuk-Drub e1310, g2 Kroneet e1320 and 22 more; champion f32 Maelond e358, f150 Thalath e1675
-full   faith: fa4 The Starward Circle of Brilseas since 1000 e227
-full   gods: blessed by g14 Brilseas e98, g14 Brilseas e156; cursed by g2 Kroneet e129
-full   faith: fa1 The Teeth of Brilseas since 864 e128
-full   gods: blessed by g14 Brilseas e121, g14 Brilseas e260, g14 Brilseas e382, g14 Brilseas e413; cursed by g6 Og'ghal e240, g2 Kroneet e243, g10 Eeta e255, g2 Kroneet e327 and 9 more; champion f30 Snux e338, f49 Skrikrig e537; marked si20 The Stinking Ground of Osien II e225, si30 The Stinking Ground of Nuk-Drub e325, si34 The Fat Stone of Nuk-Drub III e478, si38 The Stinking Ground of Skoskrozz e539
-full   faith: fa6 The Teeth of Osien since 1002 e234
-full   gods: blessed by g15 Dirhil e349; cursed by g15 Dirhil e252; champion f46 Gugg-Gaz e470; marked si27 The Fat Stone of Brilseas e273
-full   faith: fa7 The Teeth of Dirhil since 1009 e266
-full   gods: blessed by g9 Nuk-Drub e228, g14 Brilseas e235, g14 Brilseas e436, g7 Boghkoz e513 and 8 more; cursed by g4 Vietwou e170, g2 Kroneet e179, g10 Eeta e231, g1 Osien e320 and 3 more; champion f18 Biskark e217, f37 Gnub e399, f55 Drirkgruz e585, f66 Sleeslux e740 and 4 more; marked si13 The Fat Stone of Nuk-Drub e148, si15 The Stinking Ground of Osien e164, si31 The Fat Stone of Nuk-Drub II e430, si36 The Fat Stone of Skoskrozz e520 and 1 more
-full   faith: fa2 The Grovellers of Nuk-Drub since 869 e163
-full   gods: blessed by g3 Thramdomm e619, g14 Brilseas e668, g9 Nuk-Drub e699, g14 Brilseas e705 and 2 more; cursed by g2 Kroneet e701, g2 Kroneet e785, g10 Eeta e796, g5 Tealdtim e1317 and 2 more; champion f57 Drind e606, f74 Naimgaim e807, f119 Kadin e1299; marked si48 The Hallowed Stone of Nuk-Drub e789, si69 The Shunned Delving of Olelie e1565, si73 The Hallowed Stone of Nuk-Drub II e1643
-full   faith: fa4 The Starward Circle of Brilseas since 1180 e629
-full   gods: marked si40 The Hallowed Stone of Garinnond e572
-full   gods: blessed by g9 Nuk-Drub e596, g7 Boghkoz e676, g14 Brilseas e697, g14 Brilseas e790 and 20 more; cursed by g1 Osien e636, g1 Osien e672, g10 Eeta e1006, g1 Osien e1022 and 11 more; champion f53 Sleenk e562, f63 Skreegg e714, f69 Skix e758, f81 Skazik e865 and 6 more; marked si43 The Fat Stone of Brilseas II e625, si59 The Fat Stone of Nuk-Drub IV e1001, si66 The Stinking Ground of Kroneet e1298, si68 The Fat Stone of Skoskrozz II e1422
-full   faith: fa2 The Grovellers of Nuk-Drub since 1560 e1000
-full   gods: blessed by g4 Vietwou e931, g4 Vietwou e959; cursed by g2 Kroneet e895, g6 Og'ghal e905, g7 Boghkoz e1499, g13 Skoskrozz e1548 and 1 more; champion f85 Wath e884; sent m15 The Dead of Synthetic 6 e914, m16 Thraik Stonehand e918; marked si53 The Black Ring of Boghkoz e910
-full   faith: fa12 The Hidden Ring of Vietwou since 1488 e894
-full   gods: blessed by g14 Brilseas e1149; cursed by g7 Boghkoz e1175, g10 Eeta e1245, g4 Vietwou e1257, g14 Brilseas e1266 and 1 more; sent m14 The Dead of Khoudin's Waste e872
-full   gods: cursed by g4 Vietwou e1440, g10 Eeta e1448, g4 Vietwou e1493
-full   gods: champion f142 Azush e1575
-full   gods: blessed by g13 Skoskrozz e1763, g7 Boghkoz e1765; cursed by g12 Olelie e1740, g6 Og'ghal e1761
-full divine_acts = 191
-full divine_bless = 57
-full divine_curse = 84
-full divine_champion = 28
-full divine_monster = 3
-full divine_mark = 19
-full divine_good = 35
-full divine_neutral = 63
-full divine_evil = 93
-full divine_creators = 47
-full divine_flares = 0
-full divine_dead = 10142
-full cults_founded = 16
-full cults_spread = 144
-full cults_adopted = 8
-full cults_suppressed = 65
-full cults_hidden = 2
-full cults_present = 10
-full cult_founders_prophets = 6
-full shrines_sacred = 12
-full shrines_profane = 7
-full temples = 19
-full towers_taken_up = 0
-full towers_abandoned = 1
-full sentence Pleased by a battle won, Brilseas the Shield of Battles set its hand over the arms of the Nux-Slurk Horde for 50 years.
-full sentence Angered by a faith taken up, Kroneet the Maker of Goblins sent a pestilence upon the Nux-Slurk Horde; 211 died.
-full sentence Pleased by the sack of a city and a realm conquered, Boghkoz the Red Banner set its mark upon Biskark Chosen of Boghkoz as the champion of the Warrens of Beeb.
-full sentence Angered by a monster slain, Nuk-Drub the Hollow Keeper loosed the Dead of Khoudin's Waste, a host of the restless dead, against the Gibeerk Horde.
-full sentence After a battle won, Nuk-Drub the Hollow Keeper hallowed the ground of the Fat Stone of Nuk-Drub.
-full sentence Calling upon Brilseas the Shield of Battles, Bugg-Zok founded the Teeth of Brilseas at the Pit of Brilseas in Sligg Pit.
-full sentence The Grovellers of Nuk-Drub spread from the Warrens of Beeb into the Grotch Mob along the roads of trade.
-full sentence The Nux-Slurk Horde under Sleek the Last took the Teeth of Brilseas as the faith of the realm.
-full sentence The Warrens of Beeb under Zeeznozz put down the Teeth of Osien.
-full sentence After the death of its last master, Glathir's White Tower of the Realm of Rathenn stood empty.
+summary cults: 15 (present 11, hidden 1, ended 3)
+summary   fa1 The Starward Circle of Lielvae, of g11 Lielvae: founded 20 e13 by f2 Thaegli the Learned at si4 The House of Lielvae in s1 Condle; in c1 The Realm of Releli, c15 The Waewo Court, c9 Clan Mammni, c18 The Kingdom of Asham; faith of c1 The Realm of Releli since 21; present
+summary   fa2 The Teeth of Grug'thak, of g7 Grug'thak: founded 715 e92 by f13 Skreegg at si14 The Bone-House of Grug'thak in s4 Gneezz Pit; in c2 The Nuzzsnuzz Mob, c19 The Warrens of Skrak, c22 Clan Gha, c23 The Snux Mob; faith of c2 The Nuzzsnuzz Mob since 717; present
+summary   fa3 The Grovellers of Cimhent, of g14 Cimhent: founded 883 e215 by f29 Gneet Chosen of Cimhent at si19 The Pit of Cimhent in s5 Zoxskrork; in c3 The Sleenk Mob, c21 The Kaash Horde, c18 The Kingdom of Asham, c9 Clan Mammni, c1 The Realm of Releli, c15 The Waewo Court; faith of c3 The Sleenk Mob since 884, c21 The Kaash Horde since 1887; present
+summary   fa5 The Teeth of Slak-Snat, of g13 Slak-Snat: founded 1001 e331 by f37 Krubeez at si28 The Pit of Slak-Snat in s13 Krark; in c3 The Sleenk Mob, c21 The Kaash Horde, c18 The Kingdom of Asham, c9 Clan Mammni; present
+summary   fa6 The Grovellers of Slirkdreeb, of g2 Slirkdreeb: founded 1004 e344 by f44 Krukotch the Conqueror at si29 The Bone-House of Slirkdreeb in s9 Kat-Skrag; in c2 The Nuzzsnuzz Mob, c19 The Warrens of Skrak, c22 Clan Gha, c23 The Snux Mob; present
+summary   fa7 The Oathsworn of Timtho, of g8 Timtho: founded 1114 e444 by f49 Galibrim at si36 The Hall of Timtho in s21 Thurk; in c9 Clan Mammni, c18 The Kingdom of Asham, c21 The Kaash Horde, c3 The Sleenk Mob, c1 The Realm of Releli, c15 The Waewo Court; faith of c9 Clan Mammni since 1118; present
+summary   and 9 more
+full   gods: blessed by g11 Lielvae e12, g1 Glaefae e180, g12 Vocaecie e1675, g11 Lielvae e1690; cursed by g2 Slirkdreeb e15, g6 Krakhgrark e17, g7 Grug'thak e19, g9 Greeskix e20 and 2 more; champion f3 Athil Chosen of Lielvae e24, f21 Resve Chosen of Cimhent e136, f26 Osvae Chosen of Cimhent e176; marked si18 The Blessed Grove of Lielvae e210
+full   faith: fa1 The Starward Circle of Lielvae since 21 e14
+full   gods: blessed by g7 Grug'thak e109, g9 Greeskix e258, g13 Slak-Snat e265, g7 Grug'thak e353 and 22 more; cursed by g1 Glaefae e98, g4 Vosieflou e99, g11 Lielvae e101, g12 Vocaecie e103 and 20 more; champion f25 Grugkreeb Chosen of Cimhent e159, f32 Kot-Kreek Chosen of Cimhent e240, f43 Nax-Grot Chosen of Cimhent e321, f77 Gniskrix Chosen of Cimhent e598 and 11 more; marked si13 The Stinking Ground of Grug'thak e89, si15 The Stinking Ground of Oalae e100, si23 The Stinking Ground of Oalae II e270, si46 The Fat Stone of Greeskix II e658 and 3 more
+full   faith: fa2 The Teeth of Grug'thak since 717 e97
+full   gods: blessed by g7 Grug'thak e228, g13 Slak-Snat e243, g14 Cimhent e256, g7 Grug'thak e440 and 5 more; cursed by g7 Grug'thak e193, g2 Slirkdreeb e225, g2 Slirkdreeb e438, g2 Slirkdreeb e550 and 4 more; champion f29 Gneet Chosen of Cimhent e214, f54 Gragg-Slix Chosen of Cimhent e422, f67 Gogitch Chosen of Cimhent e542, f129 Kiskax Chosen of Cimhent e1134 and 4 more; sent m15 Skagg e912, m18 Konkhai Stonehand e1366; marked si21 The Fat Stone of Greeskix e230, si27 The Stinking Ground of Slak-Snat e327, si30 The Stinking Ground of Soldtord II e345, si44 The Fat Stone of Slak-Snat e555
+full   faith: fa3 The Grovellers of Cimhent since 884 e224
+full   gods: sent m8 Kragg e216
+full   gods: cursed by g7 Grug'thak e332, g2 Slirkdreeb e356; champion f46 Kugneet Chosen of Soldtord e360; sent m9 Vaelime Ashwing e352; marked si25 The Stinking Ground of Soldtord e315
+full   faith: fa4 The Teeth of Soldtord since 1005 e351
+full   gods: blessed by g8 Timtho e500; marked si39 The Shunned Delving of Soldtord e466
+full   gods: blessed by g8 Timtho e462; cursed by g15 Soldtord e445; marked si42 The Hallowed Stone of Soldtord e484
+full   faith: fa8 The Hammer of Soldtord since 1118 e457
+full   gods: blessed by g8 Timtho e442, g3 Gourktair e611, g8 Timtho e669, g8 Timtho e699 and 11 more; cursed by g15 Soldtord e428, g2 Slirkdreeb e641, g2 Slirkdreeb e715, g10 Oalae e722; champion f81 Noudin Chosen of Cimhent e647, f107 Drair Chosen of Timtho e944, f177 Dartird Chosen of Timtho e1596, f198 Durdmok Chosen of Timtho e1819; marked si41 The Hallowed Stone of Timtho e481, si49 The Hallowed Stone of Greeskix e694, si87 The Shunned Delving of Soldtord II e1570
+full   faith: fa7 The Oathsworn of Timtho since 1118 e456
+full   gods: blessed by g14 Cimhent e690
+full   gods: blessed by g11 Lielvae e845, g4 Vosieflou e872, g4 Vosieflou e905, g11 Lielvae e943 and 4 more; cursed by g6 Krakhgrark e891, g7 Grug'thak e913, g9 Greeskix e918; sent m13 The Restless of Synthetic bb e863, m16 Mord the Tall e917; marked si63 The Black Ring of Slirkdreeb e887
+full   faith: fa14 The Dreamers of Vosieflou since 1431 e884
+full   gods: blessed by g11 Lielvae e1047, g5 Reldruld e1162, g5 Reldruld e1198, g9 Greeskix e1202 and 4 more; champion f147 Muldedum Chosen of Reldruld e1305, f157 Wock Chosen of Cimhent e1388; marked si73 The Holy Ground of Reldruld e1087
+full   faith: fa15 The Order of Reldruld since 1746 e1113
+full   gods: blessed by g14 Cimhent e1711; cursed by g7 Grug'thak e1506; marked si84 The Stinking Ground of Slak-Snat II e1503
+full   gods: blessed by g7 Grug'thak e1263, g14 Cimhent e1266, g2 Slirkdreeb e1270; cursed by g12 Vocaecie e1261, g1 Glaefae e1275, g4 Vosieflou e1280, g10 Oalae e1291 and 2 more
+full   faith: fa2 The Teeth of Grug'thak since 1825 e1262
+full   gods: blessed by g9 Greeskix e1639, g14 Cimhent e1659; cursed by g10 Oalae e1770, g11 Lielvae e1775, g4 Vosieflou e1804; champion f166 Ok'zuuld Chosen of Cimhent e1512; marked si82 The Ashen Field of Krakhgrark e1494
+full   faith: fa3 The Grovellers of Cimhent since 1887 e1493
+full   gods: blessed by g14 Cimhent e1799, g2 Slirkdreeb e1812; cursed by g13 Slak-Snat e1797; champion f190 Snuzbok Chosen of Cimhent e1755; sent m20 The Dead of Synthetic c e1815
+full divine_acts = 204
+full divine_bless = 81
+full divine_curse = 59
+full divine_champion = 35
+full divine_monster = 7
+full divine_mark = 22
+full divine_good = 40
+full divine_neutral = 78
+full divine_evil = 86
+full divine_creators = 45
+full divine_flares = 2
+full divine_dead = 2802
+full cults_founded = 15
+full cults_spread = 61
+full cults_adopted = 10
+full cults_suppressed = 6
+full cults_hidden = 1
+full cults_present = 11
+full cult_founders_prophets = 4
+full shrines_sacred = 9
+full shrines_profane = 13
+full temples = 18
+full towers_taken_up = 7
+full towers_abandoned = 6
+full sentence Pleased by a tower raised, Lielvae the Lamp of the Wise smiled upon the fields of the Realm of Releli for 50 years.
+full sentence Angered by a faith taken up, Slirkdreeb the Maker of Goblins sent a pestilence upon the Realm of Releli; 14 died.
+full sentence Pleased by a faith taken up, Lielvae the Lamp of the Wise set its mark upon Athil Chosen of Lielvae as the champion of the Realm of Releli.
+full sentence Angered by the felling of the wild, Soldtord the Hunter in the Green loosed Kragg, a troll of the hills, against the Drok Horde.
+full sentence After a peace made and tribute paid, Grug'thak the Red Banner cursed the ground of the Stinking Ground of Grug'thak.
+full sentence Calling upon Lielvae the Lamp of the Wise, Thaegli the Learned founded the Starward Circle of Lielvae at the House of Lielvae in Condle.
+full sentence The Teeth of Grug'thak spread from the Nuzzsnuzz Mob into the Drok Horde along the bonds of alliance.
+full sentence The Realm of Releli under Noglo the Founder took the Starward Circle of Lielvae as the faith of the realm.
+full sentence The Nuzzsnuzz Mob under Skreeneek the Faithless put down the Teeth of Vocaecie.
+full sentence After the death of its last master, Maencie of the Realm of Releli became master of Thaegli's White Tower.
+full sentence After the death of its last master, Sleek-Slizz's Bone-Tower of the Sleenk Mob stood empty.

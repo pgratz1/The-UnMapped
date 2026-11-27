@@ -23,6 +23,7 @@
 #include "../p3_01_history_support.hpp"
 #include "p5_03_relations_checks.hpp"
 #include "p5_08_api.hpp"
+#include "worldgen/history/data_checks.hpp"
 
 namespace {
 
@@ -78,11 +79,14 @@ const wd::ContentSet& shipped() {
 
 void refused(const std::string& file, const std::string& text, const std::vector<std::string>& words) {
     const Load l = load_edited(file, text);
-    REQUIRE_FALSE(l.ok());
-    REQUIRE_FALSE(l.errors.empty());
-    CAPTURE(l.errors[0].message);
+    CAPTURE(words.empty() ? std::string() : words[0]);
+    // the cross-kind checks (god_culture, god_monsters) run in the history data checks, after every kind is loaded
+    const std::vector<wd::LoadError> errs =
+        l.ok() ? worldgen::history::check_history_data(*l.content) : l.errors;
+    REQUIRE_FALSE(errs.empty());
+    CAPTURE(errs[0].message);
     bool found = false;
-    for (const auto& err : l.errors) {
+    for (const auto& err : errs) {
         bool all = true;
         for (const std::string& w : words) all = all && history_test::contains(err.message, w);
         found = found || all;
@@ -119,6 +123,8 @@ TEST_SUITE("history") {
 
 TEST_CASE("P5-08 4.1: the nine shipped gods in canonical id order with the table's values") {
     P508_REQUIRE_INTEGRATED();
+    // Integration: the favour and wrath weights are the calibrated values of game/data/gods/ (15.2 moved 4.1's
+    // starts, e.g. conquest favour 400/500/100 to 120/1000/30); every other column is 4.1's table.
     struct G {
         const char* id;
         const char* culture;
@@ -131,18 +137,18 @@ TEST_CASE("P5-08 4.1: the nine shipped gods in canonical id order with the table
         std::vector<std::string> monsters;
     };
     const std::vector<G> want = {
-        {"conquest", "orcish", "evil", "war", "the Red Banner", 400, 500, 100, 700, 0, 300, "valour", "defeat", {}},
-        {"craft", "dwarven", "neutral", "craft", "the Hammer Under the Mountain", 600, 200, 200, 700, 0, 300, "valour",
+        {"conquest", "orcish", "evil", "war", "the Red Banner", 120, 1000, 30, 700, 0, 300, "valour", "defeat", {}},
+        {"craft", "dwarven", "neutral", "craft", "the Hammer Under the Mountain", 150, 1000, 45, 700, 0, 300, "valour",
          "defeat", {}},
-        {"death", "goblin", "evil", "death", "the Hollow Keeper", 400, 0, 600, 300, 500, 200, "valour", "pestilence",
+        {"death", "goblin", "evil", "death", "the Hollow Keeper", 120, 1000, 180, 300, 350, 200, "valour", "pestilence",
          {"undead"}},
-        {"harvest", "faerie", "good", "harvest", "the Giver of Harvests", 700, 0, 300, 700, 0, 300, "plenty", "withering", {}},
-        {"lore", "elven", "good", "lore", "the Lamp of the Wise", 500, 200, 300, 600, 0, 400, "plenty", "withering", {}},
-        {"oaths", "elven", "good", "oaths", "the Keeper of Oaths", 400, 400, 200, 700, 0, 300, "valour", "defeat", {}},
-        {"ruin", "goblin", "evil", "ruin", "the Burner of Halls", 500, 300, 200, 400, 400, 200, "valour", "pestilence",
+        {"harvest", "faerie", "good", "harvest", "the Giver of Harvests", 210, 1000, 90, 700, 0, 300, "plenty", "withering", {}},
+        {"lore", "elven", "good", "lore", "the Lamp of the Wise", 120, 1000, 75, 600, 0, 400, "plenty", "withering", {}},
+        {"oaths", "elven", "good", "oaths", "the Keeper of Oaths", 90, 1000, 60, 700, 0, 300, "valour", "defeat", {}},
+        {"ruin", "goblin", "evil", "ruin", "the Burner of Halls", 120, 1000, 45, 400, 350, 200, "valour", "pestilence",
          {"dragon", "giant"}},
-        {"war", "human", "neutral", "war", "the Shield of Battles", 400, 500, 100, 700, 0, 300, "valour", "defeat", {}},
-        {"wild", "human", "neutral", "wild", "the Hunter in the Green", 500, 0, 500, 300, 500, 200, "plenty", "withering",
+        {"war", "human", "neutral", "war", "the Shield of Battles", 120, 1000, 30, 700, 0, 300, "valour", "defeat", {}},
+        {"wild", "human", "neutral", "wild", "the Hunter in the Green", 150, 1000, 150, 300, 350, 200, "plenty", "withering",
          {"troll", "ogre", "wyvern"}}};
     std::vector<const wd::Definition*> gods;
     for (const wd::KindContent& k : shipped().kinds) {
@@ -224,15 +230,17 @@ TEST_CASE("P5-08 4.2: history.pantheon in order with its starts, bounds, absence
         "faith_points", "rival_faith_points", "suppress_points", "hide_permille", "sanctum_hops", "creator"};
     REQUIRE(d->record.size() == order.size());
     for (std::size_t i = 0; i < order.size(); ++i) CHECK(d->record.name_at(i) == order[i]);
+    // Integration: the shipped (calibrated, 15.2) values; 4.2's starts were regard_fade_per_century 20,
+    // act_threshold 100, act_permille 150, god_rest_years 30, pair_rest_years 100, flare_regard 200, ...
     const std::vector<std::pair<const char*, std::int64_t>> starts = {
-        {"regard_max", 400}, {"regard_fade_per_century", 20}, {"regard_memory_years", 300}, {"contributions_max", 8},
-        {"act_threshold", 100}, {"act_permille", 150}, {"god_rest_years", 30}, {"pair_rest_years", 100},
-        {"flare_regard", 200}, {"flare_permille", 100}, {"bless_years", 50}, {"curse_years", 50},
-        {"plenty_growth_permille", 300}, {"withering_growth_permille", 500}, {"valour_permille", 50},
-        {"defeat_permille", 60}, {"pestilence_toll_permille", 120}, {"send_hops", 2}, {"sacred_growth_permille", 200},
-        {"profane_years", 300}, {"cult_found_permille", 250}, {"cult_fear_permille", 500}, {"cult_spread_permille", 20},
-        {"adopt_regard", 50}, {"adopt_permille", 15}, {"suppress_permille", 10}, {"faith_points", 60},
-        {"rival_faith_points", 40}, {"suppress_points", 120}, {"hide_permille", 400}, {"sanctum_hops", 3}};
+        {"regard_max", 400}, {"regard_fade_per_century", 8}, {"regard_memory_years", 300}, {"contributions_max", 8},
+        {"act_threshold", 70}, {"act_permille", 14}, {"god_rest_years", 20}, {"pair_rest_years", 80},
+        {"flare_regard", 130}, {"flare_permille", 100}, {"bless_years", 50}, {"curse_years", 50},
+        {"plenty_growth_permille", 800}, {"withering_growth_permille", 500}, {"valour_permille", 50},
+        {"defeat_permille", 60}, {"pestilence_toll_permille", 50}, {"send_hops", 3}, {"sacred_growth_permille", 200},
+        {"profane_years", 300}, {"cult_found_permille", 400}, {"cult_fear_permille", 700}, {"cult_spread_permille", 20},
+        {"adopt_regard", 50}, {"adopt_permille", 15}, {"suppress_permille", 8}, {"faith_points", 60},
+        {"rival_faith_points", 40}, {"suppress_points", 120}, {"hide_permille", 800}, {"sanctum_hops", 3}};
     for (const auto& [k, v] : starts) {
         CAPTURE(k);
         CHECK(d->record.get_int(k) == v);
@@ -250,7 +258,7 @@ TEST_CASE("P5-08 4.2: history.pantheon in order with its starts, bounds, absence
     refused(file, with_line(text, "valour_permille", "501"), {"valour_permille"});
     refused(file, with_line(text, "champion_epithet", "\"Chosen\""), {"champion_epithet"});
     refused(file, without(text, "hide_permille"), {"hide_permille"});
-    refused(file, with_line(text, "flare_regard", "90"), {"flare_regard 90 is below act_threshold 100"});
+    refused(file, with_line(text, "flare_regard", "60"), {"flare_regard 60 is below act_threshold 70"});
     refused(file, with_line(with_line(text, "act_threshold", "500"), "flare_regard", "600"),
             {"act_threshold 500 is above regard_max 400"});
     accepted(file, with_line(text, "act_permille", "0"));
@@ -261,8 +269,9 @@ TEST_CASE("P5-08 4.2, 4.4, 12: creator_title, the culture forms and the follow-u
     const wd::Definition* ch = p503check::definition(shipped(), "history", "chronology");
     REQUIRE(ch != nullptr);
     CHECK(ch->record.get_string("creator_title") == "the Maker of {plural}");
-    CHECK(p508api::tuning_or(shipped(), "monsters", "deep_stir_permille", -1) == 1000);
-    CHECK(p508api::tuning_or(shipped(), "alliances", "renew_written_max", -1) == 3);
+    // the calibrated values (12.2's and 12.5's starts were 1000 and 3)
+    CHECK(p508api::tuning_or(shipped(), "monsters", "deep_stir_permille", -1) == 700);
+    CHECK(p508api::tuning_or(shipped(), "alliances", "renew_written_max", -1) == 1);
     CHECK(p508api::tuning_or(shipped(), "figures", "tower_lapse_years", -1) == 200);
     const std::vector<std::pair<const char*, const char*>> human = {
         {"cult_forms", "The Brotherhood of {god}"}, {"temple_forms", "The Temple of {god}"},

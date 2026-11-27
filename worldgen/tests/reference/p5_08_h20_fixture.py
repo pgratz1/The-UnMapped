@@ -15,7 +15,9 @@ report must contain at that level: the [pantheon] and [cults] blocks (10 items 2
 report's values are checked only from rows, F3 of the notes), and the sentence of the first event of every kind 100 to
 110 (8.2), all from the reference's rows. Written by the test writer from the spec; never from C++ output.
 """
+import copy
 import os
+import re
 import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -70,6 +72,28 @@ def candidates(quick=False):
     return out
 
 
+def _letters(m):
+    return "Synthetic " + "".join(chr(ord("a") + int(d)) for d in m.group(1))
+
+
+def lettered(res, inp):
+    """The conflict stress geographies name their regions `Synthetic <n>`, and the names built on them (lairs,
+    monsters, sites) are then not names for the readers (letters, spaces; integration finding): every `Synthetic <n>`
+    in the rows and the region names becomes `Synthetic ` and the digits as letters (0 a, 1 b, ...), one for one, so
+    the dump and its expected lines are computed from the same rows."""
+    def fix(v):
+        return re.sub(r"Synthetic (\d+)", _letters, v) if isinstance(v, str) else v
+    out = {}
+    for k, rows in res.items():
+        if k.startswith("_") or not isinstance(rows, list):
+            out[k] = rows
+            continue
+        out[k] = [tuple(fix(v) for v in r) if isinstance(r, (tuple, list)) else r for r in rows]
+    inp2 = copy.copy(inp)
+    inp2.regions = [dict(r, name=fix(r["name"])) for r in inp.regions]
+    return out, inp2
+
+
 def tv(v):
     if v is None:
         return "-1"
@@ -104,7 +128,7 @@ def dump(label, res, inp):
              label, inp.params["span"], ", ".join(sorted(features(res)))),
          "# Written by the test writer from the spec; format: README.md (schema 14: god rows have six columns, faction",
          "# rows thirteen; -1 is NULL in every nullable column).",
-         "[meta]", "seed = %d" % inp.seed, 'seed_phrase = ""', "map_size = %d" % inp.map_size,
+         "[meta]", "seed = %d" % inp.seed, 'seed_phrase = ""', "map_size = 512",   # the stress geographies' 192 is no map size for the readers
          "history_span = %d" % inp.params["span"], 'history_detail = "normal"',
          'races = "%s"' % ",".join(r[1] for r in inp.races if r[9] == 1), 'civs_per_race = "auto"',
          'event_intensity = "normal"', 'monster_pressure = "normal"', 'divine_activity = "normal"', 'divine_script = ""',
@@ -187,6 +211,7 @@ def main(argv):
     cands = candidates(quick)
     best = max(cands, key=lambda c: (len(features(c[1])), -len(c[1]["event"])))
     label, res, inp = best
+    res, inp = lettered(res, inp)
     for lab, r, _i in cands:
         print("%-40s events %5d features %2d: %s" % (lab, len(r["event"]), len(features(r)),
                                                      ", ".join(sorted(set(FEATURES) - features(r)))))

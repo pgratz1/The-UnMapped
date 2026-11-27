@@ -1,0 +1,29 @@
+# P5-08 16 item 11: the settings of H20's run (p5_08_h20_fixture.py), so that one span-2000 history holds every
+# feature of the v11 report together: the acts, the cults, a counted flare, the deep with an aid and a sealing, a
+# tower taken up and one abandoned. Written by the test writer (integration); seed 16 with four
+# realms a race shows all nineteen features of p5_08_h20_fixture.py's FEATURES.
+base = "pantheon-small"
+paths = ["flare", "certain act", "tower_taken_up", "tower_abandoned", "stir", "hidden", "ended suppressed",
+         "ended fell", "cult_spread", "cult_adopted"]
+
+[monsters]
+deep_years = [5, 10, 20]
+deep_delve_permille = 1000
+deep_wake_ppm = [0, 20000, 60000]
+deep_stir_permille = 1000
+deep_aid_permille = 1000
+deep_aid_hops = 6
+
+[alliances]
+form_friend_permille = 200
+form_max_permille = 300
+
+[figures]
+caster_ppm = 20000
+
+[[case]]
+seed = 16
+span = 2000
+races = "all"
+civs = "4"
+intensity = "normal"

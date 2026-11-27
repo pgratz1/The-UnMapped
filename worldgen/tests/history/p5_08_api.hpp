@@ -40,7 +40,7 @@
 #include "worldgen/history/timeline.hpp"
 #include "worldgen/inspect/markers.hpp"
 
-// #define UNMAPPED_P508_API 1
+#define UNMAPPED_P508_API 1
 
 namespace p508api {
 

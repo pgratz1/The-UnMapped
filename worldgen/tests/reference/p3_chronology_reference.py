@@ -493,8 +493,13 @@ def table_hash(ncols, rows):
     return h
 
 
+def columns(t):
+    """COLUMNS[t]; the god table has six columns from 0.30.0 (P5-08 9)."""
+    return 6 if t == "god" and pdr.at_least("0.30.0") else COLUMNS[t]
+
+
 def table_hashes(res):
-    return {t: table_hash(COLUMNS[t], res[t]) for t in TABLES}
+    return {t: table_hash(columns(t), res[t]) for t in TABLES}
 
 
 # ---------------------------------------------------------------------------

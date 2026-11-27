@@ -67,7 +67,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h16-alliances",   // P5-04 18.1 item 16 (format v7, schema 11)
                                                "h17-figures",     // P5-06 18.1 item 14 (format v8, schema 12)
                                                "h18-v9",          // P5-04a 16 item 12 (format v9, schema 12)
-                                               "h19-v10"};        // P5-07 16 item 11 (format v10, schema 13)
+                                               "h19-v10",         // P5-07 16 item 11 (format v10, schema 13)
+                                               "h20-v11"};        // P5-08 16 item 11 (format v11, schema 14)
     return v;
 }
 
@@ -111,6 +112,7 @@ struct Fixture {
     // schema 12 (P5-06 9.1, 9.3; H17): the rows as given, in id order (figure.died -1 is NULL)
     std::vector<db::FigureRow> figures;
     std::vector<db::BookRow> books;
+    std::vector<db::FactionRow> factions;   // schema 14 (P5-08 9; H20): the rows as given, in id order
 };
 
 namespace detail {
@@ -207,7 +209,12 @@ inline Fixture load_fixture(const std::string& name) {
         fx.cultures.push_back({i64(*r->get(0)), str(*r->get(1)), str(*r->get(2)), i64(*r->get(3))});
     }
     for (const toml::array* r : detail::rows(doc, "god")) {
-        fx.gods.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), 1, std::string(), i64(*r->get(0))});
+        if (r->size() >= 6U) {   // schema 14 (P5-08 9; H20): domain, title and race as given
+            fx.gods.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), str(*r->get(4)),
+                               i64(*r->get(5))});
+        } else {   // an older fixture's three columns: a creator (domain 1, race = id)
+            fx.gods.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), 1, std::string(), i64(*r->get(0))});
+        }
     }
     for (const toml::array* r : detail::rows(doc, "age")) {
         fx.ages.push_back({i64(*r->get(0)), i64(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), str(*r->get(4))});
@@ -309,6 +316,23 @@ inline Fixture load_fixture(const std::string& name) {
         f.temper = i64(*r->get(17));
         f.skill = i64(*r->get(18));
         fx.figures.push_back(std::move(f));
+    }
+    for (const toml::array* r : detail::rows(doc, "faction")) {   // P5-08 9: -1 is NULL (ended_year)
+        db::FactionRow f;
+        f.id = i64(*r->get(0));
+        f.name = str(*r->get(1));
+        f.kind = i64(*r->get(2));
+        f.civ = i64(*r->get(3));
+        f.god = i64(*r->get(4));
+        f.founder = i64(*r->get(5));
+        f.seat = i64(*r->get(6));
+        f.founded_year = i64(*r->get(7));
+        f.founding_event = i64(*r->get(8));
+        f.ended_year = nullable(*r->get(9));
+        f.ending_event = i64(*r->get(10));
+        f.ending = i64(*r->get(11));
+        f.status = i64(*r->get(12));
+        fx.factions.push_back(std::move(f));
     }
     for (const toml::array* r : detail::rows(doc, "book")) {
         fx.books.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
@@ -537,6 +561,7 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.settlement_races) ctx.write_settlement_race(r);
     for (const auto& r : f.figures) ctx.write_figure(r);   // P5-06 9.1, 9.3
     for (const auto& r : f.books) ctx.write_book(r);
+    for (const auto& r : f.factions) ctx.write_faction(r);   // P5-08 9
 }
 
 inline const dbtest::TempDir& fixture_dir() {

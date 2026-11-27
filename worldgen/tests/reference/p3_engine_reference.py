@@ -4404,7 +4404,7 @@ def cmd_check_world(argv):
         chron = pchr.chronology(dat.chron, p, int(meta["seed"]), pchr.world_region_names(conn))
         for t in pchr.TABLES:
             got, _ = pchr.world_table_hash(conn, t)
-            c.eq("table %s" % t, got, pchr.table_hash(pchr.COLUMNS[t], chron[t]))
+            c.eq("table %s" % t, got, pchr.table_hash(pchr.columns(t), chron[t]))
     if "history" in stages:
         inp = inputs_from_world(conn)
         res = history_stage(dat, inp)

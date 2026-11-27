@@ -877,6 +877,27 @@ class Monsters:
                 self.log.append((Y, "hero slain", m["id"], c, hero[0]))
                 return
 
+    def huntable_by(self, c):
+        """P5-08 6.3 (lead ruling PN5): some awake monster (a sealed one is asleep) remembers a raid on c within
+        hunt_memory_years and floor(levy x prowess / 1000) > 0, with c alive and visible (the test of hunts())."""
+        w, t = self.w, self.t
+        Y = w.year
+        if not 1 <= c <= len(w.civs):
+            return False
+        civ = w.civ(c)
+        if civ["ended_year"] is not None or not w.visible(civ):
+            return False
+        for m in self.monsters:
+            if m["status"] != AWAKE or c not in m["raids"] or Y - m["raids"][c][0] > t["hunt_memory_years"]:
+                continue
+            hops = self.geo.hops(self.lair_region(m))
+            H = sum(u["population"] * t["hunt_levy_permille"] // 1000 for u in w.settlements
+                    if u["owner_civ"] == c and u["status"] in (1, 2) and w.visible(u)
+                    and u["region"] in hops and hops[u["region"]] <= t["hunt_hops"])
+            if H * self.prowess(civ["race"]) // 1000 > 0:
+                return True
+        return False
+
     def prowess(self, race):
         return self.w.pd.race[race]["prowess"]
 

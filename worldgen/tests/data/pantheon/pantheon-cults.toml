@@ -36,3 +36,11 @@ span = 6000
 races = "all"
 civs = "4"
 intensity = "normal"
+
+# integration: with the champion rulings (PN5) the cases above no longer hide or suppress a cult to its end
+[[case]]
+seed = 0
+span = 2000
+races = "all"
+civs = "4"
+intensity = "normal"

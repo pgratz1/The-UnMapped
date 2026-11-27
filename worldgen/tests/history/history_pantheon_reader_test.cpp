@@ -107,7 +107,8 @@ TEST_CASE("P5-08 9: the god rows") {
     refused_prefix("G4", "UPDATE god SET domain = 2 WHERE id = 1;", "corrupt table 'god': row 1: ");
     refused_prefix("G5", "UPDATE god SET race = 2 WHERE id = 1;", "corrupt table 'god': row 1: ");
     refused_prefix("G6", "UPDATE god SET camp = 3 WHERE id = " + g + ";", "corrupt table 'god': row " + g + ": ");
-    refused_prefix("G7", "DELETE FROM god WHERE id = " + g + ";", "corrupt table 'god': ");
+    // a missing god row may be met first as the participant of an event that names it (integration)
+    refused_prefix("G7", "DELETE FROM god WHERE id = " + g + ";", "corrupt table '");
 }
 
 TEST_CASE("P5-08 9: the faction rows") {
@@ -123,7 +124,7 @@ TEST_CASE("P5-08 9: the faction rows") {
     refused_prefix("F7", "UPDATE faction SET status = 4 WHERE id = " + k + ";", pre);
     refused_prefix("F8", "UPDATE faction SET status = 3, ending = 0, ended_year = NULL WHERE id = " + k + ";", pre);
     refused_prefix("F9", "UPDATE faction SET status = 1, ending = 1 WHERE id = " + k + ";", pre);
-    refused_prefix("F10", "UPDATE faction SET id = id + 100 WHERE id = " + k + ";", "corrupt table 'faction': ");
+    refused_prefix("F10", "UPDATE faction SET id = id + 100 WHERE id = " + k + ";", "corrupt table '");
     refused("F11", "UPDATE faction SET status = 2, ending = 0, ended_year = NULL, ending_event = 0 WHERE id = " + k +
                        " AND status <> 2;",
             pre + "faction " + k + " hidden without a sanctum");
@@ -164,10 +165,10 @@ TEST_CASE("P5-08 9: event values and the faction order of cult events") {
     const p508_check::World w = pantheon_prop::rows_of(b.path);
     const std::int64_t eff = w.value_seq.at(p508api::K_CURSE).at("effect");
     refused_prefix("V1", "UPDATE event_value SET value = 4 WHERE event = " + n(b.curse) + " AND seq = " + n(eff) + ";",
-                   "corrupt table 'event_value': row " + n(b.curse) + ": ");
+                   "corrupt table 'event_value': row (" + n(b.curse) + ", ");   // its key (event, seq)
     const std::int64_t ds = w.value_seq.at(p508api::K_CURSE).at("divine_script");
     refused_prefix("V2", "UPDATE event_value SET value = 2 WHERE event = " + n(b.curse) + " AND seq = " + n(ds) + ";",
-                   "corrupt table 'event_value': row " + n(b.curse) + ": ");
+                   "corrupt table 'event_value': row (" + n(b.curse) + ", ");
     if (b.spread != 0) {
         refused_prefix("V3", "UPDATE event_participant SET entity_id = 99999 WHERE event = " + n(b.spread) + " AND seq = 1;",
                        "corrupt table '");

@@ -197,9 +197,10 @@ def forge_factor(f, forge_strength_permille, forge_depth_permille, D, forged):
 
 
 def telling_delve(site, depth):
-    """6.2; P5-08 12.3 (0.30.0): (s + 4 x d) mod 9."""
+    """6.2; P5-08 12.3 (0.30.0): (s + 4 x d) mod 9. `depth` is the event's value d + 1 (d the old depth, P5-07 160;
+    reading P-R23 of the P5-08 integration: 12.3's d is P5-07's d, as the engine has it)."""
     if p508_on():
-        return (site + 4 * depth) % 9
+        return (site + 4 * (depth - 1)) % 9
     return (site + depth) % 3
 
 
@@ -236,9 +237,9 @@ def aid_strength(P_q, levy_permille, prowess_permille):
 
 
 def telling_warren_delved(settlement, depth):
-    """r2 6.10; P5-08 12.3 (0.30.0): (t + 4 x d) mod 9."""
+    """r2 6.10; P5-08 12.3 (0.30.0): (t + 4 x d) mod 9, `depth` the event's value d + 1 (reading P-R23)."""
     if p508_on():
-        return (settlement + 4 * depth) % 9
+        return (settlement + 4 * (depth - 1)) % 9
     return (settlement + depth) % 3
 
 
