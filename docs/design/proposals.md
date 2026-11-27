@@ -1642,3 +1642,7 @@ Status: decided by the lead. Spec r2 (allies' aid at the gate and goblin deep wa
 - **Exit check.** Every god camp already takes part in an event (the creators' awakenings); the stage adds a target that a god of each camp acts in at least 80 of 100 default worlds.
 - Questions Q-P5-08-1 to 5 (pantheon shape, rate of acts, hidden cults, cults across camps, divine script) and lead questions L-1 to L-12 are in the spec, section 21.
 - Status: proposed with the spec (r1).
+
+### P5-08 spec r1: lead rulings on its questions L-1 to L-12 (2026-11-27)
+
+Status: decided by the lead. All twelve are approved as the spec recommends (`docs/specs/p5-08-pantheon-cults.md` 21): one schema bump to 14 for the `god` columns, the table `faction`, the site kinds 5 to 7, the site endings 7 and 8, the figure roles 6 and 7 and entity type 7 (L-1); cults as `faction` rows of kind 1 (L-2); the source and applier split of the interventions (L-3); sent monsters outside the world cap (L-4); the deep's stir in quiet steps, to be dropped if its target cannot be met without breaking DP2 (L-5); one live cult per god (L-6); the tower lapse with `tower_abandoned` and `tower_taken_up` (L-7); aid events written after the outcome (L-8); `renew_written_max` 3 (L-9); event kinds 100 to 110 (L-10); a prophet as founder when no recorded figure fits (L-11); pestilence on the capital's region and acts without disposition effects (L-12). Paul's questions Q-P5-08-1 to 5 are in the questions file; the build follows the recommendations meanwhile.
