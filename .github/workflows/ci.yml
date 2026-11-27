@@ -56,7 +56,8 @@ jobs:
     # and worldgen-cli-tests-* CTest entries, four at a time (the test presets
     # set "jobs": 4, the vCPU count of the hosted Linux and Windows runners
     # for a public repository), each with a 3600 s CTest timeout.
-    timeout-minutes: 180
+    # windows-msvc-debug needs about 200 minutes for ctest since generator 0.29.0.
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:

@@ -60,3 +60,8 @@ Both large property files were split by whole `TEST_CASE`s, with no change to an
 | `alliances-p504a-b` | alliances-small coverage, determinism | 56 | 710 |
 
 `depths-property-c` took 148 s in a `ctest` run with four entries at once, against about 73 s alone, so the MSVC figure may be higher on a loaded runner. The case counts are unchanged: 1848 with `--count` and 1951 with `--count --no-skip`, before and after. The slow entries are unchanged (`slow-depths`, `slow-alliances` select by file pattern and take the new files).
+
+CI run 45951641439 on `windows-msvc-debug` (MSVC Debug seconds): `depths-property-a` 1744, `-b` 1809, `-c` 3158 (estimate 930; timeout 3600).
+`depths-property-c` is split into `-c` (I0, I1, the aid settings: 73 s on `linux-gcc-release`, loaded and alone alike) and `-d` (the warren rules and resume: 74 s); both about 1600 s expected on MSVC Debug at the observed ratio of 43.
+The warren-rules case alone takes 67 s of the 146 s of old part c (46%), so no single case dominates; the case counts stay 1848 and 1951.
+The `build` job timeout in `ci.yml` is raised from 180 to 300 minutes (`windows-msvc-debug` needs about 200 minutes for `ctest`).

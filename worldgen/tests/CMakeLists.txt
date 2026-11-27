@@ -514,6 +514,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_depths_property_a_test.cpp
     history/history_depths_property_b_test.cpp
     history/history_depths_property_c_test.cpp
+    history/history_depths_property_d_test.cpp
     history/history_depths_reader_test.cpp
     history/history_depths_report_test.cpp
     history/history_depths_golden_test.cpp
@@ -678,6 +679,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD depths-property-a 80 "*history_depths_property_a_test.cpp"
     SHARD depths-property-b 80 "*history_depths_property_b_test.cpp"
     SHARD depths-property-c 80 "*history_depths_property_c_test.cpp"
+    SHARD depths-property-d 80 "*history_depths_property_d_test.cpp"
     SHARD depths-golden 70 "*history_depths_golden_test.cpp"
     SHARD depths 20 "*history_depths_data_test.cpp,*history_depths_forced_test.cpp,*history_depths_reader_test.cpp,*history_depths_report_test.cpp,*history_depths_unit_test.cpp"
     REST other 13
