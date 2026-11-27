@@ -4,7 +4,7 @@ name_culture = "human"
 camp = "neutral"
 domain = "war"
 title = "the Shield of Battles"
-favour = { bless = 400, champion = 500, mark = 100 }
+favour = { bless = 120, champion = 1000, mark = 30 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "valour"
 curse = "defeat"

@@ -4,7 +4,7 @@ name_culture = "faerie"
 camp = "good"
 domain = "harvest"
 title = "the Giver of Harvests"
-favour = { bless = 700, champion = 0, mark = 300 }
+favour = { bless = 210, champion = 1000, mark = 90 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "plenty"
 curse = "withering"

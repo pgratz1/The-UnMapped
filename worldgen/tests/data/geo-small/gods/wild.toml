@@ -4,8 +4,8 @@ name_culture = "human"
 camp = "neutral"
 domain = "wild"
 title = "the Hunter in the Green"
-favour = { bless = 500, champion = 0, mark = 500 }
-wrath = { curse = 300, monster = 600, mark = 200 }
+favour = { bless = 150, champion = 1000, mark = 150 }
+wrath = { curse = 300, monster = 350, mark = 200 }
 bless = "plenty"
 curse = "withering"
 monsters = ["troll", "ogre", "wyvern"]

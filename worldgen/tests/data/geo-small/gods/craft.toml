@@ -4,7 +4,7 @@ name_culture = "dwarven"
 camp = "neutral"
 domain = "craft"
 title = "the Hammer Under the Mountain"
-favour = { bless = 500, champion = 350, mark = 150 }
+favour = { bless = 150, champion = 1000, mark = 45 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "valour"
 curse = "defeat"

@@ -4,7 +4,7 @@ name_culture = "elven"
 camp = "good"
 domain = "lore"
 title = "the Lamp of the Wise"
-favour = { bless = 400, champion = 350, mark = 250 }
+favour = { bless = 120, champion = 1000, mark = 75 }
 wrath = { curse = 600, monster = 0, mark = 400 }
 bless = "plenty"
 curse = "withering"

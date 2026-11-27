@@ -4,7 +4,7 @@ name_culture = "elven"
 camp = "good"
 domain = "oaths"
 title = "the Keeper of Oaths"
-favour = { bless = 300, champion = 500, mark = 200 }
+favour = { bless = 90, champion = 1000, mark = 60 }
 wrath = { curse = 700, monster = 0, mark = 300 }
 bless = "valour"
 curse = "defeat"

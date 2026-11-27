@@ -4,8 +4,8 @@ name_culture = "goblin"
 camp = "evil"
 domain = "ruin"
 title = "the Burner of Halls"
-favour = { bless = 400, champion = 450, mark = 150 }
-wrath = { curse = 400, monster = 600, mark = 200 }
+favour = { bless = 120, champion = 1000, mark = 45 }
+wrath = { curse = 400, monster = 350, mark = 200 }
 bless = "valour"
 curse = "pestilence"
 monsters = ["dragon", "giant"]

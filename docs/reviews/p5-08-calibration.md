@@ -91,3 +91,57 @@ Untouched: `flare_permille`, `valour_permille`, `defeat_permille`, `cult_spread_
 - `875 e18 tower_abandoned/25: After the death of its last master, the Star-Tower of Onnfaell of the Realm of Aennitha stood empty.`
 
 Reading notes: several acts cite the same few deeds ("a tower raised and a book written" for the lore god, "the felling of the wild" for the wild god), so lines of one god repeat their cause; the ruler is not named in an act. The lines are from the sweep at `act_permille` 50 (seeds 100 to 119; wording does not depend on the values).
+
+## Recalibration after the champion rules (branch `p5/08-calib2`)
+
+Engine as of `02dffa2` (a god raises a champion only for a realm at war or with a huntable monster; a champion takes command in an open war). Data only, mirrored byte for byte into `worldgen/tests/data/geo` and `geo-small`; no C++ change, no golden re-recorded. Four tuning sweeps (t1 and t2 on seeds 0-49, t3 and t4 on 0-99), then B (100-199), `meddling` and `distant` (0-49). Scripts and tables: `~/.cache/the-unmapped/out/p508-calib2/` (`t1`-`t4`, `FB`, `Fm`, `Fd`; A = `t4`).
+
+### Values changed (old to new)
+
+- `gods/*.toml` `favour` (bless, champion, mark): the schema caps a weight at 1000, so champion cannot be raised past it; instead every god's bless and mark were scaled by 3/10 and champion set to 1000 (conquest, war, oaths, craft, lore, ruin 350 to 500 became 1000; wild, death, harvest 0 to 1000, which lets them raise champions too). Examples: war 400/500/100 to 120/1000/30; harvest 700/0/300 to 210/1000/90.
+- `gods/{ruin,death,wild}.toml` `wrath.monster` 600 to 350 (G2 standing).
+- `history/pantheon.toml`: `pestilence_toll_permille` 80 to 50, `plenty_growth_permille` 550 to 800 (G2 population and standing).
+- `history/monsters.toml`: `deep_warren_wake_permille` 300 to 200; `deep_stir_permille` stays 700 (500 was tried in t1: DP1 and DP2 fell to 28 and 21 of 50).
+
+### Targets (A = seeds 0-99, B = 100-199)
+
+| Target | Bound | A | B |
+| --- | --- | --- | --- |
+| PN1 acts median; max | 8-25; <=60 | 13; 30 | 14; 28 |
+| PN3 worlds with an act, good / neutral / evil | >=80 | 98 / 100 / 91 | 97 / 100 / 88 |
+| PN4 bless / curse / champion / monster / mark | 5-45% | 27.0 / 33.8 / **5.3** / 11.0 / 22.9 | 26.7 / 30.8 / **6.3** / 11.5 / 24.6 |
+| PN5 worlds with champion; share that fights | >=30; >=50% | 48; 71.2% | 63; 72.3% |
+| PN6 sent monsters alive | <=20% | 11.8% | 9.4% |
+| PN7 divine_dead median | <=3% | 0.47% | 0.42% |
+| PN8 flare-ups median | <=3 | 2 (86 worlds) | 2 (88) |
+| CU1 cults median; worlds | 2-6; >=85 | 3; 98 | 3; 99 |
+| CU2 / CU3 / CU4 / CU5 | >=40% / >=50 / 20-70 / 10-50 | 88.1% / 97 / 61 / 14 | 90.7% / 99 / 59 / 18 |
+| CU6 prophets | <=60% | **61.0%** | **70.7%** |
+| FU1 wakings before E-500 | >=35% | 59.0% | 57.4% |
+| FU2 renewed median / FU3 towers ended | <=8 / >=25% | 7.5 / 69.1% | 6 / 70.0% |
+| C1 wars median | 22-28 | 26 | 24.5 |
+| G2 standing median (mean); population median | >=81; >=205,000 | 81.5 (83.9); 205,953 | 86.5 (88.3); 215,146 |
+| M4a / M4b | >=85; avg>=65, each>=60 | 96 / 77 | 98 / 83 |
+| T16 per thousand | <=2 | 0.80 | 0.74 |
+| T18 summary median; max | <=700 | 662.5; 779 | 657; 882 |
+| GW4 goblin regions median | <=12 | 12 (mean 12.68) | 14 (13.67) |
+| AL5 wars with ally | 20-45% | 29.4% | 30.8% |
+| DP1 depth-3 mine worlds | 40-90 | 45 | 44 |
+| DP2 worlds with waking; most | 25-55; <=4 | 50; 2 | **57**; 3 |
+| DP3 / DP6 / DP7 | 30-65 / >=70 / <=25% | 55.7 / 85.2 / 14.8 | 54.4 / 92.6 / 7.4 |
+| DP4 hold-lost worlds; most | 15-40; <=4 | 21; 4 | 26; 4 |
+| DP5 realms ended by the deep | <=8% | 0 of 144 | 0 of 157 |
+| GW1 / GW2 / AD1 | 10-50 / 10-30% (6% accepted) / 10-40% | 30 / 9.8% / 24.6% | 24 / 7.4% / 17.6% |
+| dwarves in alliance or trade | >=85% | 89% | 88% |
+
+### Option sets (seeds 0-49)
+
+- `meddling`: acts median 24.5 (max 57) against 12 at the default (t2 values, same seeds) = 2.0 times (PN2 >= 1.8 met); sent monsters alive 19.3%; T16 2.86 per thousand (over 2; the meddling set was 2.33 before).
+- `distant`: acts median 4 = 0.33 times (<= 0.6 met), an act in 50 of 50 worlds; T16 1.55; dwarves in alliance or trade 84%.
+
+### Remaining misses
+
+1. **CU6**: 61.0% on A, 70.7% on B, pooled 66.0% against the lead's 60%. A prophet is made when the realm has neither a living caster nor a ruler figure at the founding; more champions (champion-born cults use the champion) did not lower it. The only data lever, `figures.toml caster_ppm`, breaks FG7 (first calibration). Needs a rule change (for example the founder may be the realm's ruler or general of any kind, or a champion-less cult waits for a figure).
+2. **DP2** on B: 57 worlds against 55 (A 50).
+3. **PN4 champion** 5.3% on A is only just inside; the weight is at its cap of 1000, so the share can rise further only by scaling down bless and mark, or by a rule change.
+4. GW2 7.4% on B is under 10% (lead ruled 6% acceptable); GW4 median 14 on B (bound 12), mean 13.67; T18 max 882 on B; `meddling` T16 2.86.
