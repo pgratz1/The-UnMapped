@@ -248,7 +248,7 @@ After the camp rule the report and timeline goldens were recorded again (fixture
 
 1. World-hash goldens, for validation: `worldgen-tests-other` (`db_determinism`, `stages_pipeline`), `worldgen-cli-tests-other`
    (`cli_golden`, `cli_p1_generate`, `cli_history_settings` 0.11.0 comparison), `worldgen-cli-tests-regions` (until hashes).
-2. **Reference against engine: `pantheon-small` seed 5 at 512, table `figure`** (`history_pantheon_golden_test.cpp:98`); every
+2. **Reference against engine (two disagreements): (a) `history_conflict_unit_test.cpp:160-164`: the golden conflict case's tables and the conflict tension at year 5000 (engine 998, reference 1001; two cases) with `ConflictConfig` now wired as the stage; (b) `pantheon-small` seed 5 at 512, table `figure`** (`history_pantheon_golden_test.cpp:98`); every
    other case of `p5-08-pantheon.txt` agrees. Row not located.
 3. **Report text of fixture `h12-v3`** (and other fixtures): the C++ summary and full hashes differ from the golden
    (`history_report_v3_test.cpp:313`, `history_report_fixtures_test.cpp`): not diagnosed (`p3_report_reference.py compare`
