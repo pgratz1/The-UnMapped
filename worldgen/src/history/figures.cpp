@@ -181,6 +181,7 @@ FiguresTuning figures_tuning_from(const data::ContentSet& content) {
     t.epithet_repeat_max = r.get_int("epithet_repeat_max");
     t.tower_spacing_permille = r.get_int("tower_spacing_permille");
     t.hero_return_years = r.get_int("hero_return_years");
+    t.tower_lapse_years = r.get_int("tower_lapse_years");  // P5-08 12.6
     return t;
 }
 
@@ -292,6 +293,7 @@ FiguresSubsystem::Line& FiguresSubsystem::line(std::int64_t civ) {
         lines_.resize(static_cast<std::size_t>(civ));
         hero_.resize(static_cast<std::size_t>(civ), 0);
         caster_.resize(static_cast<std::size_t>(civ), 0);
+        last_caster_death_.resize(static_cast<std::size_t>(civ), 0);
         champion_.resize(static_cast<std::size_t>(civ), 0);
     }
     return lines_[static_cast<std::size_t>(civ - 1)];
@@ -1111,6 +1113,18 @@ void FiguresSubsystem::die(StepContext& ctx, std::int64_t id, std::int64_t how) 
     if (ci < caster_.size() && caster_[ci] == id) {
         caster_[ci] = 0;
     }
+    // P5-08 12.6: the master's death on its tower; the realm's last caster.
+    if (f.role == CASTER_ROLE) {
+        if (ci < last_caster_death_.size()) {
+            last_caster_death_[ci] = ev;
+        }
+        const auto it = std::lower_bound(towers_.begin(), towers_.end(), f.tower,
+                                         [](const TowerSite& t, std::int64_t s) { return t.site < s; });
+        if (f.tower != 0 && it != towers_.end() && it->site == f.tower && it->master == id) {
+            it->master_died = y;
+            it->master_death = ev;
+        }
+    }
 }
 
 void FiguresSubsystem::deaths_of_age(StepContext& ctx) {
@@ -1379,6 +1393,20 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
             continue;
         }
         const Settlement seat = ctx.state().settlement(t);
+        // P5-08 12.6 item 1: an open kind 4 site of c at t (a library) or in
+        // t's region (a tower), the smallest id, is taken up instead.
+        std::size_t taken = towers_.size();
+        for (std::size_t i = 0; i < towers_.size() && taken == towers_.size(); ++i) {
+            const TowerSite& ts = towers_[i];
+            if (!ts.ended && ts.civ == c && ts.master_death != 0 &&
+                (ts.settlement == t || (ts.settlement == 0 && ts.region == seat.region))) {
+                taken = i;
+            }
+        }
+        if (taken < towers_.size()) {
+            take_up_tower(ctx, c, t, taken);
+            continue;
+        }
         const bool library = seat.kind == SettlementKind::city && libraries_.count(t) == 0;
         std::int64_t x = seat.x;
         std::int64_t yc = seat.y;
@@ -1440,7 +1468,13 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         e.participants = {fig_role("figure", f), civ_role("civilization", c),
                           Participant{"site", EntityType::site, s}};
         e.values = {library ? 1 : 0};
+        // P5-08 12.6 item 2: also the death of c's last caster, ascending.
         e.causes = {std::max(seat.founding_event, ctx.state().civ(c).founding_event)};
+        const std::int64_t last_death = last_caster_death_[static_cast<std::size_t>(c - 1)];
+        if (last_death != 0 && last_death != e.causes.front()) {
+            e.causes.push_back(last_death);
+            std::sort(e.causes.begin(), e.causes.end());
+        }
         const std::int64_t ev = ctx.append(e);
         MonstersSubsystem::SiteSpec spec;
         spec.id = s;
@@ -1454,7 +1488,7 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         spec.origin_year = ctx.year();
         spec.origin_event = ev;
         sites_->open_site(spec);
-        towers_.push_back(TowerSite{s, c, library ? t : 0, seat.region, x, yc, ctx.year(), false});
+        towers_.push_back(TowerSite{s, c, library ? t : 0, seat.region, x, yc, ctx.year(), false, f, 0, 0});
         if (library) {
             libraries_.insert(t);
         }
@@ -1465,6 +1499,30 @@ void FiguresSubsystem::caster_rises(StepContext& ctx) {
         caster_[static_cast<std::size_t>(c - 1)] = f;
         stats_.casters += 1;
     }
+}
+
+// P5-08 12.6 item 1: a new caster of c takes up towers_[index]; its
+// figure, life and name draws as a founding's, no site and no name draw.
+void FiguresSubsystem::take_up_tower(StepContext& ctx, std::int64_t c, std::int64_t t, std::size_t index) {
+    const TowerSite ts = towers_[index];
+    const std::int64_t f = new_figure(ctx, CASTER_ROLE, c);
+    life_draws(ctx, f, tuning_.caster_age_permille, tuning_.caster_age_span_permille);
+    draw_person_name(ctx, f);
+    EventSpec e = point_event(ctx, "tower_taken_up", ts.region, ts.settlement != 0 ? t : 0);
+    e.participants = {fig_role("figure", f), civ_role("civilization", c), Participant{"site", EntityType::site, ts.site}};
+    e.causes = {ts.master_death};
+    const std::int64_t ev = ctx.append(e);
+    TowerSite& live = towers_[index];
+    live.master = f;
+    live.master_died = 0;
+    live.master_death = 0;
+    Figure& g = figure(f);
+    g.start_event = ev;
+    g.tower = ts.site;
+    g.tower_event = ev;
+    caster_[static_cast<std::size_t>(c - 1)] = f;
+    stats_.casters += 1;
+    stats_.towers_taken_up += 1;
 }
 
 bool FiguresSubsystem::tower_open(std::int64_t site) const {
@@ -1509,11 +1567,27 @@ void FiguresSubsystem::tower_endings(StepContext& ctx) {
         }
         // Reading: an ending event older than the site (a tower raised in a
         // region the realm did not own) waits for the next change of owner.
-        if (ending == 0 || ev == 0 || ctx.event_year(ev) < ts.origin_year) {
+        if (ending != 0 && ev != 0 && ctx.event_year(ev) >= ts.origin_year) {
+            sites_->end_site_seam(ts.site, ctx.event_year(ev), ev, ending);
+            towers_[i].ended = true;
             continue;
         }
-        sites_->end_site_seam(ts.site, ctx.event_year(ev), ev, ending);
+        // P5-08 12.6 item 3: the lapse, after the tests for 5 and 4.
+        if (tuning_.tower_lapse_years <= 0 || ts.master_death == 0 ||
+            ctx.year() < checked_add(ts.master_died, tuning_.tower_lapse_years)) {
+            continue;
+        }
+        if (ctx.step() == Step::q4 && ctx.quiet_events_left(ts.civ) <= 0) {
+            continue;  // it waits
+        }
+        EventSpec e = point_event(ctx, "tower_abandoned", ts.region, ts.settlement);
+        e.participants = {Participant{"site", EntityType::site, ts.site}, civ_role("civilization", ts.civ),
+                          fig_role("figure", ts.master)};
+        e.causes = {ts.master_death};
+        const std::int64_t lapse = ctx.append(e);
+        sites_->end_site_seam(ts.site, ctx.year(), lapse, 7);
         towers_[i].ended = true;
+        stats_.towers_abandoned += 1;
     }
 }
 

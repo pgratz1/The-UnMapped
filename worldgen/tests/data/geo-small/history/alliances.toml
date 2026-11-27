@@ -72,3 +72,5 @@ excused_memory = 15
 refuse_grudge = 80
 betray_cooled_disposition = 0
 betray_weak_permille = 500
+# P5-08 12.5 (generator 0.30.0): written renewals per alliance (0: no cap).
+renew_written_max = 3

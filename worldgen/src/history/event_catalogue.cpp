@@ -619,7 +619,7 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             }
             from = bar + 1;
         }
-        if (words.size() > 8U) {  // P5-04a 8.5
+        if (words.size() > 9U) {  // P5-04a 8.5; P5-08 12.3 (lead ruling): up to nine
             return "choice of " + size_text(words.size()) + " words" + where;
         }
         if (words.size() < 2U || kind.value_seq(name) == 0) {
@@ -2215,7 +2215,8 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
             hi = 3;
         } else if (v.seq == kind->value_seq("telling")) {
             key = "telling";
-            hi = k == "deep_woken" || k == "hold_lost" ? 5 : 2;  // r2: 3 to 5 at a warren
+            // r2: 3 to 5 at a warren; P5-08 12.3: 93 and 98 0 to 8.
+            hi = k == "deep_woken" || k == "hold_lost" ? 5 : (k == "delving_deepened" || k == "warren_delved" ? 8 : 2);
         } else if (k == "hold_lost" && v.seq == kind->value_seq("dead")) {
             key = "dead";
             hi = OPEN;
@@ -2273,6 +2274,7 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
     std::vector<std::int64_t> waking_of_site(t.sites.size() + 1, 0);    // per site: its deep_woken
     std::vector<std::int64_t> waking_of_monster(t.monsters.size() + 1, 0);
     std::vector<std::uint8_t> took(t.monsters.size() + 1, 0);          // a hold_lost seen
+    std::vector<std::int64_t> outcome_of_monster(t.monsters.size() + 1, 0);  // P5-08 12.4: its waking's outcome
     // r2: per settlement the depths of its warren_delved, their civilization
     // and its warren waking.
     std::vector<std::uint8_t> warren_depths(t.settlements.size() + 1, 0);
@@ -2341,8 +2343,11 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
             const std::int64_t waking = known_monster ? waking_of_monster[static_cast<std::size_t>(m)] : 0;
             const std::int64_t ally = participant(e.id, "ally");
             const std::int64_t partner = participant(e.id, "partner");
+            // P5-08 12.4: it also cites the waking's outcome, of its year.
+            const std::int64_t outcome = known_monster ? outcome_of_monster[static_cast<std::size_t>(m)] : 0;
             if (waking == 0 || !cites(e.id, waking) || t.events[static_cast<std::size_t>(waking - 1)].year != e.year ||
-                participant(waking, "civilization") != partner || ally == partner) {
+                participant(waking, "civilization") != partner || ally == partner || outcome == 0 ||
+                !cites(e.id, outcome) || t.events[static_cast<std::size_t>(outcome - 1)].year != e.year) {
                 return at + "ally_aided_hold " + int_text(e.id) + " does not answer its waking";
             }
             continue;
@@ -2370,6 +2375,9 @@ std::optional<std::string> deep_tables_problem(const MonsterTables& t, const Kin
         const bool first = k == "deep_sealed" || k == "warren_sealed" || (known_monster && took[static_cast<std::size_t>(m)] == 0);
         if (first && (waking == 0 || !cites(e.id, waking))) {
             return at + std::string(k) + " without its waking";
+        }
+        if (first && known_monster && outcome_of_monster[static_cast<std::size_t>(m)] == 0) {
+            outcome_of_monster[static_cast<std::size_t>(m)] = e.id;
         }
         if (k == "warren_sealed" && participant(waking, "site") != 0) {  // r2: a warren's waking has no site
             return at + std::string(k) + " without its waking";

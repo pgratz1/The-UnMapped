@@ -59,6 +59,8 @@ struct AlliancesTuning {
     // 0.26.0's meaning (no large share, no soured draw, no factor below 1000).
     std::int64_t spoils_large_share = 1000000, spoils_large_part_permille = 1001;
     std::int64_t soured_renew_permille = 1000, soured_join_permille = 1000;
+    // P5-08 12.5 (generator 0.30.0): written renewals per alliance row; 0 no cap.
+    std::int64_t renew_written_max = 0;
     std::int64_t weary_years = 0, join_weary_permille = 1000, join_busy_permille = 0;
     std::int64_t join_fear_floor = 0, join_warmth_floor = 0, grasping_join_permille = 1000;
     std::int64_t join_claim_permille = 1000, excused_memory = 0, refuse_grudge = 0;
@@ -81,6 +83,7 @@ struct AlliancesStats {
     std::int64_t trades = 0, trades_broken = 0, mines = 0, arms = 0;
     // P5-04a: soured alliances, spurnings at once, excused refusals, quiet renewals.
     std::int64_t soured = 0, spurned_at_once = 0, excused = 0, renewed_quietly = 0;
+    std::int64_t renewals_capped = 0;  // P5-08 12.5: quiet renewals made by the cap
 };
 
 class AlliancesSubsystem final : public Subsystem, public AllianceView {
@@ -128,6 +131,7 @@ private:
         // the next due year of the renewal chain, and the latest joint war
         // and granted share between the pair (0 none).
         std::int64_t renew_year = 0, renew_event = 0;
+        std::int64_t written_renewals = 0;  // P5-08 12.5
         std::int64_t next_due = 0;
         std::int64_t fought_event = 0, shared_event = 0;
         std::int64_t refusals = 0;  // P5-04a 4.3: counted refusals only

@@ -36,6 +36,7 @@
 namespace worldgen::history {
 
 class ConflictSubsystem;  // P5-07 7.3: the flight seam
+struct DeepFlightPlan;
 class AllianceView;       // P5-07 r2 7.6: the allies of a waking realm
 class RelationsSubsystem;  // P5-07 r2 6.11: the aid's goodwill
 
@@ -144,6 +145,8 @@ struct MonstersTuning {
     std::int64_t deep_warren_population_min = 600, deep_warren_ore_min = 1, deep_warren_wake_permille = 0;
     std::int64_t deep_aid_permille = 0, deep_aid_hops = 2, deep_aid_levy_permille = 500, deep_aid_max = 2;
     std::int64_t deep_aid_memory = 30;
+    // P5-08 12.2 (generator 0.30.0): the deep's stir in quiet steps; 0 off.
+    std::int64_t deep_stir_permille = 0;
 
     friend bool operator==(const MonstersTuning&, const MonstersTuning&) = default;
 };
@@ -180,6 +183,9 @@ struct MonstersStats {
     std::int64_t warrens_sealed = 0;
     std::int64_t aids = 0;
     std::int64_t wakings_aided = 0;
+    // P5-08 12.2: stirs drawn in quiet steps and the wakings they forced.
+    std::int64_t deep_stirred = 0;
+    std::int64_t stir_wakings = 0;
 };
 
 class MonstersSubsystem final : public Subsystem, public TensionSource, public WildView, public MonsterNames {
@@ -405,17 +411,25 @@ private:
     struct DeepHold {
         std::int64_t site = 0, settlement = 0, civ = 0, depth = 0, region = 0, cause = 0;
     };
-    bool deep_wake_at(StepContext& context, const DeepHold& hold);
+    // P5-08 12.2: `certain` (a stir's flare-up) skips the wake draw.
+    bool deep_wake_at(StepContext& context, const DeepHold& hold, bool certain);
+    // P5-08 12.2: the stir (Q4, after the delving; at most one a step).
+    void deep_stir(StepContext& context);
+    // 6.4's candidate test for a mine (site > 0) or a warren (settlement t).
+    [[nodiscard]] std::optional<DeepHold> mine_candidate(const StepContext& context, std::int64_t site) const;
+    [[nodiscard]] std::optional<DeepHold> warren_candidate(const StepContext& context, std::int64_t settlement) const;
     // P5-07 r2 6.11: the allies that send aid to a waking of monster m at t.
     struct DeepAid {
         std::int64_t ally = 0, origin = 0, strength = 0;
     };
     [[nodiscard]] std::vector<DeepAid> deep_aid(const StepContext& context, std::int64_t monster, std::int64_t civ,
                                                 const std::vector<std::int64_t>& hops) const;
-    // 6.6: take(m, t, causes); false (and nothing written) when t is its
-    // race's last refuge and the flight has no plan.
-    bool deep_take(StepContext& context, std::int64_t monster, std::int64_t settlement,
-                   const std::vector<std::int64_t>& causes);
+    // 6.6: take(m, t, causes, plan); its hold_lost event, or 0 (and nothing
+    // written) when t is its race's last refuge and the flight has no plan.
+    // P5-08 12.7 A1: at a waking `plan` is the gate's plan (not recomputed);
+    // nullptr: the take computes its own.
+    std::int64_t deep_take(StepContext& context, std::int64_t monster, std::int64_t settlement,
+                           const std::vector<std::int64_t>& causes, const DeepFlightPlan* plan);
     // 6.7: after a raid of a deep horror on t.
     void deep_after_raid(StepContext& context, std::int64_t monster, std::int64_t settlement, std::int64_t raid_event);
     // 6.5: the gate's odds for a hold of `people` of civilization c against kind k.
@@ -499,6 +513,12 @@ private:
     std::vector<std::vector<WindowEntry>> windows_;  // per region
     std::int64_t cursor_ = 1;
     std::int64_t pending_flare_ = 0;
+    // P5-08 12.2: the stirring candidate (a mine's site or a warren's
+    // settlement, 0 none), its last deepening (the flare trigger), and the
+    // first year of the current phase.
+    std::int64_t stir_site_ = 0, stir_warren_ = 0, stir_event_ = 0;
+    std::int64_t phase_seen_ = 0, phase_start_ = 0;
+    std::array<std::uint64_t, 2> stir_keys_{};  // hist.deep.stir, hist.deep.warren_stir
     MonstersStats stats_;
     const RenamingSubsystem* renaming_ = nullptr;  // P5-03 12.2
     const FigureView* figures_ = nullptr;          // P5-06 7.1

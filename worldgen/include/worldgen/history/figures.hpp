@@ -80,6 +80,8 @@ struct FiguresTuning {
     std::int64_t epithet_repeat_max = 2;
     // P5-04a 14.2a (generator 0.28.0); the defaults keep 0.27.0's meaning.
     std::int64_t tower_spacing_permille = 0, hero_return_years = 100000;
+    // P5-08 12.6 (generator 0.30.0): a master-less tower lapses after these years; 0 never.
+    std::int64_t tower_lapse_years = 0;
 
     friend bool operator==(const FiguresTuning&, const FiguresTuning&) = default;
 };
@@ -95,6 +97,7 @@ struct FiguresTuning {
 struct FiguresStats {
     std::int64_t reigns = 0, named = 0, disputes = 0, exiles = 0, appointments = 0, falls = 0;
     std::int64_t heroes = 0, casters = 0, books = 0, blights = 0, regnal = 0;
+    std::int64_t towers_taken_up = 0, towers_abandoned = 0;  // P5-08 12.6
 };
 
 // A reign of the lines, for the calibration sweep's dumps (FX2): not stored.
@@ -211,6 +214,9 @@ private:
     struct TowerSite {
         std::int64_t site = 0, civ = 0, settlement = 0, region = 0, x = 0, y = 0, origin_year = 0;
         bool ended = false;
+        // P5-08 12.6: its master (the founder, then whoever took it up) and,
+        // once the master died, the year and the figure_died (0 alive).
+        std::int64_t master = 0, master_died = 0, master_death = 0;
     };
     struct BookState {
         std::int64_t id = 0;
@@ -260,6 +266,7 @@ private:
     void stand_down(StepContext& context);
     // 6.8.
     void caster_rises(StepContext& context);
+    void take_up_tower(StepContext& context, std::int64_t civ, std::int64_t seat, std::size_t index);
     // P5-04a 21.4: the endings of open towers and libraries; whether a site is open.
     void tower_endings(StepContext& context);
     [[nodiscard]] bool tower_open(std::int64_t site) const;
@@ -290,6 +297,7 @@ private:
     std::map<std::int64_t, KnownWar> wars_;        // by war_declared id
     std::vector<std::int64_t> hero_;               // per civilization: the living hero
     std::vector<std::int64_t> caster_;             // per civilization: the living caster
+    std::vector<std::int64_t> last_caster_death_;  // P5-08 12.6: per civilization: its last caster's figure_died
     std::vector<std::int64_t> champion_;           // P5-08 7.5: per civilization, the last champion
     std::vector<BookState> books_;                 // index id - 1
     std::set<std::int64_t> libraries_;             // settlements with a library (6.8)

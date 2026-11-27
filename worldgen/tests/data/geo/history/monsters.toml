@@ -61,3 +61,5 @@ deep_aid_hops = 2
 deep_aid_levy_permille = 500
 deep_aid_max = 2
 deep_aid_memory = 30
+# P5-08 12.2 (generator 0.30.0): the deep stirs in quiet steps (0: off).
+deep_stir_permille = 1000

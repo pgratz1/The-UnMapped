@@ -1504,6 +1504,8 @@ Schema history_monsters_schema() {
         i("deep_aid_levy_permille", 0, 4000),
         i("deep_aid_max", 0, 8),
         i("deep_aid_memory", 0, 500),
+        // P5-08 12.2 (generator 0.30.0).
+        i("deep_stir_permille", 0, 1000),
     };
     std::vector<Check> checks{
         Check{"monsters_bold_ordered",
@@ -1615,6 +1617,8 @@ Schema history_alliances_schema() {
         i("refuse_grudge", 0, 2000),
         i("betray_cooled_disposition", -2000, 2000),
         i("betray_weak_permille", 0, 1000),
+        // P5-08 12.5 (generator 0.30.0).
+        i("renew_written_max", 0, 100),
     };
     const auto above = [](const Record& r, std::string_view a, std::string_view b,
                           std::string_view words) -> std::optional<std::string> {
@@ -1737,6 +1741,8 @@ Schema history_figures_schema() {
         // P5-04a 14.2a (generator 0.28.0), appended in this order.
         i("tower_spacing_permille", 0, 1000),
         i("hero_return_years", 1, 100000),
+        // P5-08 12.6 (generator 0.30.0).
+        i("tower_lapse_years", 0, 10000),
     };
     std::vector<Check> checks{
         Check{"figures_skill_ordered",

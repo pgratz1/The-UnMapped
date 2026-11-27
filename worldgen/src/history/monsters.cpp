@@ -285,6 +285,7 @@ MonstersTuning monsters_tuning_from(const data::ContentSet& content) {
     t.deep_aid_levy_permille = r.get_int("deep_aid_levy_permille");
     t.deep_aid_max = r.get_int("deep_aid_max");
     t.deep_aid_memory = r.get_int("deep_aid_memory");
+    t.deep_stir_permille = r.get_int("deep_stir_permille");  // P5-08 12.2
     return t;
 }
 
@@ -411,6 +412,7 @@ void MonstersSubsystem::prepare(const StepContext& ctx) {
     for (std::size_t i = 0; i < deep_streams.size(); ++i) {
         deep_keys_[i] = stream_key(in.seed, deep_streams[i]);
     }
+    stir_keys_ = {stream_key(in.seed, streams::hist_deep_stir), stream_key(in.seed, streams::hist_deep_warren_stir)};
     switch (in.params.monster_pressure) {
         case data::MonsterPressure::low: pressure_ = tuning_.pressure_low; break;
         case data::MonsterPressure::normal: pressure_ = tuning_.pressure_normal; break;
@@ -562,6 +564,10 @@ void MonstersSubsystem::run(StepContext& ctx) {
     switch (ctx.step()) {
         case Step::t1: beasts(ctx, 1); break;
         case Step::t4: {
+            if (ctx.phase_id() != phase_seen_) {  // P5-08 12.2: the phase's first tick year
+                phase_seen_ = ctx.phase_id();
+                phase_start_ = ctx.year();
+            }
             read_log(ctx);
             beasts_bold(ctx);
             monsters_year(ctx);
@@ -585,6 +591,7 @@ void MonstersSubsystem::run(StepContext& ctx) {
             outposts_left(ctx);
             deepen(ctx);          // P5-07 6.1
             warren_delving(ctx);  // r2 6.10
+            deep_stir(ctx);       // P5-08 12.2
             break;
         default: break;
     }

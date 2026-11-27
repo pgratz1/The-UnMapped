@@ -56,3 +56,5 @@ epithet_repeat_max = 2
 # P5-04a 14.2a (generator 0.28.0), in this order.
 tower_spacing_permille = 30
 hero_return_years = 100
+# P5-08 12.6 (generator 0.30.0): a tower without a master lapses after these years (0: never).
+tower_lapse_years = 200

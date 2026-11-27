@@ -148,7 +148,7 @@ void MonstersSubsystem::deepen(StepContext& ctx) {
         EventSpec e = point_event(ctx, "delving_deepened", s.region, s.settlement);
         e.participants = {Participant{"civilization", EntityType::civilization, c},
                           Participant{"site", EntityType::site, id}};
-        e.values = {d + 1, (id + d + 1) % 3};
+        e.values = {d + 1, (id + 4 * d) % 9};  // P5-08 12.3
         e.causes = {cause};
         const std::int64_t ev = ctx.append(e);
         Site& w = site(id);
@@ -252,7 +252,7 @@ void MonstersSubsystem::warren_delving(StepContext& ctx) {
         const std::int64_t region = st.region;
         EventSpec e = point_event(ctx, "warren_delved", region, t);
         e.participants = {Participant{"civilization", EntityType::civilization, c}};
-        e.values = {d + 1, (t + d + 1) % 3};
+        e.values = {d + 1, (t + 4 * d) % 9};  // P5-08 12.3
         e.causes = {cause};
         const std::int64_t ev = ctx.append(e);
         warren_depth_[ti] = d + 1;
@@ -327,7 +327,7 @@ std::vector<MonstersSubsystem::DeepAid> MonstersSubsystem::deep_aid(const StepCo
     return out;
 }
 
-bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
+bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold, bool certain) {
     const State& state = ctx.state();
     const bool warren = hold.site == 0;
     const std::int64_t c = hold.civ;
@@ -355,7 +355,8 @@ bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
         p = floor_div(checked_mul(p, tuning_.deep_warren_wake_permille), 1000);
     }
     p = std::min(PPM, p);
-    if (!chance_ppm(ctx.draw(deep_keys_[warren ? WARREN_WAKE : WAKE_DEEP], word(key_a), 0, 0), p)) {
+    // P5-08 12.2: a stir's flare-up wakes the stirring candidate with no draw.
+    if (!certain && !chance_ppm(ctx.draw(deep_keys_[warren ? WARREN_WAKE : WAKE_DEEP], word(key_a), 0, 0), p)) {
         return false;
     }
     // 3. The kind.
@@ -383,10 +384,15 @@ bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
     const std::int64_t odds = gate_odds(ctx, c, people, k, aid_strength);
     const auto u = static_cast<std::int64_t>(pick(ctx.draw(deep_keys_[GATE], word(m), 0, 0), 1000));
     bool falls = u >= odds;
+    std::optional<DeepFlightPlan> plan;
     if (falls && deep_last_refuge(ctx, t)) {
         // 6.5: a fall that cannot happen (no flight plan) becomes a seal.
+        // P5-08 12.7 A1: the plan is kept for the take.
         const std::int64_t dead = floor_div(checked_mul(people, tuning_.deep_toll_permille), 1000);
-        falls = conflict_ != nullptr && conflict_->deep_flight_plan(ctx, c, t, people - dead, region).has_value();
+        if (conflict_ != nullptr) {
+            plan = conflict_->deep_flight_plan(ctx, c, t, people - dead, region);
+        }
+        falls = plan.has_value();
     }
     // 5. The lair.
     const auto l = static_cast<std::int64_t>(sites_.size()) + 1;
@@ -439,34 +445,15 @@ bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
         site(hold.site).woken = true;
     }
     ++stats_.deep_woken;
-    // 6.11: one ally_aided_hold per ally of the aid, ascending; the goodwill
-    // between different races, with the aid event just appended.
-    std::vector<std::int64_t> causes{ev};
-    const std::int64_t race_c = state.civ(c).race;
-    for (const DeepAid& a : aid) {
-        EventSpec g = point_event(ctx, "ally_aided_hold", region, t);
-        g.participants = {Participant{"ally", EntityType::civilization, a.ally},
-                          Participant{"partner", EntityType::civilization, c},
-                          Participant{"monster", EntityType::monster, m},
-                          Participant{"origin", EntityType::settlement, a.origin}};
-        g.values = {(m + a.ally) % 3};
-        g.causes = {ev};
-        const std::int64_t aid_event = ctx.append(g);
-        causes.push_back(aid_event);
-        ++stats_.aids;
-        const std::int64_t race_a = ctx.state().civ(a.ally).race;
-        if (race_a != race_c) {
-            relations_->credit(race_a, race_c, tuning_.deep_aid_memory, aid_event);
-        }
-    }
-    if (!aid.empty()) {
-        ++stats_.wakings_aided;
-    }
-    // 7. The gate's outcome.
-    if (!falls || !deep_take(ctx, m, t, causes)) {
-        if (falls) {
+    // 7. The gate's outcome (P5-08 12.4: it cites the waking only).
+    const std::vector<std::int64_t> woken_cause{ev};
+    std::int64_t outcome = 0;
+    if (falls) {
+        outcome = deep_take(ctx, m, t, woken_cause, plan ? &*plan : nullptr);
+        if (outcome == 0) {
             fail("history: monsters: the fall of settlement " + db::format_i64(t) + " found no flight");
         }
+    } else {
         EventSpec g = point_event(ctx, warren ? "warren_sealed" : "deep_sealed", region, t);
         g.participants = {Participant{"civilization", EntityType::civilization, c},
                           Participant{"monster", EntityType::monster, m}};
@@ -475,11 +462,11 @@ bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
         }
         g.participants.push_back(Participant{"lair", EntityType::site, l});
         g.values = {(m + 1) % 3};
-        g.causes = causes;
-        const std::int64_t sealed = ctx.append(g);
+        g.causes = woken_cause;
+        outcome = ctx.append(g);
         Monster& w = monster(m);
         w.status = MonsterStatus::asleep;
-        w.sleeping_event = sealed;
+        w.sleeping_event = outcome;
         w.sealed = true;
         if (warren) {
             warren_sealed_[static_cast<std::size_t>(t - 1)] = 1;
@@ -489,51 +476,160 @@ bool MonstersSubsystem::deep_wake_at(StepContext& ctx, const DeepHold& hold) {
         }
         ++stats_.deep_sealed;
     }
+    // 6.11, P5-08 12.4: after the outcome (and its flight's or ruin's
+    // events), one ally_aided_hold per ally of the aid, ascending, citing the
+    // waking and the outcome, each followed by its goodwill between
+    // different races.
+    const std::int64_t race_c = ctx.state().civ(c).race;
+    for (const DeepAid& a : aid) {
+        EventSpec g = point_event(ctx, "ally_aided_hold", region, t);
+        g.participants = {Participant{"ally", EntityType::civilization, a.ally},
+                          Participant{"partner", EntityType::civilization, c},
+                          Participant{"monster", EntityType::monster, m},
+                          Participant{"origin", EntityType::settlement, a.origin}};
+        g.values = {(m + a.ally) % 3};
+        g.causes = {ev, outcome};
+        const std::int64_t aid_event = ctx.append(g);
+        ++stats_.aids;
+        const std::int64_t race_a = ctx.state().civ(a.ally).race;
+        if (race_a != race_c) {
+            relations_->credit(race_a, race_c, tuning_.deep_aid_memory, aid_event);
+        }
+    }
+    if (!aid.empty()) {
+        ++stats_.wakings_aided;
+    }
     return true;
+}
+
+std::optional<MonstersSubsystem::DeepHold> MonstersSubsystem::mine_candidate(const StepContext& ctx,
+                                                                             std::int64_t id) const {
+    const State& state = ctx.state();
+    const auto n_civs = static_cast<std::int64_t>(state.civs().size());
+    if (id < 1 || id > static_cast<std::int64_t>(sites_.size())) {
+        return std::nullopt;
+    }
+    const Site& x = sites_[static_cast<std::size_t>(id - 1)];
+    if (x.kind != MINE || x.ended_year || x.woken || x.sealed || x.depth < 1) {
+        return std::nullopt;
+    }
+    const std::int64_t d = x.depth;
+    if (tuning_.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0) {
+        return std::nullopt;
+    }
+    const std::int64_t c = x.founder;
+    if (c < 1 || c > n_civs || state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
+        return std::nullopt;
+    }
+    const std::int64_t t = x.settlement;
+    if (!standing(state.settlement(t)) || !ctx.visible(state.settlement(t)) || state.settlement(t).owner_civ != c) {
+        return std::nullopt;
+    }
+    return DeepHold{id, t, c, d, x.region, x.deepen_event};
+}
+
+std::optional<MonstersSubsystem::DeepHold> MonstersSubsystem::warren_candidate(const StepContext& ctx,
+                                                                               std::int64_t t) const {
+    const State& state = ctx.state();
+    const auto n_civs = static_cast<std::int64_t>(state.civs().size());
+    if (t < 1 || static_cast<std::size_t>(t) > warren_depth_.size() ||
+        t > static_cast<std::int64_t>(state.settlements().size())) {
+        return std::nullopt;
+    }
+    const auto ti = static_cast<std::size_t>(t - 1);
+    const std::int64_t d = warren_depth_[ti];
+    if (d < 1 || warren_woken_[ti] != 0 || warren_sealed_[ti] != 0 ||
+        tuning_.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0) {
+        return std::nullopt;
+    }
+    const Settlement& st = state.settlement(t);
+    const std::int64_t c = warren_delver_[ti];
+    if (!standing(st) || !ctx.visible(st) || st.owner_civ != c || c < 1 || c > n_civs || state.civ(c).ended_year ||
+        !ctx.visible(state.civ(c))) {
+        return std::nullopt;
+    }
+    return DeepHold{0, t, c, d, st.region, warren_event_[ti]};
 }
 
 void MonstersSubsystem::deep_waking(StepContext& ctx) {
     const State& state = ctx.state();
-    const auto n_civs = static_cast<std::int64_t>(state.civs().size());
+    const auto ns = static_cast<std::int64_t>(state.settlements().size());
+    grow_warrens(static_cast<std::size_t>(ns));
+    // P5-08 12.2: in the first tick year of a flare-up whose trigger is the
+    // stirring candidate's last deepening, that candidate wakes first, with
+    // no wake draw, if it is still a candidate (engineer's reading: before
+    // the other candidates, as the gods' certain act).
+    if (stir_event_ != 0 && ctx.phase_kind() == PhaseKind::flare && ctx.phase_trigger_event() == stir_event_ &&
+        ctx.year() == phase_start_) {
+        const std::optional<DeepHold> hold =
+            stir_site_ != 0 ? mine_candidate(ctx, stir_site_) : warren_candidate(ctx, stir_warren_);
+        if (hold && deep_wake_at(ctx, *hold, true)) {
+            ++stats_.stir_wakings;
+            return;
+        }
+    }
     const auto n = static_cast<std::int64_t>(sites_.size());
     for (std::int64_t id = 1; id <= n; ++id) {
-        if (site(id).kind != MINE || site(id).ended_year || site(id).woken || site(id).sealed || site(id).depth < 1) {
-            continue;
-        }
-        const std::int64_t d = site(id).depth;
-        if (tuning_.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0) {
-            continue;
-        }
-        const std::int64_t c = site(id).founder;
-        if (c < 1 || c > n_civs || state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
-            continue;
-        }
-        const std::int64_t t = site(id).settlement;
-        if (!standing(state.settlement(t)) || !ctx.visible(state.settlement(t)) || state.settlement(t).owner_civ != c) {
-            continue;
-        }
         // Ids and values only: the lair grows the site list.
-        if (deep_wake_at(ctx, DeepHold{id, t, c, d, site(id).region, site(id).deepen_event})) {
+        const std::optional<DeepHold> hold = mine_candidate(ctx, id);
+        if (hold && deep_wake_at(ctx, *hold, false)) {
             return;  // at most one waking a step
         }
     }
     // r2 6.10: the warrens, after every mine candidate.
-    const auto ns = static_cast<std::int64_t>(state.settlements().size());
+    for (std::int64_t t = 1; t <= ns; ++t) {
+        const std::optional<DeepHold> hold = warren_candidate(ctx, t);
+        if (hold && deep_wake_at(ctx, *hold, false)) {
+            return;
+        }
+    }
+}
+
+// --- P5-08 12.2 The stir (Q4) ------------------------------------------------------------------------
+
+void MonstersSubsystem::deep_stir(StepContext& ctx) {
+    stir_site_ = 0;  // stirring clears at the next Q4
+    stir_warren_ = 0;
+    stir_event_ = 0;
+    if (tuning_.deep_stir_permille <= 0 || pending_flare_ != 0) {
+        return;
+    }
+    const std::int64_t length = ctx.years();
+    const auto chance_of = [&](const DeepHold& hold) {
+        const std::int64_t ppm = tuning_.deep_wake_ppm[static_cast<std::size_t>(hold.depth - 1)];
+        std::int64_t p = floor_div(checked_mul(ppm, pressure_), 1000);
+        p = floor_div(checked_mul(checked_mul(p, length), tuning_.deep_stir_permille), 1000);
+        if (hold.site == 0) {
+            p = floor_div(checked_mul(p, tuning_.deep_warren_wake_permille), 1000);
+        }
+        return std::min(PPM, p);
+    };
+    const auto n = static_cast<std::int64_t>(sites_.size());
+    for (std::int64_t id = 1; id <= n; ++id) {
+        const std::optional<DeepHold> hold = mine_candidate(ctx, id);
+        if (!hold || hold->cause == 0) {
+            continue;
+        }
+        if (chance_ppm(ctx.draw(stir_keys_[0], word(id), 0, 0), chance_of(*hold))) {
+            stir_site_ = id;
+            stir_event_ = hold->cause;
+            pending_flare_ = stir_event_;
+            ++stats_.deep_stirred;
+            return;
+        }
+    }
+    const auto ns = static_cast<std::int64_t>(ctx.state().settlements().size());
     grow_warrens(static_cast<std::size_t>(ns));
     for (std::int64_t t = 1; t <= ns; ++t) {
-        const auto ti = static_cast<std::size_t>(t - 1);
-        const std::int64_t d = warren_depth_[ti];
-        if (d < 1 || warren_woken_[ti] != 0 || warren_sealed_[ti] != 0 ||
-            tuning_.deep_wake_ppm[static_cast<std::size_t>(d - 1)] <= 0) {
+        const std::optional<DeepHold> hold = warren_candidate(ctx, t);
+        if (!hold || hold->cause == 0) {
             continue;
         }
-        const Settlement& st = state.settlement(t);
-        const std::int64_t c = warren_delver_[ti];
-        if (!standing(st) || !ctx.visible(st) || st.owner_civ != c || c < 1 || c > n_civs || state.civ(c).ended_year ||
-            !ctx.visible(state.civ(c))) {
-            continue;
-        }
-        if (deep_wake_at(ctx, DeepHold{0, t, c, d, st.region, warren_event_[ti]})) {
+        if (chance_ppm(ctx.draw(stir_keys_[1], word(t), 0, 0), chance_of(*hold))) {
+            stir_warren_ = t;
+            stir_event_ = hold->cause;
+            pending_flare_ = stir_event_;
+            ++stats_.deep_stirred;
             return;
         }
     }
@@ -541,8 +637,8 @@ void MonstersSubsystem::deep_waking(StepContext& ctx) {
 
 // --- 6.6 The take ----------------------------------------------------------------------------------------
 
-bool MonstersSubsystem::deep_take(StepContext& ctx, std::int64_t id, std::int64_t t,
-                                  const std::vector<std::int64_t>& causes) {
+std::int64_t MonstersSubsystem::deep_take(StepContext& ctx, std::int64_t id, std::int64_t t,
+                                          const std::vector<std::int64_t>& causes, const DeepFlightPlan* gate_plan) {
     State& state = ctx.state();
     const std::int64_t c = monster(id).waking_realm;
     if (!standing(state.settlement(t)) || state.settlement(t).owner_civ != c) {
@@ -552,13 +648,16 @@ bool MonstersSubsystem::deep_take(StepContext& ctx, std::int64_t id, std::int64_
     const std::int64_t dead = floor_div(checked_mul(p, tuning_.deep_toll_permille), 1000);
     const std::int64_t survivors = p - dead;
     // 2. Last refuge: a flight, else no take.
+    // P5-08 12.7 A1: at a waking the gate's plan, not recomputed.
     std::optional<DeepFlightPlan> plan;
-    if (deep_last_refuge(ctx, t)) {
+    if (gate_plan != nullptr) {
+        plan = *gate_plan;
+    } else if (deep_last_refuge(ctx, t)) {
         if (conflict_ != nullptr) {
             plan = conflict_->deep_flight_plan(ctx, c, t, survivors, lair_region(monster(id)));
         }
         if (!plan) {
-            return false;
+            return 0;
         }
     }
     // 3. The event; the open mine at t, if any.
@@ -593,7 +692,7 @@ bool MonstersSubsystem::deep_take(StepContext& ctx, std::int64_t id, std::int64_
     m.takes += 1;
     m.holds_settlement = true;
     ++stats_.holds_lost;
-    return true;
+    return ev;
 }
 
 // --- 6.7 The horror's years: a later take after a raid ---------------------------------------------------
@@ -605,8 +704,9 @@ void MonstersSubsystem::deep_after_raid(StepContext& ctx, std::int64_t id, std::
     }
     const std::int64_t c = monster(id).waking_realm;
     const std::int64_t region = state.settlement(t).region;
+    // P5-08 12.7 A2: the waking realm must be visible.
     if (!standing(state.settlement(t)) || state.settlement(t).owner_civ != c || state.civ(c).ended_year ||
-        region < 1 || region > region_count_) {
+        !ctx.visible(state.civ(c)) || region < 1 || region > region_count_) {
         return;
     }
     const std::int64_t h = monster(id).hops[static_cast<std::size_t>(region - 1)];
@@ -621,7 +721,7 @@ void MonstersSubsystem::deep_after_raid(StepContext& ctx, std::int64_t id, std::
     if (!chance_pm(ctx.draw(deep_keys_[TAKE], word(id), word(t), 0), floor_div(checked_mul(base, f_p), 1000))) {
         return;
     }
-    (void)deep_take(ctx, id, t, std::vector<std::int64_t>{raid_event});
+    (void)deep_take(ctx, id, t, std::vector<std::int64_t>{raid_event}, nullptr);
 }
 
 }  // namespace worldgen::history

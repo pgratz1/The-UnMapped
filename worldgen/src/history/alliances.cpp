@@ -117,6 +117,7 @@ AlliancesTuning alliances_tuning_from(const data::ContentSet& content) {
     t.spoils_large_share = r.get_int("spoils_large_share");
     t.spoils_large_part_permille = r.get_int("spoils_large_part_permille");
     t.soured_renew_permille = r.get_int("soured_renew_permille");
+    t.renew_written_max = r.get_int("renew_written_max");  // P5-08 12.5
     t.soured_join_permille = r.get_int("soured_join_permille");
     t.weary_years = r.get_int("weary_years");
     t.join_weary_permille = r.get_int("join_weary_permille");
@@ -1031,6 +1032,15 @@ void AlliancesSubsystem::renewals(StepContext& ctx) {
             notable.push_back(basis_event);
         }
         a.next_due = checked_add(due, tuning_.term_years);
+        // P5-08 12.5: past the cap a notable renewal is made quietly (R unchanged).
+        const bool capped = !notable.empty() && tuning_.renew_written_max > 0 &&
+                            a.written_renewals >= tuning_.renew_written_max;
+        if (capped) {
+            relations_.credit_units(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory);
+            ++stats_.renewed_quietly;
+            ++stats_.renewals_capped;
+            continue;
+        }
         if (notable.empty() || !quiet_ok(ctx, p.first)) {
             // A renewal with nothing new (or without a quiet step's budget) writes nothing.
             // P5-07 7.5: no event of this step to cite; units only.
@@ -1050,6 +1060,7 @@ void AlliancesSubsystem::renewals(StepContext& ctx) {
         Alliance& live = alliances_.at(p);
         live.renew_year = year;
         live.renew_event = ev;
+        live.written_renewals += 1;
         live.basis = basis;
         live.foe = foe;
         relations_.credit(race_of(ctx, p.first), race_of(ctx, p.second), tuning_.renew_memory, ev);
