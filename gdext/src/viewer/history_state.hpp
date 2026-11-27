@@ -174,6 +174,17 @@ public:
     }
     [[nodiscard]] std::int64_t last_marker_step_nsec() const noexcept { return last_marker_step_nsec_; }
 
+    // --- Mountain depths (spec P5-07 11.2) -------------------------------------
+    // The text a mine's hover gains at Y: ", delved <mine_depth_word(d)>" when
+    // Timeline::mine_depth_at(site, Y) = d >= 1, then ", sealed in <year>"
+    // when the horror its deep_woken woke was sealed by Y; empty otherwise.
+    [[nodiscard]] std::string mine_depth_text(std::int64_t site) const;
+    // The same for a settlement's warren (items 1 and 4): ", warrens delved
+    // <word>" when Timeline::warren_depth_at(settlement, Y) = d >= 1, then
+    // ", sealed in <year>" when the horror woken in its warren (a deep_woken
+    // without a site at that settlement) was sealed by Y.
+    [[nodiscard]] std::string warren_text(std::int64_t settlement) const;
+
 private:
     HistoryStatus status_ = HistoryStatus::none;
     std::string error_code_;
@@ -195,6 +206,14 @@ private:
     worldgen::inspect::YearMarkers markers_current_;
     worldgen::inspect::YearMarkers markers_scratch_;
     std::int64_t last_marker_step_nsec_ = 0;
+
+    // P5-07: the monster woken at a mine (site id, monster) and in a warren
+    // (settlement id, monster), from the deep_woken events, ascending key.
+    std::vector<std::pair<std::int64_t, std::int64_t>> mine_horrors_;
+    std::vector<std::pair<std::int64_t, std::int64_t>> warren_horrors_;
+    // The ", sealed in <year>" part for a horror list's key at Y.
+    [[nodiscard]] std::string sealed_text(const std::vector<std::pair<std::int64_t, std::int64_t>>& horrors,
+                                          std::int64_t key) const;
 };
 
 }  // namespace unmapped

@@ -117,6 +117,8 @@ void HistoryState::reset() {
     markers_current_ = {};
     markers_scratch_ = {};
     last_marker_step_nsec_ = 0;
+    mine_horrors_.clear();
+    warren_horrors_.clear();
 }
 
 void HistoryState::load(const worldgen::db::WorldReader& reader) {
@@ -161,6 +163,35 @@ void HistoryState::load(const worldgen::db::WorldReader& reader) {
         error_message_ = e.what();
         return;
     }
+    // P5-07 11.2: the horror of each mine and warren, from its deep_woken.
+    if (const auto* woken = history_->view.catalogue().find("deep_woken")) {
+        const auto* site_role = woken->find_role("site");
+        const auto* monster_role = woken->find_role("monster");
+        for (const auto& e : history_->view.events()) {
+            if (e.row.kind != woken->id || monster_role == nullptr) {
+                continue;
+            }
+            std::int64_t site = 0;
+            std::int64_t monster = 0;
+            for (const auto& p : e.participants) {
+                if (site_role != nullptr && p.role == site_role->seq) {
+                    site = p.entity_id;
+                } else if (p.role == monster_role->seq) {
+                    monster = p.entity_id;
+                }
+            }
+            if (monster == 0) {
+                continue;
+            }
+            if (site != 0) {
+                mine_horrors_.emplace_back(site, monster);
+            } else if (e.row.settlement != 0) {
+                warren_horrors_.emplace_back(e.row.settlement, monster);
+            }
+        }
+        std::sort(mine_horrors_.begin(), mine_horrors_.end());
+        std::sort(warren_horrors_.begin(), warren_horrors_.end());
+    }
     // P4-04 8.1: the marker index; its failure leaves the history loaded.
     try {
         auto index = worldgen::inspect::MarkerIndex::load(reader, *history_);
@@ -188,6 +219,42 @@ void HistoryState::load(const worldgen::db::WorldReader& reader) {
         markers_error_code_ = "corrupt_layer";
         markers_error_message_ = e.what();
     }
+}
+
+std::string HistoryState::sealed_text(const std::vector<std::pair<std::int64_t, std::int64_t>>& horrors,
+                                      std::int64_t key) const {
+    const auto it = std::lower_bound(horrors.begin(), horrors.end(), std::make_pair(key, std::int64_t{0}));
+    for (auto i = it; i != horrors.end() && i->first == key; ++i) {
+        const std::int64_t sealed = history_->timeline.sealed_year(i->second);
+        if (sealed >= 0 && sealed <= year_) {
+            return ", sealed in " + std::to_string(sealed);
+        }
+    }
+    return {};
+}
+
+std::string HistoryState::mine_depth_text(std::int64_t site) const {
+    if (!loaded()) {
+        return {};
+    }
+    std::string text;
+    const std::int64_t depth = history_->timeline.mine_depth_at(site, year_);
+    if (depth >= 1) {
+        text = ", delved " + std::string(worldgen::inspect::mine_depth_word(depth));
+    }
+    return text + sealed_text(mine_horrors_, site);
+}
+
+std::string HistoryState::warren_text(std::int64_t settlement) const {
+    if (!loaded()) {
+        return {};
+    }
+    std::string text;
+    const std::int64_t depth = history_->timeline.warren_depth_at(settlement, year_);
+    if (depth >= 1) {
+        text = ", warrens delved " + std::string(worldgen::inspect::mine_depth_word(depth));
+    }
+    return text + sealed_text(warren_horrors_, settlement);
 }
 
 namespace {

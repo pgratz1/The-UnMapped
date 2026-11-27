@@ -61,6 +61,10 @@ struct ViewerCheckOptions {
     int64_t expect_mines = -1;          // the history report's mine_opened lines (P5-04 11.3); -1: not checked
     godot::String history_summary;      // P4-05 8.1: `report --history --level summary`
     int64_t expect_library = -1;        // P5-04a 21.7 item 4: a library's site id (check M12); -1: not checked
+    // P5-07 11.2: --expect-depths: the world must have a deepened mine, a
+    // sealed mine and a delved warren (checks M13 and M14); without it the
+    // checks run on what the world has.
+    bool expect_depths = false;
     bool wired = false;
 };
 

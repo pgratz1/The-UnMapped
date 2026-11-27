@@ -35,10 +35,14 @@
 #    P5-04 11.3: the world must have a mine_opened event, check M10),
 #    and the browser (P4-05 8: history-summary.txt from report --history
 #    --level summary; checks B0 to B12).
-# 4b. Library world (P5-04a 21.7 item 4): --seed 51 --map-size 512, the
+# 4b. Library world (P5-04a 21.7 item 4): --seed 61 --map-size 512, the
 #    smallest seed >= 42 at 512 whose full history report has a `library`
-#    line in [sites] (at 0.28.0); the viewer gets --expect-history library
-#    --expect-library <site id> (check M12 only).
+#    line in [sites] (51 at 0.28.0, 61 at 0.29.0); the viewer gets
+#    --expect-history library --expect-library <site id> (check M12 only).
+# 4c. Depths world (P5-07 11.2): --seed 45 --map-size 512, the smallest
+#    seed >= 42 at 512 (at 0.29.0) with a mine delved to depth 3, a sealed
+#    mine and a delved goblin warren; the viewer gets --expect-history
+#    library --expect-depths (checks M13 and M14 only).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
@@ -133,7 +137,8 @@ endfunction()
 # feature the checks below need (an ended civilization, a pass, a mine, towers).
 # No seed from 42 to 69 at 512 with those has an ended tower.
 set(_real_seed 49)
-set(_library_seed 51)
+set(_library_seed 61)
+set(_depths_seed 45)
 set(_real_dir "${WORK_DIR}/real")
 set(_real_world "${_real_dir}/world.db")
 run_step("generate seed ${_real_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_real_seed} --map-size 512 --data "${DATA_DIR}"
@@ -294,6 +299,11 @@ list(GET _library_lines 0 _library_line)
 string(REGEX MATCH "^  si([0-9]+) " _m "${_library_line}")
 set(_library_site "${CMAKE_MATCH_1}")
 message("library world: seed ${_library_seed}, ${_library_line}")
+set(_depths_dir "${WORK_DIR}/depths")
+file(MAKE_DIRECTORY "${_depths_dir}")
+set(_depths_world "${_depths_dir}/world.db")
+run_step("generate seed ${_depths_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_depths_seed} --map-size 512
+    --data "${DATA_DIR}" --out "${_depths_world}")
 
 # --- 3. Import, 4. viewer checks ----------------------------------------------
 run_step("editor import" "${GODOT}" --headless --path "${PROJECT_DIR}" --import)
@@ -313,6 +323,7 @@ viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_
     --expect-marker-years ${_marker_years_arg} --expect-passes ${_passes} --expect-mines ${_mines_opened})
 viewer_check("library world" "${_library_world}" "${_library_dir}" -1 -1 --expect-history library
     --expect-library ${_library_site})
+viewer_check("depths world" "${_depths_world}" "${_depths_dir}" -1 -1 --expect-history library --expect-depths)
 
 # --- 5. Playback runs (P4-06 11.1) ---------------------------------------------
 # R1: a short movie with --play-log at a fixed frame step: the year lines
