@@ -376,8 +376,9 @@ FigureView::Hero FiguresSubsystem::hero_of(std::int64_t civ) const {
     if (civ >= 1 && static_cast<std::size_t>(civ) <= hero_.size()) {
         f = hero_[static_cast<std::size_t>(civ - 1)];
     }
-    if (f == 0) {
-        f = champion_of(civ);  // P5-08 7.5: else its champion
+    // P5-08 7.5 (lead ruling PN5): a living champion hunts ahead of the hero.
+    if (const std::int64_t ch = champion_of(civ); ch != 0) {
+        f = ch;
     }
     if (f == 0) {
         return {};
@@ -430,6 +431,7 @@ void FiguresSubsystem::raise_divine(StepContext& ctx, std::int64_t f, std::int64
         fig.skill = std::max<std::int64_t>(1, tuning_.skill_max);
         fig.epithet = std::string(epithet);
         champion_[static_cast<std::size_t>(c - 1)] = id;
+        champion_to_war(ctx, id, c, event);
     }
 }
 
@@ -1145,6 +1147,63 @@ void FiguresSubsystem::deaths_of_age(StepContext& ctx) {
 
 // --- Generals (6.6) -------------------------------------------------------------------------------------
 
+void FiguresSubsystem::appoint_champion(StepContext& ctx, std::int64_t w, std::size_t side, std::int64_t ch,
+                                        std::int64_t extra_cause) {
+    const KnownWar& kw0 = wars_.at(w);
+    const std::int64_t c = side == 0 ? kw0.attacker : kw0.defender;
+    const std::int64_t enemy = side == 0 ? kw0.defender : kw0.attacker;
+    const bool again = figure(ch).first_command != 0;
+    if (!again) {
+        figure(ch).first_command = ctx.year();
+    }
+    EventSpec e = point_event(ctx, "general_appointed", kw0.goal, 0);
+    e.participants = {fig_role("figure", ch), civ_role("civilization", c), civ_role("enemy", enemy)};
+    e.values = {again ? 1 : 0};
+    e.causes = {w};
+    if (extra_cause != 0) {
+        e.causes.push_back(extra_cause);  // the divine_champion, later than the declaration
+    }
+    const std::int64_t ev = ctx.append(e);
+    figure(ch).serving = w;
+    ctx.state().open_relation(figure_civ_key(ch, c, "served"), ev);
+    KnownWar& kwc = wars_.at(w);
+    kwc.general[side] = ch;
+    kwc.vacant[side] = false;
+    kwc.champion_waits[side] = false;
+    stats_.appointments += 1;
+}
+
+// P5-08 7.5 (lead ruling PN5): a champion raised while its realm is a
+// principal of open wars commands, at once, the open war of smallest id whose
+// side has no general (causes: the war, then the divine_champion); else it
+// waits on each open war whose side has a living general, and takes the post
+// in the next T3 after that general dies (vacancies). Joined allies have no
+// general (P5-06 6.6), so an ally's war gives no post.
+void FiguresSubsystem::champion_to_war(StepContext& ctx, std::int64_t ch, std::int64_t c, std::int64_t event) {
+    if (conflict_ == nullptr || ctx.state().civ(c).ended_year) {
+        return;
+    }
+    std::vector<std::pair<std::int64_t, std::size_t>> waits;
+    for (const auto& [w, kw] : wars_) {
+        if (!conflict_->war_open(w)) {
+            continue;
+        }
+        for (std::size_t side = 0; side < 2; ++side) {
+            if ((side == 0 ? kw.attacker : kw.defender) != c) {
+                continue;
+            }
+            if (kw.general[side] == 0) {
+                appoint_champion(ctx, w, side, ch, event);
+                return;
+            }
+            waits.emplace_back(w, side);
+        }
+    }
+    for (const auto& [w, side] : waits) {
+        wars_.at(w).champion_waits[side] = true;
+    }
+}
+
 void FiguresSubsystem::appoint(StepContext& ctx, std::int64_t w, std::size_t side) {
     KnownWar& kw0 = wars_.at(w);
     const std::int64_t c = side == 0 ? kw0.attacker : kw0.defender;
@@ -1156,21 +1215,7 @@ void FiguresSubsystem::appoint(StepContext& ctx, std::int64_t w, std::size_t sid
     // P5-08 7.5: a living champion not serving another war is appointed with
     // no draw.
     if (const std::int64_t ch = champion_of(c); ch != 0 && figure(ch).serving == 0) {
-        const bool again = figure(ch).first_command != 0;
-        if (!again) {
-            figure(ch).first_command = y;
-        }
-        EventSpec e = point_event(ctx, "general_appointed", kw0.goal, 0);
-        e.participants = {fig_role("figure", ch), civ_role("civilization", c), civ_role("enemy", enemy)};
-        e.values = {again ? 1 : 0};
-        e.causes = {w};
-        const std::int64_t ev = ctx.append(e);
-        figure(ch).serving = w;
-        ctx.state().open_relation(figure_civ_key(ch, c, "served"), ev);
-        KnownWar& kwc = wars_.at(w);
-        kwc.general[side] = ch;
-        kwc.vacant[side] = false;
-        stats_.appointments += 1;
+        appoint_champion(ctx, w, side, ch, 0);
         return;
     }
     if (!chance_pm(ctx.draw(keys_[APPOINT], word(w), word(c), word(v)), p)) {
@@ -1230,6 +1275,19 @@ void FiguresSubsystem::vacancies(StepContext& ctx) {
         for (std::size_t side = 0; side < 2; ++side) {
             KnownWar& kw = wars_.at(w);
             const std::int64_t c = side == 0 ? kw.attacker : kw.defender;
+            if (kw.champion_waits[side] && kw.general[side] != 0) {
+                continue;  // the general still serves
+            }
+            if (kw.champion_waits[side] && !kw.vacant[side]) {
+                // P5-08 7.5 (lead ruling PN5): the general died; the waiting
+                // champion takes the post once, with no draw.
+                kw.champion_waits[side] = false;
+                const std::int64_t ch = champion_of(c);
+                if (ch != 0 && figure(ch).serving == 0 && !ctx.state().civ(c).ended_year) {
+                    appoint_champion(ctx, w, side, ch, 0);
+                }
+                continue;
+            }
             if (!kw.vacant[side] || kw.general[side] != 0 || ctx.state().civ(c).ended_year) {
                 continue;
             }

@@ -167,3 +167,27 @@ Measured with the rule (gcc, seeds 0-39 at 1024, `game/data`; seeds 0-7 byte-ide
 needs 50%). Acts 100-104: bless 156, curse 164, champion 20, monster 95, mark 111. Diagnosis: champions live about 25
 to 35 years and only 6 of 20 saw a war declaration of their realm in their life; a champion raised during an open war
 is not appointed to it (P5-06 6.6 appoints at a declaration only), and a realm's own hero hunts before its champion.
+
+## Champions to war and to the hunt first (second lead ruling on PN5, 2026-11-27)
+
+- **`hero_of(c)`** returns c's living champion first, else its hero (`monsters.cpp` hunts read it; the hunt chance,
+  might and reach are unchanged; a hunt led by the champion names it in `monster_slain_by_hero` / `hero_slain`).
+- **At raising** (`FiguresSubsystem::champion_to_war`, called at the end of `raise_divine` for role 6): if the
+  conflict seam is set and c has not ended, scan `wars_` (the declarations figures has read, ascending id) for wars
+  with `conflict_->war_open(w)` where c is the attacker (side 0) or defender (side 1), sides in that order. The first
+  such side with `general[side] == 0` gets the champion at once: `general_appointed` with participants (figure,
+  civilization, enemy), value `again` (1 when the champion commanded before), causes `{w, divine_champion}`
+  (ascending), the `served` relation opened, no `hist.figures.appoint` draw; stop. If none is free, every such side
+  is flagged `champion_waits`.
+- **Waiting**: in T3 `vacancies()` (open wars, ascending id, sides 0 then 1), a flagged side whose general slot is
+  empty and not `vacant` (the general died of age, which leaves no vacancy) clears the flag and appoints the champion
+  if it is alive, not serving and c has not ended (causes `{w}`). A flagged side whose general fell is `vacant`, and
+  the existing `appoint()` already takes the free champion first. The flag is cleared by any appointment of the side.
+- **Allies**: a joined ally's war makes a champion eligible (6.3) but gives no post: P5-06 6.6 names generals for the
+  two principals only.
+- `appoint()`'s champion branch is now `appoint_champion(ctx, w, side, ch, 0)`; same event and bytes as before.
+
+Measured after the second ruling (gcc, seeds 0-39 at 1024, `game/data`; seeds 0-7 byte-identical with clang): 22
+`divine_champion`, champions in 18 of 40 worlds, 17 of 22 fight (77.3%; PN5 needs 50%), 13 champions appointed
+general; acts bless 153, curse 158, champion 22, monster 96, mark 115; wars median 28; `monster_slain_by_hero` by
+heroes 78, by champions 4.

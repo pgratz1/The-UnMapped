@@ -198,6 +198,7 @@ private:
         std::array<std::int64_t, 2> general{};  // per side (0 attacker, 1 defender), 0 none
         std::array<std::int64_t, 2> vacancy{};  // v_c
         std::array<bool, 2> vacant{};           // a general fell; no appointment since
+        std::array<bool, 2> champion_waits{};   // P5-08 7.5: a champion raised while this side had a general
     };
     struct RaceData {
         std::int64_t id = 0, lifespan = 1, generation = 1, awakening = 0;
@@ -262,6 +263,11 @@ private:
     void deaths_of_age(StepContext& context);
     // 6.6.
     void appoint(StepContext& context, std::int64_t war, std::size_t side);
+    // P5-08 7.5: the champion ch takes the post of `side` in `war` (no draw).
+    void appoint_champion(StepContext& context, std::int64_t war, std::size_t side, std::int64_t ch,
+                          std::int64_t extra_cause);
+    // P5-08 7.5 (lead ruling PN5): a champion raised during an open war.
+    void champion_to_war(StepContext& context, std::int64_t ch, std::int64_t civ, std::int64_t event);
     void vacancies(StepContext& context);
     void stand_down(StepContext& context);
     // 6.8.
