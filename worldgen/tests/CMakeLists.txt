@@ -520,6 +520,24 @@ target_sources(worldgen-tests PRIVATE
     history/history_depths_golden_test.cpp
     history/history_depths_forced_test.cpp
 )
+# Pantheon, divine interventions and cults (spec P5-08 r1, generator 0.30.0, schema 14, report v11): the spec's
+# arithmetic by hand (history_pantheon_unit_test.cpp, runs before integration), the data of 4 on game/data, the
+# invariants of 13 on pantheon-small and shipped worlds with determinism, I0, resume and the activity levels, the
+# reader checks of 9 on corrupt copies, report v11 and the timeline reads on fixture H20 (h20-v11.toml, written by
+# reference/p5_08_h20_fixture.py), and the golden file golden/p5-08-pantheon.txt (fixture lines now, world lines at
+# integration). Names and the switch are in history/p5_08_api.hpp (UNMAPPED_P508_API at integration: until then the
+# cases that need 0.30.0 return at their start). Slow cases in the suite "pantheon-slow". The reference is
+# reference/p5_08_pantheon_reference.py.
+target_sources(worldgen-tests PRIVATE
+    history/history_pantheon_unit_test.cpp
+    history/history_pantheon_data_test.cpp
+    history/history_pantheon_property_a_test.cpp
+    history/history_pantheon_property_b_test.cpp
+    history/history_pantheon_property_c_test.cpp
+    history/history_pantheon_reader_test.cpp
+    history/history_pantheon_report_test.cpp
+    history/history_pantheon_golden_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -682,6 +700,10 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD depths-property-d 80 "*history_depths_property_d_test.cpp"
     SHARD depths-golden 70 "*history_depths_golden_test.cpp"
     SHARD depths 20 "*history_depths_data_test.cpp,*history_depths_forced_test.cpp,*history_depths_reader_test.cpp,*history_depths_report_test.cpp,*history_depths_unit_test.cpp"
+    SHARD pantheon-property-a 80 "*history_pantheon_property_a_test.cpp"
+    SHARD pantheon-property-b 80 "*history_pantheon_property_b_test.cpp"
+    SHARD pantheon-property-c 80 "*history_pantheon_property_c_test.cpp"
+    SHARD pantheon 40 "*history_pantheon_data_test.cpp,*history_pantheon_golden_test.cpp,*history_pantheon_reader_test.cpp,*history_pantheon_report_test.cpp,*history_pantheon_unit_test.cpp"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -705,5 +727,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-alliances 300 "*-slow" "*history_alliances_*"
     SLOW slow-figures 300 "*-slow" "*history_figures_*"
     SLOW slow-depths 600 "*-slow" "*depths_*"
+    SLOW slow-pantheon 600 "*-slow" "*pantheon_*"
     SLOW_REST slow-other 10 "*-slow"
 )
