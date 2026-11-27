@@ -324,7 +324,11 @@ inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     bool skip = false;
     for (const std::string& l : block(text, "[civilizations]")) {
         if (!l.empty() && l[0] == 'c') flush();
-        if (l.rfind(full ? "  relations:" : "  adversaries:", 0) == 0 || (no_rulers && l.rfind("  rulers: ", 0) == 0)) {
+        // P5-08 10 item 4 and 12 item 2 (format v11): the realm's `gods:`, `faith:` and `deep:` lines are at both
+        // levels, but not at summary when the world has more than SUMMARY_LINES_CIVS civilizations (as `rulers:`)
+        const bool big_only_full = no_rulers && (l.rfind("  rulers: ", 0) == 0 || l.rfind("  gods: ", 0) == 0 ||
+                                                 l.rfind("  faith: ", 0) == 0 || l.rfind("  deep: ", 0) == 0);
+        if (l.rfind(full ? "  relations:" : "  adversaries:", 0) == 0 || big_only_full) {
             skip = true;
             continue;
         }

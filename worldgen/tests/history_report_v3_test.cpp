@@ -308,10 +308,10 @@ TEST_CASE("P3-07 r22 26.4, 26.2: a claim note names a region renamed after the d
         CHECK(contains_line(present, "  rg3: The Grey Downs since 1800, e1022; formerly Bel Downs"));
     }
     CHECK(contains_line(block(full, "[present]"), "  rg3 The Grey Downs: The Kingdom of Bel (c2) since 801"));
-    // P5-07 (format v10, generator 0.29.0): the reference's text at v10 (at v9 1fc91d5d... and d4036290...; at v8 e8a6ca2c... and 34134964...; at v7 2d9cc570... and fa1716d1...) (p3_report_reference.py
+    // P5-08 (format v11, generator 0.30.0): the reference's text at v11 (at v10 abe5b762... and 9771b636...; at v9 1fc91d5d... and d4036290...; at v8 e8a6ca2c... and 34134964...; at v7 2d9cc570... and fa1716d1...) (p3_report_reference.py
     // fixture h12-v3, these statements, report; at v6 ad99363d... and 6f841276...)
-    CHECK(hrtest::sha_hex(summary) == "abe5b762037f7ca879394df9848a5df182d5f53c6133b26ab135ee20e8d5d23e");
-    CHECK(hrtest::sha_hex(full) == "9771b636890de7f8a48ae64fb3e98a3499f8c37e930acf0a5d87b5057d484aeb");
+    CHECK(hrtest::sha_hex(summary) == "9fa45060a28a7b787f36d3e3f187dc2171c4ab8bd7ba22bb3940ad4aae11250e");
+    CHECK(hrtest::sha_hex(full) == "9027001dfc26f20466c56237c70f2eeb8359d43700e3172a68206337f648e846");
 }
 
 }  // TEST_SUITE

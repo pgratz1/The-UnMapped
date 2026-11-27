@@ -759,7 +759,9 @@ class Figures:
         if not self.t["name_rulers"]:
             return
         L = self.lines.get(c)
-        if L is None or L["f"] or self.civ(c)["ended_year"] is not None and self.civ(c)["ending_event"] < e:
+        # Reading P-R29 (P5-08 integration, the engine's): a realm already ended when the deed is read (its ending
+        # event read later in the same range) is not named by the deed; rule 4 names it with the ending event.
+        if L is None or L["f"] or self.civ(c)["ended_year"] is not None:
             return
         f = self.name_reign(c)
         self.open_ruled(f, e)

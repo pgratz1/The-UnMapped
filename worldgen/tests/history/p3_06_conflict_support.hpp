@@ -1908,6 +1908,10 @@ struct ConflictConfig {
                 pair->sub->set_figures(figures.get());
                 pair->peoples.sub->set_figures(figures.get());
                 monsters->set_figures(figures.get());
+                // P5-07 7.3, r2 7.6: the deep's flight seam and the allies' aid, as the history stage sets them
+                monsters->set_conflict(pair->sub.get());
+                monsters->set_alliances(alliances.get());
+                monsters->set_relations(relations.get());
                 alliances->set_figures(figures.get());
                 figures->set_sites(monsters.get());
                 figures->set_conflict(pair->sub.get());

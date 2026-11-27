@@ -164,6 +164,9 @@ P-R27 (10 item 3) "in" and "faith of" list the rows open at E or closed by the c
      `in none` when empty; the faith part is left out when empty.
 P-R28 (10 item 6) A temple's or sanctum's cult reads `, of <name> (fa<id>)` after the site's name; a shrine's
      `, sacred` or `, profane`.
+P-R29 (P5-06 6.4 rule 3, integration part 3a) A deed read while its realm has already ended in the state (its
+     civ_ended or civ_conquered later in the same read range, e.g. a cult_adopted of T4 read in T6 after a conquest
+     of T5) does not name the ruler; rule 4 names the reign with the ending event (p5_06_figures_reference.name_by_deed).
 Lead rulings mirrored (PN5, docs/reviews/p5-08-impl-notes.md, last two entries): a champion needs work (an open war
      of c as a side or an open joined ally, or a huntable monster) when chosen; a champion is c's hunter ahead of its
      hero; at its raising it commands the first open war of c with no general on c's side, else waits on each such

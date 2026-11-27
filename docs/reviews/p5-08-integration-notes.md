@@ -271,3 +271,39 @@ After the camp rule the report and timeline goldens were recorded again (fixture
 `worldgen-tests-pantheon` 73 s, `-pantheon-property-a` 69 s, `-b` 85 s, `-c` 90 s. Longest others: `-figures-property` 106 s,
 `-relations-p504a` 100 s, `-figures-p504a` 88 s, `-depths-property-b` 85 s, `-depths-property-a` 83 s. No entry is above 200 s
 (MSVC Debug at 13 times: the longest about 1,400 s of 3,600 s). The slow entries were not timed.
+
+## Part 3a: the three reference-against-engine disagreements (root causes)
+
+Test writer (Opus), 2026-11-27, `p5/08-int`. No file under `worldgen/src`, `tools/worldgen-cli/src` or `game/data` changed.
+
+1. **`pantheon-small` seed 5 at 512, table `figure`: spec gap, the engine's reading taken (P-R29).** One cell: ruler
+   f104 of c11 (office 4433), `start_event` 1445 in the engine, 1441 in the reference. e1441 is c11's `cult_adopted`
+   (4440, written by the pantheon, last in its step), e1445 c11's `civ_conquered` (4440, conflict, later in the same
+   step); the figures read both in one range. The engine (`figures.cpp`, the deed branch, as for every deed since
+   P5-06) does not name a ruler by a deed when the realm has already ended in the state (`civ(c).ended_year`), so
+   rule 4 names it with the ending; the reference skipped only a deed after the ending event. P5-06 6.4 rule 3 says
+   "read while the reign is unnamed" and is silent on a realm whose end lies later in the same range; the case first
+   becomes reachable with P5-08's cult deeds. Reference: `p5_06_figures_reference.name_by_deed` skips any ended realm
+   (reading P-R29 in `p5_08_pantheon_reference.READINGS`). Re-recorded `p5-08-pantheon.txt` (one line changed, the
+   engine's hash). The other goldens of the conflict replay (`p3-05`, `p3-06`, `p5-02`, `p5-03`, `p5-07`, `p5-12`)
+   and the 13 report inputs rebuilt with `build-inputs` are unchanged byte for byte. Not rerun: `p5_04`/`p5_06`
+   goldens (their world cases read the unchanged report inputs).
+2. **Conflict golden, stress-7, tension at 4876 (trigger 998 against 1001): test-support error.** `ConflictConfig`
+   (`p3_06_conflict_support.hpp`) did not set the P5-07 seams the history stage sets (`monsters->set_conflict`,
+   `set_alliances`, `set_relations`), so its run differed from `history_stage` once the deep was stirred (P5-08 12.2);
+   the reference and the real stage agree. Added the three seams. Golden unchanged.
+3. **Report fixtures: test and golden errors; the engine's report follows the spec.**
+   - `h19-v10`: `p3-07-report.txt` was recorded before part 2 reordered events 41 to 43 of `h19-v10.toml`; the
+     reference's fixture and the C++ copy agree table for table. Re-recorded from `p3_report_reference.py golden`
+     (only the ten `h19-v10` lines change).
+   - `history_report_v3_test.cpp` (the claim-note copy of H12): the constants were the v10 values;
+     `p3_report_reference.py compare` on the C++ text is equal at both levels; set to the reference's v11 hashes.
+   - `h20-v11`, `civ_common` check (`history_report_checks.hpp`): with 33 civilizations (more than
+     `SUMMARY_LINES_CIVS`) the summary leaves out the realm's `gods:`, `faith:` and `deep:` lines (P5-08 10 item 4,
+     12.1 item 2), as the engine does; the check now skips them at both levels in that case, as it does `rulers:`.
+   No `[pantheon]`/`[cults]` block or `gods` line is printed for an old fixture without pantheon data.
+
+Rerun (`linux-gcc-release`, the files only): `history_pantheon_golden_test`, `history_conflict_unit_test`,
+`history_report_v3_test`, `history_report_fixtures_test`, `conflict_engineer_test` (its line 388 of part 2's list,
+explained by item 2), `history_conflict_order_test`, `_golden_test`, `_property_test` all pass. Still failing, not
+these causes (part 2's item 5): `history_monsters_golden_test.cpp` 392, 466 (`ymrach` in the kinds seen), 496 (sites).
