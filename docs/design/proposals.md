@@ -1615,3 +1615,6 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Guard: the dwarves' median of regions held at the end (2 at 0.28.0) and standing settlements (82 on seeds 0 to 99 against the bound of 81) must not fall; calibration lowers the fall rates before any other target is traded.
 - Status: ruled by the lead.
 
+### A realm's fall to the deep stays rare; 8% is a ceiling (Paul, 2026-11-26)
+
+Status: decided. Q-P5-07-5. As calibrated for P5-07, single holds fall in about 20 of 100 default worlds (at most four in one world), and a whole dwarven realm ended in 1 of 200 worlds (about 0.3% of dwarven realms), against the bound "at most 8% of dwarven realms, at least one fall in 200 worlds". Asked whether 8% was a ceiling or a rate to reach, Paul took the recommendation: "Ok I take the recommendation on the 8%". The build stays as calibrated: a lost realm is a rare legend, lost holds are common. No retune is planned; the lower bound (at least one fall in 200 worlds) stays a target for later recalibrations.
