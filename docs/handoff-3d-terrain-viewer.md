@@ -6,6 +6,8 @@ Written by the lead session on 2026-11-27 for a separate Claude Code session on 
 
 The "3D heightmap preview" of design section 13 (row P6) and section 11 ("Later: a 3D heightmap preview, which leads into terrain streaming"), with the terrain approach of design section 7 ("Terrain approach: Terrain3D first, with a test"). Read those three places in `docs/design/design.md` before anything else. A first stage is: open a generated `world.db` in the Godot project and fly over its terrain in 3D.
 
+**Decided by Paul (2026-11-27): "Plain preview first".** The first stage loads the elevation and biome layers into Terrain3D and lets the user fly over them. The fly-across performance test of design section 7 (VR at 90 Hz, region loading), detail noise, river carving and streaming are later stages of their own.
+
 ## The boundary between the two sessions
 
 - This session changes only `gdext/`, `game/`, `extern/` (to vendor Terrain3D), the build files those need, and its own files under `docs/specs/` and `docs/reviews/`.
