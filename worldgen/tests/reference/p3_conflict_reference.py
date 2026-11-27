@@ -925,6 +925,8 @@ class World(pp.World):
             self.alliances.t6()              # T6: alliances (after relations)
         if self.figures is not None:
             self.figures.t6()                # T6: figures (after alliances)
+        if self.pantheon is not None:
+            self.pantheon.t6()               # T6: pantheon, the finish (P5-08 6.10, integration E3)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()

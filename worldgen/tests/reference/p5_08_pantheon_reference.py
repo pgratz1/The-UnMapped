@@ -190,15 +190,6 @@ def _p506():
 # Formulas (6.2 to 6.9), each as the spec writes it
 # ---------------------------------------------------------------------------
 
-# P5-08 integration (engine defect E2): False is 6.8's text ("a creator: r_a = its race", reading P-R11); True replays
-# the 0.30.0 engine, which compares camps for a creator too. A diagnostic switch only.
-AFFINITY_BY_CAMP = False
-# P5-08 integration (engine defect E4): False is 6.12 item 4 (entities created in the step are invisible: a cult
-# founded in a step neither spreads nor is adopted in it, reading P-R9); True replays the 0.30.0 engine, which spreads
-# a cult, and decides its faith and suppression, in the step of its founding. A diagnostic switch only.
-NEW_CULT_ACTIVE = False
-
-
 def clamp(v, lo, hi):
     return max(lo, min(hi, v))
 
@@ -607,6 +598,21 @@ class Pantheon:
 
     def q4(self):
         self.step(quiet=True)
+
+    def t6(self):
+        """6.10 and 6.12 item 5 (integration E3): in T6 of the last year, after every other subsystem, the endings
+        of the log after the T4 cursor are applied as a next step would, with no event and no draw."""
+        w = self.w
+        if w.year != w.figures.E - 1:
+            return
+        self.realm_ends = []
+        last = len(w.events)
+        for e in range(self.cursor, last + 1):
+            ev = w.events[e - 1]
+            if ev["key"] in ("civ_ended", "civ_conquered"):
+                self.realm_ends.append((_one(w, ev, "civilization"), e))
+        self.cursor = last + 1
+        self.endings()
 
     def step(self, quiet):
         for c in sorted(self.ended_seen):   # 6.2: dropped at the step after the ending event was read
@@ -1019,10 +1025,7 @@ class Pantheon:
     def affinity(self, g, a):
         gd = self.gods[g]
         aff = self.t["affinity_permille"]
-        if gd["race"] and not AFFINITY_BY_CAMP:
-            same = self.w.race_c(a) == gd["race"]
-        else:
-            same = gd["camp"] == self.civ_camp(a)
+        same = gd["camp"] == self.civ_camp(a)   # 6.8 (integration E2): camps, also for a creator
         if same:
             return aff["same"]
         return aff["opposed"] if opposed(gd["camp"], self.civ_camp(a)) else aff["near"]
@@ -1034,7 +1037,7 @@ class Pantheon:
             return
         for cult in list(self.cults):
             k = cult["id"]
-            if cult["status"] != PRESENT or (cult["serial"] == w.serial and not NEW_CULT_ACTIVE):
+            if cult["status"] != PRESENT or cult["serial"] == w.serial:
                 continue
             g = cult["god"]
             for a in w.avc():
@@ -1074,7 +1077,7 @@ class Pantheon:
             if key not in w.relations:
                 continue
             cult = self.cults[k - 1]
-            if (cult["serial"] == w.serial and not NEW_CULT_ACTIVE) or not self.alive_visible(c):
+            if cult["serial"] == w.serial or not self.alive_visible(c):
                 continue
             g = cult["god"]
             if quiet and w.quiet_events_left(c) <= 0:
