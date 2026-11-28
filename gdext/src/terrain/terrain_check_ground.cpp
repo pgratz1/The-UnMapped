@@ -120,7 +120,7 @@ void own_ground(WorldFile& world, Own& o) {
     if (!o.water.empty()) {
         if (o.river.empty()) {
             for (std::size_t k = 0; k < total; ++k) {
-                o.painted[k] = o.water[k] == 1 ? 16 : 0;
+                o.painted[k] = static_cast<std::uint8_t>(o.water[k] == 1 ? 16 : 0);
             }
         } else {
             struct P {

@@ -211,9 +211,9 @@ It fails unless every step exits 0 and the viewer prints `UNMAPPED-CHECK: PASS` 
 
 ## Terrain preview
 
-The 3D terrain preview of spec `docs/specs/v3d-01-terrain-preview.md`: a world's `elevation` layer as Terrain3D terrain at one vertex per 16 m cell (true scale, map centred on the origin, region size 256), coloured by the `biome` layer with table `biome`'s colours, an opaque sea plane at 0 m, lakes flat at their surface, and a fly camera. It is the scene `res://viewer3d/terrain_preview.tscn`; the 2D viewer (`viewer.tscn`, the main scene) is unchanged.
+The 3D terrain preview of specs `docs/specs/v3d-01-terrain-preview.md` and `v3d-02-biome-ground-and-vegetation.md`: a world's `elevation` layer as Terrain3D terrain at one vertex per 16 m cell (true scale, map centred on the origin, region size 256), lakes flat at their surface, an opaque sea plane at 0 m faded by depth fog to the horizon, and a fly camera. Since V3D-02 each biome has its own generated ground texture (grain, relief and roughness, coloured so that from afar it matches the 2D map), blended over about two cells at biome borders, rock on slopes over 35 degrees and snow on the coldest alpine ground, rivers painted as on the 2D composite map, and placeholder trees, shrubs, reeds and snags built in code and placed by Terrain3D's instancer from the world seed. `--flat-colours --no-trees` gives V3D-01's look: one white texture and the biome colours in the colour map. It is the scene `res://viewer3d/terrain_preview.tscn`; the 2D viewer (`viewer.tscn`, the main scene) is unchanged.
 
-Code: `gdext/src/terrain/`. `terrain_data` (layout, height and colour buffers, cell and world coordinates, ground samples, the HUD line) and `fly_state` (the camera rules of spec 8.2) are plain C++ without Godot types, built as the static library `unmapped_terrain_core` that the extension and the unit tests link. `TerrainPreview` opens the world through `WorldFile`, copies the buffers into three `Image`s (height and control `FORMAT_RF`, colour `FORMAT_RGBA8`) and creates the `Terrain3D` node through Godot's `ClassDB`: `unmapped_gdext` never links Terrain3D, so the class is used only when the plug-in is in the run copy, and without it the preview shows the sea plane and says so. `terrain_check` is the check below.
+Code: `gdext/src/terrain/`. `terrain_data` (layout, height and colour buffers, cell and world coordinates, ground samples, the HUD line), `fly_state` (the camera rules of V3D-01 8.2), `ground` (the fifteen ground types, their 256 x 256 textures, the per-cell ground, the control map, the river paint and the textured colour map; V3D-02 3 to 5), `vegetation` (kinds, densities, the seeded placement and the instance cap; V3D-02 6) and `placeholder_meshes` (the flat-shaded meshes of V3D-02 6.2) are plain C++ without Godot types, built as the static library `unmapped_terrain_core` that the extension and the unit tests link. `TerrainPreview` opens the world through `WorldFile`, copies the buffers into three `Image`s (height and control `FORMAT_RF`, colour `FORMAT_RGBA8`) and creates the `Terrain3D` node through Godot's `ClassDB`: `unmapped_gdext` never links Terrain3D, so the class is used only when the plug-in is in the run copy, and without it the preview shows the sea plane and says so. The textures and the vegetation scenes (a `PackedScene` per kind built in code, children `MeshLOD0` and `MeshLOD1`) are made once per process; the instances go to the instancer with `add_transforms`, one instancer cell (512 m) per call, then one `update_mmis` rebuilds the multimeshes on the next drawn frame. `terrain_check` and `terrain_check_ground` are the check below.
 
 ### Building
 
@@ -237,14 +237,16 @@ OUT=~/.cache/the-unmapped/out
 "$GODOT" --path "$B/game" res://viewer3d/terrain_preview.tscn -- $OUT/seed42-1024.db
 ```
 
-Maps of 512, 1024 and 2048 cells are accepted. The camera starts above cell (N/2, 7N/8), 300 m above the highest peak, looking north at pitch -25. Keys: W/S forward and back along the view, A/D sideways, E/Q up and down, Shift x4, mouse wheel or `-`/`=` speed (10 to 2000 m/s), right mouse button held to look, arrow keys to turn, R back to the start, H hides the HUD, Escape releases the mouse. "Open world..." opens another file. The HUD shows the cell, the position in metres east and south of the centre, the altitude and height above ground, the ground's elevation (and a lake's surface), the biome and region names, the speed and the frame rate.
+Maps of 512, 1024 and 2048 cells are accepted. The camera starts above cell (N/2, 7N/8), 300 m above the highest peak, looking north at pitch -25. Keys: W/S forward and back along the view, A/D sideways, E/Q up and down, Shift x4, mouse wheel or `-`/`=` speed (10 to 2000 m/s), right mouse button held to look, arrow keys to turn, R back to the start, T vegetation on or off (the mesh assets' `enabled`; instances are kept), G ground textured or flat (reopens the world in the other mode and keeps the camera; nothing without a `biome` layer), H hides the HUD, Escape releases the mouse. "Open world..." opens another file. The HUD shows the cell, the position in metres east and south of the centre, the altitude and height above ground, the ground's elevation (and a lake's surface), the biome and region names, the speed and the frame rate.
 
-Options after the world path: `--at <x> <y>`, `--alt <m>`, `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`. A top-down view to compare with the 2D map: `--at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/top.png` on a 1024 world, against `worldgen-cli render --db <world> --composite biomes`.
+Options after the world path: `--at <x> <y>`, `--alt <m>`, `--above <m>` (start that many metres above the ground at the start cell; not with `--alt`), `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the first drawn frame after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`, `--flat-colours` (V3D-01's ground), `--no-trees` (no vegetation), `--instance-cap <n>` (0 to 4,000,000, default 1,000,000: above it the placement keeps a uniform, seeded share of every kind).
+
+The status lines at the bottom left name the mode (`ground: textured, 15 ground types` or `ground: flat colours`), the vegetation (`vegetation: <n> instances`, with `, thinned from <S> to the cap` when the cap binds, or `vegetation: off`), and what is missing: `no biome layer: ground drawn grey, no vegetation`, `no water layer: rivers not drawn`, `no timber layer: tree density from the biome alone`, `no temperature layer: no snow`, `no seed in meta: vegetation placed with seed 0`. A top-down view to compare with the 2D map: `--at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/top.png` on a 1024 world, against `worldgen-cli render --db <world> --composite biomes`.
 
 ### Checks
 
-- `gdext-terrain-tests` (doctest, no Godot; built with the extension and tests): U1 to U6 of spec 9.1.
-- `gdext-terrain-check` (registered with `gdext-headless-check`, Terrain3D on or off; `gdext/cmake/terrain_check.cmake`, about 13 s): generates a 512 world (seed 49) and a 1024 world (seed 1) with `--until regions` and renders their `biome` layer, a 512 world with `--until elevation` and the test pattern, then runs the preview headless on each with `--check` (T1 to T8 of spec 9.2: layout and images; every height against the check's own formula; every colour against `biome.png`; the start and the HUD at four places; with Terrain3D its region locations and `get_height` and `get_color` at 32 points; without it, the status, sea and camera; 300 frames of scripted flight above the ground). The 512 world runs a second time with `--no-terrain3d`. Terrain3D instantiates and answers `get_height` and `get_color` under `--headless`, so T6 runs in CI. Both Godot checks hold `RESOURCE_LOCK godot-run-copy`, since both import the same run copy.
+- `gdext-terrain-tests` (doctest, no Godot; built with the extension and tests): U1 to U6 of V3D-01 9.1 and U7 to U16 of V3D-02 11.1 (ground types; the textures against the test's own copy of the formula and recorded FNV-1a hashes, which must pass on GCC, Clang and MSVC alike; `hash32` and `mix64` vectors; control on hand-made grids; river paint against the 2D rule; the textured colours; placement repeatability, exclusions and counts per kind within 4 standard deviations; the cap against a brute-force sort; `ground_low`; the meshes' triangle counts, normals, winding and heights).
+- `gdext-terrain-check` (registered with `gdext-headless-check`, Terrain3D on or off; `gdext/cmake/terrain_check.cmake`, about 14 s): generates a 512 world (seed 49) and a 1024 world (seed 1) with `--until regions` and renders their `biome` layer and `map` composite, a 512 world with `--until elevation` and the test pattern, then runs the preview headless with `--check`: the 512 world in the default mode, with `--flat-colours --no-trees` and with `--no-terrain3d`, the 1024 world with `--instance-cap 50000`, and the two others. V3D-01's T1 to T8: layout and images; every height against the check's own formula; every colour against `biome.png` (flat colours); the start and the HUD at four places; with Terrain3D its region locations and `get_height` and `get_color` at 32 points; without it, the status, sea and camera; 300 frames of scripted flight above the ground. V3D-02's T3 and T9 to T16, with the check's own copy of the ground, river, control and colour formulas and of the exclusion and cap rules: the colour image, and every painted river cell against `map.png`; the fifteen texture assets (images equal to `build_ground_texture`, `albedo_color`, `uv_scale`); the control image and `get_control` at 32 points; the five mesh assets and their LODs; the instances stored in the regions per kind and the first and last of each at their place; the placement and the cap; the sea plane, far plane and fog; the status lines; keys T and G. Key T makes Terrain3D log `_viewport_texture is null. Couldn't create thumbnail picture` once per mesh asset under `--headless` (it redraws an editor thumbnail when `enabled` changes); the check passes regardless. Terrain3D instantiates and answers `get_height` and `get_color` under `--headless`, so T6 runs in CI. Both Godot checks hold `RESOURCE_LOCK godot-run-copy`, since both import the same run copy.
 
 ### By hand on a GPU (spec 9.3)
 
@@ -260,17 +262,46 @@ After the commands of "Flying over a world", for 512, 1024 and 2048 worlds:
 | G6 | every control; the camera never enters the ground when diving at 2000 m/s with Shift |
 | G7 | at 2048, a flight from the south edge to the north edge shows the whole map with no missing region |
 
-Checked by the engineer on 2026-11-27 (Linux, RTX 4090 Laptop GPU, Vulkan Forward+), non-interactively: G1 (the sky's ground colour is set to the sea's, so the sea reads to the horizon; the plane's edge at 24 N m shows as a slight change of tone), G2 (seed 42 at 1024), G4 and G5 by eye in screenshots, no Terrain3D or shader error on stderr. G3, G6 and G7 need a person at the controls.
+Checked by the engineer on 2026-11-27 (Linux, RTX 4090 Laptop GPU, Vulkan Forward+), non-interactively: G1 (the sky's ground colour is set to the sea's, so the sea reads to the horizon; the plane's edge at 24 N m showed as a slight change of tone, which V3D-02's wider plane and fog replace), G2 (seed 42 at 1024), G4 and G5 by eye in screenshots, no Terrain3D or shader error on stderr. G3, G6 and G7 need a person at the controls.
+
+V3D-02 (spec 11.3), with the worlds above and `P="$GODOT --path $B/game res://viewer3d/terrain_preview.tscn --"`:
+
+```
+$P $OUT/seed42-1024.db
+$P $OUT/seed42-1024.db --at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/v3d02-top.png
+$P $OUT/seed42-1024.db --above 250 --pitch -15 --screenshot $OUT/v3d02-low.png
+$P $OUT/seed42-1024.db --alt 30000 --pitch -10 --screenshot $OUT/v3d02-horizon.png
+$P $OUT/seed42-1024.db --flat-colours --no-trees --screenshot $OUT/v3d02-as-v3d01.png
+$P $OUT/seed42-2048.db --bench
+"$B/tools/worldgen-cli/worldgen-cli" render --db $OUT/seed42-1024.db --composite map --out $OUT/seed42-1024.map.png
+```
+
+| Id | Look for |
+| --- | --- |
+| G8 | each biome has its own grain, relief and sheen at 250 m above ground; from 22 km the top-down view matches `seed42-1024.biomes.png` in colour and layout |
+| G9 | biome borders blend over two or three cells; no 16 m staircase at 250 m above ground |
+| G10 | rock on mountain sides and not on gentle ground; snow only on the highest alpine ground |
+| G11 | forests dense, grassland scattered, heath and moor with shrubs, reeds in marsh and fen; nothing in lakes, rivers or the sea or on rock; no floating tree, none sunk to its crown |
+| G12 | rivers as blue lines in the same places as in `seed42-1024.map.png` |
+| G13 | at 30 km the sea reaches the horizon with no edge and no change of tone; no flicker where low coast meets the sea |
+| G14 | T and G work; `v3d02-as-v3d01.png` looks like V3D-01 |
+| G15 | at 2048, flying at 200 m/s 150 m above a forest: no stall after the first frame |
+
+Seen by the engineer on 2026-11-27 in screenshots of seed 42 (same machine): the top-down view at 1024 matches the 2D map in layout and, but for the mountains, in colour (slopes over 35 degrees show the grey rock overlay, where the 2D map shows the alpine and heath colours); grassland matches the flat colours to within 1/255 at the same pixels; trees stand in forests, sparsely in grassland and steppe, none in lakes, rivers or on rock; snow lies only on the flatter alpine tops, since rock wins on the steep ones; rivers run where the 2D map has them, with a pale fringe where the colour map fades from the river colour to white over one cell; at 30 km the plane's edge itself is invisible (the colours just above and below it differ by at most 2/255), but the lit sea inside the fog's start is lighter than the fog colour, so a soft lighter band lies some way below the horizon. No Terrain3D, shader or instancer error on stderr with a display. G9, G14 and G15 need a person at the controls.
 
 ### Bench
 
-`--bench` prints (spec 10; headless only the first two lines, and `first frame` there runs to the next process frame, since nothing is drawn):
+`--bench` prints (V3D-01 10 and V3D-02 12; headless only the first three lines, and `first frame` there runs to the next process frame, since nothing is drawn):
 
 ```
 UNMAPPED-TERRAIN-BENCH: map <N>, open <ms> ms, layers <ms> ms, buffers <ms> ms, images <ms> ms, import <ms> ms, first frame <ms> ms
 UNMAPPED-TERRAIN-BENCH: memory static <MB> MB, video <MB> MB, regions <k>
+UNMAPPED-TERRAIN-BENCH: ground textures <ms> ms, cells <ms> ms, control <ms> ms; vegetation placement <ms> ms, transfer <ms> ms, instances <n> of <S> (cap <B>)
+UNMAPPED-TERRAIN-BENCH: view at cell (<x>, <y>), 150 m above ground: frames 300, mean <ms>, max <ms>, over 16.7 ms <a>
 UNMAPPED-TERRAIN-BENCH: flight <s> s at 1000 m/s: frames <n>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>
 ```
+
+`transfer` is the `add_transforms` calls and `update_mmis`; `first frame` starts after it, so it holds the multimesh build. The view line is taken after 60 warm-up frames at the centre cell, 150 m above `ground_clamp`, heading 0, pitch -10, vsync off.
 
 Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, Linux, a laptop with an RTX 4090 Laptop GPU (Vulkan, NVIDIA driver), 1600 x 900 window:
 
@@ -280,4 +311,14 @@ Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, Linux, a laptop with a
 | 1024 | 0.5 ms | 6.7 ms | 4.4 ms | 5.0 ms | 22 ms | 45 ms | 84.6 MB | 16 | 45,667 in 16.4 s | 0.4 ms | 56 ms | 1 / 1 / 1 |
 | 2048 | 0.7 ms | 28 ms | 20 ms | 20 ms | 86 ms | 46 ms | 160.7 MB | 64 | 82,821 in 32.8 s | 0.4 ms | 61 ms | 1 / 1 / 1 |
 
-The one slow frame of each flight is its first. Video memory reads 0.0 MB on this machine: the rendering server reports no video, texture or buffer memory with the NVIDIA Vulkan driver, so spec V17 (video memory grows with the regions in use) is not measured.
+The one slow frame of each flight is its first. These are V3D-01's figures, before the ground and vegetation.
+
+V3D-02, measured 2026-11-27 on the same machine and worlds (default options, cap 1,000,000; static memory without vegetation from a `--no-trees` run):
+
+| N | ground textures | cells | control | placement | transfer | first frame | instances | static memory (no trees / with) | view mean, max | flight frames, mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 36 ms | 0.8 ms | 3.1 ms | 3.9 ms | 38 ms | 78 ms | 64,385 of 64,385 | 67.0 / 104.3 MB | 0.4 ms, 1.2 ms | 25,590 in 8.2 s, 0.3 ms, 2.4 ms |
+| 1024 | 38 ms | 3.0 ms | 12 ms | 24 ms | 229 ms | 149 ms | 356,973 of 356,973 | 86.1 / 286.5 MB | 0.8 ms, 1.6 ms | 26,093 in 16.4 s, 0.6 ms, 2.7 ms |
+| 2048 | 41 ms | 14 ms | 54 ms | 136 ms | 702 ms | 396 ms | 1,000,000 of 1,811,182 | 162.2 / 741.6 MB | 0.8 ms, 1.5 ms | 47,895 in 32.8 s, 0.7 ms, 5.2 ms |
+
+No frame of the view or the flight took over 11.1 ms. At the cap, vegetation costs about 580 MB of static memory (about 0.58 KB per instance, in Terrain3D's region dictionaries and the multimeshes), about twice the spec's estimate. Video memory reads 0.0 MB on this machine: the rendering server reports no video, texture or buffer memory with the NVIDIA Vulkan driver, so spec V17 (video memory grows with the regions in use) is not measured.

@@ -214,7 +214,7 @@ std::vector<std::uint8_t> river_paint(const Layout& layout, std::span<const std:
     }
     if (river.empty()) {
         for (std::size_t k = 0; k < cells; ++k) {
-            out[k] = water[k] == 1 ? std::uint8_t{16} : std::uint8_t{0};
+            out[k] = static_cast<std::uint8_t>(water[k] == 1 ? 16 : 0);
         }
         return out;
     }

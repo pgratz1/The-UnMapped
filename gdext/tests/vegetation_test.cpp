@@ -63,8 +63,8 @@ World mixed_world() {
             w.elevation[k] = static_cast<std::int16_t>((x * 7 + y * 3) % 9000 - 200);
             w.heights[k] = static_cast<float>(w.elevation[k]) / 10.0f;
             w.timber[k] = static_cast<std::uint8_t>((x * 13 + y) % 256);
-            w.water[k] = (x % 41 == 0) ? std::uint8_t{1} : (y % 47 == 0 ? std::uint8_t{2} : std::uint8_t{0});
-            w.cells.painted[k] = (x % 43 == 0) ? std::uint8_t{3} : std::uint8_t{0};
+            w.water[k] = static_cast<std::uint8_t>((x % 41 == 0) ? 1 : (y % 47 == 0 ? 2 : 0));
+            w.cells.painted[k] = static_cast<std::uint8_t>((x % 43 == 0) ? 3 : 0);
             w.cells.rock[k] = static_cast<std::uint8_t>((x * 31 + y * 17) % 256);
             w.cells.snow[k] = static_cast<std::uint8_t>((x * 11 + y * 29) % 256);
         }
@@ -277,7 +277,7 @@ TEST_CASE("U15 ground_low") {
     }
     // On the last row and column the grid point is the far corner of the
     // last cell square, reached through float sums.
-    CHECK(ground_low(layout, h, 4080.0f, 4080.0f) == doctest::Approx(H(511, 511)).epsilon(1e-6));
+    CHECK(static_cast<double>(ground_low(layout, h, 4080.0f, 4080.0f)) == doctest::Approx(static_cast<double>(H(511, 511))).epsilon(1e-6));
     int bad = 0;
     for (std::uint64_t k = 0; k < 1000; ++k) {
         const std::uint64_t r = own_mix(k + 77);

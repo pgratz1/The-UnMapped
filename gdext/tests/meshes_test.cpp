@@ -52,10 +52,10 @@ TEST_CASE("U16 build_mesh") {
             CHECK(bad_normal == 0);
             CHECK(bad_winding == 0);
             if (kind == 0) {
-                CHECK(top == doctest::Approx(11.5f));
+                CHECK(static_cast<double>(top) == doctest::Approx(11.5));
             }
             if (kind == 1) {
-                CHECK(top == doctest::Approx(15.5f));
+                CHECK(static_cast<double>(top) == doctest::Approx(15.5));
             }
             // One colour per primitive, all opaque.
             bool opaque = true;
