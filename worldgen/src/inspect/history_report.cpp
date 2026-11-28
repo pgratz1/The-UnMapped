@@ -378,7 +378,7 @@ Id kind_id_of(const HistoryView& v, std::string_view key) {
     return k != nullptr ? k->id : -1;
 }
 
-constexpr std::array<std::string_view, 9> DOMAIN = {"creation", "war",   "death", "harvest", "craft",
+constexpr std::array<std::string_view, 9> DOMAIN_WORDS = {"creation", "war",   "death", "harvest", "craft",
                                                     "wild",     "oaths", "lore",  "ruin"};
 constexpr std::array<std::string_view, 5> ACT_KEYS = {"divine_bless", "divine_curse", "divine_champion",
                                                       "divine_monster", "divine_mark"};
@@ -431,7 +431,7 @@ const db::FactionRow* cult_of_god(const history::HistoryTables& t, Id g) {
 BlockLine god_line(const history::HistoryTables& t, const db::GodRow& g,
                    const std::array<std::int64_t, 5>& acts) {
     BlockLine l{tagged_ref(2, g.id, g.name), lit(" "), txt(g.title),
-                lit(" (" + std::string(word(CAMP, g.camp, 0)) + ", " + std::string(word(DOMAIN, g.domain, 1)) +
+                lit(" (" + std::string(word(CAMP, g.camp, 0)) + ", " + std::string(word(DOMAIN_WORDS, g.domain, 1)) +
                     "): acts " + num(total_of(acts)))};
     std::string kinds;
     for (std::size_t i = 0; i < acts.size(); ++i) {
