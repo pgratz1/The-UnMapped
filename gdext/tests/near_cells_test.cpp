@@ -468,3 +468,138 @@ TEST_CASE("U25 near constants and defaults") {
     CHECK(NEAR_RADIUS_MIN - NEAR_VISIBLE_MAX > 0.0);
     CHECK(NEAR_RADIUS_MAX == 8192.0);
 }
+
+// The forest path's start (lead's interim ruling on spec 12.1, 2026-11-27):
+// x* unchanged; the start is the forest cell of x* nearest to row 7N/8, and
+// the path runs along the longer run of forest; the camera is never below
+// the sea plane plus 60 m.
+namespace {
+
+struct Grid {
+    int n = 512;
+    GroundCells cells;
+    explicit Grid(int size, std::uint8_t fill = 0) : n(size) {
+        cells.type.assign(static_cast<std::size_t>(n) * static_cast<std::size_t>(n), fill);
+    }
+    void set(int x, int y, std::uint8_t t) {
+        cells.type[static_cast<std::size_t>(y) * static_cast<std::size_t>(n) + static_cast<std::size_t>(x)] = t;
+    }
+};
+
+}  // namespace
+
+TEST_CASE("U26 forest_column counts forest floor and carr in the middle band") {
+    const Layout layout = layout_of(512);
+    Grid g(512);
+    for (int y = 64; y < 448; ++y) {
+        g.set(100, y, 2);
+    }
+    for (int y = 64; y < 300; ++y) {
+        g.set(90, y, 3);
+    }
+    for (int y = 0; y < 64; ++y) {
+        g.set(80, y, 2);  // outside the band of rows: not counted
+    }
+    CHECK(forest_column(layout, g.cells) == 100);
+    g.set(90, 300, 2);
+    for (int y = 301; y < 448; ++y) {
+        g.set(90, y, 2);
+    }
+    CHECK(forest_column(layout, g.cells) == 90);  // a tie goes to the smaller x
+    CHECK(forest_column(layout, GroundCells{}) == 256);
+}
+
+TEST_CASE("U27 forest_start_cell: in the column, nearest to row 7N/8") {
+    const Layout layout = layout_of(512);
+    const int row = 7 * 512 / 8;  // 448
+    Grid g(512);
+    // The row itself is forest: start there.
+    for (int y = 400; y <= row; ++y) {
+        g.set(200, y, 2);
+    }
+    ForestStart s = forest_start_cell(layout, g.cells, 200);
+    CHECK(s.found);
+    CHECK(s.x == 200);
+    CHECK(s.y == row);
+    CHECK(s.north);  // 49 cells north, 1 south
+    // The row is sea: the nearest forest cell of the column, ties the smaller row.
+    Grid h(512);
+    h.set(300, row - 5, 3);
+    h.set(300, row + 5, 2);
+    s = forest_start_cell(layout, h.cells, 300);
+    CHECK(s.found);
+    CHECK(s.x == 300);
+    CHECK(s.y == row - 5);
+    h.set(300, row + 4, 2);
+    s = forest_start_cell(layout, h.cells, 300);
+    CHECK(s.y == row + 4);
+}
+
+TEST_CASE("U28 forest_start_cell: the direction of the longer run, ties north") {
+    const Layout layout = layout_of(512);
+    const int row = 448;
+    Grid g(512);
+    for (int y = row - 3; y <= row + 10; ++y) {
+        g.set(50, y, 2);
+    }
+    ForestStart s = forest_start_cell(layout, g.cells, 50);
+    CHECK(s.y == row);
+    CHECK_FALSE(s.north);  // 4 north against 11 south
+    for (int y = row - 10; y < row - 3; ++y) {
+        g.set(50, y, 3);
+    }
+    s = forest_start_cell(layout, g.cells, 50);
+    CHECK(s.north);  // 11 against 11: north
+    // A run stops at the map's edge.
+    Grid e(512);
+    for (int y = 440; y < 512; ++y) {
+        e.set(7, y, 2);
+    }
+    s = forest_start_cell(layout, e.cells, 7);
+    CHECK(s.y == row);
+    CHECK_FALSE(s.north);  // 9 north against 64 south
+}
+
+TEST_CASE("U29 forest_start_cell: elsewhere on the map, or the centre") {
+    const Layout layout = layout_of(512);
+    const int row = 448;
+    Grid g(512);
+    // No forest in column 100: the nearest by squared distance.
+    g.set(103, row, 2);     // d2 = 9
+    g.set(98, row - 2, 2);  // d2 = 8
+    ForestStart s = forest_start_cell(layout, g.cells, 100);
+    CHECK(s.found);
+    CHECK(s.x == 98);
+    CHECK(s.y == row - 2);
+    // Ties: the smaller row, then the smaller column.
+    Grid t(512);
+    t.set(102, row + 2, 2);  // d2 = 8
+    t.set(102, row - 2, 2);  // d2 = 8, smaller row
+    t.set(98, row - 2, 3);   // d2 = 8, smaller row and column
+    s = forest_start_cell(layout, t.cells, 100);
+    CHECK(s.x == 98);
+    CHECK(s.y == row - 2);
+    Grid r(512);
+    r.set(98, row + 2, 2);   // d2 = 8, smaller column
+    r.set(102, row - 2, 2);  // d2 = 8, smaller row: wins
+    s = forest_start_cell(layout, r.cells, 100);
+    CHECK(s.x == 102);
+    CHECK(s.y == row - 2);
+    // No forest at all, or no ground cells: the centre, not found.
+    const Grid none(512, 1);
+    s = forest_start_cell(layout, none.cells, 100);
+    CHECK_FALSE(s.found);
+    CHECK(s.x == 256);
+    CHECK(s.y == 256);
+    s = forest_start_cell(layout, GroundCells{}, 100);
+    CHECK_FALSE(s.found);
+    CHECK(s.x == 256);
+    CHECK(s.y == 256);
+}
+
+TEST_CASE("U30 forest_start_altitude: 60 m above the ground, never below the sea plus 60 m") {
+    CHECK(FOREST_PATH_ABOVE == 60.0f);
+    CHECK(forest_start_altitude(100.0f) == 160.0f);
+    CHECK(forest_start_altitude(0.0f) == 60.0f);
+    CHECK(forest_start_altitude(-35.0f) == 60.0f);
+}

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -341,5 +342,73 @@ int forest_column(const Layout& layout, const GroundCells& cells) {
     }
     return best;
 }
+
+bool is_forest_cell(const GroundCells& cells, int n, int x, int y) {
+    if (x < 0 || y < 0 || x >= n || y >= n) {
+        return false;
+    }
+    const std::uint8_t t = cells.type[static_cast<std::size_t>(y) * static_cast<std::size_t>(n) + static_cast<std::size_t>(x)];
+    return t == 2 || t == 3;
+}
+
+ForestStart forest_start_cell(const Layout& layout, const GroundCells& cells, int column) {
+    const int n = layout.n;
+    ForestStart s;
+    s.x = n / 2;
+    s.y = n / 2;
+    const std::size_t total = static_cast<std::size_t>(n) * static_cast<std::size_t>(n);
+    if (cells.type.size() != total || column < 0 || column >= n) {
+        return s;
+    }
+    const int row = 7 * n / 8;
+    // The column first: distance |y - row|, the smaller row on a tie.
+    for (int d = 0; d < n && !s.found; ++d) {
+        for (const int y : {row - d, row + d}) {
+            if (is_forest_cell(cells, n, column, y)) {
+                s.x = column;
+                s.y = y;
+                s.found = true;
+                break;
+            }
+        }
+    }
+    if (!s.found) {
+        // The whole map, by squared distance; scanning rows then columns in
+        // ascending order and keeping only a strictly nearer cell gives the
+        // ties to the smaller row, then the smaller column.
+        std::int64_t best = -1;
+        for (int y = 0; y < n; ++y) {
+            for (int x = 0; x < n; ++x) {
+                if (!is_forest_cell(cells, n, x, y)) {
+                    continue;
+                }
+                const std::int64_t dx = x - column;
+                const std::int64_t dy = y - row;
+                const std::int64_t d2 = dx * dx + dy * dy;
+                if (best < 0 || d2 < best) {
+                    best = d2;
+                    s.x = x;
+                    s.y = y;
+                    s.found = true;
+                }
+            }
+        }
+    }
+    if (!s.found) {
+        return s;
+    }
+    int north = 0;
+    for (int y = s.y; is_forest_cell(cells, n, s.x, y); --y) {
+        ++north;
+    }
+    int south = 0;
+    for (int y = s.y; is_forest_cell(cells, n, s.x, y); ++y) {
+        ++south;
+    }
+    s.north = north >= south;
+    return s;
+}
+
+float forest_start_altitude(float ground) { return std::max(ground + FOREST_PATH_ABOVE, FOREST_PATH_ABOVE); }
 
 }  // namespace unmapped::terrain

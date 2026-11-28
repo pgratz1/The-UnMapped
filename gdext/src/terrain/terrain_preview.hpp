@@ -44,7 +44,7 @@
 //   --veg-whole-map         V3D-02's whole-map placement, no tiers
 //   --veg-threads <n>       worker tasks in flight, 0 to 8 (default 4)
 //   --tier-colours          near-tier instances tinted red
-//   --at-forest             start at the bench's forest path, 60 m up
+//   --at-forest             start at the bench's forest path, 60 m up (at least 60 m above the sea)
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
 //
@@ -114,6 +114,7 @@ struct TerrainScene {
     std::uint64_t far_threshold = 0;         // T (tiers)
     std::uint64_t far_candidates = 0;        // S_far (tiers)
     int forest_column = 0;                   // x* of V3D-03 12.1
+    terrain::ForestStart forest;             // the forest path's start cell and direction (12.1, lead's ruling)
     float h_min = 0.0f;
     float h_max = 0.0f;
     std::uint32_t sea_rgb = 0x183878;
@@ -216,7 +217,8 @@ public:
     [[nodiscard]] std::string vegetation_hud_line() const;
     // Places the camera (the check's path).
     void set_fly_state(const terrain::FlyState& state);
-    // The start of the forest path of 12.1 (60 m above the ground, heading 0).
+    // The start of the forest path of 12.1 (60 m above the ground and at
+    // least 60 m above the sea, heading 0 or 180).
     [[nodiscard]] terrain::FlyState forest_start() const;
     // The world shown, as opened.
     [[nodiscard]] const godot::String& current_path() const noexcept { return current_path_; }

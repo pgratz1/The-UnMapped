@@ -145,4 +145,28 @@ private:
 // type 2 or 3 (forest floor, carr) in rows [N/8, 7N/8); ties the smallest x.
 [[nodiscard]] int forest_column(const Layout& layout, const GroundCells& cells);
 
+// True for a cell of ground type 2 or 3 (forest floor, carr).
+[[nodiscard]] bool is_forest_cell(const GroundCells& cells, int n, int x, int y);
+
+// The start of the forest path (lead's interim ruling on 12.1, 2026-11-27):
+// the forest cell of column `column` nearest to row 7N/8, ties the smaller
+// row; when the column has none, the forest cell of the map nearest to
+// (column, 7N/8) by squared distance, ties the smaller row, then the smaller
+// column; when the map has none (or no ground cells), the map centre with
+// found = false. The path heads north (heading 0, decreasing y) or south
+// (heading 180), whichever has the longer run of consecutive forest cells
+// along the start's column counted from the start cell; ties north.
+struct ForestStart {
+    int x = 0;
+    int y = 0;
+    bool north = true;
+    bool found = false;
+};
+[[nodiscard]] ForestStart forest_start_cell(const Layout& layout, const GroundCells& cells, int column);
+
+// The forest path's height above the ground, and its floor above the sea
+// plane (y = 0): the camera starts at max(ground + 60, 0 + 60).
+inline constexpr float FOREST_PATH_ABOVE = 60.0f;
+[[nodiscard]] float forest_start_altitude(float ground);
+
 }  // namespace unmapped::terrain

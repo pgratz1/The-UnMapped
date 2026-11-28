@@ -241,7 +241,7 @@ OUT=~/.cache/the-unmapped/out
 
 Maps of 512, 1024 and 2048 cells are accepted. The camera starts above cell (N/2, 7N/8), 300 m above the highest peak, looking north at pitch -25. Keys: W/S forward and back along the view, A/D sideways, E/Q up and down, Shift x4, mouse wheel or `-`/`=` speed (10 to 2000 m/s), right mouse button held to look, arrow keys to turn, R back to the start, T vegetation on or off (the mesh assets' `enabled`; instances are kept), G ground textured or flat (reopens the world in the other mode and keeps the camera; nothing without a `biome` layer), H hides the HUD, Escape releases the mouse. "Open world..." opens another file. The HUD shows the cell, the position in metres east and south of the centre, the altitude and height above ground, the ground's elevation (and a lake's surface), the biome and region names, the speed and the frame rate.
 
-Options after the world path: `--at <x> <y>`, `--alt <m>`, `--above <m>` (start that many metres above the ground at the start cell; not with `--alt`), `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the first drawn frame after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`, `--flat-colours` (V3D-01's ground), `--no-trees` (no vegetation), `--instance-cap <n>` (0 to 4,000,000, default 2,000,000: the far tier's budget, or with `--veg-whole-map` V3D-02's cap), `--veg-radius <m>` (0, or 1,536 to 8,192, default 2,048; 0 is the far tier alone, without shrubs or reeds), `--veg-whole-map` (V3D-02's whole-map placement; not with `--veg-radius`), `--veg-threads <n>` (worker tasks in flight, 0 to 8, default 4; 0 computes 2 cells a frame on the main thread), `--tier-colours` (near-tier instances tinted red, to see the partition), `--at-forest` (start above the bench's forest column at row 7N/8, heading 0, 60 m above the ground unless `--above` or `--alt` is given; not with `--at`). `--screenshot` waits for the first drawn frame, then for the near tier to settle (at most 30 s; past that it prints `near vegetation not settled`), then 2 s.
+Options after the world path: `--at <x> <y>`, `--alt <m>`, `--above <m>` (start that many metres above the ground at the start cell; not with `--alt`), `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the first drawn frame after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`, `--flat-colours` (V3D-01's ground), `--no-trees` (no vegetation), `--instance-cap <n>` (0 to 4,000,000, default 2,000,000: the far tier's budget, or with `--veg-whole-map` V3D-02's cap), `--veg-radius <m>` (0, or 1,536 to 8,192, default 2,048; 0 is the far tier alone, without shrubs or reeds), `--veg-whole-map` (V3D-02's whole-map placement; not with `--veg-radius`), `--veg-threads <n>` (worker tasks in flight, 0 to 8, default 4; 0 computes 2 cells a frame on the main thread), `--tier-colours` (near-tier instances tinted red, to see the partition), `--at-forest` (start at the bench's forest path: the forest cell of the forest column x* nearest to row 7N/8, heading north or south along the longer run of forest, 60 m above the ground and never below 60 m above the sea, unless `--above` or `--alt` is given; not with `--at`). `--screenshot` waits for the first drawn frame, then for the near tier to settle (at most 30 s; past that it prints `near vegetation not settled`), then 2 s.
 
 The HUD's second line is the vegetation: `vegetation near <filled> cells, <pending> pending, <n> instances; far <F>` in tiers, `vegetation whole map <n>` with `--veg-whole-map`, `vegetation off` with `--no-trees`, without a `biome` layer or after T. The status lines at the bottom left name the mode (`ground: textured, 15 ground types` or `ground: flat colours`), the vegetation (in tiers `vegetation: far tier <F> trees and snags of <S_far> (budget <B>); near tier within <R> m in cells of 256 m`, or with `--veg-radius 0` `...; no near tier: no shrubs or reeds`; with `--veg-whole-map` `vegetation: <n> instances`, with `, thinned from <S> to the cap` when the cap binds; or `vegetation: off`), and what is missing: `no biome layer: ground drawn grey, no vegetation`, `no water layer: rivers not drawn`, `no timber layer: tree density from the biome alone`, `no temperature layer: no snow`, `no seed in meta: vegetation placed with seed 0`. A top-down view to compare with the 2D map: `--at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/top.png` on a 1024 world, against `worldgen-cli render --db <world> --composite biomes`.
 
@@ -297,7 +297,9 @@ V3D-03 (spec 11.3), with the same `P`:
 $P $OUT/seed42-2048.db --at-forest
 $P $OUT/seed42-2048.db --at-forest --pitch -8 --screenshot $OUT/v3d03-near-2048.png
 $P $OUT/seed42-2048.db --at-forest --pitch -8 --veg-whole-map --screenshot $OUT/v3d03-whole-2048.png
-$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -20 --tier-colours --screenshot $OUT/v3d03-tiers-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --screenshot $OUT/v3d03-high-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --instance-cap 1000000 --screenshot $OUT/v3d03-high-cap1m-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --tier-colours --screenshot $OUT/v3d03-tiers-2048.png
 $P $OUT/seed42-1024.db --at-forest --pitch -8 --screenshot $OUT/v3d03-near-1024.png
 $P $OUT/seed42-1024.db --at-forest --pitch -8 --veg-whole-map --screenshot $OUT/v3d03-whole-1024.png
 $P $OUT/seed42-512.db --bench;  $P $OUT/seed42-1024.db --bench;  $P $OUT/seed42-2048.db --bench
@@ -314,7 +316,27 @@ $P $OUT/seed42-1024.db --veg-radius 100    (refused: --veg-radius 100: 0 or a wh
 | G21 | T hides and shows both tiers; the HUD lines |
 | G22 | the bench lines below for 512, 1024 and 2048 |
 
-Not yet checked by eye (2026-11-27): the desktop session was locked while V3D-03 was built, and a locked session draws no new frames (Wayland sends no frame callbacks; under Xwayland the saved viewport still held a frame from the load, with the HUD reading `near 0 cells, 228 pending`), so G16 to G22 and the drawn bench wait for a person at the machine. On seed 42 at 2048 the forest column of spec 12.1 is x* = 592, and its row 7N/8 lies on the sea: `--at-forest` and the forest flights start there, 60 m above the sea bed and so below the sea plane, and reach the forest about 300 m north. For a view inside the forest use `--at` with a forest cell instead.
+The forest path's start (lead's interim ruling on spec 12.1, 2026-11-27, to be written into the spec): x* is unchanged; the start is the cell of column x* that is forest floor or carr and nearest to row 7N/8 (ties: the smaller row); if the column has none, the forest cell of the map nearest to (x*, 7N/8) by squared distance (ties: smaller row, then smaller column); with no forest at all, the map centre, and the status line says `no forest on this map: the forest path starts at the map centre`. The path runs north or south, whichever keeps the longer run of forest cells along the column from the start (ties north), and the camera starts at max(ground + 60, 60) m, never below the sea plane plus 60 m (`forest_start_cell` and `forest_start_altitude` in `near_cells.hpp`, unit tests U26 to U30). On seed 42 the start is (275, 865) at 1024 and (592, 1759) at 2048 (column 129 at 512); before the ruling the 2048 start lay on the sea at row 1792, 60 m above the sea bed and below the sea plane.
+
+Screenshots on a locked or remote machine: a locked Wayland session draws no frames, but a virtual X display renders on the GPU (Godot prints `Using Device #1: NVIDIA`; Mesa's `No DRI3 support detected` is harmless):
+
+```
+env -u WAYLAND_DISPLAY xvfb-run -a -s "-screen 0 1600x900x24" "$GODOT" --display-driver x11 --path "$B/game" res://viewer3d/terrain_preview.tscn -- <world.db> <options> --screenshot <file.png>
+```
+
+Without DRI3, Xvfb presents frames by copying them, so frame times under it are about 20 to 30 ms whatever is drawn: they are indicative only, and the frame columns of the bench below are taken that way.
+
+Checked by the engineer on 2026-11-27 from screenshots under Xvfb (RTX 4090 Laptop GPU, Vulkan Forward+, 1600 x 900), the commands above:
+
+- G16: at 2048, `v3d03-near-2048.png` (60 m above Temperate forest at (592, 1759), pitch -8; HUD `near 228 cells, 0 pending, 103383 instances; far 2000000`) shows forest at full density to the trees on the skyline and no visible ring; `v3d03-whole-2048.png` from the same point (V3D-02, cap 2,000,000) is plainly thinner near the camera, with ground showing between trees. Trees stand on the ground, none floating or sunk.
+- Density step at about 1.2 km, from 400 m above the same cell looking across the forest (`v3d03-high-2048.png`, `-high-cap1m-2048.png`): at the default budget of 2,000,000 the step is not visible by eye (mean row colours just inside and outside the ring differ by at most 2/255); at 1,000,000 a band of lighter green lies beyond the near ring (green up to 11/255 lighter, more ground between trees), soft and without a hard edge. The rows within the ring are identical in both, as they must be.
+- G19: `v3d03-tiers-2048.png` shows red-tinted near trees from the foreground to about 1.4 to 1.6 km (estimated from the screen row at pitch -12), thinning out through the fade, ordinary far trees everywhere; no doubled trees, no bare ring, no hard edge.
+- G17: at 1024, `v3d03-near-1024.png` and `v3d03-whole-1024.png` are identical pixel for pixel (the far tier holds every tree there, and the near tier's shrubs are V3D-02's).
+- G22: the drawn bench below for 512, 1024 and 2048.
+- G18 in part: the bench's forest flights at 200 and 800 m/s had no late cell at any size, at most 7 cells pending.
+
+G18 by eye, G20 (R and G keys) and G21 (T key) need a person at the controls; nothing here contradicts them.
+
 
 ### Bench
 
@@ -366,14 +388,25 @@ UNMAPPED-TERRAIN-BENCH: tiers: far <F> of <S_far> (budget <B>), near radius <R> 
 UNMAPPED-TERRAIN-BENCH: forest flight at <v> m/s, column <x>, <m> m: frames <k>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>; cells filled <f> (<r> per s), dropped <d>, late <L>, most pending <P>; compute mean <us> us, max <us> us; attach max <us> us; memory static <MB> MB
 ```
 
-`settled` runs from the first frame at the view point to the near tier's `settled()`. The forest flight line comes twice, at 200 and 800 m/s, along the column x* of spec 12.1 from row 7N/8 north for min(12 N, 8,192) m, 60 m above the ground, pitch -8, after the near tier has settled at its start (at most 30 s). `compute` is the worker time per cell, `attach` the main-thread time of the attach step in one frame, `late` the cells still unfilled when they came within 1,400 m. Headless, the bench prints the first three lines and the tiers line.
+`settled` runs from the first frame at the view point to the near tier's `settled()`. The forest flight line comes twice, at 200 and 800 m/s, from the forest path's start (above) north or south along its column for min(12 N, 8,192) m, 60 m above the ground, pitch -8, after the near tier has settled at its start (at most 30 s). `compute` is the worker time per cell, `attach` the main-thread time of the attach step in one frame, `late` the cells still unfilled when they came within 1,400 m. Headless, the bench prints the first three lines and the tiers line.
 
-Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, default options (far budget 2,000,000, radius 2,048 m, 4 tasks), **headless** (the desktop session was locked, and a locked Wayland session draws no frames; Godot's X11 driver under Xwayland drew about one frame a second, so the drawn bench, the forest flights and the frame times are still to be taken). Static memory headless leaves out what the renderer would hold for the near multimeshes:
+Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, default options (far budget 2,000,000, radius 2,048 m, 4 tasks), drawn under Xvfb on the RTX 4090 Laptop GPU at 1600 x 900 (frame times indicative only, see above: every frame of every flight is over 16.7 ms there, by the copy). Video memory reads 0.0 MB, as with V3D-02.
 
-| N | placement (far tier) | transfer | far tier of S_far (all candidates S) | settled at the view | near cells, instances | static memory: no trees / tiers / `--veg-whole-map` |
-| --- | --- | --- | --- | --- | --- | --- |
-| 512 | 9.6 ms | 78 ms | 104,482 of 104,482 (187,951) | 291 ms | 170, 17,359 | 47.8 / 60.3 / 66.7 MB |
-| 1024 | 57 ms | 511 ms | 604,322 of 604,322 (1,088,122) | 263 ms | 153, 14,293 | 66.9 / 130.5 / 178.1 MB |
-| 2048 | 299 ms | 1,459 ms | 2,000,000 of 3,057,704 (5,523,211) | 312 ms | 181, 16,608 | 143.0 / 352.2 / 342.3 MB |
+| N | first frame | placement (far tier), transfer | far tier of S_far (all S) | static memory at load / after the flights | settled at the view | near cells, instances at the view | view mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 114 ms | 9.0 ms, 72 ms | 104,482 of 104,482 (187,951) | 132.0 / 133.2 MB | 853 ms | 181, 17,688 | 17.1, 29.0 ms |
+| 1024 | 281 ms | 56 ms, 498 ms | 604,322 of 604,322 (1,088,122) | 454.1 / 464.1 MB | 782 ms | 153, 14,293 | 19.8, 34.6 ms |
+| 2048 | 654 ms | 293 ms, 1,435 ms | 2,000,000 of 3,057,704 (5,523,211) | 1,383.7 / 1,450.1 MB | 926 ms | 181, 16,608 | 19.3, 26.2 ms |
+
+| N | forest flight | frames, mean, max | over 33.3 ms | cells filled (per s) | dropped | late | most pending | compute mean, max | attach max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 200 m/s, 6,144 m | 1,438, 21.4, 28.5 ms | 0 | 242 (7.9) | 372 | 0 | 4 | 11, 357 us | 103 us |
+| 512 | 800 m/s | 339, 22.7, 41.1 ms | 1 | 261 (34.0) | 363 | 0 | 6 | 9, 137 us | 104 us |
+| 1024 | 200 m/s, 8,192 m | 1,545, 26.5, 39.7 ms | 4 | 517 (12.6) | 507 | 0 | 3 | 39, 448 us | 190 us |
+| 1024 | 800 m/s | 382, 26.8, 32.6 ms | 0 | 517 (50.5) | 507 | 0 | 6 | 38, 414 us | 187 us |
+| 2048 | 200 m/s, 8,192 m | 1,415, 29.0, 37.0 ms | 5 | 544 (13.3) | 500 | 0 | 4 | 86, 249 us | 630 us |
+| 2048 | 800 m/s | 349, 29.4, 33.3 ms | 0 | 542 (52.8) | 497 | 0 | 7 | 83, 366 us | 507 us |
+
+V3D-01's flight at 1000 m/s: 512 386 frames, mean 21.3, max 27.1 ms; 1024 711, 23.1, 33.7 ms; 2048 1,382, 23.7, 33.9 ms. Drawn static memory is far above the headless figures (352 MB at 2048 headless against 1,384 MB drawn), since the renderer's multimeshes are counted. The near tier never fell behind: no late cell, and compute and attach stay well under a millisecond, so the frame times measure Xvfb's copy, not the tiers. Headless figures (2026-11-27): static memory with no trees / tiers / `--veg-whole-map` 47.8 / 60.3 / 66.7 MB at 512, 66.9 / 130.5 / 178.1 MB at 1024, 143.0 / 352.2 / 342.3 MB at 2048.
 
 At 512 and 1024 the far tier holds every tree and snag (T = 2^32), so the trees are V3D-02's and the near tier adds only shrubs and reeds; the transfer to Terrain3D halves against `--veg-whole-map`, since shrubs no longer go through it. At 2048 the far tier keeps 65% of the trees and snags (about 98 trees per hectare in forest beyond 1.2 km against 150 near), and `--instance-cap 1000000` keeps 33% (static memory 249 MB headless). The view point at the centre of the seed 42 worlds is mostly not forest, hence about 100 near instances a cell there; a forest cell holds about 1,000 (721 shrubs, plus at 2048 the extra trees).

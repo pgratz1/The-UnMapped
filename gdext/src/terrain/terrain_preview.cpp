@@ -604,6 +604,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
                                                      scene_.ground, scene_.seed, instance_cap_);
     }
     scene_.forest_column = have_biome ? terrain::forest_column(layout, scene_.ground) : n / 2;
+    scene_.forest = terrain::forest_start_cell(layout, scene_.ground, scene_.forest_column);
     timings_.placement = now_usec() - t0;
 
     t0 = now_usec();
@@ -680,6 +681,9 @@ bool TerrainPreview::open_world(const godot::String& path) {
             }
         } else {
             status_lines_.push_back("vegetation: off");
+        }
+        if ((at_forest_ || bench_) && !scene_.forest.found) {
+            status_lines_.push_back("no forest on this map: the forest path starts at the map centre");
         }
         if (scene_.textured) {
             if (scene_.water.empty()) {
@@ -969,7 +973,8 @@ void TerrainPreview::place_start() {
         cx = opt_at_->first;
         cy = opt_at_->second;
     } else if (at_forest_) {
-        cx = scene_.forest_column;  // V3D-03 9.1: the forest path's start (12.1)
+        cx = scene_.forest.x;  // V3D-03 9.1: the forest path's start (12.1, lead's ruling)
+        cy = scene_.forest.y;
     }
     const terrain::Vec2 w = terrain::cell_to_world(layout, cx, cy);
     start_ = terrain::FlyState{};
@@ -979,9 +984,10 @@ void TerrainPreview::place_start() {
     if (opt_above_) {
         start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + *opt_above_;
     } else if (at_forest_ && !opt_alt_) {
-        start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + 60.0f;
+        start_.y = terrain::forest_start_altitude(terrain::ground_clamp(layout, scene_.heights, w.x, w.z));
     }
-    start_.heading_deg = opt_heading_.value_or(0.0f);
+    const float default_heading = at_forest_ && !scene_.forest.north ? 180.0f : 0.0f;
+    start_.heading_deg = opt_heading_.value_or(default_heading);
     start_.pitch_deg = opt_pitch_.value_or(-25.0f);
     start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
     // The heading wrap and the floor of 8.2, without moving.

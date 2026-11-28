@@ -321,12 +321,11 @@ terrain::FlyState TerrainPreview::forest_start() const {
     if (!scene_.layout) {
         return s;
     }
-    const int n = scene_.layout->n;
-    const terrain::Vec2 w = terrain::cell_to_world(*scene_.layout, scene_.forest_column, 7 * n / 8);
+    const terrain::Vec2 w = terrain::cell_to_world(*scene_.layout, scene_.forest.x, scene_.forest.y);
     s.x = w.x;
     s.z = w.z;
-    s.y = terrain::ground_clamp(*scene_.layout, scene_.heights, w.x, w.z) + 60.0f;
-    s.heading_deg = 0.0f;
+    s.y = terrain::forest_start_altitude(terrain::ground_clamp(*scene_.layout, scene_.heights, w.x, w.z));
+    s.heading_deg = scene_.forest.north ? 0.0f : 180.0f;
     s.pitch_deg = -8.0f;
     return s;
 }
@@ -348,8 +347,10 @@ void TerrainPreview::print_tiers_line() {
 }
 
 void TerrainPreview::start_forest_flight(int index) {
-    // 12.1: from (x*, 7N/8) north for min(12 N, 8192) m, 60 m above the
-    // ground, pitch -8; first wait for the near tier to settle there.
+    // 12.1 with the lead's ruling: from the forest cell of column x* nearest
+    // to row 7N/8, north or south along the longer run of forest, for
+    // min(12 N, 8192) m, 60 m above the ground, pitch -8; first wait for the
+    // near tier to settle there.
     forest_index_ = index;
     forest_speed_ = index == 0 ? 200.0f : 800.0f;
     forest_length_ = std::min(12.0f * static_cast<float>(scene_.layout->n), 8192.0f);
@@ -427,7 +428,8 @@ void TerrainPreview::bench_phases(float dt) {
             forest_done_ += forest_speed_ * dt;
             const terrain::FlyState s = forest_start();
             fly_.x = s.x;
-            fly_.z = s.z - std::min(forest_done_, forest_length_);
+            const float along = std::min(forest_done_, forest_length_);
+            fly_.z = scene_.forest.north ? s.z - along : s.z + along;
             fly_.y = terrain::ground_clamp(*scene_.layout, scene_.heights, fly_.x, fly_.z) + 60.0f;
             apply_camera();
             if (forest_done_ >= forest_length_) {
@@ -461,7 +463,7 @@ void TerrainPreview::finish_forest_flight() {
     const std::uint64_t compute_mean = compute_cells_ == 0 ? 0 : compute_usec_sum_ / compute_cells_;
     godot::UtilityFunctions::print(
         "UNMAPPED-TERRAIN-BENCH: forest flight at ", num(static_cast<std::uint64_t>(forest_speed_)), " m/s, column ",
-        scene_.forest_column, ", ", num(static_cast<std::uint64_t>(forest_length_)), " m: frames ",
+        scene_.forest.x, ", ", num(static_cast<std::uint64_t>(forest_length_)), " m: frames ",
         num(frame_usec_.size()), ", mean ", ms(mean), ", max ", ms(max), ", over 11.1 ms ", num(over11),
         ", over 16.7 ms ", num(over16), ", over 33.3 ms ", num(over33), "; cells filled ", num(forest_filled_), " (",
         to_godot(terrain::one_decimal(rate)), " per s), dropped ", num(forest_dropped_), ", late ", num(late),
