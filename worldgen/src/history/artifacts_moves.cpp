@@ -109,12 +109,24 @@ void ArtifactsSubsystem::on_general(StepContext& ctx, std::int64_t e) {
         if (bears_class(f, cls)) {
             continue;
         }
-        for (const std::int64_t a : held_by(KEPT, c)) {
-            if (kind_of(artifact(a)).artifact_class == cls) {
-                move(a, ctx.event_year(e), e, holder(BORNE, FIGURE_TYPE, f));
-                stats_.quiet_moves += 1;
+        // L-28 ("the dark blade calls"): a kept evil artifact of the class
+        // first, then any other; smallest id first within each.
+        std::int64_t pick_id = 0;
+        for (const std::int64_t a : held_by(KEPT, c)) {  // ascending id
+            if (kind_of(artifact(a)).artifact_class != cls) {
+                continue;
+            }
+            if (evil(artifact(a))) {
+                pick_id = a;
                 break;
             }
+            if (pick_id == 0) {
+                pick_id = a;
+            }
+        }
+        if (pick_id != 0) {
+            move(pick_id, ctx.event_year(e), e, holder(BORNE, FIGURE_TYPE, f));
+            stats_.quiet_moves += 1;
         }
     }
 }

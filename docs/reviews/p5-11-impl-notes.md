@@ -386,3 +386,7 @@ I2: gcc seeds 9, 12, 23, 30 with a scratch root (rows 13 and 14 removed, `corrup
 `event_kind`, `event_kind_role`, `event_kind_value` (kind 118) and `meta` (content hashes). With `corrupt_permille`
 150 kept, seeds 9, 12, 23 are equal likewise and seed 30 differs: the faith exposure (r4, not r3) corrupts a ruler
 there, as intended.
+
+**L-28 (lead, "the dark blade calls").** M1 now takes a kept evil arm or armour of the class before any other
+(smallest id among the evil, else smallest id among the rest; `on_general`). M15 was evil-only already; M5 takes
+from a hoard and has no choice among kept arms. No draw, no data field.
