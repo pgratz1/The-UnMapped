@@ -19,7 +19,7 @@
 namespace unmapped::terrain {
 
 inline constexpr int VEGETATION_KINDS = 5;  // mesh ids 0 broadleaf, 1 conifer, 2 shrub, 3 reed, 4 snag
-inline constexpr std::uint64_t DEFAULT_INSTANCE_CAP = 1000000;
+inline constexpr std::uint64_t DEFAULT_INSTANCE_CAP = 2000000;
 inline constexpr std::uint64_t MAX_INSTANCE_CAP = 4000000;
 
 struct VegetationKindInfo {
@@ -38,6 +38,7 @@ extern const std::array<VegetationKindInfo, VEGETATION_KINDS> VEGETATION_KINDS_I
 struct VegetationDensity {
     int fallback_timber;  // t when the timber layer is absent
     int conifer_c0;       // %
+    int tree_q8;          // trees (Q8 per cell) at t = 255: 393 (60 per ha), 983 (150) on forest types
     int shrub_q8;
     int reed_q8;
     int snag_q8;

@@ -300,3 +300,22 @@ TEST_CASE("U15 ground_low") {
     }
     CHECK(bad == 0);
 }
+
+TEST_CASE("U13 the forest densities of 6.3 (Paul, 2026-11-27)") {
+    // Forest floor and carr: 150 trees per hectare at t = 255 (Q8 983) and
+    // 100 shrubs per hectare of undergrowth (Q8 655) on top; the mix of kinds
+    // is unchanged. Every other type keeps 60 trees per hectare (Q8 393).
+    using E = std::array<std::uint32_t, VEGETATION_KINDS>;
+    CHECK(expected_counts(2, 255, 100) == E{688, 295, 66 + 655, 0, 0});
+    CHECK(expected_counts(3, 255, 100) == E{885, 98, 98 + 655, 66, 0});
+    CHECK(expected_counts(1, 255, 100) == E{314, 79, 52, 0, 0});
+    CHECK(expected_counts(7, 255, 100) == E{79, 314, 262, 0, 0});
+    CHECK(expected_counts(9, 0, 100) == E{0, 0, 26, 0, 0});
+    for (std::uint8_t type = 0; type <= 10; ++type) {
+        CAPTURE(static_cast<int>(type));
+        const bool forest = type == 2 || type == 3;
+        CHECK(VEGETATION_DENSITY[type].tree_q8 == (forest ? 983 : 393));
+    }
+    CHECK(VEGETATION_KINDS_INFO[2].lod0_range == 1000.0f);
+    CHECK(DEFAULT_INSTANCE_CAP == 2000000);
+}

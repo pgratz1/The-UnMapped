@@ -14,18 +14,23 @@ const std::array<VegetationKindInfo, VEGETATION_KINDS> VEGETATION_KINDS_INFO = {
     {"snag", 1, 3000.0f, 0.0f, 800, 1200},
 }};
 
+// Columns: fallback t, c0 %, trees Q8 at t = 255, shrub, reed, snag Q8.
+// The two forest types (forest floor, carr) carry 150 trees per hectare at
+// t = 255 (983 = 150 * 256 / 39.0625) and 100 shrubs per hectare of
+// undergrowth (655) on top of their open-ground shrubs (Paul, 2026-11-27);
+// every other type keeps 60 trees per hectare (393).
 const std::array<VegetationDensity, 11> VEGETATION_DENSITY = {{
-    {0, 0, 0, 0, 0},      // 0 unknown
-    {38, 20, 52, 0, 0},   // 1 grassland
-    {255, 30, 66, 0, 0},  // 2 forest floor
-    {179, 10, 98, 66, 0}, // 3 carr
-    {77, 0, 66, 393, 0},  // 4 marsh
-    {51, 10, 66, 262, 0}, // 5 fen
-    {13, 40, 98, 0, 0},   // 6 steppe
-    {13, 80, 262, 0, 0},  // 7 heath
-    {26, 70, 164, 0, 0},  // 8 moor
-    {0, 100, 26, 0, 0},   // 9 scree
-    {0, 0, 0, 0, 52},     // 10 waste
+    {0, 0, 393, 0, 0, 0},          // 0 unknown
+    {38, 20, 393, 52, 0, 0},       // 1 grassland
+    {255, 30, 983, 66 + 655, 0, 0}, // 2 forest floor
+    {179, 10, 983, 98 + 655, 66, 0}, // 3 carr
+    {77, 0, 393, 66, 393, 0},      // 4 marsh
+    {51, 10, 393, 66, 262, 0},     // 5 fen
+    {13, 40, 393, 98, 0, 0},       // 6 steppe
+    {13, 80, 393, 262, 0, 0},      // 7 heath
+    {26, 70, 393, 164, 0, 0},      // 8 moor
+    {0, 100, 393, 26, 0, 0},       // 9 scree
+    {0, 0, 393, 0, 0, 52},         // 10 waste
 }};
 
 std::array<std::uint32_t, VEGETATION_KINDS> expected_counts(std::uint8_t type, int timber, std::int64_t elevation_dm) {
@@ -34,7 +39,7 @@ std::array<std::uint32_t, VEGETATION_KINDS> expected_counts(std::uint8_t type, i
         return e;
     }
     const VegetationDensity& d = VEGETATION_DENSITY[type];
-    const std::int64_t eT = (393 * static_cast<std::int64_t>(timber) + 127) / 255;
+    const std::int64_t eT = (static_cast<std::int64_t>(d.tree_q8) * static_cast<std::int64_t>(timber) + 127) / 255;
     const std::int64_t conifer_pct = std::min<std::int64_t>(100, d.conifer_c0 + std::max<std::int64_t>(0, elevation_dm - 3000) / 100);
     const std::int64_t eConifer = (eT * conifer_pct + 50) / 100;
     e[0] = static_cast<std::uint32_t>(eT - eConifer);

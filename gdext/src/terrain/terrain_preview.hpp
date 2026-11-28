@@ -37,7 +37,7 @@
 //   --flat-colours          V3D-01's ground: one white texture, control 0,
 //                           biome colours (spec V3D-02 10.1)
 //   --no-trees              no vegetation
-//   --instance-cap <n>      the vegetation cap, 0 to 4000000 (default 1000000)
+//   --instance-cap <n>      the vegetation cap, 0 to 4000000 (default 2000000)
 //   --above <m>             start m metres above the ground at the start cell
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
