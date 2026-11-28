@@ -49,26 +49,33 @@ jobs:
         run: python3 -B tools/lint/determinism_lint.py
 
 
+  # windows-msvc-debug runs as three jobs (matrix shards 1 to 3 of 3): each
+  # builds the preset, then runs the CTest entries k, k+3, k+6, ... of the
+  # preset's list (ctest -I k,,3). Shard 1 alone also generates and uploads
+  # the world hashes. Every other preset is one job (shards 1, shard 1).
   build:
-    name: ${{ matrix.preset }}
+    name: ${{ matrix.shards > 1 && format('{0} ({1}/{2})', matrix.preset, matrix.shard, matrix.shards) || matrix.preset }}
     runs-on: ${{ matrix.os }}
     # Above the worst case for linux-clang-asan: build, then the worldgen-tests-*
     # and worldgen-cli-tests-* CTest entries, four at a time (the test presets
     # set "jobs": 4, the vCPU count of the hosted Linux and Windows runners
     # for a public repository), each with a 3600 s CTest timeout.
-    # windows-msvc-debug needs about 200 minutes for ctest since generator 0.29.0.
-    timeout-minutes: 300
+    # windows-msvc-debug needs about 220 minutes for ctest in one job, so it is
+    # split into three jobs of about 75 minutes of ctest each (limit 180).
+    timeout-minutes: ${{ matrix.shards > 1 && 180 || 300 }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, preset: linux-gcc-debug }
-          - { os: ubuntu-latest, preset: linux-gcc-release }
-          - { os: ubuntu-latest, preset: linux-clang-debug }
-          - { os: ubuntu-latest, preset: linux-clang-release }
-          - { os: ubuntu-latest, preset: linux-clang-asan }
-          - { os: windows-latest, preset: windows-msvc-debug }
-          - { os: windows-latest, preset: windows-msvc-release }
+          - { os: ubuntu-latest, preset: linux-gcc-debug, shard: 1, shards: 1 }
+          - { os: ubuntu-latest, preset: linux-gcc-release, shard: 1, shards: 1 }
+          - { os: ubuntu-latest, preset: linux-clang-debug, shard: 1, shards: 1 }
+          - { os: ubuntu-latest, preset: linux-clang-release, shard: 1, shards: 1 }
+          - { os: ubuntu-latest, preset: linux-clang-asan, shard: 1, shards: 1 }
+          - { os: windows-latest, preset: windows-msvc-debug, shard: 1, shards: 3 }
+          - { os: windows-latest, preset: windows-msvc-debug, shard: 2, shards: 3 }
+          - { os: windows-latest, preset: windows-msvc-debug, shard: 3, shards: 3 }
+          - { os: windows-latest, preset: windows-msvc-release, shard: 1, shards: 1 }
     defaults:
       run:
         shell: bash
@@ -111,9 +118,33 @@ jobs:
       - name: Build
         run: cmake --build "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
 
-      # Four entries at a time ("jobs" in the test preset).
+      # A split preset must run every CTest entry exactly once across its
+      # shards: list the entries of each part (ctest -N -I k,,N) and compare
+      # the union with the full list, sorted, so a missed or repeated entry
+      # fails the job before any test runs.
+      - name: Check that the shards cover every test once
+        if: matrix.shards > 1
+        run: |
+          d="$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+          n=${{ matrix.shards }}
+          names() { tr -d '\r' | sed -n 's/^ *Test *#[0-9]*: //p' | sort; }
+          ctest --preset "${{ matrix.preset }}" --test-dir "$d" -N | names > "$RUNNER_TEMP/all.txt"
+          : > "$RUNNER_TEMP/parts.txt"
+          for k in $(seq 1 "$n"); do
+            ctest --preset "${{ matrix.preset }}" --test-dir "$d" -N -I "$k,,$n" | names | tee -a "$RUNNER_TEMP/parts.txt" | wc -l
+          done
+          sort "$RUNNER_TEMP/parts.txt" > "$RUNNER_TEMP/parts-sorted.txt"
+          echo "entries in full list: $(wc -l < "$RUNNER_TEMP/all.txt")"
+          if [ ! -s "$RUNNER_TEMP/all.txt" ]; then echo "::error::empty test list"; exit 1; fi
+          diff "$RUNNER_TEMP/all.txt" "$RUNNER_TEMP/parts-sorted.txt"
+
+      # Four entries at a time ("jobs" in the test preset). A split preset
+      # runs its own part only.
       - name: Test
-        run: ctest --preset "${{ matrix.preset }}" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+        run: |
+          part=()
+          if [ "${{ matrix.shards }}" -gt 1 ]; then part=(-I "${{ matrix.shard }},,${{ matrix.shards }}"); fi
+          ctest --preset "${{ matrix.preset }}" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}" "${part[@]}"
 
       # The *-slow doctest suites (CTest label `slow`, excluded from the test
       # step above), on one release preset per platform only (spec P3-10 4
@@ -130,11 +161,13 @@ jobs:
       # takes every <preset>-* file, so compare-hashes compares them all.
       - name: Generate the P0 world cases
         id: cases
+        if: matrix.shard == 1
         run: bash tools/ci/world-hashes.sh generate "${{ matrix.preset }}" --build-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
 
       # Checks hash --expect against worldgen/tests/golden/p0-worlds.txt; while
       # that file does not exist it prints a warning and passes.
       - name: Check the golden world hashes
+        if: matrix.shard == 1
         run: bash tools/ci/world-hashes.sh expect "${{ matrix.preset }}" --build-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
 
       # Uploaded even when generation or the golden check failed, so that
