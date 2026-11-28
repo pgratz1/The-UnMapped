@@ -458,6 +458,24 @@ KINDS_030 = (
     kind_def(110, "tower_abandoned", 1, 1, 2, (_S1("site"), _C1("civilization"), _F1("figure")), ()),
 )
 COMPILED_030 = COMPILED_029 + KINDS_030
+# P5-11 8.1 (generator 0.31.0): kinds 111 to 116 appended (artifact = entity type 10, first use; god 2, civ 3, figure
+# 6, monster 8, site 9; unlisted counts 1-1); every one caused, with a region; settlement 2 (optional) but for 115.
+ARTIFACT = 10
+_R1 = lambda n: (n, ARTIFACT, 1, 1)
+KINDS_031 = (
+    kind_def(111, "artifact_made", 1, 1, 2, (_R1("artifact"), _C1("civilization"), ("maker", FIGURE, 0, 1),
+                                             ("god", GOD, 0, 1), ("maker_realm", CIV, 0, 1), ("site", SITE, 0, 1)),
+             ("maker_kind", "deep")),
+    kind_def(112, "artifact_taken", 1, 1, 2, (_R1("artifact"), _C1("taker"), _C1("from"), ("figure", FIGURE, 0, 1)),
+             ("how",)),
+    kind_def(113, "artifact_lost", 1, 1, 2, (_R1("artifact"), _C1("civilization"), ("figure", FIGURE, 0, 1)), ()),
+    kind_def(114, "artifact_hoarded", 1, 1, 2, (_R1("artifact"), _M1("monster"), _C1("civilization"),
+                                                ("figure", FIGURE, 0, 1)), ("how",)),
+    kind_def(115, "artifact_recovered", 1, 1, 0, (_R1("artifact"), _C1("civilization"), ("figure", FIGURE, 0, 1),
+                                                  ("monster", MONSTER, 0, 1), ("from", CIV, 0, 1)), ("how",)),
+    kind_def(116, "artifact_buried", 1, 1, 2, (_R1("artifact"), _F1("figure"), _C1("civilization")), ()),
+)
+COMPILED_031 = COMPILED_030 + KINDS_031
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -528,12 +546,17 @@ RENDER_R29 = False
 #   RENDER_R30      8.1 kinds 100 to 110; 8.2 the god form {g:titled}; the display name of entity type 7 (faction.name);
 #                   schema 14 (9: god gains domain, title, race; table faction).
 RENDER_R30 = False
+# P5-11 (generator 0.31.0):
+#   RENDER_R31      8.1 kinds 111 to 116; 7.6 the display name of entity type 10 (artifact.name), the form `kind` of an
+#                   artifact role ("a"/"an" + noun, " of deep iron" when deep), the forms `all` and `titled` of an
+#                   empty role render nothing; schema 15 (9).
+RENDER_R31 = False
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0", "0.31.0")
 
 
 def at_least(v):
@@ -549,7 +572,7 @@ def use_version(v):
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, RENDER_R24, RENDER_R25, SCHEMA_VERSION
-    global RENDER_R26, RENDER_R27, RENDER_R28, RENDER_R29, RENDER_R30
+    global RENDER_R26, RENDER_R27, RENDER_R28, RENDER_R29, RENDER_R30, RENDER_R31
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
@@ -557,7 +580,7 @@ def use_version(v):
                 "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023,
                 "0.24.0": COMPILED_024, "0.25.0": COMPILED_025, "0.26.0": COMPILED_026,
                 "0.27.0": COMPILED_027, "0.28.0": COMPILED_028, "0.29.0": COMPILED_029,
-                "0.30.0": COMPILED_030}[v]
+                "0.30.0": COMPILED_030, "0.31.0": COMPILED_031}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     i = VERSIONS.index(v)
     RENDER_R12 = QUIET_R12 = QUIET_R15 = i >= VERSIONS.index("0.19.0")
@@ -572,12 +595,13 @@ def use_version(v):
     RENDER_R28 = i >= VERSIONS.index("0.28.0")
     RENDER_R29 = i >= VERSIONS.index("0.29.0")
     RENDER_R30 = i >= VERSIONS.index("0.30.0")
+    RENDER_R31 = i >= VERSIONS.index("0.31.0")
     global TABLES, COLUMNS
     TABLES = (TABLES_024 if RENDER_R24 else TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21
               else TABLES_021)
     COLUMNS = (COLUMNS_024 if RENDER_R24 else COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21
                else COLUMNS_021)
-    SCHEMA_VERSION = 14 if RENDER_R30 else 13 if RENDER_R29 else 12 if RENDER_R27 else 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
+    SCHEMA_VERSION = 15 if RENDER_R31 else 14 if RENDER_R30 else 13 if RENDER_R29 else 12 if RENDER_R27 else 11 if RENDER_R26 else 10 if RENDER_R24 else 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
@@ -808,7 +832,7 @@ def placeholder_problem(kind, body, at):
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
             return "form '%s' needs a race role at byte %d" % (form, at)
-        if form == "kind" and r["type"] != MONSTER:   # P5-02 10.3, where the race-role form check is
+        if form == "kind" and r["type"] != MONSTER and not (RENDER_R31 and r["type"] == ARTIFACT):   # P5-02 10.3
             return "form 'kind' needs a monster role at byte %d" % at
         if form == "raid" and r["type"] != MONSTER:   # P5-03 9.5
             return "form 'raid' needs a monster role at byte %d" % at
@@ -818,7 +842,7 @@ def placeholder_problem(kind, body, at):
             return "form 'titled' needs a god role at byte %d" % at
         if form == "under" and r["type"] not in (6, CIV):   # P5-06 7.9
             return "form 'under' needs a figure or civilization role at byte %d" % at
-        if form not in ("all", "with", "against", "under") and r["min"] == 0:   # P5-04 8.2, P5-06 7.9: as all
+        if form not in ("all", "with", "against", "under") + (("titled",) if RENDER_R31 else ()) and r["min"] == 0:   # P5-04 8.2, P5-06 7.9: as all
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
     if body in roles:
@@ -1078,6 +1102,8 @@ def render(view, eid, links=None):
                 t, x = ps[0]
                 out.append(died_phrase(view["monster_kind"](x)["wake"]))
             elif form == "titled":   # P5-08 8.2: the god's name (linked), a space and its title
+                if not ps:   # P5-11 7.6: an empty role renders nothing
+                    continue
                 t, x = ps[0]
                 put_name(view["name"](t, x, "name"), t, x)
                 out.append(" " + view["god_title"](x))
@@ -2141,12 +2167,29 @@ def view_from_rows(res, regions, races, gods):
         god_titles = {g[0]: (g[4] if len(g) > 4 else "") for g in gods}
         view["god_title"] = lambda x: god_titles[x]
         names[FACTION] = {f[0]: f[1] for f in res.get("faction", [])}
+    if RENDER_R31 and "artifact" in res:   # P5-11 7.6: type 10's name and its form kind
+        names[ARTIFACT] = {a[0]: a[1] for a in res["artifact"]}
+        akind = {k[0]: k for k in res.get("artifact_kind", [])}
+        aform = {a[0]: artifact_kind_form(akind[a[2]][3], a[12]) for a in res["artifact"]}
+        base_name = name
+
+        def name(t, x, form):   # noqa: F811
+            if t == ARTIFACT and form == "kind":
+                return aform[x]
+            return base_name(t, x, form)
+        view["name"] = name
     if RENDER_R27 and "figure" in res:   # P5-06 7.9: display names of type 6, the recorded ruler, {@book}
         names[6] = {f[0]: figure_display_name(f[1], f[16], f[2]) for f in res["figure"]}
         view["ruler_at"] = ruler_at_fn(res.get("relation", []))
         titles = {b[5]: b[1] for b in res.get("book", [])}
         view["book_title"] = lambda e: titles[e]
     return view
+
+
+def artifact_kind_form(noun, deep):
+    """P5-11 7.6: "a" or "an" (an before a noun starting with a, e, i, o or u), a space and the noun, then " of deep
+    iron" when deep is 1."""
+    return ("an " if noun[:1] in "aeiou" else "a ") + noun + (" of deep iron" if deep == 1 else "")
 
 
 def figure_display_name(name, regnal, epithet):

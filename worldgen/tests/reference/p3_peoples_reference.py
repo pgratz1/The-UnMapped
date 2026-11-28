@@ -138,7 +138,7 @@ FLAGS_023 = ("ghost",)
 FLAGS_024 = ("p503",)
 FLAGS_027 = ("nofade",)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")   # 0.21.0, 0.22.0, 0.28.0 to 0.30.0: no peoples rule
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0", "0.31.0")   # 0.21.0, 0.22.0, 0.28.0 to 0.31.0: no peoples rule
 
 
 def road_loss_of(P, u, t):
@@ -351,6 +351,8 @@ KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
+    if len(pe.COMPILED) == 116:   # P5-11 8.1 (0.31.0): kinds 111 to 116
+        return pe.COMPILED_031
     if len(pe.COMPILED) == 110:   # P5-08 8.1 (0.30.0): kinds 100 to 110
         return pe.COMPILED_030
     if len(pe.COMPILED) == 99:   # P5-07 8.1 (0.29.0): kinds 93 to 99

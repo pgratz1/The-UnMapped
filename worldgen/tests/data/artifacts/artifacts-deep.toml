@@ -1,0 +1,32 @@
+# P5-11 fixture `artifacts-deep` (spec 6.4, 7.1, 16 item 3): artifacts-small (4.6) with P5-07's deep years shortened and
+# every deepening certain, so that dwarven mines reach depth 3 and their smiths forge of deep iron (deep 1, the
+# delving_deepened cause of 8.1), for the realm itself and on commission (maker_kind 2). Reference replay on the conflict
+# stress geographies; the paths listed must appear over the cases.
+
+base = "artifacts-small"
+paths = ["deep", "maker 2"]
+
+[monsters]
+deep_years = [5, 10, 20]
+deep_delve_permille = 1000
+
+[[case]]
+seed = 0
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "normal"
+
+[[case]]
+seed = 6
+span = 2000
+races = "goblin,human,orc"
+civs = "4"
+intensity = "normal"
+
+[[case]]
+seed = 13
+span = 6000
+races = "all"
+civs = "4"
+intensity = "turbulent"

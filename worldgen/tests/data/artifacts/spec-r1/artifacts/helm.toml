@@ -1,0 +1,10 @@
+# P5-11 r1 4.1 (fixture: the spec's shipped listing, read by the references while the data root has no
+# artifacts directory; the shipped and calibrated files are game/data/artifacts/).
+[artifact.helm]
+class = "armour"
+title = "Helm"
+noun = "helm"
+weight = 300
+battle_permille = 30
+hunt_permille = 30
+claim_permille = 100
