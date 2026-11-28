@@ -1,6 +1,6 @@
 # V3D-01 Terrain preview
 
-Status: **r2, 2026-11-27, as built.** r1 was approved by Paul on 2026-11-27 with all six recommendations of section 14 accepted; r2 records where the build differs from r1 and the findings of section 13 (revision notes at the end). First stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`). Design doc section 7 ("Terrain approach: Terrain3D first, with a test"; "Fixed world" and threading, 648), section 10 (engine and terrain rows, 890 to 897), section 11 ("Later: a 3D heightmap preview", 950) and section 13 (row P6, 1117). Paul's decision of 2026-11-27: **plain preview first**, the `elevation` and `biome` layers loaded into Terrain3D and flown over. Builds on the viewer as built (`gdext/README.md`: `WorldFile`, the run copy `<build>/game/`, `gdext-headless-check`).
+Status: **r3, 2026-11-27, as built** (r3 records the first passing CI run). r1 was approved by Paul on 2026-11-27 with all six recommendations of section 14 accepted; r2 records where the build differs from r1 and the findings of section 13 (revision notes at the end). First stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`). Design doc section 7 ("Terrain approach: Terrain3D first, with a test"; "Fixed world" and threading, 648), section 10 (engine and terrain rows, 890 to 897), section 11 ("Later: a 3D heightmap preview", 950) and section 13 (row P6, 1117). Paul's decision of 2026-11-27: **plain preview first**, the `elevation` and `biome` layers loaded into Terrain3D and flown over. Builds on the viewer as built (`gdext/README.md`: `WorldFile`, the run copy `<build>/game/`, `gdext-headless-check`).
 
 **No world change.** The stage reads `world.db` and writes nothing to it or anywhere else in the source tree. `GENERATOR_VERSION`, the schema version, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/` or `game/data/` changes. Floating point is allowed throughout this stage: nothing it computes reaches a world file. Owner: viewer engineer; build engineer for sections 3 and 11.
 
@@ -358,6 +358,7 @@ The engineer records the figures for 512, 1024 and 2048 (release preset, the mac
 - The seven `build` jobs, `determinism-lint` and `compare-hashes` are unchanged: they never turn the extension on.
 - On failure, `gdext-*` also upload `<build>/gdext/terrain-check/`.
 - As built (r2): the workflow changes are made; neither job has yet passed with them, and MSVC has not yet compiled Terrain3D or the compatibility header (open after r2, section 13).
+- r3: CI run 46087708271 on `v3d/01-terrain` (2026-11-27) passed `gdext-linux` and `gdext-windows`: MSVC compiled Terrain3D through the compatibility header, and the terrain check ran on Windows.
 
 ## 12. Invariants
 
@@ -395,7 +396,7 @@ Each item gives the reading this spec assumes and what to do if it is false. The
 
 Godot itself: naming a scene after `--path` runs that scene instead of the main scene. If that is wrong, the 2D `ViewerScreen` takes a first user argument `--terrain` and calls `change_scene_to_file("res://viewer3d/terrain_preview.tscn")`. That one line is the only 2D change allowed. Found: it works; the 2D viewer is unchanged.
 
-**Open after r2.** (1) The Windows (MSVC) build of the header and of Terrain3D, and the CI jobs `gdext-linux` and `gdext-windows` with the option on, have not passed yet. (2) The sea plane does not fill the view from high altitude and its edge shows as a change of tone (5.4); V3D-02 fixes it.
+**Open after r2.** (1) The Windows (MSVC) build of the header and of Terrain3D, and the CI jobs `gdext-linux` and `gdext-windows` with the option on, have not passed yet. Closed (r3): CI run 46087708271 on `v3d/01-terrain`, 2026-11-27, passed both jobs; MSVC compiled Terrain3D through the compatibility header and the terrain check ran there. (2) The sea plane does not fill the view from high altitude and its edge shows as a change of tone (5.4); V3D-02 fixes it.
 
 ## 14. Questions for Paul (decided 2026-11-27: Paul accepts all six recommendations)
 
@@ -412,3 +413,4 @@ Godot itself: naming a scene after `--path` runs that scene instead of the main 
 
 - r1 (2026-11-27): first draft. Approved by Paul the same day; Q-V3D-01-1 to 6 decided as recommended (status line and section 14 heading only).
 - r2 (2026-11-27): as built. 3.1 to 3.3: Terrain3D does not compile unchanged; the force-included compatibility header, the one edited vendored line (`terrain_3d.cpp:647`) and its patch file, the three-version pin and the 8-line limit (Paul's decision). 5.1: "not used" notes for a wrong type or an unreadable layer; `<path>: <code>: <message>` for a failed open. 5.3: the wetness reading of the colour map's alpha. 5.4: the sky's ground colour set to the sea's. 6: the helpers `unknown_biome_cells`, `HudWorld`, `hud_line`, `HUD_KEYS`, `one_decimal`, `speed_of`, `speed_step`, `camera_rotation` and the constants. 7: the order of the Terrain3D calls, `free_editor_textures` false, `region_size` not set. 9.2: the T6 reopen check. 10: headless first frame, video memory from `RenderingServer::get_rendering_info`, the recorded figures. 13: each V item confirmed, false or not measured. Open after it: Windows and CI not yet passed; the sea plane (fixed by V3D-02).
+- r3 (2026-11-27): 11 and 13's open item (1) closed: CI run 46087708271 on `v3d/01-terrain` passed `gdext-linux` and `gdext-windows`, so MSVC compiles Terrain3D through the compatibility header and the terrain check runs on Windows. No other change.

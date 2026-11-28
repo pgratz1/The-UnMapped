@@ -1,6 +1,6 @@
 # V3D-02 Biome ground and vegetation
 
-Status: **r1, 2026-11-27, approved by Paul on 2026-11-27** with the recommendations of section 17 accepted. Second stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 as built (`docs/specs/v3d-01-terrain-preview.md` r2). Paul flew V3D-01 on 2026-11-27: "looks good, but just basic terrain, no trees, and the only difference between biomes is the ground colour". He chose **generated placeholders** for this stage's art: nothing licensed or vendored; textures and meshes are built in code and can be replaced by real assets later. Design doc section 7 ("Wilderness": vegetation scattered from biome rules and drawn with instancing; "What makes each biome distinct": silhouette and ground shape) and section 1 (greybox art carries the project until each generator is good enough).
+Status: **r2, as built** (2026-11-27). r1 was approved by Paul on 2026-11-27 with the recommendations of section 17 accepted; r2 records the build and Paul's changes after flying it (revision notes). Second stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 as built (`docs/specs/v3d-01-terrain-preview.md` r2). Paul flew V3D-01 on 2026-11-27: "looks good, but just basic terrain, no trees, and the only difference between biomes is the ground colour". He chose **generated placeholders** for this stage's art: nothing licensed or vendored; textures and meshes are built in code and can be replaced by real assets later. Design doc section 7 ("Wilderness": vegetation scattered from biome rules and drawn with instancing; "What makes each biome distinct": silhouette and ground shape) and section 1 (greybox art carries the project until each generator is good enough).
 
 **No world change.** The stage reads `world.db` and writes nothing to it or anywhere else in the source tree. `GENERATOR_VERSION`, the schema version, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/` or `game/data/` changes. It uses worldgen only through its public headers. Floating point is allowed (nothing reaches a world file), but every buffer the checks hash is integer arithmetic (section 15). Owner: viewer engineer.
 
@@ -107,6 +107,8 @@ albedo_color = (lin(c.r/255)/m, lin(c.g/255)/m, lin(c.b/255)/m, 1)     (channels
 lin(u) = u <= 0.04045 ? u/12.92 : ((u + 0.055)/1.055)^2.4
 ```
 
+As built: Godot converts a `Color` given to `albedo_color` from sRGB to linear on its way to the shader, so the scene sets `srgb_encode` of each channel above (`ground.hpp`, the inverse of `lin`), and the shader receives the linear value. T9 compares the encoded value.
+
 The colour map stays: on land it is neutral white, and it carries the 2D colours of lakes and rivers (5.1). With `--flat-colours` everything is V3D-01's (one white texture, control 0, biome colours in the colour map).
 
 Other asset properties: `uv_scale` from 3.1 (the shader's UV is world metres × uv_scale, W4); `detiling_rotation` 0.2 and `detiling_shift` 0.2 for ids 1 to 12 and 14, 0 for 0 and 13; `normal_depth`, `ao_strength`, `roughness` left at their defaults. Material features stay at their defaults, all off: auto shader (it would override the control map), macro variation (it would shift the colours), dual scaling (a later stage).
@@ -202,24 +204,26 @@ Trunks reach 2 m below the origin, so a tree on a slope never shows a gap under 
 Per land type. Trees come from the `timber` layer t (0 to 255) at the cell, or the fallback t when the layer is absent (round(255 × the shipped biome timber of P1-04 4.1)). Expected counts are Q8 per cell (256 = one instance per 16 m cell = 39.06 per hectare).
 
 ```
-eT       = (393*t + 127) / 255                           (393 = 60 trees per hectare at t = 255)
+eT       = (tree_q8*t + 127) / 255                       (tree_q8 393 = 60 trees per hectare at t = 255; 983 = 150)
 conifer% = min(100, c0 + max(0, E - 3000) / 100)         (E in dm: +1 point per 10 m above 300 m)
 eConifer = (eT*conifer% + 50) / 100;   eBroadleaf = eT - eConifer
 ```
 
-| Type | Fallback t | c0 (%) | Shrub Q8 (per ha) | Reed Q8 (per ha) | Snag Q8 (per ha) |
-| --- | --- | --- | --- | --- | --- |
-| 1 grassland | 38 | 20 | 52 (8) | 0 | 0 |
-| 2 forest floor | 255 | 30 | 66 (10) | 0 | 0 |
-| 3 carr | 179 | 10 | 98 (15) | 66 (10) | 0 |
-| 4 marsh | 77 | 0 | 66 (10) | 393 (60) | 0 |
-| 5 fen | 51 | 10 | 66 (10) | 262 (40) | 0 |
-| 6 steppe | 13 | 40 | 98 (15) | 0 | 0 |
-| 7 heath | 13 | 80 | 262 (40) | 0 | 0 |
-| 8 moor | 26 | 70 | 164 (25) | 0 | 0 |
-| 9 scree | 0 | 100 | 26 (4) | 0 | 0 |
-| 10 waste | 0 | 0 | 0 | 0 | 52 (8) |
-| 0 unknown | 0 | 0 | 0 | 0 | 0 |
+| Type | Fallback t | c0 (%) | tree_q8 (per ha at t = 255) | Shrub Q8 (per ha) | Reed Q8 (per ha) | Snag Q8 (per ha) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 grassland | 38 | 20 | 393 (60) | 52 (8) | 0 | 0 |
+| 2 forest floor | 255 | 30 | 983 (150) | 721 (110) | 0 | 0 |
+| 3 carr | 179 | 10 | 983 (150) | 753 (115) | 66 (10) | 0 |
+| 4 marsh | 77 | 0 | 393 (60) | 66 (10) | 393 (60) | 0 |
+| 5 fen | 51 | 10 | 393 (60) | 66 (10) | 262 (40) | 0 |
+| 6 steppe | 13 | 40 | 393 (60) | 98 (15) | 0 | 0 |
+| 7 heath | 13 | 80 | 393 (60) | 262 (40) | 0 | 0 |
+| 8 moor | 26 | 70 | 393 (60) | 164 (25) | 0 | 0 |
+| 9 scree | 0 | 100 | 393 (60) | 26 (4) | 0 | 0 |
+| 10 waste | 0 | 0 | 393 (60) | 0 | 0 | 52 (8) |
+| 0 unknown | 0 | 0 | 393 (60) | 0 | 0 | 0 |
+
+r2 (Paul, 2026-11-27, after flying r1): the two forest types carry 150 trees per hectare (`tree_q8` 983, was the fixed 393) and 100 shrubs per hectare of undergrowth (655) on top of their r1 shrubs (66 and 98, now 721 and 753); the shrub range stays 1000 m (6.1). Every other value is r1's. The table is `VEGETATION_DENSITY` in `vegetation.cpp`.
 
 The tree line is the alpine biome (timber 0 there). The design's later rule, scatter sets named in each biome's TOML file, replaces this table (Q-V3D-02-6).
 
@@ -238,7 +242,8 @@ Cells in row-major order (y, then x); in each cell the kinds 0 to 4 in order. A 
 hc = mix64(hb + 64*j);  count = (e >> 8) + ((hc & 0xFF) < (e & 0xFF) ? 1 : 0)      (count <= 62)
 for k in 0..count-1:
   h   = mix64(hb + 64*j + 1 + k)
-  jx  = float(3*(h & 0x3FF)) / 256 - 6;   jz = float(3*((h >> 10) & 0x3FF)) / 256 - 6       (metres, in [-6, 6))
+  jx  = cell_jitter(mix64(h ^ 0x6A09E667F3BCC909));  jz = cell_jitter(mix64(h ^ 0xBB67AE8584CAA73B))
+  cell_jitter(u) = float(2*(u >> 54) + 1) / 128 - 8      (metres: 1024 steps of 1/64 m over [-7.992, 7.992])
   X   = 16*(x - N/2) + jx;  Z = 16*(y - N/2) + jz;  drop the instance if X or Z is outside [-8N, 8N - 16]
   yaw = (h >> 20) & 0x3FF                          (yaw in degrees = yaw * 360 / 1024)
   sc  = smin + ((smax - smin)*((h >> 30) & 0x3FF) + 511) / 1023      (per mille, from 6.1)
@@ -247,9 +252,9 @@ for k in 0..count-1:
   Y   = ground_low(X, Z)                           (6.5)
 ```
 
-Jitter stays within ±6 m of the cell's vertex, so an instance's nearest vertex is its own cell and it keeps 10 m from a painted river vertex.
+Jitter covers the whole cell, strictly less than 8 m from the cell's vertex on each axis, so an instance's nearest vertex is its own cell and it keeps more than 8 m from a painted river vertex. r2 (Paul, 2026-11-27): r1's jitter (`3*(h & 0x3FF)/256 - 6` and the next 10 bits, ±6 m) left trees standing in rows 16 m apart; each axis now has its own keyed draw. Yaw, scale, tint, `thin` and the edge-drop rule are unchanged; bits 0 to 19 of h are no longer used.
 
-**Cap.** Let S be the number of candidates and B the cap (default 1,000,000; `--instance-cap`). If S > B, keep exactly the B candidates with the smallest key (thin << 32) | p, where p is the candidate's index in placement order (S < 2^32); otherwise keep all. Survivors keep placement order. Whole-map placement at load is the choice: streaming is a later stage, and a uniform thinning keeps every biome's proportions.
+**Cap.** Let S be the number of candidates and B the cap (default 2,000,000, `DEFAULT_INSTANCE_CAP`, r2; r1 1,000,000; `--instance-cap`). If S > B, keep exactly the B candidates with the smallest key (thin << 32) | p, where p is the candidate's index in placement order (S < 2^32); otherwise keep all. Survivors keep placement order. Whole-map placement at load is the choice: streaming is a later stage, and a uniform thinning keeps every biome's proportions.
 
 ### 6.5 Ground under an instance
 
@@ -264,15 +269,15 @@ Terrain3D draws one of the two (W9), so the origin is never above the drawn surf
 
 ### 6.6 Expected counts
 
-Estimated from P1-04 9's median land shares and a land fraction of 0.40 (P1-01 `land_fraction`), before slope exclusions; the bench records the real numbers.
+Measured (r2; seed 42, Linux, RTX 4090, with the r2 densities and cap, before the r2 jitter change, which moves instances but changes no count except at the map's edge):
 
-| N | land cells | trees | shrubs | reeds | candidates S | kept (cap 1,000,000) |
-| --- | --- | --- | --- | --- | --- | --- |
-| 512 | 105,000 | 70,000 | 31,000 | 2,000 | about 100,000 | all |
-| 1024 | 419,000 | 320,000 | 125,000 | 19,000 | about 460,000 | all |
-| 2048 | 1,680,000 | 1,490,000 | 490,000 | 190,000 | about 2,200,000 | exactly 1,000,000 (about 45%) |
+| N | candidates S | kept (cap 2,000,000) | transfer | first frame | static memory |
+| --- | --- | --- | --- | --- | --- |
+| 512 | 64,385 (r1 densities; not re-measured) | all | | | |
+| 1024 | 1,088,122 | all | 916 ms | 319 ms | 624 MB |
+| 2048 | 5,523,211 | exactly 2,000,000 (36%; about 54 trees per hectare in forests) | 1,318 ms | 537 ms | 1,175 MB |
 
-Memory, estimated: about 100 bytes per instance in Terrain3D's region dictionaries plus 64 bytes per LOD on the CPU and again on the GPU for the multimeshes: about 0.35 KB per tree, 0.23 KB per shrub, so about 0.3 GB at the cap. Geography-only worlds have no `blighted_waste`, so no snags.
+Flight frames: mean 0.7 ms, worst under 5 ms. Memory is about 0.58 KB per instance (Terrain3D's region dictionaries and the multimeshes), about twice r1's estimate of 0.3 KB. Geography-only worlds have no `blighted_waste`, so no snags.
 
 ## 7. Sea (item 5)
 
@@ -318,7 +323,7 @@ Namespace `unmapped::terrain`. No Godot types.
 2. Unless `--no-trees` or no `biome` layer: `place_vegetation` with the cap.
 3. Textures and meshes (once per process; they do not depend on the world): the fifteen `GroundTexture`s and their `ImageTexture`s, and for each kind a `PackedScene` built in code: a `Node3D` root with one `MeshInstance3D` child per LOD named `MeshLOD0`, `MeshLOD1`, owner the root, the `ArrayMesh` of `build_mesh` with the shared material on its surface, then `PackedScene::pack(root)` (W1).
 4. Before `add_child` (V3D-01 r2's order): texture assets 0 to 14 (`set_texture_asset`), or the one white asset with `--flat-colours`; mesh assets 0 to 4 (`set_mesh_asset`) unless vegetation is off. On each mesh asset set `scene_file` **first**, since `set_scene_file` resets name, height offset, density and LOD ranges (`Terrain3DMeshAsset::set_scene_file`), then the rest of 6.1.
-5. After `import_images`: for each kind with instances, `get_instancer().add_transforms(id, transforms, colours, false)`, with `Transform3D(Basis(Vector3(0, 1, 0), yaw).scaled(Vector3(s, s, s)), Vector3(X, Y, Z))`, s = sc / 1000, yaw = yaw1024 · 2π / 1024, colour (v, v, v, 1) with v = (200 + tint·55/255) / 255 (integer division in the numerator); then once `update_mmis(-1, Vector2i(0, 0), true)` (rebuild everything; Terrain3D builds the multimeshes on the next `frame_pre_draw`, W3).
+5. After `import_images`: for each kind with instances and each instancer cell (32 x 32 vertices, 512 m) holding instances of it, in cell order and placement order within the cell, one `get_instancer().add_transforms(id, transforms, colours, false)` (as built: Terrain3D copies a cell's colour array for every instance appended, so one call per kind is quadratic; the stored instances are the same), with `Transform3D(Basis(Vector3(0, 1, 0), yaw).scaled(Vector3(s, s, s)), Vector3(X, Y, Z))`, s = sc / 1000, yaw = yaw1024 · 2π / 1024, colour (v, v, v, 1) with v = (200 + tint·55/255) / 255 (integer division in the numerator); then once `update_mmis(-1, Vector2i(0, 0), true)` (rebuild everything; Terrain3D builds the multimeshes on the next `frame_pre_draw`, W3).
 6. Sea and fog (section 7).
 
 ### 9.2 Every Terrain3D name called (a wrong name fails only at run time; T9 to T12 cover each)
@@ -341,8 +346,8 @@ Namespace `unmapped::terrain`. No Godot types.
 | Option | Meaning |
 | --- | --- |
 | `--flat-colours` | V3D-01's ground: one white texture, control 0, biome colours, no river paint |
-| `--no-trees` | no mesh assets and no placement |
-| `--instance-cap <n>` | the cap B of 6.4, 0 to 4,000,000 (default 1,000,000) |
+| `--no-trees` | no mesh assets and no placement (as built: Terrain3D then inserts its own default mesh into the empty mesh list; T11) |
+| `--instance-cap <n>` | the cap B of 6.4, 0 to 4,000,000 (default 2,000,000, r2) |
 | `--above <m>` | start altitude `ground_clamp` + m at the start cell, instead of the default or `--alt` (for screenshots) |
 
 `--flat-colours --no-trees` is V3D-01's look, with the sea of section 7. Refusals: `--instance-cap <v>: not a whole number from 0 to 4000000`, `--above <v>: not a number`, `--above cannot be combined with --alt`. `--screenshot` now saves 2.0 s after the **first drawn frame** after the terrain is added (the instancer builds its multimeshes in that frame).
@@ -354,11 +359,11 @@ Namespace `unmapped::terrain`. No Godot types.
 | T | vegetation on or off: `enabled` on every mesh asset (instances are kept); nothing with `--no-trees` |
 | G | ground textured or flat: reopens the world in the other mode, keeping the camera's `FlyState`; nothing when there is no `biome` layer |
 
-The key line becomes `WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, T trees, G ground, H hide`. The HUD's first line is unchanged.
+The key line becomes `WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, T trees, G ground, H hide`. The HUD's first line is unchanged. As built, headless only: key T logs Terrain3D thumbnail errors (`_viewport_texture is null`); the check still passes.
 
 ### 10.3 Status lines (added)
 
-`ground: textured, 15 ground types` or `ground: flat colours`; `no biome layer: ground drawn grey, no vegetation`; `vegetation: <n> instances` with `, thinned from <S> to the cap` when S > B; `vegetation: off`; the seed note of section 2; `no water layer: rivers not drawn`; `no timber layer: tree density from the biome alone`; `no temperature layer: no snow`.
+`ground: textured, 15 ground types` or `ground: flat colours`; `no biome layer: ground drawn grey, no vegetation` (replaces V3D-01's "terrain drawn grey" line); `vegetation: <n> instances` with `, thinned from <S> to the cap` when S > B; `vegetation: off`; the seed note of section 2; `no water layer: rivers not drawn`; `no timber layer: tree density from the biome alone`; `no temperature layer: no snow`.
 
 ## 11. Testing (item 8)
 
@@ -372,7 +377,7 @@ The key line becomes `WASD move, E/Q up/down, right mouse look, wheel speed, Shi
 | U10 | `build_control` on hand-made 16 x 16 grids: a straight border (blends 0, 51, 102 by distance), a lone cell (blend capped at 127), rock at g = 224, 272, 320 (0, 128, 255), snow at T = −20, −40, −60 (0, 128, 255), the candidate order on ties, painted and lake cells with blend 0, bits exactly `(base << 27) | (overlay << 22) | (blend << 14)`, no value with base 15 or more |
 | U11 | `river_paint` against the 2D rule: a diagonal step closes its corner, class 4 widens east and south, a lake cell is never painted, without `river` the class is 16 |
 | U12 | `build_textured_colours`: land white, lake colour, river class colours, alpha 128 |
-| U13 | `place_vegetation`: the same inputs twice give identical output; another seed differs; no instance on water, painted, rock ≥ 128, snow ≥ 128 or non-land cells; each instance within ±6 m of its cell's vertex and inside the map; on a 512 world of one land type and t = 255 the count per kind is within 4 standard deviations of N² · e / 256 for every row of 6.3 |
+| U13 | `place_vegetation`: the same inputs twice give identical output; another seed differs; no instance on water, painted, rock ≥ 128, snow ≥ 128 or non-land cells; each instance less than 8 m from its cell's vertex on each axis and inside the map; on a 512 world of one land type and t = 255 the count per kind, over the interior cells (edge cells lose instances jittered off the map), is within 4 standard deviations of the expected count for every row of 6.3. r2 adds: the values of 6.3's table (`tree_q8` 983 on forest types, 393 otherwise; shrubs 721 and 753), `DEFAULT_INSTANCE_CAP` 2,000,000 and the shrub `lod0_range` 1000; the in-cell offsets (dx, dz) fill a 4 x 4 histogram evenly (each bin within 2% of 1/16), with no correlation (\|r\| < 0.01) between dx and dz, between neighbouring cells or between slots of one cell |
 | U14 | the cap: S > B keeps exactly B, and the kept set equals a brute-force sort of the keys; S ≤ B keeps all; B = 0 keeps none |
 | U15 | `ground_low` equals the height at a vertex and is ≤ `sample_bilinear` and ≤ both triangulations at 1,000 fixed points |
 | U16 | `build_mesh`: triangle counts of 6.2; unit normals; each triangle's normal points away from its primitive's axis or centre; bounds (broadleaf top 11.5 m, conifer 15.5 m) |
@@ -384,11 +389,11 @@ The key line becomes `WASD move, E/Q up/down, right mouse look, wheel speed, Shi
 | Id | Check |
 | --- | --- |
 | T3 (default mode) | colour image equals the check's own 5.1 at every cell; every painted cell equals `map.png` at that cell |
-| T9 | `present`: 15 texture assets; for each, albedo and normal images 256 x 256 RGBA8 with mipmaps, level 0 equal to `build_ground_texture`; `albedo_color` equal to the check's 3.3 within 1e-6; `uv_scale` as 3.1 |
+| T9 | `present`: 15 texture assets; for each, albedo and normal images 256 x 256 RGBA8 with mipmaps, level 0 equal to `build_ground_texture`; `albedo_color` equal to `srgb_encode` of the check's 3.3 within 1e-6; `uv_scale` as 3.1 |
 | T10 | control image equal to the check's own 4.2 at every cell; `get_control` at the 32 points of V3D-01 T6 equals it bit for bit |
-| T11 | `present`: 5 mesh assets, `get_lod_count` 2, 2, 1, 1, 1, the LOD ranges of 6.1, `cast_shadows` 0 |
+| T11 | `present`: 5 mesh assets, `get_lod_count` 2, 2, 1, 1, 1, the LOD ranges of 6.1, `cast_shadows` 0; without vegetation, no mesh asset of ours (Terrain3D's own default mesh may be the one entry) |
 | T12 | `present`: over `get_region_locations`, the transforms of `get_region(l).get_instances()[id]` total the placement's count per kind; the first and last instance of each kind are found at their position within 0.01 m (region-local, W3) |
-| T13 | placement: no instance on a cell excluded by 6.4 (the check's own exclusion rule); on `w1024 --instance-cap 50000` the kept count is min(S, 50000) and equals the check's own cap rule |
+| T13 | placement: no instance on a cell excluded by 6.4 (the check's own exclusion rule), each less than 8 m from its vertex on each axis; on `w1024 --instance-cap 50000` the kept count is min(S, 50000) and equals the check's own cap rule |
 | T14 | sea: plane side 800,000, camera far 450,000, the fog settings of section 7 |
 | T15 | status lines of 10.3 for each run |
 | T16 | key G reopens in the other mode with the camera unchanged and one Terrain3D node; key T flips `enabled` on all mesh assets |
@@ -440,13 +445,13 @@ No workflow change. `gdext-linux` and `gdext-windows` run the new unit tests in 
 2. The fifteen textures are the same bytes in every world, on every platform.
 3. Every control value has base and overlay in 0..14, blend in 0..255, every other bit 0; a lake, sea or painted cell has blend 0; a land cell's border blend is at most 127.
 4. Every painted cell is exactly a cell the 2D composite map paints as river, in the same colour.
-5. For a given world file, cap and option set, the placement is identical on every run and platform; no instance stands on a cell excluded by 6.4, outside the map, or more than 6 m from its cell's vertex on either axis.
+5. For a given world file, cap and option set, the placement is identical on every run and platform; no instance stands on a cell excluded by 6.4, outside the map, or 8 m or more from its cell's vertex on either axis.
 6. The kept count is min(S, B).
 7. With `--flat-colours --no-trees` the height, control and colour buffers are V3D-01's.
 
 ## 15. Determinism notes
 
-Textures, ground cells, control, colours, river paint, counts, jitter, yaw, scale, tint and the cap use unsigned wrapping or `int64` integer arithmetic with truncating division, so they are exact everywhere. X and Z are exact in float (multiples of 1/256 below 2^15 need 23 bits). Y comes from `ground_low` arithmetic on floats with `-ffp-contract=off` and `/fp:precise` (the project's flags apply to `unmapped_terrain_core`), so it is IEEE-exact and reproducible. `lin` (a power function) feeds only `albedo_color`, which is compared with a tolerance and never hashed. Nothing iterates an unordered container on our side; Terrain3D's own unordered maps affect only rendering order. Control values are copied as bits; id 0 is the only base that can form a denormal (3.1).
+Textures, ground cells, control, colours, river paint, counts, jitter, yaw, scale, tint and the cap use unsigned wrapping or `int64` integer arithmetic with truncating division, so they are exact everywhere. X and Z are exact in float (r2: odd multiples of 1/128 below 2^15 need 22 bits). Y comes from `ground_low` arithmetic on floats with `-ffp-contract=off` and `/fp:precise` (the project's flags apply to `unmapped_terrain_core`), so it is IEEE-exact and reproducible. `lin` (a power function) feeds only `albedo_color`, which is compared with a tolerance and never hashed. Nothing iterates an unordered container on our side; Terrain3D's own unordered maps affect only rendering order. Control values are copied as bits; id 0 is the only base that can form a denormal (3.1).
 
 ## 16. To verify against Terrain3D and Godot (engineer, before building on it)
 
@@ -465,17 +470,31 @@ Textures, ground cells, control, colours, river paint, counts, jitter, yaw, scal
 | W11 | mesh assets set before `add_child` initialise headless without error (`create_mesh_thumbnails` needs no display) | set them after `add_child` through `get_assets()` |
 | W12 | at the cap, transfer plus first frame stay under about 5 s at 2048 | lower the default cap (Q-V3D-02-2) |
 
+**Found (r2).** Every item held: W1, W2, W3 (T12 reads `get_instances()`), W4, W5, W7, W9, W10 and W11 by the checks and the source; W6 and W8 by eye on Paul's GPU; W12 at 1.1 s (transfer plus first frame at 2048 with r1's cap, before the density change; 1.9 s at r2's cap of 2,000,000, 6.6).
+
 ## 17. Questions for Paul (decided 2026-11-27: Paul accepts the recommendations)
 
 | Id | Question | Recommendation (interim reading) |
 | --- | --- | --- |
 | Q-V3D-02-1 | Where the biome colour lives: in each ground texture (`albedo_color`, colour map white on land, as specified), or kept in the colour map over neutral textures | textures: rock, snow and water then keep their own colours instead of being tinted by the biome; the far view still matches the 2D map through 3.3 |
-| Q-V3D-02-2 | Vegetation for the whole map at load with a cap of 1,000,000 (2048 thinned to about 45%), or a lower cap, or placing only near the camera now | whole map, cap 1,000,000; near-camera placement is the streaming stage's work |
+| Q-V3D-02-2 | Vegetation for the whole map at load with a cap of 1,000,000 (2048 thinned to about 45%), or a lower cap, or placing only near the camera now | whole map, cap 1,000,000; near-camera placement is the streaming stage's work. Decided as recommended, then changed by Paul after flying it (2026-11-27): cap 2,000,000 |
 | Q-V3D-02-3 | Snow on alpine ground below −2 °C mean annual temperature, or no snow until weather exists | snow as specified; it reads the world's temperature layer and only inside the alpine biome |
-| Q-V3D-02-4 | Tree density at most 60 per hectare (a real forest has several hundred), or denser with a shorter view range | 60: placeholder trees are large, and the cap binds at 2048 already |
+| Q-V3D-02-4 | Tree density at most 60 per hectare (a real forest has several hundred), or denser with a shorter view range | 60: placeholder trees are large, and the cap binds at 2048 already. Decided as recommended, then changed by Paul after flying it (2026-11-27): 150 per hectare on forest floor and carr, with 100 shrubs per hectare of undergrowth (6.3) |
 | Q-V3D-02-5 | Rivers painted by the 2D map's rule (one cell, widened from class 4), or width by class | the 2D rule: 3D and 2D agree cell for cell; true widths come with carving |
 | Q-V3D-02-6 | The ground and vegetation tables live in C++ for now; design 7 wants each biome's TOML to name its scatter sets, which is `game/data/` and the other session's ground | C++ placeholders now; a later stage proposes the data fields through `proposals.md` and the lead |
+
+**Open after r2.**
+
+1. At 2048 the cap thins forests below the 1024 density (about 54 trees per hectare); true density needs placement near the camera (a later stage).
+2. A soft lighter band below the horizon: the lit sea is lighter than the fog colour.
+3. Rock covers most mountain slopes, so far views are greyer than the 2D map's alpine colours.
+4. Shaded slopes are very dark.
+5. Rivers read as painted ribbons, with a pale one-cell fringe on steep slopes.
+6. Shrubs read as small boulders.
+7. MSVC and CI have not run on this stage.
+8. The interactive keys T and G were checked by Paul only informally.
 
 ## Revision notes
 
 - r1 (2026-11-27): first draft. Approved by Paul the same day; Q-V3D-02-1 to 6 decided as recommended (status line and section 17 heading only).
+- r2 (2026-11-27): as built. 3.3: `albedo_color` is set `srgb_encode`d (Godot linearises it); T9 compares the encoded value. 6.3: column `tree_q8` (983 on forest floor and carr, 393 elsewhere) and forest undergrowth (shrubs 721 and 753), Paul's change after flying r1. 6.4: jitter over the whole cell from one keyed draw per axis (`cell_jitter`), so instances keep more than 8 m from a painted river vertex; default cap 2,000,000 (`DEFAULT_INSTANCE_CAP`). 6.6: the measured counts, times and memory (0.58 KB per instance) replace the estimates. 9.1 step 5: one `add_transforms` per kind and instancer cell. 10.1: Terrain3D's default mesh under `--no-trees`. 10.2: headless thumbnail errors on key T. 10.3: the no-biome line replaces V3D-01's. 11.1 U13: interior cells only; the table, cap and even-jitter tests. 11.2 T9, T11, T13 as built. 14 invariant 5, 15: 8 m and 22 bits. 16: every item found to hold. 17: Q-V3D-02-2 and -4 changed by Paul. Open after r2 added.
