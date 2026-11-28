@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <string>
 #include <utility>
 
 #include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/directional_light3d.hpp>
 #include <godot_cpp/classes/class_db_singleton.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/engine.hpp>
@@ -40,6 +42,7 @@
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/vector3.hpp>
 
+#include "terrain/look.hpp"
 #include "terrain/placeholder_meshes.hpp"
 #include "terrain/terrain_check.hpp"
 #include "world_layer.hpp"
@@ -102,11 +105,12 @@ godot::Color srgb_byte_colour(std::uint32_t rgba) {
 // Node3D root with one MeshInstance3D child per LOD, MeshLOD0 and MeshLOD1,
 // owned by the root.
 godot::Ref<godot::PackedScene> vegetation_scene(int kind, const godot::Ref<godot::StandardMaterial3D>& material,
-                                                 std::array<godot::Ref<godot::ArrayMesh>, 2>& meshes) {
+                                                 std::array<godot::Ref<godot::ArrayMesh>, 2>& meshes,
+                                                 const terrain::Look& look) {
     godot::Node3D* root = memnew(godot::Node3D);
     root->set_name(terrain::VEGETATION_KINDS_INFO[static_cast<std::size_t>(kind)].name);
     for (int lod = 0; lod < terrain::lod_count(kind); ++lod) {
-        const terrain::MeshData data = terrain::build_mesh(kind, lod);
+        const terrain::MeshData data = terrain::build_mesh(kind, lod, look);
         godot::PackedVector3Array vertices;
         godot::PackedVector3Array normals;
         godot::PackedColorArray colours;
@@ -205,8 +209,9 @@ void TerrainPreview::_ready() {
     status_ = find_part<godot::Label>(this, "Status");
     open_button_ = find_part<godot::Button>(this, "OpenButton");
     open_dialog_ = find_part<godot::FileDialog>(this, "OpenDialog");
+    sun_ = find_part<godot::DirectionalLight3D>(this, "Sun");
     if (camera_ == nullptr || sea_ == nullptr || hud_ == nullptr || status_ == nullptr || open_button_ == nullptr ||
-        open_dialog_ == nullptr) {
+        open_dialog_ == nullptr || sun_ == nullptr) {
         get_tree()->quit(1);
         return;
     }
@@ -378,6 +383,17 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             tier_colours_ = true;
         } else if (arg == "--at-forest") {
             at_forest_ = true;
+        } else if (arg == "--at-peak") {
+            at_peak_ = true;
+        } else if (arg == "--look-v3d03") {
+            // V3D-04 9.1.
+            const godot::String text = has_one ? args[++i] : godot::String();
+            const std::optional<terrain::Look> look = terrain::parse_look_v3d03(to_utf8(text));
+            if (look) {
+                look_ = *look;
+            } else {
+                refuse("--look-v3d03 " + text + ": all, or a comma list of rock, light, snow, shrubs, sea");
+            }
         } else if (!arg.begins_with("--") && world_path_.is_empty()) {
             world_path_ = arg;
         }
@@ -391,6 +407,9 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
     }
     if (at_forest_ && opt_at_) {
         refuse("--at-forest cannot be combined with --at");
+    }
+    if (at_peak_ && (opt_at_ || at_forest_)) {
+        refuse("--at-peak cannot be combined with --at or --at-forest");
     }
     if (!instance_cap_given_) {
         // V3D-03 9.1: the far budget, or V3D-02's cap with --veg-whole-map.
@@ -575,7 +594,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     timings_.cells = now_usec() - t0;
     t0 = now_usec();
     if (scene_.textured) {
-        scene_.control = terrain::build_control(layout, scene_.ground);
+        scene_.control = terrain::build_control(layout, scene_.ground, look_);  // V3D-04 4.4
         scene_.colours = terrain::build_textured_colours(layout, scene_.ground, records);
     } else {
         scene_.control.assign(cells, 0u);
@@ -605,6 +624,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     }
     scene_.forest_column = have_biome ? terrain::forest_column(layout, scene_.ground) : n / 2;
     scene_.forest = terrain::forest_start_cell(layout, scene_.ground, scene_.forest_column);
+    scene_.peak = terrain::peak_view(layout, scene_.elevation, scene_.ground);
     timings_.placement = now_usec() - t0;
 
     t0 = now_usec();
@@ -637,6 +657,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     }
 
     place_sea();
+    apply_light();
     place_start();
     near_open();
 
@@ -652,7 +673,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     if (!have_biome) {
         status_lines_.push_back("no biome layer: ground drawn grey, no vegetation");
     } else {
-        status_lines_.push_back(scene_.textured ? "ground: textured, 15 ground types" : "ground: flat colours");
+        status_lines_.push_back(scene_.textured ? "ground: textured, 17 ground types" : "ground: flat colours");
         if (scene_.tiers) {
             // V3D-03 9.2.
             godot::String line = "vegetation: far tier " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.kept())) +
@@ -694,6 +715,12 @@ bool TerrainPreview::open_world(const godot::String& path) {
             }
         }
     }
+    if (at_peak_ && !scene_.peak.found) {
+        status_lines_.push_back("no land on this map: the peak view starts at the map centre");
+    }
+    if (const std::string items = terrain::restored_items(look_); !items.empty()) {
+        status_lines_.push_back(to_godot("look: V3D-03 for " + items));  // V3D-04 9.2
+    }
     if (scene_.water_depth.empty()) {
         status_lines_.push_back("no water_depth layer: lakes drawn at their beds");
     }
@@ -731,7 +758,7 @@ void TerrainPreview::build_ground_assets() {
         material->set_cull_mode(godot::BaseMaterial3D::CULL_BACK);
         for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
             mesh_scenes_[static_cast<std::size_t>(kind)] =
-                vegetation_scene(kind, material, veg_meshes_[static_cast<std::size_t>(kind)]);
+                vegetation_scene(kind, material, veg_meshes_[static_cast<std::size_t>(kind)], look_);
         }
     }
 }
@@ -758,7 +785,7 @@ bool TerrainPreview::make_terrain() {
             build_ground_assets();
         }
         if (scene_.textured) {
-            // The fifteen ground types (V3D-02 3).
+            // The seventeen ground types (V3D-02 3, V3D-04 4.1).
             const auto& records = world_->biome_records();
             for (int id = 0; id < terrain::GROUND_TYPE_COUNT; ++id) {
                 const auto type = static_cast<terrain::GroundType>(id);
@@ -932,7 +959,13 @@ void TerrainPreview::place_sea() {
     godot::Ref<godot::StandardMaterial3D> material;
     material.instantiate();
     material->set_albedo(rgb_colour(scene_.sea_rgb));
-    material->set_roughness(0.2f);
+    if (look_.sea) {
+        // V3D-04 6: unshaded, so the sea, the fog and the sky below the
+        // horizon are one colour and no lighter band can form.
+        material->set_shading_mode(godot::BaseMaterial3D::SHADING_MODE_UNSHADED);
+    } else {
+        material->set_roughness(0.2f);
+    }
     plane->set_material(material);
     sea_->set_mesh(plane);
     sea_->set_position(godot::Vector3(0.0f, 0.0f, 0.0f));
@@ -964,6 +997,53 @@ void TerrainPreview::place_sea() {
     }
 }
 
+void TerrainPreview::apply_light() {
+    // V3D-04 5: the sun and the ambient light of the look, in every mode.
+    const bool v4 = look_.light;
+    const auto d = v4 ? terrain::sun_direction(terrain::SUN_AZIMUTH_DEG, terrain::SUN_ELEVATION_DEG)
+                      : terrain::sun_direction(terrain::V3D03_SUN_AZIMUTH_DEG, terrain::V3D03_SUN_ELEVATION_DEG);
+    if (sun_ != nullptr) {
+        sun_->set_basis(godot::Basis::looking_at(godot::Vector3(d[0], d[1], d[2]), godot::Vector3(0.0f, 1.0f, 0.0f)));
+        sun_->set_param(godot::Light3D::PARAM_ENERGY, v4 ? terrain::SUN_ENERGY : terrain::V3D03_SUN_ENERGY);
+    }
+    auto* env_node = godot::Object::cast_to<godot::WorldEnvironment>(get_node_or_null("WorldEnvironment"));
+    const godot::Ref<godot::Environment> env = env_node != nullptr ? env_node->get_environment() : godot::Ref<godot::Environment>();
+    if (env.is_valid()) {
+        const auto& rgb = v4 ? terrain::AMBIENT_RGB : terrain::V3D03_AMBIENT_RGB;
+        env->set_ambient_source(godot::Environment::AMBIENT_SOURCE_SKY);
+        env->set_ambient_light_sky_contribution(v4 ? terrain::AMBIENT_SKY_CONTRIBUTION : terrain::V3D03_AMBIENT_SKY_CONTRIBUTION);
+        env->set_ambient_light_color(godot::Color(rgb[0], rgb[1], rgb[2]));
+        env->set_ambient_light_energy(v4 ? terrain::AMBIENT_ENERGY : terrain::V3D03_AMBIENT_ENERGY);
+    }
+}
+
+godot::Ref<godot::ArrayMesh> TerrainPreview::vegetation_mesh(int kind, int lod) const {
+    if (kind < 0 || kind >= terrain::VEGETATION_KINDS || lod < 0 || lod > 1) {
+        return {};
+    }
+    return veg_meshes_[static_cast<std::size_t>(kind)][static_cast<std::size_t>(lod)];
+}
+
+std::string TerrainPreview::look_bench_line() const {
+    if (!scene_.layout || scene_.ground.type.empty()) {
+        return {};
+    }
+    const terrain::Layout& layout = *scene_.layout;
+    terrain::Look old = look_;
+    old.rock = false;
+    old.snow = false;
+    const terrain::LookCounts now = terrain::look_counts(layout, scene_.ground, scene_.control);
+    const std::vector<std::uint32_t> v3d03 = terrain::build_control(layout, scene_.ground, old);
+    const terrain::LookCounts was = terrain::look_counts(layout, scene_.ground, v3d03);
+    auto pct = [a = now.alpine](std::uint64_t v) {
+        const std::uint64_t t = terrain::tenths_of(v, a);
+        return std::to_string(t / 10) + "." + std::to_string(t % 10) + "%";
+    };
+    return "look: alpine cells " + std::to_string(now.alpine) + ", snow " + std::to_string(now.snow) + " (" + pct(now.snow) +
+           "), rock " + std::to_string(now.rock) + " (" + pct(now.rock) + "); with V3D-03's control snow " +
+           std::to_string(was.snow) + " (" + pct(was.snow) + "), rock " + std::to_string(was.rock) + " (" + pct(was.rock) + ")";
+}
+
 void TerrainPreview::place_start() {
     const terrain::Layout& layout = *scene_.layout;
     const int n = layout.n;
@@ -975,6 +1055,9 @@ void TerrainPreview::place_start() {
     } else if (at_forest_) {
         cx = scene_.forest.x;  // V3D-03 9.1: the forest path's start (12.1, lead's ruling)
         cy = scene_.forest.y;
+    } else if (at_peak_) {
+        cx = scene_.peak.cam_x;  // V3D-04 9.1
+        cy = scene_.peak.cam_y;
     }
     const terrain::Vec2 w = terrain::cell_to_world(layout, cx, cy);
     start_ = terrain::FlyState{};
@@ -985,10 +1068,15 @@ void TerrainPreview::place_start() {
         start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + *opt_above_;
     } else if (at_forest_ && !opt_alt_) {
         start_.y = terrain::forest_start_altitude(terrain::ground_clamp(layout, scene_.heights, w.x, w.z));
+    } else if (at_peak_ && !opt_alt_) {
+        // V3D-04 9.1: 200 m above the peak vertex.
+        start_.y = scene_.heights[static_cast<std::size_t>(scene_.peak.y) * static_cast<std::size_t>(n) +
+                                  static_cast<std::size_t>(scene_.peak.x)] +
+                   200.0f;
     }
     const float default_heading = at_forest_ && !scene_.forest.north ? 180.0f : 0.0f;
     start_.heading_deg = opt_heading_.value_or(default_heading);
-    start_.pitch_deg = opt_pitch_.value_or(-25.0f);
+    start_.pitch_deg = opt_pitch_.value_or(at_peak_ ? -8.0f : -25.0f);
     start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
     // The heading wrap and the floor of 8.2, without moving.
     terrain::step(start_, terrain::FlyInput{}, 0.0f,
@@ -1115,6 +1203,9 @@ void TerrainPreview::bench_first_frame() {
                                    static_cast<int64_t>(scene_.placement.kept()), " of ",
                                    static_cast<int64_t>(scene_.placement.candidates), " (cap ",
                                    static_cast<int64_t>(instance_cap_), ")");
+    if (const std::string line = look_bench_line(); !line.empty()) {
+        godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ", to_godot(line));  // V3D-04 9.2
+    }
     // V3D-02 12: the view at the centre cell, 150 m above the ground,
     // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300. V3D-03
     // 12.2: the near tier's settling is timed from here.

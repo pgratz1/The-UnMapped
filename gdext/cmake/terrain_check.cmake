@@ -22,7 +22,11 @@
 #    --veg-whole-map and with --veg-radius 0; the elevation-only and
 #    test-pattern worlds. Runs with vegetation in a Terrain3D node also fly
 #    the camera path of V3D-03 11.2 over frames. Each run must exit 0 and
-#    print UNMAPPED-TERRAIN-CHECK: PASS.
+#    print UNMAPPED-TERRAIN-CHECK: PASS. V3D-04 10.2: the 512 world also
+#    with --look-v3d03 all (V3D-03's look in every item).
+# 5. V3D-04 T29: the refusals of 9.1 (exit 1 and the text on stderr).
+# 6. V3D-04 T30: --bench headless on the 512 world prints the look line,
+#    equal to the line the default-mode check computed from its own counts.
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -86,8 +90,14 @@ function(terrain_check label dir expect)
     if(NOT STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: PASS")
         message(FATAL_ERROR "terrain check: the preview did not report UNMAPPED-TERRAIN-CHECK: PASS for the ${label}")
     endif()
+    set(STEP_OUTPUT "${STEP_OUTPUT}" PARENT_SCOPE)
 endfunction()
 terrain_check("512 world" w512 ${_expect})
+set(_look_line "")
+if(STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: look line ([^\n]*)")
+    set(_look_line "${CMAKE_MATCH_1}")
+endif()
+terrain_check("512 world, --look-v3d03 all" w512 ${_expect} --look-v3d03 all)
 terrain_check("512 world, --flat-colours --no-trees" w512 ${_expect} --flat-colours --no-trees)
 terrain_check("512 world, --no-terrain3d" w512 absent --no-terrain3d)
 terrain_check("1024 world, --instance-cap 50000" w1024 ${_expect} --instance-cap 50000)
@@ -98,4 +108,37 @@ terrain_check("512 world, --veg-whole-map" w512 ${_expect} --veg-whole-map)
 terrain_check("512 world, --veg-radius 0" w512 ${_expect} --veg-radius 0)
 terrain_check("elevation-only world" elev ${_expect})
 terrain_check("test-pattern world" pattern ${_expect})
+
+# --- 5. Refusals (V3D-04 T29) ----------------------------------------------------------
+function(terrain_refusal label text)
+    execute_process(COMMAND "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
+        -- "${WORK_DIR}/w512/world.db" --check "${WORK_DIR}/w512" --expect-terrain3d ${_expect} ${ARGN}
+        RESULT_VARIABLE _rc OUTPUT_VARIABLE _out ERROR_VARIABLE _err TIMEOUT 120)
+    message("---- refusal, ${label}: exit ${_rc}")
+    string(FIND "${_err}${_out}" "${text}" _at)
+    if(_rc EQUAL 0 OR _at LESS 0)
+        message("${_out}\n[stderr]\n${_err}")
+        message(FATAL_ERROR "terrain check: ${label} was not refused with '${text}' (exit ${_rc})")
+    endif()
+endfunction()
+terrain_refusal("--look-v3d03 trees" "--look-v3d03 trees: all, or a comma list of rock, light, snow, shrubs, sea"
+    --look-v3d03 trees)
+terrain_refusal("--look-v3d03 rock," "--look-v3d03 rock,: all, or a comma list of rock, light, snow, shrubs, sea"
+    --look-v3d03 rock,)
+terrain_refusal("--at-peak --at-forest" "--at-peak cannot be combined with --at or --at-forest" --at-peak --at-forest)
+terrain_refusal("--at-peak --at" "--at-peak cannot be combined with --at or --at-forest" --at-peak --at 10 10)
+
+# --- 6. Bench look line (V3D-04 T30) -----------------------------------------------------
+if(TERRAIN3D)
+    if(_look_line STREQUAL "")
+        message(FATAL_ERROR "terrain check: the 512 world's check printed no look line")
+    endif()
+    run_step("bench, 512 world" "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
+        -- "${WORK_DIR}/w512/world.db" --bench)
+    string(FIND "${STEP_OUTPUT}" "UNMAPPED-TERRAIN-BENCH: ${_look_line}" _at)
+    if(_at LESS 0)
+        message(FATAL_ERROR "terrain check: the bench did not print 'UNMAPPED-TERRAIN-BENCH: ${_look_line}'")
+    endif()
+    message("---- T30 bench look line equals the check's own: ${_look_line}")
+endif()
 message("terrain check: all runs passed")

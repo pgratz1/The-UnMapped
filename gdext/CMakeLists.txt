@@ -21,6 +21,7 @@ add_library(unmapped_terrain_core STATIC
     src/terrain/vegetation.cpp
     src/terrain/placeholder_meshes.cpp
     src/terrain/near_cells.cpp
+    src/terrain/look.cpp
 )
 target_include_directories(unmapped_terrain_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(unmapped_terrain_core PUBLIC worldgen::worldgen)
@@ -204,6 +205,7 @@ if(UNMAPPED_BUILD_TESTS)
         tests/vegetation_test.cpp
         tests/meshes_test.cpp
         tests/near_cells_test.cpp
+        tests/look_test.cpp
     )
     target_link_libraries(gdext-terrain-tests PRIVATE unmapped_terrain_core worldgen::worldgen unmapped::doctest)
     unmapped_project_target(gdext-terrain-tests)

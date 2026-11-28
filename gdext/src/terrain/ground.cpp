@@ -25,6 +25,8 @@ const std::array<GroundTypeInfo, GROUND_TYPE_COUNT> GROUND_TYPES = {{
     {"", 0xF0F2F5, 2, 25, 1, 115, 1.0f / 16.0f},                  // 12 snow
     {"lake", 0xFFFFFF, 8, 20, 1, 20, 1.0f / 8.0f},                // 13 water
     {"ocean", 0xB8A878, 16, 40, 2, 217, 1.0f / 6.0f},             // 14 shore
+    {"", 0x8C8880, 4, 100, 6, 191, 1.0f / 24.0f},                 // 15 pale rock (V3D-04 4.1)
+    {"", 0x7A6A58, 8, 120, 5, 204, 1.0f / 20.0f},                 // 16 brown rock
 }};
 
 GroundType ground_type_of_key(std::string_view key) {
@@ -282,6 +284,8 @@ GroundCells build_ground_cells(const GroundInputs& in) {
     out.painted = river_paint(layout, in.water, in.river, in.flow_dir);
     out.rock.assign(cells, 0);
     out.snow.assign(cells, 0);
+    out.rock_variant.assign(cells, 11);
+    out.snow_line.assign(cells, 0);
     const int n = layout.n;
     auto E = [&in, n](int x, int y) {
         x = std::clamp(x, 0, n - 1);
@@ -306,13 +310,47 @@ GroundCells build_ground_cells(const GroundInputs& in) {
                 const std::int64_t snow = T >= -20 ? 0 : T <= -60 ? 255 : ((-20 - T) * 255 + 20) / 40;
                 out.snow[k] = static_cast<std::uint8_t>(snow);
             }
+            // V3D-04 4.2 and 4.3 (control only).
+            out.rock_variant[k] = rock_variant(x, y, in.elevation[k]);
+            if (!in.temperature.empty()) {
+                out.snow_line[k] = snow_line(x, y, in.temperature[k], g);
+            }
         }
     }
     return out;
 }
 
+std::uint8_t rock_variant(int x, int y, std::int32_t e) noexcept {
+    const std::int32_t jr =
+        static_cast<std::int32_t>(hash32(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), ROCK_JITTER_KEY) >> 24) - 128;
+    const std::int32_t v = e + jr;
+    // Floor division, written out (C++ division truncates).
+    std::int32_t band = v / ROCK_BAND_DM;
+    if (v % ROCK_BAND_DM != 0 && v < 0) {
+        --band;
+    }
+    const std::int32_t i = ((band % 5) + 5) % 5;
+    return ROCK_SEQ[static_cast<std::size_t>(i)];
+}
+
+std::uint8_t snow_line(int x, int y, std::int64_t t, std::int64_t g) noexcept {
+    const std::int64_t jt =
+        static_cast<std::int64_t>((hash32(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), SNOW_JITTER_KEY) >> 24) % 13) - 6;
+    const std::int64_t tp = t + jt;
+    const std::int64_t sT = tp >= SNOW_T0 ? 0 : tp <= SNOW_T1 ? 255 : ((SNOW_T0 - tp) * 255 + 10) / 20;
+    constexpr std::int64_t span = SNOW_HOLD_NONE_G - SNOW_HOLD_FULL_G;
+    const std::int64_t hold = g <= SNOW_HOLD_FULL_G ? 255 : g >= SNOW_HOLD_NONE_G ? 0 : ((SNOW_HOLD_NONE_G - g) * 255 + span / 2) / span;
+    return static_cast<std::uint8_t>((sT * hold + 127) / 255);
+}
+
 std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells& cells) {
+    return build_control(layout, cells, Look{false, true, false, true, true});
+}
+
+std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells& cells, const Look& look) {
     const int n = layout.n;
+    const bool have_variant = !cells.rock_variant.empty();
+    const bool have_line = !cells.snow_line.empty();
     const std::size_t total = cells_of(layout);
     std::vector<std::uint32_t> out(total, 0);
     for (int y = 0; y < n; ++y) {
@@ -351,18 +389,26 @@ std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells
                     }
                 }
                 const int border = o == 0 ? 0 : std::min(127, (255 * o + (b + o) / 2) / (b + o));
-                // Candidates in order; the largest blend wins, ties to the earlier.
-                const std::uint32_t ids[3] = {11u, 12u, ov};
-                const int blends[3] = {cells.rock[k], cells.snow[k], border};
-                int pick = 0;
-                for (int c = 1; c < 3; ++c) {
-                    if (blends[c] > blends[pick]) {
-                        pick = c;
+                const std::uint32_t rock_id = look.rock && have_variant ? static_cast<std::uint32_t>(cells.rock_variant[k]) : 11u;
+                const int line = look.snow && have_line ? cells.snow_line[k] : 0;
+                if (look.snow && line >= 128) {
+                    // V3D-04 4.4: the snow line wins at 128 or more.
+                    overlay = 12u;
+                    blend = static_cast<std::uint32_t>(line);
+                } else {
+                    // Candidates in order; the largest blend wins, ties to the earlier.
+                    const std::uint32_t ids[3] = {rock_id, 12u, ov};
+                    const int blends[3] = {cells.rock[k], look.snow ? line : cells.snow[k], border};
+                    int pick = 0;
+                    for (int c = 1; c < 3; ++c) {
+                        if (blends[c] > blends[pick]) {
+                            pick = c;
+                        }
                     }
-                }
-                if (blends[pick] > 0) {
-                    overlay = ids[pick];
-                    blend = static_cast<std::uint32_t>(blends[pick]);
+                    if (blends[pick] > 0) {
+                        overlay = ids[pick];
+                        blend = static_cast<std::uint32_t>(blends[pick]);
+                    }
                 }
             }
             out[k] = (base << 27) | (overlay << 22) | (blend << 14);
@@ -370,6 +416,29 @@ std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells
     }
     return out;
 }
+
+LookCounts look_counts(const Layout& layout, const GroundCells& cells, std::span<const std::uint32_t> control) {
+    LookCounts out;
+    const std::size_t total = cells_of(layout);
+    if (cells.type.size() != total || cells.painted.size() != total || control.size() != total) {
+        return out;
+    }
+    for (std::size_t k = 0; k < total; ++k) {
+        if (cells.type[k] != static_cast<std::uint8_t>(GroundType::scree) || cells.painted[k] > 0) {
+            continue;
+        }
+        ++out.alpine;
+        const std::uint32_t overlay = (control[k] >> 22) & 0x1Fu;
+        const std::uint32_t blend = (control[k] >> 14) & 0xFFu;
+        if (blend >= 128) {
+            out.snow += overlay == 12u ? 1u : 0u;
+            out.rock += (overlay == 11u || overlay == 15u || overlay == 16u) ? 1u : 0u;
+        }
+    }
+    return out;
+}
+
+std::uint64_t tenths_of(std::uint64_t v, std::uint64_t a) noexcept { return a == 0 ? 0 : (1000 * v + a / 2) / a; }
 
 std::vector<std::uint8_t> build_textured_colours(const Layout& layout, const GroundCells& cells,
                                                  std::span<const worldgen::inspect::BiomeRecord> records) {

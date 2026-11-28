@@ -467,6 +467,8 @@ private:
         std::size_t bad_range = 0;
         std::size_t bad_missing = 0;
         std::size_t bad_xform = 0;
+        std::size_t shrub_nodes = 0;  // V3D-04 T28
+        std::size_t bad_shrub = 0;
         std::size_t xform_unread = 0;
         std::size_t bad_partition = 0;
         std::size_t bad_overlap = 0;
@@ -509,6 +511,16 @@ private:
                             continue;
                         }
                         const godot::Ref<godot::MultiMesh> mm = node->get_multimesh();
+                        if (kind == 2) {
+                            // V3D-04 T28: the near shrubs draw the preview's shrub mesh, the
+                            // one Terrain3D's mesh asset holds (compared with build_mesh there).
+                            ++shrub_nodes;
+                            const godot::Ref<godot::Mesh> mesh = mm->get_mesh();
+                            bad_shrub += (mesh.is_valid() &&
+                                          mesh.ptr() == static_cast<godot::Mesh*>(preview.vegetation_mesh(2, lod).ptr()))
+                                             ? 0u
+                                             : 1u;
+                        }
                         bad_count += static_cast<std::size_t>(mm->get_instance_count()) == list.size() ? 0u : 1u;
                         const godot::PackedFloat32Array got = mm->get_buffer();
                         const bool buf_ok = static_cast<std::size_t>(got.size()) == want_buf.size() &&
@@ -588,6 +600,10 @@ private:
         c_.check(bad_count == 0 && bad_buffer == 0,
                  "T18 at " + where + ": instance_count and buffer equal the check's own Extra and 7.2 (" + num(instances) +
                      " instances; " + num(bad_count) + " counts, " + num(bad_buffer) + " buffers differ)");
+        if (shrub_nodes > 0) {
+            c_.check(bad_shrub == 0, "T28 at " + where + ": " + num(shrub_nodes) + " near shrub nodes draw the preview's shrub mesh (" +
+                                         num(bad_shrub) + " do not)");
+        }
         if (nodes_expected == 0) {
             TerrainChecker::info("T18 at " + where + ": no near node here");
         } else if (xform_unread == nodes_expected) {

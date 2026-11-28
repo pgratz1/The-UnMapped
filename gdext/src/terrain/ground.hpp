@@ -1,8 +1,8 @@
 #pragma once
 
-// Ground of the 3D terrain preview (spec V3D-02 sections 3 to 5).
+// Ground of the 3D terrain preview (spec V3D-02 sections 3 to 5, V3D-04 4).
 //
-// Plain C++, no Godot types: the fifteen ground types, their generated
+// Plain C++, no Godot types: the seventeen ground types, their generated
 // textures and colours, the per-cell ground (type, river paint, rock,
 // snow), Terrain3D's control map and the colour map of the textured mode.
 // TerrainPreview turns the buffers into Godot images and texture assets;
@@ -17,12 +17,13 @@
 #include <string_view>
 #include <vector>
 
+#include "terrain/look.hpp"
 #include "terrain/terrain_data.hpp"
 #include "worldgen/inspect/geography.hpp"
 
 namespace unmapped::terrain {
 
-// The ids of 3.1. Ids 0 to 10 are land, 13 and 14 are not.
+// The ids of 3.1 (and V3D-04 4.1). Ids 0 to 10 are land, 11 to 16 are not.
 enum class GroundType : std::uint8_t {
     unknown = 0,
     grassland = 1,
@@ -39,9 +40,26 @@ enum class GroundType : std::uint8_t {
     snow = 12,
     water = 13,
     shore = 14,
+    pale_rock = 15,   // V3D-04 4.1: rock band overlays, never a base
+    brown_rock = 16,
 };
 
-inline constexpr int GROUND_TYPE_COUNT = 15;
+inline constexpr int GROUND_TYPE_COUNT = 17;
+
+// V3D-04 4.2 and 4.3.
+inline constexpr std::int32_t ROCK_BAND_DM = 450;
+inline constexpr std::array<std::uint8_t, 5> ROCK_SEQ = {11, 15, 11, 16, 15};
+inline constexpr std::int64_t SNOW_T0 = -10;           // 0.1 C: no snow line at or above
+inline constexpr std::int64_t SNOW_T1 = SNOW_T0 - 20;  // full snow line at or below
+// The slope hold of 4.3, in g (dm over 32 m): full up to SNOW_HOLD_FULL_G,
+// none from SNOW_HOLD_NONE_G. Tuned (V3D-04 10.3, S1): the spec's 320 (45
+// degrees) and 457 (55 degrees) left 57 to 60 per cent of alpine cells and
+// most summits past the hold, so no cap could form; 457 (55 degrees) and
+// 627 (about 63 degrees) leave the steepest faces bare.
+inline constexpr std::int64_t SNOW_HOLD_FULL_G = 457;
+inline constexpr std::int64_t SNOW_HOLD_NONE_G = 627;
+inline constexpr std::uint32_t ROCK_JITTER_KEY = 0x524B4A54u;
+inline constexpr std::uint32_t SNOW_JITTER_KEY = 0x534E4F57u;
 inline constexpr int GROUND_TEXTURE_SIZE = 256;
 
 struct GroundTypeInfo {
@@ -54,7 +72,7 @@ struct GroundTypeInfo {
     float uv_scale;              // 1/m
 };
 
-// Table 3.1, indexed by id.
+// Table 3.1 with V3D-04 4.1's rows 15 and 16, indexed by id.
 extern const std::array<GroundTypeInfo, GROUND_TYPE_COUNT> GROUND_TYPES;
 
 // 3.1: the type of a biome key; unknown for any key not in the table.
@@ -109,7 +127,17 @@ struct GroundCells {
     std::vector<std::uint8_t> painted;  // river paint class, 0 none, 16 no class
     std::vector<std::uint8_t> rock;     // 0 to 255
     std::vector<std::uint8_t> snow;     // 0 to 255
+    // V3D-04 (control only; placement reads rock and snow above).
+    std::vector<std::uint8_t> rock_variant;  // 11, 15 or 16 (4.2)
+    std::vector<std::uint8_t> snow_line;     // 0 to 255 (4.3)
 };
+
+// V3D-04 4.2 for a land cell at (x, y) of elevation e (dm).
+[[nodiscard]] std::uint8_t rock_variant(int x, int y, std::int32_t e) noexcept;
+
+// V3D-04 4.3 for a land cell at (x, y) of temperature t (0.1 C) and slope
+// g (V3D-02 4.1's isqrt of the central differences, dm over 32 m).
+[[nodiscard]] std::uint8_t snow_line(int x, int y, std::int64_t t, std::int64_t g) noexcept;
 
 // 4.1 and 5.2. Throws std::invalid_argument when a non-empty span is not
 // n * n long or elevation is empty.
@@ -121,8 +149,28 @@ struct GroundCells {
                                                     std::span<const std::uint8_t> river,
                                                     std::span<const std::uint8_t> flow_dir);
 
-// 4.2: control values (bit patterns), n * n.
+// 4.2: control values (bit patterns), n * n: V3D-02's rule.
 [[nodiscard]] std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells& cells);
+
+// V3D-04 4.4: with look.rock the rock overlay is the cell's rock_variant,
+// with look.snow the snow line replaces snow and wins at 128 or more. With
+// both restored it is the two-argument form bit for bit. An empty
+// rock_variant or snow_line reads as 11 or 0.
+[[nodiscard]] std::vector<std::uint32_t> build_control(const Layout& layout, const GroundCells& cells, const Look& look);
+
+// V3D-04 4.4: over the land cells of type 9 (alpine) not painted, how many
+// have a snow overlay (12) and a rock overlay (11, 15 or 16) of blend 128 or
+// more in `control`.
+struct LookCounts {
+    std::uint64_t alpine = 0;
+    std::uint64_t snow = 0;
+    std::uint64_t rock = 0;
+};
+[[nodiscard]] LookCounts look_counts(const Layout& layout, const GroundCells& cells, std::span<const std::uint32_t> control);
+
+// 9.2's percentage of a to one decimal, in tenths: (1000 v + a/2) / a, 0
+// when a = 0.
+[[nodiscard]] std::uint64_t tenths_of(std::uint64_t v, std::uint64_t a) noexcept;
 
 // 5.1: RGBA colour map of the textured mode, 4 * n * n bytes.
 [[nodiscard]] std::vector<std::uint8_t> build_textured_colours(const Layout& layout, const GroundCells& cells,

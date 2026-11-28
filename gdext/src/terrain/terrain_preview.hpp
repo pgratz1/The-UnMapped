@@ -45,6 +45,10 @@
 //   --veg-threads <n>       worker tasks in flight, 0 to 8 (default 4)
 //   --tier-colours          near-tier instances tinted red
 //   --at-forest             start at the bench's forest path, 60 m up (at least 60 m above the sea)
+//   --look-v3d03 <list>     the named items of V3D-04 (rock, light, snow,
+//                           shrubs, sea, or all) drawn as in V3D-03
+//   --at-peak               start 2,000 m south of the highest land cell,
+//                           200 m above the peak, looking north (V3D-04 9.1)
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
 //
@@ -66,6 +70,7 @@
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/directional_light3d.hpp>
 #include <godot_cpp/classes/file_dialog.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/input_event.hpp>
@@ -81,6 +86,7 @@
 
 #include "terrain/fly_state.hpp"
 #include "terrain/ground.hpp"
+#include "terrain/look.hpp"
 #include "terrain/near_cells.hpp"
 #include "terrain/terrain_check.hpp"
 #include "terrain/terrain_data.hpp"
@@ -115,6 +121,7 @@ struct TerrainScene {
     std::uint64_t far_candidates = 0;        // S_far (tiers)
     int forest_column = 0;                   // x* of V3D-03 12.1
     terrain::ForestStart forest;             // the forest path's start cell and direction (12.1, lead's ruling)
+    terrain::PeakView peak;                  // V3D-04 8: the start of --at-peak
     float h_min = 0.0f;
     float h_max = 0.0f;
     std::uint32_t sea_rgb = 0x183878;
@@ -213,6 +220,16 @@ public:
     [[nodiscard]] godot::Node3D* near_root() const noexcept { return near_root_; }
     [[nodiscard]] const NearFrameStats& near_stats() const noexcept { return near_stats_; }
     [[nodiscard]] const terrain::VegetationInputs& vegetation_inputs() const noexcept { return veg_inputs_; }
+    // V3D-04.
+    [[nodiscard]] const terrain::Look& look() const noexcept { return look_; }
+    [[nodiscard]] bool at_peak_option() const noexcept { return at_peak_; }
+    [[nodiscard]] godot::DirectionalLight3D* sun() const noexcept { return sun_; }
+    // The mesh of a vegetation kind and LOD as built (shared by Terrain3D's
+    // mesh asset and the near tier's nodes); null before it is built.
+    [[nodiscard]] godot::Ref<godot::ArrayMesh> vegetation_mesh(int kind, int lod) const;
+    // V3D-04 9.2: the bench's look line (without the UNMAPPED-TERRAIN-BENCH
+    // prefix); empty without ground cells.
+    [[nodiscard]] std::string look_bench_line() const;
     // The HUD's vegetation line (9.2).
     [[nodiscard]] std::string vegetation_hud_line() const;
     // Places the camera (the check's path).
@@ -256,6 +273,7 @@ private:
     bool make_terrain();
     void add_vegetation();
     void place_sea();
+    void apply_light();
     void place_start();
     void apply_camera();
     void show_status();
@@ -294,6 +312,7 @@ private:
     godot::Button* open_button_ = nullptr;
     godot::FileDialog* open_dialog_ = nullptr;
     godot::Node3D* terrain_ = nullptr;
+    godot::DirectionalLight3D* sun_ = nullptr;
 
     godot::Ref<WorldFile> world_;
     TerrainScene scene_;
@@ -339,6 +358,8 @@ private:
     int veg_threads_ = 4;
     bool tier_colours_ = false;
     bool at_forest_ = false;
+    bool at_peak_ = false;
+    terrain::Look look_;
     bool trees_visible_ = true;
     godot::String current_path_;
     bool refused_ = false;
