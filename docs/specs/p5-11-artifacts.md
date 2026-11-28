@@ -1,6 +1,6 @@
 # P5-11 Artifacts
 
-Status: **r2 (2026-11-28)**, for approval of the r2 passages: r1 as approved by the lead (L-1 to L-11) and built, plus Paul's answers to Q-P5-11-1 to 7 (21) and one new rule he asked for, **corruption by an evil artifact** (6.11). Every passage new or changed in r2 is marked **(r2)**; the list is in the revision notes. Phase P5 History depth, stage 11 (`docs/specs/p5-00-history-depth-overview.md` 3.1, the P5-11 paragraph and its amendment: "its makers are P5-06's figures (casters, or smiths as a new role) and P5-04's forges"; 6.1's row `artifact`, `artifact_holding`, entity type 10). **Base: P5-08 as built** (spec r1a, `docs/reviews/p5-08-*`): generator 0.30.0, schema 14, history report format v11, event kinds 1 to 110, 120 streams, browser groups 0 to 9, 37 tables. This stage: generator **0.31.0**; schema **15**; history report format **v12**; event kinds **111 to 117** ((r2) 117 `artifact_corrupted`; no DDL change); **128** streams ((r2) `hist.artifacts.corrupt`); browser group 10; 40 tables.
+Status: **r4 (2026-11-28)**, for approval of the r4 passages: r3 plus **the dark gift and enshrined relics** (4.4a, 6.13), so that corruption has cases: the engineer measured on 40 default worlds 5 evil artifacts of 41 god-given, a kept one in 2 worlds and no corruption (`docs/reviews/p5-11-impl-notes.md`, r2 measurement). r2 and r3 stand as written; r4 adds two occasion rows with a camp filter and one exposure, and changes no schema. Marked **(r4)**. r3 (2026-11-28): r2 (being built: rulers only) plus **corruption of a bearer** (6.12; Paul, 2026-11-28: "Actually, I like the idea that it could also corrupt a hero or a general that bears the artifact"), a pure addition on top of r2 for a second short engineering pass (r2's ruler rule, stream 128, kind 117 and its tuning names are unchanged). r2: r1 as approved by the lead (L-1 to L-11) and built, plus Paul's answers to Q-P5-11-1 to 7 (21) and one new rule he asked for, **corruption by an evil artifact** (6.11). Every passage new or changed in r2 is marked **(r2)**, in r3 **(r3)**; the lists are in the revision notes. Phase P5 History depth, stage 11 (`docs/specs/p5-00-history-depth-overview.md` 3.1, the P5-11 paragraph and its amendment: "its makers are P5-06's figures (casters, or smiths as a new role) and P5-04's forges"; 6.1's row `artifact`, `artifact_holding`, entity type 10). **Base: P5-08 as built** (spec r1a, `docs/reviews/p5-08-*`): generator 0.30.0, schema 14, history report format v11, event kinds 1 to 110, 120 streams, browser groups 0 to 9, 37 tables. This stage: generator **0.31.0**; schema **15**; history report format **v12**; event kinds **111 to 117** ((r2) 117 `artifact_corrupted`; no DDL change) ((r3) **and 118** `bearer_corrupted`); **128** streams ((r2) `hist.artifacts.corrupt`) ((r3) **129**: `hist.artifacts.corrupt_bearer`); browser group 10; 40 tables.
 
 Design: section 5 ("Magical artifacts, made in response to conflicts. Each has a maker, an occasion and a chain of holders and places, and where it lies in the present is a site and a quest hook"; "Dwarves are great forgers. They make wealth and weapons and trade them to the other kingdoms, which ties the mountain peoples into trade and into the making of artifacts"), section 2 (deferred: "artifacts with lineages" beyond this), section 9 ("Ruler lines send the player after artifacts once the artifacts stage of phase P5 exists"), section 13 (the P5 row). Proposals entry "History: magical artifacts are made in response to conflicts" (2026-11-19). Builds on P3-06 (wars, battles, sacks, conquests), P5-02 (monsters, hoards, lairs, sites), P5-04 (mines, forges, partners), P5-06 (figures: generals, heroes, casters, towers; deaths and burials), P5-07 (forge depth, the deep), P5-08 (gods, champions, cults, temples, sanctums).
 
@@ -26,6 +26,8 @@ The stage also carries two P5-08 follow-ups (section 12): battles that cite the 
 | 6 | Report v12, timeline, browser, markers, viewer | `[artifacts]`, realm, figure and monster lines; group 10; glyph 24 | 10, 11 | report and viewer |
 | 7 | Follow-ups | P5-08 critic F1 (battles cite acts), F2 (cult return cool-down), F5 (a form word) | 12 | yes |
 | 8 | (r2) Corruption | an evil god's artifact kept by a realm corrupts its ruler's temper; event 117; wars cite it; epithet `the Dark` | 4.3, 6.11, 7.7, 8.4 | yes |
+| 10 | (r4) The dark gift; enshrined relics | an evil god's blessing or a realm's adoption of its cult may bring a god-given treasure (occasion field `god_camp`, two rows); an evil relic enshrined at a temple of its god's cult exposes every realm whose faith that cult is | 4.4a, 6.13 | yes |
+| 9 | (r3) Corrupted bearers | a general or hero who bears an evil god's arms or armour: a corrupted general's sieges end in sacks, a corrupted hero forsakes the realm for the wilds; event 118; epithets `the Butcher`, `the Forsworn`; a newly risen hero takes up a kept evil arm | 4.3, 6.12, 7.8, 8.5 | yes |
 
 ## 3. Inputs, streams, draws
 
@@ -43,6 +45,10 @@ The stage also carries two P5-08 follow-ups (section 12): battles that cite the 
 | 126 | `hist.artifacts.raid` | the `monster_raid` r, 0, 0 | once per raid on a seat at most (M7) |
 | 127 | `hist.names.artifact` | P3-02 4.2's attempt keys (t, culture, artifact id, j) | per name attempt (6.6) |
 | 128 | (r2) `hist.artifacts.corrupt` | `D_at` at year t_j: artifact a, civilization c, period j | once per (kept holding of an evil artifact, period j) at most (6.11) |
+
+| 129 | (r3) `hist.artifacts.corrupt_bearer` | `D_at` at year t_j: artifact a, figure f, period j | once per (borne holding of an evil artifact by a general or hero, period j) at most (6.12) |
+
+(r3) A stream of its own, not stream 128 with another key: civilization and figure ids overlap as numbers, so (a, c, j) and (a, f, j) on one stream would give the same value to a ruler's and a bearer's draw whenever c = f; a separate stream name makes the two families independent by construction and leaves r2's keys as built.
 
 (r2) Stream 128 is appended after 127, so the keys of streams 1 to 127 do not change. `D_at(stream; t; a, b, k)` is P5-06 6.3's draw at a fixed year t (`ctx.draw_at`), whatever step evaluates it.
 
@@ -126,12 +132,17 @@ All required, in this order.
 | (r2) `corrupt_permille` | int(0, 1000) | 150 | the chance per period that it corrupts the reigning ruler (lever of CR1, CR2) |
 | (r2) `corrupt_camp_permille` | record {`good`, `neutral`, `evil`} int(0, 1000) | 1000, 1000, 600 | factor on `corrupt_permille` by the camp of the keeping realm's race (an evil people is less turned by an evil god's gift; lever) |
 | (r2) `corrupt_warlike_permille` | int(0, 1000) | 500 | the share of corruptions that make the ruler warlike; the rest grasping (lever of C1, FX2) |
+| (r3) `corrupt_bearer_years` | int(1, 10000) | 10 | the period of 6.12 for a borne holding (shorter than `corrupt_years`: a goblin general commands for 12 to 36 years, P5-06 6.9) |
+| (r3) `corrupt_bearer_permille` | int(0, 1000) | 300 | the chance per period that it corrupts its general or hero (lever of CB1, CB2); 0 turns 6.12 off, M15 included (I2) |
+| (r3) `corrupt_sack_permille` | int(0, 1000) | 500 | added to the sack chance of a siege fall won by a side whose general is corrupted (7.8; lever of CB3, G2) |
 
 Checks: `artifacts_occasion_*` (4.4). **Code defaults** (a tuning built in code): `occasions` empty, the others their starts (inert). The **`zero`** fixture tuning: shipped values with `occasions` empty (I0, 14).
 
 `history.figures` gains, appended after its last field, `smith_age_permille` int(0, 1000) start **250** and `smith_age_span_permille` int(0, 1000) start **300** (a smith's age at entry, per mille of lifespan, P5-06 6.9); code defaults the starts.
 
 (r2) `history.figures`' `deed` enum (P5-06 6.10) gains **`corrupted`**, appended last: for a ruler, 1 when an `artifact_corrupted` (8.4) fell in its reign, else 0; 0 for other roles. The shipped `epithets` list gains one entry, inserted as the **third** (after `the Faithless`, before `the Last`): role `ruler`, deed `corrupted`, `min` 1, `substantial` 0, text **`the Dark`** (ordinary only, so at most `epithet_repeat_max` (2) rulers of a world: a conqueror whose conquests reach `the Conqueror`'s substantial threshold keeps that epithet, since entry 1 is tried first). Both fixture roots likewise; the `zero` fixture tuning keeps the list as shipped.
+
+(r3) The deed `corrupted` also applies to generals and heroes: 1 when a `bearer_corrupted` (8.5) names the figure, else 0 (rulers as r2; 0 for other roles). Two more `epithets` entries, each inserted as the **first entry of its role** (so the corruption is what the figure is remembered by; ordinary only, at most `epithet_repeat_max` (2) bearers a world): before `the Unbeaten`: role `general`, deed `corrupted`, `min` 1, `substantial` 0, text **`the Butcher`**; before `{slayer}`: role `hero`, deed `corrupted`, `min` 1, `substantial` 0, text **`the Forsworn`**. (A hero's `{slayer}` by a substantial deed is now tried second, so a corrupted dragonslayer is `the Forsworn`, within the cap of 2; a third corrupted hero keeps `{slayer}`.)
 
 `history.pantheon` gains, appended, `cult_return_years` int(0, 10000), start **400**, code default 0 (12.2).
 
@@ -156,13 +167,28 @@ An occasion is a record {`kind`: event kind key, `role`: role key, `chance_permi
 
 Estimated at the starts: 8 to 15 artifacts a default world (wars about 25, sacks about 10, heroes about 10 a world; forges double the chance for about a third of the makings). AR1 (15.1) decides.
 
+### 4.4a (r4) The dark gift: a camp filter and two rows
+
+**Field.** An occasion record gains, last, the optional field **`god_camp`**: enum(`any`, `good`, `neutral`, `evil`), absent = `any`. Check `artifacts_occasion_god_camp`: a value other than `any` needs a role of entity type god in `kind` (`occasions[<i>]: god_camp <c> needs a god role in <k>`). In 6.3, after the eligibility line: when `o.god_camp` ≠ `any` and e's god participant is absent or of another camp, next c (no draw). Every r1 row is `any` (field absent), so every r1 making is unchanged.
+
+**Rows** (appended after the shipped `book_written` row, so the order and draws of the earlier rows are unchanged; taste, calibrated in 15.2 step 9):
+
+| # | kind.role | chance ‰ | bearer | arms / armour / regalia / relic / staff | `god_camp` | reading |
+| --- | --- | --- | --- | --- | --- | --- |
+| 13 | `divine_bless.civilization` | 600 | realm | 400 / 300 / 300 / 0 / 0 | evil | the dark gift: an evil god's favour comes as a treasure for the ruler's hall |
+| 14 | `cult_adopted.civilization` | 500 | site | 0 / 0 / 0 / 1000 / 0 | evil | the faith's relic, given when a realm takes an evil god's cult |
+
+Both events have a god participant (`divine_bless`'s `actor`, `cult_adopted`'s `god`), so 6.4 makes the artifact god-given (`maker_kind` 4, `god` the evil god) with no code. First holdings by 6.5 as written: row 13's arms, armour and regalia are **kept** by the realm (bearer `realm`), so r2 exposes its ruler at once and M1 and M15 can hand the arms to a general or hero (r3); row 14's relic is enshrined at the adoption's temple when the event names an open kind 6 site, else kept: either way the adopting realm's ruler is exposed (r2 or 6.13). A good god's blessing occasions nothing (L-24).
+
+**Wording** (data, `history.report`): the cause words of `artifact_made`'s `{@causes:…}` gain `divine_bless=a dark blessing,cult_adopted=a faith taken`, so the line reads as the god's gift: `In answer to a dark blessing, Kraalzo the Red Banner bestowed Driz, a spear, upon the Warrens of Geeb-Kreek.` · `In answer to a faith taken, Murn the Hollow Keeper bestowed the Reliquary of Snutch, a reliquary, upon the Gub Horde.`
+
 ### 4.5 Pantheon deeds and cause words (data; amends P5-08 4.3, 8.2)
 
 Deeds appended: `craft`: `artifact_made.maker_realm +20 any`; `war`: `artifact_taken.taker +10 any`. The act cause words gain `artifact_made=a great work forged`, `artifact_taken=a treasure taken`. P5-08 4.4's faerie `cult_forms` `The Hidden Ring of {god}` becomes `The Silver Ring of {god}` (critic F5: "hidden" is a state, not a name).
 
 ### 4.6 Fixture content `artifacts-small`
 
-In memory, as P5-08's `pantheon-small`, plus: every shipped occasion with `chance_permille` 1000, `realm_rest_years` 0, `world_max` 500, `burial_permille` 500, `battle_take_permille` 500, `raid_take_permille` 500, so that every path of 6 occurs in a 512 world; (r2) and `corrupt_years` 5, `corrupt_permille` 1000, `corrupt_warlike_permille` 500, so that a corruption, a lifting and a corrupted war occur where an evil artifact is kept.
+In memory, as P5-08's `pantheon-small`, plus: every shipped occasion with `chance_permille` 1000, `realm_rest_years` 0, `world_max` 500, `burial_permille` 500, `battle_take_permille` 500, `raid_take_permille` 500, so that every path of 6 occurs in a 512 world; (r2) and `corrupt_years` 5, `corrupt_permille` 1000, `corrupt_warlike_permille` 500, so that a corruption, a lifting and a corrupted war occur where an evil artifact is kept; (r3) and `corrupt_bearer_years` 2, `corrupt_bearer_permille` 1000, `corrupt_sack_permille` 1000.
 
 ## 5. State
 
@@ -171,6 +197,8 @@ In memory, as P5-08's `pantheon-small`, plus: every shipped occasion with `chanc
 - per artifact (ids 1, 2, … in creation order, H2; at most 100,000, fatal `history: bound: artifacts exceed 100000`): every column of `artifact` (9), and its holdings in order (every column of `artifact_holding`), the last one open;
 - per civilization (index civ id − 1): `last_made` (year, −∞ none), `seat` (6.2);
 - (r2) per holding of state 1 of an evil artifact (6.11): `checked` (the last period year evaluated; starts at the holding's `from_year`), kept beside the holding;
+  ((r3) correction of wording: r2's `checked` is the count `periods(h)` of 6.11's pseudocode, 0 at opening; the pseudocode rules.)
+- (r3) per holding of state 2 of an evil artifact (6.12): `periods` likewise (0 at opening); per figure: `corrupt_event` (0 none; the figure's one `bearer_corrupted`) and `corrupt_artifact`, kept for the figure's life;
 - indexes rebuilt from the holdings after every move, all ordered: kept by civilization, borne by figure, hoarded by monster (`std::map` keyed by holder id to ascending artifact ids);
 - the log cursor.
 
@@ -190,6 +218,8 @@ In memory, as P5-08's `pantheon-small`, plus: every shipped occasion with `chanc
 For each event of the log, in ascending id: first the **moves** of 6.7 it triggers, then the **making** of 6.3 it may occasion.
 
 (r2) After `seat` is refreshed, every step ends with the **corruption pass** of 6.11: in T4 and T6 its lifting part only; in T3 and Q4 its lifting part and then its draws.
+
+(r3) In T3 and Q4 the bearers' draws of 6.12 follow the rulers' draws of 6.11 in the same pass. The move M15 (6.12) is one more row of the log's moves, read in T4.
 
 ### 6.2 Holdings
 
@@ -339,6 +369,72 @@ draws (end of T3 and Q4, after lifting), each alive c ascending:
 
 **Q4.** The pass runs at the quiet step's Y; periods with t_j in (Y, Z] wait for the next pass. The event is charged to c (`quiet_events_left`), checked before the draw; a realm with no budget keeps its periods for the next pass (the draw is keyed by t_j, so a later evaluation gives the same result).
 
+### 6.12 (r3) Corruption of a bearer (Paul, 2026-11-28: "Actually, I like the idea that it could also corrupt a hero or a general that bears the artifact")
+
+This reverses r2's L-12 ("a bearer is not exposed") for generals and heroes; 6.11 is unchanged.
+
+**Who.** A living figure f of role **3 general** or **4 hero** that bears (holding state 2) an evil artifact (6.11's definition; only arms and armour are ever borne, so an evil god's arms or armour). **The champion (role 6) is immune**: the god armed its own devotee, and the corruption takes the **later bearers** who inherit or take the gift (L-18). Casters bear only staffs, which are never god-given. A figure is corrupted **at most once** in its life.
+
+**How the gift reaches a later bearer** (the r1 and r2 moves, plus M15):
+
+| Path | Rule | How often |
+| --- | --- | --- |
+| the champion dies, its realm alive | M2: kept by the realm (85% with `burial_permille` 150), then **M1**: the realm's next `general_appointed` takes up the smallest-id kept arms (then armour) when the general bears none of the class | the main path: an evil god's champions are armed at about 0.3 a default world (gods make 7% of artifacts, a third of the gods are evil, divine champions most of them), and a realm with wars appoints a general within years |
+| a bearing general falls | M3: kept by the enemy (850‰), then the enemy's next general by M1 | a chain inside wars |
+| a hoarding monster is slain by a hero | M5: borne by the hero | rare |
+| **(new) a hero rises** | **M15**, below | as often as heroes rise in a realm that keeps an evil arm |
+
+So generals have a real pool through M1, which already exists. Heroes had only M5, nearly a dead path, so r3 adds one small move:
+
+| # | Event read | Artifacts | Move |
+| --- | --- | --- | --- |
+| M15 | `hero_rose` (f, c), only when `corrupt_bearer_permille` > 0 | for class arms, then armour: when f lives and bears none of the class, the smallest-id **evil** artifact of the class kept by c | borne by f; quiet (as M1). The dark gift finds a bearer: a non-evil kept artifact is never taken up by M15, so r1's moves of every other artifact are unchanged |
+
+6.7's sentence "No other event moves an artifact" reads with M15 added.
+
+**When and how** (end of T3 and Q4, after 6.11's draws). Tb = `corrupt_bearer_years`. For the open holding h of each evil artifact a in state 2, ascending artifact id, held by figure f (opened in f_h):
+
+```
+B = figures.brief(f)
+if not B.alive or B.role ∉ {3, 4} or corrupt_event(f) ≠ 0: next a            // champions, the dead, the already corrupted
+c = B.civ
+for j = periods(h) + 1, … while f_h + j × Tb ≤ Y:
+    t = f_h + j × Tb
+    if Q4 and quiet_events_left(c) = 0: next a                                  // periods unchanged
+    u = pick(D_at(hist.artifacts.corrupt_bearer; t; a, f, j), 1000)
+    periods(h) = j
+    if u < corrupt_bearer_permille:
+        append bearer_corrupted e (8.5; year Y)
+        corrupt_event(f) = e; corrupt_artifact(f) = a
+        figures.corrupt_bearer(ctx, f, e)                                       // 7.8
+        next a
+```
+
+No camp factor (a bearer's people does not shield the bearer; L-20). A figure bearing two evil artifacts (an arm and an armour) is tested on each, the smaller id first, and corrupted once at most.
+
+**The consequence, one per role** (through existing rules only):
+
+- **General: he puts cities to the sword.** While a corrupted general lives and bears the corrupting artifact (**in force**), a siege fall won by the side he leads in that war is sacked more often: P3-06 7.5 item 1's sack chance gains `corrupt_sack_permille` (inside its `min(1000, …)`), and a `sacked` so decided also cites the `bearer_corrupted` (7.8). The general earns `the Butcher`. Chosen over a claim to the throne, which would need a new path in P5-06 6.5 (a crisis is peoples' event, and its claimant is a new figure): the sack rule is a single term and a cause, and a sack is the most visible beat of a war.
+- **Hero: he forsakes the realm for the wilds.** At once, `corrupt_bearer` makes the hero an outlaw: status 2 (alive, in exile), its place region the `bearer_corrupted`'s region, no host; c's hero becomes 0, so the outlaw no longer hunts for c (`hero_of(c)` gives no hero) and c may raise a new hero at its next raid (P5-06 6.7's "no living hero" counts only c's serving hero). The outlaw keeps its arms (a borne artifact stays with its bearer through an exile, 6.7) and dies of age as an exile (`figure_died`, `how` 2, 6.9). The hero earns `the Forsworn`. Chosen over keeping a hoard (M5 is rare, so it would hardly show): the exile path exists, and the fate `in the wilds` is already a report word.
+
+**What ends it.** A general's corruption is in force until his death (any of 6.9, a fall in battle) or until he no longer bears the artifact (taken, lost, hoarded, buried: by the existing moves only); the deed and epithet stay. A hero's outlawry is for life (the deed is done); its artifact moves on its death by M2 as for any bearer: buried with it, or kept by its realm (where 6.11 then exposes the ruler, and M1 or M15 the next general or hero: the gift goes on turning hearts). Nothing is destroyed; lost things stay lost.
+
+**Q4.** As 6.11: the event is charged to f's civilization and needs its budget before the draw; periods with t_j > Y wait.
+
+### 6.13 (r4) Enshrined relics reach the throne: the faith exposure
+
+**Exposure.** r2 exposes c's ruler to the evil artifacts c **keeps**. r4 adds a second exposure: an evil artifact a **enshrined** (state 6) at an **open** site s of kind 6 (a temple) exposes every alive realm c whose **faith** is the cult k of whose temples s is one, when k's god is `a.god` (the relic of the faith). The faith reading is taken (L-25): a realm that worships the god whose relic lies in the god's temple is turned, wherever the temple stands; a temple at a capital of another faith turns no one. Read through `DivineView` (7.9): `faith(c)` = the faction of c's open `faith_of` (0 none) and its `since` year; `faction_god(k)`; `temple_faction(s)` (the faction whose `cult_founded` or `cult_adopted` opened s).
+
+**Periods of an enshrined exposure.** One holding can expose several realms, so the count is kept per exposure: a member `std::map<std::pair<artifact, civ>, Exposure{origin, periods}>`. The origin is f = max(h.`from_year`, `faith(c).since`); when the pass finds an exposure whose stored origin differs (a new holding or a new faith), it resets `periods` to 0 with the new origin; an entry whose exposure has ended is erased at the lifting. Periods t_j = f + j × `corrupt_years` as 6.11.
+
+**Draw and event.** As 6.11 (same `corrupt_permille`, camp factor, temper split, kind 117, `corrupt_reign`), on stream 128 with the key (a, c, **1,000,000 + j**) at t_j: j ≤ 10,000 (a span of at most 10,000 years over `corrupt_years` ≥ 1), so the enshrined keys never equal a kept exposure's (a, c, j) and the two families are independent. The event's causes are the holding's `event`, the artifact's `made_event` and c's `cult_adopted` that opened the faith, ascending, distinct; region and settlement `seat(c)` as 8.4.
+
+**Order in the pass.** For each c (ascending, as 6.11): its exposures in ascending artifact id over both kinds (kept or enshrined; an artifact is in one holding, so it is one kind at a time), each with its periods; the in-force rule, the Q4 budget and the one-corruption-at-a-time rule as 6.11.
+
+**Lifting** (every step, as 6.11): the corrupting artifact no longer exposes c: not kept by c and not (enshrined at an open temple of c's faith whose god is the artifact's), so also when c's faith ends or changes, the temple ends (M14 moves the relic at a suppression; a temple ended with code 4 or 7 keeps it, unexposed), or the relic moves.
+
+The r3 bearer rule is unchanged; its pool grows through row 13's kept arms and armour (M1, M15).
+
 ## 7. Seams
 
 ### 7.1 `ArtifactView` (new, `worldgen/history/artifacts.hpp`; implemented by `ArtifactsSubsystem`)
@@ -413,6 +509,17 @@ virtual ReignBrief reign_brief(std::int64_t civ) const;   // number 0: no reign;
 
 **Visibility.** A corruption written in a T3 pass acts from the next call of each reader: conflict's T2 of the next year, alliances' and pantheon's next steps. A lifting at the end of T4 or T6 likewise; figures' own reign change in T3 clears the override at once (the new reign has none).
 
+### 7.8 (r3) Bearer seams (amend P3-06 7.5, P5-06 6.7, 6.9, 6.10, 9 F28)
+
+- **`ArtifactView`** gains `virtual std::int64_t bearer_corruption(std::int64_t figure) const;` (default 0): the figure's `bearer_corrupted` event when it is a living general that bears its `corrupt_artifact` now, else 0 (heroes: 0, since their consequence is applied once by figures).
+- **`FiguresSubsystem::corrupt_bearer(StepContext& ctx, std::int64_t figure, std::int64_t event)`**, for `ArtifactsSubsystem` only: fatal unless the figure lives, has role 3 or 4 and was not corrupted before. Sets the figure's deed `corrupted` (4.3). For a hero (role 4) also: status 2, its place region = `event`'s region (P5-06 6.9's "place" of an exile without host), its realm's hero = 0, and the figure is skipped by `hero_of` and by every later rise test as c's hero. No event is appended by figures; no relation opens or closes (a hero has none). A general keeps serving its war (`served` unchanged).
+- **Sacks** (P3-06 7.5 item 1): for a fall in war w taken by x, g = `figures.general_of(w, x).figure`; when g ≠ 0 and `artifacts.bearer_corruption(g)` = e_g ≠ 0: the chance is `min(1000, sack_base + h(x, y) × sack_hostility div 1000 + corrupt_sack_permille)` and, when sacked, the `sacked` also cites e_g (causes ascending, distinct). The draw and its key are unchanged; with e_g = 0 nothing changes. Conflict already holds both views (7.2, 12.1).
+- **Reader check F28** (P5-06 9): status 2 is allowed for role 2, **or for role 4 when a `bearer_corrupted` names the figure**; the message text `in exile but not a claimant` is unchanged.
+- **One hero a realm** (P5-06 6.7 and its invariant): "a realm has at most one living hero" counts heroes with status 1 only; an outlaw (status 2) is not its realm's hero, so a new hero may rise beside it.
+- **Death of an outlaw** (P5-06 6.9): `how` 2 (in exile), its place region as set above, settlement 0.
+- (r4) see 7.9 for the pantheon reads of 6.13.
+- **Visibility**: a corruption in the T3 pass acts on the same year's T6 sieges (conflict's T6 reads the view live); a hero outlawed in T3 or Q4 hunts no more from monsters' next T4.
+
 ## 8. Events
 
 ### 8.1 Catalogue (appended after 110; ids final if no other stage merges first)
@@ -470,6 +577,26 @@ Causes as 8.1. **Companions** (amends P3-07 24.2's table, with P5-00 7.1): `fell
 
 Sample (illustrative names): `The Crown of Aldmar, a crown of Ghor the Red Banner, turned the heart of the Kingdom of Cear under Aldric II to greed.` · `Kazrak, a sword of Murn the Hollow Keeper, turned the heart of the Gub Horde under Grishnak to war.` (A god-given artifact is never of deep iron, 6.4, so the `kind` form is always `a <noun>`.) Salience 50, as a hoard taken: a turn of a reign is a story beat. Estimated 0 to 2 a default world (CR2), inside T18.
 
+### 7.9 (r4) Pantheon reads (amend P5-08 7.1)
+
+`DivineView` gains (each with a default for test fakes: 0 / `{}`): `struct Faith { std::int64_t faction = 0, since = 0, event = 0; }; virtual Faith faith(std::int64_t civ) const;` (c's open `faith_of`: the faction, its `from_year` and its `cult_adopted`), `virtual std::int64_t faction_god(std::int64_t faction) const;`, `virtual std::int64_t temple_faction(std::int64_t site) const;` (0 when s is not a temple). `stages/history.cpp` sets `artifacts.set_divine(&pantheon)`. Pantheon runs before artifacts in T4 and Q4, so a faith taken or a cult suppressed in a step is seen by that step's pass. With no view set, 6.13 exposes nothing.
+
+### 8.5 (r3) Event 118 `bearer_corrupted`
+
+A kind of its own rather than a role added to 117: r2's kind 117, its template and its reader checks stay as built, and each kind has one template and one participant rule.
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values |
+| --- | --- | --- | --- | --- | --- | --- |
+| 118 | `bearer_corrupted` | 1 | 1 | 0 | 1 `artifact` artifact; 2 `figure` figure; 3 `civilization` civ; 4 `god` god | `role` (3–4) |
+
+- `figure` the bearer; `civilization` its realm (`figure.civ`); `god` = `artifact.god` (camp 2); `role` the figure's role; region: `seat(c)`'s region when c is alive, else c's home region; year Y. Causes: the borne holding's `event` and the artifact's `made_event`, ascending, distinct. Charged civilization (Q4): c. Browser group `artifacts` (10); `event_symbol` plain. No companion.
+
+| key | sal. | template | summary? |
+| --- | --- | --- | --- |
+| `bearer_corrupted` | 50 | `{artifact}, {artifact:kind} of {god:titled}, turned the heart of {figure} of {civilization}{role?|||, who would put cities to the sword|, who forsook the realm for the wilds}.` | yes |
+
+Samples (illustrative names): `Kazrak, a sword of Murn the Hollow Keeper, turned the heart of Gorbag of the Gub Horde, who would put cities to the sword.` · `The Helm of Drork, a helm of Ghor the Red Banner, turned the heart of Maela of the Kingdom of Cear, who forsook the realm for the wilds.` (The figure's display name is as at E, so it reads `Gorbag the Butcher` when the epithet was earned.)
+
 ## 9. Schema 15 (hard rule 7)
 
 **DDL** (appended after `faction`; 40 tables):
@@ -502,6 +629,16 @@ CREATE TABLE artifact_holding (artifact INTEGER NOT NULL, seq INTEGER NOT NULL, 
 - the artifact has a holding of state 1 with holder the event's `civilization`, `from_year` ≤ the event's year and `to_year` NULL or ≥ it: `artifact_corrupted: ar<a> not kept by c<c> in <year>`;
 - its causes include that holding's `event` and the artifact's `made_event`: `artifact_corrupted: ar<a> does not cite its holding and making`.
 
+(r4) **117 by faith.** The third check of 117 (kept by c) also passes for a holding of state 6 at site s, open at the event's year, with `from_year` ≤ the year and `to_year` NULL or ≥ it, when s's `origin_event` names a faction k whose god is the artifact's `god`, and c has a `faith_of` row of k with `from_year` ≤ the year and `to_year` NULL or ≥ it; its message text is unchanged. The fourth check (causes include the holding's `event` and `made_event`) is unchanged; the faith's `cult_adopted` is an extra cause (invariant 18).
+
+(r3) **Event kind 118.** `event_kind` also gains 118 (8.5); no DDL change, schema 15 stands. Checks added after those of 117, same form:
+
+- `role` is 3 or 4 and equals the `figure` participant's `role`: `bearer_corrupted role <r> is not the figure's`;
+- the `god` participant is the artifact's `god` and its `camp` is 2: `bearer_corrupted: ar<a> is not of an evil god`;
+- the artifact has a holding of state 2 with holder the figure, `from_year` ≤ the event's year and `to_year` NULL or ≥ it: `bearer_corrupted: ar<a> not borne by f<f> in <year>`;
+- the figure is alive at the event (`born` ≤ year, `died` NULL or ≥ year) and no other `bearer_corrupted` names it: `bearer_corrupted: f<f> dead or corrupted twice`;
+- its causes include that holding's `event` and the artifact's `made_event`: `bearer_corrupted: ar<a> does not cite its holding and making`.
+
 ## 10. History report v12 (amends P3-07; new section 35)
 
 1. Header **`# worldgen history v12`** at both levels; `report --help` prints it. The growth rule holds.
@@ -517,13 +654,19 @@ CREATE TABLE artifact_holding (artifact INTEGER NOT NULL, seq INTEGER NOT NULL, 
    - `[figures]`: a ruler's deeds gain `corrupted to <temper word> by ar<id> <name>` for each event 117 in its reign (the ruler is the figure of the `ruled` row of c open at the event); the `reigned … (reign <n>, <temper word>)` part keeps the drawn temper.
    - `[stats]` (full; appended after `battles_under_acts`): `artifacts_evil`, `rulers_corrupted` (events 117), `artifacts_corrupting` (artifacts with an event 117), `wars_by_corrupted` (`war_declared` citing an event 117), `corrupted_warlike` (events 117 with `temper` 1).
    - Length: at most +1 line a corruption at summary (the chronicle line); T18.
+9. (r3) **Corrupted bearers** (parts appended to item 8's lines):
+   - `[artifacts]` count line: `, bearers corrupted <b>` after `rulers corrupted <r>`; an evil artifact's `, corrupted <n>` counts events 117 and 118; the full `corrupted:` line lists events 118 too, as `<year> f<id> <name> of c<id> <name> e<id>`, all in event id order.
+   - `[figures]`: a general's or hero's deeds gain `corrupted by ar<id> <name>`; an outlawed hero's fate is the existing `in the wilds` (status 2 without host).
+   - `[civilizations]` `artifacts:` line: the part `corrupted by` also lists the realm's events 118 (one list, event id order, the cap of 4 as r2).
+   - `[stats]` (full; appended after r2's five): `bearers_corrupted` (events 118), `generals_corrupted` (`role` 3), `heroes_outlawed` (`role` 4), `sacks_by_corrupted` (`sacked` citing an event 118), `evil_taken_up_by_heroes` (M15 holdings).
+10. (r4) `[stats]` (full; appended after r3's five): `artifacts_dark_gifts` (makings occasioned by a `divine_bless`), `artifacts_faith_relics` (by a `cult_adopted`), `rulers_corrupted_by_faith` (events 117 citing a `cult_adopted`). No other report text changes: the gifts are artifacts like any other, and a corruption by faith is an event 117.
 
 ## 11. Timeline, browser, markers (library) and the viewer
 
 ### 11.1 Library
 
 - **Timeline** (amends P4-01; r10): `struct ArtifactPlace { std::int64_t state = 0, holder_type = 0, holder = 0, region = 0, settlement = 0, site = 0, x = 0, y = 0, since = 0, event = 0; };` `ArtifactPlace artifact_at(std::int64_t artifact, std::int64_t year) const` (the last holding with `from_year` ≤ year; state 0 before its making; for state 3 the place is the monster's lair at that year (`monster_at`), for states 1 and 2 all place fields 0: a kept or borne artifact is shown through its holder, not on the map); `std::vector<std::int64_t> artifacts_held(std::int64_t holder_type, std::int64_t holder, std::int64_t year) const` (ascending); `std::vector<std::int64_t> artifacts_placed(std::int64_t year) const` (the artifacts in state 3 to 6 at that year, ascending).
-- **Browser** (amends P4-05 4.4): eleventh kind group **`artifacts` = 10** for kinds 111 to 116 ((r2) and 117) (`ALL_GROUPS` 0x7FF). Entities of type 10 are selectable; `block` returns its `[artifacts]` line and its `held:` line; the realm `artifacts:` line links them. `history_entity_tag` gains `ar` for type 10.
+- **Browser** (amends P4-05 4.4): eleventh kind group **`artifacts` = 10** for kinds 111 to 116 ((r2) and 117) ((r3) and 118) (`ALL_GROUPS` 0x7FF). Entities of type 10 are selectable; `block` returns its `[artifacts]` line and its `held:` line; the realm `artifacts:` line links them. `history_entity_tag` gains `ar` for type 10.
 - **Markers** (amends P4-04 3.6): glyph **24 `artifact`**, drawn at the place of each artifact of `artifacts_placed(year)`, one glyph cell (7 cells) above it when the place has a settlement (`artifact_glyph_offset`, lead ruling on part D); `MarkerOptions::artifacts`; `event_symbol` for 111 to 116 plain. `std::string_view artifact_state_word(std::int64_t state)`: `kept`, `borne`, `hoarded`, `lost`, `buried`, `enshrined`.
 
 ### 11.2 Viewer work (viewer engineer)
@@ -569,6 +712,13 @@ A realm a is no candidate of cult k in 6.8 while there is a `cult_suppressed` of
 11. (r2) **In force.** A corruption e of c (year y_e, artifact a, holding h, ruler f of the `ruled` row open at e) is in force at year y when y_e < y, f's `ruled` row has `to_year` NULL or ≥ y, and h has `to_year` NULL or ≥ y. At most one corruption of c is in force at any year (the pass draws only for a reign with no corruption, after lifting). Every `war_declared` of year y whose attacker has a corruption in force at y cites it, and no `war_declared` cites an event 117 not in force at its year (or one of another civilization).
 12. (r2) **Replay.** For every kept holding of an evil artifact, the events 117 are exactly those of 6.11's pass replayed at each pass of the step replay, where "corrupted now" at a pass is: an earlier event 117 of c whose holding the replay still has open and whose ruler's `ruled` row is open or closed by an event after the pass's log cursor (the reference's check; the draw needs only a, c, j and t_j). Invariant 11's year form is for readers that see only the rows.
 13. (r2) The epithet `the Dark` is borne only by rulers with an event 117 in their reign; corruption moves no artifact (invariants 5 and 6 unchanged).
+14. (r3) Every `bearer_corrupted` passes 9's checks for 118 and: year ≥ the cited holding's `from_year` + `corrupt_bearer_years`; the figure is of role 3 or 4 (never 6); at most one per figure.
+15. (r3) A hero named by a `bearer_corrupted` has status 2 from the event to its death, no `hero_slain` or `monster_slain_by_hero` after it, and is not its realm's hero afterwards (a later `hero_rose` of the realm may follow); a general so named keeps role 3, and every `sacked` citing the event is of a war in which he was the taker's general (`served` open at the sack) while he bore the artifact.
+16. (r3) Every holding opened by a `hero_rose` (M15) is of an evil artifact of class arms or armour, borne by that event's figure, following a kept holding by its realm.
+17. (r3) **Replay**: for every borne holding of an evil artifact by a general or hero, the events 118 are exactly those of 6.12 replayed at the passes of the step replay (no in-force rule is needed: a figure is corrupted once, so the test is the figure's earlier events 118); the epithets `the Butcher` and `the Forsworn` only on figures named by an event 118.
+18. (r4) Every event 117 is of a kept exposure (r2's invariant 10) or of a faith exposure: the artifact enshrined at an open temple of the cult of its god, c's `faith_of` of that cult open at the year, year ≥ max(holding `from_year`, faith `from_year`) + `corrupt_years`, and causes = {holding event, `made_event`, the faith's `cult_adopted`}. Invariant 11's in-force year form gains, for a faith exposure: the `faith_of` row's `to_year` NULL or ≥ y and the temple's ending year (its `ending_event`'s year) NULL or ≥ y.
+19. (r4) Every making occasioned by an occasion with `god_camp` ≠ `any` names a god of that camp; every `artifact_made` citing a `divine_bless` or `cult_adopted` is god-given by an evil god (with the shipped rows).
+20. (r4) Replay (invariants 12 and 17) covers the faith exposures, the reference keeping the (artifact, civ) origins as 6.13.
 
 ## 14. Determinism notes (for the auditor)
 
@@ -581,6 +731,9 @@ A realm a is no candidate of cult k in 6.8 while there is a `cult_suppressed` of
 - **I0** (proof obligation): with the `zero` tuning (`occasions` empty), no artifact and no smith exists, every `ArtifactView` read is 0, and the history tables are byte-identical to those of the same build with `ArtifactsSubsystem` not installed and no view set, apart from the catalogue rows of kinds 111 to 116 and the `artifact_kind` rows. (12.1, 12.2 and 4.5 are the same in both builds.)
 - (r2) **Corruption.** One keyed draw `D_at(hist.artifacts.corrupt; t_j; a, c, j)` per evaluated period, at the fixed year t_j, so the outcome does not depend on which step evaluates it (a Q4 without budget defers it to the same result). One `pick(…, 1000)` gives both the chance and the temper. Products: `corrupt_permille` × camp factor ≤ 10^6; p × `corrupt_warlike_permille` ≤ 10^6; `j × corrupt_years` checked. Order: after the step's log and seat refresh; civilizations ascending, their kept evil artifacts ascending id, periods ascending. `periods(h)` is a member rebuilt by the replay on resume. The temper override enters only through `tau()` (7.7).
 - (r2) **I1** (proof obligation): with `corrupt_permille` 0 every history table is byte-identical to that of the same build with the corruption pass removed, apart from the catalogue row of kind 117 and the `history.figures` content hash (the inserted epithet entry never applies, the stream is never drawn, no ruler is named by the deed).
+- (r3) **Bearers.** Stream 129, `D_at(hist.artifacts.corrupt_bearer; t_j; a, f, j)` at the fixed year t_j, one `pick(…, 1000)` per evaluated period; independent of stream 128's draws by name (3). Order: after 6.11's draws in the same pass; artifacts in state 2 ascending id, periods ascending. M15 sits in the log's moves (event id order, as M1). Products: `j × corrupt_bearer_years` checked; the sack term is a sum inside the existing `min`. Members `periods(h)`, `corrupt_event(f)` and `corrupt_artifact(f)` rebuilt by the replay.
+- (r4) **Faith exposures.** Keys (a, c, 1,000,000 + j) on stream 128 at t_j (6.13; j ≤ 10,000 by the span bound, so disjoint from the kept keys); the exposure map is ordered by (artifact, civ) and rebuilt by the replay; origins are years read from rows (`faith_of` from, holding from). The pantheon reads are const and taken after pantheon's step. The occasion filter is a pure test before the draw, so r1's draws on rows 1 to 12 keep their keys; rows 13 and 14 draw on stream 121 with their own events as keys. (A gift still sets `last_made` and counts toward `world_max`, so later makings of rows 1 to 12 may shift: worlds change, as expected of a data change.)
+- (r3) **I2** (proof obligation): with `corrupt_bearer_permille` 0 every history table is byte-identical to that of the r2 build, apart from the catalogue row of kind 118 and the `history.figures` and `history.artifacts` content hashes: M15 is off, stream 129 is never drawn, no figure is corrupted, so `bearer_corruption` is 0 and no sack chance or cause changes.
 
 ## 15. Targets and calibration
 
@@ -609,6 +762,14 @@ A realm a is no candidate of cult k in 6.8 while there is a `cult_suppressed` of
 | (r2) **CR2** | corruptions a world | median 0 to 2 on each sample; max ≤ 8 |
 | (r2) **CR3** | wars of corrupted rulers | `wars_by_corrupted` ≥ 1 in ≥ 10 worlds of each sample (visible); ≤ 8% of wars pooled |
 | (r2) **CR4** | tempers | both warlike and grasping corruptions occur on each sample |
+| (r4) **CR0** restated | the pool | evil artifacts in ≥ **50** of 100 worlds on each sample (r2: reported only) |
+| (r4) **CR0b** | exposed rulers | a realm with an exposure (kept, 6.11, or by faith, 6.13) at some year in ≥ **35** worlds of each sample; L-13's floor no longer applies, and CR1 stays 20 to 60 |
+| (r4) **AR1**, **AR2** kept | with rows 13 and 14 | median 8 to 20 and cap 40 as written; gods ≥ 5% and smith-made ≥ 45% as written, and gods ≤ 25% of makings (a guard, so the smiths stay the makers of most) |
+| (r3) **CB0** (reported) | the bearers' pool | worlds in which an evil artifact is ever borne by a general or hero; M15 take-ups |
+| (r3) **CB1** | worlds with a corrupted bearer | 10 to 40 of 100 on each sample (if CB0 is below 15 on a sample: at least 60% of the pool worlds, and the lead is told, L-21) |
+| (r3) **CB2** | corrupted bearers a world | at most 4 in every world; both roles occur on each sample |
+| (r3) **CB3** | sacks by corrupted generals | `sacks_by_corrupted` ≥ 1 in ≥ 5 worlds of each sample; ≤ 5% of sacks pooled |
+| (r3) guards | as r2's guards, and | G2 (standing settlements, population), P5-06's targets on disputed successions and exiles (unchanged by rule: an outlaw writes no `exiled`), heroes (rises, and monsters slain by heroes ≥ 25%), the FG bounds (FG11 epithets; AR8's figures max), M4a and M4b |
 | (r2) guards | as above | C1, G2, T16, T18 (median ≤ +5 lines over r1's 675 / 685.5), AR1 to AR8 (AR8 as restated by the lead, 320), and P5-06's FX2 and FX3, FG11, and P5-04a's betrayals ≤ 18% of ended alliances, each kept |
 
 ### 15.2 Calibration (data only, a separate agent, in this order; history replayed on cached geography, checked equal to `generate`)
@@ -620,6 +781,8 @@ A realm a is no candidate of cult k in 6.8 while there is a `cult_suppressed` of
 5. FU5 by `cult_return_years`.
 6. After every step: C1, G2, M4a, M4b, T16, T18, PN, CU; a step that breaks one is undone and reported to the lead. At most 8 sweeps; a miss is reported, not looped on.
 7. (r2) **Corruption, a brief rerun** on r1's calibrated values (steps 1 to 6 are not redone): measure CR0 first; then CR1 and CR2 by `corrupt_permille` (first) and `corrupt_years`; then `corrupt_camp_permille`'s `evil` value if evil peoples hold most of the pool; then CR4, C1 and FX2 by `corrupt_warlike_permille`. At most 4 sweeps on seeds 0–49, then A and B once with the guards of 15.1. No other value moves; a guard that breaks is reported to the lead.
+9. (r4) **The pool, before steps 7 and 8** (one combined rerun now runs 9, 7, 8 in that order, at most 6 sweeps on seeds 0–49 in all, then A and B once): CR0 and CR0b by the `chance_permille` of rows 13 and 14 (row 13 first); if AR1's median passes 20 or gods pass 25%, lower rows 13 and 14 before anything else, and then, only if needed, the divine champion row's chance (r1's row 9, 800). If CR0 stays below 50 with rows 13 and 14 at 1000, report it (L-27) rather than touch pantheon values. Then step 7 (CR1, CR2 by `corrupt_permille`; the `evil` camp factor is expected to move up, since the gifts go mostly to the gods' kin among evil peoples) and step 8. A miss is reported, not looped on.
+8. (r3) **Bearers, after step 7** (r2's values fixed): CB0 first; then CB1 and CB2 by `corrupt_bearer_permille`, then `corrupt_bearer_years`; then CB3 and G2 by `corrupt_sack_permille`. At most 3 sweeps on seeds 0–49, then A and B once with every guard. A miss is reported, not looped on.
 
 ## 16. Tests required
 
@@ -642,8 +805,14 @@ C++ (new shards `worldgen-tests-artifacts` for `*artifacts_*`, `-artifacts-prope
 15. (r2) Corruption, unit (on fixtures with a hand-placed evil artifact): evil only for camp 2 (a good god's and a smith's artifact never draw); the periods t_j at f + T and f + 2T and none before; no draw while in force, a draw again after the lifting; a new reign draws again (its own j continues from `periods(h)`); both tempers from one `pick` at the boundary u = p × w div 1000 − 1 and u = p × w div 1000; the camp factor; Q4 with and without budget (the deferred draw gives the same result); lifting on each kind of leaving (M1 general, M7 raid, M9 sack, M11 conquest, M13 recovery) and on the reign's end; `corrupt_reign` names an unnamed reign (record event 117, `office_from` the reign's start) and refuses a corrupted reign; `tau()` in all four readers (strain, allied strain, spoils, `temper`) and the drawn temper kept in `figure.temper`; the declaration cites the event in force and not after the lifting; the epithet `the Dark` and its cap of 2; the template at both tempers; the four reader checks of 117 on corrupt fixtures.
 16. (r2) Property (seeds 0–9 at 512 with `artifacts-small`, shipped; slow as item 13): invariants 10 to 13; I1.
 17. (r2) H21 gains one evil artifact kept and a corruption in force at a `war_declared` (the chronicle line, the `[artifacts]` mark and `corrupted:` line, the realm part, the ruler's deed, the five stats).
+18. (r3) Bearers, unit: a champion bearing its god's evil gift never draws; a general who took it up by M1 and a hero by M5 and by M15 draw at f + Tb and not before; one corruption a figure (no draw after it, a second evil artifact not drawn); Q4 with and without budget; M15 takes only an evil arm or armour, only with `corrupt_bearer_permille` > 0, arms before armour, not when the hero bears the class; the general's sack term and the `sacked` cause in force, and not after he has lost the artifact or died; the hero's outlawry (status 2, place region, `hero_of` 0, a new hero may rise, its death `how` 2 and M2 on its artifact); F28's new allowance and its unchanged message; the epithets `the Butcher` and `the Forsworn` before the role's other entries and their cap of 2; the template at both roles; the five reader checks of 118 on corrupt fixtures; `corrupt_bearer` refusals (dead, role, twice).
+19. (r3) Property (as item 16): invariants 14 to 17; I2.
+21. (r4) Unit: the field `god_camp` (absent = any; its check; an evil row skips a good god's event with no draw); rows 13 and 14 make a god-given kept arm, armour or regalia and an enshrined or kept relic; the cause words of both; the faith exposure (a relic at a temple of the faith exposes each realm of that faith, not a realm of another faith, not after the temple ends or the faith changes; the origin at max(holding, faith) and the reset of periods; the key offset 1,000,000; the third cause); lifting by faith; 117's third check passing for a faith exposure and failing for a temple of another cult.
+22. (r4) Property: invariants 18 to 20; the r3 bearer property with gifts present.
+23. (r4) H21 gains a dark gift taken up by a general and a ruler corrupted by faith (the chronicle lines, the three stats).
+20. (r3) H21 gains a general corrupted before a sack that cites him and a hero outlawed by an artifact taken up by M15 (chronicle lines, the `[artifacts]`, `[figures]` and realm parts, the five stats).
 
-Reference: **`p5_11_artifacts_reference.py`** (test writer): replays 6.3 to 6.8 from the stored log and the fixtures' tables and `check-world` for 13; golden **`worldgen/tests/golden/p5-11-artifacts.txt`** (`artifacts-small` worlds at 512 seeds 0–9 and shipped seed 42 at 1024: hashes of `artifact_kind`, `artifact`, `artifact_holding`, `figure`, `event`, `event_cause`, and the stat lines of 10 item 6). (r2) The reference mirrors 6.11 from the stored rows alone: the kept holdings of evil artifacts (`artifact.god`, `god.camp`), its existing step replay for the pass years and Q4 budgets, the `ruled` rows and events 117 for the in-force test (invariant 11), and `D_at` for the draw; it does not need the reign draws of P5-06. The golden file adds the five stats of 10 item 8 and the hash of the events 117. Carried test-side items: `p5_06_figures_reference.py` knows role 8 (r2) and the epithet entry `the Dark` with the deed `corrupted`; `p5_08_pantheon_reference.py` the return bar and the new deeds; `p3_conflict_reference.py` the extra causes; `p4_browser_reference.py` group 10.
+Reference: **`p5_11_artifacts_reference.py`** (test writer): replays 6.3 to 6.8 from the stored log and the fixtures' tables and `check-world` for 13; golden **`worldgen/tests/golden/p5-11-artifacts.txt`** (`artifacts-small` worlds at 512 seeds 0–9 and shipped seed 42 at 1024: hashes of `artifact_kind`, `artifact`, `artifact_holding`, `figure`, `event`, `event_cause`, and the stat lines of 10 item 6). (r2) The reference mirrors 6.11 from the stored rows alone: the kept holdings of evil artifacts (`artifact.god`, `god.camp`), its existing step replay for the pass years and Q4 budgets, the `ruled` rows and events 117 for the in-force test (invariant 11), and `D_at` for the draw; it does not need the reign draws of P5-06. The golden file adds the five stats of 10 item 8 and the hash of the events 117. (r3) Likewise 6.12 and M15 from the stored rows (`figure.role`, the borne holdings, the figure's earlier events 118, `D_at` on stream 129), the sack chance's extra term in `p3_conflict_reference.py` (the taker's general from the `served` rows, in force from the holdings), and the golden file adds the five stats of 10 item 9 and the hash of the events 118. (r4) The reference reads `god_camp` and rows 13 and 14 in its making replay, and the faith exposures from the `faith_of` rows, the temples' `origin_event` factions and `ending` years; the golden file adds the three stats of 10 item 10. Carried test-side items: `p5_06_figures_reference.py` knows role 8 (r2) and the epithet entry `the Dark` with the deed `corrupted`; `p5_08_pantheon_reference.py` the return bar and the new deeds; `p3_conflict_reference.py` the extra causes; `p4_browser_reference.py` group 10.
 
 ## 17. Golden values and CI
 
@@ -665,8 +834,18 @@ Every world file and every history golden is re-recorded once, after the cross-p
 | (r2) J | corruption tests and reference | test writer | 13 items 10 to 13, 14, 16 items 15 to 17 |
 | (r2) K | brief rerun | calibration agent, after I | 15.2 step 7 |
 | (r2) L | goldens | validation, once, after K | 17 |
+| (r3) M | bearers, the second engineering pass on r2 as built (about half a day) | one generator engineer | 3 (stream 129), 4.3, 4.6, 6.1, 6.12, 7.8, 8.5, 9 (118), 10 item 9, 11.1 |
+| (r3) N | bearer tests and reference | test writer | 13 items 14 to 17, 14, 16 items 18 to 20 |
+| (r3) O | bearer rerun | calibration agent, after M | 15.2 step 8 |
+| (r4) M covers r4 too | one combined engineering pass: r3's Part M plus 4.4a, 6.13, 7.9, 9 (117 by faith), 10 item 10 (about a day in all) | one generator engineer | as M, and 4.4a, 6.13, 7.9 |
+| (r4) N covers r4 | tests and reference of r3 and r4 together | test writer | 13 items 14 to 20, 16 items 18 to 23 |
+| (r4) O covers r4 | one combined rerun, 15.2 steps 9, 7, 8 | calibration agent | 15.2 |
+
+Parts L (goldens) runs once, after O, when r3 is taken with r2; if r2 merges first, L runs after K and again after O.
 
 (r2) **Part I, files.** `core/streams.hpp` (stream 128); `src/data/kinds_history.cpp` (the four `history.artifacts` fields, the deed `corrupted`); data `history/artifacts.toml`, `history/figures.toml` (epithet entry 3), `history/report.toml` (template 117), in `game/data` and both fixture roots, and the `artifacts-small` values; `event_catalogue.cpp` (kind 117, its reader checks in the one problem function); `figures_view.hpp`, `figures.hpp`, `figures.cpp` (`ReignBrief`, `reign_brief`, the reign fields, `tau()`, `corrupt_reign`, `lift_corruption`, rule 3's kind, the deed); `artifacts.cpp` or a new `artifacts_corrupt.cpp` (the pass, `periods`); `conflict_war.cpp` (the declaration cause); `src/inspect/history_report.cpp` and the digest (10 item 8); `history_browser.cpp` (117 in group 10). No other subsystem changes. Part J mirrors 6.11 in `p5_11_artifacts_reference.py` and adds the epithet to `p5_06_figures_reference.py`; new tests go to the `-artifacts` and `-artifacts-property` entries, none to the `windows-msvc-debug` entries above 1700 s.
+
+(r3) **Part M, files** (the brief's "Part J"; lettered M because r2's J is its tests). `core/streams.hpp` (stream 129); `src/data/kinds_history.cpp` (the three `history.artifacts` fields; the deed `corrupted` for roles 3 and 4); data `history/artifacts.toml`, `history/figures.toml` (the two epithet entries), `history/report.toml` (template 118), in `game/data` and both fixture roots, and the `artifacts-small` values; `event_catalogue.cpp` (kind 118 and its checks; F28's allowance); `artifacts.hpp` (`bearer_corruption`) and the corruption pass file of Part I (the bearers' draws, `periods`, the figure members) and `artifacts_moves.cpp` (M15); `figures.hpp`, `figures.cpp` (`corrupt_bearer`, the outlaw's status, place and `hero_of`, the deed); `conflict_war.cpp` (the sack term and cause, P3-06 7.5); `src/inspect/history_report.cpp` and the digest (10 item 9); `history_browser.cpp` (118 in group 10). Nothing of r2's code changes. (r4) Also, in the same pass: `src/data/kinds_history.cpp` (the occasion field `god_camp` and its check); `artifacts.cpp` (the filter in 6.3's eligibility); data `history/artifacts.toml` rows 13 and 14 (`game/data` and both fixture roots) and `history/report.toml` (two cause words in `artifact_made`); `pantheon.hpp`, `pantheon.cpp` (`DivineView::faith`, `faction_god`, `temple_faction`); `stages/history.cpp` (`artifacts.set_divine`); `artifacts_corrupt.cpp` (the faith exposure, its map, key offset, third cause and lifting); `artifact_checks.cpp` (117's third check by faith); the digest (three stats). Part N mirrors 6.12 in `p5_11_artifacts_reference.py`, the sack term in `p3_conflict_reference.py`, the epithets and F28 in `p5_06_figures_reference.py`; tests go to `-artifacts` and `-artifacts-property`.
 
 ## 19. Amendments
 
@@ -684,6 +863,9 @@ Every world file and every history golden is re-recorded once, after the cross-p
 | (r2) P5-06 | 6.4 rule 3 (`artifact_corrupted` names a ruler by deed), 6.10 (deed `corrupted`, epithet `the Dark`), 7.1 (`reign_brief`), 7.2 and 7.3 (the effective temper) | 4.3, 7.7 |
 | (r2) P5-04a | 2 (`FigureView::temper` returns the effective temper) | 7.7 |
 | (r2) P3-06 | 7.1 (a declaration cites a corruption in force) | 7.7 |
+| (r3) P3-06 | 7.5 item 1 (the sack chance and cause of a corrupted general) | 7.8 |
+| (r4) P5-08 | 7.1 (`DivineView::faith`, `faction_god`, `temple_faction`) | 7.9 |
+| (r3) P5-06 | 6.7 (an outlawed hero is no hero of its realm), 6.9 (an outlaw's place and death), 6.10 (deed `corrupted` for generals and heroes; `the Butcher`, `the Forsworn`), 9 F28 (status 2 for an outlawed hero) | 4.3, 7.8 |
 | `schema.md` | the DDL of 9, code lists, entity type 10, changelog row 15, catalogue 111 to 116 | 9, 22 |
 
 ## 20. For P6 (P5-00 10.2)
@@ -691,6 +873,8 @@ Every world file and every history golden is re-recorded once, after the cross-p
 P6 reads, per artifact: its present holding (6.9): a hoard (the lair is a dungeon with a treasure), a ruin or a field (a site to place), a grave (the bearer's tomb, `figure.death_region`, `death_settlement`), a sanctum, temple or tower (already a site), a realm's treasury or a living bearer (a ruler's quest line: design 9 "Ruler lines send the player after artifacts"; a realm whose home artifact is held by another, a monster or a ruin has a natural quest). Quest hooks: a stolen artifact never recovered (P5-00 10's example), a crown in a dragon's hoard, a sword in a hero's grave. The chain of holdings is the artifact's lore.
 
 (r2) Two hooks from Paul's answers (2026-11-28): (1) **Unmaking.** Artifacts are "magical so very difficult to destroy" and are never destroyed in history (Q-P5-11-2); unmaking one is a candidate quest line for the game ("such and such item needs to be unmade to save a town/city"), for design 9's quest lines: an evil artifact with events 117 is the natural candidate, since its chain of holdings and the rulers it turned are its case. (2) **Corruption as a plot point.** The game can build on 6.11: a realm whose ruler is corrupted at the present (invariant 11 at E) is a court under a shadow; the artifact's events 117 name each ruler it turned; a player who carries an evil artifact off ends a corruption by the rule history used.
+
+(r3) A corrupted hero alive at E is an outlaw in the wilds with a dark blade (a figure for a quest: hunted, redeemed, or met); a dead one lies in a grave or left the blade to its realm, where it turns the next ruler or general. A corrupted general's sacks name him in the chronicle of every ruined city he took.
 
 ## 21. Open questions
 
@@ -707,6 +891,8 @@ P6 reads, per artifact: its present holding (6.9): a hoard (the lair is a dungeo
 | Q-P5-11-7 | Regalia or relic held by another as a grievance, recovered by a won war? | (a) yes | "yes" | as built (7.2, M13, AR7) |
 
 (r2) No new question for Paul: his words "corrupting a bearer" are read as the holder's corruption through the realm that keeps the artifact (L-12); the lead may put the bearer reading back to him if it does not satisfy.
+
+(r3) Paul did, on the same day: "Actually, I like the idea that it could also corrupt a hero or a general that bears the artifact". L-12 is superseded for generals and heroes by 6.12; the ruler rule of r2 stands beside it. No new question for Paul.
 
 **For the lead:**
 
@@ -729,6 +915,16 @@ P6 reads, per artifact: its present holding (6.9): a hoard (the lair is a dungeo
 | (r2) L-15 | The corrupted temper is the effective one only; `figure.temper` keeps the drawn temper and no column is added | Yes: schema 15 is unchanged; the event's `temper` value records the corrupted one |
 | (r2) L-16 | Only `war_declared` cites a corruption (not betrayals, refusals or spoils, which read the temper too) | Yes: one cause path, as the artifact claim; the temper's other effects show in the realm's record |
 | (r2) L-17 | Epithet `the Dark`, ordinary only (at most two a world), as entry 3 of the ruler list | Yes: a corrupted reign is a story; entry 3 keeps `the Conqueror` and `the Faithless` first |
+| (r3) L-18 | The champion is immune; the corruption takes the later bearers (generals by M1, M3; heroes by M5, M15) | Yes: the god armed its devotee, and the stronger story is the gift passing to lesser hands after the champion's death. Exposing champions too would be a one-line change (role 6 in the set) if the lead prefers |
+| (r3) L-19 | M15: a newly risen hero takes up a kept **evil** arm or armour (only evil ones, only with `corrupt_bearer_permille` > 0) | Yes: without it a hero bears an evil gift only through M5 and the hero rule would be nearly dead; limiting it to evil artifacts leaves every other holding of r1 and r2 unchanged (I2). The alternative, M15 for every kept arm, changes AR targets and hunts and would need AR recalibration |
+| (r3) L-20 | No camp factor for bearers; a period of its own (`corrupt_bearer_years` 10) and a chance of its own (`corrupt_bearer_permille` 300) | Yes: generals' careers are short (goblins 12 to 36 years), so r2's 25-year period would rarely fire; a bearer holds the thing in hand, so its people's camp does not shield it |
+| (r3) L-21 | CB1's floor if the pool is small | as L-13: at least 60% of the pool worlds when CB0 is below 15 on a sample |
+| (r3) L-22 | One consequence per role: a general's sacks (`corrupt_sack_permille` in P3-06 7.5, the `sacked` cites him); a hero's outlawry (status 2, no `exiled` event, F28 relaxed) | Yes: both are existing paths with one term or one status; a general's claim to the throne would need a new path in P5-06 6.5, and a hero's kept hoard would hardly show (M5 is rare) |
+| (r3) L-23 | Kind 118 of its own, not a role on 117 | Yes: r2's 117 is being built; one template and one check list per kind |
+| (r4) L-24 | A camp filter `god_camp` on occasions, so only an evil god's blessing (and adoption of an evil cult) brings a gift | Yes: blessings of every god would add about as many good gifts, push AR1 past 20 and the god share up, and serve no rule; one optional field and one test |
+| (r4) L-25 | The faith reading for enshrined relics (every realm whose faith is the cult of the relic's god), not the temple-at-the-capital reading | Yes: it is the stronger story (the faithful are turned by their god's relic), it reaches realms that never hold the temple, and it needs only three const pantheon reads |
+| (r4) L-26 | Enshrined exposures keyed (a, c, 1,000,000 + j) on stream 128, with an (artifact, civ) origin map | Yes: no new stream, disjoint keys, and one holding may expose several realms |
+| (r4) L-27 | If CR0 stays below 50 worlds with rows 13 and 14 at 1000 | Report it; the next lever is the pantheon's act rates (P5-08 calibration), which this stage does not move |
 
 ## 22. Text for the lead (`schema.md` and `proposals.md`)
 
@@ -736,9 +932,11 @@ P6 reads, per artifact: its present holding (6.9): a hoard (the lair is a dungeo
 
 **`docs/design/proposals.md`**: entries "Schema 15: artifacts (P5-11)" and "History: P5-11 artifacts (readings)" (appended by the spec writer, r1); (r2) "Artifacts: Paul's answers to Q-P5-11-1 to 7 (2026-11-28)".
 
-(r2) **`schema.md`**: the catalogue rows and the changelog row 15 read "event kinds 111 to 117" (117 `artifact_corrupted`, a catalogue row; no DDL change).
+(r2) **`schema.md`**: the catalogue rows and the changelog row 15 read "event kinds 111 to 117" (117 `artifact_corrupted`, a catalogue row; no DDL change). (r3) "111 to 118" (118 `bearer_corrupted`); `figure.status` 2 also for a hero outlawed by a `bearer_corrupted`. (r3) `proposals.md`: "Artifacts: corruption also takes a bearer (Paul, 2026-11-28)".
 
 ## Revision notes
 
 - r1 (2026-11-28): first draft, for approval.
 - r2 (2026-11-28): Paul's answers to Q-P5-11-1 to 7 (21, decided); the new rule of corruption by an evil artifact (Q-P5-11-3 reversed). Sections changed, each passage marked (r2): status line; 1 (the paragraph on corruption); 2 (item 8); 3 (stream 128); 4.3 (four `history.artifacts` fields; the deed `corrupted` and the epithet `the Dark` of `history.figures`); 4.6 (fixture values); 5 (`periods`); 6.1 (the pass); 6.10 (item 6); **6.11 (new)**; **7.7 (new)**; 8.3 (no companion); **8.4 (new: event 117)**; 9 (kind 117 and its reader checks; schema 15 unchanged; no existing message text changed); 10 (item 8); 11.1 and 11.2 (117 in group 10); 13 (invariants 10 to 13); 14 (corruption notes, I1); 15.1 (CR0 to CR4, guards); 15.2 (step 7); 16 (items 15 to 17, the reference); 18 (parts I to L, files); 19 (three rows); 20 (unmaking and corruption hooks); 21 (Paul's answers; L-12 to L-17). Event kinds 111 to 117; 128 streams. Nothing built in r1 changes when `corrupt_permille` is 0 (I1).
+- r3 (2026-11-28): Paul extends corruption to bearers ("Actually, I like the idea that it could also corrupt a hero or a general that bears the artifact"), superseding L-12 for generals and heroes; a pure addition on r2 (its ruler rule, stream 128, kind 117 and tuning names unchanged). Sections changed, each passage marked (r3): status line; 2 (item 9); 3 (stream 129); 4.3 (three `history.artifacts` fields; the deed `corrupted` for generals and heroes, epithets `the Butcher` and `the Forsworn`); 4.6; 5 (bearer members; a wording correction of r2's `checked`); 6.1; **6.12 (new; M15)**; **7.8 (new)**; **8.5 (new: event 118)**; 9 (kind 118 checks); 10 (item 9); 11.1; 13 (invariants 14 to 17); 14 (bearer notes, I2); 15.1 (CB0 to CB3, guards); 15.2 (step 8); 16 (items 18 to 20, reference); 18 (parts M to O, files); 19 (two rows); 20; 21 (L-18 to L-23); 22. Event kinds 111 to 118; 129 streams. With `corrupt_bearer_permille` 0 the r2 build's worlds are unchanged (I2).
+- r4 (2026-11-28): the dark gift and enshrined relics, after the engineer's measurement of r2 (5 evil artifacts in 40 worlds, 2 worlds with a kept one, no corruption). r2 and r3 stand. Sections changed, each passage marked (r4): status line; 2 (item 10); **4.4a (new: field `god_camp`, rows 13 and 14, two cause words)**; **6.13 (new: the faith exposure)**; 7.8 (a pointer); **7.9 (new: pantheon reads)**; 9 (117's third check by faith); 10 (item 10); 13 (invariants 18 to 20); 14 (faith keys, the filter); 15.1 (CR0, CR0b, AR1 and AR2 kept, gods ≤ 25%); 15.2 (step 9 and the combined order); 16 (items 21 to 23, reference); 18 (parts M to O cover r4, files); 19 (one row); 21 (L-24 to L-27). No schema change; no new stream or event kind.
