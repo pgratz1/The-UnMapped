@@ -1,0 +1,19 @@
+; Terrain3D v1.1.0-stable (extern/terrain3d/), built from vendored source by
+; the project's CMake (spec V3D-01 3.4). This file is generated into the build
+; tree and copied into the run copy <build>/game/addons/terrain_3d/; the
+; library is built straight into its bin/ folder. Entry symbol as upstream's
+; extern/terrain3d/project/addons/terrain_3d/terrain.gdextension. No [icons]
+; section: the editor plug-in and its icons are not vendored.
+
+[configuration]
+
+entry_symbol = "terrain_3d_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+
+linux.debug.x86_64 = "res://addons/terrain_3d/bin/libterrain3d.so"
+linux.release.x86_64 = "res://addons/terrain_3d/bin/libterrain3d.so"
+windows.debug.x86_64 = "res://addons/terrain_3d/bin/terrain3d.dll"
+windows.release.x86_64 = "res://addons/terrain_3d/bin/terrain3d.dll"

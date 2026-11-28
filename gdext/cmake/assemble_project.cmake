@@ -30,7 +30,28 @@ if(NOT EXISTS "${PROJECT_DIR}/bin/.gdignore")
     file(WRITE "${PROJECT_DIR}/bin/.gdignore" "")
 endif()
 
-set(_reserved .godot bin)
+set(_reserved .godot bin addons)
+
+# Terrain3D (spec V3D-01 3.4): addons/ is a real folder of the run copy
+# holding addons/terrain_3d/terrain.gdextension and its bin/. game/ itself
+# must not have an addons entry, since the run copy reserves the name.
+if(EXISTS "${SOURCE_DIR}/addons")
+    message(FATAL_ERROR "assemble_project.cmake: ${SOURCE_DIR}/addons exists, but the run copy reserves addons/ "
+        "for the Terrain3D plug-in (spec V3D-01 3.4). Raise the conflict before adding addons to game/.")
+endif()
+if(TERRAIN3D)
+    if(NOT TERRAIN3D_GDEXTENSION OR NOT EXISTS "${TERRAIN3D_GDEXTENSION}")
+        message(FATAL_ERROR "assemble_project.cmake: TERRAIN3D is on but TERRAIN3D_GDEXTENSION (${TERRAIN3D_GDEXTENSION}) is missing")
+    endif()
+    file(MAKE_DIRECTORY "${PROJECT_DIR}/addons/terrain_3d/bin")
+    if(NOT EXISTS "${PROJECT_DIR}/addons/terrain_3d/bin/.gdignore")
+        file(WRITE "${PROJECT_DIR}/addons/terrain_3d/bin/.gdignore" "")
+    endif()
+    file(COPY_FILE "${TERRAIN3D_GDEXTENSION}" "${PROJECT_DIR}/addons/terrain_3d/terrain.gdextension" ONLY_IF_DIFFERENT)
+elseif(EXISTS "${PROJECT_DIR}/addons")
+    # Switched off: no stale plug-in may be loaded from the run copy.
+    file(REMOVE_RECURSE "${PROJECT_DIR}/addons")
+endif()
 
 file(GLOB _entries LIST_DIRECTORIES true RELATIVE "${SOURCE_DIR}" "${SOURCE_DIR}/*" "${SOURCE_DIR}/.*")
 list(REMOVE_DUPLICATES _entries)
@@ -161,6 +182,9 @@ endforeach()
 # run copy. One res:// path per line.
 set(_list "${PROJECT_DIR}/.godot/extension_list.cfg")
 set(_want "res://unmapped.gdextension\n")
+if(TERRAIN3D)
+    string(APPEND _want "res://addons/terrain_3d/terrain.gdextension\n")
+endif()
 set(_have "")
 if(EXISTS "${_list}")
     file(READ "${_list}" _have)

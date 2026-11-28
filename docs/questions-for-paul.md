@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 7, decided 208, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 8, decided 238, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -17,6 +17,12 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 None.
 
 ### Not blocking
+
+From the 3D terrain track (merged 2026-11-28):
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-V3D-04-6 | The banding of the rock on steep mountain faces in the 3D preview. | Left as built until the textures stage replaces the placeholder rock. | `docs/specs/v3d-04-look-pass.md`, "Paul's review" | open until the textures stage |
 
 The seven questions of P5-11 artifacts (2026-11-28). Work goes on with the recommendations.
 
@@ -42,6 +48,18 @@ Work the lead took from the answers (not questions): record a famine or plague i
 
 
 ## 2. Decided
+
+### The 3D terrain track, V3D-01 to V3D-05 (answered by Paul in the second session, 2026-11-27 and 2026-11-28)
+
+Asked and answered in the laptop session; each spec records the question, the options and Paul's words. Recorded in `proposals.md` as "3D terrain track: Paul's review of 2026-11-28" and "Terrain3D is pinned with Godot and godot-cpp as three versions".
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-V3D-01-1 to 6 | The terrain preview's first stage (scope, Terrain3D vendoring and the version pin, camera, checks). | As recommended. | `docs/specs/v3d-01-terrain-preview.md` 14 | Decided 2026-11-27: all six recommendations accepted. |
+| Q-V3D-02-1 to 6 | Biome ground and vegetation; the art for this stage. | Generated placeholders built in code, nothing licensed or vendored. | `docs/specs/v3d-02-biome-ground-and-vegetation.md` 17 | Decided 2026-11-27: recommendations accepted, with Paul's changes after flying it (spec r2). |
+| Q-V3D-03-1 to 5 | Vegetation near the camera: tiers, radius, budgets. | As recommended. | `docs/specs/v3d-03-vegetation-near-camera.md` 16 | Decided 2026-11-27: accepted; Q-V3D-03-2 then changed by Paul to a far budget of 2,000,000 instances. |
+| Q-V3D-04-1 to 5 | The look pass: mountains, snow line, shrubs, the sea's horizon. | Built on the recommendations while Paul was away. | `docs/specs/v3d-04-look-pass.md` 14, "Paul's review" | Decided 2026-11-28: reviewed and accepted (Q-V3D-04-6 stays open, section 1). |
+| Q-V3D-05-1 to 8 | Markers for settlements, ruins and sites in 3D: models, beacons, labels, the tour, the jump view. | Built on the recommendations while Paul was away. | `docs/specs/v3d-05-markers.md` 16, "Paul's review" | Decided 2026-11-28: accepted as a map-mode view. Q-V3D-05-1 and -5 reversed by Paul (trees cleared in and thinned around towns; nothing stands in water) and deferred to P6's site plans; Q-V3D-05-6 decided as "lighten the mine beacon", not yet built. |
 
 ### Answered by Paul on 2026-11-25 (in this file)
 

@@ -7,6 +7,7 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "terrain/terrain_preview.hpp"
 #include "viewer/layer_map_view.hpp"
 #include "viewer/viewer_model.hpp"
 #include "viewer/viewer_screen.hpp"
@@ -28,6 +29,9 @@ void initialize_unmapped(godot::ModuleInitializationLevel level) {
     GDREGISTER_CLASS(unmapped::LayerMapView);
     GDREGISTER_CLASS(unmapped::YearMarks);
     GDREGISTER_CLASS(unmapped::ViewerScreen);
+    // 3D terrain preview (spec V3D-01). It reaches Terrain3D only through
+    // ClassDB, so it is registered whether or not the plug-in is built.
+    GDREGISTER_CLASS(unmapped::TerrainPreview);
 }
 
 void uninitialize_unmapped(godot::ModuleInitializationLevel /*level*/) {}

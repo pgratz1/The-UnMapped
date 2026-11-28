@@ -20,7 +20,7 @@ It links `worldgen` through its public headers and nothing else of it; `worldgen
 
 **Why godot-cpp 10.0.0.** Since version 10, godot-cpp is versioned separately from Godot. Its README (https://github.com/godotengine/godot-cpp/blob/10.0.0-stable/README.md) says: "Using the `api_version` parameter (see below), godot-cpp v10 can target Godot 4.3 or later", and "GDExtensions targeting an earlier version of Godot should work in later minor versions, but not vice-versa." 10.0.0-stable (2026-09-15) is its newest release and ships `extension_api-4-7.json`. That file equals the API dumped from the pinned 4.7.2 editor in every section except the version header, and the interface JSON is byte-identical (`extern/README.md`, Notes). Terrain3D v1.1.0 itself builds against a godot-cpp master commit from 2026-03 (submodule `60b5a419`), so it does not pin a godot-cpp tag that we could share.
 
-Terrain3D is not integrated now; it only decides the version (milestone 2 confirms it).
+Terrain3D v1.1.0-stable is vendored in `extern/terrain3d/` and built by our CMake against godot-cpp 10.0.0 with a force-included compatibility header and one edited line (`extern/README.md`); it is used by the 3D terrain preview ("Terrain preview" below).
 
 ## Getting the pinned editor
 
@@ -79,6 +79,9 @@ Godot loads an extension from a `.gdextension` file inside the project, and writ
   bin/                    real folder: the extension's output directory
     libunmapped_gdext.so  (Windows: unmapped_gdext.dll)
   .godot/                 real folder: Godot's cache
+  addons/terrain_3d/      real folder, only with -DUNMAPPED_BUILD_TERRAIN3D=ON (spec V3D-01 3.4)
+    terrain.gdextension   generated from gdext/terrain3d/terrain.gdextension.in
+    bin/libterrain3d.so   (Windows: terrain3d.dll), the plug-in's output directory
 ```
 
 - The library is built straight into `<build>/game/bin/`. `game/unmapped.gdextension` names it as `res://bin/libunmapped_gdext.so` (Linux) and `res://bin/unmapped_gdext.dll` (Windows), relative to the project, so the committed file is the same on every machine.
@@ -101,6 +104,7 @@ All in `gdext/src/`, registered at the scene level:
 | `ViewerModel` | `RefCounted` | The model of the viewer screen: the open world, its views (every layer, then every composite), the selected view, decoded layers and images; `get_view_count()`, `get_view_info(i)` (kind `layer` or `composite`, name, group, unit, size, element type, palette), `select_view(i)`, `get_view_image(i)`; `get_legend()` and `get_legend_title()` for the selected view; `describe_cell(x, y)`, one line with the cell, its value in display units, its biome and region names and, with history, who holds the region in the current year; signals `world_opened`, `world_open_failed`, `world_closed`, `view_selected`, `view_failed`, `year_changed`, `view_image_changed`, `markers_changed`. The history methods of spec P4-03 3.2 and the marker methods of spec P4-04 8.1 (below). No Controls; a VR view can use it as is. |
 | `LayerMapView` | `Control` | Presentation: draws one layer image with nearest filtering (as tiles of 128 x 128 cells, each its own texture; an image redrawn in place uploads only the tiles that changed), pan (drag with left or middle button), zoom about the cursor (wheel), fit (double click); signal `cell_hovered(x, y)`. Given the same `Image` again (redrawn in place) it updates its texture and keeps pan and zoom. Draws the markers above the image (`set_markers(markers, glyphs)`, P4-04 8.4) and hit-tests them under the mouse (signal `marker_hovered(index)`, -1 for none; `get_marker_screen_position(index)`). |
 | `YearMarks` | `Control` | Presentation: the marks under the year slider (P4-03 4.5), one line per awakening, phase start and the present; its tooltip names the nearest mark. |
+| `TerrainPreview` | `Node3D` | The 3D terrain preview (spec V3D-01): root of `game/viewer3d/terrain_preview.tscn`. See "Terrain preview" below. |
 | `ViewerScreen` | `Control` | The flat view: root of `game/viewer/viewer.tscn`; finds its parts by unique name, wires them to a `ViewerModel`, reads the command line, runs the headless check and `--bench`. The layer list shows every view under group headings, Composites first (Terrain, Water, Climate, Biomes, Resources, Regions, Other follow); a world opens on the first entry. The legend panel shows the selected view's colours; the line under the map describes the cell under the mouse; the year bar under the map sets the year. |
 
 `HistoryState` (`gdext/src/viewer/history_state.hpp`, C++ only, not registered) is what the model holds of the history: worldgen's `LoadedHistory` (`load_history`, read once when a world opens), the civilization colours (`civilization_colours`), the current year Y with its `YearState`, the holder vector and fill of the territory image (`territory_holders`, `territory_fill`), the `TerritoryBase` once built, and the holder vector the image was last drawn with, which alone decides whether a year change redraws the image. It holds no Godot types.
@@ -206,3 +210,279 @@ CTest test `gdext-headless-check`, registered when the option is on, tests are b
 Playback (P4-06 11): P0 without history (controls disabled, methods false, keys inert, no ticker); P1 at open (stopped, speed 10, skip on, ticker on, the speeds, default span [0, E]); then, after the browser checks, P2 to P10, with the check's own copy of the timing rule over its own stop years (the chronicle lines of `history-summary.txt` / `history.txt`, its own `Timeline`'s holder changes, the starts of `[phases]`): P2 plain years, P3 the cases C1 to C4 call by call, P4 a civilization's story and its wars, P5 the ticker at both levels (and the 5 + `... and <n> more` cut), P6 the flashes, P7 pausing, resuming, a speed change, `select_event`, stop and reopening, P8 the keys, P9 `parse_play_options` over 29 argument lists, P10 the layout at 1280 x 800 and 1600 x 1000 (slider width, year bar inside `MapArea`, ticker inside the map view within 40 %). Then three runs of the viewer on the real world with `--headless --fixed-fps 30`: R1 `--play 0 200 --speed 100 --quit-at-end --play-log` (exit 0, ascending year lines from 0, `finished at 200 after <n> frames`), R2 the same with identical lines, R3 `--play 0 <E + 1> --quit-at-end` (exit 1 and the refusal text).
 
 It fails unless every step exits 0 and the viewer prints `UNMAPPED-CHECK: PASS` for each world. It takes about 35 seconds (`linux-gcc-release`; the playback checks about 2 s, R1 to R3 about 1 s each). Run it alone with `ctest --preset <preset> -R gdext-headless-check -V`.
+
+## Terrain preview
+
+The 3D terrain preview of specs `docs/specs/v3d-01-terrain-preview.md`, `v3d-02-biome-ground-and-vegetation.md`, `v3d-03-vegetation-near-camera.md` `v3d-04-look-pass.md` and `v3d-05-markers.md`: a world's `elevation` layer as Terrain3D terrain at one vertex per 16 m cell (true scale, map centred on the origin, region size 256), lakes flat at their surface, an opaque sea plane at 0 m faded by depth fog to the horizon, and a fly camera. Since V3D-02 each biome has its own generated ground texture (grain, relief and roughness, coloured so that from afar it matches the 2D map), blended over about two cells at biome borders, rock on slopes over 35 degrees and snow on the coldest alpine ground, rivers painted as on the 2D composite map, and placeholder trees, shrubs, reeds and snags built in code and placed by Terrain3D's instancer from the world seed. Since V3D-04 (the look pass, below) rock is drawn in strata of three tones, the sun stands in the south-south-west with a partly fixed ambient light, a snow line covers the cold ground but for the steepest faces, shrubs are three-lobed green clumps and the sea is unshaded; `--look-v3d03` restores V3D-03's look item by item. `--flat-colours --no-trees --look-v3d03 all` gives V3D-01's look: one white texture and the biome colours in the colour map. It is the scene `res://viewer3d/terrain_preview.tscn`; the 2D viewer (`viewer.tscn`, the main scene) is unchanged.
+
+Code: `gdext/src/terrain/`. `terrain_data` (layout, height and colour buffers, cell and world coordinates, ground samples, the HUD line), `fly_state` (the camera rules of V3D-01 8.2), `ground` (the seventeen ground types, their 256 x 256 textures, the per-cell ground with V3D-04's rock variant and snow line, the control map, the river paint and the textured colour map; V3D-02 3 to 5), `vegetation` (kinds, densities, the seeded placement and the instance cap; V3D-02 6; the forest types forest floor and carr carry 150 trees per hectare at full timber, Q8 983 against 393 elsewhere, with the same conifer share, and 100 shrubs per hectare of undergrowth, Q8 655, on top of their own shrubs: Paul, 2026-11-27; an instance's offset from its cell's vertex is two keyed draws, one per axis, over the whole 16 m cell, `cell_jitter`, where spec 6.4 has [-6, 6) m from one hash, which stood trees in rows 16 m apart) `placeholder_meshes` (the flat-shaded meshes of V3D-02 6.2 and V3D-04's smooth shrub) and `look` (V3D-04's items, the light's constants, `sun_direction`, `peak_view`) are plain C++ without Godot types, built as the static library `unmapped_terrain_core` that the extension and the unit tests link. `TerrainPreview` opens the world through `WorldFile`, copies the buffers into three `Image`s (height and control `FORMAT_RF`, colour `FORMAT_RGBA8`) and creates the `Terrain3D` node through Godot's `ClassDB`: `unmapped_gdext` never links Terrain3D, so the class is used only when the plug-in is in the run copy, and without it the preview shows the sea plane and says so. The textures and the vegetation scenes (a `PackedScene` per kind built in code, children `MeshLOD0` and `MeshLOD1`) are made once per process; the instances go to the instancer with `add_transforms`, one instancer cell (512 m) per call, then one `update_mmis` rebuilds the multimeshes on the next drawn frame. `terrain_check`, `terrain_check_ground` and `terrain_check_near` are the check below.
+
+Since V3D-03 the vegetation is drawn in two tiers. The **far tier** is V3D-02's placement restricted to trees and snags and thinned by the keyed `thin` draw to a budget (`--instance-cap`, default 2,000,000: Paul, 2026-11-27, where spec r1 says 1,000,000); it goes to Terrain3D's instancer once at load and is never changed. The **near tier** holds, in 256 m cells within `--veg-radius` (default 2,048 m) of the camera, exactly the candidates the far tier left out (shrubs, reeds, and the trees and snags above the far threshold), so every map size shows full density near the camera. `near_cells` (plain C++) holds the grid, the cells' boxes and distances and the state machine (empty, queued, computing, ready, filled, dropping) with its budgets: 4 tasks in flight, 4 cells or 16,384 instances attached and 16 cells dropped per frame, filled nearest and in view first, dropped only beyond R + 512 m. `terrain_preview_near.cpp` runs it once per frame: each cell is computed on a `WorkerThreadPool` task (`near_instances` and `instance_buffer`, plain C++ on the task's own slot and the world's read-only buffers; no Godot call on a worker), and attached on the main thread as one `MultiMeshInstance3D` per kind and LOD (named `n<q>k<kind>l<lod>`, under the child `NearVegetation`) with the buffer copied in; trees fade out over 1,200 to 1,300 m from their cell's centre (Godot's visibility range, fade self), shrubs end at 1,000 m and reeds at 800 m as before. Opening another world, key G and leaving the scene first wait for every running task and drop its result. `--veg-whole-map` gives V3D-02's placement unchanged.
+
+### Building
+
+The plug-in is the CMake option `UNMAPPED_BUILD_TERRAIN3D` (default OFF; configure refuses it without `UNMAPPED_BUILD_GDEXT=ON`). With it off, the build, the run copy (no `addons/`) and the test list are as before, apart from the preview's own sources and tests, which are built with the extension.
+
+```
+cmake --preset linux-gcc-release -DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_BUILD_TERRAIN3D=ON
+cmake --build --preset linux-gcc-release
+ctest --preset linux-gcc-release -R gdext
+```
+
+The plug-in adds 15 sources to the build.
+
+### Flying over a world
+
+```
+B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-release
+GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64
+OUT=~/.cache/the-unmapped/out
+"$B/tools/worldgen-cli/worldgen-cli" generate --seed 42 --map-size 1024 --out $OUT/seed42-1024.db
+"$GODOT" --path "$B/game" res://viewer3d/terrain_preview.tscn -- $OUT/seed42-1024.db
+```
+
+Maps of 512, 1024 and 2048 cells are accepted. The camera starts above cell (N/2, 7N/8), 300 m above the highest peak, looking north at pitch -25. Keys: W/S forward and back along the view, A/D sideways, E/Q up and down, Shift x4, mouse wheel or `-`/`=` speed (10 to 2000 m/s), right mouse button held to look, arrow keys to turn, R back to the start, T vegetation on or off (the mesh assets' `enabled`; instances are kept), G ground textured or flat (reopens the world in the other mode and keeps the camera; nothing without a `biome` layer), H hides the HUD, Escape releases the mouse. "Open world..." opens another file. The HUD shows the cell, the position in metres east and south of the centre, the altitude and height above ground, the ground's elevation (and a lake's surface), the biome and region names, the speed and the frame rate.
+
+Options after the world path: `--at <x> <y>`, `--alt <m>`, `--above <m>` (start that many metres above the ground at the start cell; not with `--alt`), `--heading <deg>`, `--pitch <deg>`, `--speed <v>`, `--size <w> <h>`, `--screenshot <file.png>` (saved 2 s after the first drawn frame after the terrain is added, then quit; needs a display), `--bench`, `--check <dir> --expect-terrain3d present|absent`, `--no-terrain3d`, `--flat-colours` (V3D-01's ground), `--no-trees` (no vegetation), `--instance-cap <n>` (0 to 4,000,000, default 2,000,000: the far tier's budget, or with `--veg-whole-map` V3D-02's cap), `--veg-radius <m>` (0, or 1,536 to 8,192, default 2,048; 0 is the far tier alone, without shrubs or reeds), `--veg-whole-map` (V3D-02's whole-map placement; not with `--veg-radius`), `--veg-threads <n>` (worker tasks in flight, 0 to 8, default 4; 0 computes 2 cells a frame on the main thread), `--tier-colours` (near-tier instances tinted red, to see the partition), `--look-v3d03 <list>` (V3D-04: `all`, or a comma list of `rock`, `light`, `snow`, `shrubs`, `sea`, drawn as in V3D-03; anything else is refused with `--look-v3d03 <v>: all, or a comma list of rock, light, snow, shrubs, sea`; key G keeps the look), `--at-peak` (V3D-04: start 2,000 m south of the highest land cell, 200 m above the peak, heading 0, pitch -8, each overridden by `--alt`, `--above`, `--heading`, `--pitch`; not with `--at` or `--at-forest`), `--year <Y>`, `--no-markers` and `--at-marker <v>` (V3D-05, see "Markers" below), `--at-forest` (start at the bench's forest path: the forest cell of the forest column x* nearest to row 7N/8, heading north or south along the longer run of forest, 60 m above the ground and never below 60 m above the sea, unless `--above` or `--alt` is given; not with `--at`). `--screenshot` waits for the first drawn frame, then for the near tier to settle (at most 30 s; past that it prints `near vegetation not settled`), then 2 s.
+
+The HUD's second line is the vegetation: `vegetation near <filled> cells, <pending> pending, <n> instances; far <F>` in tiers, `vegetation whole map <n>` with `--veg-whole-map`, `vegetation off` with `--no-trees`, without a `biome` layer or after T. The status lines at the bottom left name the mode (`ground: textured, 17 ground types` or `ground: flat colours`), the items drawn as in V3D-03 (`look: V3D-03 for <items>`, in the order rock, light, snow, shrubs, sea; no line when none is), the vegetation (in tiers `vegetation: far tier <F> trees and snags of <S_far> (budget <B>); near tier within <R> m in cells of 256 m`, or with `--veg-radius 0` `...; no near tier: no shrubs or reeds`; with `--veg-whole-map` `vegetation: <n> instances`, with `, thinned from <S> to the cap` when the cap binds; or `vegetation: off`), and what is missing: `no biome layer: ground drawn grey, no vegetation`, `no water layer: rivers not drawn`, `no timber layer: tree density from the biome alone`, `no temperature layer: no snow`, `no seed in meta: vegetation placed with seed 0`, `no land on this map: the peak view starts at the map centre` (with `--at-peak`). A top-down view to compare with the 2D map: `--at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/top.png` on a 1024 world, against `worldgen-cli render --db <world> --composite biomes`.
+
+### Checks
+
+- `gdext-terrain-tests` (doctest, no Godot; built with the extension and tests): U1 to U6 of V3D-01 9.1, U7 to U16 of V3D-02 11.1, U17 to U25 of V3D-03 11.1 and U31 to U39 of V3D-04 10.1 (the two rock types and their recorded hashes; the rock variant and the snow line against the test's own formulas; the control of 4.4 against the test's own copy, and with rock and snow restored against V3D-02's rule, on hand grids and a 512 test world; `rock` and `snow` unchanged for placement; the shrub's 60 triangles, smooth normals and vertex colours; `parse_look_v3d03`; `sun_direction`; `peak_view`) (`place_candidates` over 20 rectangles against the whole map's list; the far tier and the partition for six budgets against a brute-force sort; the near boxes hold every instance; the wanted set at 12 camera points against a brute-force pass; hysteresis; order and budgets; teleport and cancel with simulated workers; `instance_buffer`; the constants) (ground types; the textures against the test's own copy of the formula and recorded FNV-1a hashes, which must pass on GCC, Clang and MSVC alike; `hash32` and `mix64` vectors; control on hand-made grids; river paint against the 2D rule; the textured colours; placement repeatability, exclusions and counts per kind within 4 standard deviations; the cap against a brute-force sort; `ground_low`; the meshes' triangle counts, normals, winding and heights).
+- V3D-05 adds U40 to U51 of spec 12.1 and U52 (the label declutter) in `gdext/tests/markers3d_test.cpp`, and T31 to T40 to the terrain check (see "Markers" below).
+- `gdext-terrain-check` (registered with `gdext-headless-check`, Terrain3D on or off; `gdext/cmake/terrain_check.cmake`, about 14 s): generates a 512 world (seed 49; since V3D-05 with every stage, so with a history) and a 1024 world (seed 1) with `--until regions` and renders their `biome` layer and `map` composite, a 512 world with `--until elevation` and the test pattern, then runs the preview headless with `--check`: the 512 world in the default mode, with `--flat-colours --no-trees` and with `--no-terrain3d`, the 1024 world with `--instance-cap 50000`, and the two others. V3D-01's T1 to T8: layout and images; every height against the check's own formula; every colour against `biome.png` (flat colours); the start and the HUD at four places; with Terrain3D its region locations and `get_height` and `get_color` at 32 points; without it, the status, sea and camera; 300 frames of scripted flight above the ground. V3D-02's T3 and T9 to T16, with the check's own copy of the ground, river, control and colour formulas and of the exclusion and cap rules: the colour image, and every painted river cell against `map.png`; the fifteen texture assets, seventeen since V3D-04 (images equal to `build_ground_texture`, `albedo_color`, `uv_scale`); the control image and `get_control` at 32 points; the five mesh assets and their LODs; the instances stored in the regions per kind and the first and last of each at their place; the placement and the cap; the sea plane, far plane and fog; the status lines; keys T and G. Key T makes Terrain3D log `_viewport_texture is null. Couldn't create thumbnail picture` once per mesh asset under `--headless` (it redraws an editor thumbnail when `enabled` changes); the check passes regardless. Terrain3D instantiates and answers `get_height` and `get_color` under `--headless`, so T6 runs in CI. V3D-03 adds the runs `1024 --instance-cap 50000 --veg-threads 0`, `512 --veg-whole-map` and `512 --veg-radius 0` (about 28 s in all now), and every run with vegetation in a Terrain3D node then flies a camera path over frames (P0 the centre, P1, P2 at 64 m a frame, a jump to P3 near the south-west corner and back to P0, each waited on until the near tier settles, at most 900 frames): T17 the far tier against the check's own partition rule and Terrain3D's stored count; T18 at each point the filled cells against the check's own distance (all within R, none beyond R + H) and every near node's count, buffer, box and visibility ranges against the check's own `Extra` and 7.2; T19 near and Terrain3D's far positions in each filled cell disjoint and together the cell's candidates; T20 the per-frame budgets, no cell attached twice without a drop, a +-128 m wiggle at P1 that moves no filled cell, and a reopen of the world on the first frame at P3 with cells computing; T21 the cells at P0 byte-identical to the first visit; T22 the HUD line and key T; T23 the main-thread run gives the same buffers; T24 no near node with `--veg-radius 0` and no `NearVegetation` with `--veg-whole-map`. Headless, `MultiMesh::get_buffer` returns the buffer set (W15), but `get_instance_transform` returns the identity, so T18's read-back of the first transform (W16) is checked only when the check is run with a display (it passed on 2026-11-27, Vulkan). V3D-04 adds the run `512 --look-v3d03 all`, four refusals and one headless `--bench` (about 32 s in all now): T25 the seventeen texture assets, the control against the check's own copy of 4.2 to 4.4 at every cell and at 32 `get_control` points (with rock and snow restored, V3D-02's rule), every control's bits, snow overlays only on cells under the snow line's slope and temperature, and rock on every alpine cell past the hold; T26 the `Sun`'s -Z and energy and the environment's ambient source, sky contribution, colour and energy; T27 the sea material; T28 the kind 2 mesh asset's arrays against `build_mesh(2, 0, look)` and every near shrub node drawing the preview's shrub mesh; T29 the status lines and the refusals of `--look-v3d03 trees`, `--look-v3d03 rock,`, `--at-peak --at-forest` and `--at-peak --at`; T30 the bench's look line on the 512 world equal to the line the check computes from its own counts. Both Godot checks hold `RESOURCE_LOCK godot-run-copy`, since both import the same run copy.
+
+### By hand on a GPU (spec 9.3)
+
+After the commands of "Flying over a world", for 512, 1024 and 2048 worlds:
+
+| Id | Look for |
+| --- | --- |
+| G1 | no checkerboard; land in biome colours; sea a flat plane to the horizon |
+| G2 | a top-down screenshot (above) matches the `biomes` composite in layout: north at the top, coasts, lakes and mountains in the same places, not mirrored |
+| G3 | the HUD's `ground` at three cells equals the 2D viewer's hover elevation at the same cells (`--hover x y` in the 2D viewer; `--at x y` here) |
+| G4 | no cracks or steps at region edges (X or Z a multiple of 4096 m); no flicker where low coast meets the sea plane |
+| G5 | lakes flat and lake-blue, level with their shores; no hole or spike |
+| G6 | every control; the camera never enters the ground when diving at 2000 m/s with Shift |
+| G7 | at 2048, a flight from the south edge to the north edge shows the whole map with no missing region |
+
+Checked by the engineer on 2026-11-27 (Linux, RTX 4090 Laptop GPU, Vulkan Forward+), non-interactively: G1 (the sky's ground colour is set to the sea's, so the sea reads to the horizon; the plane's edge at 24 N m showed as a slight change of tone, which V3D-02's wider plane and fog replace), G2 (seed 42 at 1024), G4 and G5 by eye in screenshots, no Terrain3D or shader error on stderr. G3, G6 and G7 need a person at the controls.
+
+V3D-02 (spec 11.3), with the worlds above and `P="$GODOT --path $B/game res://viewer3d/terrain_preview.tscn --"`:
+
+```
+$P $OUT/seed42-1024.db
+$P $OUT/seed42-1024.db --at 512 512 --alt 22000 --pitch -89 --screenshot $OUT/v3d02-top.png
+$P $OUT/seed42-1024.db --above 250 --pitch -15 --screenshot $OUT/v3d02-low.png
+$P $OUT/seed42-1024.db --alt 30000 --pitch -10 --screenshot $OUT/v3d02-horizon.png
+$P $OUT/seed42-1024.db --flat-colours --no-trees --screenshot $OUT/v3d02-as-v3d01.png
+$P $OUT/seed42-2048.db --bench
+"$B/tools/worldgen-cli/worldgen-cli" render --db $OUT/seed42-1024.db --composite map --out $OUT/seed42-1024.map.png
+```
+
+| Id | Look for |
+| --- | --- |
+| G8 | each biome has its own grain, relief and sheen at 250 m above ground; from 22 km the top-down view matches `seed42-1024.biomes.png` in colour and layout |
+| G9 | biome borders blend over two or three cells; no 16 m staircase at 250 m above ground |
+| G10 | rock on mountain sides and not on gentle ground; snow only on the highest alpine ground |
+| G11 | forests dense, grassland scattered, heath and moor with shrubs, reeds in marsh and fen; nothing in lakes, rivers or the sea or on rock; no floating tree, none sunk to its crown |
+| G12 | rivers as blue lines in the same places as in `seed42-1024.map.png` |
+| G13 | at 30 km the sea reaches the horizon with no edge and no change of tone; no flicker where low coast meets the sea |
+| G14 | T and G work; `v3d02-as-v3d01.png` looks like V3D-01 |
+| G15 | at 2048, flying at 200 m/s 150 m above a forest: no stall after the first frame |
+
+Seen by the engineer on 2026-11-27 in screenshots of seed 42 (same machine): the top-down view at 1024 matches the 2D map in layout and, but for the mountains, in colour (slopes over 35 degrees show the grey rock overlay, where the 2D map shows the alpine and heath colours); grassland matches the flat colours to within 1/255 at the same pixels; trees stand in forests, sparsely in grassland and steppe, none in lakes, rivers or on rock; snow lies only on the flatter alpine tops, since rock wins on the steep ones; rivers run where the 2D map has them, with a pale fringe where the colour map fades from the river colour to white over one cell; at 30 km the plane's edge itself is invisible (the colours just above and below it differ by at most 2/255), but the lit sea inside the fog's start is lighter than the fog colour, so a soft lighter band lies some way below the horizon. No Terrain3D, shader or instancer error on stderr with a display. G9, G14 and G15 need a person at the controls.
+
+V3D-03 (spec 11.3), with the same `P`:
+
+```
+$P $OUT/seed42-2048.db --at-forest
+$P $OUT/seed42-2048.db --at-forest --pitch -8 --screenshot $OUT/v3d03-near-2048.png
+$P $OUT/seed42-2048.db --at-forest --pitch -8 --veg-whole-map --screenshot $OUT/v3d03-whole-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --screenshot $OUT/v3d03-high-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --instance-cap 1000000 --screenshot $OUT/v3d03-high-cap1m-2048.png
+$P $OUT/seed42-2048.db --at-forest --above 400 --pitch -12 --tier-colours --screenshot $OUT/v3d03-tiers-2048.png
+$P $OUT/seed42-1024.db --at-forest --pitch -8 --screenshot $OUT/v3d03-near-1024.png
+$P $OUT/seed42-1024.db --at-forest --pitch -8 --veg-whole-map --screenshot $OUT/v3d03-whole-1024.png
+$P $OUT/seed42-512.db --bench;  $P $OUT/seed42-1024.db --bench;  $P $OUT/seed42-2048.db --bench
+$P $OUT/seed42-1024.db --veg-radius 100    (refused: --veg-radius 100: 0 or a whole number from 1536 to 8192)
+```
+
+| Id | Look for |
+| --- | --- |
+| G16 | at 2048 low over forest: full density near (as `v3d03-near-1024.png`), thinner beyond about 1.2 km; `v3d03-whole-2048.png` thinner near |
+| G17 | at 1024, `v3d03-near-1024.png` and `v3d03-whole-1024.png` show the same trees (shrubs too, within 1 km) |
+| G18 | flying at 200 m/s and with Shift (800 m/s): no tree pops in front of the camera; the density ring fades, no trees doubled or jumping |
+| G19 | `v3d03-tiers-2048.png`: red near trees only within about 1.2 km, ordinary ones everywhere |
+| G20 | R and G keys: after a jump the near forest fills within about a second, nearest first; HUD counts settle |
+| G21 | T hides and shows both tiers; the HUD lines |
+| G22 | the bench lines below for 512, 1024 and 2048 |
+
+The forest path's start (lead's interim ruling on spec 12.1, 2026-11-27, to be written into the spec): x* is unchanged; the start is the cell of column x* that is forest floor or carr and nearest to row 7N/8 (ties: the smaller row); if the column has none, the forest cell of the map nearest to (x*, 7N/8) by squared distance (ties: smaller row, then smaller column); with no forest at all, the map centre, and the status line says `no forest on this map: the forest path starts at the map centre`. The path runs north or south, whichever keeps the longer run of forest cells along the column from the start (ties north), and the camera starts at max(ground + 60, 60) m, never below the sea plane plus 60 m (`forest_start_cell` and `forest_start_altitude` in `near_cells.hpp`, unit tests U26 to U30). On seed 42 the start is (275, 865) at 1024 and (592, 1759) at 2048 (column 129 at 512); before the ruling the 2048 start lay on the sea at row 1792, 60 m above the sea bed and below the sea plane.
+
+Screenshots on a locked or remote machine: a locked Wayland session draws no frames, but a virtual X display renders on the GPU (Godot prints `Using Device #1: NVIDIA`; Mesa's `No DRI3 support detected` is harmless):
+
+```
+env -u WAYLAND_DISPLAY xvfb-run -a -s "-screen 0 1600x900x24" "$GODOT" --display-driver x11 --path "$B/game" res://viewer3d/terrain_preview.tscn -- <world.db> <options> --screenshot <file.png>
+```
+
+Without DRI3, Xvfb presents frames by copying them, so frame times under it are about 20 to 30 ms whatever is drawn: they are indicative only, and the frame columns of the bench below are taken that way.
+
+Checked by the engineer on 2026-11-27 from screenshots under Xvfb (RTX 4090 Laptop GPU, Vulkan Forward+, 1600 x 900), the commands above:
+
+- G16: at 2048, `v3d03-near-2048.png` (60 m above Temperate forest at (592, 1759), pitch -8; HUD `near 228 cells, 0 pending, 103383 instances; far 2000000`) shows forest at full density to the trees on the skyline and no visible ring; `v3d03-whole-2048.png` from the same point (V3D-02, cap 2,000,000) is plainly thinner near the camera, with ground showing between trees. Trees stand on the ground, none floating or sunk.
+- Density step at about 1.2 km, from 400 m above the same cell looking across the forest (`v3d03-high-2048.png`, `-high-cap1m-2048.png`): at the default budget of 2,000,000 the step is not visible by eye (mean row colours just inside and outside the ring differ by at most 2/255); at 1,000,000 a band of lighter green lies beyond the near ring (green up to 11/255 lighter, more ground between trees), soft and without a hard edge. The rows within the ring are identical in both, as they must be.
+- G19: `v3d03-tiers-2048.png` shows red-tinted near trees from the foreground to about 1.4 to 1.6 km (estimated from the screen row at pitch -12), thinning out through the fade, ordinary far trees everywhere; no doubled trees, no bare ring, no hard edge.
+- G17: at 1024, `v3d03-near-1024.png` and `v3d03-whole-1024.png` are identical pixel for pixel (the far tier holds every tree there, and the near tier's shrubs are V3D-02's).
+- G22: the drawn bench below for 512, 1024 and 2048.
+- G18 in part: the bench's forest flights at 200 and 800 m/s had no late cell at any size, at most 7 cells pending.
+
+G18 by eye, G20 (R and G keys) and G21 (T key) need a person at the controls; nothing here contradicts them.
+
+
+### Bench
+
+`--bench` prints (V3D-01 10 and V3D-02 12; headless only the first three lines, and `first frame` there runs to the next process frame, since nothing is drawn):
+
+```
+UNMAPPED-TERRAIN-BENCH: map <N>, open <ms> ms, layers <ms> ms, buffers <ms> ms, images <ms> ms, import <ms> ms, first frame <ms> ms
+UNMAPPED-TERRAIN-BENCH: memory static <MB> MB, video <MB> MB, regions <k>
+UNMAPPED-TERRAIN-BENCH: ground textures <ms> ms, cells <ms> ms, control <ms> ms; vegetation placement <ms> ms, transfer <ms> ms, instances <n> of <S> (cap <B>)
+UNMAPPED-TERRAIN-BENCH: look: alpine cells <a>, snow <s> (<p>%), rock <r> (<q>%); with V3D-03's control snow <s0> (<p0>%), rock <r0> (<q0>%)
+UNMAPPED-TERRAIN-BENCH: view at cell (<x>, <y>), 150 m above ground: frames 300, mean <ms>, max <ms>, over 16.7 ms <a>
+UNMAPPED-TERRAIN-BENCH: flight <s> s at 1000 m/s: frames <n>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>
+```
+
+The look line (V3D-04 9.2, headless too, with a `biome` layer) counts the alpine cells not painted, and those with a snow (12) or rock (11, 15, 16) overlay of blend 128 or more, in the current control and in the control with rock and snow restored. `transfer` is the `add_transforms` calls and `update_mmis`; `first frame` starts after it, so it holds the multimesh build. The view line is taken after 60 warm-up frames at the centre cell, 150 m above `ground_clamp`, heading 0, pitch -10, vsync off.
+
+Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, Linux, a laptop with an RTX 4090 Laptop GPU (Vulkan, NVIDIA driver), 1600 x 900 window:
+
+| N | open | layers | buffers | images | import | first frame | static memory | regions | flight frames | mean | max | over 11.1 / 16.7 / 33.3 ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 0.5 ms | 1.6 ms | 1.1 ms | 1.0 ms | 4.6 ms | 44 ms | 65.5 MB | 4 | 29,301 in 8.2 s | 0.3 ms | 55 ms | 1 / 1 / 1 |
+| 1024 | 0.5 ms | 6.7 ms | 4.4 ms | 5.0 ms | 22 ms | 45 ms | 84.6 MB | 16 | 45,667 in 16.4 s | 0.4 ms | 56 ms | 1 / 1 / 1 |
+| 2048 | 0.7 ms | 28 ms | 20 ms | 20 ms | 86 ms | 46 ms | 160.7 MB | 64 | 82,821 in 32.8 s | 0.4 ms | 61 ms | 1 / 1 / 1 |
+
+The one slow frame of each flight is its first. These are V3D-01's figures, before the ground and vegetation.
+
+V3D-02, measured 2026-11-27 on the same machine and worlds (default options, cap 1,000,000; static memory without vegetation from a `--no-trees` run):
+
+| N | ground textures | cells | control | placement | transfer | first frame | instances | static memory (no trees / with) | view mean, max | flight frames, mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 36 ms | 0.8 ms | 3.1 ms | 3.9 ms | 38 ms | 78 ms | 64,385 of 64,385 | 67.0 / 104.3 MB | 0.4 ms, 1.2 ms | 25,590 in 8.2 s, 0.3 ms, 2.4 ms |
+| 1024 | 38 ms | 3.0 ms | 12 ms | 24 ms | 229 ms | 149 ms | 356,973 of 356,973 | 86.1 / 286.5 MB | 0.8 ms, 1.6 ms | 26,093 in 16.4 s, 0.6 ms, 2.7 ms |
+| 2048 | 41 ms | 14 ms | 54 ms | 136 ms | 702 ms | 396 ms | 1,000,000 of 1,811,182 | 162.2 / 741.6 MB | 0.8 ms, 1.5 ms | 47,895 in 32.8 s, 0.7 ms, 5.2 ms |
+
+No frame of the view or the flight took over 11.1 ms. At the cap, vegetation costs about 580 MB of static memory (about 0.58 KB per instance, in Terrain3D's region dictionaries and the multimeshes), about twice the spec's estimate. Video memory reads 0.0 MB on this machine: the rendering server reports no video, texture or buffer memory with the NVIDIA Vulkan driver, so spec V17 (video memory grows with the regions in use) is not measured.
+
+With denser forests (150 trees and 100 more shrubs per hectare on forest floor and carr) and the cap at 2,000,000, measured 2026-11-27 on the same machine and worlds (512 not measured):
+
+| N | placement | transfer | first frame | instances | static memory | view mean, max | flight frames, mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1024 | 67 ms | 916 ms | 319 ms | 1,088,122 of 1,088,122 | 624.4 MB | 1.2 ms, 1.6 ms | 22,433 in 16.4 s, 0.7 ms, 4.7 ms |
+| 2048 | 365 ms | 1,318 ms | 537 ms | 2,000,000 of 5,523,211 | 1,175.1 MB | 0.9 ms, 2.2 ms | 44,217 in 32.8 s, 0.7 ms, 4.2 ms |
+
+Still no frame over 11.1 ms. At 2048 the cap keeps about 36% of the candidates, so forests there show about 54 trees per hectare.
+
+V3D-03 (spec 12) adds two kinds of line after the view line and before the flight, and changes the third line's meaning in tiers (`vegetation placement` is `place_far_tier`, `instances <F> of <S>` the far tier of all candidates, `cap` the far budget):
+
+```
+UNMAPPED-TERRAIN-BENCH: tiers: far <F> of <S_far> (budget <B>), near radius <R> m, settled <ms> ms after the first frame, near cells <c>, near instances <n>, memory static <MB> MB
+UNMAPPED-TERRAIN-BENCH: forest flight at <v> m/s, column <x>, <m> m: frames <k>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>; cells filled <f> (<r> per s), dropped <d>, late <L>, most pending <P>; compute mean <us> us, max <us> us; attach max <us> us; memory static <MB> MB
+```
+
+`settled` runs from the first frame at the view point to the near tier's `settled()`. The forest flight line comes twice, at 200 and 800 m/s, from the forest path's start (above) north or south along its column for min(12 N, 8,192) m, 60 m above the ground, pitch -8, after the near tier has settled at its start (at most 30 s). `compute` is the worker time per cell, `attach` the main-thread time of the attach step in one frame, `late` the cells still unfilled when they came within 1,400 m. Headless, the bench prints the first three lines and the tiers line.
+
+Measured 2026-11-27, `linux-gcc-release`, seed 42 worlds, default options (far budget 2,000,000, radius 2,048 m, 4 tasks), drawn under Xvfb on the RTX 4090 Laptop GPU at 1600 x 900 (frame times indicative only, see above: every frame of every flight is over 16.7 ms there, by the copy). Video memory reads 0.0 MB, as with V3D-02.
+
+| N | first frame | placement (far tier), transfer | far tier of S_far (all S) | static memory at load / after the flights | settled at the view | near cells, instances at the view | view mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 114 ms | 9.0 ms, 72 ms | 104,482 of 104,482 (187,951) | 132.0 / 133.2 MB | 853 ms | 181, 17,688 | 17.1, 29.0 ms |
+| 1024 | 281 ms | 56 ms, 498 ms | 604,322 of 604,322 (1,088,122) | 454.1 / 464.1 MB | 782 ms | 153, 14,293 | 19.8, 34.6 ms |
+| 2048 | 654 ms | 293 ms, 1,435 ms | 2,000,000 of 3,057,704 (5,523,211) | 1,383.7 / 1,450.1 MB | 926 ms | 181, 16,608 | 19.3, 26.2 ms |
+
+| N | forest flight | frames, mean, max | over 33.3 ms | cells filled (per s) | dropped | late | most pending | compute mean, max | attach max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 512 | 200 m/s, 6,144 m | 1,438, 21.4, 28.5 ms | 0 | 242 (7.9) | 372 | 0 | 4 | 11, 357 us | 103 us |
+| 512 | 800 m/s | 339, 22.7, 41.1 ms | 1 | 261 (34.0) | 363 | 0 | 6 | 9, 137 us | 104 us |
+| 1024 | 200 m/s, 8,192 m | 1,545, 26.5, 39.7 ms | 4 | 517 (12.6) | 507 | 0 | 3 | 39, 448 us | 190 us |
+| 1024 | 800 m/s | 382, 26.8, 32.6 ms | 0 | 517 (50.5) | 507 | 0 | 6 | 38, 414 us | 187 us |
+| 2048 | 200 m/s, 8,192 m | 1,415, 29.0, 37.0 ms | 5 | 544 (13.3) | 500 | 0 | 4 | 86, 249 us | 630 us |
+| 2048 | 800 m/s | 349, 29.4, 33.3 ms | 0 | 542 (52.8) | 497 | 0 | 7 | 83, 366 us | 507 us |
+
+V3D-01's flight at 1000 m/s: 512 386 frames, mean 21.3, max 27.1 ms; 1024 711, 23.1, 33.7 ms; 2048 1,382, 23.7, 33.9 ms. Drawn static memory is far above the headless figures (352 MB at 2048 headless against 1,384 MB drawn), since the renderer's multimeshes are counted. The near tier never fell behind: no late cell, and compute and attach stay well under a millisecond, so the frame times measure Xvfb's copy, not the tiers. Headless figures (2026-11-27): static memory with no trees / tiers / `--veg-whole-map` 47.8 / 60.3 / 66.7 MB at 512, 66.9 / 130.5 / 178.1 MB at 1024, 143.0 / 352.2 / 342.3 MB at 2048.
+
+At 512 and 1024 the far tier holds every tree and snag (T = 2^32), so the trees are V3D-02's and the near tier adds only shrubs and reeds; the transfer to Terrain3D halves against `--veg-whole-map`, since shrubs no longer go through it. At 2048 the far tier keeps 65% of the trees and snags (about 98 trees per hectare in forest beyond 1.2 km against 150 near), and `--instance-cap 1000000` keeps 33% (static memory 249 MB headless). The view point at the centre of the seed 42 worlds is mostly not forest, hence about 100 near instances a cell there; a forest cell holds about 1,000 (721 shrubs, plus at 2048 the extra trees).
+
+### Look pass (spec V3D-04)
+
+Five items, each restored to V3D-03's look by `--look-v3d03 <item>` (`all` for every one). Nothing in placement, densities, tiers or the far budget changes: vegetation still reads V3D-02's `rock` and `snow`, and the check's T12, T13 and T17 to T19 pass unchanged on every run.
+
+- **rock**: ground types 15 (pale rock, 0x8C8880) and 16 (brown rock, 0x7A6A58), never a base; the rock overlay of each land cell is `ROCK_SEQ = {11, 15, 11, 16, 15}` by 45 m height band with a per-cell jitter of up to 12.8 m (`rock_variant`), so faces show strata that follow the contours.
+- **light**: the sun from azimuth 210 (south-south-west) at 45 degrees, energy 0.75; ambient from the sky at contribution 0.4 plus a fixed (0.70, 0.74, 0.82) at energy 0.8 (`look.hpp`; set in `open_world` in every mode). Top-down views are now lit from the bottom of the image (Q-V3D-04-1).
+- **snow**: `snow_line` on every land cell from the temperature (none at or above `SNOW_T0` = -1.0 C, full at -3.0 C, per-cell jitter of up to 0.6 C) and the slope (full up to `SNOW_HOLD_FULL_G` 457, about 55 degrees, none from `SNOW_HOLD_NONE_G` 627, about 63 degrees); at 128 or more it is the overlay, else it competes with rock and the border as before.
+- **shrubs**: three smooth ellipsoid lobes (60 triangles, 2.45 by 2.15 m, 1.30 m high), coloured per vertex from 0x3C6420 at the ground to 0x6E9E38 at the top.
+- **sea**: the sea plane unshaded, so the sea, the fog and the sky's ground are one colour: no light band below the horizon and no sun glint.
+
+Tuned against the spec (r1), 2026-11-28: the snow line's slope hold is 457 to 627 where the spec gives 320 to 457 (45 to 55 degrees). On seed 42, 57% (1024) and 60% (2048) of the alpine cells, and 60% of the cells within 40 of the highest peak, are past 55 degrees, so with the spec's hold the snow lay in scattered patches (11.5% and 9.0% of alpine cells) and no cap formed, and no step of `SNOW_T0` allowed by the spec (to +0.5 C, which also brings the line down to the tree line) reaches 30%. With the wider hold: 20.7% and 15.6% (V3D-03: 2.5% and 2.1%), still under the spec's 30%.
+
+Screenshots (spec 10.3, under Xvfb on the RTX 4090 Laptop GPU, 1600 x 900, seed 42, 2026-11-28); pairs differ in one item, `-before` with that item restored. `v3d04-all-before.png`, `v3d04-horizon-before.png` and `v3d04-v3d02view-before.png` were taken with the build before V3D-04 (V3D-03's look in every item); `v3d04-light-s-before.png` and `v3d04-horizon-low-before.png` were not taken. Luma is (54r + 183g + 19b) / 256; the HUD rows 0 to 110 and the bottom 150 rows are left out.
+
+| Id | Measured | Verdict |
+| --- | --- | --- |
+| R1 | changed pixels of `v3d04-rock-*`: luma p10 to p90 spread 26 before, 47 after (1.81 x); median 105 before, 123 after | met; the bands follow the contours, and read as regular stripes on large faces |
+| L1 | `v3d04-light-s-after.png` looks south from (420, 930) over open sea only, so rows 300 to 600 are the sea (luma 54) and say nothing about the land. In its place: the shaded far mountains of `v3d04-all-*` (rows 230 to 330, columns 850 to 1300) p10 luma 47 before, 93 after; the mountains of `v3d04-v3d02view-*` (rows 120 to 300, columns 300 to 1000) 40 before, 59 after | met on the substitute views; the spec's view needs another heading |
+| L2 | `v3d04-top-*`: mean luma 61.6 before, 60.7 after; 0.089% of pixels with a channel at 255 in both | met |
+| S1 | bench, alpine cells with snow: 1024 20.7% (V3D-03 2.5%), 2048 15.6% (2.1%); rock past the hold on every alpine cell (T25) | missed (30% to 60%); 8 and 7 times V3D-03 |
+| S2 | changed pixels with all channels at least 200: 1024 1,340 before, 39,019 after (29 x; 13 x with the spec's hold); 2048 694 before, 19,672 after (28 x) | met: white upper slopes above a ragged line, the steepest faces and the summits' spires dark through it |
+| B1 | changed pixels of `v3d04-shrub-10-*`: mean HSV saturation 0.31 before, 0.53 after; mean hue 96 before, 108 after | met: rounded green clumps where grey-olive faceted stones stood |
+| B2 | `v3d04-shrub-300-after.png`: yellow-green dots between the trees, lighter than both the forest floor and the crowns | met |
+| H1 | the light band of `v3d04-horizon-before.png` (up to 57 per channel above the sea colour, rows 390 to past 700 at column 800) is gone in `v3d04-horizon-after.png` and `-low-after.png`; the sea itself is exactly (24, 56, 120). Rows just under the horizon where the far sky's ground shows (about 60 rows at 30 km, 1 row at 2 km) carry a channel noise of up to 6 to 8, the same bytes in V3D-03 | met but for that sky noise, which is not the sea's |
+
+The lighting keeps the rest of the map: the V3D-02 view (`--at 800 380 --above 250 --heading 270 --pitch -15` on 1024) has mean luma 84.8 before and 89.4 after, its forest rows 62.6 and 70.4, and no part washed out; the top-down view is L2's.
+
+### Markers (spec V3D-05)
+
+The settlements, ruins and sites of the history's end year (or `--year Y`) stand on the ground as placeholder models built in code, each with a beacon above it, labels for the nearest and a HUD line for the nearest. Code: `markers3d` (plain C++, in `unmapped_terrain_core`: the records through worldgen's public `load_history`, `civilization_colours`, `MarkerIndex::markers_at` and `Timeline::sites_existing`/`site_at`; placement, meshes, beacon transforms, label choice, HUD, status, jump order and view, option parsing), `terrain_preview_markers.cpp` (the `Markers` node: `Models` with one `MeshInstance3D` per record named `s<id>` or `t<id>`, `Beacons` one `MultiMeshInstance3D` updated each frame with one buffer, `Labels` with sixteen `Label3D` nodes `l0` to `l15`) and `terrain_check_markers.cpp`. The 2D viewer's files are not touched; its marker hover text is restated (spec 3.2), without the P5-07 seal year and warren text, which live in `HistoryState`.
+
+Options: `--year <Y>` (a whole number from 0; above the history's end gives the end and a status line), `--no-markers` (the history is not read; no `Markers` node), `--at-marker <v>` (start at the jump view of `settlement:<id>`, `site:<id>`, `rank:<k>` of the jump order, or a name, exact then ASCII case-folded; `--alt`, `--above`, `--heading`, `--pitch` override it; not with `--at`, `--at-forest`, `--at-peak` or `--no-markers`; a miss starts at the default view with a status line). Keys: M markers on or off (the node's `visible`, nothing rebuilt; key G keeps it), N and Shift+N the next and previous standing settlement by population, landing south of it looking north. HUD line 3: `markers <n> at year <Y>; nearest <D> <bearing>: <text>` within 2,000 m, else `...; nearest <name> (<kind>), <D> <bearing>`; `markers off (M)`, `markers off (--no-markers)`, `markers: none, no history in this world` or `markers: none, the history could not be read`. Status: `markers: <s> settlements (<c> capitals), <r> ruins (<o> old), <l> lairs, <p> outposts, <m> mines, <t> towers at year <Y> of <E>`.
+
+Models (spec 5): houses of 6 to 9.5 by 5 to 8.5 m with gable roofs in the holder's territory colour (dimmed 12/16 and some roofless when declining) on 16 m slots, `min(64, max(2..16 by kind, isqrt(population / 8)))` of them; a capital's hall with a pyramid roof; a fortress keep; city and fortress walls with a south gate; a ruin's low stubs and broken grey ring (old ruins fainter and drawn only to 3 km); a lair's dark mound with a black mouth; an outpost's palisade and watchtower; a mine's pit, headframe and spoil heap; a tower's 36 m column (a library's 26 m with a hall). Each box stands on the lowest `ground_low` of its corners and sinks 0.5 m. Mines and libraries stand one glyph (7 cells) from their settlement as on the 2D map, and a site within 4 cells of an earlier marker steps (+7, +7) up to three times.
+
+Built beyond or against the spec (r1), 2026-11-28, pending Paul's review:
+
+- **Jump view**: `JUMP_DIST` 500 m and `JUMP_ABOVE` 150 m, where the spec gives 1,200 and 350 m. From 1.2 km a 64-house city was a smudge of a few coloured pixels and houses 3 to 4 px, hidden in forest; from 500 m (pitch about -17) a city reads as a cluster of coloured roofs inside its grey wall (`v3d05-tower-1024.png`, Aleldford).
+- **Label declutter** (`LABEL_DECLUTTER`, `label_box`, `declutter_labels`): the spec's selection is kept (T34 compares it), then in order of distance a label whose screen box (0.55 em a character, two lines of 1.25 em) overlaps a nearer drawn label's box by more than half of the smaller box is hidden. Without it a mine or library and its own settlement, 112 m apart, printed one label over the other from any distance (spec V4); the check's T34 has its own copy of the rule.
+- **Ruin rings**: e, and so the ring's radius, is taken over the stub slots of the ruin (the slots the model uses), not over the town's house count.
+- The 200-byte HUD cut keeps the line within 200 bytes including the `...`.
+
+`gdext-terrain-check` (spec 12.2): the 512 world (seed 49) is now generated with every stage; W25 holds (`worldgen-cli hash --detail` gives the same 18 layer lines with and without the history stages), so T1 to T30 are unchanged. Every run on a world with a history checks T31 (the records against the check's own from `MarkerIndex` and `Timeline`, in order; a standing settlement, a capital and a ruin; the seed 49 world has 31 settlements with 6 capitals, 9 ruins of which 4 old, a lair, 2 outposts, a mine and 3 towers at 6000), T32 (one model per record, named, at the check's own cell with Y the height buffer exactly, arrays equal to `build_marker_mesh`, visibility ranges), T33 (beacon count, colours and every transform at three camera points against the check's own formula), T34 (labels and their properties at the same points and along a 40-frame path, with the declutter), T35 (status and HUD lines, a `--year` past the end in process), T36 (key M), T37 (the jump order; N, N, Shift+N, Shift+N), and T38 holds by the default run (T12, T13, T17 to T19 with markers). The 1024 world (geography only), the elevation-only and the test-pattern worlds check T39. New runs: `--no-markers` (every V3D-01 to V3D-04 check, and T39), `--year 3000`, `--at-marker rank:1`, `--at-marker settlement:<the largest settlement, printed by the default run>` and `--at-marker nowhere` (markers only), and T40's six refusals. The check takes 37.5 s in `linux-gcc-release` (31.9 s before) and 68.6 s in `linux-gcc-debug` on this machine; the timeout stays 300 s.
+
+Screenshots (spec 12.3, under Xvfb, RTX 4090 Laptop GPU, 1600 x 900, seed 42, 2026-11-28; ids chosen from `report --history --level full`): `v3d05-city-1024.png` and `-street-1024.png` (`rank:1`: Wuldbury, city of the Duchy of Brel, population 16,225), `-ruin-1024.png` (`settlement:57`, Gentstead, ruin of a town), `-lair-1024.png` (`site:1`, Vifae's Deep, the only open lair), `-mine-1024.png` (`site:13 --year 3300`: the world's only mine, the Mines of Kingrouli, is closed at 6000), `-tower-1024.png` (`site:20`, the Library of Eded at Aleldford), `-outpost-1024.png` (`site:27`, Hird Tower), `-air-1024.png`, `-air-2048.png`, `-nohistory-1024.png`, and the bench at 1024 and 2048. Not taken (16-run budget): `-city-off-1024`, `-air-y3000-1024` (T31 and T35 check the records at 3000: 23 against 47 on seed 49) and the 2048 `--no-markers` bench.
+
+| Id | Seen | Verdict |
+| --- | --- | --- |
+| V1 | from 500 m a city is a cluster of roofs in the holder's colour inside a grey wall, the capital's beacon taller and wider; colours match `territory-markers.png` (Brel cyan, the goblins yellow, the faeries purple, the orcs red, the dwarves orange) | met at 500 m; houses are small next to trees (forest towns are partly hidden by trees, accepted by Q-V3D-05-1) |
+| V2 | nothing floating seen; the screenshots are 400 m and more away, so walls on slopes are not judged | not judged |
+| V3 | at 500 m the kinds are told apart by label and beacon colour more than by shape; a library 112 m from a coastal city stood in the sea (its glyph offset cell is sea) | partly: see the open points |
+| V4 | beacons thin coloured poles to the haze, 4 px and more at 1024 and 2048; at most 16 labels; with the declutter none over another's text by more than half | met |
+| V5 | by the check (records at 3000 against 6000) | met by T31 and T35 |
+| V6 | the V3D-04 picture with `no history in this world: no markers` and the HUD line | met |
+| V7 | per-frame marker work over the view: mean 26 us, max 85 us at 1024; 30 and 66 us at 2048 | met (under 0.5 ms) |
+
+Bench (spec 13), drawn under Xvfb as above (frame times indicative only):
+
+```
+UNMAPPED-TERRAIN-BENCH: markers: history <ms> ms, records <ms> ms, meshes <ms> ms, nodes <ms> ms; <n> markers (<s> settlements, <r> ruins, <o> old, <l> lairs, <p> outposts, <m> mines, <t> towers), <tri> triangles, beacons <b>
+UNMAPPED-TERRAIN-BENCH: markers per frame over the view: mean <us> us, max <us> us
+```
+
+| N | history | records | meshes | nodes | markers | triangles | beacons | per frame mean, max | view mean, max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1024 | 6.5 ms | 1.1 ms | 4.9 ms | 4.6 ms | 116 (80 settlements, 11 ruins, 9 old, 1 lair, 6 outposts, 0 mines, 9 towers) | 24,856 | 107 | 26, 85 us | 20.2, 26.0 ms |
+| 2048 | 11.9 ms | 3.4 ms | 15.3 ms | 4.5 ms | 299 (239, 17, 7, 6, 16, 4, 10) | 84,658 | 292 | 30, 66 us | 20.5, 27.1 ms |
+
+W29 holds: the history loads in about 12 ms at 2048, so the preview reads it on the main thread. W26 holds: with `fixed_size` a label keeps its screen size and `pixel_size` 0.0017 gives capitals 14 to 15 px high at 1600 x 900. W27 holds (above). W28 not judged at 8 km.
+
+Open points for Paul: a mine or library whose glyph offset (7 cells) lands in the sea stands in the sea (spec 4 takes the 2D offset as it is); the mine beacon's dark grey (60, 60, 60) is hard to see against forest; houses 4 to 6 m high stand among 11 to 15 m trees (Q-V3D-05-1); the HUD key line is longer and line 3 is new with `--no-markers` too, so `--no-markers` pictures differ from V3D-04's in the HUD text only.

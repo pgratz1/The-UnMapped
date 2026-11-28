@@ -12,8 +12,33 @@
 set(UNMAPPED_GODOT_PROJECT_DIR "${CMAKE_BINARY_DIR}/game" CACHE INTERNAL
     "Run copy of the Godot project (links to game/ plus bin/)")
 
+# The plain-C++ parts of the 3D terrain preview (spec V3D-01 6, V3D-02 8, V3D-03 5, 6): no Godot
+# types, so the unit tests (gdext-terrain-tests) link them without Godot.
+add_library(unmapped_terrain_core STATIC
+    src/terrain/terrain_data.cpp
+    src/terrain/fly_state.cpp
+    src/terrain/ground.cpp
+    src/terrain/vegetation.cpp
+    src/terrain/placeholder_meshes.cpp
+    src/terrain/near_cells.cpp
+    src/terrain/look.cpp
+    src/terrain/markers3d.cpp
+)
+target_include_directories(unmapped_terrain_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(unmapped_terrain_core PUBLIC worldgen::worldgen)
+target_compile_features(unmapped_terrain_core PUBLIC cxx_std_20)
+set_target_properties(unmapped_terrain_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+unmapped_project_target(unmapped_terrain_core)
+
 add_library(unmapped_gdext SHARED
     src/register_types.cpp
+    src/terrain/terrain_preview.cpp
+    src/terrain/terrain_check.cpp
+    src/terrain/terrain_check_ground.cpp
+    src/terrain/terrain_check_near.cpp
+    src/terrain/terrain_preview_near.cpp
+    src/terrain/terrain_preview_markers.cpp
+    src/terrain/terrain_check_markers.cpp
     src/world_file.cpp
     src/world_layer.cpp
     src/viewer/history_state.cpp
@@ -32,7 +57,7 @@ add_library(unmapped_gdext SHARED
     src/viewer/viewer_check_playback.cpp
 )
 target_include_directories(unmapped_gdext PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(unmapped_gdext PRIVATE worldgen::worldgen unmapped::godot-cpp)
+target_link_libraries(unmapped_gdext PRIVATE unmapped_terrain_core worldgen::worldgen unmapped::godot-cpp)
 target_compile_features(unmapped_gdext PRIVATE cxx_std_20)
 unmapped_project_target(unmapped_gdext)
 
@@ -62,12 +87,49 @@ if(MSVC)
     set_target_properties(unmapped_gdext PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
 endif()
 
+# --------------------------------------------------------------------------
+# Terrain3D (spec V3D-01 3.3, 3.4): the vendored plug-in is built in
+# extern/CMakeLists.txt; here it is placed in the run copy only, as
+#   Linux   addons/terrain_3d/bin/libterrain3d.so
+#   Windows addons/terrain_3d/bin/terrain3d.dll
+# and its .gdextension file is generated into the build tree.
+# --------------------------------------------------------------------------
+if(UNMAPPED_BUILD_TERRAIN3D)
+    set(_t3d_bin "${UNMAPPED_GODOT_PROJECT_DIR}/addons/terrain_3d/bin")
+    set_target_properties(unmapped_terrain3d PROPERTIES
+        OUTPUT_NAME terrain3d
+        LIBRARY_OUTPUT_DIRECTORY "${_t3d_bin}"
+        RUNTIME_OUTPUT_DIRECTORY "${_t3d_bin}"
+        PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pdb-terrain3d")
+    foreach(_cfg IN ITEMS DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+        set_target_properties(unmapped_terrain3d PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY_${_cfg} "${_t3d_bin}"
+            RUNTIME_OUTPUT_DIRECTORY_${_cfg} "${_t3d_bin}")
+    endforeach()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_options(unmapped_terrain3d PRIVATE "LINKER:--exclude-libs,ALL" "LINKER:--no-undefined")
+    endif()
+    if(MSVC)
+        set_target_properties(unmapped_terrain3d PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib-terrain3d")
+    endif()
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/terrain3d/terrain.gdextension.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/terrain3d/terrain.gdextension" @ONLY NEWLINE_STYLE LF)
+    # The run copy is assembled after the extension, which needs the plug-in
+    # in place for the scene to find the class.
+    add_dependencies(unmapped_gdext unmapped_terrain3d)
+    set(_unmapped_terrain3d_on ON)
+else()
+    set(_unmapped_terrain3d_on OFF)
+endif()
+
 # Assemble the run copy of the project after every build of the library, so
 # new files in game/ appear without reconfiguring.
 add_custom_command(TARGET unmapped_gdext POST_BUILD
     COMMAND "${CMAKE_COMMAND}"
         "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}/game"
         "-DPROJECT_DIR=${UNMAPPED_GODOT_PROJECT_DIR}"
+        "-DTERRAIN3D=${_unmapped_terrain3d_on}"
+        "-DTERRAIN3D_GDEXTENSION=${CMAKE_CURRENT_BINARY_DIR}/terrain3d/terrain.gdextension"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/assemble_project.cmake"
     VERBATIM)
 
@@ -115,7 +177,42 @@ if(UNMAPPED_BUILD_TESTS)
                     "-DPROJECT_DIR=${UNMAPPED_GODOT_PROJECT_DIR}"
                     "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/headless-check"
                     -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/headless_check.cmake")
-            set_tests_properties(gdext-headless-check PROPERTIES TIMEOUT 300)
+            # Both checks run --import on the same run copy (spec V3D-01 3.4).
+            set_tests_properties(gdext-headless-check PROPERTIES TIMEOUT 300 RESOURCE_LOCK godot-run-copy)
+            # The 3D terrain preview's check (spec V3D-01 9.2), with Terrain3D
+            # on or off.
+            add_test(NAME gdext-terrain-check
+                COMMAND "${CMAKE_COMMAND}"
+                    "-DGODOT=${UNMAPPED_GODOT}"
+                    "-DWORLDGEN_CLI=$<TARGET_FILE:worldgen-cli>"
+                    "-DDATA_DIR=${PROJECT_SOURCE_DIR}/game/data"
+                    "-DPROJECT_DIR=${UNMAPPED_GODOT_PROJECT_DIR}"
+                    "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/terrain-check"
+                    "-DTERRAIN3D=${_unmapped_terrain3d_on}"
+                    -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/terrain_check.cmake")
+            set_tests_properties(gdext-terrain-check PROPERTIES TIMEOUT 300 RESOURCE_LOCK godot-run-copy)
         endif()
     endif()
+endif()
+
+# --------------------------------------------------------------------------
+# Unit tests of the terrain preview's plain-C++ parts (spec V3D-01 9.1): no
+# Godot, so they run without the editor.
+# --------------------------------------------------------------------------
+if(UNMAPPED_BUILD_TESTS)
+    add_executable(gdext-terrain-tests
+        tests/main.cpp
+        tests/terrain_data_test.cpp
+        tests/fly_state_test.cpp
+        tests/ground_test.cpp
+        tests/vegetation_test.cpp
+        tests/meshes_test.cpp
+        tests/near_cells_test.cpp
+        tests/look_test.cpp
+        tests/markers3d_test.cpp
+    )
+    target_link_libraries(gdext-terrain-tests PRIVATE unmapped_terrain_core worldgen::worldgen unmapped::doctest)
+    unmapped_project_target(gdext-terrain-tests)
+    add_test(NAME gdext-terrain-tests COMMAND gdext-terrain-tests)
+    set_tests_properties(gdext-terrain-tests PROPERTIES TIMEOUT 300)
 endif()
