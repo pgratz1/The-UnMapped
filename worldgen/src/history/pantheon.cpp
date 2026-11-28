@@ -148,6 +148,7 @@ PantheonTuning pantheon_tuning_from(const data::ContentSet& content) {
     t.hide_permille = r.get_int("hide_permille");
     t.sanctum_hops = r.get_int("sanctum_hops");
     t.creator = acts_from(r.get_record("creator"));
+    t.cult_return_years = r.get_int("cult_return_years");  // P5-11 12.2
     return t;
 }
 
@@ -923,6 +924,18 @@ std::int64_t PantheonSubsystem::growth_permille(std::int64_t civ, std::int64_t s
         }
     }
     return std::clamp<std::int64_t>(g, -900, 1000);
+}
+
+std::int64_t PantheonSubsystem::force_act(std::int64_t civ, std::int64_t year, bool valour) const {
+    std::int64_t best = 0;
+    if (civ >= 1 && static_cast<std::size_t>(civ) <= effects_.size()) {
+        for (const Effect& x : effects_[static_cast<std::size_t>(civ - 1)]) {
+            if (x.kind == (valour ? 3 : 4) && x.from <= year && year < x.until) {
+                best = std::max(best, x.event);
+            }
+        }
+    }
+    return best;
 }
 
 std::int64_t PantheonSubsystem::force_permille(std::int64_t civ, std::int64_t year) const {

@@ -10,6 +10,7 @@
 
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/pantheon.hpp"
+#include "worldgen/history/artifacts.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -1486,6 +1487,11 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             if (figures_ != nullptr) {  // P5-06 7.2: the attacker's temper, normalized by race
                 rate = floor_div(checked_mul(rate, figures_->strain_permille(a)), 1000);
             }
+            if (artifacts_ != nullptr) {  // P5-11 7.2: a's treasure held by b
+                if (const std::int64_t claim = artifacts_->claim_permille(a, b); claim > 0) {
+                    rate = floor_div(checked_mul(rate, checked_add(1000, claim)), 1000);
+                }
+            }
             const std::int64_t next = strain_after(tuning_, strain(a, b), rate, years, permille, intensity_);
             if (next > BOUND_2_40) {
                 fail("history: bound: conflict strain of civilization " + int_text(a) + " against " + int_text(b) +
@@ -1668,6 +1674,14 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     if (const auto lp = last_peace_.find(ordered(a, b)); lp != last_peace_.end()) {
         e.causes.push_back(lp->second.event);
         std::stable_sort(e.causes.begin(), e.causes.end());
+    }
+    // P5-11 7.2: a declaration over a's treasure held by b cites the holding.
+    if (artifacts_ != nullptr && artifacts_->claim_permille(a, b) > 0) {
+        if (const std::int64_t held = artifacts_->claim_event(a, b); held != 0) {
+            e.causes.push_back(held);
+            std::stable_sort(e.causes.begin(), e.causes.end());
+            e.causes.erase(std::unique(e.causes.begin(), e.causes.end()), e.causes.end());
+        }
     }
     const std::int64_t ev = ctx.append(e);
     const RelationKey peace = symmetric_relation(a, b, "peace");

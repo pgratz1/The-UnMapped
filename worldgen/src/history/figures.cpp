@@ -80,6 +80,7 @@ enum Role : std::int64_t {
     CASTER_ROLE = 5,
     CHAMPION_ROLE = 6,  // P5-08 9
     PROPHET_ROLE = 7,
+    SMITH_ROLE = 8,  // P5-11 9
 };
 enum Status : std::int64_t { ALIVE = 1, IN_EXILE = 2, DIED = 3, FELL = 4, SLAIN = 5, FELL_WITH_REALM = 6 };
 
@@ -182,6 +183,8 @@ FiguresTuning figures_tuning_from(const data::ContentSet& content) {
     t.tower_spacing_permille = r.get_int("tower_spacing_permille");
     t.hero_return_years = r.get_int("hero_return_years");
     t.tower_lapse_years = r.get_int("tower_lapse_years");  // P5-08 12.6
+    t.smith_age_permille = r.get_int("smith_age_permille");  // P5-11 4.3
+    t.smith_age_span_permille = r.get_int("smith_age_span_permille");
     return t;
 }
 
@@ -433,6 +436,38 @@ void FiguresSubsystem::raise_divine(StepContext& ctx, std::int64_t f, std::int64
         champion_[static_cast<std::size_t>(c - 1)] = id;
         champion_to_war(ctx, id, c, event);
     }
+}
+
+void FiguresSubsystem::raise_maker(StepContext& ctx, std::int64_t f, std::int64_t c, std::int64_t event) {
+    prepare(ctx);
+    if (f != next_figure_id()) {
+        fail("history: figures: raise_maker: figure " + int_text(f) + " is not the next figure");
+    }
+    (void)line(c);  // the per-civilization vectors
+    const std::int64_t id = new_figure(ctx, SMITH_ROLE, c);
+    life_draws(ctx, id, tuning_.smith_age_permille, tuning_.smith_age_span_permille);
+    draw_person_name(ctx, id);
+    figure(id).start_event = event;
+}
+
+FigureView::Brief FiguresSubsystem::brief(std::int64_t f) const {
+    if (!figure_exists(f)) {
+        return {};
+    }
+    const Figure& x = figure(f);
+    return Brief{x.role, x.civ, x.status == ALIVE || x.status == IN_EXILE, x.death_region, x.death_settlement};
+}
+
+std::int64_t FiguresSubsystem::caster_site(std::int64_t f) const {
+    if (f == 0) {
+        return 0;
+    }
+    for (const TowerSite& t : towers_) {  // ascending site id
+        if (!t.ended && t.master == f) {
+            return t.site;
+        }
+    }
+    return 0;
 }
 
 bool FiguresSubsystem::figure_exists(std::int64_t f) const {
@@ -1078,6 +1113,8 @@ void FiguresSubsystem::die(StepContext& ctx, std::int64_t id, std::int64_t how) 
         }
     } else if (f0.role == CASTER_ROLE && f0.tower != 0 && sites_ != nullptr) {
         region = ctx.event_region(f0.tower_event);
+    } else if (f0.role == SMITH_ROLE) {
+        // P5-11 6.4: a smith dies at the place of its artifact_made.
     } else if (realm_alive) {
         region = state.settlement(civ.capital).region;
         if (f0.role == RULER) {
@@ -1829,8 +1866,8 @@ void FiguresSubsystem::epithets(const StepContext& ctx) {
     for (const auto& [key, id] : order) {
         (void)key;
         const Figure& f = figure(id);
-        if (f.role == CHAMPION_ROLE || f.role == PROPHET_ROLE) {
-            continue;  // P5-08 6.5: a champion keeps its epithet; a prophet has none
+        if (f.role == CHAMPION_ROLE || f.role == PROPHET_ROLE || f.role == SMITH_ROLE) {
+            continue;  // P5-08 6.5: a champion keeps its epithet; a prophet (P5-11: a smith) has none
         }
         std::string chosen;
         for (const EpithetRule& rule : tuning_.epithets) {

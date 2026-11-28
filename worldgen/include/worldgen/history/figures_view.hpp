@@ -59,6 +59,23 @@ public:
         (void)civ;
         return 0;
     }
+    // P5-11 7.3: a figure's role, civilization, whether it lives (status 1
+    // or 2) and its place of death (all 0 for an unknown id); the open kind 4
+    // site whose master is the caster, or whose last master it was when it
+    // has died (0 none). Defaults for views that keep no figures.
+    struct Brief {
+        std::int64_t role = 0, civ = 0;
+        bool alive = false;
+        std::int64_t death_region = 0, death_settlement = 0;
+    };
+    [[nodiscard]] virtual Brief brief(std::int64_t figure) const {
+        (void)figure;
+        return {};
+    }
+    [[nodiscard]] virtual std::int64_t caster_site(std::int64_t figure) const {
+        (void)figure;
+        return 0;
+    }
 };
 
 }  // namespace worldgen::history

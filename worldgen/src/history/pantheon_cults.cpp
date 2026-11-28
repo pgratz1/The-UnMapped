@@ -328,6 +328,13 @@ void PantheonSubsystem::spreads(StepContext& ctx) {
             if (from == 0) {
                 continue;
             }
+            // P5-11 12.2: no spread back into a realm that put the cult down
+            // within cult_return_years.
+            if (const auto bar = suppressed_.find({k, a});
+                bar != suppressed_.end() && bar->second > ctx.year() - tuning_.cult_return_years) {
+                stats_.cult_returns_barred += 1;
+                continue;
+            }
             if (quiet(ctx) && ctx.quiet_events_left(a) <= 0) {
                 continue;  // no draw
             }
@@ -493,6 +500,7 @@ void PantheonSubsystem::faiths(StepContext& ctx) {
         e.values = {hidden ? 1 : 0};
         e.causes = {latest_.at({k, c})};
         const std::int64_t ev = ctx.append(e);
+        suppressed_[{k, c}] = ctx.year();  // P5-11 12.2
         // 1. The realm's cult_in closes; its temples of the cult end (8).
         ctx.state().close_relation(cult_key(k, c, "cult_in"), ev);
         cult_in_.erase({k, c});

@@ -116,6 +116,7 @@ public:
     [[nodiscard]] bool arms(std::int64_t c) const override;
     [[nodiscard]] std::int64_t arms_event(std::int64_t c) const override;  // P5-04a 9.2
     [[nodiscard]] std::vector<std::pair<std::int64_t, std::int64_t>> partners(std::int64_t c) const override;  // P5-08 7.4
+    [[nodiscard]] std::int64_t forge_site(std::int64_t c) const override;  // P5-11 7.4
 
     // Inspection (tests).
     [[nodiscard]] const AlliancesTuning& tuning() const noexcept { return tuning_; }

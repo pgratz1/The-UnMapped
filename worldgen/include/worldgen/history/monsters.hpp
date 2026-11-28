@@ -38,6 +38,7 @@ namespace worldgen::history {
 class ConflictSubsystem;  // P5-07 7.3: the flight seam
 struct DeepFlightPlan;
 class AllianceView;       // P5-07 r2 7.6: the allies of a waking realm
+class ArtifactView;       // P5-11 7.2: hunt strength and hoard motive
 class RelationsSubsystem;  // P5-07 r2 6.11: the aid's goodwill
 
 // The bounds of P5-02 5.
@@ -287,6 +288,22 @@ public:
     [[nodiscard]] std::int64_t living_count(std::size_t kind) const { return living_of(kind); }
     void end_site_seam(std::int64_t site, std::int64_t year, std::int64_t event, std::int64_t ending);
 
+    // P5-11 7.5: const reads for the artifacts. A site's kind, region, cell,
+    // settlement, whether it is open, its ending code and event, and a mine's
+    // last delving_deepened (std::nullopt for an unknown id); whether a
+    // monster lives (awake or asleep); its lair (site id, 0 for an unknown id).
+    struct SiteBrief {
+        std::int64_t kind = 0, region = 0, x = 0, y = 0, settlement = 0;
+        bool open = false;
+        std::int64_t ending = 0, ending_event = 0, deepen_event = 0;
+    };
+    [[nodiscard]] std::optional<SiteBrief> site_brief(std::int64_t site) const;
+    [[nodiscard]] bool monster_alive(std::int64_t monster) const;
+    [[nodiscard]] std::int64_t lair_of(std::int64_t monster) const;
+    // P5-11 7.2: the artifacts' hunt strength and hoard motive (set once by
+    // the stage; nullptr: none, as at 0.30.0).
+    void set_artifacts(const ArtifactView* artifacts) noexcept { artifacts_ = artifacts; }
+
     // 6.2.2: the beast rows of the run's end (year end_year - 1), called by
     // the stage once the engine has run. Idempotent.
     void finish(std::int64_t end_year);
@@ -527,6 +544,7 @@ private:
     MonstersStats stats_;
     const RenamingSubsystem* renaming_ = nullptr;  // P5-03 12.2
     const FigureView* figures_ = nullptr;          // P5-06 7.1
+    const ArtifactView* artifacts_ = nullptr;      // P5-11 7.2
     std::vector<std::int64_t> heroes_slain_;       // ruling G1: heroes slain in the T4 of heroes_slain_year_
     std::int64_t heroes_slain_year_ = -1;
     std::uint64_t name_key_ = 0;                   // P5-03 12.2: hist.names.monster

@@ -274,6 +274,23 @@ std::int64_t AlliancesSubsystem::forge_depth(std::int64_t c) const {
     return d;
 }
 
+std::int64_t AlliancesSubsystem::forge_site(std::int64_t c) const {
+    if (sites_ == nullptr) {
+        return 0;
+    }
+    std::int64_t best = 0;
+    std::int64_t depth = -1;
+    for (auto it = mines_.lower_bound(Pair{c, 0}); it != mines_.end() && it->first.first == c; ++it) {
+        const std::int64_t s = it->second.site;
+        const std::int64_t d = sites_->mine_depth(s);
+        if (d > depth || (d == depth && s < best)) {
+            best = s;
+            depth = d;
+        }
+    }
+    return best;
+}
+
 std::int64_t AlliancesSubsystem::arms_event(std::int64_t c) const {
     if (!arms(c)) {
         return 0;

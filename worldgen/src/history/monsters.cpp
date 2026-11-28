@@ -8,6 +8,8 @@
 
 #include "worldgen/history/monsters.hpp"
 
+#include "worldgen/history/artifacts.hpp"
+
 #include <algorithm>
 #include <initializer_list>
 #include <limits>
@@ -649,6 +651,30 @@ void MonstersSubsystem::end_site_seam(std::int64_t id, std::int64_t year, std::i
 
 std::size_t MonstersSubsystem::monster_kind_of(std::int64_t id) const {
     return monster(id).kind;
+}
+
+std::optional<MonstersSubsystem::SiteBrief> MonstersSubsystem::site_brief(std::int64_t id) const {
+    if (id < 1 || static_cast<std::size_t>(id) > sites_.size()) {
+        return std::nullopt;
+    }
+    const Site& t = sites_[static_cast<std::size_t>(id - 1)];
+    return SiteBrief{t.kind, t.region, t.x, t.y, t.settlement, !t.ended_year.has_value(),
+                     t.ending, t.ending_event, t.deepen_event};
+}
+
+bool MonstersSubsystem::monster_alive(std::int64_t id) const {
+    if (id < 1 || static_cast<std::size_t>(id) > monsters_.size()) {
+        return false;
+    }
+    const MonsterStatus s = monsters_[static_cast<std::size_t>(id - 1)].status;
+    return s == MonsterStatus::awake || s == MonsterStatus::asleep;
+}
+
+std::int64_t MonstersSubsystem::lair_of(std::int64_t id) const {
+    if (id < 1 || static_cast<std::size_t>(id) > monsters_.size()) {
+        return 0;
+    }
+    return monsters_[static_cast<std::size_t>(id - 1)].lair;
 }
 
 std::optional<MonstersSubsystem::HeightCell> MonstersSubsystem::height_cell(const StepContext& ctx,
@@ -1588,14 +1614,21 @@ void MonstersSubsystem::hunts(StepContext& ctx, std::int64_t id) {
             std::find(heroes_slain_.begin(), heroes_slain_.end(), hero.figure) != heroes_slain_.end()) {
             hero = FigureView::Hero{};  // lead ruling G1: slain in this step, no hero for the rest of it
         }
+        // P5-11 7.2: a hoard of c's treasure adds to the chance as a hero
+        // does; the hero's borne artifacts add to its might.
+        const std::int64_t motive = artifacts_ != nullptr ? artifacts_->hoard_motive_permille(id, c) : 0;
+        const std::int64_t arms =
+            artifacts_ != nullptr && hero.figure != 0 ? artifacts_->hunt_permille(hero.figure) : 0;
         const std::int64_t p_hunt = std::min(
-            checked_add(tuning_.hunt_max_permille, hero.hunt_permille),
-            checked_add(checked_add(tuning_.hunt_permille,
-                                    checked_mul(std::max<std::int64_t>(0, r_c - 1), tuning_.hunt_raid_permille)),
-                        hero.hunt_permille));
+            checked_add(checked_add(tuning_.hunt_max_permille, hero.hunt_permille), motive),
+            checked_add(checked_add(checked_add(tuning_.hunt_permille,
+                                                checked_mul(std::max<std::int64_t>(0, r_c - 1),
+                                                            tuning_.hunt_raid_permille)),
+                                    hero.hunt_permille),
+                        motive));
         const std::int64_t hunters = hunt_levy(ctx, id, c);
         std::int64_t strength = floor_div(checked_mul(hunters, hunt_prowess(state, c)), 1000);
-        strength = floor_div(checked_mul(strength, checked_add(1000, hero.might_permille)), 1000);
+        strength = floor_div(checked_mul(strength, checked_add(checked_add(1000, hero.might_permille), arms)), 1000);
         if (strength == 0) {
             continue;
         }

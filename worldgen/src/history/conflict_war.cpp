@@ -15,8 +15,10 @@
 #include "conflict_internal.hpp"
 #include "worldgen/core/checked.hpp"
 #include "worldgen/core/wide.hpp"
+#include "worldgen/history/artifacts.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/draw.hpp"
+#include "worldgen/history/pantheon.hpp"
 
 namespace worldgen::history {
 
@@ -140,9 +142,13 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     const bool led = gx.figure != 0 || gy.figure != 0;
     std::int64_t p = battle_permille_of(attack, defend, def);
     if (led) {
-        const std::int64_t a2 = floor_div(checked_mul(attack, checked_add(1000, gx.skill)), 1000);
+        // P5-11 7.2: a general's borne arms add to its skill in the win chance.
+        const std::int64_t bx = artifacts_ != nullptr && gx.figure != 0 ? artifacts_->battle_permille(gx.figure) : 0;
+        const std::int64_t by = artifacts_ != nullptr && gy.figure != 0 ? artifacts_->battle_permille(gy.figure) : 0;
+        const std::int64_t a2 =
+            floor_div(checked_mul(attack, checked_add(checked_add(1000, gx.skill), bx)), 1000);
         const std::int64_t d1 = floor_div(checked_mul(defend, def), 1000);
-        const std::int64_t d2 = floor_div(checked_mul(d1, checked_add(1000, gy.skill)), 1000);
+        const std::int64_t d2 = floor_div(checked_mul(d1, checked_add(checked_add(1000, gy.skill), by)), 1000);
         const std::int64_t sum = checked_add(a2, d2);
         p = sum > 0 ? floor_div(checked_mul(a2, 1000), sum) : 500;
     }
@@ -200,6 +206,27 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
             std::stable_sort(e.causes.begin(), e.causes.end());
             arms_cited_.insert(arms);
         }
+    }
+    // P5-11 7.2: a led battle cites the winner's general's arms; 12.1: every
+    // battle cites the winner's valour and the loser's defeat in force.
+    const std::size_t plain_causes = e.causes.size();
+    if (led && artifacts_ != nullptr) {
+        const std::int64_t gw = (x_wins ? gx : gy).figure;
+        if (const std::int64_t made = gw != 0 ? artifacts_->battle_artifact(gw) : 0; made != 0) {
+            e.causes.push_back(made);
+        }
+    }
+    if (divine_ != nullptr) {
+        if (const std::int64_t act = divine_->force_act(winner, ctx.year(), true); act != 0) {
+            e.causes.push_back(act);
+        }
+        if (const std::int64_t act = divine_->force_act(loser, ctx.year(), false); act != 0) {
+            e.causes.push_back(act);
+        }
+    }
+    if (e.causes.size() != plain_causes) {
+        std::stable_sort(e.causes.begin(), e.causes.end());
+        e.causes.erase(std::unique(e.causes.begin(), e.causes.end()), e.causes.end());
     }
     const std::int64_t ev = ctx.append(e);
     // P5-04 7.7: a side's dead split over its allies in ascending id by

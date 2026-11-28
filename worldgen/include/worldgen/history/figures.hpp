@@ -82,6 +82,8 @@ struct FiguresTuning {
     std::int64_t tower_spacing_permille = 0, hero_return_years = 100000;
     // P5-08 12.6 (generator 0.30.0): a master-less tower lapses after these years; 0 never.
     std::int64_t tower_lapse_years = 0;
+    // P5-11 4.3 (generator 0.31.0): a smith's age at entry.
+    std::int64_t smith_age_permille = 250, smith_age_span_permille = 300;
 
     friend bool operator==(const FiguresTuning&, const FiguresTuning&) = default;
 };
@@ -137,12 +139,19 @@ public:
     [[nodiscard]] std::int64_t champion_of(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t caster_of(std::int64_t civ) const override;
     [[nodiscard]] std::int64_t ruler_figure(std::int64_t civ) const override;
+    // P5-11 7.3.
+    [[nodiscard]] Brief brief(std::int64_t figure) const override;
+    [[nodiscard]] std::int64_t caster_site(std::int64_t figure) const override;
     [[nodiscard]] std::int64_t next_figure_id() const noexcept { return static_cast<std::int64_t>(figures_.size()) + 1; }
     // Creates figure `figure` (fatal unless it is the next id) of role 6
     // (champion: hero ages, skill skill_max, the epithet) or 7 (prophet:
     // caster ages) for civ, start_event `event`, with its name and life.
     void raise_divine(StepContext& context, std::int64_t figure, std::int64_t role, std::int64_t civ,
                       std::int64_t event, std::string_view epithet);
+    // P5-11 7.3: creates figure `figure` (fatal unless it is the next id) of
+    // role 8 (smith: smith ages, no epithet) for civ, start_event `event`
+    // (its artifact_made), with its name and life.
+    void raise_maker(StepContext& context, std::int64_t figure, std::int64_t civ, std::int64_t event);
 
     // The rows of tables figure and book (9.1, 9.3), ascending id.
     [[nodiscard]] std::vector<db::FigureRow> figure_rows() const;

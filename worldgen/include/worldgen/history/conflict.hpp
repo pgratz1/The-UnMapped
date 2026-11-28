@@ -31,6 +31,7 @@
 namespace worldgen::history {
 
 class DivineView;  // P5-08 7.1 (pantheon.hpp)
+class ArtifactView;  // P5-11 7.1 (artifacts.hpp)
 
 // --- Tuning (12.1) -------------------------------------------------------------------------
 
@@ -315,6 +316,12 @@ public:
         (void)c;
         return {};
     }
+    // P5-11 7.4: the open mine of c with the largest mine_depth, then the
+    // smallest site id; 0 none. A default for views that keep no mines.
+    [[nodiscard]] virtual std::int64_t forge_site(std::int64_t c) const {
+        (void)c;
+        return 0;
+    }
 };
 
 // P5-04 7.6: an ally that joined a war, in join order.
@@ -423,6 +430,9 @@ public:
     void set_figures(const FigureView* view) noexcept { figures_ = view; }
     // P5-08 7.1: the gods' effects on force (nullptr: neutral).
     void set_divine(const DivineView* view) noexcept { divine_ = view; }
+    // P5-11 7.2: the artifacts' battle bonus, claims and their causes
+    // (nullptr: none, as at 0.30.0).
+    void set_artifacts(const ArtifactView* view) noexcept { artifacts_ = view; }
 
     // P5-04 7.13: const reads with the live state of the step.
     [[nodiscard]] std::int64_t disposition_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
@@ -680,6 +690,7 @@ private:
     const AllianceView* alliances_ = nullptr;        // P5-04 7.1
     const FigureView* figures_ = nullptr;            // P5-06 7.1
     const DivineView* divine_ = nullptr;             // P5-08 7.1
+    const ArtifactView* artifacts_ = nullptr;        // P5-11 7.2
     std::set<std::int64_t> arms_cited_;              // P5-04a 9.2: arms_sold events cited by a battle
 };
 

@@ -52,6 +52,15 @@ public:
     [[nodiscard]] virtual std::int64_t force_permille(std::int64_t civ, std::int64_t year) const = 0;
     // A profane shrine's region in its years.
     [[nodiscard]] virtual bool shunned(std::int64_t region, std::int64_t year) const = 0;
+    // P5-11 12.1: the largest event id among the acts on civ whose valour
+    // (valour true) or defeat (false) is in force at `year`; 0 none. A
+    // default for views that keep no acts.
+    [[nodiscard]] virtual std::int64_t force_act(std::int64_t civ, std::int64_t year, bool valour) const {
+        (void)civ;
+        (void)year;
+        (void)valour;
+        return 0;
+    }
 };
 
 // The bound of 5 (H2).
@@ -113,6 +122,7 @@ struct PantheonTuning {
     std::int64_t faith_points = 60, rival_faith_points = 40, suppress_points = 120;
     std::int64_t hide_permille = 400, sanctum_hops = 3;
     GodActs creator;
+    std::int64_t cult_return_years = 0;  // P5-11 12.2 (generator 0.31.0); 0: no bar
 
     friend bool operator==(const PantheonTuning&, const PantheonTuning&) = default;
 };
@@ -129,6 +139,7 @@ struct PantheonStats {
     std::int64_t flares = 0, flares_acted = 0, dead = 0;
     std::int64_t cults_founded = 0, spreads = 0, adopted = 0, suppressed = 0, hidden = 0, ended = 0;
     std::int64_t prophets = 0;
+    std::int64_t cult_returns_barred = 0;  // P5-11 12.2
 };
 
 class PantheonSubsystem final : public Subsystem,
@@ -168,6 +179,7 @@ public:
                                                std::int64_t year) const override;
     [[nodiscard]] std::int64_t force_permille(std::int64_t civ, std::int64_t year) const override;
     [[nodiscard]] bool shunned(std::int64_t region, std::int64_t year) const override;
+    [[nodiscard]] std::int64_t force_act(std::int64_t civ, std::int64_t year, bool valour) const override;
 
     // The rows of table faction (9), ascending id.
     [[nodiscard]] std::vector<db::FactionRow> faction_rows() const;
@@ -315,6 +327,7 @@ private:
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cult_in_;  // (cult, civ) -> its opening event
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> latest_;   // (cult, civ) -> its latest cult event
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> faith_of_;  // civ -> (cult, cult_adopted)
+    std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> suppressed_;  // P5-11 12.2: (cult, civ) -> last year
     std::vector<std::pair<std::int64_t, std::int64_t>> ended_realms_;  // (civ, ending event) read this step
     std::int64_t pending_flare_ = 0;
     std::array<std::int64_t, 3> flared_{};  // (god, civ, deed event), 0s none
