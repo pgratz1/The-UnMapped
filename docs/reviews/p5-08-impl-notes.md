@@ -223,3 +223,29 @@ From `docs/reviews/p5-08-integration-notes.md`, "Engine defects".
   loop; `pantheon_tables_problem` checks them last (after its value checks), with the view's former message
   `corrupt table 'event_participant': row (e, s): god|faction <id> does not exist`. Both readers call it, so their
   first errors agree (a deleted god now reports `corrupt table 'god': row ...: id ... is not ...` in both).
+
+## Viewer (viewer engineer, 2026-11-27; `gdext/` and `game/` only, no library change)
+
+- **Markers.** Glyph names `shrine`, `temple`, `sanctum` (21 to 23) with the library's fills and offsets; the Markers
+  group gains the boxes `Shrines` and `Temples` (options `shrines`, `temples`; enabled only while `Sites` is on, since
+  the library draws them only then; the boxes sit in an `HFlowContainer` now); key rows `shrine`, `temple`,
+  `hidden sanctum` after `tower`.
+- **Hover.** 11.2 item 2 as written: `<name> (holy to|cursed by <god>), since <year>`, `<name> (temple of <cult>),
+  since <year>`, `<name> (hidden sanctum of <cult>), since <year>` (`HistoryState::faith_site_text`: the `god` and
+  `faction` participants of the site's origin event, `profane` from the `divine_mark` value). A standing settlement's
+  hover gains `; <that text>` for each shrine and temple founded by Y; a temple ended by Y adds
+  `, lost|abandoned|suppressed in <year>` (reading: ended sites leave the map, so the ending shows on the settlement;
+  ending 4 is worded `lost`, the report's word). The territory hover gains `, faith: <cult>` (`Timeline::faith_at`).
+- **Browser.** The group `gods` comes from `ALL_GROUPS` (menu, `set_browser_group`, `--browser-group gods`). A third
+  entity tab `Gods` (`%GodList`) lists the gods then the cults; `g<id>`, `fa<id>` links select them (scope Selected,
+  follow on) and show `god_block`/`cult_block`; `si<id>` links select the site's settlement, else its region, as the
+  place. `EventFilter` has no god or faction field, so `BrowserState::refresh_list` keeps the events naming the
+  selected god or cult as a participant (a viewer-side filter; a library field would be the cleaner home).
+- **Checks.** M16 (shrine, temple, sanctum: absent before origin, glyph, fill, offset, hover by model and mouse, the
+  settlement's hover, the two boxes), M17 (an ended temple), M18 (faith in the territory hover), B16 (group `gods` =
+  kinds 100 to 108, the Gods tab, a cult and its god selected with blocks and event lists, a realm's `faith:` link, a
+  site link); M1, M7, H6, B6, B13, B14 updated. Option `--expect-pantheon`. Worlds: the main world is now **seed 45**
+  (seed 49 has no `region_ceded` at 0.30.0); a pantheon world **seed 44** (the smallest seed >= 42 at 512 with all
+  three site kinds and a temple abandoned or suppressed). Seeds recorded in `gdext/README.md`; CLAUDE.md's headless
+  check paragraph still names seed 49 (lead's file).
+- Screenshots: `~/.cache/the-unmapped/out/p508-viewer/p508-map-markers.png`, `p508-browser-cult.png` (seed 44).

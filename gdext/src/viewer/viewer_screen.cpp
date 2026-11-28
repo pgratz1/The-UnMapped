@@ -203,6 +203,8 @@ void ViewerScreen::_ready() {
     mark_events_ = require<godot::CheckBox>("MarkEvents");
     mark_passes_ = require<godot::CheckBox>("MarkPasses");
     mark_sites_ = require<godot::CheckBox>("MarkSites");
+    mark_shrines_ = require<godot::CheckBox>("MarkShrines");
+    mark_temples_ = require<godot::CheckBox>("MarkTemples");
     marker_legend_ = require<godot::ItemList>("MarkerLegend");
     right_pane_ = require<godot::TabContainer>("RightPane");
     browser_back_ = require<godot::Button>("BrowserBack");
@@ -211,6 +213,7 @@ void ViewerScreen::_ready() {
     entity_tabs_ = require<godot::TabBar>("EntityTabs");
     civ_list_ = require<godot::Tree>("CivList");
     figure_list_ = require<godot::Tree>("FigureList");
+    god_list_ = require<godot::Tree>("GodList");
     search_results_ = require<godot::ItemList>("SearchResults");
     event_scope_ = require<godot::OptionButton>("EventScope");
     event_group_ = require<godot::OptionButton>("EventGroup");
@@ -228,14 +231,15 @@ void ViewerScreen::_ready() {
     ticker_ = require<godot::Control>("Ticker");
     ticker_lines_ = require<godot::Control>("TickerLines");
     wired_ = right_pane_ != nullptr && browser_back_ != nullptr && browser_forward_ != nullptr &&
-             browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr && figure_list_ != nullptr &&
+             browser_search_ != nullptr && entity_tabs_ != nullptr && civ_list_ != nullptr && figure_list_ != nullptr && god_list_ != nullptr &&
              search_results_ != nullptr && event_scope_ != nullptr && event_group_ != nullptr &&
              event_all_ != nullptr && event_from_ != nullptr && event_to_ != nullptr &&
              event_this_year_ != nullptr && follow_toggle_ != nullptr && follow_first_ != nullptr &&
              event_list_ != nullptr && browser_detail_ != nullptr && play_button_ != nullptr &&
              play_speed_ != nullptr && play_skip_quiet_ != nullptr && ticker_ != nullptr && ticker_lines_ != nullptr &&
              markers_toggle_ != nullptr && mark_faded_ != nullptr && mark_events_ != nullptr &&
-             mark_passes_ != nullptr && mark_sites_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
+             mark_passes_ != nullptr && mark_sites_ != nullptr && mark_shrines_ != nullptr &&
+             mark_temples_ != nullptr && marker_legend_ != nullptr && open_button_ != nullptr && open_dialog_ != nullptr && file_label_ != nullptr && layer_list_ != nullptr &&
              meta_tree_ != nullptr && map_view_ != nullptr && status_label_ != nullptr && cell_label_ != nullptr &&
              legend_title_ != nullptr && legend_list_ != nullptr && year_slider_ != nullptr &&
              year_marks_ != nullptr && year_field_ != nullptr && year_label_ != nullptr && year_counts_ != nullptr;
@@ -269,6 +273,10 @@ void ViewerScreen::_ready() {
                               callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("passes")));
         mark_sites_->connect("toggled",
                              callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("sites")));
+        mark_shrines_->connect("toggled",
+                               callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("shrines")));
+        mark_temples_->connect("toggled",
+                               callable_mp(this, &ViewerScreen::on_marker_option_toggled).bind(godot::String("temples")));
         update_marker_controls();
         year_slider_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_slider_changed));
         year_field_->connect("value_changed", callable_mp(this, &ViewerScreen::on_year_field_changed));
@@ -341,6 +349,8 @@ void ViewerScreen::_ready() {
             check_expect_library_ = args[++i].to_int();
         } else if (arg == "--expect-depths") {
             check_expect_depths_ = true;
+        } else if (arg == "--expect-pantheon") {
+            check_expect_pantheon_ = true;
         } else if (arg == "--history-summary" && i + 1 < args.size()) {
             check_history_summary_ = args[++i];
         } else if (arg == "--select" && i + 1 < args.size()) {
@@ -501,6 +511,7 @@ void ViewerScreen::run_check_deferred() {
     options.expect_mines = check_expect_mines_;
     options.expect_library = check_expect_library_;
     options.expect_depths = check_expect_depths_;
+    options.expect_pantheon = check_expect_pantheon_;
     options.history_summary = check_history_summary_;
     options.wired = wired_;
     const int exit_code = run_viewer_check(*this, options);
@@ -631,12 +642,21 @@ void ViewerScreen::update_marker_controls() {
     const bool enabled = available && model_->get_markers_enabled();
     markers_toggle_->set_pressed_no_signal(enabled);
     markers_toggle_->set_disabled(!available);
-    const std::array<std::pair<godot::CheckBox*, const char*>, 4> boxes{
-        {{mark_faded_, "faded"}, {mark_events_, "events"}, {mark_passes_, "passes"}, {mark_sites_, "sites"}}};
+    const std::array<std::pair<godot::CheckBox*, const char*>, 6> boxes{
+        {{mark_faded_, "faded"},
+         {mark_events_, "events"},
+         {mark_passes_, "passes"},
+         {mark_sites_, "sites"},
+         {mark_shrines_, "shrines"},
+         {mark_temples_, "temples"}}};
+    const bool sites = enabled && model_->get_marker_option("sites");
     for (const auto& [box, name] : boxes) {
         // Without markers the boxes show the defaults (8.2: faded off).
         box->set_pressed_no_signal(available ? model_->get_marker_option(name) : godot::String(name) != "faded");
-        box->set_disabled(!enabled);
+        // P5-08 11.2: shrines and temples are kinds of site, so their boxes
+        // follow Sites.
+        const bool sub = box == mark_shrines_ || box == mark_temples_;
+        box->set_disabled(sub ? !sites : !enabled);
     }
     const godot::Array legend = model_->get_marker_legend();
     // The key list changes only with the options and the flag: rebuilt

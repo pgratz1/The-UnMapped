@@ -179,8 +179,9 @@ public:
     bool set_markers_enabled(bool on);
     // "faded" (old ruins, P5-06 25.1 (e)), "events", "passes", "sites"
     // (MarkerOptions::sites: mines and towers, P5-04 11.3, P5-06 11.4; "mines"
-    // is accepted as its former name); false for any other name or when not
-    // available.
+    // is accepted as its former name), and (P5-08 11.1) "shrines" and
+    // "temples" (temples and hidden sanctums), drawn only with "sites" on;
+    // false for any other name or when not available.
     [[nodiscard]] bool get_marker_option(const godot::String& name) const;
     bool set_marker_option(const godot::String& name, bool on);
     // Array of Dictionary in draw order (P4-04 6.1): {type, id, x, y, glyph,
@@ -219,6 +220,16 @@ public:
     [[nodiscard]] godot::Array get_figure_list() const;
     // figure_block's lines at the current level, as get_civilization_block.
     [[nodiscard]] godot::Array get_figure_block(int64_t figure) const;
+    // P5-08 11.1: Array of {target ("g<id>" or "fa<id>"), kind ("god" or
+    // "cult"), id, name, detail (a god's title; a cult's god), founded_year
+    // and ended_year (cults; -1 open or a god), status (a cult's word:
+    // "present", "hidden", "ended"; empty for a god)}: the gods ascending id,
+    // then the cults ascending id.
+    [[nodiscard]] godot::Array get_god_list() const;
+    // god_block's and cult_block's lines, as get_civilization_block; empty
+    // for an id the world lacks.
+    [[nodiscard]] godot::Array get_god_block(int64_t god) const;
+    [[nodiscard]] godot::Array get_cult_block(int64_t cult) const;
     [[nodiscard]] godot::PackedInt64Array get_event_ids() const;
     [[nodiscard]] godot::PackedStringArray get_event_rows() const;
     // Dictionary of 5.2; empty for an unknown id.
@@ -237,6 +248,12 @@ public:
     bool select_civilization(int64_t civilization);
     // P5-06 11.3: a figure, as select_civilization (0 clears).
     bool select_figure(int64_t figure);
+    // P5-08 11.1: a god (entity type 2) or a cult (faction, type 7), as
+    // select_civilization (0 clears). The list of scope Selected holds the
+    // events with it as a participant (EventFilter has no field for them, so
+    // BrowserState filters the selection by participant).
+    bool select_god(int64_t god);
+    bool select_cult(int64_t cult);
     // event = e and Y its year; pushes the path.
     bool select_event(int64_t event);
     // type 4 (settlement) or 5 (region); scope place, event cleared; pushes
@@ -386,6 +403,9 @@ private:
     void rebuild_mask();
     // Restores a path entry (selection, scope, year).
     void restore_path(const BrowserPathEntry& entry);
+    // P5-08: selects (type, id) as select_civilization does (0 clears);
+    // the caller has checked the id.
+    bool select_entity(int64_t type, int64_t id);
     // The model side of a selection change: refresh, then
     // browser_selection_changed.
     void selection_changed(bool list);

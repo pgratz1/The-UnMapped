@@ -687,8 +687,21 @@ void check_with_history(Checker& check, ViewerScreen& screen, const ViewerCheckO
                         }
                     }
                 }
+                // P5-08 11.2 item 2: the realm's faith, named from the
+                // check's own faction rows.
+                godot::String faith;
+                const auto& history = model->history_state().history();
+                const int64_t cult = history.timeline.faith_at(civ, model->get_year());
+                if (cult != 0) {
+                    faith = ", faith: cult " + num(cult);
+                    for (const auto& k : history.tables.factions) {
+                        if (k.id == cult) {
+                            faith = ", faith: " + to_godot(k.name);
+                        }
+                    }
+                }
                 return "   |   held by " + (c != nullptr ? to_godot(c->name) : godot::String("?")) + " since " +
-                       num(since) + ruled;
+                       num(since) + ruled + faith;
             }
             return since > 0 ? "   |   free since " + num(since) : godot::String("   |   free");
         };
@@ -899,6 +912,9 @@ std::vector<std::string> expected_marker_legend(bool faded, bool events, bool pa
     if (mines) {
         rows.emplace_back("mine");   // P5-04 11.3
         rows.emplace_back("tower");  // P5-06 11.4
+        for (const char* label : {"shrine", "temple", "hidden sanctum"}) {  // P5-08 11.2
+            rows.emplace_back(label);
+        }
     }
     return rows;
 }
@@ -966,9 +982,18 @@ std::vector<std::string> expected_marker_rows(const ViewerModel& model) {
     for (int pass = 3; pass <= 6; ++pass) {
         if (pass == 5) {  // P5-04 11.3: mines between ruins and standing settlements
             for (const auto& site : m.sites) {
-                const bool tower = site.kind == 4;  // P5-06 11.4
-                row("site", site.site, site.x, site.y, tower ? "tower" : "mine",
-                    rgb(tower ? worldgen::inspect::MARKER_TOWER : worldgen::inspect::MARKER_MINE), false, true);
+                // P5-06 11.4 towers, P5-08 11.1 shrines, temples, sanctums.
+                const char* glyph = site.kind == 4   ? "tower"
+                                    : site.kind == 5 ? "shrine"
+                                    : site.kind == 6 ? "temple"
+                                    : site.kind == 7 ? "sanctum"
+                                                     : "mine";
+                const worldgen::inspect::Rgb fill = site.kind == 4   ? worldgen::inspect::MARKER_TOWER
+                                                    : site.kind == 5 ? worldgen::inspect::MARKER_SHRINE
+                                                    : site.kind == 6 ? worldgen::inspect::MARKER_TEMPLE
+                                                    : site.kind == 7 ? worldgen::inspect::MARKER_SANCTUM
+                                                                     : worldgen::inspect::MARKER_MINE;
+                row("site", site.site, site.x, site.y, glyph, rgb(fill), false, true);
             }
         }
         for (const auto& s : m.settlements) {
@@ -1083,7 +1108,8 @@ void check_markers_without_history(Checker& check, ViewerScreen& screen) {
                  "M0 no markers without history: available false, no entries, no key list");
     check.expect(screen.markers_toggle()->is_disabled() && screen.mark_faded()->is_disabled() &&
                      screen.mark_events()->is_disabled() && screen.mark_passes()->is_disabled() &&
-                     screen.mark_sites()->is_disabled(),
+                     screen.mark_sites()->is_disabled() && screen.mark_shrines()->is_disabled() &&
+                     screen.mark_temples()->is_disabled(),
                  "M0 every control of the Markers group is disabled");
     const bool enabled = model->get_markers_enabled();
     const bool set = model->set_markers_enabled(!enabled);
@@ -1104,19 +1130,23 @@ void check_markers_at_open(Checker& check, ViewerScreen& screen) {
                                                            model->get_markers_error_message()));
     const bool options = !model->get_marker_option("faded") && model->get_marker_option("events") &&
                          model->get_marker_option("passes") && model->get_marker_option("sites") &&
+                         model->get_marker_option("shrines") && model->get_marker_option("temples") &&
                          !model->get_marker_option("other");
     const bool boxes = screen.markers_toggle()->is_pressed() && !screen.mark_faded()->is_pressed() &&
                        screen.mark_events()->is_pressed() && screen.mark_passes()->is_pressed() &&
                        screen.mark_sites()->is_pressed() && !screen.mark_sites()->is_disabled() &&
+                       screen.mark_shrines()->is_pressed() && !screen.mark_shrines()->is_disabled() &&
+                       screen.mark_temples()->is_pressed() && !screen.mark_temples()->is_disabled() &&
                        !screen.markers_toggle()->is_disabled() && !screen.mark_faded()->is_disabled();
-    const bool words = screen.mark_faded()->get_text() == "Old ruins" && screen.mark_sites()->get_text() == "Sites";
+    const bool words = screen.mark_faded()->get_text() == "Old ruins" && screen.mark_sites()->get_text() == "Sites" &&
+                       screen.mark_shrines()->get_text() == "Shrines" && screen.mark_temples()->get_text() == "Temples";
     check.expect(options && boxes && words,
-                 "M1 options old ruins off, events on, passes on, sites on, in the model and the boxes 'Old ruins' "
-                 "and 'Sites' (P5-06 11.4, 25.1 (e))");
+                 "M1 options old ruins off, events on, passes on, sites, shrines and temples on, in the model and the "
+                 "boxes 'Old ruins', 'Sites', 'Shrines' and 'Temples' (P5-06 11.4, 25.1 (e), P5-08 11.2)");
     const auto labels = legend_labels(model->get_marker_legend());
     check.expect(labels == expected_marker_legend(false, true, true) &&
                      screen.marker_legend()->get_item_count() == static_cast<int64_t>(labels.size()),
-                 "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'old ruin', 'tower' after 'mine'");
+                 "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'old ruin', 'tower' after 'mine', then 'shrine', 'temple', 'hidden sanctum'");
     // P4-05 12.1 F7: each key icon shows its glyph at g = 2, the rings at
     // g = 1: the drawn extent is that of the glyph's non-zero cells times g.
     const godot::Array legend = model->get_marker_legend();
@@ -1868,6 +1898,498 @@ void check_depths(Checker& check, ViewerScreen& screen, const ViewerCheckOptions
     model->set_year(end);
 }
 
+// --- Pantheon and cults (P5-08 11.2): M16 to M18 and B16 ---------------------
+
+// The entity of role `role` in event e (the kind's role by key), 0 none.
+int64_t role_entity(const worldgen::history::HistoryView& v, const worldgen::history::HistoryView::Event* e,
+                    const char* role) {
+    if (e == nullptr) {
+        return 0;
+    }
+    const auto* kind = v.catalogue().find_id(e->row.kind);
+    const auto* r = kind != nullptr ? kind->find_role(role) : nullptr;
+    for (const auto& p : e->participants) {
+        if (r != nullptr && p.role == r->seq) {
+            return p.entity_id;
+        }
+    }
+    return 0;
+}
+
+// The check's own text of 11.2 item 2 for a shrine, temple or sanctum at Y:
+// the god of the shrine's divine_mark (role actor, value profane), the cult
+// of the origin event (role faction), names from the check's tables.
+std::string expected_faith_text(const worldgen::history::LoadedHistory& h, const worldgen::db::SiteRow& row,
+                                int64_t year) {
+    const auto& v = h.view;
+    const auto* origin = v.event(row.origin_event);
+    std::string text = row.name;
+    if (row.kind == 5) {
+        const int64_t god = role_entity(v, origin, "actor");
+        std::string god_name = "?";
+        for (const auto& g : h.tables.gods) {
+            god_name = g.id == god ? g.name : god_name;
+        }
+        bool profane = false;
+        const auto* kind = origin != nullptr ? v.catalogue().find_id(origin->row.kind) : nullptr;
+        const int64_t seq = kind != nullptr ? kind->value_seq("profane") : 0;
+        if (seq >= 1 && static_cast<std::size_t>(seq) <= origin->values.size()) {
+            profane = origin->values[static_cast<std::size_t>(seq - 1)] != 0;
+        }
+        text += std::string(profane ? " (cursed by " : " (holy to ") + god_name + ")";
+    } else {
+        const int64_t cult = role_entity(v, origin, "faction");
+        std::string cult_name = "?";
+        for (const auto& k : h.tables.factions) {
+            cult_name = k.id == cult ? k.name : cult_name;
+        }
+        text += std::string(row.kind == 6 ? " (temple of " : " (hidden sanctum of ") + cult_name + ")";
+    }
+    text += ", since " + std::to_string(row.origin_year);
+    if (row.kind == 6 && row.ended_year && *row.ended_year <= year) {
+        const char* word = row.ending == 8 ? "suppressed" : row.ending == 7 ? "abandoned" : "lost";
+        text += std::string(", ") + word + " in " + std::to_string(*row.ended_year);
+    }
+    return text;
+}
+
+// The index of the model's entry of (type, id) at the current year, -1 none.
+int64_t marker_entry(const godot::Ref<ViewerModel>& model, const char* type, int64_t id) {
+    const godot::Array markers = model->get_markers();
+    for (int64_t i = 0; i < markers.size(); ++i) {
+        const godot::Dictionary m = markers[i];
+        if (godot::String(m["type"]) == type && int64_t(m["id"]) == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool standing_at(const worldgen::history::LoadedHistory& h, int64_t settlement, int64_t year) {
+    const auto s = h.timeline.settlement_state(settlement, year);
+    return s.exists && (s.status == 1 || s.status == 2);
+}
+
+// M16: the first shrine (one at a settlement first), temple and sanctum of
+// the world: absent the year before their origin, then at their origin year
+// and their last open year an entry with glyph, fill and offset, the hover
+// text of 11.2 item 2 (model and mouse), and the settlement's hover with the
+// shrine or temple. The Shrines and Temples boxes. M17: an ended temple
+// (abandoned or suppressed at a standing settlement first). M18: a realm's
+// faith in the territory hover.
+void check_pantheon_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
+                            const LibraryWorld& lib) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    const auto& h = *lib.history;
+    const int64_t end = model->get_end_year();
+    LayerMapView* view = screen.map_view();
+    const worldgen::db::SiteRow* picks[3] = {nullptr, nullptr, nullptr};
+    for (const auto& s : h.tables.sites) {
+        if (s.kind < 5 || s.kind > 7) {
+            continue;
+        }
+        const worldgen::db::SiteRow*& pick = picks[s.kind - 5];
+        if (pick == nullptr || (s.kind == 5 && pick->settlement == 0 && s.settlement != 0)) {
+            pick = &s;
+        }
+    }
+    const char* glyphs[3] = {"shrine", "temple", "sanctum"};
+    const worldgen::inspect::Rgb fills[3] = {worldgen::inspect::MARKER_SHRINE, worldgen::inspect::MARKER_TEMPLE,
+                                             worldgen::inspect::MARKER_SANCTUM};
+    for (std::size_t k = 0; k < 3; ++k) {
+        const worldgen::db::SiteRow* row = picks[k];
+        const std::string what = std::string("M16 ") + glyphs[k];
+        if (row == nullptr) {
+            if (options.expect_pantheon) {
+                check.expect(false, to_godot(what) + ": none in this world (--expect-pantheon)");
+            } else {
+                godot::UtilityFunctions::print("UNMAPPED-CHECK: info: ", to_godot(what), ": none in this world");
+            }
+            continue;
+        }
+        const int64_t last = row->ended_year ? *row->ended_year - 1 : end;
+        if (row->origin_year > 0) {
+            model->set_year(row->origin_year - 1);
+            check.expect(marker_entry(model, "site", row->id) < 0,
+                         to_godot(what) + " si" + num(row->id) + " has no entry in " + num(row->origin_year - 1));
+        }
+        const int64_t ox = row->kind == 5 && row->settlement != 0 ? 7 : row->kind == 6 ? -7 : 0;
+        const int64_t oy = row->settlement != 0 && row->kind != 7 ? 7 : 0;
+        const int64_t fill = (int64_t{fills[k].r} << 16) | (int64_t{fills[k].g} << 8) | int64_t{fills[k].b};
+        std::string wrong;
+        for (const int64_t y : {row->origin_year, last}) {
+            model->set_year(y);
+            const std::string want = expected_faith_text(h, *row, y);
+            const int64_t i = marker_entry(model, "site", row->id);
+            if (i < 0) {
+                wrong = "no entry in " + std::to_string(y);
+                break;
+            }
+            const godot::Dictionary m = model->get_markers()[i];
+            if (godot::String(m["glyph"]) != glyphs[k] || int64_t(m["fill"]) != fill || int64_t(m["offset_x"]) != ox ||
+                int64_t(m["offset_y"]) != oy || int64_t(m["site_kind"]) != row->kind) {
+                wrong = "entry " + to_utf8(godot::Variant(m).stringify());
+                break;
+            }
+            if (to_utf8(model->describe_marker(i)) != want) {
+                wrong = "in " + std::to_string(y) + " hover '" + to_utf8(model->describe_marker(i)) + "', expected '" +
+                        want + "'";
+                break;
+            }
+            const godot::Vector2i at = view->get_marker_screen_position(i);
+            if (at.x >= 0) {
+                send_motion(screen, godot::Vector2(static_cast<float>(at.x), static_cast<float>(at.y)));
+                const bool hovered = view->get_hovered_marker() == i && to_utf8(screen.cell_label()->get_text()) == want;
+                screen.hover_cell(-1, -1);
+                if (!hovered) {
+                    wrong = "in " + std::to_string(y) + " the mouse over it shows '" +
+                            to_utf8(screen.cell_label()->get_text()) + "'";
+                    break;
+                }
+            }
+            // The settlement's hover names its shrine or temple.
+            if (row->settlement != 0 && row->kind != 7 && standing_at(h, row->settlement, y)) {
+                const int64_t s = marker_entry(model, "standing", row->settlement);
+                const std::string text = s >= 0 ? to_utf8(model->describe_marker(s)) : std::string("(no entry)");
+                if (text.find("; " + want) == std::string::npos) {
+                    wrong = "in " + std::to_string(y) + " settlement s" + std::to_string(row->settlement) + " hover '" +
+                            text + "' lacks '; " + want + "'";
+                    break;
+                }
+            }
+        }
+        check.expect(wrong.empty(), to_godot(what) + " si" + num(row->id) + " in " + num(row->origin_year) + " and " +
+                                        num(last) + ": glyph " + glyphs[k] + ", its fill, offset (" + num(ox) + ", " +
+                                        num(oy) + "), hover '" + to_godot(expected_faith_text(h, *row, last)) + "'" +
+                                        (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+    }
+    // The boxes, at E.
+    model->set_year(end);
+    const auto count_kinds = [&model](int64_t from, int64_t to) {
+        int64_t n = 0;
+        const godot::Array markers = model->get_markers();
+        for (int64_t i = 0; i < markers.size(); ++i) {
+            const godot::Dictionary m = markers[i];
+            const int64_t kind = m.get("site_kind", int64_t{0});
+            n += godot::String(m["type"]) == "site" && kind >= from && kind <= to ? 1 : 0;
+        }
+        return n;
+    };
+    const auto legend_has_label = [&model](const char* label) {
+        const auto labels = legend_labels(model->get_marker_legend());
+        return std::find(labels.begin(), labels.end(), std::string(label)) != labels.end();
+    };
+    {
+        const int64_t total = model->get_markers().size();
+        const int64_t shrines = count_kinds(5, 5);
+        const int64_t temples = count_kinds(6, 7);
+        screen.mark_shrines()->set_pressed(false);
+        const bool shrines_off = !model->get_marker_option("shrines") && count_kinds(5, 5) == 0 &&
+                                 model->get_markers().size() == total - shrines && !legend_has_label("shrine") &&
+                                 legend_has_label("temple");
+        screen.mark_shrines()->set_pressed(true);
+        screen.mark_temples()->set_pressed(false);
+        const bool temples_off = !model->get_marker_option("temples") && count_kinds(6, 7) == 0 &&
+                                 model->get_markers().size() == total - temples && !legend_has_label("temple") &&
+                                 !legend_has_label("hidden sanctum") && legend_has_label("shrine");
+        screen.mark_temples()->set_pressed(true);
+        screen.mark_sites()->set_pressed(false);
+        const bool follow_sites = screen.mark_shrines()->is_disabled() && screen.mark_temples()->is_disabled() &&
+                                  count_kinds(5, 7) == 0;
+        screen.mark_sites()->set_pressed(true);
+        const bool back = model->get_markers().size() == total && !screen.mark_shrines()->is_disabled() &&
+                          !screen.mark_temples()->is_disabled();
+        check.expect(shrines_off && temples_off && follow_sites && back,
+                     "M16 in " + num(end) + " the Shrines box removes the " + num(shrines) +
+                         " shrine entries and the key row 'shrine', Temples the " + num(temples) +
+                         " temple and sanctum entries and their rows; both follow Sites; all come back");
+    }
+
+    // M17: an ended temple.
+    const worldgen::db::SiteRow* ended = nullptr;
+    for (const auto& s : h.tables.sites) {
+        if (s.kind != 6 || !s.ended_year) {
+            continue;
+        }
+        const bool good = (s.ending == 7 || s.ending == 8) && standing_at(h, s.settlement, *s.ended_year);
+        if (ended == nullptr || (good && !((ended->ending == 7 || ended->ending == 8) &&
+                                           standing_at(h, ended->settlement, *ended->ended_year)))) {
+            ended = &s;
+        }
+    }
+    if (ended == nullptr) {
+        if (options.expect_pantheon) {
+            check.expect(false, "M17 an ended temple: none in this world (--expect-pantheon)");
+        } else {
+            godot::UtilityFunctions::print("UNMAPPED-CHECK: info: M17 no ended temple in this world");
+        }
+    } else {
+        const int64_t y = *ended->ended_year;
+        std::string wrong;
+        if (y - 1 >= ended->origin_year) {
+            model->set_year(y - 1);
+            if (marker_entry(model, "site", ended->id) < 0) {
+                wrong = "no entry in " + std::to_string(y - 1);
+            }
+        }
+        model->set_year(y);
+        if (wrong.empty() && marker_entry(model, "site", ended->id) >= 0) {
+            wrong = "an entry in its end year";
+        }
+        const std::string want = expected_faith_text(h, *ended, y);
+        const bool settlement_shown = standing_at(h, ended->settlement, y);
+        if (wrong.empty() && settlement_shown) {
+            const int64_t s = marker_entry(model, "standing", ended->settlement);
+            const std::string text = s >= 0 ? to_utf8(model->describe_marker(s)) : std::string("(no entry)");
+            if (text.find("; " + want) == std::string::npos) {
+                wrong = "settlement hover '" + text + "' lacks '; " + want + "'";
+            }
+        }
+        if (wrong.empty() && options.expect_pantheon && !settlement_shown) {
+            wrong = "its settlement does not stand in its end year (--expect-pantheon wants one that does)";
+        }
+        check.expect(wrong.empty(), "M17 temple si" + num(ended->id) + " (ending " + num(ended->ending) + ") has an entry in " +
+                                        num(y - 1) + ", none in its end year " + num(y) +
+                                        (settlement_shown ? ", and its settlement's hover reads '" + to_godot(want) + "'"
+                                                          : godot::String(" (its settlement is gone)")) +
+                                        (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+    }
+
+    // M18: a realm's faith in the territory hover, at E - 1.
+    const int64_t y = end > 0 ? end - 1 : 0;
+    model->set_year(y);
+    int64_t civ = 0;
+    int64_t cult = 0;
+    for (const auto& c : h.tables.civilizations) {
+        if (civ == 0 && h.timeline.faith_at(c.id, y) != 0) {
+            civ = c.id;
+            cult = h.timeline.faith_at(c.id, y);
+        }
+    }
+    int64_t region = 0;
+    for (const auto& r : lib.regions) {
+        const auto holding = model->history_state().holding(r.id);
+        if (region == 0 && holding && holding->civ == civ && civ != 0) {
+            region = r.id;
+        }
+    }
+    if (civ == 0 || region == 0) {
+        check.expect(!options.expect_pantheon, "M18 a realm with a faith and a region at " + num(y) +
+                                                   (options.expect_pantheon ? ": none (--expect-pantheon)" : ": none"));
+    } else {
+        std::string name = "?";
+        for (const auto& k : h.tables.factions) {
+            name = k.id == cult ? k.name : name;
+        }
+        const std::string text = model->history_state().holding_text(region);
+        const std::string suffix = ", faith: " + name;
+        const bool ends = text.size() >= suffix.size() &&
+                          text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+        check.expect(ends, "M18 region " + num(region) + " of c" + num(civ) + " in " + num(y) + ": the hover ends '" +
+                               to_godot(suffix) + "': '" + to_godot(text) + "'");
+    }
+    model->set_year(end);
+}
+
+// B16: the group gods, the Gods tab, a cult and a god selected with their
+// blocks and event lists, the realm's faith line and a site link.
+void check_pantheon_browser(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
+                            const LibraryWorld& lib) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    if (!model->get_browser_available()) {
+        check.expect(false, "B16 the browser is available");
+        return;
+    }
+    const auto& h = *lib.history;
+    const auto& v = h.view;
+    const auto ids_of = [&model]() {
+        std::vector<int64_t> out;
+        const godot::PackedInt64Array ids = model->get_event_ids();
+        for (int64_t i = 0; i < ids.size(); ++i) {
+            out.push_back(ids[i]);
+        }
+        return out;
+    };
+    model->clear_selection();
+    model->set_browser_level("full");
+    model->set_browser_years(-1, -1);
+    model->set_browser_this_year(false);
+    // The group gods: kinds 100 to 108 by key (spec 8.1, 11.1).
+    {
+        std::set<int64_t> kinds;
+        for (const char* key : {"divine_bless", "divine_curse", "divine_champion", "divine_monster", "divine_mark",
+                                "cult_founded", "cult_spread", "cult_adopted", "cult_suppressed"}) {
+            if (const auto* k = v.catalogue().find(key)) {
+                kinds.insert(k->id);
+            }
+        }
+        std::vector<int64_t> want;
+        for (const auto& e : v.events()) {
+            if (kinds.count(e.row.kind) != 0) {
+                want.push_back(e.row.id);
+            }
+        }
+        const bool set = model->set_browser_group("gods");
+        bool listed = false;
+        for (int32_t i = 0; i < screen.event_group()->get_item_count(); ++i) {
+            listed = listed || screen.event_group()->get_item_text(i) == "gods";
+        }
+        const std::vector<int64_t> got = ids_of();
+        check.expect(set && listed && kinds.size() == 9 && got == want && !want.empty() &&
+                         godot::String(model->get_selection()["group"]) == "gods",
+                     "B16 the group 'gods' is offered and lists the " + num(static_cast<int64_t>(want.size())) +
+                         " events of kinds 100 to 108 at full (got " + num(static_cast<int64_t>(got.size())) + ")");
+        model->set_browser_group("all");
+    }
+    // The Gods tab: every god, then every cult.
+    const godot::Array gods = model->get_god_list();
+    check.expect(gods.size() == static_cast<int64_t>(h.tables.gods.size() + h.tables.factions.size()) &&
+                     tree_row_count(screen.god_list()) == gods.size(),
+                 "B16 the Gods tab lists the " + num(static_cast<int64_t>(h.tables.gods.size())) + " gods and " +
+                     num(static_cast<int64_t>(h.tables.factions.size())) + " cults");
+    if (h.tables.factions.empty()) {
+        check.expect(!options.expect_pantheon, godot::String("B16 a cult to select: none") +
+                                                   (options.expect_pantheon ? " (--expect-pantheon)" : ""));
+        model->clear_selection();
+        model->set_browser_level("summary");
+        return;
+    }
+    // A cult: the first with a temple seat.
+    const worldgen::db::FactionRow& cult = h.tables.factions.front();
+    const auto events_naming = [&v](int64_t type, int64_t id) {
+        std::vector<int64_t> out;
+        for (const auto& e : v.events()) {
+            for (const auto& p : e.participants) {
+                if (p.entity_type == type && p.entity_id == id) {
+                    out.push_back(e.row.id);
+                    break;
+                }
+            }
+        }
+        return out;
+    };
+    // A block's links: every target followable, and the targets.
+    const auto block_targets = [&model](const godot::Array& block, bool& followable) {
+        std::set<std::string> targets;
+        followable = true;
+        for (int64_t i = 0; i < block.size(); ++i) {
+            const godot::Dictionary line = block[i];
+            const godot::Array links = line["links"];
+            for (int64_t j = 0; j < links.size(); ++j) {
+                const godot::String target = godot::Dictionary(links[j])["target"];
+                targets.insert(to_utf8(target));
+                const bool plain = target.begins_with("ra") || target.begins_with("m");
+                followable = followable && (plain || model->can_follow_link(target));
+            }
+        }
+        return targets;
+    };
+    {
+        const godot::String target = "fa" + num(cult.id);
+        const bool followed = model->follow_link(target);
+        const godot::Dictionary sel = model->get_selection();
+        const godot::Array block = model->get_cult_block(cult.id);
+        bool followable = false;
+        const auto targets = block_targets(block, followable);
+        const std::string detail = to_utf8(screen.browser_detail()->get_parsed_text());
+        const std::string first = block.is_empty() ? std::string() : to_utf8(godot::Dictionary(block[0])["text"]);
+        const std::vector<int64_t> want = events_naming(7, cult.id);
+        const bool ok = followed && int64_t(sel["entity_type"]) == 7 && int64_t(sel["entity_id"]) == cult.id &&
+                        godot::String(sel["scope"]) == "entity" && !block.is_empty() &&
+                        targets.count("g" + std::to_string(cult.god)) != 0 && followable && !first.empty() &&
+                        detail.find(first) != std::string::npos && screen.entity_tabs()->get_current_tab() == 2 &&
+                        ids_of() == want && !want.empty();
+        check.expect(ok, "B16 selecting cult fa" + num(cult.id) + " (" + to_godot(cult.name) +
+                             ") shows its [cults] line with a link to g" + num(cult.god) + ", brings the Gods tab "
+                             "forward and lists the " + num(static_cast<int64_t>(want.size())) + " events naming it (got " +
+                             num(model->get_event_ids().size()) + ")");
+        // The god of the cult, through the block's link.
+        const bool god_followed = model->follow_link("g" + num(cult.god));
+        const godot::Dictionary gsel = model->get_selection();
+        const godot::Array gblock = model->get_god_block(cult.god);
+        bool gfollow = false;
+        block_targets(gblock, gfollow);
+        const std::vector<int64_t> gwant = events_naming(2, cult.god);
+        check.expect(god_followed && int64_t(gsel["entity_type"]) == 2 && int64_t(gsel["entity_id"]) == cult.god &&
+                         !gblock.is_empty() && gfollow && ids_of() == gwant,
+                     "B16 its link g" + num(cult.god) + " selects the god: its [pantheon] line, links followable, the " +
+                         num(static_cast<int64_t>(gwant.size())) + " events naming it");
+    }
+    // The realm's faith: civilization_block lines 'gods:' and 'faith:'.
+    {
+        int64_t civ = 0;
+        int64_t faith = 0;
+        const int64_t end = model->get_end_year();
+        for (const auto& c : h.tables.civilizations) {
+            for (int64_t y = 0; y <= end && civ == 0; y += 50) {
+                if (h.timeline.faith_at(c.id, y) != 0) {
+                    civ = c.id;
+                    faith = h.timeline.faith_at(c.id, y);
+                }
+            }
+        }
+        if (civ == 0) {
+            check.expect(!options.expect_pantheon, "B16 a realm with a faith: none");
+        } else {
+            model->select_civilization(civ);
+            const godot::Array block = model->get_civilization_block(civ);
+            std::string wrong = "no line 'faith:' with a link to fa" + std::to_string(faith);
+            bool gods_line = false;
+            for (int64_t i = 0; i < block.size(); ++i) {
+                const godot::Dictionary line = block[i];
+                const godot::String text = godot::String(line["text"]).strip_edges();
+                gods_line = gods_line || text.begins_with("gods:");
+                if (!text.begins_with("faith:")) {
+                    continue;
+                }
+                const godot::Array links = line["links"];
+                for (int64_t j = 0; j < links.size(); ++j) {
+                    const godot::Dictionary link = links[j];
+                    if (godot::String(link["target"]) == "fa" + num(faith)) {
+                        const bool followed = model->follow_link(link["target"]);
+                        const godot::Dictionary sel = model->get_selection();
+                        wrong = followed && int64_t(sel["entity_type"]) == 7 && int64_t(sel["entity_id"]) == faith
+                                    ? std::string()
+                                    : "the link did not select the cult";
+                        break;
+                    }
+                }
+                break;
+            }
+            check.expect(wrong.empty(), "B16 realm c" + num(civ) + "'s block has a 'faith:' line whose link fa" +
+                                            num(faith) + " selects the cult" + (gods_line ? " (and a 'gods:' line)" : "") +
+                                            (wrong.empty() ? godot::String() : ": " + to_godot(wrong)));
+        }
+    }
+    // A site link: the cult's seat selects its settlement.
+    {
+        const worldgen::db::SiteRow* seat = nullptr;
+        for (const auto& s : h.tables.sites) {
+            seat = s.id == cult.seat ? &s : seat;
+        }
+        const bool followed = model->follow_link("si" + num(cult.seat));
+        const godot::Dictionary sel = model->get_selection();
+        check.expect(seat != nullptr && followed && int64_t(sel["place_type"]) == 4 &&
+                         int64_t(sel["place_id"]) == seat->settlement && godot::String(sel["scope"]) == "place",
+                     "B16 the link si" + num(cult.seat) + " (the cult's temple) selects its settlement as the place");
+    }
+    model->clear_selection();
+    model->set_browser_level("summary");
+}
+
+void check_pantheon(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options) {
+    godot::Ref<ViewerModel> model = screen.get_model();
+    const LibraryWorld lib = open_library_world(model->get_world_path());
+    if (!lib.problem.empty()) {
+        check.expect(false, "M16 the check reads the world: " + to_godot(lib.problem));
+        return;
+    }
+    const int64_t year = model->get_year();
+    check_pantheon_markers(check, screen, options, lib);
+    check_pantheon_browser(check, screen, options, lib);
+    model->set_year(year);
+}
+
 void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
                    const HistoryReport& report) {
     godot::Ref<ViewerModel> model = screen.get_model();
@@ -2188,6 +2710,19 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
             }
             return std::string("?");
         };
+        // P5-08 11.2: the settlement's shrines and temples, from the check's
+        // own read (expected_faith_text).
+        const auto faith_suffix = [&lib, &model](int64_t id) {
+            std::string out;
+            if (lib.history) {
+                for (const auto& row : lib.history->tables.sites) {
+                    if (row.settlement == id && (row.kind == 5 || row.kind == 6) && row.origin_year <= model->get_year()) {
+                        out += "; " + expected_faith_text(*lib.history, row, model->get_year());
+                    }
+                }
+            }
+            return out;
+        };
         const auto expected_text = [&](int64_t id) -> std::string {
             const auto it = by_id.find(id);
             const auto* m = model_settlement(*model.ptr(), id);
@@ -2202,7 +2737,7 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
             const bool is_capital = m->capital;
             return r.name + ", " + r.kind + (is_capital ? " (capital)" : "") + " of " + civ_name(r.owner) + ", " +
                    r.status + ", population " + std::to_string(r.population) + " recorded in " +
-                   std::to_string(m->since) + ", founded in " + std::to_string(r.founded);
+                   std::to_string(m->since) + ", founded in " + std::to_string(r.founded) + faith_suffix(id);
         };
         const std::array<std::pair<const char*, int64_t>, 3> cases{
             {{"standing", standing}, {"standing", capital}, {"ruin", ruin}}};
@@ -2727,6 +3262,9 @@ int run_viewer_check(ViewerScreen& screen, const ViewerCheckOptions& options) {
     }
     if ((options.expect_depths || options.expect_history == "loaded") && model->has_history()) {
         check_depths(check, screen, options);  // P5-07 11.2: M13, M14
+    }
+    if ((options.expect_pantheon || options.expect_history == "loaded") && model->has_history()) {
+        check_pantheon(check, screen, options);  // P5-08 11.2: M16 to M18, B16
     }
 
     // The reader's distinct errors reach Godot as code and message.

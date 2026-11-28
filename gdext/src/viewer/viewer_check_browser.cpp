@@ -811,12 +811,16 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         const bool linked = model->follow_link("c" + num(civ)) &&
                             int64_t(selection(*model.ptr())["entity_id"]) == civ &&
                             int64_t(selection(*model.ptr())["entity_type"]) == 3;
-        const bool inert = !model->follow_link("ra1") && !model->follow_link("g1") && !model->follow_link("m1") &&
-                           !model->follow_link("si1") && !model->follow_link("x");
+        // P5-08 11.1: g, fa and si links are followed now; one to an id the
+        // world lacks is not.
+        const bool inert = !model->follow_link("ra1") && !model->follow_link("g999999") && !model->follow_link("m1") &&
+                           !model->follow_link("si999999") && !model->follow_link("fa999999") &&
+                           !model->follow_link("x");
         expect(start != 0 && at_start && at_c1 && at_c2 && back && forward && linked && inert,
                "B6 e" + num(start) + ": its cause e" + num(c1) + " and that one's cause e" + num(c2) +
                    " by link, each at its year; Back twice returns to e" + num(start) + ", Forward to e" + num(c1) +
-                   "; a c link selects c" + num(civ) + "; ra, g, m, si links are not followed");
+                   "; a c link selects c" + num(civ) + "; ra and m links, and g, si, fa links to ids the world lacks, "
+                   "are not followed");
     }
 
     // B7: an event's place.
@@ -1200,11 +1204,13 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
             got_groups.push_back(to_utf8(groups[i]));
         }
         godot::OptionButton* menu = screen.event_group();
-        // P5-06 11.3: nine groups, alliances (7) before figures, the last.
+        // P5-06 11.3: alliances (7) before figures; P5-08 11.1: ten groups,
+        // gods the last.
         const int32_t last = 8;
-        const bool listed = got_groups == want_groups && got_groups.size() == 9 && got_groups[7] == "alliances" &&
-                            got_groups.back() == "figures" && menu->get_item_count() == groups.size() + 1 &&
-                            menu->get_item_text(last) == "alliances" && menu->get_item_text(9) == "figures";
+        const bool listed = got_groups == want_groups && got_groups.size() == 10 && got_groups[7] == "alliances" &&
+                            got_groups[8] == "figures" && got_groups.back() == "gods" &&
+                            menu->get_item_count() == groups.size() + 1 && menu->get_item_text(last) == "alliances" &&
+                            menu->get_item_text(9) == "figures" && menu->get_item_text(10) == "gods";
         menu->select(last);
         menu->emit_signal("item_selected", last);  // as a pick in the menu
         std::vector<int64_t> want;
@@ -1226,7 +1232,7 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         const bool rows = screen.event_list()->get_item_count() == static_cast<int64_t>(want.size());
         expect(listed && d.empty() && rows && !want.empty() && war_kinds.empty() && settlement_kinds.empty(),
                "B13 the group menu lists " + num(static_cast<int64_t>(got_groups.size())) +
-                   " groups, alliances before figures (last); picking alliances lists the " + num(static_cast<int64_t>(want.size())) +
+                   " groups, alliances before figures, gods last; picking alliances lists the " + num(static_cast<int64_t>(want.size())) +
                    " chronicle lines of its kinds" + to_godot(d.empty() ? "" : ": " + d) +
                    (war_kinds.empty() && settlement_kinds.empty()
                         ? godot::String()
@@ -1271,7 +1277,7 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         model->clear_selection();
         model->set_browser_level("full");
         godot::OptionButton* menu = screen.event_group();
-        const int32_t last = menu->get_item_count() - 1;
+        const int32_t last = 9;  // figures; gods (P5-08) follows it
         menu->select(last);
         menu->emit_signal("item_selected", last);
         std::vector<int64_t> want;
@@ -1284,7 +1290,7 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
         const bool group_word = godot::String(model->get_selection()["group"]) == "figures";
         expect(d.empty() && group_word && !want.empty() &&
                    screen.event_list()->get_item_count() == static_cast<int64_t>(want.size()),
-               "B14 picking figures, the last group, lists the " + num(static_cast<int64_t>(want.size())) +
+               "B14 picking figures, the group before gods, lists the " + num(static_cast<int64_t>(want.size())) +
                    " chronicle lines of its kinds" + to_godot(d.empty() ? "" : ": " + d));
         menu->select(0);
         menu->emit_signal("item_selected", 0);
@@ -1302,7 +1308,8 @@ void check_browser(ViewerScreen& screen, const ViewerCheckOptions& options, cons
                 problem = problem.empty() ? "row " + std::to_string(rows) + " '" + to_utf8(row->get_text(0)) + "'" : problem;
             }
         }
-        const bool tabs = screen.entity_tabs()->get_tab_count() == 2 && screen.entity_tabs()->get_tab_title(1) == "Figures";
+        const bool tabs = screen.entity_tabs()->get_tab_count() == 3 && screen.entity_tabs()->get_tab_title(1) == "Figures" &&
+                          screen.entity_tabs()->get_tab_title(2) == "Gods";  // P5-08 11.2
         expect(problem.empty() && rows == static_cast<int64_t>(figures.size()) && rows > 0 && tabs,
                "B14 the Figures tab lists the " + num(rows) + " figures of the index (" +
                    num(static_cast<int64_t>(figures.size())) + "), ascending id, by display name" +

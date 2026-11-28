@@ -8,7 +8,7 @@
 # 1. Test pattern: worldgen-cli generate --seed 42 --test-pattern into
 #    WORK_DIR/pattern/, and render each layer to <layer>.png with the default
 #    palette (auto) and scale (1).
-# 2. Real world: worldgen-cli generate --seed 49 --map-size 512 into
+# 2. Real world: worldgen-cli generate --seed 45 --map-size 512 into
 #    WORK_DIR/real/; its layers are listed from `worldgen-cli report`
 #    ([layers]), the layers biome, elevation, rainfall and region must be
 #    among them,
@@ -43,6 +43,10 @@
 #    seed >= 42 at 512 (at 0.29.0) with a mine delved to depth 3, a sealed
 #    mine and a delved goblin warren; the viewer gets --expect-history
 #    library --expect-depths (checks M13 and M14 only).
+# 4d. Pantheon world (P5-08 11.2): --seed 44 --map-size 512, the smallest
+#    seed >= 42 at 512 (at 0.30.0) with a shrine, a temple, a hidden sanctum
+#    and a temple abandoned or suppressed, run with --expect-history library
+#    --expect-pantheon (checks M16 to M18 and B16 only).
 # Fails unless every step exits 0 and each step 4 prints UNMAPPED-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
@@ -135,10 +139,13 @@ endfunction()
 # The real world's seed: 42 until 0.27.0; at 0.28.0 seed 42 at 512 has no
 # ended civilization; seed 49 is the smallest seed above 42 with every
 # feature the checks below need (an ended civilization, a pass, a mine, towers).
-# No seed from 42 to 69 at 512 with those has an ended tower.
-set(_real_seed 49)
+# No seed from 42 to 69 at 512 with those has an ended tower. At 0.30.0
+# seed 49 has no region_ceded event; seed 45 is the smallest seed >= 42
+# with every feature (P5-08).
+set(_real_seed 45)
 set(_library_seed 61)
 set(_depths_seed 45)
+set(_pantheon_seed 44)
 set(_real_dir "${WORK_DIR}/real")
 set(_real_world "${_real_dir}/world.db")
 run_step("generate seed ${_real_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_real_seed} --map-size 512 --data "${DATA_DIR}"
@@ -305,6 +312,27 @@ set(_depths_world "${_depths_dir}/world.db")
 run_step("generate seed ${_depths_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_depths_seed} --map-size 512
     --data "${DATA_DIR}" --out "${_depths_world}")
 
+set(_pantheon_dir "${WORK_DIR}/pantheon")
+file(MAKE_DIRECTORY "${_pantheon_dir}")
+set(_pantheon_world "${_pantheon_dir}/world.db")
+run_step("generate seed ${_pantheon_seed}, map size 512" "${WORLDGEN_CLI}" generate --seed ${_pantheon_seed} --map-size 512
+    --data "${DATA_DIR}" --out "${_pantheon_world}")
+run_step("report --history, pantheon world" "${WORLDGEN_CLI}" report --db "${_pantheon_world}" --history --level full
+    --out "${_pantheon_dir}/history.txt" QUIET)
+foreach(_what "shrine" "temple" "sanctum")
+    file(STRINGS "${_pantheon_dir}/history.txt" _pantheon_lines REGEX "^  si[0-9]+ .*: ${_what} in ")
+    if(NOT _pantheon_lines)
+        message(FATAL_ERROR "headless check: the seed ${_pantheon_seed} world has no ${_what} line in [sites]; choose "
+            "the smallest seed >= 42 at 512 with a shrine, a temple, a sanctum and a temple abandoned or suppressed, "
+            "and record it here and in gdext/README.md")
+    endif()
+endforeach()
+file(STRINGS "${_pantheon_dir}/history.txt" _pantheon_lines REGEX "^  si[0-9]+ .*: temple in .*(abandoned|suppressed)")
+if(NOT _pantheon_lines)
+    message(FATAL_ERROR "headless check: the seed ${_pantheon_seed} world has no temple abandoned or suppressed; choose "
+        "another seed and record it here and in gdext/README.md")
+endif()
+
 # --- 3. Import, 4. viewer checks ----------------------------------------------
 run_step("editor import" "${GODOT}" --headless --path "${PROJECT_DIR}" --import)
 
@@ -324,6 +352,7 @@ viewer_check("512 world" "${_real_world}" "${_real_dir}" ${_real_count} ${_real_
 viewer_check("library world" "${_library_world}" "${_library_dir}" -1 -1 --expect-history library
     --expect-library ${_library_site})
 viewer_check("depths world" "${_depths_world}" "${_depths_dir}" -1 -1 --expect-history library --expect-depths)
+viewer_check("pantheon world" "${_pantheon_world}" "${_pantheon_dir}" -1 -1 --expect-history library --expect-pantheon)
 
 # --- 5. Playback runs (P4-06 11.1) ---------------------------------------------
 # R1: a short movie with --play-log at a fixed frame step: the year lines

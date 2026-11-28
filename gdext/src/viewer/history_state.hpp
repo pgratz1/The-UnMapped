@@ -185,6 +185,23 @@ public:
     // without a site at that settlement) was sealed by Y.
     [[nodiscard]] std::string warren_text(std::int64_t settlement) const;
 
+    // --- Pantheon and cults (spec P5-08 11.2) ----------------------------------
+    // The hover text of a shrine, temple or sanctum (site kinds 5 to 7):
+    // "<name> (<shrine_word> <god name>), since <year>", "<name> (temple of
+    // <cult name>), since <year>", "<name> (hidden sanctum of <cult name>),
+    // since <year>"; a temple ended by Y gains ", <ending> in <year>"
+    // (ending 4 lost, 7 abandoned, 8 suppressed). Empty for a site of
+    // another kind or an id the world lacks. The god is the `god` participant
+    // of the shrine's divine_mark, the cult the `faction` participant of the
+    // site's origin event.
+    [[nodiscard]] std::string faith_site_text(std::int64_t site) const;
+    // The text a standing settlement's hover gains at Y: "; <faith_site_text>"
+    // for each shrine and temple of the settlement founded by Y, ascending
+    // site id (a temple ended by Y with its ending and year).
+    [[nodiscard]] std::string settlement_faith_text(std::int64_t settlement) const;
+    // The name of cult (faction) `id`, "cult <id>" when the world lacks it.
+    [[nodiscard]] std::string cult_name(std::int64_t id) const;
+
 private:
     HistoryStatus status_ = HistoryStatus::none;
     std::string error_code_;

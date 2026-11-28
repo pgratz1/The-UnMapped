@@ -37,6 +37,9 @@ inline constexpr std::int64_t BROWSER_CIVILIZATION = 3;
 inline constexpr std::int64_t BROWSER_SETTLEMENT = 4;
 inline constexpr std::int64_t BROWSER_REGION = 5;
 inline constexpr std::int64_t BROWSER_FIGURE = 6;  // P5-06 11.3
+inline constexpr std::int64_t BROWSER_GOD = 2;   // P5-08 11.1
+inline constexpr std::int64_t BROWSER_CULT = 7;  // P5-08 11.1: a faction of kind 1
+inline constexpr std::int64_t BROWSER_SITE = 9;  // link targets only: a site selects its place
 
 // 5.1: what is selected; 0 means none. The entity is a civilization (3) now;
 // monsters (8) and sites (9) attach later (section 9), so nothing here
@@ -111,7 +114,8 @@ public:
 
     // worldgen's EventFilter for the filter and selection at year Y. Returns
     // false when the list is empty by construction (scope entity or place
-    // with nothing selected).
+    // with nothing selected). A selected god or cult (P5-08) sets no entity
+    // field: refresh_list keeps the events with it as a participant.
     [[nodiscard]] bool event_filter(std::int64_t year, worldgen::inspect::EventFilter& out) const;
     // Recomputes the id list; true when it differs from the one before.
     // FatalError from worldgen passes through (a caller's bad id).

@@ -825,6 +825,9 @@ int settlement_pass(const worldgen::inspect::SettlementMarker& m) {
 // `figure` participant of its tower_founded event (the site's origin event).
 std::string site_marker_text(const HistoryState& history, const worldgen::inspect::SiteMarker& m) {
     using worldgen::history::EntityType;
+    if (m.kind >= 5 && m.kind <= 7) {  // P5-08 11.2 item 2: shrine, temple, sanctum
+        return history.faith_site_text(m.site);
+    }
     const worldgen::history::LoadedHistory& loaded = history.history();
     const worldgen::history::HistoryView& view = loaded.view;
     const std::string* name = view.name(EntityType::site, m.site);
@@ -861,6 +864,18 @@ std::string site_marker_text(const HistoryState& history, const worldgen::inspec
     return text;
 }
 
+// The fill of a site glyph (P5-04 11.3, P5-06 11.4, P5-08 11.1).
+worldgen::inspect::Rgb site_fill(std::uint8_t base) {
+    switch (base) {
+        case worldgen::inspect::GLYPH_TOWER: return worldgen::inspect::MARKER_TOWER;
+        case worldgen::inspect::GLYPH_SHRINE: return worldgen::inspect::MARKER_SHRINE;
+        case worldgen::inspect::GLYPH_TEMPLE: return worldgen::inspect::MARKER_TEMPLE;
+        case worldgen::inspect::GLYPH_SANCTUM: return worldgen::inspect::MARKER_SANCTUM;
+        default: break;
+    }
+    return worldgen::inspect::MARKER_MINE;
+}
+
 bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& name, bool*& out) {
     if (name == "faded") {
         out = &options.faded;
@@ -870,6 +885,10 @@ bool option_ref(worldgen::inspect::MarkerOptions& options, const godot::String& 
         out = &options.passes;
     } else if (name == "sites" || name == "mines") {  // P5-04 11.3, P5-06 11.4: mines and towers
         out = &options.sites;
+    } else if (name == "shrines") {  // P5-08 11.1
+        out = &options.shrines;
+    } else if (name == "temples") {  // temples and sanctums
+        out = &options.temples;
     } else {
         return false;
     }
@@ -1011,8 +1030,7 @@ godot::Dictionary ViewerModel::marker_dictionary(const MarkerRef& ref) const {
         out["y"] = site.y;
         const std::uint8_t base = worldgen::inspect::site_glyph_base(site);
         out["glyph"] = to_godot(marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false}));
-        out["fill"] = rgb_of(base == worldgen::inspect::GLYPH_TOWER ? worldgen::inspect::MARKER_TOWER
-                                                                    : worldgen::inspect::MARKER_MINE);
+        out["fill"] = rgb_of(site_fill(base));
         out["capital"] = false;
         out["small"] = true;  // a minor mark, hidden with the hamlets when zoomed out (8.4)
         out["site_kind"] = site.kind;
@@ -1141,6 +1159,7 @@ godot::String ViewerModel::describe_marker(int64_t index) const {
                     std::to_string(s.population) + " recorded in " + std::to_string(s.since) + ", founded in " +
                     std::to_string(s.founded);
             text += history_.warren_text(s.settlement);  // P5-07 11.2 item 4
+            text += history_.settlement_faith_text(s.settlement);  // P5-08: its shrines and temples
         } else {
             // P5-06 25.1 (e): a status 3 entry of type faded is an old ruin.
             const char* word = ref.type != MarkerType::faded ? ", ruin of a "
@@ -1197,6 +1216,13 @@ godot::Array ViewerModel::get_marker_legend() const {
     if (options.sites) {
         row("mine", "mine", rgb_of(worldgen::inspect::MARKER_MINE));
         row("tower", "tower", rgb_of(worldgen::inspect::MARKER_TOWER));  // P5-06 11.4
+        if (options.shrines) {  // P5-08 11.1
+            row("shrine", "shrine", rgb_of(worldgen::inspect::MARKER_SHRINE));
+        }
+        if (options.temples) {
+            row("temple", "temple", rgb_of(worldgen::inspect::MARKER_TEMPLE));
+            row("hidden sanctum", "sanctum", rgb_of(worldgen::inspect::MARKER_SANCTUM));
+        }
     }
     return out;
 }

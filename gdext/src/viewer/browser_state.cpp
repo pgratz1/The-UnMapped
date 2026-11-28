@@ -153,7 +153,7 @@ bool BrowserState::event_filter(std::int64_t year, worldgen::inspect::EventFilte
                 out.civilization = selection.entity_id;
             } else if (selection.entity_type == BROWSER_FIGURE) {
                 out.figure = selection.entity_id;
-            } else {
+            } else if (selection.entity_type != BROWSER_GOD && selection.entity_type != BROWSER_CULT) {
                 return false;
             }
             break;
@@ -189,6 +189,22 @@ bool BrowserState::refresh_list(const worldgen::history::LoadedHistory& history,
     worldgen::inspect::EventFilter f;
     if (event_filter(year, f)) {
         index_->select(history, f, scratch_);
+        if (filter.scope == BrowserScope::entity &&
+            (selection.entity_type == BROWSER_GOD || selection.entity_type == BROWSER_CULT)) {
+            // P5-08: worldgen's EventFilter has no god or faction field; keep
+            // the events that name the selected god or cult as a participant.
+            const std::int64_t type = selection.entity_type;
+            const std::int64_t id = selection.entity_id;
+            std::erase_if(scratch_, [&history, type, id](std::int64_t e) {
+                const auto* event = history.view.event(e);
+                if (event == nullptr) {
+                    return true;
+                }
+                return std::none_of(event->participants.begin(), event->participants.end(), [type, id](const auto& p) {
+                    return p.entity_type == type && p.entity_id == id;
+                });
+            });
+        }
     } else {
         scratch_.clear();
     }
