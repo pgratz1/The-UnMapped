@@ -17,8 +17,12 @@
 #    present (TERRAIN3D on) or absent (off): the 512 world in the default
 #    mode, with --flat-colours --no-trees (V3D-01's look) and with
 #    --no-terrain3d --expect-terrain3d absent; the 1024 world with
-#    --instance-cap 50000; the elevation-only and test-pattern worlds. Each
-#    run must exit 0 and print UNMAPPED-TERRAIN-CHECK: PASS.
+#    --instance-cap 50000 (V3D-03: a split far tier, so trees are in the
+#    near tier), also with --veg-threads 0; the 512 world with
+#    --veg-whole-map and with --veg-radius 0; the elevation-only and
+#    test-pattern worlds. Runs with vegetation in a Terrain3D node also fly
+#    the camera path of V3D-03 11.2 over frames. Each run must exit 0 and
+#    print UNMAPPED-TERRAIN-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -87,6 +91,11 @@ terrain_check("512 world" w512 ${_expect})
 terrain_check("512 world, --flat-colours --no-trees" w512 ${_expect} --flat-colours --no-trees)
 terrain_check("512 world, --no-terrain3d" w512 absent --no-terrain3d)
 terrain_check("1024 world, --instance-cap 50000" w1024 ${_expect} --instance-cap 50000)
+# V3D-03 11.2: the near tier on the main thread, V3D-02's whole-map
+# placement and the far tier alone.
+terrain_check("1024 world, --instance-cap 50000 --veg-threads 0" w1024 ${_expect} --instance-cap 50000 --veg-threads 0)
+terrain_check("512 world, --veg-whole-map" w512 ${_expect} --veg-whole-map)
+terrain_check("512 world, --veg-radius 0" w512 ${_expect} --veg-radius 0)
 terrain_check("elevation-only world" elev ${_expect})
 terrain_check("test-pattern world" pattern ${_expect})
 message("terrain check: all runs passed")

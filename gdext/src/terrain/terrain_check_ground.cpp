@@ -592,10 +592,18 @@ void run_ground_checks(TerrainPreview& preview, const TerrainCheckOptions& optio
                                                   ") or 8 m or more from its vertex (" + num(far) + ")");
         std::vector<Cand> cands = own_candidates(o, scene.seed);
         const std::uint64_t cap = preview.instance_cap();
+        if (scene.tiers) {
+            // V3D-03: the far tier and its partition are T17's.
+            c.check(scene.placement.candidates == cands.size(),
+                    "T13 candidates " + num(cands.size()) + " (the far tier: T17)");
+            cands.clear();
+        }
         const std::uint64_t S = cands.size();
         const std::uint64_t kept = scene.placement.kept();
-        c.check(scene.placement.candidates == S && kept == std::min<std::uint64_t>(S, cap),
-                "T13 candidates " + num(S) + ", kept " + num(kept) + " = min(S, " + num(cap) + ")");
+        if (!scene.tiers) {
+            c.check(scene.placement.candidates == S && kept == std::min<std::uint64_t>(S, cap),
+                    "T13 candidates " + num(S) + ", kept " + num(kept) + " = min(S, " + num(cap) + ")");
+        }
         // The kept set: the cap smallest keys, back in placement order.
         if (S > cap) {
             std::vector<std::uint64_t> keys(cands.size());
@@ -622,7 +630,9 @@ void run_ground_checks(TerrainPreview& preview, const TerrainCheckOptions& optio
             }
             ++at;
         }
-        c.check(differ == 0, "T13 the kept instances equal the check's own placement and cap rule (" + num(differ) + " differ)");
+        if (!scene.tiers) {
+            c.check(differ == 0, "T13 the kept instances equal the check's own placement and cap rule (" + num(differ) + " differ)");
+        }
     }
 
     // T14: the sea of section 7.
@@ -660,12 +670,22 @@ void run_ground_checks(TerrainPreview& preview, const TerrainCheckOptions& optio
             not_want.push_back("ground: ");
         } else {
             want.push_back(textured ? "ground: textured, 15 ground types" : "ground: flat colours");
-            if (vegetation) {
+            if (vegetation && scene.tiers) {
+                // V3D-03 9.2.
+                godot::String line = "vegetation: far tier " + num(scene.placement.kept()) + " trees and snags of " +
+                                     num(scene.far_candidates) + " (budget " + num(preview.instance_cap()) + "); ";
+                line += preview.veg_radius() > 0.0
+                            ? "near tier within " + num(static_cast<std::uint64_t>(preview.veg_radius())) + " m in cells of 256 m"
+                            : godot::String("no near tier: no shrubs or reeds");
+                want.push_back(line);
+                not_want.push_back(" instances, thinned from ");
+            } else if (vegetation) {
                 godot::String line = "vegetation: " + num(scene.placement.kept()) + " instances";
                 if (scene.placement.candidates > scene.placement.cap) {
                     line += ", thinned from " + num(scene.placement.candidates) + " to the cap";
                 }
                 want.push_back(line);
+                not_want.push_back("vegetation: far tier");
             } else {
                 want.push_back("vegetation: off");
             }

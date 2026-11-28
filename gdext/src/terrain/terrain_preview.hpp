@@ -37,17 +37,33 @@
 //   --flat-colours          V3D-01's ground: one white texture, control 0,
 //                           biome colours (spec V3D-02 10.1)
 //   --no-trees              no vegetation
-//   --instance-cap <n>      the vegetation cap, 0 to 4000000 (default 2000000)
+//   --instance-cap <n>      the far budget, 0 to 4000000 (default 1000000;
+//                           with --veg-whole-map V3D-02's cap, default 2000000)
 //   --above <m>             start m metres above the ground at the start cell
+//   --veg-radius <m>        near tier radius R: 0 or 1536 to 8192 (default 2048)
+//   --veg-whole-map         V3D-02's whole-map placement, no tiers
+//   --veg-threads <n>       worker tasks in flight, 0 to 8 (default 4)
+//   --tier-colours          near-tier instances tinted red
+//   --at-forest             start at the bench's forest path, 60 m up
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
+//
+// Vegetation in tiers (spec V3D-03): the far tier (trees and snags thinned
+// to the budget) goes to Terrain3D's instancer once at load; the near tier
+// fills 256 m cells around the camera with the instances the far tier left
+// out, computed on WorkerThreadPool tasks (terrain_preview_near.cpp) and
+// drawn with the preview's own MultiMeshInstance3D nodes under the child
+// NearVegetation.
 
 #include <array>
 #include <cstdint>
+#include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/file_dialog.hpp>
@@ -55,6 +71,7 @@
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/multi_mesh_instance3d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/packed_scene.hpp>
@@ -64,6 +81,8 @@
 
 #include "terrain/fly_state.hpp"
 #include "terrain/ground.hpp"
+#include "terrain/near_cells.hpp"
+#include "terrain/terrain_check.hpp"
 #include "terrain/terrain_data.hpp"
 #include "terrain/vegetation.hpp"
 #include "world_file.hpp"
@@ -90,7 +109,11 @@ struct TerrainScene {
     terrain::GroundCells ground;             // empty without a biome layer
     std::vector<std::uint32_t> control;      // control bits, as imported
     bool vegetation = false;                 // a placement was made
-    terrain::Placement placement;
+    bool tiers = false;                      // V3D-03 tiers (else V3D-02's whole-map placement)
+    terrain::Placement placement;            // given to Terrain3D: the far tier in tier mode
+    std::uint64_t far_threshold = 0;         // T (tiers)
+    std::uint64_t far_candidates = 0;        // S_far (tiers)
+    int forest_column = 0;                   // x* of V3D-03 12.1
     float h_min = 0.0f;
     float h_max = 0.0f;
     std::uint32_t sea_rgb = 0x183878;
@@ -110,13 +133,48 @@ struct TerrainTimings {
     std::uint64_t transfer = 0;
 };
 
+// The near tier's work in the last frame (V3D-03 7.1), read by the check
+// and the bench.
+struct NearFrameStats {
+    std::vector<int> attached;
+    std::vector<int> dropped;
+    std::uint64_t in_flight = 0;    // tasks running after step 6
+    std::uint64_t attach_usec = 0;  // step 5
+};
+
+// One worker task's slot: what it reads (set by the main thread before the
+// task starts, unchanged while it runs) and what it writes (read by the main
+// thread only after the task has completed).
+struct NearSlot {
+    bool busy = false;
+    std::int64_t task = -1;
+    int cell = -1;
+    std::uint64_t generation = 0;
+    std::uint64_t threshold = 0;
+    const terrain::VegetationInputs* inputs = nullptr;
+    int m = 0;
+    std::uint8_t tint_mode = 0;
+    std::array<std::vector<float>, terrain::VEGETATION_KINDS> buffers;
+    std::array<std::uint32_t, terrain::VEGETATION_KINDS> counts{};
+    std::uint64_t usec = 0;
+};
+
+// A computed cell's result, held until it is attached or released.
+struct NearResult {
+    std::array<std::vector<float>, terrain::VEGETATION_KINDS> buffers;
+    std::array<std::uint32_t, terrain::VEGETATION_KINDS> counts{};
+};
+
 class TerrainPreview : public godot::Node3D {
     GDCLASS(TerrainPreview, godot::Node3D)
 
 public:
     TerrainPreview() = default;
 
+    ~TerrainPreview() override;
+
     void _ready() override;
+    void _exit_tree() override;
     void _process(double delta) override;
     void _unhandled_input(const godot::Ref<godot::InputEvent>& event) override;
 
@@ -145,6 +203,21 @@ public:
     [[nodiscard]] bool no_trees_option() const noexcept { return no_trees_; }
     [[nodiscard]] std::uint64_t instance_cap() const noexcept { return instance_cap_; }
     [[nodiscard]] bool trees_visible() const noexcept { return trees_visible_; }
+    // V3D-03.
+    [[nodiscard]] bool whole_map_option() const noexcept { return veg_whole_map_; }
+    [[nodiscard]] double veg_radius() const noexcept { return veg_radius_; }
+    [[nodiscard]] int veg_threads() const noexcept { return veg_threads_; }
+    [[nodiscard]] bool tier_colours_option() const noexcept { return tier_colours_; }
+    [[nodiscard]] const terrain::NearCells* near_cells() const noexcept { return near_.get(); }
+    [[nodiscard]] godot::Node3D* near_root() const noexcept { return near_root_; }
+    [[nodiscard]] const NearFrameStats& near_stats() const noexcept { return near_stats_; }
+    [[nodiscard]] const terrain::VegetationInputs& vegetation_inputs() const noexcept { return veg_inputs_; }
+    // The HUD's vegetation line (9.2).
+    [[nodiscard]] std::string vegetation_hud_line() const;
+    // Places the camera (the check's path).
+    void set_fly_state(const terrain::FlyState& state);
+    // The start of the forest path of 12.1 (60 m above the ground, heading 0).
+    [[nodiscard]] terrain::FlyState forest_start() const;
     // The world shown, as opened.
     [[nodiscard]] const godot::String& current_path() const noexcept { return current_path_; }
 
@@ -198,6 +271,20 @@ private:
     void on_first_drawn_frame();
     void finish_bench();
 
+    // Near tier (terrain_preview_near.cpp).
+    void near_open();
+    void near_close();
+    void near_frame();
+    void near_attach(int q, NearResult& result);
+    void near_free_nodes(int q);
+    void compute_near_slot(int slot);
+    void finish_slot(NearSlot& slot);
+    [[nodiscard]] bool near_settled() const;
+    // Bench additions (12).
+    void bench_phases(float dt);
+    void start_forest_flight(int index);
+    void print_tiers_line();
+    void finish_forest_flight();
     godot::Camera3D* camera_ = nullptr;
     godot::MeshInstance3D* sea_ = nullptr;
     godot::Label* hud_ = nullptr;
@@ -216,6 +303,7 @@ private:
     std::vector<godot::Ref<godot::ImageTexture>> normal_textures_;
     std::vector<double> mean_grey_;
     std::array<godot::Ref<godot::PackedScene>, terrain::VEGETATION_KINDS> mesh_scenes_;
+    std::array<std::array<godot::Ref<godot::ArrayMesh>, 2>, terrain::VEGETATION_KINDS> veg_meshes_;
     std::vector<godot::String> status_lines_;
     TerrainTimings timings_;
 
@@ -242,6 +330,13 @@ private:
     bool no_trees_ = false;
     std::uint64_t instance_cap_ = terrain::DEFAULT_INSTANCE_CAP;
     std::optional<float> opt_above_;
+    bool instance_cap_given_ = false;
+    bool veg_whole_map_ = false;
+    bool veg_radius_given_ = false;
+    double veg_radius_ = terrain::NEAR_RADIUS_DEFAULT;
+    int veg_threads_ = 4;
+    bool tier_colours_ = false;
+    bool at_forest_ = false;
     bool trees_visible_ = true;
     godot::String current_path_;
     bool refused_ = false;
@@ -256,6 +351,45 @@ private:
     std::uint64_t last_frame_usec_ = 0;
     std::vector<std::uint64_t> frame_usec_;
     int view_frames_ = 0;
+
+    // Near tier.
+    terrain::VegetationInputs veg_inputs_;
+    std::unique_ptr<terrain::NearCells> near_;
+    godot::Node3D* near_root_ = nullptr;
+    std::array<NearSlot, 8> near_slots_;
+    std::uint64_t near_generation_ = 0;
+    bool exiting_ = false;  // in _exit_tree: the near nodes go with the tree
+    std::map<int, NearResult> near_results_;
+    std::map<int, std::vector<godot::MultiMeshInstance3D*>> near_nodes_;
+    NearFrameStats near_stats_;
+    std::uint64_t compute_usec_sum_ = 0;
+    std::uint64_t compute_usec_max_ = 0;
+    std::uint64_t compute_cells_ = 0;
+    std::uint64_t attach_usec_max_ = 0;
+
+    // The check's path (terrain_check_near.cpp), driven frame by frame.
+    std::unique_ptr<TerrainCheckRun> check_run_;
+
+    // Screenshot and bench phases of V3D-03.
+    enum class Phase { none, screenshot_settle, headless_settle, view_settle, forest_settle, forest_fly };
+    Phase phase_ = Phase::none;
+    // Near frames run since the phase began: a settle test counts only after
+    // the near tier has seen the camera where the phase put it.
+    int phase_frames_ = 0;
+    std::uint64_t phase_start_usec_ = 0;
+    std::uint64_t view_start_usec_ = 0;
+    std::uint64_t settled_usec_ = 0;  // from the first frame at the view point; 0 until settled
+    bool settled_seen_ = false;
+    int forest_index_ = 0;            // 0: 200 m/s, 1: 800 m/s
+    float forest_speed_ = 0.0f;
+    float forest_length_ = 0.0f;
+    float forest_done_ = 0.0f;
+    std::uint64_t forest_filled_ = 0;
+    std::uint64_t forest_dropped_ = 0;
+    std::uint64_t forest_late0_ = 0;
+    std::uint64_t forest_pending_max_ = 0;
+    std::uint64_t forest_t0_ = 0;
+    bool forest_recording_ = false;
 };
 
 }  // namespace unmapped

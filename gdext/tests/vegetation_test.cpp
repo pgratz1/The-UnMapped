@@ -409,3 +409,196 @@ TEST_CASE("U13 instances spread evenly and independently over their cell (Paul, 
     CHECK(std::abs(correlation(c, d)) < 0.01);
     CHECK(std::abs(correlation(e, f)) < 0.01);
 }
+
+// --- Spec V3D-03 11.1: U17, U18, U24, U25 (vegetation part) ---------------------------
+
+namespace {
+
+VegetationInputs inputs_of(const World& w, std::uint64_t seed) {
+    VegetationInputs in;
+    in.layout = &w.layout;
+    in.heights = w.heights;
+    in.elevation = w.elevation;
+    in.timber = w.timber;
+    in.water = w.water;
+    in.cells = &w.cells;
+    in.seed = seed;
+    return in;
+}
+
+bool same(const Candidate& a, const Candidate& b) { return same(a.instance, b.instance) && a.thin == b.thin && a.kind == b.kind; }
+
+// The terrain cell of an instance: its nearest vertex (the jitter is under 8 m).
+std::pair<int, int> cell_of(const Layout& layout, const Instance& i) {
+    const CellHit hit = world_to_cell(layout, i.x, i.z);
+    return {hit.x, hit.y};
+}
+
+}  // namespace
+
+TEST_CASE("U17 place_candidates over rectangles equals the whole map's list filtered by cell") {
+    const World w = mixed_world();
+    const VegetationInputs in = inputs_of(w, 42);
+    const std::vector<Candidate> whole = place_candidates(in, 0, 0, 512, 512);
+    // The whole-map list is the test's own 6.4 list, field for field.
+    const std::vector<Cand> own = own_candidates(w, 42);
+    REQUIRE(whole.size() == own.size());
+    std::size_t differ = 0;
+    for (std::size_t p = 0; p < own.size(); ++p) {
+        differ += (whole[p].kind == own[p].kind && whole[p].instance.x == own[p].x && whole[p].instance.z == own[p].z &&
+                   whole[p].thin == own[p].thin)
+                      ? 0u
+                      : 1u;
+    }
+    CHECK(differ == 0);
+    // The placement is built on it.
+    const Placement all = place(w, 42, MAX_INSTANCE_CAP);
+    CHECK(all.candidates == whole.size());
+    struct Rect {
+        int x0, y0, x1, y1;
+    };
+    const std::vector<Rect> rects = {
+        {0, 0, 512, 512},     {0, 0, 1, 1},       {511, 511, 512, 512}, {0, 511, 1, 512},   {511, 0, 512, 1},
+        {0, 0, 16, 16},       {496, 496, 512, 512}, {100, 200, 101, 201}, {0, 100, 512, 101}, {100, 0, 101, 512},
+        {-20, -20, 30, 30},   {480, 480, 600, 600}, {256, 256, 272, 272}, {17, 33, 99, 34},   {300, 10, 301, 500},
+        {40, 40, 40, 80},     {0, 255, 512, 257},  {255, 0, 257, 512},   {123, 321, 222, 444}, {-5, 200, 5, 600},
+    };
+    for (const Rect& r : rects) {
+        CAPTURE(r.x0);
+        CAPTURE(r.y0);
+        CAPTURE(r.x1);
+        CAPTURE(r.y1);
+        const std::vector<Candidate> got = place_candidates(in, r.x0, r.y0, r.x1, r.y1);
+        std::vector<Candidate> want;
+        for (const Candidate& c : whole) {
+            const auto [x, y] = cell_of(w.layout, c.instance);
+            if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1) {
+                want.push_back(c);
+            }
+        }
+        REQUIRE(got.size() == want.size());
+        std::size_t bad = 0;
+        for (std::size_t p = 0; p < got.size(); ++p) {
+            bad += same(got[p], want[p]) ? 0u : 1u;
+        }
+        CHECK(bad == 0);
+    }
+}
+
+TEST_CASE("U18 the partition between the far tier and the near cells") {
+    const World w = mixed_world();
+    const VegetationInputs in = inputs_of(w, 9);
+    const std::vector<Candidate> whole = place_candidates(in, 0, 0, 512, 512);
+    std::vector<std::uint32_t> thins;
+    for (const Candidate& c : whole) {
+        if (FAR_KIND[c.kind]) {
+            thins.push_back(c.thin);
+        }
+    }
+    std::sort(thins.begin(), thins.end());
+    const std::uint64_t s_far = thins.size();
+    REQUIRE(s_far > 2000);
+    // No tie in the test world, so the far count is exactly min(B, S_far).
+    CHECK(std::adjacent_find(thins.begin(), thins.end()) == thins.end());
+    for (const std::uint64_t budget : {std::uint64_t{0}, std::uint64_t{1}, std::uint64_t{1000}, s_far - 1, s_far,
+                                       std::uint64_t{1000000000}}) {
+        CAPTURE(budget);
+        const std::uint64_t T = s_far <= budget ? THIN_ALL : thins[static_cast<std::size_t>(budget)];
+        const FarTier tier = place_far_tier(in, budget);
+        CHECK(tier.threshold == T);
+        CHECK(tier.far_candidates == s_far);
+        CHECK(tier.budget == budget);
+        CHECK(tier.placement.candidates == whole.size());
+        CHECK(tier.placement.kinds[2].empty());
+        CHECK(tier.placement.kinds[3].empty());
+        CHECK(tier.placement.kept() == std::min(budget, s_far));
+        // Exactly the far set, in placement order.
+        std::array<std::size_t, 5> next{};
+        std::size_t bad = 0;
+        for (const Candidate& c : whole) {
+            if (!(FAR_KIND[c.kind] && c.thin < T)) {
+                continue;
+            }
+            const auto& list = tier.placement.kinds[c.kind];
+            std::size_t& at = next[c.kind];
+            bad += (at < list.size() && same(list[at], c.instance)) ? 0u : 1u;
+            ++at;
+        }
+        for (std::size_t k = 0; k < 5; ++k) {
+            bad += next[k] == tier.placement.kinds[k].size() ? 0u : 1u;
+        }
+        CHECK(bad == 0);
+        // Per near cell: near instances and far instances of its cells are
+        // disjoint and together the candidates of its rectangle, per kind.
+        std::vector<std::array<std::vector<Instance>, 5>> far_by_cell(32 * 32);
+        for (std::size_t k = 0; k < 5; ++k) {
+            for (const Instance& i : tier.placement.kinds[k]) {
+                const auto [x, y] = cell_of(w.layout, i);
+                far_by_cell[static_cast<std::size_t>((y / 16) * 32 + x / 16)][k].push_back(i);
+            }
+        }
+        std::size_t wrong = 0;
+        for (int j = 0; j < 32; j += (budget == 1000 ? 1 : 3)) {
+            for (int i = 0; i < 32; i += (budget == 1000 ? 1 : 3)) {
+                const auto nearby = near_instances(in, i, j, T);
+                const std::vector<Candidate> cands = place_candidates(in, 16 * i, 16 * j, 16 * i + 16, 16 * j + 16);
+                std::array<std::size_t, 5> ni{};
+                std::array<std::size_t, 5> fi{};
+                const auto& fars = far_by_cell[static_cast<std::size_t>(j * 32 + i)];
+                for (const Candidate& c : cands) {
+                    const bool far = FAR_KIND[c.kind] && c.thin < T;
+                    const auto& list = far ? fars[c.kind] : nearby[c.kind];
+                    std::size_t& at = far ? fi[c.kind] : ni[c.kind];
+                    wrong += (at < list.size() && same(list[at], c.instance)) ? 0u : 1u;
+                    ++at;
+                }
+                for (std::size_t k = 0; k < 5; ++k) {
+                    wrong += (ni[k] == nearby[k].size() && fi[k] == fars[k].size()) ? 0u : 1u;
+                }
+            }
+        }
+        CHECK(wrong == 0);
+    }
+}
+
+TEST_CASE("U24 instance_buffer") {
+    std::vector<Instance> list(3);
+    list[0] = {10.5f, 20.25f, -30.125f, 0, 1000, 0};
+    list[1] = {-4000.0f, 0.0f, 4080.0f, 256, 700, 255};
+    list[2] = {123.0078125f, -5.5f, 7.0f, 1000, 1400, 77};
+    for (const std::uint8_t mode : {std::uint8_t{0}, std::uint8_t{1}}) {
+        CAPTURE(static_cast<int>(mode));
+        const std::vector<float> b = instance_buffer(list, mode);
+        REQUIRE(b.size() == 48);
+        for (std::size_t k = 0; k < 3; ++k) {
+            const Instance& in = list[k];
+            const float* p = &b[16 * k];
+            const double s = in.scale_pm / 1000.0;
+            const double a = in.yaw1024 * 2.0 * 3.14159265358979323846 / 1024.0;
+            CHECK(p[3] == in.x);
+            CHECK(p[7] == in.y);
+            CHECK(p[11] == in.z);
+            CHECK(p[1] == 0.0f);
+            CHECK(p[4] == 0.0f);
+            CHECK(p[6] == 0.0f);
+            CHECK(p[9] == 0.0f);
+            CHECK(p[5] == static_cast<float>(in.scale_pm) / 1000.0f);
+            CHECK(std::abs(static_cast<double>(p[0]) - s * std::cos(a)) < 1e-6);
+            CHECK(std::abs(static_cast<double>(p[2]) - s * std::sin(a)) < 1e-6);
+            CHECK(std::abs(static_cast<double>(p[8]) + s * std::sin(a)) < 1e-6);
+            CHECK(std::abs(static_cast<double>(p[10]) - s * std::cos(a)) < 1e-6);
+            const float v = static_cast<float>(200 + in.tint * 55 / 255) / 255.0f;
+            CHECK(p[12] == v);
+            CHECK(p[13] == (mode == 1 ? 0.45f * v : v));
+            CHECK(p[14] == (mode == 1 ? 0.45f * v : v));
+            CHECK(p[15] == 1.0f);
+        }
+    }
+    CHECK(instance_buffer({}, 0).empty());
+}
+
+TEST_CASE("U25 tier constants") {
+    CHECK(DEFAULT_FAR_BUDGET == 2000000);  // Paul, 2026-11-27 (spec r1: 1,000,000)
+    CHECK(FAR_KIND == std::array<bool, 5>{true, true, false, false, true});
+    CHECK(THIN_ALL == 4294967296ull);
+}

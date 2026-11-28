@@ -89,10 +89,70 @@ struct Placement {
 };
 
 // 6.3, 6.4. timber and water empty when absent. Throws std::invalid_argument
-// on a size mismatch.
+// on a size mismatch. Built on place_candidates over the whole map.
 [[nodiscard]] Placement place_vegetation(const Layout& layout, std::span<const float> heights,
                                          std::span<const std::int16_t> elevation, std::span<const std::uint8_t> timber,
                                          std::span<const std::uint8_t> water, const GroundCells& cells,
                                          std::uint64_t seed, std::uint64_t cap);
+
+// --- Tiers (spec V3D-03 4, 5) -------------------------------------------------------
+
+// One candidate of 6.4 before any cap: the instance, its keyed thin draw and
+// its mesh id.
+struct Candidate {
+    Instance instance;
+    std::uint32_t thin = 0;
+    std::uint8_t kind = 0;
+};
+
+// The inputs of a placement, as place_vegetation's arguments. timber and
+// water empty when absent. The pointers and spans must outlive every use;
+// the scene keeps them unchanged while a worker task reads them.
+struct VegetationInputs {
+    const Layout* layout = nullptr;
+    std::span<const float> heights;
+    std::span<const std::int16_t> elevation;
+    std::span<const std::uint8_t> timber;
+    std::span<const std::uint8_t> water;
+    const GroundCells* cells = nullptr;
+    std::uint64_t seed = 0;
+};
+
+// 6.4's candidates of terrain cells x0 <= x < x1, y0 <= y < y1 (clamped to
+// the map), in placement order (y, x, kind, k): the whole map's list
+// filtered by cell. Throws std::invalid_argument on a size mismatch.
+[[nodiscard]] std::vector<Candidate> place_candidates(const VegetationInputs& in, int x0, int y0, int x1, int y1);
+
+// 4.1: the kinds of the far tier (trees and snags); shrubs and reeds are
+// near-only.
+inline constexpr std::array<bool, VEGETATION_KINDS> FAR_KIND = {true, true, false, false, true};
+inline constexpr std::uint64_t DEFAULT_FAR_BUDGET = 2000000;  // Paul, 2026-11-27 (spec r1: 1,000,000)
+inline constexpr std::uint64_t THIN_ALL = std::uint64_t{1} << 32;  // T when the budget holds every far candidate
+
+// 4.2: the far tier. threshold T, far_candidates S_far, budget B;
+// placement.kinds the far instances (thin < T) in placement order, ids 2
+// and 3 empty; placement.candidates S (every kind), placement.cap B.
+struct FarTier {
+    std::uint64_t threshold = THIN_ALL;
+    std::uint64_t far_candidates = 0;
+    std::uint64_t budget = 0;
+    Placement placement;
+};
+[[nodiscard]] FarTier place_far_tier(const VegetationInputs& in, std::uint64_t budget);
+
+// Whether a candidate belongs to the far tier of threshold T (4.2).
+[[nodiscard]] inline bool is_far(const Candidate& c, std::uint64_t threshold) noexcept {
+    return FAR_KIND[c.kind] && static_cast<std::uint64_t>(c.thin) < threshold;
+}
+
+// 4.2: Extra of near cell (i, j), terrain cells 16i to 16i + 15 and 16j to
+// 16j + 15, per kind, in placement order.
+[[nodiscard]] std::array<std::vector<Instance>, VEGETATION_KINDS> near_instances(const VegetationInputs& in, int i, int j,
+                                                                                  std::uint64_t threshold);
+
+// 7.2: 16 floats per instance, the 3 x 4 transform rows (basis row, origin
+// component) then RGBA. tint_mode 0 grey (v, v, v), 1 the tier colours
+// (v, 0.45 v, 0.45 v).
+[[nodiscard]] std::vector<float> instance_buffer(std::span<const Instance> instances, std::uint8_t tint_mode);
 
 }  // namespace unmapped::terrain

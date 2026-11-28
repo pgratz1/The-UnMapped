@@ -28,6 +28,7 @@
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/viewport_texture.hpp>
+#include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/mesh.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
@@ -100,7 +101,8 @@ godot::Color srgb_byte_colour(std::uint32_t rgba) {
 // A PackedScene of one vegetation kind built in code (V3D-02 9.1 step 3): a
 // Node3D root with one MeshInstance3D child per LOD, MeshLOD0 and MeshLOD1,
 // owned by the root.
-godot::Ref<godot::PackedScene> vegetation_scene(int kind, const godot::Ref<godot::StandardMaterial3D>& material) {
+godot::Ref<godot::PackedScene> vegetation_scene(int kind, const godot::Ref<godot::StandardMaterial3D>& material,
+                                                 std::array<godot::Ref<godot::ArrayMesh>, 2>& meshes) {
     godot::Node3D* root = memnew(godot::Node3D);
     root->set_name(terrain::VEGETATION_KINDS_INFO[static_cast<std::size_t>(kind)].name);
     for (int lod = 0; lod < terrain::lod_count(kind); ++lod) {
@@ -127,6 +129,7 @@ godot::Ref<godot::PackedScene> vegetation_scene(int kind, const godot::Ref<godot
         mesh.instantiate();
         mesh->add_surface_from_arrays(godot::Mesh::PRIMITIVE_TRIANGLES, arrays);
         mesh->surface_set_material(0, material);
+        meshes[static_cast<std::size_t>(lod)] = mesh;
         godot::MeshInstance3D* instance = memnew(godot::MeshInstance3D);
         instance->set_name(godot::String("MeshLOD") + godot::String::num_int64(lod));
         instance->set_mesh(mesh);
@@ -170,6 +173,24 @@ godot::String TerrainPreview::status_text() const {
         text += status_lines_[i];
     }
     return text;
+}
+
+TerrainPreview::~TerrainPreview() {
+    // _exit_tree has waited for every task; this is a last guard for a
+    // preview freed outside the tree.
+    for (NearSlot& slot : near_slots_) {
+        if (slot.busy) {
+            godot::WorkerThreadPool::get_singleton()->wait_for_task_completion(slot.task);
+            slot.busy = false;
+        }
+    }
+}
+
+void TerrainPreview::_exit_tree() {
+    // V3D-03 7.1: every worker task is finished before the scene exits.
+    check_run_.reset();
+    exiting_ = true;
+    near_close();
 }
 
 void TerrainPreview::_ready() {
@@ -320,6 +341,7 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             const int64_t v = text.is_valid_int() ? text.to_int() : -1;
             if (v >= 0 && v <= static_cast<int64_t>(terrain::MAX_INSTANCE_CAP)) {
                 instance_cap_ = static_cast<std::uint64_t>(v);
+                instance_cap_given_ = true;
             } else {
                 refuse("--instance-cap " + text + ": not a whole number from 0 to 4000000");
             }
@@ -331,6 +353,31 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             } else {
                 refuse("--above " + text + ": not a number");
             }
+        } else if (arg == "--veg-radius" && has_one) {
+            // V3D-03 9.1: 0 or a whole number from 1536 to 8192.
+            const godot::String text = args[++i];
+            const int64_t v = text.is_valid_int() ? text.to_int() : -1;
+            if (v == 0 || (v >= static_cast<int64_t>(terrain::NEAR_RADIUS_MIN) &&
+                           v <= static_cast<int64_t>(terrain::NEAR_RADIUS_MAX))) {
+                veg_radius_ = static_cast<double>(v);
+                veg_radius_given_ = true;
+            } else {
+                refuse("--veg-radius " + text + ": 0 or a whole number from 1536 to 8192");
+            }
+        } else if (arg == "--veg-threads" && has_one) {
+            const godot::String text = args[++i];
+            const int64_t v = text.is_valid_int() ? text.to_int() : -1;
+            if (v >= 0 && v <= 8) {
+                veg_threads_ = static_cast<int>(v);
+            } else {
+                refuse("--veg-threads " + text + ": a whole number from 0 to 8");
+            }
+        } else if (arg == "--veg-whole-map") {
+            veg_whole_map_ = true;
+        } else if (arg == "--tier-colours") {
+            tier_colours_ = true;
+        } else if (arg == "--at-forest") {
+            at_forest_ = true;
         } else if (!arg.begins_with("--") && world_path_.is_empty()) {
             world_path_ = arg;
         }
@@ -338,6 +385,16 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
     scripted_ = !screenshot_path_.is_empty() || bench_ || !check_dir_.is_empty();
     if (opt_above_ && opt_alt_) {
         refuse("--above cannot be combined with --alt");
+    }
+    if (veg_whole_map_ && veg_radius_given_) {
+        refuse("--veg-whole-map cannot be combined with --veg-radius");
+    }
+    if (at_forest_ && opt_at_) {
+        refuse("--at-forest cannot be combined with --at");
+    }
+    if (!instance_cap_given_) {
+        // V3D-03 9.1: the far budget, or V3D-02's cap with --veg-whole-map.
+        instance_cap_ = veg_whole_map_ ? terrain::DEFAULT_INSTANCE_CAP : terrain::DEFAULT_FAR_BUDGET;
     }
     if (!screenshot_path_.is_empty()) {
         if (bench_ || !check_dir_.is_empty()) {
@@ -353,6 +410,8 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
 }
 
 void TerrainPreview::clear_world() {
+    // Every worker task finishes before the inputs it reads are freed.
+    near_close();
     if (terrain_ != nullptr) {
         remove_child(terrain_);
         terrain_->queue_free();
@@ -525,10 +584,26 @@ bool TerrainPreview::open_world(const godot::String& path) {
     timings_.control = now_usec() - t0;
     t0 = now_usec();
     scene_.vegetation = have_biome && !no_trees_;
-    if (scene_.vegetation) {
+    scene_.tiers = scene_.vegetation && !veg_whole_map_;
+    veg_inputs_ = terrain::VegetationInputs{};
+    veg_inputs_.layout = &*scene_.layout;
+    veg_inputs_.heights = scene_.heights;
+    veg_inputs_.elevation = scene_.elevation;
+    veg_inputs_.timber = scene_.timber;
+    veg_inputs_.water = scene_.water;
+    veg_inputs_.cells = &scene_.ground;
+    veg_inputs_.seed = scene_.seed;
+    if (scene_.tiers) {
+        // V3D-03 7.1: the far tier; the near tier follows the camera.
+        terrain::FarTier far = terrain::place_far_tier(veg_inputs_, instance_cap_);
+        scene_.far_threshold = far.threshold;
+        scene_.far_candidates = far.far_candidates;
+        scene_.placement = std::move(far.placement);
+    } else if (scene_.vegetation) {
         scene_.placement = terrain::place_vegetation(layout, scene_.heights, scene_.elevation, scene_.timber, scene_.water,
                                                      scene_.ground, scene_.seed, instance_cap_);
     }
+    scene_.forest_column = have_biome ? terrain::forest_column(layout, scene_.ground) : n / 2;
     timings_.placement = now_usec() - t0;
 
     t0 = now_usec();
@@ -562,6 +637,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
 
     place_sea();
     place_start();
+    near_open();
 
     if (opt_at_) {
         const auto [x, y] = *opt_at_;
@@ -576,12 +652,26 @@ bool TerrainPreview::open_world(const godot::String& path) {
         status_lines_.push_back("no biome layer: ground drawn grey, no vegetation");
     } else {
         status_lines_.push_back(scene_.textured ? "ground: textured, 15 ground types" : "ground: flat colours");
-        if (scene_.vegetation) {
+        if (scene_.tiers) {
+            // V3D-03 9.2.
+            godot::String line = "vegetation: far tier " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.kept())) +
+                                 " trees and snags of " + godot::String::num_int64(static_cast<int64_t>(scene_.far_candidates)) +
+                                 " (budget " + godot::String::num_int64(static_cast<int64_t>(instance_cap_)) + "); ";
+            if (veg_radius_ > 0.0) {
+                line += "near tier within " + godot::String::num_int64(static_cast<int64_t>(veg_radius_)) + " m in cells of 256 m";
+            } else {
+                line += "no near tier: no shrubs or reeds";
+            }
+            status_lines_.push_back(line);
+        }
+        if (scene_.vegetation && !scene_.tiers) {
             godot::String line = "vegetation: " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.kept())) + " instances";
             if (scene_.placement.candidates > scene_.placement.cap) {
                 line += ", thinned from " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.candidates)) + " to the cap";
             }
             status_lines_.push_back(line);
+        }
+        if (scene_.vegetation) {
             if (!scene_.seed_known) {
                 status_lines_.push_back("no seed in meta: vegetation placed with seed 0");
             }
@@ -636,7 +726,8 @@ void TerrainPreview::build_ground_assets() {
         material->set_roughness(0.9f);
         material->set_cull_mode(godot::BaseMaterial3D::CULL_BACK);
         for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
-            mesh_scenes_[static_cast<std::size_t>(kind)] = vegetation_scene(kind, material);
+            mesh_scenes_[static_cast<std::size_t>(kind)] =
+                vegetation_scene(kind, material, veg_meshes_[static_cast<std::size_t>(kind)]);
         }
     }
 }
@@ -877,6 +968,8 @@ void TerrainPreview::place_start() {
     if (opt_at_ && opt_at_->first >= 0 && opt_at_->second >= 0 && opt_at_->first < n && opt_at_->second < n) {
         cx = opt_at_->first;
         cy = opt_at_->second;
+    } else if (at_forest_) {
+        cx = scene_.forest_column;  // V3D-03 9.1: the forest path's start (12.1)
     }
     const terrain::Vec2 w = terrain::cell_to_world(layout, cx, cy);
     start_ = terrain::FlyState{};
@@ -885,6 +978,8 @@ void TerrainPreview::place_start() {
     start_.y = opt_alt_.value_or(scene_.h_max + 300.0f);
     if (opt_above_) {
         start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + *opt_above_;
+    } else if (at_forest_ && !opt_alt_) {
+        start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + 60.0f;
     }
     start_.heading_deg = opt_heading_.value_or(0.0f);
     start_.pitch_deg = opt_pitch_.value_or(-25.0f);
@@ -934,14 +1029,16 @@ void TerrainPreview::update_hud() {
         return;
     }
     const int fps = static_cast<int>(std::lround(godot::Engine::get_singleton()->get_frames_per_second()));
-    hud_->set_text(to_godot(hud_at(fly_.x, fly_.y, fly_.z, fps)) + "\n" + terrain::HUD_KEYS);
+    hud_->set_text(to_godot(hud_at(fly_.x, fly_.y, fly_.z, fps)) + "\n" + to_godot(vegetation_hud_line()) + "\n" +
+                   terrain::HUD_KEYS);
 }
 
 void TerrainPreview::after_load() {
     update_hud();
     if (!screenshot_path_.is_empty() && !refused_) {
-        // V3D-02 10.1: 2.0 s after the first drawn frame after the terrain
-        // is added (the instancer builds its multimeshes in that frame).
+        // V3D-03 9.1: after the first drawn frame after the terrain is added
+        // (the instancer builds its multimeshes in that frame), then once
+        // the near tier has settled (at most 30 s), 2.0 s.
         godot::RenderingServer::get_singleton()->connect(
             "frame_post_draw", callable_mp(this, &TerrainPreview::on_first_drawn_frame), godot::Object::CONNECT_ONE_SHOT);
     }
@@ -979,7 +1076,9 @@ std::uint64_t video_memory_bytes() {
 }  // namespace
 
 void TerrainPreview::on_first_drawn_frame() {
-    get_tree()->create_timer(2.0)->connect("timeout", callable_mp(this, &TerrainPreview::take_screenshot));
+    phase_ = Phase::screenshot_settle;
+    phase_frames_ = 0;
+    phase_start_usec_ = now_usec();
 }
 
 void TerrainPreview::bench_first_frame() {
@@ -1010,14 +1109,9 @@ void TerrainPreview::bench_first_frame() {
                                    static_cast<int64_t>(scene_.placement.kept()), " of ",
                                    static_cast<int64_t>(scene_.placement.candidates), " (cap ",
                                    static_cast<int64_t>(instance_cap_), ")");
-    if (is_headless()) {
-        get_tree()->quit(0);
-        return;
-    }
     // V3D-02 12: the view at the centre cell, 150 m above the ground,
-    // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300.
-    godot::DisplayServer::get_singleton()->window_set_vsync_mode(godot::DisplayServer::VSYNC_DISABLED);
-    godot::OS::get_singleton()->set_low_processor_usage_mode(false);
+    // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300. V3D-03
+    // 12.2: the near tier's settling is timed from here.
     const terrain::Vec2 c = terrain::cell_to_world(*scene_.layout, n / 2, n / 2);
     fly_ = start_;
     fly_.x = c.x;
@@ -1026,6 +1120,22 @@ void TerrainPreview::bench_first_frame() {
     fly_.heading_deg = 0.0f;
     fly_.pitch_deg = -10.0f;
     apply_camera();
+    view_start_usec_ = now_usec();
+    settled_usec_ = 0;
+    settled_seen_ = false;
+    if (is_headless()) {
+        // Headless: the V3D-02 lines and the tiers line only.
+        if (scene_.tiers) {
+            phase_ = Phase::headless_settle;
+            phase_frames_ = 0;
+            phase_start_usec_ = now_usec();
+        } else {
+            get_tree()->quit(0);
+        }
+        return;
+    }
+    godot::DisplayServer::get_singleton()->window_set_vsync_mode(godot::DisplayServer::VSYNC_DISABLED);
+    godot::OS::get_singleton()->set_low_processor_usage_mode(false);
     view_frames_ = 0;
     frame_usec_.clear();
     last_frame_usec_ = now_usec();
@@ -1057,7 +1167,11 @@ void TerrainPreview::bench_view_frame() {
     godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: view at cell (", n / 2, ", ", n / 2,
                                    "), 150 m above ground: frames 300, mean ", ms(sum / frame_usec_.size()), ", max ",
                                    ms(max), ", over 16.7 ms ", over16);
-    start_flight();
+    // V3D-03 12.2: the tiers line once the near tier has settled, then the
+    // forest flights, then V3D-01's flight.
+    phase_ = Phase::view_settle;
+    phase_frames_ = 0;
+    phase_start_usec_ = now_usec();
 }
 
 void TerrainPreview::start_flight() {
@@ -1117,11 +1231,24 @@ void TerrainPreview::_process(double delta) {
     const auto ground = [this](float X, float Z) {
         return terrain::ground_clamp(*scene_.layout, scene_.heights, X, Z);
     };
+    if (check_run_) {
+        // The check's path: the check places the camera, the near tier
+        // runs its frame, the check looks at the result.
+        check_run_->before_frame(*this);
+        near_frame();
+        if (!check_run_->after_frame(*this)) {
+            const int code = check_run_->exit_code();
+            check_run_.reset();
+            get_tree()->quit(code);
+        }
+        return;
+    }
     if (flying_) {
         terrain::FlyInput in;
         in.forward = 1;
         terrain::step(fly_, in, dt, ground, bound);
         apply_camera();
+        near_frame();
         flight_time_ += dt;
         if (flight_time_ >= flight_length_) {
             finish_bench();
@@ -1129,6 +1256,13 @@ void TerrainPreview::_process(double delta) {
         return;
     }
     if (scripted_) {
+        const Phase before = phase_;
+        bench_phases(dt);
+        if (phase_ != before) {
+            phase_frames_ = 0;
+        }
+        near_frame();
+        ++phase_frames_;
         update_hud();
         return;
     }
@@ -1151,6 +1285,7 @@ void TerrainPreview::_process(double delta) {
     boost_ = in.boost;
     terrain::step(fly_, in, dt, ground, bound);
     apply_camera();
+    near_frame();
     update_hud();
 }
 
@@ -1228,6 +1363,9 @@ bool TerrainPreview::toggle_trees() {
         return false;
     }
     trees_visible_ = !trees_visible_;
+    if (near_root_ != nullptr) {
+        near_root_->set_visible(trees_visible_);  // V3D-03 7.2: the bookkeeping keeps running
+    }
     godot::Object* assets = terrain_->call("get_assets");
     if (assets == nullptr) {
         return false;
@@ -1283,7 +1421,10 @@ void TerrainPreview::run_check_deferred() {
     options.reference_dir = check_dir_;
     options.expect_terrain3d = expect_terrain3d_.is_empty() ? godot::String("absent") : expect_terrain3d_;
     options.world_path = world_path_;
-    const int code = run_terrain_check(*this, options);
+    const int code = run_terrain_check(*this, options, &check_run_);
+    if (check_run_) {
+        return;  // the path runs in _process (V3D-03 11.2)
+    }
     get_tree()->quit(code);
 }
 

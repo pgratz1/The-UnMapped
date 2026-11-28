@@ -12,7 +12,7 @@
 set(UNMAPPED_GODOT_PROJECT_DIR "${CMAKE_BINARY_DIR}/game" CACHE INTERNAL
     "Run copy of the Godot project (links to game/ plus bin/)")
 
-# The plain-C++ parts of the 3D terrain preview (spec V3D-01 6, V3D-02 8): no Godot
+# The plain-C++ parts of the 3D terrain preview (spec V3D-01 6, V3D-02 8, V3D-03 5, 6): no Godot
 # types, so the unit tests (gdext-terrain-tests) link them without Godot.
 add_library(unmapped_terrain_core STATIC
     src/terrain/terrain_data.cpp
@@ -20,6 +20,7 @@ add_library(unmapped_terrain_core STATIC
     src/terrain/ground.cpp
     src/terrain/vegetation.cpp
     src/terrain/placeholder_meshes.cpp
+    src/terrain/near_cells.cpp
 )
 target_include_directories(unmapped_terrain_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(unmapped_terrain_core PUBLIC worldgen::worldgen)
@@ -32,6 +33,8 @@ add_library(unmapped_gdext SHARED
     src/terrain/terrain_preview.cpp
     src/terrain/terrain_check.cpp
     src/terrain/terrain_check_ground.cpp
+    src/terrain/terrain_check_near.cpp
+    src/terrain/terrain_preview_near.cpp
     src/world_file.cpp
     src/world_layer.cpp
     src/viewer/history_state.cpp
@@ -200,6 +203,7 @@ if(UNMAPPED_BUILD_TESTS)
         tests/ground_test.cpp
         tests/vegetation_test.cpp
         tests/meshes_test.cpp
+        tests/near_cells_test.cpp
     )
     target_link_libraries(gdext-terrain-tests PRIVATE unmapped_terrain_core worldgen::worldgen unmapped::doctest)
     unmapped_project_target(gdext-terrain-tests)

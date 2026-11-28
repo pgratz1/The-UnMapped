@@ -171,7 +171,8 @@ void check_no_world(TerrainPreview& preview, const TerrainCheckOptions& options,
 
 }  // namespace
 
-int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& options) {
+int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& options,
+                      std::unique_ptr<TerrainCheckRun>* path) {
     Checker c;
     Checker::info("terrain check of " + options.world_path + ", Godot " +
                   godot::String(godot::Engine::get_singleton()->get_version_info()["string"]) +
@@ -459,6 +460,13 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
     // V3D-02 T16: keys T and G (G reopens the world twice).
     run_key_checks(preview, options, c);
 
+    // V3D-03: T17 here, then the path (T18 to T24) over frames.
+    if (path != nullptr) {
+        *path = start_near_check(preview, options, c);
+        if (*path) {
+            return -1;
+        }
+    }
     godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
     return c.all ? 0 : 1;
 }
