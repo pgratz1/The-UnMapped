@@ -9,7 +9,7 @@
 
 namespace unmapped::terrain {
 
-NearGrid build_near_grid(const Layout& layout, std::span<const float> heights) {
+NearGrid build_near_grid(const Layout& layout, std::span<const float> heights, const GroundField* field, double below) {
     const int n = layout.n;
     const std::size_t total = static_cast<std::size_t>(n) * static_cast<std::size_t>(n);
     if (heights.size() != total) {
@@ -26,12 +26,16 @@ NearGrid build_near_grid(const Layout& layout, std::span<const float> heights) {
             b.x1 = b.x0 + NEAR_CELL_M;
             b.z0 = 16.0 * static_cast<double>(16 * j - n / 2) - 8.0;
             b.z1 = b.z0 + NEAR_CELL_M;
-            float lo = heights[0];
-            float hi = heights[0];
+            // V3D-06 10: the field's vertices of the same area when given.
+            const int f = field != nullptr ? field->f : 1;
+            const int fn = field != nullptr ? field->layout.n : n;
+            const std::span<const float> hs = field != nullptr ? std::span<const float>(field->heights) : heights;
+            float lo = hs[0];
+            float hi = hs[0];
             bool first = true;
-            for (int y = std::max(0, 16 * j - 1); y <= std::min(n - 1, 16 * j + 16); ++y) {
-                for (int x = std::max(0, 16 * i - 1); x <= std::min(n - 1, 16 * i + 16); ++x) {
-                    const float h = heights[static_cast<std::size_t>(y) * static_cast<std::size_t>(n) + static_cast<std::size_t>(x)];
+            for (int y = std::max(0, (16 * j - 1) * f); y <= std::min(fn - 1, (16 * j + 16) * f); ++y) {
+                for (int x = std::max(0, (16 * i - 1) * f); x <= std::min(fn - 1, (16 * i + 16) * f); ++x) {
+                    const float h = hs[static_cast<std::size_t>(y) * static_cast<std::size_t>(fn) + static_cast<std::size_t>(x)];
                     if (first) {
                         lo = h;
                         hi = h;
@@ -42,7 +46,7 @@ NearGrid build_near_grid(const Layout& layout, std::span<const float> heights) {
                     }
                 }
             }
-            b.bot = static_cast<double>(lo) - NEAR_BOX_BELOW;
+            b.bot = static_cast<double>(lo) - below;
             b.top = static_cast<double>(hi) + NEAR_BOX_ABOVE;
         }
     }

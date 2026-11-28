@@ -1,6 +1,7 @@
 #include "terrain/markers3d.hpp"
 
 #include <algorithm>
+#include <map>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -131,7 +132,8 @@ std::string outpost_text(const std::string& name, const std::string& founder, st
 
 // --- Records (3) ------------------------------------------------------------------------
 
-MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::optional<std::int64_t> year) {
+MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::optional<std::int64_t> year, bool pads,
+                              int map_n) {
     namespace history = worldgen::history;
     namespace inspect = worldgen::inspect;
     MarkerLoad out;
@@ -167,151 +169,190 @@ MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::opt
         }
         const std::int64_t end = h.timeline.end_year();
         out.end_year = end;
-        std::int64_t y = end;
+        std::int64_t shown = end;
         if (year) {
-            y = std::min(*year, end);
+            shown = std::min(*year, end);
             out.year_clamped = *year > end;
         }
-        out.year = y;
-        inspect::MarkerOptions options;
-        options.faded = true;
-        options.events = false;
-        options.passes = false;
-        options.sites = true;
-        const inspect::YearMarkers markers = index.value().markers_at(h, y, options);
-        const auto sentence = [&view](std::int64_t event) -> std::string {
-            try {
-                return history::render_event(view, event);
-            } catch (const std::exception& e) {
-                return std::string("(") + e.what() + ")";
-            }
-        };
+        out.year = shown;
+        const auto build_year = [&](std::int64_t y, bool texts) {
+            std::vector<MarkerRecord> records;
+            inspect::MarkerOptions options;
+            options.faded = true;
+            options.events = false;
+            options.passes = false;
+            options.sites = true;
+            const inspect::YearMarkers markers = index.value().markers_at(h, y, options);
+            const auto sentence = [&view, texts](std::int64_t event) -> std::string {
+                if (!texts) {
+                    return {};
+                }
+                try {
+                    return history::render_event(view, event);
+                } catch (const std::exception& e) {
+                    return std::string("(") + e.what() + ")";
+                }
+            };
 
-        // Settlement entries, ascending settlement id.
-        for (const inspect::SettlementMarker& s : markers.settlements) {
-            MarkerRecord r;
-            r.id = s.settlement;
-            r.x = static_cast<int>(s.x);
-            r.y = static_cast<int>(s.y);
-            r.settlement_kind = static_cast<int>(s.kind);
-            r.population = s.population;
-            r.name = name_of(view, EntityType::settlement, s.settlement, "settlement");
-            const std::string kind_word(history::settlement_kind_word(s.kind));
-            const inspect::MarkerType type = inspect::settlement_marker_type(s);
-            if (type == inspect::MarkerType::standing) {
-                r.kind = MarkerKind::settlement;
-                r.capital = s.capital;
-                r.declining = s.status == 2;
-                r.colour = s.owner == 0 ? MARKER_NO_OWNER : colour_of(colours, s.owner, MARKER_NO_OWNER);
-                r.kind_word = kind_word + (s.capital ? ", capital" : "");
-                SettlementTextParts parts;
-                parts.name = r.name;
-                parts.kind = s.kind;
-                parts.status = s.status;
-                parts.capital = s.capital;
-                parts.owner = s.owner != 0 ? name_of(view, EntityType::civilization, s.owner, "civilization") : "";
-                parts.population = s.population;
-                parts.since = s.since;
-                parts.founded = s.founded;
-                r.text = standing_text(parts);
-            } else {
-                const bool faded = type == inspect::MarkerType::faded;
-                r.kind = faded ? MarkerKind::old_ruin : MarkerKind::ruin;
-                r.colour = faded ? OLD_RUIN_STONE : RUIN_STONE;
-                const char* word = !faded ? "ruin of a" : s.status == 4 ? "faded ruin of a" : "old ruin of a";
-                r.kind_word = std::string(word) + " " + kind_word;
-                r.text = ruin_text(r.name, word, s.kind, s.ruined_year, s.ruin_event != 0 ? sentence(s.ruin_event) : "");
+            // Settlement entries, ascending settlement id.
+            for (const inspect::SettlementMarker& s : markers.settlements) {
+                MarkerRecord r;
+                r.id = s.settlement;
+                r.x = static_cast<int>(s.x);
+                r.y = static_cast<int>(s.y);
+                r.settlement_kind = static_cast<int>(s.kind);
+                r.population = s.population;
+                r.name = texts ? name_of(view, EntityType::settlement, s.settlement, "settlement") : std::string();
+                const std::string kind_word(history::settlement_kind_word(s.kind));
+                const inspect::MarkerType type = inspect::settlement_marker_type(s);
+                if (type == inspect::MarkerType::standing) {
+                    r.kind = MarkerKind::settlement;
+                    r.capital = s.capital;
+                    r.declining = s.status == 2;
+                    r.colour = s.owner == 0 ? MARKER_NO_OWNER : colour_of(colours, s.owner, MARKER_NO_OWNER);
+                    r.kind_word = kind_word + (s.capital ? ", capital" : "");
+                    SettlementTextParts parts;
+                    parts.name = r.name;
+                    parts.kind = s.kind;
+                    parts.status = s.status;
+                    parts.capital = s.capital;
+                    parts.owner = s.owner != 0 && texts ? name_of(view, EntityType::civilization, s.owner, "civilization") : "";
+                    parts.population = s.population;
+                    parts.since = s.since;
+                    parts.founded = s.founded;
+                    r.text = standing_text(parts);
+                } else {
+                    const bool faded = type == inspect::MarkerType::faded;
+                    r.kind = faded ? MarkerKind::old_ruin : MarkerKind::ruin;
+                    r.colour = faded ? OLD_RUIN_STONE : RUIN_STONE;
+                    const char* word = !faded ? "ruin of a" : s.status == 4 ? "faded ruin of a" : "old ruin of a";
+                    r.kind_word = std::string(word) + " " + kind_word;
+                    r.text = ruin_text(r.name, word, s.kind, s.ruined_year, s.ruin_event != 0 ? sentence(s.ruin_event) : "");
+                }
+                records.push_back(std::move(r));
             }
-            out.records.push_back(std::move(r));
-        }
 
-        // Sites: mines and towers from the markers, lairs and outposts open at
-        // Y from the timeline, merged ascending site id.
-        std::vector<MarkerRecord> sites;
-        for (const inspect::SiteMarker& m : markers.sites) {
-            if (m.kind != 3 && m.kind != 4) {
-                continue;
-            }
-            MarkerRecord r;
-            r.id = m.site;
-            r.x = static_cast<int>(m.x);
-            r.y = static_cast<int>(m.y);
-            r.name = name_of(view, EntityType::site, m.site, "site");
-            const worldgen::db::SiteRow* row = find_row(h.tables.sites, m.site);
-            const std::int64_t since = row != nullptr ? row->origin_year : 0;
-            if (m.kind == 3) {
-                r.kind = MarkerKind::mine;
-                r.colour = m.founder == 0 ? MARKER_MINE : colour_of(colours, m.founder, MARKER_MINE);
-                r.kind_word = "mine";
-                const std::string founder =
-                    m.founder != 0 ? name_of(view, EntityType::civilization, m.founder, "civilization") : "";
-                r.text = mine_text(r.name, founder, since, h.timeline.mine_depth_at(m.site, y));
-            } else {
-                r.kind = MarkerKind::tower;
-                r.library = m.settlement != 0;
-                r.colour = MARKER_TOWER;
-                r.kind_word = r.library ? "library" : "tower";
-                std::string figure;
-                const history::HistoryView::Event* origin = row != nullptr ? view.event(row->origin_event) : nullptr;
-                if (origin != nullptr) {
-                    for (const auto& p : origin->participants) {
-                        if (p.entity_type == static_cast<std::int64_t>(EntityType::figure)) {
-                            const worldgen::db::FigureRow* f = find_row(h.tables.figures, p.entity_id);
-                            figure = f != nullptr ? history::figure_display_name(*f) : "figure " + std::to_string(p.entity_id);
-                            break;
+            // Sites: mines and towers from the markers, lairs and outposts open at
+            // Y from the timeline, merged ascending site id.
+            std::vector<MarkerRecord> sites;
+            for (const inspect::SiteMarker& m : markers.sites) {
+                if (m.kind != 3 && m.kind != 4) {
+                    continue;
+                }
+                MarkerRecord r;
+                r.id = m.site;
+                r.x = static_cast<int>(m.x);
+                r.y = static_cast<int>(m.y);
+                r.name = texts ? name_of(view, EntityType::site, m.site, "site") : std::string();
+                const worldgen::db::SiteRow* row = find_row(h.tables.sites, m.site);
+                const std::int64_t since = row != nullptr ? row->origin_year : 0;
+                if (m.kind == 3) {
+                    r.kind = MarkerKind::mine;
+                    r.colour = m.founder == 0 ? MARKER_MINE : colour_of(colours, m.founder, MARKER_MINE);
+                    r.kind_word = "mine";
+                    const std::string founder =
+                        m.founder != 0 && texts ? name_of(view, EntityType::civilization, m.founder, "civilization") : "";
+                    if (texts) {
+                        r.text = mine_text(r.name, founder, since, h.timeline.mine_depth_at(m.site, y));
+                    }
+                } else {
+                    r.kind = MarkerKind::tower;
+                    r.library = m.settlement != 0;
+                    r.colour = MARKER_TOWER;
+                    r.kind_word = r.library ? "library" : "tower";
+                    std::string figure;
+                    const history::HistoryView::Event* origin = row != nullptr && texts ? view.event(row->origin_event) : nullptr;
+                    if (origin != nullptr) {
+                        for (const auto& p : origin->participants) {
+                            if (p.entity_type == static_cast<std::int64_t>(EntityType::figure)) {
+                                const worldgen::db::FigureRow* f = find_row(h.tables.figures, p.entity_id);
+                                figure = f != nullptr ? history::figure_display_name(*f) : "figure " + std::to_string(p.entity_id);
+                                break;
+                            }
                         }
                     }
+                    r.text = tower_text(r.name, r.library, figure, since);
                 }
-                r.text = tower_text(r.name, r.library, figure, since);
+                sites.push_back(std::move(r));
             }
-            sites.push_back(std::move(r));
-        }
-        for (const std::int64_t site : h.timeline.sites_existing(y)) {
-            const history::SiteState st = h.timeline.site_at(site, y);
-            if (!st.open || (st.kind != 1 && st.kind != 2)) {
-                continue;
+            for (const std::int64_t site : h.timeline.sites_existing(y)) {
+                const history::SiteState st = h.timeline.site_at(site, y);
+                if (!st.open || (st.kind != 1 && st.kind != 2)) {
+                    continue;
+                }
+                MarkerRecord r;
+                r.id = site;
+                r.x = static_cast<int>(st.x);
+                r.y = static_cast<int>(st.y);
+                r.name = texts ? name_of(view, EntityType::site, site, "site") : std::string();
+                const worldgen::db::SiteRow* row = find_row(h.tables.sites, site);
+                const std::int64_t since = row != nullptr ? row->origin_year : 0;
+                if (st.kind == 1) {
+                    r.kind = MarkerKind::lair;
+                    r.colour = LAIR_ROCK;
+                    r.kind_word = "lair";
+                    std::string monster;
+                    std::string monster_kind;
+                    bool asleep = false;
+                    if (st.monster != 0 && texts) {
+                        const history::MonsterState ms = h.timeline.monster_at(st.monster, y);
+                        if (ms.alive) {
+                            monster = name_of(view, EntityType::monster, st.monster, "monster");
+                            const worldgen::db::MonsterKindRow* kind = view.monster_kind_row(st.monster);
+                            monster_kind = kind != nullptr ? kind->name : "";
+                            asleep = !ms.awake;
+                        }
+                    }
+                    r.text = lair_text(r.name, monster, monster_kind, asleep, since);
+                } else {
+                    r.kind = MarkerKind::outpost;
+                    r.colour = st.founder == 0 ? MARKER_NO_OWNER : colour_of(colours, st.founder, MARKER_NO_OWNER);
+                    r.kind_word = "outpost";
+                    const std::string founder =
+                        st.founder != 0 && texts ? name_of(view, EntityType::civilization, st.founder, "civilization") : "";
+                    r.text = outpost_text(r.name, founder, since);
+                }
+                sites.push_back(std::move(r));
             }
-            MarkerRecord r;
-            r.id = site;
-            r.x = static_cast<int>(st.x);
-            r.y = static_cast<int>(st.y);
-            r.name = name_of(view, EntityType::site, site, "site");
-            const worldgen::db::SiteRow* row = find_row(h.tables.sites, site);
-            const std::int64_t since = row != nullptr ? row->origin_year : 0;
-            if (st.kind == 1) {
-                r.kind = MarkerKind::lair;
-                r.colour = LAIR_ROCK;
-                r.kind_word = "lair";
-                std::string monster;
-                std::string monster_kind;
-                bool asleep = false;
-                if (st.monster != 0) {
-                    const history::MonsterState ms = h.timeline.monster_at(st.monster, y);
-                    if (ms.alive) {
-                        monster = name_of(view, EntityType::monster, st.monster, "monster");
-                        const worldgen::db::MonsterKindRow* kind = view.monster_kind_row(st.monster);
-                        monster_kind = kind != nullptr ? kind->name : "";
-                        asleep = !ms.awake;
+            std::stable_sort(sites.begin(), sites.end(),
+                             [](const MarkerRecord& a, const MarkerRecord& b) { return a.id < b.id; });
+            for (MarkerRecord& r : sites) {
+                records.push_back(std::move(r));
+            }
+            return records;
+        };
+        out.records = build_year(shown, true);
+        out.records_usec = now_usec() - t0;
+        if (pads) {
+            // V3D-06 7 with Paul's ruling Q-V3D-06-4: a pad under every place
+            // that ever stood, the union over the years 0 to E of each year's
+            // records at their model cells (steps 1 and 2 of V3D-05 4 with
+            // that year's records), one per (settlement or site, id, model
+            // cell) with the largest r0 it had in any year.
+            t0 = now_usec();
+            std::map<std::array<std::int64_t, 4>, std::int32_t> places;
+            for (std::int64_t year_k = 0; year_k <= end; ++year_k) {
+                const std::vector<MarkerRecord> records = year_k == shown ? out.records : build_year(year_k, false);
+                const std::vector<ModelCell> cells = marker_cells(records, map_n);
+                for (std::size_t i = 0; i < records.size(); ++i) {
+                    const std::array<std::int64_t, 4> key = {is_site(records[i].kind) ? 1 : 0, records[i].id,
+                                                             cells[i].x, cells[i].y};
+                    const std::int32_t r0 = pad_radius(records[i]);
+                    auto it = places.find(key);
+                    if (it == places.end()) {
+                        places.emplace(key, r0);
+                    } else {
+                        it->second = std::max(it->second, r0);
                     }
                 }
-                r.text = lair_text(r.name, monster, monster_kind, asleep, since);
-            } else {
-                r.kind = MarkerKind::outpost;
-                r.colour = st.founder == 0 ? MARKER_NO_OWNER : colour_of(colours, st.founder, MARKER_NO_OWNER);
-                r.kind_word = "outpost";
-                const std::string founder =
-                    st.founder != 0 ? name_of(view, EntityType::civilization, st.founder, "civilization") : "";
-                r.text = outpost_text(r.name, founder, since);
             }
-            sites.push_back(std::move(r));
-        }
-        std::stable_sort(sites.begin(), sites.end(),
-                         [](const MarkerRecord& a, const MarkerRecord& b) { return a.id < b.id; });
-        for (MarkerRecord& r : sites) {
-            out.records.push_back(std::move(r));
+            for (const auto& [key, r0] : places) {
+                out.pad_places.push_back(PadPlace{static_cast<int>(key[2]), static_cast<int>(key[3]), r0});
+            }
+            out.pad_years = end + 1;
+            out.places_usec = now_usec() - t0;
         }
         out.status = MarkerStatus::loaded;
-        out.records_usec = now_usec() - t0;
         return out;
     } catch (const std::bad_alloc&) {
         return fail("out_of_memory", "out of memory while reading the markers");
@@ -324,18 +365,12 @@ MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::opt
 
 // --- Placement (4) ----------------------------------------------------------------------
 
-std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const Layout& layout,
-                                    std::span<const float> heights) {
-    const int n = layout.n;
-    if (heights.size() != static_cast<std::size_t>(n) * static_cast<std::size_t>(n)) {
-        throw std::invalid_argument("place_markers: the height buffer is not N^2 long");
-    }
+std::vector<ModelCell> marker_cells(std::span<const MarkerRecord> records, int n) {
     const auto clamp_cell = [n](int v) { return std::min(std::max(v, 0), n - 1); };
-    std::vector<Marker3D> out;
+    std::vector<ModelCell> out;
     out.reserve(records.size());
     for (const MarkerRecord& rec : records) {
-        Marker3D m;
-        m.rec = rec;
+        ModelCell c;
         int cx = rec.x;
         int cy = rec.y;
         if (rec.kind == MarkerKind::mine || rec.kind == MarkerKind::tower) {
@@ -351,26 +386,51 @@ std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const
         }
         if (is_site(rec.kind)) {
             const auto crowded = [&out](int x, int y) {
-                for (const Marker3D& e : out) {
-                    if (std::max(std::abs(e.cell_x - x), std::abs(e.cell_y - y)) <= MARKER_CLEAR_CELLS) {
+                for (const ModelCell& e : out) {
+                    if (std::max(std::abs(e.x - x), std::abs(e.y - y)) <= MARKER_CLEAR_CELLS) {
                         return true;
                     }
                 }
                 return false;
             };
-            while (m.moves < MARKER_MAX_MOVES && crowded(cx, cy)) {
+            while (c.moves < MARKER_MAX_MOVES && crowded(cx, cy)) {
                 cx = clamp_cell(cx + MARKER_MOVE_CELLS);
                 cy = clamp_cell(cy + MARKER_MOVE_CELLS);
-                ++m.moves;
+                ++c.moves;
             }
         }
-        m.cell_x = cx;
-        m.cell_y = cy;
-        const Vec2 w = cell_to_world(layout, cx, cy);
+        c.x = cx;
+        c.y = cy;
+        out.push_back(c);
+    }
+    return out;
+}
+
+std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const Layout& layout,
+                                    std::span<const float> heights) {
+    const int n = layout.n;
+    if (heights.size() != static_cast<std::size_t>(n) * static_cast<std::size_t>(n)) {
+        throw std::invalid_argument("place_markers: the height buffer is not N^2 long");
+    }
+    return place_markers(records, layout, coarse_field(layout, std::vector<float>(heights.begin(), heights.end())));
+}
+
+std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const Layout& layout, const GroundField& field) {
+    const std::vector<ModelCell> cells = marker_cells(records, layout.n);
+    std::vector<Marker3D> out;
+    out.reserve(records.size());
+    for (std::size_t i = 0; i < records.size(); ++i) {
+        const MarkerRecord& rec = records[i];
+        Marker3D m;
+        m.rec = rec;
+        m.cell_x = cells[i].x;
+        m.cell_y = cells[i].y;
+        m.moves = cells[i].moves;
+        const Vec2 w = cell_to_world(layout, m.cell_x, m.cell_y);
         m.X = w.x;
         m.Z = w.z;
-        m.Y = heights[static_cast<std::size_t>(cy) * static_cast<std::size_t>(n) + static_cast<std::size_t>(cx)];
-        const MeshData mesh = build_marker_mesh(m, layout, heights);
+        m.Y = field_at_cell(field, m.cell_x, m.cell_y);
+        const MeshData mesh = build_marker_mesh(m, field.layout, field.heights);
         float top = 0.0f;
         for (std::size_t v = 1; v < mesh.positions.size(); v += 3) {
             top = std::max(top, mesh.positions[v]);
@@ -382,7 +442,7 @@ std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const
             case MarkerKind::outpost: m.beacon_colour = rec.colour; break;
             case MarkerKind::ruin: m.beacon_colour = RUIN_BEACON; break;
             case MarkerKind::lair: m.beacon_colour = LAIR_BEACON; break;
-            case MarkerKind::mine: m.beacon_colour = MARKER_MINE; break;
+            case MarkerKind::mine: m.beacon_colour = MINE_BEACON; break;
             case MarkerKind::tower: m.beacon_colour = MARKER_TOWER; break;
             case MarkerKind::old_ruin: m.beacon_colour = 0; break;
         }
@@ -670,6 +730,40 @@ int extent(int count) {
     }
     return e;
 }
+
+}  // namespace
+
+int marker_extent(const MarkerRecord& rec) {
+    switch (rec.kind) {
+        case MarkerKind::settlement: {
+            const int kind = rec.settlement_kind >= 1 && rec.settlement_kind <= 5 ? rec.settlement_kind : 1;
+            return extent(house_count(kind, rec.population));
+        }
+        case MarkerKind::ruin:
+        case MarkerKind::old_ruin: {
+            const int H = house_count(rec.settlement_kind, rec.population);
+            return extent(rec.kind == MarkerKind::old_ruin ? (H + 3) / 4 : (H + 1) / 2);
+        }
+        default:
+            return 0;
+    }
+}
+
+std::int32_t pad_radius(const MarkerRecord& rec) {
+    switch (rec.kind) {
+        case MarkerKind::settlement:
+            return 16 * marker_extent(rec) + ((rec.settlement_kind == 4 || rec.settlement_kind == 5) ? 24 : 16);
+        case MarkerKind::ruin:
+        case MarkerKind::old_ruin: return 16 * marker_extent(rec) + 16;
+        case MarkerKind::lair: return 16;
+        case MarkerKind::outpost: return 20;
+        case MarkerKind::mine: return 24;
+        case MarkerKind::tower: return rec.library ? 20 : 8;
+    }
+    return 16;
+}
+
+namespace {
 
 void city_wall(Builder& b, int e, double height) {
     const double S = 16.0 * e + 12.0;

@@ -24,6 +24,7 @@
 #include <string_view>
 #include <vector>
 
+#include "terrain/detail.hpp"
 #include "terrain/fly_state.hpp"
 #include "terrain/placeholder_meshes.hpp"
 #include "terrain/terrain_data.hpp"
@@ -65,18 +66,27 @@ struct MarkerLoad {
     // Bench (13): load_history, and the rest of section 3.
     std::uint64_t history_usec = 0;
     std::uint64_t records_usec = 0;
+    // V3D-06 7 (Paul, Q-V3D-06-4): with pads, every place that ever stood:
+    // the union over the years 0 to E, one entry per (settlement or site,
+    // id, model cell), in that key's order, with the largest r0 it had.
+    std::vector<PadPlace> pad_places;
+    std::int64_t pad_years = 0;
+    std::uint64_t places_usec = 0;
 };
 
 // Section 3: the records at the history's end year, or at min(year, E).
+// With pads, also the pad places of V3D-06 7 for a map of map_n cells.
 // Never throws.
-[[nodiscard]] MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::optional<std::int64_t> year);
+[[nodiscard]] MarkerLoad load_marker_records(const worldgen::db::WorldReader& reader, std::optional<std::int64_t> year,
+                                             bool pads = false, int map_n = 0);
 
 // 3.1's colours (0xRRGGBB).
 inline constexpr std::uint32_t MARKER_NO_OWNER = 0x808080;  // (128, 128, 128)
 inline constexpr std::uint32_t RUIN_STONE = 0x78726A;       // (120, 114, 106)
 inline constexpr std::uint32_t OLD_RUIN_STONE = 0x8C8880;   // (140, 136, 128)
 inline constexpr std::uint32_t LAIR_ROCK = 0x584E42;        // (88, 78, 66)
-inline constexpr std::uint32_t MARKER_MINE = 0x3C3C3C;      // (60, 60, 60)
+inline constexpr std::uint32_t MARKER_MINE = 0x3C3C3C;      // (60, 60, 60): the headframe beam without founder
+inline constexpr std::uint32_t MINE_BEACON = 0xD6A840;      // (214, 168, 64): V3D-06 12
 inline constexpr std::uint32_t MARKER_TOWER = 0x783CB4;     // (120, 60, 180)
 // Section 5's colours.
 inline constexpr std::uint32_t HOUSE_WALL = 0xB4A48C;   // (180, 164, 140)
@@ -133,9 +143,25 @@ struct Marker3D {
     std::uint32_t beacon_colour = 0;
 };
 
+// Steps 1 and 2 of section 4: each record's model cell and moves (cells only).
+struct ModelCell {
+    int x = 0;
+    int y = 0;
+    int moves = 0;
+};
+[[nodiscard]] std::vector<ModelCell> marker_cells(std::span<const MarkerRecord> records, int n);
+
 // Section 4; throws std::invalid_argument when heights is not N^2 long.
 [[nodiscard]] std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const Layout& layout,
                                                   std::span<const float> heights);
+// V3D-06 10: on a field (layout the coarse one): Y the field at the anchor
+// vertex, meshes on ground_height.
+[[nodiscard]] std::vector<Marker3D> place_markers(std::span<const MarkerRecord> records, const Layout& layout,
+                                                  const GroundField& field);
+// V3D-05 5's slot extent e (settlements of their houses, ruins of their
+// stubs; 0 for sites) and V3D-06 7's pad radius r0 (m).
+[[nodiscard]] int marker_extent(const MarkerRecord& rec);
+[[nodiscard]] std::int32_t pad_radius(const MarkerRecord& rec);
 
 // --- Models (5) ----------------------------------------------------------------------
 

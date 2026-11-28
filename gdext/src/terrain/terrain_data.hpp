@@ -85,12 +85,37 @@ struct CellHit {
 // surface Terrain3D draws.
 [[nodiscard]] float ground_low(const Layout& layout, std::span<const float> heights, float X, float Z);
 
+// --- The ground field (spec V3D-06 8) ----------------------------------------------
+
+// The heights Terrain3D draws: with ground detail the fine field at spacing
+// s (layout.n = V = N f vertices per side, origin -8N, so cell_to_world and
+// world_to_cell work on fine vertices), without it the 16 m buffer (f = 1).
+// Kept here rather than in detail.hpp so that the vegetation and marker
+// headers can name it without the detail code.
+struct GroundField {
+    Layout layout;
+    std::vector<float> heights;
+    int f = 1;
+};
+
+// A field of f = 1 over the coarse buffer (--ground-detail off).
+[[nodiscard]] GroundField coarse_field(const Layout& layout, std::vector<float> heights);
+
+// V3D-06 8: the one height query, ground_low on the field; and ground_clamp
+// on the field (the camera). Thread-safe readers of an immutable field.
+[[nodiscard]] float ground_height(const GroundField& field, float X, float Z);
+[[nodiscard]] float ground_top(const GroundField& field, float X, float Z);
+// The field at coarse cell (cx, cy): fine vertex (cx f, cy f).
+[[nodiscard]] float field_at_cell(const GroundField& field, int cx, int cy);
+
 // --- HUD (8.4) ------------------------------------------------------------------
 
 // What the HUD reads of a world. Spans empty when the layer is absent.
 struct HudWorld {
     const Layout* layout = nullptr;
     std::span<const float> heights;
+    // V3D-06 10: the "above ground" value from the field when set.
+    const GroundField* field = nullptr;
     std::span<const std::int16_t> elevation;
     std::span<const std::uint16_t> water_depth;
     std::span<const std::uint8_t> biome;
@@ -106,7 +131,7 @@ struct HudWorld {
 
 // The key line under it.
 inline constexpr const char* HUD_KEYS =
-    "WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, T trees, G ground, H hide";
+    "WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, T trees, G ground, J detail, H hide";
 
 // One decimal, without a negative zero ("12.5", "-0.1", "0.0").
 [[nodiscard]] std::string one_decimal(double value);

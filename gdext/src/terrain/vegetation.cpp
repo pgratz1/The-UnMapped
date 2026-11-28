@@ -137,7 +137,7 @@ void for_each_candidate(const VegetationInputs& in, int x0, int y0, int x1, int 
                         static_cast<std::uint64_t>(info.scale_min_pm) + (range * ((h >> 30) & 0x3FF) + 511) / 1023);
                     cand.instance.tint = static_cast<std::uint8_t>((h >> 40) & 0xFF);
                     cand.thin = static_cast<std::uint32_t>(mix64(h ^ 0xD1B54A32D192ED03ull) >> 32);
-                    cand.instance.y = ground_low(layout, in.heights, X, Z);
+                    cand.instance.y = in.ground != nullptr ? ground_height(*in.ground, X, Z) : ground_low(layout, in.heights, X, Z);
                     visit(cand);
                 }
             }
@@ -161,8 +161,9 @@ std::vector<Candidate> place_candidates(const VegetationInputs& in, int x0, int 
 
 Placement place_vegetation(const Layout& layout, std::span<const float> heights, std::span<const std::int16_t> elevation,
                            std::span<const std::uint8_t> timber, std::span<const std::uint8_t> water,
-                           const GroundCells& cells, std::uint64_t seed, std::uint64_t cap) {
+                           const GroundCells& cells, std::uint64_t seed, std::uint64_t cap, const GroundField* ground) {
     VegetationInputs in;
+    in.ground = ground;
     in.layout = &layout;
     in.heights = heights;
     in.elevation = elevation;

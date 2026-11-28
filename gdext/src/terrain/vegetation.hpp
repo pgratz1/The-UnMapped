@@ -93,7 +93,7 @@ struct Placement {
 [[nodiscard]] Placement place_vegetation(const Layout& layout, std::span<const float> heights,
                                          std::span<const std::int16_t> elevation, std::span<const std::uint8_t> timber,
                                          std::span<const std::uint8_t> water, const GroundCells& cells,
-                                         std::uint64_t seed, std::uint64_t cap);
+                                         std::uint64_t seed, std::uint64_t cap, const GroundField* ground = nullptr);
 
 // --- Tiers (spec V3D-03 4, 5) -------------------------------------------------------
 
@@ -116,6 +116,9 @@ struct VegetationInputs {
     std::span<const std::uint8_t> water;
     const GroundCells* cells = nullptr;
     std::uint64_t seed = 0;
+    // V3D-06 10: when set, Y = ground_height on this field (heights above
+    // then only sizes the inputs); null: ground_low on heights, as before.
+    const GroundField* ground = nullptr;
 };
 
 // 6.4's candidates of terrain cells x0 <= x < x1, y0 <= y < y1 (clamped to

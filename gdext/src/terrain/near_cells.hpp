@@ -57,8 +57,12 @@ struct NearGrid {
     std::vector<NearBox> boxes;  // q = j * m + i
 };
 
-// 6.1. Throws std::invalid_argument when heights is not n * n long.
-[[nodiscard]] NearGrid build_near_grid(const Layout& layout, std::span<const float> heights);
+// 6.1. Throws std::invalid_argument when heights is not n * n long. V3D-06
+// 10: with a field the box spans the field's vertices of the same area, and
+// `below` is 4 m with boulders.
+inline constexpr double NEAR_BOX_BELOW_BOULDERS = 4.0;
+[[nodiscard]] NearGrid build_near_grid(const Layout& layout, std::span<const float> heights,
+                                       const GroundField* field = nullptr, double below = NEAR_BOX_BELOW);
 
 struct NearViewer {
     double x = 0.0;

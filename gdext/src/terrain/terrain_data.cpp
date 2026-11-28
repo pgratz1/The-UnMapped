@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdio>
 #include <stdexcept>
+#include <utility>
 
 #include "worldgen/inspect/layer_catalogue.hpp"
 
@@ -192,6 +193,29 @@ float ground_low(const Layout& layout, std::span<const float> heights, float X, 
     return std::min(a, b);
 }
 
+GroundField coarse_field(const Layout& layout, std::vector<float> heights) {
+    GroundField field;
+    field.layout = layout;
+    field.heights = std::move(heights);
+    field.f = 1;
+    return field;
+}
+
+float ground_height(const GroundField& field, float X, float Z) {
+    return ground_low(field.layout, field.heights, X, Z);
+}
+
+float ground_top(const GroundField& field, float X, float Z) {
+    return ground_clamp(field.layout, field.heights, X, Z);
+}
+
+float field_at_cell(const GroundField& field, int cx, int cy) {
+    const int v = field.layout.n;
+    const int x = std::clamp(cx * field.f, 0, v - 1);
+    const int y = std::clamp(cy * field.f, 0, v - 1);
+    return field.heights[static_cast<std::size_t>(y) * static_cast<std::size_t>(v) + static_cast<std::size_t>(x)];
+}
+
 std::string one_decimal(double value) {
     char buffer[64];
     std::snprintf(buffer, sizeof buffer, "%.1f", value);
@@ -213,7 +237,8 @@ std::string hud_line(const HudWorld& world, float X, float Y, float Z, float spe
         text = "outside the map";
     }
     text += sep + std::to_string(std::lround(X)) + " m E, " + std::to_string(std::lround(Z)) + " m S";
-    const float ground = sample_bilinear(layout, world.heights, X, Z);
+    const float ground = world.field != nullptr ? sample_bilinear(world.field->layout, world.field->heights, X, Z)
+                                                : sample_bilinear(layout, world.heights, X, Z);
     text += sep + "altitude " + one_decimal(static_cast<double>(Y)) + " m, " + one_decimal(static_cast<double>(Y - ground)) +
             " above ground";
     if (hit.inside) {
