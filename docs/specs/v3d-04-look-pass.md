@@ -1,6 +1,6 @@
 # V3D-04 Look pass: mountains, shrubs, sea horizon
 
-Status: **r1, 2026-11-28, interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 14 (Q-V3D-04-1 to 4); each is one constant or one option item, so it reverses cheaply. Fourth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2 and V3D-03 r2 as built ("V3D-02 n" and "V3D-03 n" refer to their sections). It answers V3D-02's "Open after r2" items 2, 3, 4 and 6 and Paul's ruling of 2026-11-27: **mountains are mostly rock up to the snow.** Art stays generated placeholders; no asset file is added.
+Status: **r2, 2026-11-28, as built; interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 14 (Q-V3D-04-1 to 4); each is one constant or one option item, so it reverses cheaply. r2 records the build: the snow line's slope hold as tuned (4.3), S1 as measured and missed (10.3, Q-V3D-04-5), L1 on views that see the mountains (10.3), and the measured figures; see the revision notes. Fourth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2 and V3D-03 r2 as built ("V3D-02 n" and "V3D-03 n" refer to their sections). It answers V3D-02's "Open after r2" items 2, 3, 4 and 6 and Paul's ruling of 2026-11-27: **mountains are mostly rock up to the snow.** Art stays generated placeholders; no asset file is added.
 
 **No world change.** The stage reads `world.db` and writes nothing to it or to the source tree. `GENERATOR_VERSION`, the schema, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/`, `game/data/` or `extern/` changes (Terrain3D is not edited). No new dependency. **Placement is unchanged bit for bit**: `GroundCells::rock` and `::snow` keep V3D-02 4.1's values, and placement, densities, tiers and the far budget read only those (V3D-02 6.4, V3D-03 4.2). Owner: viewer engineer.
 
@@ -75,20 +75,20 @@ For every land cell (types 0 to 10, not only scree), with the temperature layer 
 jt(c)  = int((hash32(x, y, 0x534E4F57) >> 24) % 13) - 6                (-6..6, 0.1 C)
 T'     = T + jt(c)
 sT     = T' >= SNOW_T0 ? 0 : T' <= SNOW_T1 ? 255 : ((SNOW_T0 - T')*255 + 10) / 20     SNOW_T0 = -10, SNOW_T1 = -30
-hold   = g <= 320 ? 255 : g >= 457 ? 0 : ((457 - g)*255 + 68) / 137                    (45 to 55 degrees)
+hold   = g <= 457 ? 255 : g >= 627 ? 0 : ((627 - g)*255 + 85) / 170                    (55 to about 63 degrees)
 snow_line(c) = (sT*hold + 127) / 255
 ```
 
-`SNOW_T1 = SNOW_T0 − 20` always (the ramp of 2 °C, about 300 m at 6.5 °C per km). Not land, or no temperature layer: 0.
+`SNOW_T1 = SNOW_T0 − 20` always (the ramp of 2 °C, about 300 m at 6.5 °C per km). Not land, or no temperature layer: 0. The hold's ends are `SNOW_HOLD_FULL_G` 457 and `SNOW_HOLD_NONE_G` 627 (`ground.hpp`). r1 had 320 and 457 (45° to 55°); as built (r2) they are 457 and 627, because on seed 42 57% (1024) and 60% (2048) of alpine cells, and 60% of the cells near the highest peak, are steeper than 55°: r1's hold left scattered patches (11.5% and 9.0% of alpine cells) and no cap (10.3, S1).
 
 | | V3D-02 4.1 snow (kept for placement) | V3D-04 snow line (control only) |
 | --- | --- | --- |
 | where | scree (alpine) only | every land type (in practice alpine, since T < −1 °C needs about 1 km) |
 | temperature | −2 °C to −6 °C | −1 °C to −3 °C, ±0.6 °C per-cell jitter |
-| slope | none; rock wins on steep cells by the largest-blend rule | full to 45°, none past 55° |
+| slope | none; rock wins on steep cells by the largest-blend rule | full to 55°, none past about 63° (r1: 45° and 55°) |
 | pick | largest blend of rock, snow, border | snow first when `snow_line ≥ 128` (4.4) |
 
-Alpine ground starts at T ≤ 0.5 °C (P1-04): the line lies about 230 m above the tree line and is full about 300 m higher, so the mountain is bare scree and rock up to it and white above it but for faces past about 50°. `SNOW_T0` is the one tuning constant (10.3).
+Alpine ground starts at T ≤ 0.5 °C (P1-04): the line lies about 230 m above the tree line and is full about 300 m higher, so the mountain is bare scree and rock up to it and white above it but for faces past about 60° (r1: 50°), which stand out as dark spires. `SNOW_T0` stays −10; the hold's two ends were tuned in its place (10.3).
 
 ### 4.4 Control (replaces V3D-02 4.2's pick when the look item is on)
 
@@ -98,7 +98,7 @@ if look.snow and snow_line(c) >= 128:   pick = (12, snow_line(c))
 else: candidates (rock_id, rock(c)), (12, look.snow ? snow_line(c) : snow(c)), (ov, border); largest blend, ties to the earlier
 ```
 
-Base, painted cells, non-land cells, the border rule and the encoding are V3D-02 4.2's. With `rock` and `snow` both restored, `build_control` is V3D-02's bit for bit (U34). `GroundCells` gains `rock_variant` and `snow_line` (n² bytes each); `rock` and `snow` are untouched.
+Base, painted cells, non-land cells, the border rule and the encoding are V3D-02 4.2's. With `rock` and `snow` both restored, `build_control` is V3D-02's bit for bit (U34). As built, the two-argument `build_control(layout, cells)` is kept and is V3D-02's rule; the three-argument form with the look is the one the scene calls. `GroundCells` gains `rock_variant` and `snow_line` (n² bytes each); `rock` and `snow` are untouched.
 
 `LookCounts look_counts(const Layout&, const GroundCells&, std::span<const std::uint32_t> control)`: over cells of type 9 not painted, `alpine`, `snow` (overlay 12, blend ≥ 128), `rock` (overlay 11, 15 or 16, blend ≥ 128).
 
@@ -152,7 +152,7 @@ Winding is V3D-02's (clockwise from outside, W7). Scale range, tint, material (r
 | `std::optional<Look> parse_look_v3d03(std::string_view list)` | `all`, or a comma list of `rock`, `light`, `snow`, `shrubs`, `sea` (repeats allowed): those items false; anything else: `std::nullopt` |
 | `SUN_AZIMUTH_DEG` 210, `SUN_ELEVATION_DEG` 45, `SUN_ENERGY` 0.75, `AMBIENT_SKY_CONTRIBUTION` 0.4, `AMBIENT_RGB` {0.70, 0.74, 0.82}, `AMBIENT_ENERGY` 0.8, and the V3D-03 set `V3D03_SUN_AZIMUTH_DEG` 315, `_ELEVATION_DEG` 40, `_ENERGY` 1.0, contribution 1.0, colour 0, energy 1.0 | section 5 |
 | `std::array<float, 3> sun_direction(float azimuth_deg, float elevation_deg)` | section 5 |
-| `ROCK_BAND_DM` 450, `ROCK_SEQ`, `SNOW_T0` −10 (in `ground.hpp`) | section 4 |
+| `ROCK_BAND_DM` 450, `ROCK_SEQ`, `SNOW_T0` −10, `SNOW_T1` −30, `SNOW_HOLD_FULL_G` 457, `SNOW_HOLD_NONE_G` 627, `ROCK_JITTER_KEY` 0x524B4A54, `SNOW_JITTER_KEY` 0x534E4F57 (in `ground.hpp`) | section 4 |
 | `struct PeakView { int x, y; int cam_x, cam_y; bool found; }`; `PeakView peak_view(const Layout&, std::span<const std::int16_t> elevation, const GroundCells&)` | the land cell (types 1 to 10, not painted) of largest E, ties to the smaller row then column; camera cell (x, min(N − 1, y + 125)), 2,000 m south; none: the centre, `found` false |
 
 ## 9. Options, status, bench
@@ -184,9 +184,9 @@ from `look_counts` on the current control and on `build_control` with `rock` and
 | --- | --- |
 | U31 | the table of 4.1 (17 rows); `build_ground_texture` of 15 and 16 against the test's own copy of V3D-02 3.2 at four pixels and recorded FNV-1a 64 hashes (GCC, Clang, MSVC alike); U8's hashes of ids 0 to 14 unchanged |
 | U32 | `rock_variant` on hand grids: E = 0, 449, 450, 2,250, −1, −450, −451 with jr forced through chosen (x, y): the band and sequence entry by the test's own floor division; jr in [−128, 127] over 10,000 cells |
-| U33 | `snow_line` at T' ∈ {−9, −10, −11, −20, −30, −31} × g ∈ {0, 320, 388, 456, 457}: the formula's values (for example T' −20, g 0 → 128; T' −30, g 388 → 128); jt in [−6, 6]; non-land and no temperature give 0 |
-| U34 | `build_control`: a cell with `snow_line` 128 and rock 255 picks 12; 127 and rock 255 picks the rock variant; the rock overlay id equals `rock_variant`; with `rock` and `snow` restored, the output equals V3D-02's rule (the test's existing copy) on the U10 grids and on a 512 test world; no base above 14, no overlay above 16 |
-| U35 | `build_ground_cells`: `type`, `painted`, `rock`, `snow` equal to V3D-02 4.1's on the 512 test world; so `place_vegetation` and `place_far_tier` output is unchanged (U13, U18 pass unchanged) |
+| U33 | `snow_line` at T' ∈ {−9, −10, −11, −20, −30, −31} × g ∈ {0, 320, 457, 542, 626, 627}: the formula's values (for example T' −20, g 0 → 128; T' −30, g 542 → 128; T' −31, g 457 → 255, g 627 → 0); `SNOW_HOLD_FULL_G` 457, `SNOW_HOLD_NONE_G` 627; jt in [−6, 6]; non-land and no temperature give 0 |
+| U34 | `build_control`: a cell with `snow_line` 128 and rock 255 picks 12; 127 and rock 255 picks the rock variant; the rock overlay id equals `rock_variant`; with `rock` and `snow` restored, the output equals V3D-02's rule (the test's existing copy) on the U10 grids and on a hand-made 512 world (alpine ridges and other land, lakes, steep faces; no generated world); no base above 14, no overlay above 16 |
+| U35 | `build_ground_cells`: `type`, `painted`, `rock`, `snow` equal to V3D-02 4.1's on the hand-made 512 world; so `place_vegetation` and `place_far_tier` output is unchanged (U13, U18 pass unchanged) |
 | U36 | shrub: 60 triangles, unit normals, each normal within 1e-5 of its lobe's gradient direction and on the outward side; top 1.30 m ± 0.01; colours between dark and light per channel, non-decreasing in y; restored: V3D-02's 36-triangle shrub byte for byte; kinds 0, 1, 3, 4 equal with either look |
 | U37 | `parse_look_v3d03`: `all`, `rock`, `sea,rock`, `rock,rock`; refused: empty, `Rock`, `trees`, `rock,`; `Look{}` all true |
 | U38 | `sun_direction` at (315, 40) and (210, 45) within 1e-5 of section 5; unit length; the constants of 8 |
@@ -198,10 +198,10 @@ New run `w512 --look-v3d03 all`. The check keeps its own copy of 4.2 to 4.4 and 
 
 | Id | Check |
 | --- | --- |
-| T25 | `present`: 17 texture assets; 15 and 16 as T9; the control image equals the check's own 4.4 at every cell and at the 32 `get_control` points; under `--look-v3d03 all` it equals V3D-02's rule (T10 unchanged) |
+| T25 | `present`: 17 texture assets; 15 and 16 as T9; the control image equals the check's own 4.4 at every cell and at the 32 `get_control` points; under `--look-v3d03 all` it equals V3D-02's rule (T10 unchanged); invariants 4 and 6, and rock ≥ 128 on every alpine cell (type 9, not painted) with g ≥ 627 |
 | T26 | `Sun`: its −Z within 1e-5 of `sun_direction(210, 45)`, `light_energy` 0.75; environment ambient source, contribution, colour and energy as section 5; under `--look-v3d03 all` the V3D-03 values |
 | T27 | sea material unshaded, albedo the sea colour; restored: shaded, roughness 0.2; fog and sky as T14 |
-| T28 | the kind 2 mesh asset's and near nodes' `ArrayMesh`: 180 vertices, normals and colours equal to `build_mesh(2, 0, look)`; T12, T13, T17 to T19 pass unchanged on every run (placement untouched) |
+| T28 | the kind 2 mesh asset's mesh: 180 vertices (108 restored), normals and colours equal to `build_mesh(2, 0, look)`, compared by its arrays, since Terrain3D instantiates the packed scene and holds a copy of the preview's mesh (an info line when the renderer keeps no arrays); every near shrub node draws the preview's own shrub mesh; T12, T13, T17 to T19 pass unchanged on every run (placement untouched) |
 | T29 | status lines of 9.2 for every run; the refusals of 9.1 |
 | T30 | `--bench` headless on `w512`: the look line present, its counts equal to the check's own `look_counts` |
 
@@ -214,9 +214,9 @@ X() { env -u WAYLAND_DISPLAY xvfb-run -a -s "-screen 0 1600x900x24" "$GODOT" --d
 # R: rock (same light both)
 X $OUT/seed42-1024.db --at 420 930 --above 300 --pitch -10 --look-v3d03 rock --screenshot $OUT/v3d04-rock-before.png
 X $OUT/seed42-1024.db --at 420 930 --above 300 --pitch -10 --screenshot $OUT/v3d04-rock-after.png
-# L: light, looking south at the faces turned from the sun; and from above
-X $OUT/seed42-1024.db --at 420 930 --above 300 --heading 180 --pitch -10 --look-v3d03 light --screenshot $OUT/v3d04-light-s-before.png
-X $OUT/seed42-1024.db --at 420 930 --above 300 --heading 180 --pitch -10 --screenshot $OUT/v3d04-light-s-after.png
+# L: light on mountains (r2: the V3D-02 view; r1's view from (420, 930) heading 180 sees open sea only); and from above
+X $OUT/seed42-1024.db --at 800 380 --above 250 --heading 270 --pitch -15 --look-v3d03 light --screenshot $OUT/v3d04-v3d02view-before.png
+X $OUT/seed42-1024.db --at 800 380 --above 250 --heading 270 --pitch -15 --screenshot $OUT/v3d04-v3d02view-after.png
 X $OUT/seed42-1024.db --at 512 512 --alt 22000 --pitch -89 --look-v3d03 light,sea --screenshot $OUT/v3d04-top-before.png
 X $OUT/seed42-1024.db --at 512 512 --alt 22000 --pitch -89 --look-v3d03 sea --screenshot $OUT/v3d04-top-after.png
 # S: snow, at 1024 and 2048
@@ -242,18 +242,20 @@ X $OUT/seed42-1024.db --bench;  X $OUT/seed42-2048.db --bench
 
 Luma is (54r + 183g + 19b) / 256 on sRGB bytes. "Changed pixels" are those that differ between a pair (the pair differs in one item only, and HUD and status rows are excluded: rows 0 to 110 and the bottom 150).
 
-| Id | Good means (record the before figure too) |
-| --- | --- |
-| R1 | changed pixels of `v3d04-rock-*`: after luma 10th-to-90th percentile spread ≥ 1.5 × before's; after median ≥ before's; bands of tone follow the contours by eye |
-| L1 | `v3d04-light-s-after.png`, rows 300 to 600: the darkest decile of luma ≥ 45 (before: record) |
-| L2 | `v3d04-top-*`: the mean luma of the image (HUD rows excluded) within ±5 of before; after, at most 1% of pixels have a channel at 255 |
-| S1 | bench look line, seed 42 at 1024 and 2048: snow ≥ 30% and ≤ 60% of alpine cells and ≥ 2 × the V3D-03 figure; rock ≥ 128 still on every alpine cell past 55° (by construction, T25) |
-| S2 | `v3d04-snow-*-after.png`: one continuous white cap above a ragged line, dark faces through it; changed pixels with all channels ≥ 200 at least 2 × before |
-| B1 | changed pixels of `v3d04-shrub-10-*`: after mean HSV saturation ≥ 0.45 and mean hue 75° to 120°; rounded clumps, no facets, by eye |
-| B2 | `v3d04-shrub-300-after.png`: shrubs visible as green dots distinct from the ground and from the darker trees, by eye |
-| H1 | `v3d04-horizon-after.png` and `-low-after.png`: every pixel from the horizon row down to the first land pixel of its column within 2 per channel of the sea colour (sRGB); before: record the largest difference and the band's rows |
+As built (r2): `v3d04-all-before.png`, `v3d04-horizon-before.png` and `v3d04-v3d02view-before.png` were taken with the build before V3D-04 (V3D-03's look in every item), not with `--look-v3d03`; `v3d04-light-s-*` (r1's L1 view) and `v3d04-horizon-low-before.png` were not taken. Measured 2026-11-28, seed 42, through the virtual display (RTX 4090 Laptop GPU, 1600 × 900); the full record is `gdext/README.md`, "Look pass".
 
-If S1 misses, change `SNOW_T0` in steps of 5 (0.5 °C; lower for less snow), at most three times, then report the miss. If L1 misses, raise `AMBIENT_ENERGY` to 1.0 and lower `SUN_ENERGY` to 0.65, once, then report.
+| Id | Good means (record the before figure too) | Measured (r2) |
+| --- | --- | --- |
+| R1 | changed pixels of `v3d04-rock-*`: after luma 10th-to-90th percentile spread ≥ 1.5 × before's; after median ≥ before's; bands of tone follow the contours by eye | met: spread 26 → 47 (1.81 ×), median 105 → 123; on large faces the bands read as regular stripes (Q-V3D-04-6) |
+| L1 | `v3d04-v3d02view-after.png`, rows 120 to 300, columns 300 to 1,000 (the shaded mountains): the darkest decile of luma ≥ 45 (before: record) | met: 40 → 59; also the far mountains of `v3d04-all-*` (rows 230 to 330, columns 850 to 1,300) 47 → 93 |
+| L2 | `v3d04-top-*`: the mean luma of the image (HUD rows excluded) within ±5 of before; after, at most 1% of pixels have a channel at 255 | met: 61.6 → 60.7; 0.089% at 255 in both. The V3D-02 view's mean 84.8 → 89.4, nothing washed out |
+| S1 | bench look line, seed 42 at 1024 and 2048: snow ≥ 30% and ≤ 60% of alpine cells and ≥ 2 × the V3D-03 figure; rock ≥ 128 still on every alpine cell with g ≥ 627 (by construction, T25) | **missed**: 20.7% at 1024, 15.6% at 2048 (V3D-03: 2.5%, 2.1%; 8 × and 7 ×); rock rule met (T25). Put to Paul, Q-V3D-04-5 |
+| S2 | `v3d04-snow-*-after.png`: one continuous white cap above a ragged line, dark faces through it; changed pixels with all channels ≥ 200 at least 2 × before | met: 1,340 → 39,019 at 1024 (29 ×; 13 × with r1's hold), 694 → 19,672 at 2048 (28 ×): white upper slopes, the steepest faces and summit spires dark through them |
+| B1 | changed pixels of `v3d04-shrub-10-*`: after mean HSV saturation ≥ 0.45 and mean hue 75° to 120°; rounded clumps, no facets, by eye | met: saturation 0.31 → 0.53, hue 96° → 108° |
+| B2 | `v3d04-shrub-300-after.png`: shrubs visible as green dots distinct from the ground and from the darker trees, by eye | met |
+| H1 | `v3d04-horizon-after.png` and `-low-after.png`: every pixel from the horizon row down to the first land pixel of its column within 2 per channel of the sea colour (sRGB); before: record the largest difference and the band's rows | met for the sea: the band (up to 57 per channel, rows 390 to past 700 at column 800) is gone, the sea is exactly (24, 56, 120). Just under the horizon, where the far sky's ground colour shows (about 60 rows at 30 km, 1 row at 2 km), a channel noise of up to 6 to 8 remains; the same bytes in V3D-03, so it is the sky's, not the sea's |
+
+Tuning, as specified: if S1 misses, change `SNOW_T0` in steps of 5 (0.5 °C; lower for less snow), at most three times, then report the miss. If L1 misses, raise `AMBIENT_ENERGY` to 1.0 and lower `SUN_ENERGY` to 0.65, once, then report. As done (r2): with r1's hold S1 gave 11.5% and 9.0%; no allowed `SNOW_T0` step reaches 30% (the furthest, to +0.5 °C, gives 22.8% and 20.2% and pulls the line down to the tree line), so `SNOW_T0` stays −10 and the hold was widened to 457 to 627 (4.3), which gives the figures above. L1 needed no tuning.
 
 ## 11. River fringe: not built
 
@@ -266,7 +268,7 @@ The pale one-cell fringe along painted rivers (V3D-02 "Open after r2" 5) is left
 3. The seventeen textures are the same bytes in every world and on every platform; ids 0 to 14 are V3D-02's.
 4. Every control value has base in 0..14, overlay in 0..16, blend in 0..255, every other bit 0; a lake, sea or painted cell has blend 0; with `--look-v3d03 rock,snow` (or `all`) the control is V3D-02's.
 5. `--look-v3d03 all` gives V3D-03's look in every item; `--flat-colours --no-trees --look-v3d03 all` gives V3D-01's.
-6. Every snow overlay with blend ≥ 128 lies on a cell with g < 457 and T' < −10 (at `SNOW_T0` −10).
+6. Every snow overlay with blend ≥ 128 lies on a cell with g < 627 (`SNOW_HOLD_NONE_G`; r1: 457) and T' < −10 (at `SNOW_T0` −10); every alpine cell (type 9, not painted) with g ≥ 627 has a rock overlay of blend ≥ 128.
 
 ## 13. Determinism, CI, to verify
 
@@ -274,25 +276,34 @@ Determinism: rock variants, snow line, control and textures are V3D-02 15's inte
 
 CI: no workflow change; `gdext-linux` and `gdext-windows` run U31 to U39 and the extra run of `gdext-terrain-check` (a few seconds). The `build` jobs, `world-hashes.sh` and `compare-gdext-hashes` are unaffected.
 
-| Id | Assumed | If false |
-| --- | --- | --- |
-| W20 | Terrain3D accepts 17 texture assets and draws overlay ids 15 and 16 (arrays sized by the asset count) | no per-cell rock tone is possible without new ids: default `Look::rock` to false and report |
-| W21 | Godot 4.7 mixes `ambient_light_color × energy` and the sky by `ambient_light_sky_contribution` when the source is sky | ambient source 2 (colour) with the same colour and energy 0.9 |
-| W22 | an unshaded `StandardMaterial3D` still takes depth fog, so the far plane edge stays the fog colour | none needed: the unshaded colour equals the fog colour |
-| W23 | `Basis::looking_at(d, up)` gives a light whose −Z is d | build the basis from d, up × d and d × (up × d) by hand |
-| W24 | smooth normals on a multimesh with the shared material light as expected (no per-face shading forced by the material) | flat normals; colour and shape alone (B1 then by eye) |
+| Id | Assumed | If false | Found (r2) |
+| --- | --- | --- | --- |
+| W20 | Terrain3D accepts 17 texture assets and draws overlay ids 15 and 16 (arrays sized by the asset count) | no per-cell rock tone is possible without new ids: default `Look::rock` to false and report | true, from Terrain3D's source; T25 and the rock screenshots |
+| W21 | Godot 4.7 mixes `ambient_light_color × energy` and the sky by `ambient_light_sky_contribution` when the source is sky | ambient source 2 (colour) with the same colour and energy 0.9 | true (T26; L1, L2) |
+| W22 | an unshaded `StandardMaterial3D` still takes depth fog, so the far plane edge stays the fog colour | none needed: the unshaded colour equals the fog colour | true (H1) |
+| W23 | `Basis::looking_at(d, up)` gives a light whose −Z is d | build the basis from d, up × d and d × (up × d) by hand | true (T26) |
+| W24 | smooth normals on a multimesh with the shared material light as expected (no per-face shading forced by the material) | flat normals; colour and shape alone (B1 then by eye) | true (B1: rounded clumps, no facets) |
 
 ## 14. Questions for Paul (built as recommended, pending review)
 
 | Id | Question | Recommendation (built) | Reverse with |
 | --- | --- | --- | --- |
 | Q-V3D-04-1 | Sun from the south-south-west (lights what the default and forest views face; top-down relief may read inverted) or keep the map convention of a north-west sun | south-south-west, 210° at 45° | `SUN_AZIMUTH_DEG`, or `--look-v3d03 light` |
-| Q-V3D-04-2 | Snow line at −1 °C to −3 °C over all land with faces past about 50° bare, or V3D-02's −2 °C to −6 °C on alpine flats | the snow line (4.3), tuned to S1 | `SNOW_T0`, or `--look-v3d03 snow` |
+| Q-V3D-04-2 | Snow line at −1 °C to −3 °C over all land with faces past about 60° bare (r2; r1 said 50°), or V3D-02's −2 °C to −6 °C on alpine flats | the snow line (4.3), with the hold as tuned | `SNOW_T0`, `SNOW_HOLD_*_G`, or `--look-v3d03 snow` |
 | Q-V3D-04-3 | Heath and moor belts under the rock: keep, soften, or drop | keep: they are the 2D map's belts, and they read worst while their slopes are dark (4.5) | none needed |
 | Q-V3D-04-4 | Unshaded sea (no band, no glint) or a lit sea with a fog colour matched to it (a band remains wherever the light or view angle changes) | unshaded | `--look-v3d03 sea` |
+| Q-V3D-04-5 (r2) | S1 is missed: snow covers 20.7% (1024) and 15.6% (2048) of alpine cells against 30% to 60%, because most alpine ground on seed 42 is steeper than 55°. Accept, or push further (a wider hold covers the spires; a warmer `SNOW_T0` brings the line down to the tree line) | accept (the lead's): the picture is snowy upper slopes with dark rock spires, which is "mostly rock up to the snow" | `SNOW_HOLD_FULL_G`, `SNOW_HOLD_NONE_G`, `SNOW_T0` |
+| Q-V3D-04-6 (r2) | On large faces the rock's altitude bands read as regular stripes. Soften (more jitter, lower contrast between the three tones) or keep | judge it in flight first; change nothing until then | the jitter's range in 4.2, the colours of 4.1 |
 
 No `proposals.md` entry: nothing here touches the design or the world file.
+
+**Open after r2.**
+
+1. Paul's review of Q-V3D-04-1 to 4 and of the two questions added in r2, Q-V3D-04-5 (S1's miss) and Q-V3D-04-6 (rock stripes).
+2. MSVC and CI: pending (run 46111093498).
+3. Interactive flight is not done: every judgement so far is from screenshots through the virtual display.
 
 ## Revision notes
 
 - r1 (2026-11-28): first draft, built on its recommendations while Paul is away; his review decides Q-V3D-04-1 to 4.
+- r2 (2026-11-28): as built, still interim. 4.3 the snow line's slope hold 457 to 627 (55° to about 63°; r1 320 to 457) with `SNOW_HOLD_FULL_G`, `SNOW_HOLD_NONE_G` and the rounding term 85 / 170, `SNOW_T0` unchanged; 4.4 the two-argument `build_control` kept as V3D-02's rule; 8 the constants; U33 the new slope points; U34 and U35 on a hand-made 512 world; T25 the rock check from 627; T28 compared by arrays (Terrain3D copies the mesh); 10.3 L1 on the V3D-02 view (r1's view sees only sea), the screenshots not taken, the measured column, S1 restated as measured and missed, the tuning as done; invariant 6 from 627; 13 how each W item was confirmed; 14 Q-V3D-04-5 and 6; Open after r2.
