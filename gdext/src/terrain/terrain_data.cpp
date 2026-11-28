@@ -176,6 +176,22 @@ float sample_bilinear(const Layout& layout, std::span<const float> heights, floa
     return top + (bottom - top) * fv;
 }
 
+float ground_low(const Layout& layout, std::span<const float> heights, float X, float Z) {
+    const GridPoint p = grid_point(layout, X, Z);
+    const float fu = p.u - static_cast<float>(p.i);
+    const float fv = p.v - static_cast<float>(p.j);
+    const float h00 = heights[index(layout, p.i, p.j)];
+    const float h10 = heights[index(layout, p.i + 1, p.j)];
+    const float h01 = heights[index(layout, p.i, p.j + 1)];
+    const float h11 = heights[index(layout, p.i + 1, p.j + 1)];
+    // Diagonal 00-11.
+    const float a = fu >= fv ? h00 + fu * (h10 - h00) + fv * (h11 - h10) : h00 + fv * (h01 - h00) + fu * (h11 - h01);
+    // Diagonal 10-01.
+    const float b = fu + fv <= 1.0f ? h00 + fu * (h10 - h00) + fv * (h01 - h00)
+                                    : h11 + (1.0f - fu) * (h01 - h11) + (1.0f - fv) * (h10 - h11);
+    return std::min(a, b);
+}
+
 std::string one_decimal(double value) {
     char buffer[64];
     std::snprintf(buffer, sizeof buffer, "%.1f", value);

@@ -80,6 +80,11 @@ struct CellHit {
 // Bilinear height at (X, Z), clamped to the map (6; HUD only).
 [[nodiscard]] float sample_bilinear(const Layout& layout, std::span<const float> heights, float X, float Z);
 
+// The lower of the two triangulations of the cell square at (X, Z), with
+// the grid point of sample_bilinear (spec V3D-02 6.5): never above the
+// surface Terrain3D draws.
+[[nodiscard]] float ground_low(const Layout& layout, std::span<const float> heights, float X, float Z);
+
 // --- HUD (8.4) ------------------------------------------------------------------
 
 // What the HUD reads of a world. Spans empty when the layer is absent.
@@ -101,7 +106,7 @@ struct HudWorld {
 
 // The key line under it.
 inline constexpr const char* HUD_KEYS =
-    "WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, H hide";
+    "WASD move, E/Q up/down, right mouse look, wheel speed, Shift fast, R start, T trees, G ground, H hide";
 
 // One decimal, without a negative zero ("12.5", "-0.1", "0.0").
 [[nodiscard]] std::string one_decimal(double value);
