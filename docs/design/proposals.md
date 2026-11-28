@@ -1701,7 +1701,22 @@ Status: decided by the lead. On the engineers' and the test writer's readings: a
 - Interim choice: as the spec r2; schema 15 unchanged (no column; kind 117 is a catalogue row).
 - Status: decided by Paul (answers); the rule's form awaits the lead's approval of spec r2
 
+### Artifacts: corruption also takes a bearer (Paul, 2026-11-28)
+
+- Date: 2026-11-28
+- Raised by: spec writer (P5-11 r3), recording Paul's decision
+- Design doc section: 5 (artifacts), 6 (figures)
+- Decision, in Paul's words: "Actually, I like the idea that it could also corrupt a hero or a general that bears the artifact". This supersedes the spec's lead question L-12 (r2: a bearer is not exposed) for generals and heroes; the ruler rule of r2 stands.
+- The rule (`docs/specs/p5-11-artifacts.md` r3 6.12): a general or hero who bears arms or armour given by an evil god is tested every 10 years of bearing and may be corrupted once in its life (event `bearer_corrupted`, kind 118). A corrupted general puts cities to the sword (his side's siege falls are sacked more often, and each such sack cites him; epithet `the Butcher`); a corrupted hero forsakes the realm for the wilds (an outlaw who hunts no more and dies in exile; epithet `the Forsworn`). The god's own champion is immune: the corruption takes those who inherit or take the gift after it, by the existing moves (the next general takes up a kept arm), and a newly risen hero now takes up a kept evil arm, so the gift keeps finding hands. When a bearer dies, the artifact moves by the existing rules: buried with him, or back to the realm's treasury, where it can turn the next ruler.
+- For the design conversation: an outlaw hero alive at the present day with a dark blade, and the graves and treasuries such blades come to, are quest hooks; design 6 could note that figures can be corrupted by what they carry.
+- Interim choice: as the spec r3 (schema 15 unchanged; kind 118 is a catalogue row; reader check F28 allows an outlawed hero in exile).
+- Status: decided by Paul (the rule's intent); its form awaits the lead's approval of spec r3
+
 ### P5-11 spec r2: lead rulings L-12 to L-17 on corruption by evil relics (2026-11-28)
 
 Status: decided by the lead. All six are approved as the spec recommends. In particular L-12: only the ruler of a realm that keeps an evil artifact at its seat is exposed, since relics are never borne (Paul's "a bearer" is read as the one who holds it); L-13: if fewer than 25 of 100 default worlds have a kept evil artifact, target CR1 is judged as 70% of the worlds that have one.
+
+### P5-11 spec r3: lead rulings L-18 to L-23 on corrupted bearers (2026-11-28)
+
+Status: decided by the lead; all six approved as the spec recommends. A god's own champion is immune and corruption takes the later bearers of the gift (L-18); the new move M15 lets a newly risen hero take up a kept evil arm, so the rule has cases (L-19); the bearer draw has its own stream; a corrupted general's sieges end in a sack more often and a corrupted hero turns outlaw; the event is a kind of its own, 118 `bearer_corrupted` (L-23). Paul is told the choices and may change them.
 
