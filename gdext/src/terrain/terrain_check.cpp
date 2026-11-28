@@ -23,6 +23,7 @@
 #include <godot_cpp/variant/vector3.hpp>
 
 #include "terrain/fly_state.hpp"
+#include "terrain/terrain_check_internal.hpp"
 #include "terrain/terrain_preview.hpp"
 #include "world_layer.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
@@ -40,14 +41,7 @@ std::string to_utf8(const godot::String& text) {
     return {utf8.get_data(), static_cast<std::size_t>(utf8.length())};
 }
 
-struct Checker {
-    bool all = true;
-    void check(bool ok, const godot::String& what) {
-        all = all && ok;
-        godot::UtilityFunctions::print(godot::String(ok ? "  ok    " : "  FAIL  ") + what);
-    }
-    static void info(const godot::String& text) { godot::UtilityFunctions::print("UNMAPPED-TERRAIN-CHECK: " + text); }
-};
+using Checker = TerrainChecker;
 
 // --- The check's own formulas (5.1 to 5.3) -----------------------------------------
 
@@ -242,12 +236,14 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
         c.check(scene.h_min == own.h_min && scene.h_max == own.h_max,
                 "T2 min " + to_godot(decimal1(static_cast<double>(own.h_min))) + " m, max " +
                     to_godot(decimal1(static_cast<double>(own.h_max))) + " m");
-        const godot::PackedByteArray control = ci->get_data();
-        bool zero = true;
-        for (int64_t k = 0; k < control.size(); ++k) {
-            zero = zero && control[k] == 0;
+        if (!scene.textured) {
+            const godot::PackedByteArray control = ci->get_data();
+            bool zero = true;
+            for (int64_t k = 0; k < control.size(); ++k) {
+                zero = zero && control[k] == 0;
+            }
+            c.check(zero, "T2 control map all 0.0f (flat colours)");
         }
-        c.check(zero, "T2 control map all 0.0f");
     }
 
     // T3: colours against worldgen's render --layer biome.
@@ -264,7 +260,9 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
         }
         c.check(alpha, "T3 every alpha is 128");
         const godot::String png = options.reference_dir.path_join("biome.png");
-        if (godot::FileAccess::file_exists(png)) {
+        if (scene.textured) {
+            Checker::info("T3 textured ground: colours checked against 5.1 below");
+        } else if (godot::FileAccess::file_exists(png)) {
             const godot::Ref<godot::Image> ref = godot::Image::load_from_file(png);
             bool ok = ref.is_valid() && ref->get_width() == n && ref->get_height() == n;
             std::size_t bad = 0;
@@ -290,7 +288,7 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
                        rgba[static_cast<int64_t>(4 * k + 2)] == 128;
             }
             c.check(grey, "T3 no biome.png: every cell grey");
-            c.check(preview.status_text().contains("no biome layer: terrain drawn grey"),
+            c.check(preview.status_text().contains("no biome layer: ground drawn grey, no vegetation"),
                     "T3 the status notes the missing biome layer");
         }
     }
@@ -434,6 +432,9 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
                         to_godot(decimal1(static_cast<double>(lowest_margin))) + " m)");
     }
 
+    // V3D-02: T3 (default mode), T9 to T15.
+    run_ground_checks(preview, options, c);
+
     // V16: opening a world again replaces the first (one Terrain3D node,
     // the same heights read back).
     if (want_present) {
@@ -454,6 +455,9 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
         }
         c.check(reopened && count == 1 && height_ok, "T6 reopening the world leaves one Terrain3D node with its heights");
     }
+
+    // V3D-02 T16: keys T and G (G reopens the world twice).
+    run_key_checks(preview, options, c);
 
     godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
     return c.all ? 0 : 1;

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <utility>
 
+#include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/class_db_singleton.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/engine.hpp>
@@ -28,12 +29,17 @@
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/viewport_texture.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/mesh.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
+#include <godot_cpp/variant/packed_color_array.hpp>
+#include <godot_cpp/variant/packed_vector3_array.hpp>
+#include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/vector3.hpp>
 
+#include "terrain/placeholder_meshes.hpp"
 #include "terrain/terrain_check.hpp"
 #include "world_layer.hpp"
 
@@ -74,6 +80,64 @@ godot::Ref<godot::ImageTexture> flat_texture(std::uint8_t r, std::uint8_t g, std
 godot::Color rgb_colour(std::uint32_t rgb) {
     return godot::Color(static_cast<float>((rgb >> 16) & 0xFF) / 255.0f, static_cast<float>((rgb >> 8) & 0xFF) / 255.0f,
                         static_cast<float>(rgb & 0xFF) / 255.0f);
+}
+
+// An RGBA8 256 x 256 image with mipmaps from bytes (V3D-02 3.2).
+godot::Ref<godot::ImageTexture> rgba_texture(const std::vector<std::uint8_t>& bytes, int size) {
+    godot::PackedByteArray data;
+    data.resize(static_cast<int64_t>(bytes.size()));
+    std::memcpy(data.ptrw(), bytes.data(), bytes.size());
+    const godot::Ref<godot::Image> image = godot::Image::create_from_data(size, size, false, godot::Image::FORMAT_RGBA8, data);
+    image->generate_mipmaps();
+    return godot::ImageTexture::create_from_image(image);
+}
+
+godot::Color srgb_byte_colour(std::uint32_t rgba) {
+    return godot::Color(static_cast<float>((rgba >> 24) & 0xFF) / 255.0f, static_cast<float>((rgba >> 16) & 0xFF) / 255.0f,
+                        static_cast<float>((rgba >> 8) & 0xFF) / 255.0f, static_cast<float>(rgba & 0xFF) / 255.0f);
+}
+
+// A PackedScene of one vegetation kind built in code (V3D-02 9.1 step 3): a
+// Node3D root with one MeshInstance3D child per LOD, MeshLOD0 and MeshLOD1,
+// owned by the root.
+godot::Ref<godot::PackedScene> vegetation_scene(int kind, const godot::Ref<godot::StandardMaterial3D>& material) {
+    godot::Node3D* root = memnew(godot::Node3D);
+    root->set_name(terrain::VEGETATION_KINDS_INFO[static_cast<std::size_t>(kind)].name);
+    for (int lod = 0; lod < terrain::lod_count(kind); ++lod) {
+        const terrain::MeshData data = terrain::build_mesh(kind, lod);
+        godot::PackedVector3Array vertices;
+        godot::PackedVector3Array normals;
+        godot::PackedColorArray colours;
+        const std::size_t count = data.colours.size();
+        vertices.resize(static_cast<int64_t>(count));
+        normals.resize(static_cast<int64_t>(count));
+        colours.resize(static_cast<int64_t>(count));
+        for (std::size_t v = 0; v < count; ++v) {
+            const auto i = static_cast<int64_t>(v);
+            vertices.set(i, godot::Vector3(data.positions[3 * v], data.positions[3 * v + 1], data.positions[3 * v + 2]));
+            normals.set(i, godot::Vector3(data.normals[3 * v], data.normals[3 * v + 1], data.normals[3 * v + 2]));
+            colours.set(i, srgb_byte_colour(data.colours[v]));
+        }
+        godot::Array arrays;
+        arrays.resize(godot::Mesh::ARRAY_MAX);
+        arrays[godot::Mesh::ARRAY_VERTEX] = vertices;
+        arrays[godot::Mesh::ARRAY_NORMAL] = normals;
+        arrays[godot::Mesh::ARRAY_COLOR] = colours;
+        godot::Ref<godot::ArrayMesh> mesh;
+        mesh.instantiate();
+        mesh->add_surface_from_arrays(godot::Mesh::PRIMITIVE_TRIANGLES, arrays);
+        mesh->surface_set_material(0, material);
+        godot::MeshInstance3D* instance = memnew(godot::MeshInstance3D);
+        instance->set_name(godot::String("MeshLOD") + godot::String::num_int64(lod));
+        instance->set_mesh(mesh);
+        root->add_child(instance);
+        instance->set_owner(root);
+    }
+    godot::Ref<godot::PackedScene> scene;
+    scene.instantiate();
+    scene->pack(root);
+    memdelete(root);
+    return scene;
 }
 
 constexpr float MOUSE_DEG_PER_PIXEL = 0.15f;
@@ -247,11 +311,34 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             }
         } else if (arg == "--no-terrain3d") {
             no_terrain3d_ = true;
+        } else if (arg == "--flat-colours") {
+            flat_colours_ = true;
+        } else if (arg == "--no-trees") {
+            no_trees_ = true;
+        } else if (arg == "--instance-cap" && has_one) {
+            const godot::String text = args[++i];
+            const int64_t v = text.is_valid_int() ? text.to_int() : -1;
+            if (v >= 0 && v <= static_cast<int64_t>(terrain::MAX_INSTANCE_CAP)) {
+                instance_cap_ = static_cast<std::uint64_t>(v);
+            } else {
+                refuse("--instance-cap " + text + ": not a whole number from 0 to 4000000");
+            }
+        } else if (arg == "--above" && has_one) {
+            float v = 0.0f;
+            const godot::String text = args[++i];
+            if (number(text, v)) {
+                opt_above_ = v;
+            } else {
+                refuse("--above " + text + ": not a number");
+            }
         } else if (!arg.begins_with("--") && world_path_.is_empty()) {
             world_path_ = arg;
         }
     }
     scripted_ = !screenshot_path_.is_empty() || bench_ || !check_dir_.is_empty();
+    if (opt_above_ && opt_alt_) {
+        refuse("--above cannot be combined with --alt");
+    }
     if (!screenshot_path_.is_empty()) {
         if (bench_ || !check_dir_.is_empty()) {
             refuse("--screenshot cannot be combined with --bench or --check");
@@ -309,6 +396,16 @@ void TerrainPreview::read_optional_layer(const char* name, const char* type, std
         scene_.biome = *grid.get_if<std::uint8_t>();
     } else if (key == "region") {
         scene_.region = *grid.get_if<std::uint16_t>();
+    } else if (key == "water") {
+        scene_.water = *grid.get_if<std::uint8_t>();
+    } else if (key == "river") {
+        scene_.river = *grid.get_if<std::uint8_t>();
+    } else if (key == "flow_dir") {
+        scene_.flow_dir = *grid.get_if<std::uint8_t>();
+    } else if (key == "timber") {
+        scene_.timber = *grid.get_if<std::uint8_t>();
+    } else if (key == "temperature") {
+        scene_.temperature = *grid.get_if<std::int16_t>();
     }
 }
 
@@ -319,6 +416,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     // Option refusals of parse_options stay (they were printed already).
 
     std::uint64_t t0 = now_usec();
+    current_path_ = path;
     world_.instantiate();
     if (!world_->open(path)) {
         status_lines_.push_back(path + godot::String(": ") + world_->get_error_code() + godot::String(": ") + world_->get_error_message());
@@ -360,31 +458,92 @@ bool TerrainPreview::open_world(const godot::String& path) {
     read_optional_layer("water_depth", "u16", notes);
     read_optional_layer("biome", "u8", notes);
     read_optional_layer("region", "u16", notes);
+    read_optional_layer("water", "u8", notes);
+    read_optional_layer("river", "u8", notes);
+    read_optional_layer("flow_dir", "u8", notes);
+    read_optional_layer("timber", "u8", notes);
+    read_optional_layer("temperature", "i16", notes);
+    {
+        // The placement key (V3D-02 2): meta seed, an unsigned decimal.
+        const godot::String seed = world_->get_meta_value("seed");
+        const std::string text = to_utf8(seed);
+        bool ok = !text.empty() && text.size() <= 20;
+        std::uint64_t value = 0;
+        for (const char ch : text) {
+            if (ch < '0' || ch > '9') {
+                ok = false;
+                break;
+            }
+            const auto digit = static_cast<std::uint64_t>(ch - '0');
+            if (value > (UINT64_MAX - digit) / 10) {
+                ok = false;
+                break;
+            }
+            value = value * 10 + digit;
+        }
+        scene_.seed = ok ? value : 0;
+        scene_.seed_known = ok;
+    }
     timings_.layers = now_usec() - t0;
 
     t0 = now_usec();
     scene_.heights = terrain::build_heights(layout, scene_.elevation, scene_.water_depth);
     const auto& records = world_->biome_records();
-    scene_.colours = terrain::build_colours(layout, scene_.biome, records);
+    const bool have_biome = !scene_.biome.empty();
+    scene_.textured = have_biome && !flat_colours_;
     const auto [lo, hi] = std::minmax_element(scene_.heights.begin(), scene_.heights.end());
     scene_.h_min = *lo;
     scene_.h_max = *hi;
     scene_.sea_rgb = terrain::sea_colour(records);
     timings_.buffers = now_usec() - t0;
 
-    t0 = now_usec();
+    // Ground (V3D-02 4, 5): cells whenever there is a biome layer (the
+    // placement reads them), control and colours of the textured mode.
     const std::size_t cells = static_cast<std::size_t>(n) * static_cast<std::size_t>(n);
+    t0 = now_usec();
+    if (have_biome) {
+        terrain::GroundInputs in;
+        in.layout = &layout;
+        in.elevation = scene_.elevation;
+        in.biome = scene_.biome;
+        in.water = scene_.water;
+        in.river = scene_.river;
+        in.flow_dir = scene_.flow_dir;
+        in.temperature = scene_.temperature;
+        in.records = records;
+        scene_.ground = terrain::build_ground_cells(in);
+    }
+    timings_.cells = now_usec() - t0;
+    t0 = now_usec();
+    if (scene_.textured) {
+        scene_.control = terrain::build_control(layout, scene_.ground);
+        scene_.colours = terrain::build_textured_colours(layout, scene_.ground, records);
+    } else {
+        scene_.control.assign(cells, 0u);
+        scene_.colours = terrain::build_colours(layout, scene_.biome, records);
+    }
+    timings_.control = now_usec() - t0;
+    t0 = now_usec();
+    scene_.vegetation = have_biome && !no_trees_;
+    if (scene_.vegetation) {
+        scene_.placement = terrain::place_vegetation(layout, scene_.heights, scene_.elevation, scene_.timber, scene_.water,
+                                                     scene_.ground, scene_.seed, instance_cap_);
+    }
+    timings_.placement = now_usec() - t0;
+
+    t0 = now_usec();
     {
         // Little-endian floats for FORMAT_RF: the host's own byte order on
-        // x86_64, the only target of the extension.
+        // x86_64, the only target of the extension. Control values are bit
+        // patterns, copied with memcpy, never through float arithmetic.
         godot::PackedByteArray bytes;
         bytes.resize(static_cast<int64_t>(cells * sizeof(float)));
         std::memcpy(bytes.ptrw(), scene_.heights.data(), cells * sizeof(float));
         height_image_ = godot::Image::create_from_data(n, n, false, godot::Image::FORMAT_RF, bytes);
-        godot::PackedByteArray zeros;
-        zeros.resize(static_cast<int64_t>(cells * sizeof(float)));
-        zeros.fill(0);
-        control_image_ = godot::Image::create_from_data(n, n, false, godot::Image::FORMAT_RF, zeros);
+        godot::PackedByteArray control;
+        control.resize(static_cast<int64_t>(cells * sizeof(std::uint32_t)));
+        std::memcpy(control.ptrw(), scene_.control.data(), cells * sizeof(std::uint32_t));
+        control_image_ = godot::Image::create_from_data(n, n, false, godot::Image::FORMAT_RF, control);
         godot::PackedByteArray rgba;
         rgba.resize(static_cast<int64_t>(scene_.colours.size()));
         std::memcpy(rgba.ptrw(), scene_.colours.data(), scene_.colours.size());
@@ -412,8 +571,34 @@ bool TerrainPreview::open_world(const godot::String& path) {
         }
     }
 
-    if (scene_.biome.empty()) {
-        status_lines_.push_back("no biome layer: terrain drawn grey");
+    // Status lines (V3D-01 7, V3D-02 10.3).
+    if (!have_biome) {
+        status_lines_.push_back("no biome layer: ground drawn grey, no vegetation");
+    } else {
+        status_lines_.push_back(scene_.textured ? "ground: textured, 15 ground types" : "ground: flat colours");
+        if (scene_.vegetation) {
+            godot::String line = "vegetation: " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.kept())) + " instances";
+            if (scene_.placement.candidates > scene_.placement.cap) {
+                line += ", thinned from " + godot::String::num_int64(static_cast<int64_t>(scene_.placement.candidates)) + " to the cap";
+            }
+            status_lines_.push_back(line);
+            if (!scene_.seed_known) {
+                status_lines_.push_back("no seed in meta: vegetation placed with seed 0");
+            }
+            if (scene_.timber.empty()) {
+                status_lines_.push_back("no timber layer: tree density from the biome alone");
+            }
+        } else {
+            status_lines_.push_back("vegetation: off");
+        }
+        if (scene_.textured) {
+            if (scene_.water.empty()) {
+                status_lines_.push_back("no water layer: rivers not drawn");
+            }
+            if (scene_.temperature.empty()) {
+                status_lines_.push_back("no temperature layer: no snow");
+            }
+        }
     }
     if (scene_.water_depth.empty()) {
         status_lines_.push_back("no water_depth layer: lakes drawn at their beds");
@@ -428,6 +613,32 @@ bool TerrainPreview::open_world(const godot::String& path) {
     show_status();
     after_load();
     return true;
+}
+
+void TerrainPreview::build_ground_assets() {
+    // V3D-02 9.1 step 3: once per process; the textures and meshes do not
+    // depend on the world.
+    if (albedo_textures_.empty()) {
+        const std::uint64_t t0 = now_usec();
+        for (int id = 0; id < terrain::GROUND_TYPE_COUNT; ++id) {
+            const terrain::GroundTexture tex = terrain::build_ground_texture(static_cast<terrain::GroundType>(id));
+            albedo_textures_.push_back(rgba_texture(tex.albedo, terrain::GROUND_TEXTURE_SIZE));
+            normal_textures_.push_back(rgba_texture(tex.normal, terrain::GROUND_TEXTURE_SIZE));
+            mean_grey_.push_back(tex.mean_grey);
+        }
+        timings_.ground_textures = now_usec() - t0;
+    }
+    if (mesh_scenes_[0].is_null()) {
+        godot::Ref<godot::StandardMaterial3D> material;
+        material.instantiate();
+        material->set_flag(godot::BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
+        material->set_flag(godot::BaseMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
+        material->set_roughness(0.9f);
+        material->set_cull_mode(godot::BaseMaterial3D::CULL_BACK);
+        for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
+            mesh_scenes_[static_cast<std::size_t>(kind)] = vegetation_scene(kind, material);
+        }
+    }
 }
 
 bool TerrainPreview::make_terrain() {
@@ -445,17 +656,75 @@ bool TerrainPreview::make_terrain() {
     node->set("vertex_spacing", scene_.layout->spacing);  // V1
     node->set("free_editor_textures", false);             // no saved Assets file (5.3)
 
-    // Texture asset 0 (5.3, V7): white albedo (alpha = height), flat normal
-    // (alpha = roughness), both built in code.
     const godot::Variant assets = classes->instantiate("Terrain3DAssets");
-    const godot::Variant asset = classes->instantiate("Terrain3DTextureAsset");
-    godot::Object* asset_object = asset;
     godot::Object* assets_object = assets;
-    if (asset_object != nullptr && assets_object != nullptr) {
-        asset_object->set("name", "white");
-        asset_object->set("albedo_texture", flat_texture(255, 255, 255, 0));
-        asset_object->set("normal_texture", flat_texture(128, 128, 255, 230));
-        assets_object->call("set_texture_asset", 0, asset);
+    if (assets_object != nullptr) {
+        if (scene_.textured || scene_.vegetation) {
+            build_ground_assets();
+        }
+        if (scene_.textured) {
+            // The fifteen ground types (V3D-02 3).
+            const auto& records = world_->biome_records();
+            for (int id = 0; id < terrain::GROUND_TYPE_COUNT; ++id) {
+                const auto type = static_cast<terrain::GroundType>(id);
+                const terrain::GroundTypeInfo& info = terrain::GROUND_TYPES[static_cast<std::size_t>(id)];
+                const godot::Variant asset = classes->instantiate("Terrain3DTextureAsset");
+                godot::Object* a = asset;
+                if (a == nullptr) {
+                    continue;
+                }
+                terrain::GroundTexture mean;
+                mean.mean_grey = mean_grey_[static_cast<std::size_t>(id)];
+                const auto c = terrain::albedo_colour(type, mean, records);
+                a->set("name", godot::String("ground ") + godot::String::num_int64(id));
+                a->set("albedo_texture", albedo_textures_[static_cast<std::size_t>(id)]);
+                a->set("normal_texture", normal_textures_[static_cast<std::size_t>(id)]);
+                // albedo_color passes through an sRGB-to-linear conversion on its
+                // way to the shader, so 3.3's linear value is encoded first.
+                a->set("albedo_color", godot::Color(terrain::srgb_encode(c[0]), terrain::srgb_encode(c[1]),
+                                                    terrain::srgb_encode(c[2]), 1.0f));
+                a->set("uv_scale", info.uv_scale);
+                const float detile = (id == 0 || id == 13) ? 0.0f : 0.2f;
+                a->set("detiling_rotation", detile);
+                a->set("detiling_shift", detile);
+                assets_object->call("set_texture_asset", id, asset);
+            }
+        } else {
+            // Texture asset 0 (V3D-01 5.3, V7): white albedo (alpha =
+            // height), flat normal (alpha = roughness), both built in code.
+            const godot::Variant asset = classes->instantiate("Terrain3DTextureAsset");
+            if (godot::Object* a = asset; a != nullptr) {
+                a->set("name", "white");
+                a->set("albedo_texture", flat_texture(255, 255, 255, 0));
+                a->set("normal_texture", flat_texture(128, 128, 255, 230));
+                assets_object->call("set_texture_asset", 0, asset);
+            }
+        }
+        if (scene_.vegetation) {
+            // Mesh assets 0 to 4 (V3D-02 6.1): scene_file first, since
+            // set_scene_file resets name, height offset, density and LOD
+            // ranges.
+            for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
+                const terrain::VegetationKindInfo& info = terrain::VEGETATION_KINDS_INFO[static_cast<std::size_t>(kind)];
+                const godot::Variant asset = classes->instantiate("Terrain3DMeshAsset");
+                godot::Object* a = asset;
+                if (a == nullptr) {
+                    continue;
+                }
+                a->set("scene_file", mesh_scenes_[static_cast<std::size_t>(kind)]);
+                a->set("name", info.name);
+                a->set("enabled", trees_visible_);
+                a->set("height_offset", 0.0f);
+                a->set("cast_shadows", 0);
+                a->set("visibility_layers", 1);
+                a->set("lod0_range", info.lod0_range);
+                if (info.lods > 1) {
+                    a->set("lod1_range", info.lod1_range);
+                }
+                a->set("fade_margin", 0.0f);
+                assets_object->call("set_mesh_asset", kind, asset);
+            }
+        }
         node->set("assets", assets);
     }
 
@@ -483,11 +752,85 @@ bool TerrainPreview::make_terrain() {
     data->call("import_images", images, godot::Vector3(origin, 0.0f, origin), 0.0f, 1.0f);  // V3, V4
     import_end_usec_ = now_usec();
     timings_.import = import_end_usec_ - t0;
+    add_vegetation();
+    import_end_usec_ = now_usec();  // the first frame starts after the transfer (V3D-02 12)
     return true;
 }
 
+void TerrainPreview::add_vegetation() {
+    // V3D-02 9.1 step 5. add_transforms copies each region's and each
+    // instancer cell's colour array once per instance it appends (Terrain3D
+    // writes a PackedColorArray back for every push), so one call with every
+    // instance of a kind is quadratic in a region's count. The instances
+    // are therefore handed over one instancer cell (32 x 32 vertices, 512 m)
+    // at a time, in placement order within each cell, which gives the same
+    // stored instances.
+    if (!scene_.vegetation || terrain_ == nullptr) {
+        return;
+    }
+    godot::Object* instancer = terrain_->call("get_instancer");
+    if (instancer == nullptr) {
+        godot::UtilityFunctions::printerr("TerrainPreview: Terrain3D has no instancer");
+        return;
+    }
+    const std::uint64_t t0 = now_usec();
+    const terrain::Layout& layout = *scene_.layout;
+    const float region_m = static_cast<float>(layout.region_size) * layout.spacing;
+    const int cells_per_region = layout.region_size / 32;
+    const int cells_per_axis = layout.region_count * cells_per_region;
+    const float lo = -8.0f * static_cast<float>(layout.n);
+    for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
+        const auto& list = scene_.placement.kinds[static_cast<std::size_t>(kind)];
+        if (list.empty()) {
+            continue;
+        }
+        // Group the instances by instancer cell, keeping placement order.
+        std::vector<std::uint32_t> cell_of(list.size());
+        std::vector<std::uint32_t> count(static_cast<std::size_t>(cells_per_axis) * static_cast<std::size_t>(cells_per_axis) + 1, 0);
+        for (std::size_t i = 0; i < list.size(); ++i) {
+            const int cx = std::clamp(static_cast<int>(std::floor((list[i].x - lo) / (region_m / static_cast<float>(cells_per_region)))), 0, cells_per_axis - 1);
+            const int cz = std::clamp(static_cast<int>(std::floor((list[i].z - lo) / (region_m / static_cast<float>(cells_per_region)))), 0, cells_per_axis - 1);
+            cell_of[i] = static_cast<std::uint32_t>(cz * cells_per_axis + cx);
+            ++count[cell_of[i] + 1];
+        }
+        for (std::size_t c = 1; c < count.size(); ++c) {
+            count[c] += count[c - 1];
+        }
+        std::vector<std::uint32_t> order(list.size());
+        {
+            std::vector<std::uint32_t> next(count.begin(), count.end() - 1);
+            for (std::size_t i = 0; i < list.size(); ++i) {
+                order[next[cell_of[i]]++] = static_cast<std::uint32_t>(i);
+            }
+        }
+        for (std::size_t c = 0; c + 1 < count.size(); ++c) {
+            if (count[c] == count[c + 1]) {
+                continue;
+            }
+            godot::TypedArray<godot::Transform3D> transforms;
+            godot::PackedColorArray colours;
+            colours.resize(static_cast<int64_t>(count[c + 1] - count[c]));
+            int64_t slot = 0;
+            for (std::uint32_t k = count[c]; k < count[c + 1]; ++k) {
+                const terrain::Instance& in = list[order[k]];
+                const float s = static_cast<float>(in.scale_pm) / 1000.0f;
+                const float yaw = static_cast<float>(in.yaw1024) * 6.28318530717958647692f / 1024.0f;
+                const godot::Basis basis = godot::Basis(godot::Vector3(0.0f, 1.0f, 0.0f), yaw).scaled(godot::Vector3(s, s, s));
+                transforms.push_back(godot::Transform3D(basis, godot::Vector3(in.x, in.y, in.z)));
+                const float v = static_cast<float>(200 + static_cast<int>(in.tint) * 55 / 255) / 255.0f;
+                colours.set(slot++, godot::Color(v, v, v, 1.0f));
+            }
+            instancer->call("add_transforms", kind, transforms, colours, false);
+        }
+    }
+    instancer->call("update_mmis", -1, godot::Vector2i(0, 0), true);
+    timings_.transfer = now_usec() - t0;
+}
+
 void TerrainPreview::place_sea() {
-    const float side = 48.0f * static_cast<float>(scene_.layout->n);
+    // V3D-02 7: a plane of 800 km faded by depth fog to the sky's ground
+    // colour, so it reaches the horizon with no visible edge.
+    const float side = SEA_SIDE;
     godot::Ref<godot::PlaneMesh> plane;
     plane.instantiate();
     plane->set_size(godot::Vector2(side, side));
@@ -498,11 +841,24 @@ void TerrainPreview::place_sea() {
     plane->set_material(material);
     sea_->set_mesh(plane);
     sea_->set_position(godot::Vector3(0.0f, 0.0f, 0.0f));
-    camera_->set_far(side);
+    camera_->set_far(CAMERA_FAR);
     // Beyond the plane the sky's ground shows below the horizon; give it the
     // sea's colour so the sea reads as reaching the horizon (9.3 G1).
     if (auto* env_node = godot::Object::cast_to<godot::WorldEnvironment>(get_node_or_null("WorldEnvironment"))) {
         const godot::Ref<godot::Environment> env = env_node->get_environment();
+        if (env.is_valid()) {
+            env->set_fog_enabled(true);
+            env->set_fog_mode(godot::Environment::FOG_MODE_DEPTH);
+            env->set_fog_light_color(rgb_colour(scene_.sea_rgb));
+            env->set_fog_light_energy(1.0f);
+            env->set_fog_density(1.0f);
+            env->set_fog_sun_scatter(0.0f);
+            env->set_fog_aerial_perspective(0.0f);
+            env->set_fog_sky_affect(0.0f);
+            env->set_fog_depth_begin(FOG_BEGIN);
+            env->set_fog_depth_end(FOG_END);
+            env->set_fog_depth_curve(1.0f);
+        }
         if (env.is_valid() && env->get_sky().is_valid()) {
             const godot::Ref<godot::ProceduralSkyMaterial> sky = env->get_sky()->get_material();
             if (sky.is_valid()) {
@@ -527,6 +883,9 @@ void TerrainPreview::place_start() {
     start_.x = w.x;
     start_.z = w.z;
     start_.y = opt_alt_.value_or(scene_.h_max + 300.0f);
+    if (opt_above_) {
+        start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + *opt_above_;
+    }
     start_.heading_deg = opt_heading_.value_or(0.0f);
     start_.pitch_deg = opt_pitch_.value_or(-25.0f);
     start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
@@ -581,7 +940,10 @@ void TerrainPreview::update_hud() {
 void TerrainPreview::after_load() {
     update_hud();
     if (!screenshot_path_.is_empty() && !refused_) {
-        get_tree()->create_timer(2.0)->connect("timeout", callable_mp(this, &TerrainPreview::take_screenshot));
+        // V3D-02 10.1: 2.0 s after the first drawn frame after the terrain
+        // is added (the instancer builds its multimeshes in that frame).
+        godot::RenderingServer::get_singleton()->connect(
+            "frame_post_draw", callable_mp(this, &TerrainPreview::on_first_drawn_frame), godot::Object::CONNECT_ONE_SHOT);
     }
     if (bench_ && !refused_) {
         // 10: the first frame runs from the end of the import to the next
@@ -616,6 +978,10 @@ std::uint64_t video_memory_bytes() {
 
 }  // namespace
 
+void TerrainPreview::on_first_drawn_frame() {
+    get_tree()->create_timer(2.0)->connect("timeout", callable_mp(this, &TerrainPreview::take_screenshot));
+}
+
 void TerrainPreview::bench_first_frame() {
     first_frame_usec_ = now_usec() - import_end_usec_;
     const int n = scene_.layout->n;
@@ -637,14 +1003,67 @@ void TerrainPreview::bench_first_frame() {
         to_godot(terrain::one_decimal(perf->get_monitor(godot::Performance::MEMORY_STATIC) / mb)), " MB, video ",
         to_godot(terrain::one_decimal(static_cast<double>(video_memory_bytes()) / mb)),
         " MB, regions ", regions);
+    godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ground textures ", ms(timings_.ground_textures), " ms, cells ",
+                                   ms(timings_.cells), " ms, control ", ms(timings_.control),
+                                   " ms; vegetation placement ", ms(timings_.placement), " ms, transfer ",
+                                   ms(timings_.transfer), " ms, instances ",
+                                   static_cast<int64_t>(scene_.placement.kept()), " of ",
+                                   static_cast<int64_t>(scene_.placement.candidates), " (cap ",
+                                   static_cast<int64_t>(instance_cap_), ")");
     if (is_headless()) {
         get_tree()->quit(0);
         return;
     }
-    // The flight: from the start, heading north at pitch -10 and 1000 m/s,
-    // for 16 N / 1000 s, vsync off.
+    // V3D-02 12: the view at the centre cell, 150 m above the ground,
+    // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300.
     godot::DisplayServer::get_singleton()->window_set_vsync_mode(godot::DisplayServer::VSYNC_DISABLED);
     godot::OS::get_singleton()->set_low_processor_usage_mode(false);
+    const terrain::Vec2 c = terrain::cell_to_world(*scene_.layout, n / 2, n / 2);
+    fly_ = start_;
+    fly_.x = c.x;
+    fly_.z = c.z;
+    fly_.y = terrain::ground_clamp(*scene_.layout, scene_.heights, c.x, c.z) + 150.0f;
+    fly_.heading_deg = 0.0f;
+    fly_.pitch_deg = -10.0f;
+    apply_camera();
+    view_frames_ = 0;
+    frame_usec_.clear();
+    last_frame_usec_ = now_usec();
+    godot::RenderingServer::get_singleton()->connect("frame_post_draw",
+                                                     callable_mp(this, &TerrainPreview::bench_view_frame));
+}
+
+void TerrainPreview::bench_view_frame() {
+    const std::uint64_t t = now_usec();
+    ++view_frames_;
+    if (view_frames_ > 60) {
+        frame_usec_.push_back(t - last_frame_usec_);
+    }
+    last_frame_usec_ = t;
+    if (frame_usec_.size() < 300) {
+        return;
+    }
+    godot::RenderingServer::get_singleton()->disconnect("frame_post_draw",
+                                                        callable_mp(this, &TerrainPreview::bench_view_frame));
+    std::uint64_t sum = 0;
+    std::uint64_t max = 0;
+    int over16 = 0;
+    for (const std::uint64_t f : frame_usec_) {
+        sum += f;
+        max = std::max(max, f);
+        over16 += f > 16700 ? 1 : 0;
+    }
+    const int n = scene_.layout->n;
+    godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: view at cell (", n / 2, ", ", n / 2,
+                                   "), 150 m above ground: frames 300, mean ", ms(sum / frame_usec_.size()), ", max ",
+                                   ms(max), ", over 16.7 ms ", over16);
+    start_flight();
+}
+
+void TerrainPreview::start_flight() {
+    // The flight: from the start, heading north at pitch -10 and 1000 m/s,
+    // for 16 N / 1000 s, vsync off.
+    const int n = scene_.layout->n;
     fly_ = start_;
     fly_.heading_deg = 0.0f;
     fly_.pitch_deg = -10.0f;
@@ -782,6 +1201,12 @@ void TerrainPreview::_unhandled_input(const godot::Ref<godot::InputEvent>& event
                     apply_camera();
                 }
                 break;
+            case godot::KEY_T:
+                toggle_trees();
+                break;
+            case godot::KEY_G:
+                toggle_ground();
+                break;
             case godot::KEY_H:
                 if (hud_ != nullptr) {
                     hud_->set_visible(!hud_->is_visible());
@@ -796,6 +1221,42 @@ void TerrainPreview::_unhandled_input(const godot::Ref<godot::InputEvent>& event
         }
         get_viewport()->set_input_as_handled();
     }
+}
+
+bool TerrainPreview::toggle_trees() {
+    if (no_trees_ || !scene_.vegetation || terrain_ == nullptr) {
+        return false;
+    }
+    trees_visible_ = !trees_visible_;
+    godot::Object* assets = terrain_->call("get_assets");
+    if (assets == nullptr) {
+        return false;
+    }
+    const int64_t count = assets->call("get_mesh_count");
+    for (int64_t id = 0; id < count; ++id) {
+        godot::Object* asset = assets->call("get_mesh_asset", id);
+        if (asset != nullptr) {
+            asset->set("enabled", trees_visible_);
+        }
+    }
+    return true;
+}
+
+bool TerrainPreview::toggle_ground() {
+    if (!scene_.layout || scene_.biome.empty() || current_path_.is_empty()) {
+        return false;
+    }
+    const terrain::FlyState keep = fly_;
+    const terrain::FlyState keep_start = start_;
+    flat_colours_ = !flat_colours_;
+    const godot::String path = current_path_;
+    if (!open_world(path)) {
+        return false;
+    }
+    fly_ = keep;
+    start_ = keep_start;
+    apply_camera();
+    return true;
 }
 
 void TerrainPreview::on_open_pressed() {

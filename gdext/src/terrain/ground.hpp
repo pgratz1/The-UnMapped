@@ -84,6 +84,13 @@ struct GroundTexture {
 [[nodiscard]] std::array<float, 3> albedo_colour(GroundType type, const GroundTexture& texture,
                                                  std::span<const worldgen::inspect::BiomeRecord> records);
 
+// The value to give Terrain3D's albedo_color so that the shader multiplies
+// by the linear value u: Godot hands the colour array to the shader through
+// an sRGB-to-linear conversion, so u is sRGB-encoded first (the standard
+// curve, extended above 1). Found while building V3D-02: 3.3's assumption
+// that albedo_color reaches the shader unchanged is false.
+[[nodiscard]] float srgb_encode(float u);
+
 // The layers read for the ground. A span is empty when its layer is absent.
 struct GroundInputs {
     const Layout* layout = nullptr;

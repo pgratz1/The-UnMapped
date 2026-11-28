@@ -34,7 +34,15 @@
 //   --check <dir>           the terrain check (terrain_check.hpp), then quit;
 //                           --expect-terrain3d present|absent
 //   --no-terrain3d          behave as if class Terrain3D did not exist
+//   --flat-colours          V3D-01's ground: one white texture, control 0,
+//                           biome colours (spec V3D-02 10.1)
+//   --no-trees              no vegetation
+//   --instance-cap <n>      the vegetation cap, 0 to 4000000 (default 1000000)
+//   --above <m>             start m metres above the ground at the start cell
+//
+// Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -47,13 +55,17 @@
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/classes/packed_scene.hpp>
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
 #include "terrain/fly_state.hpp"
+#include "terrain/ground.hpp"
 #include "terrain/terrain_data.hpp"
+#include "terrain/vegetation.hpp"
 #include "world_file.hpp"
 
 namespace unmapped {
@@ -65,8 +77,20 @@ struct TerrainScene {
     std::vector<std::uint16_t> water_depth;  // empty when absent
     std::vector<std::uint8_t> biome;         // empty when absent
     std::vector<std::uint16_t> region;       // empty when absent
+    std::vector<std::uint8_t> water;         // empty when absent (V3D-02 2)
+    std::vector<std::uint8_t> river;         // empty when absent
+    std::vector<std::uint8_t> flow_dir;      // empty when absent
+    std::vector<std::uint8_t> timber;        // empty when absent
+    std::vector<std::int16_t> temperature;   // empty when absent
+    std::uint64_t seed = 0;                  // meta seed, 0 when absent
+    bool seed_known = false;
     std::vector<float> heights;
-    std::vector<std::uint8_t> colours;       // RGBA, 4 n n bytes
+    std::vector<std::uint8_t> colours;       // RGBA, 4 n n bytes, as imported
+    bool textured = false;                   // the ground of V3D-02 (else V3D-01's flat colours)
+    terrain::GroundCells ground;             // empty without a biome layer
+    std::vector<std::uint32_t> control;      // control bits, as imported
+    bool vegetation = false;                 // a placement was made
+    terrain::Placement placement;
     float h_min = 0.0f;
     float h_max = 0.0f;
     std::uint32_t sea_rgb = 0x183878;
@@ -79,6 +103,11 @@ struct TerrainTimings {
     std::uint64_t buffers = 0;
     std::uint64_t images = 0;
     std::uint64_t import = 0;
+    std::uint64_t ground_textures = 0;  // V3D-02 12
+    std::uint64_t cells = 0;
+    std::uint64_t control = 0;
+    std::uint64_t placement = 0;
+    std::uint64_t transfer = 0;
 };
 
 class TerrainPreview : public godot::Node3D {
@@ -112,6 +141,25 @@ public:
     // the given frame rate.
     [[nodiscard]] std::string hud_at(float X, float Y, float Z, int fps) const;
     [[nodiscard]] bool terrain3d_wanted() const noexcept { return !no_terrain3d_; }
+    [[nodiscard]] bool flat_colours_option() const noexcept { return flat_colours_; }
+    [[nodiscard]] bool no_trees_option() const noexcept { return no_trees_; }
+    [[nodiscard]] std::uint64_t instance_cap() const noexcept { return instance_cap_; }
+    [[nodiscard]] bool trees_visible() const noexcept { return trees_visible_; }
+    // The world shown, as opened.
+    [[nodiscard]] const godot::String& current_path() const noexcept { return current_path_; }
+
+    // Key T: vegetation on or off (enabled on every mesh asset). Key G:
+    // reopen the world with the other ground, keeping the camera. Both do
+    // nothing when they do not apply (V3D-02 10.2); they return whether
+    // something changed.
+    bool toggle_trees();
+    bool toggle_ground();
+
+    // Sea of V3D-02 7.
+    static constexpr float SEA_SIDE = 800000.0f;
+    static constexpr float CAMERA_FAR = 450000.0f;
+    static constexpr float FOG_BEGIN = 200000.0f;
+    static constexpr float FOG_END = 400000.0f;
 
     // Texts of section 7.
     static constexpr const char* NO_TERRAIN3D_TEXT =
@@ -129,7 +177,9 @@ private:
     void refuse(const godot::String& text);
     void clear_world();
     void read_optional_layer(const char* name, const char* type, std::vector<godot::String>& notes);
+    void build_ground_assets();
     bool make_terrain();
+    void add_vegetation();
     void place_sea();
     void place_start();
     void apply_camera();
@@ -142,7 +192,10 @@ private:
     void take_screenshot();
     void run_check_deferred();
     void bench_first_frame();
+    void bench_view_frame();
     void bench_flight_frame();
+    void start_flight();
+    void on_first_drawn_frame();
     void finish_bench();
 
     godot::Camera3D* camera_ = nullptr;
@@ -158,6 +211,11 @@ private:
     godot::Ref<godot::Image> height_image_;
     godot::Ref<godot::Image> control_image_;
     godot::Ref<godot::Image> colour_image_;
+    // Built once per process (they do not depend on the world).
+    std::vector<godot::Ref<godot::ImageTexture>> albedo_textures_;
+    std::vector<godot::Ref<godot::ImageTexture>> normal_textures_;
+    std::vector<double> mean_grey_;
+    std::array<godot::Ref<godot::PackedScene>, terrain::VEGETATION_KINDS> mesh_scenes_;
     std::vector<godot::String> status_lines_;
     TerrainTimings timings_;
 
@@ -180,6 +238,12 @@ private:
     godot::String check_dir_;
     godot::String expect_terrain3d_;
     bool no_terrain3d_ = false;
+    bool flat_colours_ = false;
+    bool no_trees_ = false;
+    std::uint64_t instance_cap_ = terrain::DEFAULT_INSTANCE_CAP;
+    std::optional<float> opt_above_;
+    bool trees_visible_ = true;
+    godot::String current_path_;
     bool refused_ = false;
     bool scripted_ = false;  // --screenshot, --bench or --check
 
@@ -191,6 +255,7 @@ private:
     float flight_length_ = 0.0f;
     std::uint64_t last_frame_usec_ = 0;
     std::vector<std::uint64_t> frame_usec_;
+    int view_frames_ = 0;
 };
 
 }  // namespace unmapped

@@ -1,5 +1,5 @@
 # Terrain check of the 3D preview (CTest gdext-terrain-check; spec V3D-01
-# 9.2; gdext/README.md, "Terrain preview").
+# 9.2 and V3D-02 11.2; gdext/README.md, "Terrain preview").
 #
 #   cmake -DGODOT=<godot editor> -DWORLDGEN_CLI=<worldgen-cli>
 #         -DDATA_DIR=<repo>/game/data -DPROJECT_DIR=<build>/game
@@ -7,15 +7,18 @@
 #
 # 1. Geography-only worlds: --seed 49 --map-size 512 --until regions into
 #    WORK_DIR/w512/ and --seed 1 --map-size 1024 --until regions into
-#    WORK_DIR/w1024/, each with `render --layer biome` as biome.png.
+#    WORK_DIR/w1024/, each with `render --layer biome` as biome.png and
+#    `render --composite map` as map.png.
 # 2. --seed 49 --map-size 512 --until elevation into WORK_DIR/elev/ (no
 #    biome layer) and --seed 42 --test-pattern into WORK_DIR/pattern/ (no
 #    elevation layer).
 # 3. godot --headless --path PROJECT_DIR --import.
 # 4. For each world, the preview scene with --check <dir> --expect-terrain3d
-#    present (TERRAIN3D on) or absent (off); the 512 world once more with
-#    --no-terrain3d --expect-terrain3d absent. Each run must exit 0 and print
-#    UNMAPPED-TERRAIN-CHECK: PASS.
+#    present (TERRAIN3D on) or absent (off): the 512 world in the default
+#    mode, with --flat-colours --no-trees (V3D-01's look) and with
+#    --no-terrain3d --expect-terrain3d absent; the 1024 world with
+#    --instance-cap 50000; the elevation-only and test-pattern worlds. Each
+#    run must exit 0 and print UNMAPPED-TERRAIN-CHECK: PASS.
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -51,10 +54,14 @@ run_step("generate seed 49, 512, until regions" "${WORLDGEN_CLI}" generate --see
     --until regions --data "${DATA_DIR}" --out "${WORK_DIR}/w512/world.db")
 run_step("render biome, 512" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w512/world.db" --layer biome
     --out "${WORK_DIR}/w512/biome.png")
+run_step("render map, 512" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w512/world.db" --composite map
+    --out "${WORK_DIR}/w512/map.png")
 run_step("generate seed 1, 1024, until regions" "${WORLDGEN_CLI}" generate --seed 1 --map-size 1024
     --until regions --data "${DATA_DIR}" --out "${WORK_DIR}/w1024/world.db")
 run_step("render biome, 1024" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w1024/world.db" --layer biome
     --out "${WORK_DIR}/w1024/biome.png")
+run_step("render map, 1024" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w1024/world.db" --composite map
+    --out "${WORK_DIR}/w1024/map.png")
 run_step("generate seed 49, 512, until elevation" "${WORLDGEN_CLI}" generate --seed 49 --map-size 512
     --until elevation --data "${DATA_DIR}" --out "${WORK_DIR}/elev/world.db")
 run_step("generate test pattern" "${WORLDGEN_CLI}" generate --seed 42 --test-pattern
@@ -77,8 +84,9 @@ function(terrain_check label dir expect)
     endif()
 endfunction()
 terrain_check("512 world" w512 ${_expect})
+terrain_check("512 world, --flat-colours --no-trees" w512 ${_expect} --flat-colours --no-trees)
 terrain_check("512 world, --no-terrain3d" w512 absent --no-terrain3d)
-terrain_check("1024 world" w1024 ${_expect})
+terrain_check("1024 world, --instance-cap 50000" w1024 ${_expect} --instance-cap 50000)
 terrain_check("elevation-only world" elev ${_expect})
 terrain_check("test-pattern world" pattern ${_expect})
 message("terrain check: all runs passed")

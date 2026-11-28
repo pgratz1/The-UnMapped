@@ -172,6 +172,11 @@ std::array<float, 3> albedo_colour(GroundType type, const GroundTexture& texture
     return {channel((c >> 16) & 0xFF), channel((c >> 8) & 0xFF), channel(c & 0xFF)};
 }
 
+float srgb_encode(float u) {
+    const double v = static_cast<double>(u);
+    return static_cast<float>(v <= 0.0031308 ? 12.92 * v : 1.055 * std::pow(v, 1.0 / 2.4) - 0.055);
+}
+
 namespace {
 
 std::size_t cells_of(const Layout& layout) {
