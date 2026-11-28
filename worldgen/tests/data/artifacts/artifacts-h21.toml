@@ -1,0 +1,27 @@
+# P5-11 fixture `artifacts-h21` (spec 16 item 10; integration part 1): the history of H21 (h21-v12.toml). artifacts-small
+# (4.6) with artifacts-deep's certain deepening, sack and capture takes at 300 (so that a realm's treasure often stays
+# with it and moves later, by a raid, a lost hold or a won war) and the monsters' normal pressure doubled (hoards that
+# outlive their keepers). Chosen by worldgen/tests/reference/p5_11_h21_fixture.py as the replay that shows the most of
+# 16 item 10's features: every maker, deep iron, a claim cited and every move but M12 (no civ_ended with a kept
+# artifact was found in any searched run; docs/reviews/p5-11-integration-notes.md). Reference replay on the conflict
+# stress geography 17.
+
+base = "artifacts-small"
+paths = ["deep", "maker 2", "maker 3", "claim cited", "move monster_died hoarded>lost quiet",
+         "move hold_lost kept>hoarded"]
+
+[artifacts]
+sack_take_permille = 300
+capture_take_permille = 300
+
+[monsters]
+deep_years = [5, 10, 20]
+deep_delve_permille = 1000
+pressure = { low = 500, normal = 2000, high = 1600 }
+
+[[case]]
+seed = 17
+span = 6000
+races = "all"
+civs = "auto"
+intensity = "turbulent"

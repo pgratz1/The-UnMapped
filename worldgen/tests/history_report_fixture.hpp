@@ -68,7 +68,8 @@ inline const std::vector<std::string>& fixture_names() {
                                                "h17-figures",     // P5-06 18.1 item 14 (format v8, schema 12)
                                                "h18-v9",          // P5-04a 16 item 12 (format v9, schema 12)
                                                "h19-v10",         // P5-07 16 item 11 (format v10, schema 13)
-                                               "h20-v11"};        // P5-08 16 item 11 (format v11, schema 14)
+                                               "h20-v11",         // P5-08 16 item 11 (format v11, schema 14)
+                                               "h21-v12"};        // P5-11 16 item 10 (format v12, schema 15)
     return v;
 }
 
@@ -113,6 +114,10 @@ struct Fixture {
     std::vector<db::FigureRow> figures;
     std::vector<db::BookRow> books;
     std::vector<db::FactionRow> factions;   // schema 14 (P5-08 9; H20): the rows as given, in id order
+    // schema 15 (P5-11 9; H21): the rows as given, in key order (artifact_holding.to_year -1 is NULL)
+    std::vector<db::ArtifactKindRow> artifact_kinds;
+    std::vector<db::ArtifactRow> artifacts;
+    std::vector<db::ArtifactHoldingRow> artifact_holdings;
 };
 
 namespace detail {
@@ -333,6 +338,54 @@ inline Fixture load_fixture(const std::string& name) {
         f.ending = i64(*r->get(11));
         f.status = i64(*r->get(12));
         fx.factions.push_back(std::move(f));
+    }
+    for (const toml::array* r : detail::rows(doc, "artifact_kind")) {   // P5-11 9
+        db::ArtifactKindRow k;
+        k.id = i64(*r->get(0));
+        k.key = str(*r->get(1));
+        k.title = str(*r->get(2));
+        k.noun = str(*r->get(3));
+        k.artifact_class = i64(*r->get(4));
+        k.battle_permille = i64(*r->get(5));
+        k.hunt_permille = i64(*r->get(6));
+        k.claim_permille = i64(*r->get(7));
+        fx.artifact_kinds.push_back(std::move(k));
+    }
+    for (const toml::array* r : detail::rows(doc, "artifact")) {
+        db::ArtifactRow a;
+        a.id = i64(*r->get(0));
+        a.name = str(*r->get(1));
+        a.kind = i64(*r->get(2));
+        a.civ = i64(*r->get(3));
+        a.maker_kind = i64(*r->get(4));
+        a.maker = i64(*r->get(5));
+        a.god = i64(*r->get(6));
+        a.maker_civ = i64(*r->get(7));
+        a.maker_site = i64(*r->get(8));
+        a.made_year = i64(*r->get(9));
+        a.made_event = i64(*r->get(10));
+        a.occasion_event = i64(*r->get(11));
+        a.deep = i64(*r->get(12));
+        a.status = i64(*r->get(13));
+        fx.artifacts.push_back(std::move(a));
+    }
+    for (const toml::array* r : detail::rows(doc, "artifact_holding")) {   // -1 is NULL (to_year)
+        db::ArtifactHoldingRow h;
+        h.artifact = i64(*r->get(0));
+        h.seq = i64(*r->get(1));
+        h.from_year = i64(*r->get(2));
+        h.to_year = nullable(*r->get(3));
+        h.state = i64(*r->get(4));
+        h.holder_type = i64(*r->get(5));
+        h.holder = i64(*r->get(6));
+        h.region = i64(*r->get(7));
+        h.settlement = i64(*r->get(8));
+        h.site = i64(*r->get(9));
+        h.x = i64(*r->get(10));
+        h.y = i64(*r->get(11));
+        h.event = i64(*r->get(12));
+        h.until_event = i64(*r->get(13));
+        fx.artifact_holdings.push_back(std::move(h));
     }
     for (const toml::array* r : detail::rows(doc, "book")) {
         fx.books.push_back({i64(*r->get(0)), str(*r->get(1)), i64(*r->get(2)), i64(*r->get(3)), i64(*r->get(4)),
@@ -570,6 +623,9 @@ inline void stage_history(worldgen::stages::StageContext& ctx) {
     for (const auto& r : f.figures) ctx.write_figure(r);   // P5-06 9.1, 9.3
     for (const auto& r : f.books) ctx.write_book(r);
     for (const auto& r : f.factions) ctx.write_faction(r);   // P5-08 9
+    for (const auto& r : f.artifact_kinds) ctx.write_artifact_kind(r);   // P5-11 9
+    for (const auto& r : f.artifacts) ctx.write_artifact(r);
+    for (const auto& r : f.artifact_holdings) ctx.write_artifact_holding(r);
 }
 
 inline const dbtest::TempDir& fixture_dir() {
