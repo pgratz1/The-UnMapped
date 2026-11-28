@@ -332,7 +332,6 @@ void PantheonSubsystem::spreads(StepContext& ctx) {
             // within cult_return_years.
             if (const auto bar = suppressed_.find({k, a});
                 bar != suppressed_.end() && bar->second > ctx.year() - tuning_.cult_return_years) {
-                stats_.cult_returns_barred += 1;
                 continue;
             }
             if (quiet(ctx) && ctx.quiet_events_left(a) <= 0) {

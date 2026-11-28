@@ -139,7 +139,6 @@ struct PantheonStats {
     std::int64_t flares = 0, flares_acted = 0, dead = 0;
     std::int64_t cults_founded = 0, spreads = 0, adopted = 0, suppressed = 0, hidden = 0, ended = 0;
     std::int64_t prophets = 0;
-    std::int64_t cult_returns_barred = 0;  // P5-11 12.2
 };
 
 class PantheonSubsystem final : public Subsystem,

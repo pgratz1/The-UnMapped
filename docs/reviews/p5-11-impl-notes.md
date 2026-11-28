@@ -188,3 +188,8 @@ Sample event lines (chronicle, refs cut):
 5983 e815 artifact_hoarded/50: After the fall of a hold, Thomkhar the Deep-Coiled carried Gourin, a sword of deep iron, off from Clan Drourd to its hoard.
 5501 e1504 artifact_recovered/50: After a war won, the Warrens of Geeb-Kreek recovered the Black Hammer of Slizskrab, a hammer, from the Bikigg Mob.
 ```
+
+**Lead rulings on part D.** `cult_returns_barred` is dropped from the report, the spec's stat list and 12.2, and the
+engine's `PantheonStats` counter is removed (nothing read it); reading 5 above no longer applies. Reading 4's
+definition of `wars_citing_artifacts` is written into spec 10 item 6; readings 2 (`rg<id>`) and 8 (the marker one glyph
+cell above a settlement) stand and are written into spec 10 item 2 and 11.1.

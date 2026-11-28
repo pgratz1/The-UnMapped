@@ -81,10 +81,6 @@ inline constexpr std::size_t SUMMARY_CALAMITY_MAJOR_MAX = 8;
 // the ruling one has at least this share (the shipped mixed_min_permille;
 // the report reads the world only).
 inline constexpr std::int64_t MIXED_SHARE_MIN = 100;
-// P5-11 12.2 (part D reading): the report reads the world only, so the
-// stat cult_returns_barred is rebuilt with the shipped
-// history.pantheon.cult_return_years.
-inline constexpr std::int64_t CULT_RETURN_YEARS = 400;
 // P5-03 17.4: a [stats] value printed as "-" (ruins_oldest_year with no ruin).
 inline constexpr std::int64_t STAT_NONE = std::numeric_limits<std::int64_t>::min();
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
