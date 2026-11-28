@@ -91,6 +91,18 @@ void ViewerScreen::wire_browser() {
     for (int32_t c = 0; c < 4; ++c) {
         figure_list_->set_column_clip_content(c, true);
     }
+    // P5-08 11.2: the Gods tab, gods then cults.
+    god_list_->set_column_title(0, "Name");
+    god_list_->set_column_title(1, "Kind");
+    god_list_->set_column_title(2, "Title or god");
+    god_list_->set_column_title(3, "Years");
+    god_list_->set_column_expand_ratio(0, 3);
+    god_list_->set_column_expand_ratio(1, 1);
+    god_list_->set_column_expand_ratio(2, 2);
+    god_list_->set_column_expand_ratio(3, 1);
+    for (int32_t c = 0; c < 4; ++c) {
+        god_list_->set_column_clip_content(c, true);
+    }
     for (std::size_t i = 0; i < 3; ++i) {
         event_scope_->add_item(SCOPE_LABELS[i], static_cast<int32_t>(i));
     }
@@ -105,6 +117,7 @@ void ViewerScreen::wire_browser() {
     search_results_->connect("item_selected", callable_mp(this, &ViewerScreen::on_search_result_selected));
     civ_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_civ_list_selected));
     figure_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_figure_list_selected));
+    god_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_god_list_selected));
     entity_tabs_->connect("tab_changed", callable_mp(this, &ViewerScreen::on_entity_tab_changed));
     event_list_->connect("item_selected", callable_mp(this, &ViewerScreen::on_event_row_selected));
     event_scope_->connect("item_selected", callable_mp(this, &ViewerScreen::on_scope_selected));
@@ -180,6 +193,21 @@ void ViewerScreen::browser_world_opened() {
         row->set_text(3, years_text(f["born"], f["died"]));
         row->set_metadata(0, f["id"]);
     }
+    // P5-08 11.2: the god and cult list; metadata the link target.
+    god_list_->clear();
+    const godot::Array gods = model_->get_god_list();
+    godot::TreeItem* god_root = gods.is_empty() ? nullptr : god_list_->create_item();
+    for (int64_t i = 0; i < gods.size(); ++i) {
+        const godot::Dictionary g = gods[i];
+        godot::TreeItem* row = god_list_->create_item(god_root);
+        const bool cult = godot::String(g["kind"]) == "cult";
+        row->set_text(0, g["name"]);
+        row->set_tooltip_text(0, godot::String(g["target"]) + " " + godot::String(g["name"]));
+        row->set_text(1, cult ? godot::String("cult, ") + godot::String(g["status"]) : godot::String("god"));
+        row->set_text(2, g["detail"]);
+        row->set_text(3, cult ? years_text(g["founded_year"], g["ended_year"]) : godot::String());
+        row->set_metadata(0, g["target"]);
+    }
     entity_tabs_->set_current_tab(0);
     show_entity_list();
     // 6.1: a world with history opens on Browser; without, on Legend with
@@ -193,6 +221,7 @@ void ViewerScreen::browser_world_opened() {
 void ViewerScreen::browser_world_closed() {
     civ_list_->clear();
     figure_list_->clear();
+    god_list_->clear();
     swatches_.clear();
     search_results_->clear();
     search_rows_.clear();
@@ -251,6 +280,9 @@ void ViewerScreen::update_browser_controls() {
     if (entity_type == 6 && entity_tabs_->get_current_tab() != 1) {
         entity_tabs_->set_current_tab(1);
         show_entity_list();
+    } else if ((entity_type == 2 || entity_type == 7) && entity_tabs_->get_current_tab() != 2) {
+        entity_tabs_->set_current_tab(2);  // P5-08 11.2
+        show_entity_list();
     } else if (entity_type == 3 && entity_tabs_->get_current_tab() != 0) {
         entity_tabs_->set_current_tab(0);
         show_entity_list();
@@ -276,6 +308,28 @@ void ViewerScreen::update_browser_controls() {
         } else if (want != selected) {
             want->select(0);
             list->scroll_to_item(want);
+        }
+    }
+    // The god list's rows carry their link target (P5-08 11.2).
+    if (godot::TreeItem* root = god_list_->get_root()) {
+        const godot::String want_target =
+            entity_type == 2 ? "g" + godot::String::num_int64(entity_id)
+                             : entity_type == 7 ? "fa" + godot::String::num_int64(entity_id) : godot::String();
+        godot::TreeItem* want = nullptr;
+        for (godot::TreeItem* row = root->get_first_child(); row != nullptr && !want_target.is_empty();
+             row = row->get_next()) {
+            if (godot::String(row->get_metadata(0)) == want_target) {
+                want = row;
+                break;
+            }
+        }
+        if (want == nullptr) {
+            if (god_list_->get_selected() != nullptr) {
+                god_list_->deselect_all();
+            }
+        } else if (want != god_list_->get_selected()) {
+            want->select(0);
+            god_list_->scroll_to_item(want);
         }
     }
     // The event list shows the selected event.
@@ -375,8 +429,8 @@ void ViewerScreen::on_highlight_changed() {
 }
 
 void ViewerScreen::add_link(const godot::String& target, const godot::String& text) {
-    // Only the targets the model follows are links (5.2); the others (ra, g,
-    // m, si, f, fa) are plain text.
+    // Only the targets the model follows are links (5.2); the others (ra, m)
+    // are plain text.
     if (model_->can_follow_link(target)) {
         browser_detail_->push_meta(target, godot::RichTextLabel::META_UNDERLINE_ALWAYS, target);
         browser_detail_->add_text(text);
@@ -499,6 +553,17 @@ void ViewerScreen::show_browser_detail() {
         browser_detail_->add_text(godot::String::num_int64(event_ids_.size()) + " events in the list above.");
         return;
     }
+    if ((int64_t(sel["entity_type"]) == 2 || int64_t(sel["entity_type"]) == 7) && int64_t(sel["entity_id"]) != 0) {
+        // P5-08 11.2: a god's [pantheon] line or a cult's [cults] line.
+        const godot::Array block = int64_t(sel["entity_type"]) == 2 ? model_->get_god_block(sel["entity_id"])
+                                                                   : model_->get_cult_block(sel["entity_id"]);
+        for (int64_t i = 0; i < block.size(); ++i) {
+            add_linked_text(block[i]);
+            browser_detail_->newline();
+        }
+        browser_detail_->add_text(godot::String::num_int64(event_ids_.size()) + " events in the list above.");
+        return;
+    }
     if (int64_t(sel["entity_type"]) == 6 && int64_t(sel["entity_id"]) != 0) {
         // P5-06 11.3: the figure's block.
         const godot::Array block = model_->get_figure_block(sel["entity_id"]);
@@ -517,7 +582,8 @@ void ViewerScreen::show_browser_detail() {
         return;
     }
     browser_detail_->add_text(
-        "Choose a civilization, a figure, an event or a place on the map. A civilization or a figure turns "
+        "Choose a civilization, a figure, a god or cult, an event or a place on the map. A civilization, a figure, "
+        "a god or a cult turns "
         "on Follow: the event steps (Page Up, Page Down) then walk its events.");
 }
 
@@ -574,16 +640,27 @@ void ViewerScreen::on_figure_list_selected() {
     }
 }
 
+void ViewerScreen::on_god_list_selected() {
+    if (updating_browser_) {
+        return;
+    }
+    godot::TreeItem* row = god_list_->get_selected();
+    if (row != nullptr) {
+        model_->follow_link(row->get_metadata(0));
+    }
+}
+
 void ViewerScreen::on_entity_tab_changed(int64_t /*tab*/) {
     show_entity_list();
 }
 
 void ViewerScreen::show_entity_list() {
     const bool searching = !browser_search_->get_text().is_empty();
-    const bool figures = entity_tabs_->get_current_tab() == 1;
+    const int32_t tab = entity_tabs_->get_current_tab();
     search_results_->set_visible(searching);
-    civ_list_->set_visible(!searching && !figures);
-    figure_list_->set_visible(!searching && figures);
+    civ_list_->set_visible(!searching && tab == 0);
+    figure_list_->set_visible(!searching && tab == 1);
+    god_list_->set_visible(!searching && tab == 2);  // P5-08 11.2
 }
 
 void ViewerScreen::on_event_row_selected(int64_t index) {

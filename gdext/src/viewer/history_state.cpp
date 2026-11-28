@@ -54,6 +54,12 @@ std::string marker_glyph_name(worldgen::inspect::GlyphKey key) {
             return key.declining || key.capital ? std::string() : std::string("mine");
         case worldgen::inspect::GLYPH_TOWER:  // P5-06 11.4
             return key.declining || key.capital ? std::string() : std::string("tower");
+        case worldgen::inspect::GLYPH_SHRINE:  // P5-08 11.1
+            return key.declining || key.capital ? std::string() : std::string("shrine");
+        case worldgen::inspect::GLYPH_TEMPLE:
+            return key.declining || key.capital ? std::string() : std::string("temple");
+        case worldgen::inspect::GLYPH_SANCTUM:
+            return key.declining || key.capital ? std::string() : std::string("sanctum");
         default: break;
     }
     const std::string_view word = worldgen::history::settlement_kind_word(key.base);
@@ -79,7 +85,8 @@ std::string figure_display_name(const worldgen::history::LoadedHistory& history,
 
 std::optional<worldgen::inspect::GlyphKey> marker_glyph_key(std::string_view name) {
     for (const std::uint8_t base : {GLYPH_RUIN, GLYPH_FADED, GLYPH_PASS, GLYPH_RING, worldgen::inspect::GLYPH_MINE,
-                                    worldgen::inspect::GLYPH_TOWER}) {
+                                    worldgen::inspect::GLYPH_TOWER, worldgen::inspect::GLYPH_SHRINE,
+                                    worldgen::inspect::GLYPH_TEMPLE, worldgen::inspect::GLYPH_SANCTUM}) {
         if (name == marker_glyph_name(worldgen::inspect::GlyphKey{base, false, false})) {
             return worldgen::inspect::GlyphKey{base, false, false};
         }
@@ -257,6 +264,70 @@ std::string HistoryState::warren_text(std::int64_t settlement) const {
     return text + sealed_text(warren_horrors_, settlement);
 }
 
+std::string HistoryState::cult_name(std::int64_t id) const {
+    const std::string* name = loaded() ? history_->view.name(worldgen::history::EntityType::faction, id) : nullptr;
+    return name != nullptr && !name->empty() ? *name : "cult " + std::to_string(id);
+}
+
+std::string HistoryState::faith_site_text(std::int64_t site) const {
+    using worldgen::history::EntityType;
+    if (!loaded()) {
+        return {};
+    }
+    const worldgen::db::SiteRow* row = find_row(history_->tables.sites, site);
+    if (row == nullptr || row->kind < 5 || row->kind > 7) {
+        return {};
+    }
+    const worldgen::history::HistoryView& view = history_->view;
+    const worldgen::history::HistoryView::Event* origin = view.event(row->origin_event);
+    // The first participant of the origin event of that entity type, 0 none.
+    const auto participant = [origin](EntityType type) -> std::int64_t {
+        if (origin != nullptr) {
+            for (const auto& p : origin->participants) {
+                if (p.entity_type == static_cast<std::int64_t>(type)) {
+                    return p.entity_id;
+                }
+            }
+        }
+        return 0;
+    };
+    std::string text = row->name.empty() ? "site " + std::to_string(row->id) : row->name;
+    if (row->kind == 5) {
+        bool profane = false;
+        if (const auto* mark = view.catalogue().find("divine_mark"); mark != nullptr && origin != nullptr) {
+            const std::int64_t seq = mark->value_seq("profane");
+            profane = seq >= 1 && static_cast<std::size_t>(seq) <= origin->values.size() &&
+                      origin->values[static_cast<std::size_t>(seq - 1)] != 0;
+        }
+        const std::int64_t god = participant(EntityType::god);
+        const std::string* god_name = god != 0 ? view.name(EntityType::god, god) : nullptr;
+        text += " (" + std::string(worldgen::inspect::shrine_word(profane)) + " " +
+                (god_name != nullptr ? *god_name : "god " + std::to_string(god)) + ")";
+    } else {
+        text += (row->kind == 6 ? " (temple of " : " (hidden sanctum of ") + cult_name(participant(EntityType::faction)) +
+                ")";
+    }
+    text += ", since " + std::to_string(row->origin_year);
+    if (row->kind == 6 && row->ended_year && *row->ended_year <= year_) {
+        const char* word = row->ending == 8 ? "suppressed" : row->ending == 7 ? "abandoned" : "lost";
+        text += std::string(", ") + word + " in " + std::to_string(*row->ended_year);
+    }
+    return text;
+}
+
+std::string HistoryState::settlement_faith_text(std::int64_t settlement) const {
+    if (!loaded() || settlement == 0) {
+        return {};
+    }
+    std::string text;
+    for (const auto& row : history_->tables.sites) {
+        if (row.settlement == settlement && (row.kind == 5 || row.kind == 6) && row.origin_year <= year_) {
+            text += "; " + faith_site_text(row.id);
+        }
+    }
+    return text;
+}
+
 namespace {
 
 // The marker sets of two years are the same when their lists are (the
@@ -371,6 +442,11 @@ std::string HistoryState::holding_text(std::int64_t region) const {
         // P5-06 12: the realm's recorded ruler at Y.
         const std::int64_t ruler = history_->timeline.ruler_at(h->civ, year_);
         text += ruler != 0 ? ", ruled by " + figure_display_name(*history_, ruler) : std::string(", ruler unrecorded");
+        // P5-08 11.2 item 2: the realm's faith at Y.
+        const std::int64_t faith = history_->timeline.faith_at(h->civ, year_);
+        if (faith != 0) {
+            text += ", faith: " + cult_name(faith);
+        }
         return text;
     }
     return h->since > 0 ? "   |   free since " + std::to_string(h->since) : std::string("   |   free");

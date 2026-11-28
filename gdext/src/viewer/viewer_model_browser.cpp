@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <span>
 #include <exception>
 #include <string>
 #include <string_view>
@@ -73,6 +74,8 @@ const char* match_kind_word(std::int64_t type) {
         case BROWSER_SETTLEMENT: return "settlement";
         case BROWSER_REGION: return "region";
         case BROWSER_FIGURE: return "figure";
+        case BROWSER_GOD: return "god";    // P5-08 11.1
+        case BROWSER_CULT: return "cult";
         default: break;
     }
     return "";
@@ -301,6 +304,84 @@ godot::Array ViewerModel::get_figure_block(int64_t figure) const {
     return out;
 }
 
+namespace {
+
+// A row of a table held in ascending id order, or null.
+template <class Row>
+const Row* row_by_id(std::span<const Row> rows, std::int64_t id) noexcept {
+    const auto it = std::lower_bound(rows.begin(), rows.end(), id,
+                                     [](const Row& row, std::int64_t key) { return row.id < key; });
+    return it != rows.end() && it->id == id ? &*it : nullptr;
+}
+
+}  // namespace
+
+godot::Array ViewerModel::get_god_list() const {
+    godot::Array out;
+    if (!get_browser_available()) {
+        return out;
+    }
+    const worldgen::history::HistoryView& view = history_.history().view;
+    for (const auto& g : view.god_rows()) {
+        godot::Dictionary row;
+        row["target"] = to_godot(browser_target(BROWSER_GOD, g.id));
+        row["kind"] = "god";
+        row["id"] = g.id;
+        row["name"] = to_godot(g.name);
+        row["detail"] = to_godot(g.title);
+        row["founded_year"] = int64_t{-1};
+        row["ended_year"] = int64_t{-1};
+        row["status"] = godot::String();
+        out.push_back(row);
+    }
+    for (const auto& k : view.faction_rows()) {
+        godot::Dictionary row;
+        row["target"] = to_godot(browser_target(BROWSER_CULT, k.id));
+        row["kind"] = "cult";
+        row["id"] = k.id;
+        row["name"] = to_godot(k.name);
+        const std::string* god = view.name(worldgen::history::EntityType::god, k.god);
+        row["detail"] = god != nullptr ? to_godot(*god) : godot::String();
+        row["founded_year"] = k.founded_year;
+        row["ended_year"] = k.ended_year ? *k.ended_year : int64_t{-1};
+        row["status"] = k.status == 3 ? "ended" : k.status == 2 ? "hidden" : "present";
+        out.push_back(row);
+    }
+    return out;
+}
+
+godot::Array ViewerModel::get_god_block(int64_t god) const {
+    godot::Array out;
+    if (!get_browser_available() || row_by_id(history_.history().view.god_rows(), god) == nullptr) {
+        return out;
+    }
+    try {
+        for (const auto& line : browser_.index().god_block(history_.history(), god)) {
+            out.push_back(linked_dictionary(line));
+        }
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel.get_god_block: ") + e.what());
+        return {};
+    }
+    return out;
+}
+
+godot::Array ViewerModel::get_cult_block(int64_t cult) const {
+    godot::Array out;
+    if (!get_browser_available() || row_by_id(history_.history().view.faction_rows(), cult) == nullptr) {
+        return out;
+    }
+    try {
+        for (const auto& line : browser_.index().cult_block(history_.history(), cult)) {
+            out.push_back(linked_dictionary(line));
+        }
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel.get_cult_block: ") + e.what());
+        return {};
+    }
+    return out;
+}
+
 godot::PackedInt64Array ViewerModel::get_event_ids() const {
     return get_browser_available() ? packed(browser_.ids()) : godot::PackedInt64Array();
 }
@@ -498,6 +579,35 @@ bool ViewerModel::select_figure(int64_t figure) {
     return true;
 }
 
+bool ViewerModel::select_entity(int64_t type, int64_t id) {
+    browser_.push_path(history_.year());
+    BrowserSelection& s = browser_.selection;
+    s = {};
+    if (id != 0) {
+        s.entity_type = type;
+        s.entity_id = id;
+    }
+    browser_.filter.scope = id != 0 ? BrowserScope::entity : BrowserScope::all;
+    browser_.follow = id != 0;
+    selection_changed(true);
+    return true;
+}
+
+bool ViewerModel::select_god(int64_t god) {
+    if (!get_browser_available() || (god != 0 && row_by_id(history_.history().view.god_rows(), god) == nullptr)) {
+        return false;
+    }
+    return select_entity(BROWSER_GOD, god);
+}
+
+bool ViewerModel::select_cult(int64_t cult) {
+    if (!get_browser_available() ||
+        (cult != 0 && row_by_id(history_.history().view.faction_rows(), cult) == nullptr)) {
+        return false;
+    }
+    return select_entity(BROWSER_CULT, cult);
+}
+
 bool ViewerModel::select_event(int64_t event) {
     const worldgen::inspect::EventEntry* e = get_browser_available() ? browser_.event(event) : nullptr;
     if (e == nullptr) {
@@ -547,13 +657,30 @@ bool ViewerModel::follow_link(const godot::String& target) {
     if (!get_browser_available() || !parse_browser_target(to_utf8(target), prefix, id)) {
         return false;
     }
-    // 5.2: c, s, rg, e and (P5-06 11.3) f; ra, g and (until section 9) m,
-    // si, fa are not followed.
+    // 5.2: c, s, rg, e, (P5-06 11.3) f and (P5-08 11.1) g, fa and si (a
+    // site's place); ra and m are not followed.
     if (prefix == "c") {
         return id != 0 && select_civilization(id);
     }
     if (prefix == "f") {
         return id != 0 && select_figure(id);
+    }
+    if (prefix == "g") {  // P5-08 11.1: gods and cults
+        return id != 0 && select_god(id);
+    }
+    if (prefix == "fa") {
+        return id != 0 && select_cult(id);
+    }
+    if (prefix == "si") {
+        // A site selects its place: its settlement, else its region.
+        const auto& sites = history_.history().tables.sites;
+        const worldgen::db::SiteRow* site =
+            row_by_id(std::span<const worldgen::db::SiteRow>(sites.data(), sites.size()), id);
+        if (site == nullptr) {
+            return false;
+        }
+        return site->settlement != 0 ? select_place(BROWSER_SETTLEMENT, site->settlement)
+                                     : select_place(BROWSER_REGION, site->region);
     }
     if (prefix == "s") {
         return select_place(BROWSER_SETTLEMENT, id);
@@ -571,7 +698,8 @@ bool ViewerModel::can_follow_link(const godot::String& target) const {
     std::string prefix;
     std::int64_t id = 0;
     return get_browser_available() && parse_browser_target(to_utf8(target), prefix, id) &&
-           (prefix == "c" || prefix == "s" || prefix == "rg" || prefix == "e" || prefix == "f");
+           (prefix == "c" || prefix == "s" || prefix == "rg" || prefix == "e" || prefix == "f" || prefix == "g" ||
+            prefix == "fa" || prefix == "si");
 }
 
 bool ViewerModel::browser_back() {
@@ -762,6 +890,11 @@ void ViewerModel::bind_browser_methods() {
     ClassDB::bind_method(D_METHOD("select_figure", "figure"), &ViewerModel::select_figure);
     ClassDB::bind_method(D_METHOD("get_figure_list"), &ViewerModel::get_figure_list);
     ClassDB::bind_method(D_METHOD("get_figure_block", "figure"), &ViewerModel::get_figure_block);
+    ClassDB::bind_method(D_METHOD("select_god", "god"), &ViewerModel::select_god);
+    ClassDB::bind_method(D_METHOD("select_cult", "cult"), &ViewerModel::select_cult);
+    ClassDB::bind_method(D_METHOD("get_god_list"), &ViewerModel::get_god_list);
+    ClassDB::bind_method(D_METHOD("get_god_block", "god"), &ViewerModel::get_god_block);
+    ClassDB::bind_method(D_METHOD("get_cult_block", "cult"), &ViewerModel::get_cult_block);
     ClassDB::bind_method(D_METHOD("select_event", "event"), &ViewerModel::select_event);
     ClassDB::bind_method(D_METHOD("select_place", "type", "id"), &ViewerModel::select_place);
     ClassDB::bind_method(D_METHOD("clear_selection"), &ViewerModel::clear_selection);

@@ -65,6 +65,10 @@ struct ViewerCheckOptions {
     // sealed mine and a delved warren (checks M13 and M14); without it the
     // checks run on what the world has.
     bool expect_depths = false;
+    // P5-08 11.2: --expect-pantheon: the world must have a shrine, a temple,
+    // a sanctum, an ended temple at a standing settlement, a realm with a
+    // faith and a cult (checks M16 to M18 and B16).
+    bool expect_pantheon = false;
     bool wired = false;
 };
 

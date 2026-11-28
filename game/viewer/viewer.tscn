@@ -60,7 +60,7 @@ tooltip_text = "Settlements, ruins, event places, passes, mines and towers of th
 button_pressed = true
 text = "Show markers"
 
-[node name="MarkerBoxes" type="HBoxContainer" parent="Split/Sidebar"]
+[node name="MarkerBoxes" type="HFlowContainer" parent="Split/Sidebar"]
 layout_mode = 2
 
 [node name="MarkFaded" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
@@ -89,8 +89,24 @@ unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 button_pressed = true
-tooltip_text = "Mines and towers"
+tooltip_text = "Mines, towers, shrines, temples and hidden sanctums"
 text = "Sites"
+
+[node name="MarkShrines" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+button_pressed = true
+tooltip_text = "Shrines marked by the gods, sacred or profane (with Sites on)"
+text = "Shrines"
+
+[node name="MarkTemples" type="CheckBox" parent="Split/Sidebar/MarkerBoxes"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+button_pressed = true
+tooltip_text = "Temples of the cults and their hidden sanctums (with Sites on)"
+text = "Temples"
 
 [node name="MarkerLegend" type="ItemList" parent="Split/Sidebar"]
 unique_name_in_owner = true
@@ -336,9 +352,10 @@ unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 current_tab = 0
-tab_count = 2
+tab_count = 3
 tab_0/title = "Civilizations"
 tab_1/title = "Figures"
+tab_2/title = "Gods"
 
 [node name="CivList" type="Tree" parent="Split/RightPane/Browser"]
 unique_name_in_owner = true
@@ -351,6 +368,17 @@ hide_root = true
 select_mode = 1
 
 [node name="FigureList" type="Tree" parent="Split/RightPane/Browser"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+columns = 4
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="GodList" type="Tree" parent="Split/RightPane/Browser"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
