@@ -1,6 +1,6 @@
 # V3D-04 Look pass: mountains, shrubs, sea horizon
 
-Status: **r2, 2026-11-28, as built; interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 14 (Q-V3D-04-1 to 4); each is one constant or one option item, so it reverses cheaply. r2 records the build: the snow line's slope hold as tuned (4.3), S1 as measured and missed (10.3, Q-V3D-04-5), L1 on views that see the mountains (10.3), and the measured figures; see the revision notes. Fourth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2 and V3D-03 r2 as built ("V3D-02 n" and "V3D-03 n" refer to their sections). It answers V3D-02's "Open after r2" items 2, 3, 4 and 6 and Paul's ruling of 2026-11-27: **mountains are mostly rock up to the snow.** Art stays generated placeholders; no asset file is added.
+Status: **r2, as built; reviewed by Paul on 2026-11-28 and accepted, with the rock banding left open** (see "Paul's review"). Paul is away overnight and authorised building this stage on the recommendations of section 14 (Q-V3D-04-1 to 4); each is one constant or one option item, so it reverses cheaply. r2 records the build: the snow line's slope hold as tuned (4.3), S1 as measured and missed (10.3, Q-V3D-04-5), L1 on views that see the mountains (10.3), and the measured figures; see the revision notes. Fourth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2 and V3D-03 r2 as built ("V3D-02 n" and "V3D-03 n" refer to their sections). It answers V3D-02's "Open after r2" items 2, 3, 4 and 6 and Paul's ruling of 2026-11-27: **mountains are mostly rock up to the snow.** Art stays generated placeholders; no asset file is added.
 
 **No world change.** The stage reads `world.db` and writes nothing to it or to the source tree. `GENERATOR_VERSION`, the schema, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/`, `game/data/` or `extern/` changes (Terrain3D is not edited). No new dependency. **Placement is unchanged bit for bit**: `GroundCells::rock` and `::snow` keep V3D-02 4.1's values, and placement, densities, tiers and the far budget read only those (V3D-02 6.4, V3D-03 4.2). Owner: viewer engineer.
 
@@ -302,6 +302,10 @@ No `proposals.md` entry: nothing here touches the design or the world file.
 1. Paul's review of Q-V3D-04-1 to 4 and of the two questions added in r2, Q-V3D-04-5 (S1's miss) and Q-V3D-04-6 (rock stripes).
 2. MSVC and CI: pending (run 46111093498).
 3. Interactive flight is not done: every judgement so far is from screenshots through the virtual display.
+
+## Paul's review (2026-11-28)
+
+Paul flew the build. Q-V3D-04-1 (sun from the south-south-west): accepted. Q-V3D-04-2 (snow-line thresholds), Q-V3D-04-3 (heath and moor belts kept) and Q-V3D-04-4 (unshaded sea): accepted. Q-V3D-04-5 (the S1 miss): "fine with the amount of snow for right now". Q-V3D-04-6 (rock banding): "looks pretty artificial right now"; left open, to be settled with his broader comments on textures in a later stage.
 
 ## Revision notes
 

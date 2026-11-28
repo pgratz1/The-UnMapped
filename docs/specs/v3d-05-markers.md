@@ -1,6 +1,6 @@
 # V3D-05 Markers for settlements and sites
 
-Status: **r2, 2026-11-28, as built; interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 16 (Q-V3D-05-1 to 4); each is a constant or one function, so it reverses cheaply. r2 records what was built where it departs from r1 (two tuned jump constants, a label declutter, the ruin ring radius, the HUD cut) and adds Q-V3D-05-5 to 8 and an open list (16). Fifth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2, V3D-03 r2 and V3D-04 r2 ("V3D-0n m" refers to their sections). Art stays generated placeholders; no asset file is added.
+Status: **r2, as built; reviewed by Paul on 2026-11-28 and accepted as a map-mode view, with follow-ups** (see "Paul's review"). Paul is away overnight and authorised building this stage on the recommendations of section 16 (Q-V3D-05-1 to 4); each is a constant or one function, so it reverses cheaply. r2 records what was built where it departs from r1 (two tuned jump constants, a label declutter, the ruin ring radius, the HUD cut) and adds Q-V3D-05-5 to 8 and an open list (16). Fifth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2, V3D-03 r2 and V3D-04 r2 ("V3D-0n m" refers to their sections). Art stays generated placeholders; no asset file is added.
 
 **No world change.** The stage reads `world.db` through `worldgen`'s public API and writes nothing to it or to the source tree. `GENERATOR_VERSION`, the schema, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/`, `game/data/` or `extern/` changes. No new dependency. **Vegetation, ground and look are unchanged bit for bit** (Q-V3D-05-1). Owner: viewer engineer.
 
@@ -388,6 +388,10 @@ CI: no workflow change; `gdext-linux` and `gdext-windows` run U40 to U52 and the
 4. Not taken or not judged: the screenshots and bench of 12.3's note; W28.
 
 No `proposals.md` entry: the stage reads only what the library already gives, and changes neither the design nor the world file.
+
+## Paul's review (2026-11-28)
+
+Paul flew the build. Q-V3D-05-2 (3D labels, declutter) and Q-V3D-05-8 (the tuned jump view): fine for now; in the actual game this would be seen only in map mode. Q-V3D-05-3 (tour by population): accepted. Q-V3D-05-4 (beacons on ruins and sites): accepted. Follow-ups he asked for, for a later stage: (1) Q-V3D-05-1 reversed: a village partly cuts down the trees in the middle of the town, and there is a reduced area of trees around towns; (2) Q-V3D-05-5: nothing stands in the water, not permanently: people would not have chosen to build there; (3) towns should be shaped to the terrain instead of roughly rectangular: no home in the water, homes placed along roads that run straight or weave with the terrain depending on how uneven it is. Q-V3D-05-6 (the mine beacon's colour) was not answered.
 
 ## Revision notes
 

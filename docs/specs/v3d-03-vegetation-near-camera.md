@@ -376,6 +376,10 @@ No `proposals.md` entry is needed: the stage reads nothing new and the 256 m cel
 3. MSVC and CI: pending (run 46107942031).
 4. Video memory still reads 0 MB.
 
+## Paul's flight (2026-11-28)
+
+Paul flew the build on the real display: a solid 60 frames per second throughout, which is the display's cap. He notes that 60 is good for a flat screen and that VR needs at least 72. An uncapped frame bench on the real display is still open.
+
 ## Revision notes
 
 - r1 (2026-11-27): first draft. Approved by Paul the same day; Q-V3D-03-1 to 5 decided as recommended (status line only).
