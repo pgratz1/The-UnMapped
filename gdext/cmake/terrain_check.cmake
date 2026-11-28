@@ -5,10 +5,12 @@
 #         -DDATA_DIR=<repo>/game/data -DPROJECT_DIR=<build>/game
 #         -DWORK_DIR=<scratch dir> -DTERRAIN3D=ON|OFF -P terrain_check.cmake
 #
-# 1. Geography-only worlds: --seed 49 --map-size 512 --until regions into
-#    WORK_DIR/w512/ and --seed 1 --map-size 1024 --until regions into
-#    WORK_DIR/w1024/, each with `render --layer biome` as biome.png and
-#    `render --composite map` as map.png.
+# 1. --seed 49 --map-size 512 with every stage (V3D-05 12.2: a history, so
+#    markers; its layers are the bytes of the --until regions world, W25)
+#    into WORK_DIR/w512/ and the geography-only --seed 1 --map-size 1024
+#    --until regions into WORK_DIR/w1024/ (no history: no markers), each
+#    with `render --layer biome` as biome.png and `render --composite map`
+#    as map.png.
 # 2. --seed 49 --map-size 512 --until elevation into WORK_DIR/elev/ (no
 #    biome layer) and --seed 42 --test-pattern into WORK_DIR/pattern/ (no
 #    elevation layer).
@@ -27,6 +29,10 @@
 # 5. V3D-04 T29: the refusals of 9.1 (exit 1 and the text on stderr).
 # 6. V3D-04 T30: --bench headless on the 512 world prints the look line,
 #    equal to the line the default-mode check computed from its own counts.
+# 7. V3D-05 12.2: the 512 world with --no-markers (every check of V3D-01 to
+#    V3D-04 and T39), --year 3000, --at-marker rank:1, --at-marker
+#    settlement:<the largest settlement, printed by the default run> and
+#    --at-marker nowhere (markers only); T40's refusals.
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -58,8 +64,8 @@ function(run_step name)
 endfunction()
 
 # --- 1, 2. Worlds ---------------------------------------------------------------
-run_step("generate seed 49, 512, until regions" "${WORLDGEN_CLI}" generate --seed 49 --map-size 512
-    --until regions --data "${DATA_DIR}" --out "${WORK_DIR}/w512/world.db")
+run_step("generate seed 49, 512, every stage" "${WORLDGEN_CLI}" generate --seed 49 --map-size 512
+    --data "${DATA_DIR}" --out "${WORK_DIR}/w512/world.db")
 run_step("render biome, 512" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w512/world.db" --layer biome
     --out "${WORK_DIR}/w512/biome.png")
 run_step("render map, 512" "${WORLDGEN_CLI}" render --db "${WORK_DIR}/w512/world.db" --composite map
@@ -96,6 +102,10 @@ terrain_check("512 world" w512 ${_expect})
 set(_look_line "")
 if(STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: look line ([^\n]*)")
     set(_look_line "${CMAKE_MATCH_1}")
+endif()
+set(_largest "")
+if(STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: largest settlement ([0-9]+)")
+    set(_largest "${CMAKE_MATCH_1}")
 endif()
 terrain_check("512 world, --look-v3d03 all" w512 ${_expect} --look-v3d03 all)
 terrain_check("512 world, --flat-colours --no-trees" w512 ${_expect} --flat-colours --no-trees)
@@ -141,4 +151,20 @@ if(TERRAIN3D)
     endif()
     message("---- T30 bench look line equals the check's own: ${_look_line}")
 endif()
+# --- 7. Markers (V3D-05 12.2) ---------------------------------------------------------------
+if(_largest STREQUAL "")
+    message(FATAL_ERROR "terrain check: the 512 world's check printed no largest settlement")
+endif()
+terrain_check("512 world, --no-markers" w512 ${_expect} --no-markers)
+terrain_check("512 world, --year 3000" w512 ${_expect} --year 3000)
+terrain_check("512 world, --at-marker rank:1" w512 ${_expect} --at-marker rank:1)
+terrain_check("512 world, --at-marker settlement:${_largest}" w512 ${_expect} --at-marker settlement:${_largest})
+terrain_check("512 world, --at-marker nowhere" w512 ${_expect} --at-marker nowhere)
+terrain_refusal("--year -1" "--year -1: a whole number from 0" --year -1)
+terrain_refusal("--year x" "--year x: a whole number from 0" --year x)
+set(_at_refusal "--at-marker cannot be combined with --at, --at-forest, --at-peak or --no-markers")
+terrain_refusal("--at-marker --at" "${_at_refusal}" --at-marker rank:1 --at 10 10)
+terrain_refusal("--at-marker --at-forest" "${_at_refusal}" --at-marker rank:1 --at-forest)
+terrain_refusal("--at-marker --at-peak" "${_at_refusal}" --at-marker rank:1 --at-peak)
+terrain_refusal("--at-marker --no-markers" "${_at_refusal}" --at-marker rank:1 --no-markers)
 message("terrain check: all runs passed")

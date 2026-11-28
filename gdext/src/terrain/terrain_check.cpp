@@ -180,6 +180,7 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
     const TerrainScene& scene = preview.scene();
     if (!scene.layout) {
         check_no_world(preview, options, c);
+        c.check(preview.get_node_or_null(godot::NodePath("Markers")) == nullptr, "T39 no world shown: no Markers node");
         godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
         return c.all ? 0 : 1;
     }
@@ -194,6 +195,12 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
     const int n = own.n;
     const std::size_t cells = static_cast<std::size_t>(n) * static_cast<std::size_t>(n);
     const terrain::Layout& layout = *scene.layout;
+    if (markers_only_run(preview)) {
+        // V3D-05 12.2: --year and --at-marker runs check the markers only.
+        run_marker_checks(preview, options, c);
+        godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
+        return c.all ? 0 : 1;
+    }
 
     // T1: layout, image sizes and formats.
     c.check(layout.n == n && layout.spacing == 16.0f && layout.region_size == 256 && layout.region_min == -(n / 512) &&
@@ -435,6 +442,9 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
 
     // V3D-02: T3 (default mode), T9 to T15.
     run_ground_checks(preview, options, c);
+
+    // V3D-05: T31 to T37, T39.
+    run_marker_checks(preview, options, c);
 
     // V16: opening a world again replaces the first (one Terrain3D node,
     // the same heights read back).

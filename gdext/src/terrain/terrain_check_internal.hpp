@@ -39,4 +39,10 @@ void run_key_checks(TerrainPreview& preview, const TerrainCheckOptions& options,
 std::unique_ptr<TerrainCheckRun> start_near_check(TerrainPreview& preview, const TerrainCheckOptions& options,
                                                   TerrainChecker& c);
 
+// V3D-05: T31 to T37 and T39 (terrain_check_markers.cpp).
+void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& options, TerrainChecker& c);
+// A run that checks the markers alone (--year or --at-marker): the checks of
+// V3D-01 to V3D-04 are left to the other runs.
+bool markers_only_run(const TerrainPreview& preview);
+
 }  // namespace unmapped

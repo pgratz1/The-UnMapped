@@ -49,8 +49,14 @@
 //                           shrubs, sea, or all) drawn as in V3D-03
 //   --at-peak               start 2,000 m south of the highest land cell,
 //                           200 m above the peak, looking north (V3D-04 9.1)
+//   --year <Y>              the markers of year Y (default the history's end)
+//   --no-markers            the history is not read; no markers (V3D-05 8.1)
+//   --at-marker <v>         start at the jump view of a marker: settlement:<id>,
+//                           site:<id>, rank:<k> or a name
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
+// V3D-05 8.2: M markers on or off, N and Shift+N the next and previous
+// settlement of the jump order (terrain_preview_markers.cpp).
 //
 // Vegetation in tiers (spec V3D-03): the far tier (trees and snags thinned
 // to the budget) goes to Terrain3D's instancer once at load; the near tier
@@ -75,6 +81,8 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/label3d.hpp>
+#include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/multi_mesh_instance3d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -87,6 +95,7 @@
 #include "terrain/fly_state.hpp"
 #include "terrain/ground.hpp"
 #include "terrain/look.hpp"
+#include "terrain/markers3d.hpp"
 #include "terrain/near_cells.hpp"
 #include "terrain/terrain_check.hpp"
 #include "terrain/terrain_data.hpp"
@@ -240,6 +249,37 @@ public:
     // The world shown, as opened.
     [[nodiscard]] const godot::String& current_path() const noexcept { return current_path_; }
 
+    // V3D-05 (terrain_preview_markers.cpp).
+    [[nodiscard]] const terrain::MarkerLoad& marker_load() const noexcept { return marker_load_; }
+    [[nodiscard]] const std::vector<terrain::Marker3D>& markers() const noexcept { return markers_; }
+    [[nodiscard]] const std::vector<std::size_t>& marker_jump_order() const noexcept { return jump_order_; }
+    [[nodiscard]] const std::vector<std::size_t>& shown_labels() const noexcept { return shown_labels_; }
+    // Per shown label: drawn, or hidden by the declutter (markers3d.hpp).
+    [[nodiscard]] const std::vector<bool>& labels_drawn() const noexcept { return labels_drawn_; }
+    [[nodiscard]] godot::Node3D* markers_root() const noexcept { return markers_root_; }
+    [[nodiscard]] bool no_markers_option() const noexcept { return no_markers_; }
+    [[nodiscard]] std::optional<std::int64_t> year_option() const noexcept { return opt_year_; }
+    [[nodiscard]] const godot::String& at_marker_option() const noexcept { return at_marker_; }
+    [[nodiscard]] int jump_position() const noexcept { return jump_pos_; }
+    // The viewport height the beacons and labels are computed for.
+    [[nodiscard]] int marker_viewport_height() const;
+    // Beacons and labels for a camera at (X, Y, Z) (10), and the HUD's
+    // marker line; nothing while Markers is hidden.
+    void markers_frame(float X, float Y, float Z);
+    // HUD line 3 (8.2).
+    [[nodiscard]] std::string markers_hud_text() const;
+    // Key M: Markers visible or not; false when nothing is loaded.
+    bool toggle_markers();
+    // Keys N (+1) and Shift+N (-1): the camera to the next or previous entry
+    // of the jump order; false when there is none.
+    bool jump_marker(int direction);
+    // The label pixel size (W26) and the beacon quad's draw box.
+    static constexpr float LABEL_PIXEL_SIZE = 0.0017f;
+    static constexpr int LABEL_FONT_SIZE = 20;
+    static constexpr int LABEL_OUTLINE_SIZE = 6;
+    static constexpr float LABEL_OFFSET_PX = 24.0f;
+    static constexpr float BEACON_TOP = 30000.0f;
+
     // Key T: vegetation on or off (enabled on every mesh asset). Key G:
     // reopen the world with the other ground, keeping the camera. Both do
     // nothing when they do not apply (V3D-02 10.2); they return whether
@@ -279,6 +319,13 @@ private:
     void show_status();
     void update_hud();
     void after_load();
+
+    // Markers (terrain_preview_markers.cpp).
+    void markers_open();
+    void markers_close();
+    void markers_build_nodes();
+    void print_markers_bench_line();
+    void print_markers_frame_line();
 
     void on_open_pressed();
     void on_file_selected(const godot::String& path);
@@ -389,6 +436,33 @@ private:
     std::uint64_t compute_usec_max_ = 0;
     std::uint64_t compute_cells_ = 0;
     std::uint64_t attach_usec_max_ = 0;
+
+    // Markers (V3D-05).
+    std::optional<std::int64_t> opt_year_;
+    bool no_markers_ = false;
+    godot::String at_marker_;
+    terrain::MarkerLoad marker_load_;
+    std::vector<terrain::Marker3D> markers_;
+    std::vector<std::size_t> jump_order_;
+    std::optional<std::size_t> at_marker_index_;
+    std::vector<godot::String> marker_status_;
+    int jump_pos_ = -1;
+    bool markers_on_ = true;  // key M; kept across key G
+    godot::Node3D* markers_root_ = nullptr;
+    godot::MultiMeshInstance3D* beacons_ = nullptr;
+    std::array<godot::Label3D*, terrain::LABEL_KEEP> labels_{};
+    std::vector<std::size_t> shown_labels_;
+    std::vector<bool> labels_drawn_;
+    std::vector<std::size_t> beacon_index_;  // record index of each beacon instance
+    std::string marker_hud_;                 // the line of the last markers_frame
+    godot::Ref<godot::StandardMaterial3D> marker_material_;
+    godot::Ref<godot::StandardMaterial3D> beacon_material_;
+    std::uint64_t marker_mesh_usec_ = 0;
+    std::uint64_t marker_node_usec_ = 0;
+    std::uint64_t marker_place_usec_ = 0;
+    std::uint64_t marker_triangles_ = 0;
+    bool marker_bench_view_ = false;
+    std::vector<std::uint64_t> marker_frame_usec_;
 
     // The check's path (terrain_check_near.cpp), driven frame by frame.
     std::unique_ptr<TerrainCheckRun> check_run_;

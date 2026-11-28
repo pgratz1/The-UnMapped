@@ -37,6 +37,8 @@ add_library(unmapped_gdext SHARED
     src/terrain/terrain_check_ground.cpp
     src/terrain/terrain_check_near.cpp
     src/terrain/terrain_preview_near.cpp
+    src/terrain/terrain_preview_markers.cpp
+    src/terrain/terrain_check_markers.cpp
     src/world_file.cpp
     src/world_layer.cpp
     src/viewer/history_state.cpp

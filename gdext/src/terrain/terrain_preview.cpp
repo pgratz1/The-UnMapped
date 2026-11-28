@@ -394,6 +394,17 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             } else {
                 refuse("--look-v3d03 " + text + ": all, or a comma list of rock, light, snow, shrubs, sea");
             }
+        } else if (arg == "--year" && has_one) {
+            // V3D-05 8.1.
+            const godot::String text = args[++i];
+            opt_year_ = terrain::parse_year(to_utf8(text));
+            if (!opt_year_) {
+                refuse(to_godot(terrain::year_refusal(to_utf8(text))));
+            }
+        } else if (arg == "--no-markers") {
+            no_markers_ = true;
+        } else if (arg == "--at-marker" && has_one) {
+            at_marker_ = args[++i];
         } else if (!arg.begins_with("--") && world_path_.is_empty()) {
             world_path_ = arg;
         }
@@ -410,6 +421,9 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
     }
     if (at_peak_ && (opt_at_ || at_forest_)) {
         refuse("--at-peak cannot be combined with --at or --at-forest");
+    }
+    if (!at_marker_.is_empty() && (opt_at_ || at_forest_ || at_peak_ || no_markers_)) {
+        refuse(terrain::AT_MARKER_REFUSAL);  // V3D-05 8.1
     }
     if (!instance_cap_given_) {
         // V3D-03 9.1: the far budget, or V3D-02's cap with --veg-whole-map.
@@ -431,6 +445,7 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
 void TerrainPreview::clear_world() {
     // Every worker task finishes before the inputs it reads are freed.
     near_close();
+    markers_close();
     if (terrain_ != nullptr) {
         remove_child(terrain_);
         terrain_->queue_free();
@@ -658,6 +673,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
 
     place_sea();
     apply_light();
+    markers_open();  // V3D-05 10: after the vegetation, before place_start
     place_start();
     near_open();
 
@@ -720,6 +736,9 @@ bool TerrainPreview::open_world(const godot::String& path) {
     }
     if (const std::string items = terrain::restored_items(look_); !items.empty()) {
         status_lines_.push_back(to_godot("look: V3D-03 for " + items));  // V3D-04 9.2
+    }
+    for (const godot::String& line : marker_status_) {
+        status_lines_.push_back(line);  // V3D-05 8.4
     }
     if (scene_.water_depth.empty()) {
         status_lines_.push_back("no water_depth layer: lakes drawn at their beds");
@@ -1047,6 +1066,26 @@ std::string TerrainPreview::look_bench_line() const {
 void TerrainPreview::place_start() {
     const terrain::Layout& layout = *scene_.layout;
     const int n = layout.n;
+    if (at_marker_index_) {
+        // V3D-05 8.1: the jump view of the marker; --alt, --above, --heading
+        // and --pitch override it as with --at-peak.
+        start_ = terrain::jump_view(markers_[*at_marker_index_], layout, scene_.heights);
+        if (opt_alt_) {
+            start_.y = *opt_alt_;
+        }
+        if (opt_above_) {
+            start_.y = terrain::ground_clamp(layout, scene_.heights, start_.x, start_.z) + *opt_above_;
+        }
+        start_.heading_deg = opt_heading_.value_or(start_.heading_deg);
+        start_.pitch_deg = opt_pitch_.value_or(start_.pitch_deg);
+        start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
+        terrain::step(start_, terrain::FlyInput{}, 0.0f,
+                      [this](float X, float Z) { return terrain::ground_clamp(*scene_.layout, scene_.heights, X, Z); },
+                      16.0f * static_cast<float>(n));
+        fly_ = start_;
+        apply_camera();
+        return;
+    }
     int cx = n / 2;
     int cy = 7 * n / 8;
     if (opt_at_ && opt_at_->first >= 0 && opt_at_->second >= 0 && opt_at_->first < n && opt_at_->second < n) {
@@ -1124,7 +1163,7 @@ void TerrainPreview::update_hud() {
     }
     const int fps = static_cast<int>(std::lround(godot::Engine::get_singleton()->get_frames_per_second()));
     hud_->set_text(to_godot(hud_at(fly_.x, fly_.y, fly_.z, fps)) + "\n" + to_godot(vegetation_hud_line()) + "\n" +
-                   terrain::HUD_KEYS);
+                   to_godot(markers_hud_text()) + "\n" + terrain::HUD_KEYS + terrain::MARKER_KEYS);
 }
 
 void TerrainPreview::after_load() {
@@ -1206,6 +1245,7 @@ void TerrainPreview::bench_first_frame() {
     if (const std::string line = look_bench_line(); !line.empty()) {
         godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ", to_godot(line));  // V3D-04 9.2
     }
+    print_markers_bench_line();  // V3D-05 13
     // V3D-02 12: the view at the centre cell, 150 m above the ground,
     // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300. V3D-03
     // 12.2: the near tier's settling is timed from here.
@@ -1233,6 +1273,8 @@ void TerrainPreview::bench_first_frame() {
     }
     godot::DisplayServer::get_singleton()->window_set_vsync_mode(godot::DisplayServer::VSYNC_DISABLED);
     godot::OS::get_singleton()->set_low_processor_usage_mode(false);
+    marker_bench_view_ = true;  // V3D-05 13: the markers' per-frame work over the view
+    marker_frame_usec_.clear();
     view_frames_ = 0;
     frame_usec_.clear();
     last_frame_usec_ = now_usec();
@@ -1264,6 +1306,8 @@ void TerrainPreview::bench_view_frame() {
     godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: view at cell (", n / 2, ", ", n / 2,
                                    "), 150 m above ground: frames 300, mean ", ms(sum / frame_usec_.size()), ", max ",
                                    ms(max), ", over 16.7 ms ", over16);
+    marker_bench_view_ = false;
+    print_markers_frame_line();  // V3D-05 13
     // V3D-03 12.2: the tiers line once the near tier has settled, then the
     // forest flights, then V3D-01's flight.
     phase_ = Phase::view_settle;
@@ -1346,6 +1390,7 @@ void TerrainPreview::_process(double delta) {
         terrain::step(fly_, in, dt, ground, bound);
         apply_camera();
         near_frame();
+        markers_frame(fly_.x, fly_.y, fly_.z);
         flight_time_ += dt;
         if (flight_time_ >= flight_length_) {
             finish_bench();
@@ -1359,6 +1404,7 @@ void TerrainPreview::_process(double delta) {
             phase_frames_ = 0;
         }
         near_frame();
+        markers_frame(fly_.x, fly_.y, fly_.z);
         ++phase_frames_;
         update_hud();
         return;
@@ -1383,6 +1429,7 @@ void TerrainPreview::_process(double delta) {
     terrain::step(fly_, in, dt, ground, bound);
     apply_camera();
     near_frame();
+    markers_frame(fly_.x, fly_.y, fly_.z);
     update_hud();
 }
 
@@ -1438,6 +1485,12 @@ void TerrainPreview::_unhandled_input(const godot::Ref<godot::InputEvent>& event
                 break;
             case godot::KEY_G:
                 toggle_ground();
+                break;
+            case godot::KEY_M:
+                toggle_markers();  // V3D-05 8.2
+                break;
+            case godot::KEY_N:
+                jump_marker(key->is_shift_pressed() ? -1 : 1);
                 break;
             case godot::KEY_H:
                 if (hud_ != nullptr) {
