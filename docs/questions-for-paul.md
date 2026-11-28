@@ -4,7 +4,7 @@ A tally of every question the specs, reviews, `proposals.md` and `CLAUDE.md` put
 
 **How to use it.** Write your answer in the `Answer` cell of a row, or change its status word. The lead then moves answered rows to section 2, records the decision in `docs/design/proposals.md`, and adds new questions at each merge. A question that was asked in a spec and again in `proposals.md` is one row with both sources. Where no decision could be found, the row says so.
 
-**Count: open 0, decided 208, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
+**Count: open 7, decided 208, settled by phase approval 95.** (Rows that cover a range of question numbers are counted once per question.)
 
 Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase approval](#3-settled-by-phase-approval)
 
@@ -16,7 +16,21 @@ Contents: [1 Open](#1-open) | [2 Decided](#2-decided) | [3 Settled by phase appr
 
 None.
 
-No open questions. (2026-11-27: Paul answered the five questions of P5-08 pantheon and cults; the rows are in section 2.)
+### Not blocking
+
+The seven questions of P5-11 artifacts (2026-11-28). Work goes on with the recommendations.
+
+| # | Question | Recommendation / what the build does now | Source | Answer |
+| --- | --- | --- | --- | --- |
+| Q-P5-11-1 | How many artifacts should a default world make: a handful (3 to 6), each a legend; 8 to 20, so most realms and great wars have one; or many (40 or more), as common treasure? | Recommended: 8 to 20, with a cap of 40. Enough that a third or more change hands and several lie lost at the present as quest hooks, few enough that each is named in the chronicle. The build is calibrated to that. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-2 | May artifacts be destroyed in history (melted down by a conqueror, unmade by a god, broken in battle)? | Recommended: never. Every artifact then lies somewhere at the present day as a quest hook, and its chain of holders is its story; destruction can be a game event later. The build never destroys one. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-3 | Do evil artifacts corrupt their bearers (a relic of an evil god makes its holder's rulers grasping or warlike)? | Recommended: no, not in history. The relic records its god, so the game can give it a nature later; a corrupting rule would need its own calibration. The build has no corruption. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-4 | Should the makers be named smiths (a new kind of figure, about 5 to 10 a world), so the chronicle says who forged a thing at which hold's forges, or is the forge realm alone the maker? | Recommended: named smiths. The design asks for a maker, and a named smith of a dwarven hold shows the dwarves as great forgers. The build has smiths as figures. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-5 | The kinds: five classes (arms, armour, regalia, relic, staff) and fifteen kinds (axe, chalice, crown, hammer, hauberk, helm, idol, orb, reliquary, ring, sceptre, shield, spear, staff, sword). Take these, or add others (bows, banners, horns, cloaks)? | Recommended: take the fifteen. They are data only, so more can be added at any time without code. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-6 | Lost, buried and enshrined artifacts are never found again in history (no one digs ruins or opens graves); only a slain monster's hoard, a won war and a fleeing cult move an artifact out of another's keeping. Is that right, so the present day has artifacts waiting for the player, or should heroes or rulers sometimes recover lost artifacts in history? | Recommended: lost things stay lost. It keeps them for the player, and recovery by a hero already happens through hoards. The build does this. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+| Q-P5-11-7 | Should a realm's regalia or relic held by another realm be a grievance (more strain toward the holder, its declaration of war citing the loss) that comes back when the realm wins a war against the holder? | Recommended: yes. It makes artifacts matter to history and gives ruler quest lines a real motive; the strain is small and calibrated. The build does this. | `docs/specs/p5-11-artifacts.md` 21 (branch `p5/11-spec`) | |
+
+(2026-11-27: Paul answered the five questions of P5-08 pantheon and cults; the rows are in section 2.)
 
 (2026-11-26: Paul answered the five questions of P5-07 mountain depths; the rows are in section 2.)
 
