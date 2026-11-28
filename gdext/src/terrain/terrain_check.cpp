@@ -202,6 +202,27 @@ int run_terrain_check(TerrainPreview& preview, const TerrainCheckOptions& option
         return c.all ? 0 : 1;
     }
 
+    if (detail_run(preview)) {
+        // V3D-06 15.2: T41 to T53, the markers on the field (T46: T31 to T34)
+        // and the near path (T45, T47 over frames).
+        run_detail_checks(preview, options, c);
+        run_marker_checks(preview, options, c);
+        // The near path (T17 to T24, T47 over frames) in the default detail
+        // run and with --ground-detail off and boulders only, so that the
+        // debug check stays inside its time.
+        const bool with_path = preview.ground_detail_option() == 0 ||
+                               (preview.ground_detail_option() == 4 && preview.detail_threads_option() != 0 &&
+                                !preview.no_markers_option());
+        if (path != nullptr && with_path) {
+            *path = start_near_check(preview, options, c);
+            if (*path) {
+                return -1;
+            }
+        }
+        godot::UtilityFunctions::print(c.all ? "UNMAPPED-TERRAIN-CHECK: PASS" : "UNMAPPED-TERRAIN-CHECK: FAIL");
+        return c.all ? 0 : 1;
+    }
+
     // T1: layout, image sizes and formats.
     c.check(layout.n == n && layout.spacing == 16.0f && layout.region_size == 256 && layout.region_min == -(n / 512) &&
                 layout.region_count == n / 256 && layout.origin == -8.0f * static_cast<float>(n),

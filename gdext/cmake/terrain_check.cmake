@@ -33,6 +33,12 @@
 #    V3D-04 and T39), --year 3000, --at-marker rank:1, --at-marker
 #    settlement:<the largest settlement, printed by the default run> and
 #    --at-marker nowhere (markers only); T40's refusals.
+# V3D-06 15.2: every run above gains --ground-detail off --no-boulders.
+# 8. The ground-detail runs (T41 to T53): the 512 world at 4 m, with
+#    --detail-threads 0 (the same hashes, T52), --ground-detail 8 and 2,
+#    --no-markers and --ground-detail off with boulders; the 1024 world at
+#    4 m; two refusals; a headless bench with the detail lines. The 2 m and
+#    1024 runs use --no-trees (no near path) to keep the debug check short.
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -90,12 +96,18 @@ if(TERRAIN3D)
 else()
     set(_expect absent)
 endif()
-function(terrain_check label dir expect)
+# V3D-06 15.2: every run of V3D-01 to V3D-05 shows V3D-05's ground.
+set(_off --ground-detail off --no-boulders)
+function(detail_check label dir expect)
     run_step("terrain check, ${label}" "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
         -- "${WORK_DIR}/${dir}/world.db" --check "${WORK_DIR}/${dir}" --expect-terrain3d ${expect} ${ARGN})
     if(NOT STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: PASS")
         message(FATAL_ERROR "terrain check: the preview did not report UNMAPPED-TERRAIN-CHECK: PASS for the ${label}")
     endif()
+    set(STEP_OUTPUT "${STEP_OUTPUT}" PARENT_SCOPE)
+endfunction()
+function(terrain_check label dir expect)
+    detail_check("${label}" ${dir} ${expect} ${_off} ${ARGN})
     set(STEP_OUTPUT "${STEP_OUTPUT}" PARENT_SCOPE)
 endfunction()
 terrain_check("512 world" w512 ${_expect})
@@ -122,7 +134,7 @@ terrain_check("test-pattern world" pattern ${_expect})
 # --- 5. Refusals (V3D-04 T29) ----------------------------------------------------------
 function(terrain_refusal label text)
     execute_process(COMMAND "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
-        -- "${WORK_DIR}/w512/world.db" --check "${WORK_DIR}/w512" --expect-terrain3d ${_expect} ${ARGN}
+        -- "${WORK_DIR}/w512/world.db" --check "${WORK_DIR}/w512" --expect-terrain3d ${_expect} ${_off} ${ARGN}
         RESULT_VARIABLE _rc OUTPUT_VARIABLE _out ERROR_VARIABLE _err TIMEOUT 120)
     message("---- refusal, ${label}: exit ${_rc}")
     string(FIND "${_err}${_out}" "${text}" _at)
@@ -144,7 +156,7 @@ if(TERRAIN3D)
         message(FATAL_ERROR "terrain check: the 512 world's check printed no look line")
     endif()
     run_step("bench, 512 world" "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
-        -- "${WORK_DIR}/w512/world.db" --bench)
+        -- "${WORK_DIR}/w512/world.db" --bench ${_off})
     string(FIND "${STEP_OUTPUT}" "UNMAPPED-TERRAIN-BENCH: ${_look_line}" _at)
     if(_at LESS 0)
         message(FATAL_ERROR "terrain check: the bench did not print 'UNMAPPED-TERRAIN-BENCH: ${_look_line}'")
@@ -167,4 +179,36 @@ terrain_refusal("--at-marker --at" "${_at_refusal}" --at-marker rank:1 --at 10 1
 terrain_refusal("--at-marker --at-forest" "${_at_refusal}" --at-marker rank:1 --at-forest)
 terrain_refusal("--at-marker --at-peak" "${_at_refusal}" --at-marker rank:1 --at-peak)
 terrain_refusal("--at-marker --no-markers" "${_at_refusal}" --at-marker rank:1 --no-markers)
+
+# --- 8. Ground detail (V3D-06 15.2, T41 to T53) ----------------------------------------------
+detail_check("512 world, ground detail 4" w512 ${_expect})
+set(_hash "")
+if(STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: detail hashes ([0-9a-f ]+)")
+    set(_hash "${CMAKE_MATCH_1}")
+endif()
+detail_check("512 world, --detail-threads 0" w512 ${_expect} --detail-threads 0)
+if(TERRAIN3D OR NOT _hash STREQUAL "")
+    if(NOT STEP_OUTPUT MATCHES "UNMAPPED-TERRAIN-CHECK: detail hashes ${_hash}")
+        message(FATAL_ERROR "terrain check: T52 --detail-threads 0 gave other field, control or colour hashes than '${_hash}'")
+    endif()
+    message("---- T52 --detail-threads 0: the same hashes ${_hash}")
+endif()
+detail_check("512 world, --ground-detail 8" w512 ${_expect} --ground-detail 8)
+detail_check("512 world, --ground-detail 2 --no-trees" w512 ${_expect} --ground-detail 2 --no-trees)
+detail_check("512 world, ground detail, --no-markers" w512 ${_expect} --no-markers)
+detail_check("512 world, --ground-detail off, boulders" w512 ${_expect} --ground-detail off)
+detail_check("1024 world, ground detail 4, --no-trees" w1024 ${_expect} --no-trees)
+terrain_refusal("--ground-detail 16" "--ground-detail 16: off, 8, 4 or 2" --ground-detail 16)
+terrain_refusal("--detail-threads 17" "--detail-threads 17: a whole number from 0 to 16" --detail-threads 17)
+if(TERRAIN3D)
+    run_step("bench, 512 world, ground detail" "${GODOT}" --headless --path "${PROJECT_DIR}" res://viewer3d/terrain_preview.tscn
+        -- "${WORK_DIR}/w512/world.db" --bench)
+    foreach(_line "UNMAPPED-TERRAIN-BENCH: ground detail: 4 m, 2048^2 vertices" "UNMAPPED-TERRAIN-BENCH: ground detail stats: ")
+        string(FIND "${STEP_OUTPUT}" "${_line}" _at)
+        if(_at LESS 0)
+            message(FATAL_ERROR "terrain check: T51 the bench printed no '${_line}'")
+        endif()
+    endforeach()
+    message("---- T51 bench detail lines present")
+endif()
 message("terrain check: all runs passed")

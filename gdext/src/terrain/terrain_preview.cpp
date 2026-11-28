@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <fstream>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -405,6 +407,25 @@ void TerrainPreview::parse_options(const godot::PackedStringArray& args) {
             no_markers_ = true;
         } else if (arg == "--at-marker" && has_one) {
             at_marker_ = args[++i];
+        } else if (arg == "--ground-detail") {
+            // V3D-06 13.2.
+            const godot::String text = has_one ? args[++i] : godot::String();
+            const std::optional<int> v = terrain::parse_ground_detail(to_utf8(text));
+            if (v) {
+                ground_detail_ = *v;
+            } else {
+                refuse(to_godot(terrain::ground_detail_refusal(to_utf8(text))));
+            }
+        } else if (arg == "--no-boulders") {
+            no_boulders_ = true;
+        } else if (arg == "--detail-threads") {
+            const godot::String text = has_one ? args[++i] : godot::String();
+            const std::optional<int> v = terrain::parse_detail_threads(to_utf8(text));
+            if (v) {
+                detail_threads_ = *v;
+            } else {
+                refuse(to_godot(terrain::detail_threads_refusal(to_utf8(text))));
+            }
         } else if (!arg.begins_with("--") && world_path_.is_empty()) {
             world_path_ = arg;
         }
@@ -616,6 +637,8 @@ bool TerrainPreview::open_world(const godot::String& path) {
         scene_.colours = terrain::build_colours(layout, scene_.biome, records);
     }
     timings_.control = now_usec() - t0;
+    markers_load();  // V3D-06 13.1 step 2: the records and the pads' places
+    build_detail();  // steps 3 and 4: the factor fields, the field, control and colour
     t0 = now_usec();
     scene_.vegetation = have_biome && !no_trees_;
     scene_.tiers = scene_.vegetation && !veg_whole_map_;
@@ -627,6 +650,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     veg_inputs_.water = scene_.water;
     veg_inputs_.cells = &scene_.ground;
     veg_inputs_.seed = scene_.seed;
+    veg_inputs_.ground = &scene_.field;  // V3D-06 10: Y on the field
     if (scene_.tiers) {
         // V3D-03 7.1: the far tier; the near tier follows the camera.
         terrain::FarTier far = terrain::place_far_tier(veg_inputs_, instance_cap_);
@@ -635,7 +659,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
         scene_.placement = std::move(far.placement);
     } else if (scene_.vegetation) {
         scene_.placement = terrain::place_vegetation(layout, scene_.heights, scene_.elevation, scene_.timber, scene_.water,
-                                                     scene_.ground, scene_.seed, instance_cap_);
+                                                     scene_.ground, scene_.seed, instance_cap_, &scene_.field);
     }
     scene_.forest_column = have_biome ? terrain::forest_column(layout, scene_.ground) : n / 2;
     scene_.forest = terrain::forest_start_cell(layout, scene_.ground, scene_.forest_column);
@@ -643,7 +667,7 @@ bool TerrainPreview::open_world(const godot::String& path) {
     timings_.placement = now_usec() - t0;
 
     t0 = now_usec();
-    {
+    if (scene_.detail_spacing == 0) {
         // Little-endian floats for FORMAT_RF: the host's own byte order on
         // x86_64, the only target of the extension. Control values are bit
         // patterns, copied with memcpy, never through float arithmetic.
@@ -659,8 +683,19 @@ bool TerrainPreview::open_world(const godot::String& path) {
         rgba.resize(static_cast<int64_t>(scene_.colours.size()));
         std::memcpy(rgba.ptrw(), scene_.colours.data(), scene_.colours.size());
         colour_image_ = godot::Image::create_from_data(n, n, false, godot::Image::FORMAT_RGBA8, rgba);
+        timings_.images = now_usec() - t0;
     }
-    timings_.images = now_usec() - t0;
+    // V3D-06 11: boulders with the near tier.
+    boulders_on_ = !no_boulders_ && scene_.tiers && veg_radius_ > 0.0 && have_biome;
+    boulder_inputs_ = terrain::BoulderInputs{};
+    boulder_inputs_.layout = &*scene_.layout;
+    boulder_inputs_.elevation = scene_.elevation;
+    boulder_inputs_.water = scene_.water;
+    boulder_inputs_.cells = &scene_.ground;
+    boulder_inputs_.plan = scene_.plan.get();
+    boulder_inputs_.field = &scene_.field;
+    boulder_inputs_.seed = scene_.seed;
+    boulder_inputs_.rock_look = look_.rock;
 
     const bool have_class = godot::ClassDBSingleton::get_singleton()->class_exists("Terrain3D");
     if (have_class && !no_terrain3d_) {
@@ -686,6 +721,40 @@ bool TerrainPreview::open_world(const godot::String& path) {
     }
 
     // Status lines (V3D-01 7, V3D-02 10.3).
+    if (scene_.detail_spacing != 0) {
+        const terrain::Layout& fl = scene_.field.layout;
+        status_lines_.push_back(
+            "ground detail: " + godot::String::num_int64(scene_.detail_spacing) + " m, " + godot::String::num_int64(fl.n) +
+            " x " + godot::String::num_int64(fl.n) + " vertices in " +
+            godot::String::num_int64(static_cast<int64_t>(fl.region_count) * fl.region_count) + " regions of " +
+            godot::String::num_int64(fl.region_size) + ", " +
+            godot::String::num_int64(static_cast<int64_t>(scene_.plan ? scene_.plan->pads.size() : 0)) + " pads; built in " +
+            ms(timings_.field) + " ms on " + godot::String::num_int64(scene_.detail_threads) + " threads");
+        if (scene_.detail_limited) {
+            status_lines_.push_back(terrain::DETAIL_LIMIT_NOTE);
+        }
+    } else {
+        status_lines_.push_back(terrain::DETAIL_OFF_STATUS);
+    }
+    if (boulders_on_) {
+        std::uint32_t qmax = 0;
+        const int bn = layout.n;
+        for (int y = 0; y < bn; ++y) {
+            for (int x = 0; x < bn; ++x) {
+                qmax = std::max(qmax, terrain::boulder_density(boulder_inputs_, x, y));
+            }
+        }
+        const std::uint32_t per_cell = (qmax >> 8) + ((qmax & 0xFFu) != 0 ? 1u : 0u);
+        status_lines_.push_back("boulders: " + godot::String::num_int64(static_cast<int64_t>(per_cell) * 256) +
+                                " per near cell at most, near tier only");
+    } else if (have_biome) {
+        const char* reason = no_boulders_ ? "--no-boulders"
+                             : no_trees_ ? "--no-trees"
+                             : veg_whole_map_ ? "--veg-whole-map"
+                             : veg_radius_ <= 0.0 ? "--veg-radius 0"
+                                                  : "no near tier";
+        status_lines_.push_back(godot::String("boulders: off (") + reason + ")");
+    }
     if (!have_biome) {
         status_lines_.push_back("no biome layer: ground drawn grey, no vegetation");
     } else {
@@ -794,7 +863,10 @@ bool TerrainPreview::make_terrain() {
         return false;
     }
     node->set_name("Terrain3D");
-    node->set("vertex_spacing", scene_.layout->spacing);  // V1
+    node->set("vertex_spacing", scene_.field.layout.spacing);  // V1; V3D-06 3: s
+    if (scene_.detail_spacing != 0) {
+        node->set("mesh_lods", terrain::detail_mesh_lods(scene_.detail_spacing));  // V3D-06 3.2
+    }
     node->set("free_editor_textures", false);             // no saved Assets file (5.3)
 
     const godot::Variant assets = classes->instantiate("Terrain3DAssets");
@@ -871,6 +943,12 @@ bool TerrainPreview::make_terrain() {
 
     add_child(node);
     terrain_ = node;
+    if (scene_.field.layout.region_size != terrain::REGION_SIZE) {
+        // W30: the property's setter (change_region_size) does nothing before
+        // the node is in the tree, since Terrain3D's data object does not
+        // exist yet; with no regions it only sets the size.
+        node->call("change_region_size", scene_.field.layout.region_size);
+    }
     // After entering the tree, Terrain3D's subsystems exist.
     node->set("collision_mode", 0);  // V9: Disabled
     const godot::Variant material = node->get("material");
@@ -893,6 +971,13 @@ bool TerrainPreview::make_terrain() {
     data->call("import_images", images, godot::Vector3(origin, 0.0f, origin), 0.0f, 1.0f);  // V3, V4
     import_end_usec_ = now_usec();
     timings_.import = import_end_usec_ - t0;
+    if (scene_.detail_spacing != 0 && check_dir_.is_empty()) {
+        // V3D-06 13.1 step 5: the images are not needed after the import (the
+        // check keeps them to compare).
+        height_image_.unref();
+        control_image_.unref();
+        colour_image_.unref();
+    }
     add_vegetation();
     import_end_usec_ = now_usec();  // the first frame starts after the transfer (V3D-02 12)
     return true;
@@ -915,11 +1000,13 @@ void TerrainPreview::add_vegetation() {
         return;
     }
     const std::uint64_t t0 = now_usec();
-    const terrain::Layout& layout = *scene_.layout;
+    // V3D-06 10: the instancer cells of the fine layout (32 vertices, 32 s m).
+    const terrain::Layout& layout = scene_.field.layout;
     const float region_m = static_cast<float>(layout.region_size) * layout.spacing;
     const int cells_per_region = layout.region_size / 32;
     const int cells_per_axis = layout.region_count * cells_per_region;
-    const float lo = -8.0f * static_cast<float>(layout.n);
+    const float lo = layout.origin;
+    std::vector<bool> used(static_cast<std::size_t>(cells_per_axis) * static_cast<std::size_t>(cells_per_axis), false);
     for (int kind = 0; kind < terrain::VEGETATION_KINDS; ++kind) {
         const auto& list = scene_.placement.kinds[static_cast<std::size_t>(kind)];
         if (list.empty()) {
@@ -948,6 +1035,7 @@ void TerrainPreview::add_vegetation() {
             if (count[c] == count[c + 1]) {
                 continue;
             }
+            used[c] = true;
             godot::TypedArray<godot::Transform3D> transforms;
             godot::PackedColorArray colours;
             colours.resize(static_cast<int64_t>(count[c + 1] - count[c]));
@@ -966,6 +1054,7 @@ void TerrainPreview::add_vegetation() {
     }
     instancer->call("update_mmis", -1, godot::Vector2i(0, 0), true);
     timings_.transfer = now_usec() - t0;
+    scene_.far_instancer_cells = static_cast<std::uint64_t>(std::count(used.begin(), used.end(), true));
 }
 
 void TerrainPreview::place_sea() {
@@ -1069,18 +1158,18 @@ void TerrainPreview::place_start() {
     if (at_marker_index_) {
         // V3D-05 8.1: the jump view of the marker; --alt, --above, --heading
         // and --pitch override it as with --at-peak.
-        start_ = terrain::jump_view(markers_[*at_marker_index_], layout, scene_.heights);
+        start_ = terrain::jump_view(markers_[*at_marker_index_], scene_.field.layout, scene_.field.heights);
         if (opt_alt_) {
             start_.y = *opt_alt_;
         }
         if (opt_above_) {
-            start_.y = terrain::ground_clamp(layout, scene_.heights, start_.x, start_.z) + *opt_above_;
+            start_.y = terrain::ground_top(scene_.field, start_.x, start_.z) + *opt_above_;
         }
         start_.heading_deg = opt_heading_.value_or(start_.heading_deg);
         start_.pitch_deg = opt_pitch_.value_or(start_.pitch_deg);
         start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
         terrain::step(start_, terrain::FlyInput{}, 0.0f,
-                      [this](float X, float Z) { return terrain::ground_clamp(*scene_.layout, scene_.heights, X, Z); },
+                      [this](float X, float Z) { return terrain::ground_top(scene_.field, X, Z); },
                       16.0f * static_cast<float>(n));
         fly_ = start_;
         apply_camera();
@@ -1104,14 +1193,12 @@ void TerrainPreview::place_start() {
     start_.z = w.z;
     start_.y = opt_alt_.value_or(scene_.h_max + 300.0f);
     if (opt_above_) {
-        start_.y = terrain::ground_clamp(layout, scene_.heights, w.x, w.z) + *opt_above_;
+        start_.y = terrain::ground_top(scene_.field, w.x, w.z) + *opt_above_;
     } else if (at_forest_ && !opt_alt_) {
-        start_.y = terrain::forest_start_altitude(terrain::ground_clamp(layout, scene_.heights, w.x, w.z));
+        start_.y = terrain::forest_start_altitude(terrain::ground_top(scene_.field, w.x, w.z));
     } else if (at_peak_ && !opt_alt_) {
-        // V3D-04 9.1: 200 m above the peak vertex.
-        start_.y = scene_.heights[static_cast<std::size_t>(scene_.peak.y) * static_cast<std::size_t>(n) +
-                                  static_cast<std::size_t>(scene_.peak.x)] +
-                   200.0f;
+        // V3D-04 9.1: 200 m above the peak vertex (V3D-06 10: of the field).
+        start_.y = terrain::field_at_cell(scene_.field, scene_.peak.x, scene_.peak.y) + 200.0f;
     }
     const float default_heading = at_forest_ && !scene_.forest.north ? 180.0f : 0.0f;
     start_.heading_deg = opt_heading_.value_or(default_heading);
@@ -1119,7 +1206,7 @@ void TerrainPreview::place_start() {
     start_.speed_index = opt_speed_index_.value_or(terrain::DEFAULT_SPEED_INDEX);
     // The heading wrap and the floor of 8.2, without moving.
     terrain::step(start_, terrain::FlyInput{}, 0.0f,
-                  [this](float X, float Z) { return terrain::ground_clamp(*scene_.layout, scene_.heights, X, Z); },
+                  [this](float X, float Z) { return terrain::ground_top(scene_.field, X, Z); },
                   16.0f * static_cast<float>(n));
     fly_ = start_;
     apply_camera();
@@ -1144,6 +1231,7 @@ std::string TerrainPreview::hud_at(float X, float Y, float Z, int fps) const {
     terrain::HudWorld hud;
     hud.layout = &*scene_.layout;
     hud.heights = scene_.heights;
+    hud.field = &scene_.field;
     hud.elevation = scene_.elevation;
     hud.water_depth = scene_.water_depth;
     hud.biome = scene_.biome;
@@ -1246,6 +1334,10 @@ void TerrainPreview::bench_first_frame() {
         godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ", to_godot(line));  // V3D-04 9.2
     }
     print_markers_bench_line();  // V3D-05 13
+    if (const std::string line = detail_bench_line(); !line.empty()) {
+        godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ", to_godot(line));  // V3D-06 13.3
+        godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: ", to_godot(detail_stats_line()));
+    }
     // V3D-02 12: the view at the centre cell, 150 m above the ground,
     // heading 0, pitch -10, vsync off: 60 warm-up frames, then 300. V3D-03
     // 12.2: the near tier's settling is timed from here.
@@ -1253,7 +1345,7 @@ void TerrainPreview::bench_first_frame() {
     fly_ = start_;
     fly_.x = c.x;
     fly_.z = c.z;
-    fly_.y = terrain::ground_clamp(*scene_.layout, scene_.heights, c.x, c.z) + 150.0f;
+    fly_.y = terrain::ground_top(scene_.field, c.x, c.z) + 150.0f;
     fly_.heading_deg = 0.0f;
     fly_.pitch_deg = -10.0f;
     apply_camera();
@@ -1306,6 +1398,18 @@ void TerrainPreview::bench_view_frame() {
     godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: view at cell (", n / 2, ", ", n / 2,
                                    "), 150 m above ground: frames 300, mean ", ms(sum / frame_usec_.size()), ", max ",
                                    ms(max), ", over 16.7 ms ", over16);
+    {
+        // V3D-06 18 W32: what the frame drew at the view.
+        godot::RenderingServer* rs = godot::RenderingServer::get_singleton();
+        godot::UtilityFunctions::print(
+            "UNMAPPED-TERRAIN-BENCH: view draw: objects ",
+            static_cast<int64_t>(rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)),
+            ", draw calls ",
+            static_cast<int64_t>(rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)),
+            ", primitives ",
+            static_cast<int64_t>(rs->get_rendering_info(godot::RenderingServer::RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)),
+            "; far-tier instancer cells ", static_cast<int64_t>(scene_.far_instancer_cells));
+    }
     marker_bench_view_ = false;
     print_markers_frame_line();  // V3D-05 13
     // V3D-03 12.2: the tiers line once the near tier has settled, then the
@@ -1370,7 +1474,7 @@ void TerrainPreview::_process(double delta) {
     const auto dt = static_cast<float>(delta);
     const float bound = 16.0f * static_cast<float>(scene_.layout->n);
     const auto ground = [this](float X, float Z) {
-        return terrain::ground_clamp(*scene_.layout, scene_.heights, X, Z);
+        return terrain::ground_top(scene_.field, X, Z);
     };
     if (check_run_) {
         // The check's path: the check places the camera, the near tier
@@ -1486,6 +1590,9 @@ void TerrainPreview::_unhandled_input(const godot::Ref<godot::InputEvent>& event
             case godot::KEY_G:
                 toggle_ground();
                 break;
+            case godot::KEY_J:
+                toggle_detail();  // V3D-06 13.2
+                break;
             case godot::KEY_M:
                 toggle_markers();  // V3D-05 8.2
                 break;
@@ -1547,6 +1654,28 @@ bool TerrainPreview::toggle_ground() {
     return true;
 }
 
+bool TerrainPreview::toggle_detail() {
+    if (!scene_.layout || current_path_.is_empty()) {
+        return false;
+    }
+    const terrain::FlyState keep = fly_;
+    const terrain::FlyState keep_start = start_;
+    if (ground_detail_ != 0) {
+        detail_off_saved_ = ground_detail_;
+        ground_detail_ = 0;
+    } else {
+        ground_detail_ = detail_off_saved_;
+    }
+    const godot::String path = current_path_;
+    if (!open_world(path)) {
+        return false;
+    }
+    fly_ = keep;
+    start_ = keep_start;
+    apply_camera();
+    return true;
+}
+
 void TerrainPreview::on_open_pressed() {
     open_dialog_->popup_centered_ratio(0.6f);
 }
@@ -1576,6 +1705,186 @@ void TerrainPreview::run_check_deferred() {
         return;  // the path runs in _process (V3D-03 11.2)
     }
     get_tree()->quit(code);
+}
+
+namespace {
+
+// One band task of V3D-06 13.1 step 4: plain C++ on the plan (read only)
+// and its own rows of the three outputs; no Godot call.
+struct BandJob {
+    const terrain::DetailPlan* plan = nullptr;
+    float* heights = nullptr;
+    std::uint32_t* control = nullptr;
+    std::uint8_t* colour = nullptr;
+    std::size_t total = 0;
+    int rows = 0;
+};
+
+void band_task(void* user, uint32_t index) {
+    const auto* job = static_cast<const BandJob*>(user);
+    const int y0 = static_cast<int>(index) * job->rows;
+    terrain::build_detail_band(*job->plan, y0, y0 + job->rows, std::span<float>(job->heights, job->total),
+                               std::span<std::uint32_t>(job->control, job->total),
+                               std::span<std::uint8_t>(job->colour, 4 * job->total));
+}
+
+// Resident memory of the process in bytes (Linux; 0 elsewhere).
+std::uint64_t resident_bytes() {
+#if defined(__linux__)
+    std::ifstream statm("/proc/self/statm");
+    std::uint64_t size = 0;
+    std::uint64_t resident = 0;
+    if (statm >> size >> resident) {
+        return resident * 4096;
+    }
+#endif
+    return 0;
+}
+
+}  // namespace
+
+void TerrainPreview::build_detail() {
+    const terrain::Layout& layout = *scene_.layout;
+    std::uint64_t t0 = now_usec();
+    int s = ground_detail_;
+    scene_.detail_limited = false;
+    if (s != 0) {
+        const int e = terrain::effective_spacing(layout.n, s);
+        scene_.detail_limited = e != s;
+        s = e;
+    }
+    scene_.detail_spacing = s;
+    // The plan always (its factor fields give the boulders' density); pads
+    // only with detail and markers loaded.
+    const bool pads = s != 0 && marker_load_.status == terrain::MarkerStatus::loaded;
+    const std::vector<terrain::PadPlace> none;
+    scene_.plan = std::make_unique<terrain::DetailPlan>(terrain::make_detail_plan(
+        layout, s != 0 ? s : terrain::DETAIL_DEFAULT_SPACING, scene_.seed, scene_.elevation, scene_.water_depth,
+        scene_.ground, scene_.water, pads ? std::span<const terrain::PadPlace>(marker_load_.pad_places) : std::span<const terrain::PadPlace>(none),
+        scene_.control, scene_.colours, scene_.textured, look_));
+    timings_.factors = now_usec() - t0;
+    if (s == 0) {
+        scene_.field = terrain::coarse_field(layout, scene_.heights);
+        scene_.detail_threads = 0;
+        return;
+    }
+    t0 = now_usec();
+    scene_.field.layout = terrain::fine_layout(layout, s);
+    scene_.field.f = 16 / s;
+    const int v = scene_.field.layout.n;
+    const std::size_t total = static_cast<std::size_t>(v) * static_cast<std::size_t>(v);
+    scene_.field.heights.assign(total, 0.0f);
+    // Control and colour straight into the images' bytes (FORMAT_RF holds
+    // the control bit patterns, as V3D-02).
+    godot::PackedByteArray control;
+    control.resize(static_cast<int64_t>(total * sizeof(std::uint32_t)));
+    godot::PackedByteArray colour;
+    colour.resize(static_cast<int64_t>(total * 4));
+    BandJob job;
+    job.plan = scene_.plan.get();
+    job.heights = scene_.field.heights.data();
+    job.control = reinterpret_cast<std::uint32_t*>(control.ptrw());
+    job.colour = colour.ptrw();
+    job.total = total;
+    job.rows = terrain::DETAIL_BAND_ROWS;
+    const int bands = (v + job.rows - 1) / job.rows;
+    scene_.detail_threads = detail_threads_;
+    if (detail_threads_ == 0) {
+        for (int b = 0; b < bands; ++b) {
+            band_task(&job, static_cast<uint32_t>(b));
+        }
+    } else {
+        godot::WorkerThreadPool* pool = godot::WorkerThreadPool::get_singleton();
+        const int64_t id = pool->add_native_group_task(&band_task, &job, bands, detail_threads_, true, "ground detail");
+        pool->wait_for_group_task_completion(id);
+    }
+    timings_.field = now_usec() - t0;
+    t0 = now_usec();
+    godot::PackedByteArray bytes;
+    bytes.resize(static_cast<int64_t>(total * sizeof(float)));
+    std::memcpy(bytes.ptrw(), scene_.field.heights.data(), total * sizeof(float));
+    height_image_ = godot::Image::create_from_data(v, v, false, godot::Image::FORMAT_RF, bytes);
+    control_image_ = godot::Image::create_from_data(v, v, false, godot::Image::FORMAT_RF, control);
+    colour_image_ = godot::Image::create_from_data(v, v, false, godot::Image::FORMAT_RGBA8, colour);
+    timings_.images = now_usec() - t0;
+}
+
+void TerrainPreview::build_boulder_meshes() {
+    if (boulder_meshes_[0][0].is_valid()) {
+        return;
+    }
+    godot::Ref<godot::StandardMaterial3D> material;
+    material.instantiate();
+    material->set_flag(godot::BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
+    material->set_flag(godot::BaseMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
+    material->set_roughness(0.9f);
+    material->set_cull_mode(godot::BaseMaterial3D::CULL_BACK);
+    for (int shape = 0; shape < terrain::BOULDER_SHAPES; ++shape) {
+        for (int lod = 0; lod < 2; ++lod) {
+            const terrain::MeshData data = terrain::build_boulder_mesh(shape, lod);
+            godot::PackedVector3Array vertices;
+            godot::PackedVector3Array normals;
+            godot::PackedColorArray colours;
+            const std::size_t count = data.colours.size();
+            vertices.resize(static_cast<int64_t>(count));
+            normals.resize(static_cast<int64_t>(count));
+            colours.resize(static_cast<int64_t>(count));
+            for (std::size_t k = 0; k < count; ++k) {
+                const auto i = static_cast<int64_t>(k);
+                vertices.set(i, godot::Vector3(data.positions[3 * k], data.positions[3 * k + 1], data.positions[3 * k + 2]));
+                normals.set(i, godot::Vector3(data.normals[3 * k], data.normals[3 * k + 1], data.normals[3 * k + 2]));
+                colours.set(i, srgb_byte_colour(data.colours[k]));
+            }
+            godot::Array arrays;
+            arrays.resize(godot::Mesh::ARRAY_MAX);
+            arrays[godot::Mesh::ARRAY_VERTEX] = vertices;
+            arrays[godot::Mesh::ARRAY_NORMAL] = normals;
+            arrays[godot::Mesh::ARRAY_COLOR] = colours;
+            godot::Ref<godot::ArrayMesh> mesh;
+            mesh.instantiate();
+            mesh->add_surface_from_arrays(godot::Mesh::PRIMITIVE_TRIANGLES, arrays);
+            mesh->surface_set_material(0, material);
+            boulder_meshes_[static_cast<std::size_t>(shape)][static_cast<std::size_t>(lod)] = mesh;
+        }
+    }
+}
+
+godot::Ref<godot::ArrayMesh> TerrainPreview::boulder_mesh(int shape, int lod) const {
+    if (shape < 0 || shape >= terrain::BOULDER_SHAPES || lod < 0 || lod > 1) {
+        return {};
+    }
+    return boulder_meshes_[static_cast<std::size_t>(shape)][static_cast<std::size_t>(lod)];
+}
+
+std::string TerrainPreview::detail_bench_line() const {
+    if (!scene_.layout || scene_.detail_spacing == 0) {
+        return {};
+    }
+    const terrain::Layout& fl = scene_.field.layout;
+    const double mb = 1024.0 * 1024.0;
+    const auto msu = [](std::uint64_t usec) { return terrain::one_decimal(static_cast<double>(usec) / 1000.0); };
+    const double field_mb = static_cast<double>(scene_.field.heights.size() * sizeof(float)) / mb;
+    const double static_mb = godot::Performance::get_singleton()->get_monitor(godot::Performance::MEMORY_STATIC) / mb;
+    return "ground detail: " + std::to_string(scene_.detail_spacing) + " m, " + std::to_string(fl.n) + "^2 vertices, " +
+           std::to_string(fl.region_count * fl.region_count) + " regions of " + std::to_string(fl.region_size) +
+           ", lods " + std::to_string(terrain::detail_mesh_lods(scene_.detail_spacing)) + "; factors " +
+           msu(timings_.factors) + " ms, field, control and colour " + msu(timings_.field) + " ms (" +
+           std::to_string(scene_.detail_threads) + " threads); images " + msu(timings_.images) + " ms, import " +
+           msu(timings_.import) + " ms; memory field " + terrain::one_decimal(field_mb) + " MB, static " +
+           terrain::one_decimal(static_mb) + " MB, resident " +
+           terrain::one_decimal(static_cast<double>(resident_bytes()) / mb) + " MB; pads " +
+           std::to_string(scene_.plan ? scene_.plan->pads.size() : 0) + " (places " +
+           std::to_string(marker_load_.pad_places.size()) + " over " + std::to_string(marker_load_.pad_years) +
+           " years in " + msu(marker_load_.places_usec) + " ms); far-tier instancer cells " +
+           std::to_string(scene_.far_instancer_cells);
+}
+
+std::string TerrainPreview::detail_stats_line() const {
+    if (!scene_.plan || scene_.detail_spacing == 0) {
+        return {};
+    }
+    const std::vector<terrain::DetailTypeStats> stats = terrain::detail_stats(*scene_.plan, scene_.field, scene_.ground);
+    return "ground detail stats: " + terrain::detail_stats_text(stats);
 }
 
 }  // namespace unmapped

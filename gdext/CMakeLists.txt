@@ -23,6 +23,8 @@ add_library(unmapped_terrain_core STATIC
     src/terrain/near_cells.cpp
     src/terrain/look.cpp
     src/terrain/markers3d.cpp
+    src/terrain/detail.cpp
+    src/terrain/boulders.cpp
 )
 target_include_directories(unmapped_terrain_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(unmapped_terrain_core PUBLIC worldgen::worldgen)
@@ -39,6 +41,7 @@ add_library(unmapped_gdext SHARED
     src/terrain/terrain_preview_near.cpp
     src/terrain/terrain_preview_markers.cpp
     src/terrain/terrain_check_markers.cpp
+    src/terrain/terrain_check_detail.cpp
     src/world_file.cpp
     src/world_layer.cpp
     src/viewer/history_state.cpp
@@ -210,6 +213,8 @@ if(UNMAPPED_BUILD_TESTS)
         tests/near_cells_test.cpp
         tests/look_test.cpp
         tests/markers3d_test.cpp
+        tests/detail_test.cpp
+        tests/boulders_test.cpp
     )
     target_link_libraries(gdext-terrain-tests PRIVATE unmapped_terrain_core worldgen::worldgen unmapped::doctest)
     unmapped_project_target(gdext-terrain-tests)

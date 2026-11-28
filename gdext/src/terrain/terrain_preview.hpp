@@ -53,10 +53,14 @@
 //   --no-markers            the history is not read; no markers (V3D-05 8.1)
 //   --at-marker <v>         start at the jump view of a marker: settlement:<id>,
 //                           site:<id>, rank:<k> or a name
+//   --ground-detail <v>     V3D-06: off, 8, 4 or 2 (default 4) m vertex spacing
+//   --no-boulders           no boulders
+//   --detail-threads <n>    0 to 16 (default 8) tasks building the field
 //
 // Keys of V3D-02 10.2: T vegetation on or off, G ground textured or flat.
 // V3D-05 8.2: M markers on or off, N and Shift+N the next and previous
-// settlement of the jump order (terrain_preview_markers.cpp).
+// settlement of the jump order (terrain_preview_markers.cpp). V3D-06: J
+// ground detail on or off (reopens the world as G does).
 //
 // Vegetation in tiers (spec V3D-03): the far tier (trees and snags thinned
 // to the budget) goes to Terrain3D's instancer once at load; the near tier
@@ -92,6 +96,8 @@
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
+#include "terrain/boulders.hpp"
+#include "terrain/detail.hpp"
 #include "terrain/fly_state.hpp"
 #include "terrain/ground.hpp"
 #include "terrain/look.hpp"
@@ -134,6 +140,14 @@ struct TerrainScene {
     float h_min = 0.0f;
     float h_max = 0.0f;
     std::uint32_t sea_rgb = 0x183878;
+    // V3D-06: the ground Terrain3D draws (the coarse heights when detail is
+    // off), its plan (null when off) and the pads' places.
+    terrain::GroundField field;
+    int detail_spacing = 0;   // 0: off
+    bool detail_limited = false;  // --ground-detail 2 on a 2048 map
+    std::unique_ptr<terrain::DetailPlan> plan;
+    int detail_threads = 0;   // as run
+    std::uint64_t far_instancer_cells = 0;  // instancer cells holding far instances
 };
 
 // Times of the last open, in microseconds (10).
@@ -148,6 +162,10 @@ struct TerrainTimings {
     std::uint64_t control = 0;
     std::uint64_t placement = 0;
     std::uint64_t transfer = 0;
+    // V3D-06 13.3.
+    std::uint64_t factors = 0;
+    std::uint64_t field = 0;  // field, control and colour bands together
+    std::uint64_t places = 0;
 };
 
 // The near tier's work in the last frame (V3D-03 7.1), read by the check
@@ -174,12 +192,19 @@ struct NearSlot {
     std::array<std::vector<float>, terrain::VEGETATION_KINDS> buffers;
     std::array<std::uint32_t, terrain::VEGETATION_KINDS> counts{};
     std::uint64_t usec = 0;
+    // V3D-06 11: the cell's boulders per shape and their placement inputs.
+    const terrain::BoulderInputs* boulders = nullptr;
+    std::array<std::vector<float>, terrain::BOULDER_SHAPES> boulder_buffers;
+    std::array<std::uint32_t, terrain::BOULDER_SHAPES> boulder_counts{};
+    std::uint64_t boulder_usec = 0;
 };
 
 // A computed cell's result, held until it is attached or released.
 struct NearResult {
     std::array<std::vector<float>, terrain::VEGETATION_KINDS> buffers;
     std::array<std::uint32_t, terrain::VEGETATION_KINDS> counts{};
+    std::array<std::vector<float>, terrain::BOULDER_SHAPES> boulder_buffers;
+    std::array<std::uint32_t, terrain::BOULDER_SHAPES> boulder_counts{};
 };
 
 class TerrainPreview : public godot::Node3D {
@@ -280,6 +305,20 @@ public:
     static constexpr float LABEL_OFFSET_PX = 24.0f;
     static constexpr float BEACON_TOP = 30000.0f;
 
+    // V3D-06.
+    [[nodiscard]] int ground_detail_option() const noexcept { return ground_detail_; }
+    [[nodiscard]] bool no_boulders_option() const noexcept { return no_boulders_; }
+    [[nodiscard]] int detail_threads_option() const noexcept { return detail_threads_; }
+    [[nodiscard]] bool boulders_on() const noexcept { return boulders_on_; }
+    [[nodiscard]] godot::Node3D* boulders_root() const noexcept { return boulders_root_; }
+    [[nodiscard]] const terrain::BoulderInputs& boulder_inputs() const noexcept { return boulder_inputs_; }
+    [[nodiscard]] godot::Ref<godot::ArrayMesh> boulder_mesh(int shape, int lod) const;
+    // The bench's detail lines (without the prefix); empty when off.
+    [[nodiscard]] std::string detail_bench_line() const;
+    [[nodiscard]] std::string detail_stats_line() const;
+    // Key J: ground detail on or off, reopening the world as key G does.
+    bool toggle_detail();
+
     // Key T: vegetation on or off (enabled on every mesh asset). Key G:
     // reopen the world with the other ground, keeping the camera. Both do
     // nothing when they do not apply (V3D-02 10.2); they return whether
@@ -321,8 +360,12 @@ private:
     void after_load();
 
     // Markers (terrain_preview_markers.cpp).
+    void markers_load();
     void markers_open();
     void markers_close();
+    // V3D-06 (terrain_preview.cpp): the field, control and colour images.
+    void build_detail();
+    void build_boulder_meshes();
     void markers_build_nodes();
     void print_markers_bench_line();
     void print_markers_frame_line();
@@ -436,6 +479,21 @@ private:
     std::uint64_t compute_usec_max_ = 0;
     std::uint64_t compute_cells_ = 0;
     std::uint64_t attach_usec_max_ = 0;
+
+    // Ground detail (V3D-06).
+    int ground_detail_ = terrain::DETAIL_DEFAULT_SPACING;  // 0: off
+    int detail_off_saved_ = terrain::DETAIL_DEFAULT_SPACING;  // key J's spacing to return to
+    bool no_boulders_ = false;
+    int detail_threads_ = terrain::DETAIL_DEFAULT_THREADS;
+    bool boulders_on_ = false;
+    terrain::BoulderInputs boulder_inputs_;
+    godot::Node3D* boulders_root_ = nullptr;
+    std::map<int, std::vector<godot::MultiMeshInstance3D*>> boulder_nodes_;
+    std::array<std::array<godot::Ref<godot::ArrayMesh>, 2>, terrain::BOULDER_SHAPES> boulder_meshes_;
+    std::uint64_t boulder_usec_sum_ = 0;
+    std::uint64_t boulder_cells_ = 0;
+    std::uint64_t boulder_count_ = 0;
+    std::uint64_t boulder_cell_max_ = 0;
 
     // Markers (V3D-05).
     std::optional<std::int64_t> opt_year_;

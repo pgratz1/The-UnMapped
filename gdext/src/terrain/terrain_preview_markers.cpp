@@ -131,8 +131,10 @@ void TerrainPreview::markers_close() {
     marker_triangles_ = 0;
 }
 
-void TerrainPreview::markers_open() {
-    // Called by open_world after markers_close (clear_world).
+void TerrainPreview::markers_load() {
+    // Called by open_world after markers_close (clear_world), before the
+    // ground field: the records of the shown year and, with ground detail,
+    // the pads' places of every year (V3D-06 7, Q-V3D-06-4).
     jump_pos_ = -1;
     if (no_markers_) {
         marker_status_.push_back(terrain::MARKERS_OFF_STATUS);
@@ -144,20 +146,24 @@ void TerrainPreview::markers_open() {
         marker_load_.code = "no_reader";
         marker_load_.message = "the world file is not open";
     } else {
-        marker_load_ = terrain::load_marker_records(*reader, opt_year_);
+        marker_load_ = terrain::load_marker_records(*reader, opt_year_, ground_detail_ != 0, scene_.layout->n);
     }
     marker_status_.push_back(to_godot(terrain::markers_status_line(marker_load_)).split("\n")[0]);
     if (marker_load_.year_clamped) {
         marker_status_.push_back(to_godot(terrain::markers_status_line(marker_load_)).split("\n")[1]);
     }
-    if (marker_load_.status != terrain::MarkerStatus::loaded) {
-        if (!at_marker_.is_empty()) {
-            marker_status_.push_back(to_godot(terrain::at_marker_miss(to_utf8(at_marker_), marker_load_.year)));
-        }
+    if (marker_load_.status != terrain::MarkerStatus::loaded && !at_marker_.is_empty()) {
+        marker_status_.push_back(to_godot(terrain::at_marker_miss(to_utf8(at_marker_), marker_load_.year)));
+    }
+}
+
+void TerrainPreview::markers_open() {
+    // After the terrain: placement on the field and the nodes.
+    if (no_markers_ || marker_load_.status != terrain::MarkerStatus::loaded) {
         return;
     }
     const std::uint64_t t0 = now_usec();
-    markers_ = terrain::place_markers(marker_load_.records, *scene_.layout, scene_.heights);
+    markers_ = terrain::place_markers(marker_load_.records, *scene_.layout, scene_.field);
     jump_order_ = terrain::jump_order(markers_);
     marker_place_usec_ = now_usec() - t0;
     if (!at_marker_.is_empty()) {
@@ -192,7 +198,7 @@ void TerrainPreview::markers_build_nodes() {
     meshes.reserve(markers_.size());
     marker_triangles_ = 0;
     for (const terrain::Marker3D& m : markers_) {
-        const terrain::MeshData data = terrain::build_marker_mesh(m, *scene_.layout, scene_.heights);
+        const terrain::MeshData data = terrain::build_marker_mesh(m, scene_.field.layout, scene_.field.heights);
         marker_triangles_ += data.triangles();
         meshes.push_back(array_mesh(data, marker_material_));
     }
@@ -408,7 +414,7 @@ bool TerrainPreview::jump_marker(int direction) {
         jump_pos_ = jump_pos_ <= 0 ? count - 1 : jump_pos_ - 1;
     }
     const int speed = fly_.speed_index;
-    fly_ = terrain::jump_view(markers_[jump_order_[static_cast<std::size_t>(jump_pos_)]], *scene_.layout, scene_.heights);
+    fly_ = terrain::jump_view(markers_[jump_order_[static_cast<std::size_t>(jump_pos_)]], scene_.field.layout, scene_.field.heights);
     fly_.speed_index = speed;
     apply_camera();
     marker_hud_.clear();

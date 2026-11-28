@@ -241,7 +241,7 @@ std::uint32_t own_beacon_colour(const terrain::MarkerRecord& r) {
     switch (r.kind) {
         case MarkerKind::ruin: return 0x8C8478;
         case MarkerKind::lair: return 0x96281E;
-        case MarkerKind::mine: return 0x3C3C3C;
+        case MarkerKind::mine: return 0xD6A840;  // V3D-06 12: MINE_BEACON
         case MarkerKind::tower: return 0x783CB4;
         default: return r.colour;
     }
@@ -311,7 +311,10 @@ std::vector<std::size_t> own_labels(const std::vector<terrain::Marker3D>& m, flo
     return out;
 }
 
-terrain::FlyState own_jump(const terrain::Marker3D& m, int n, const std::vector<float>& heights) {
+terrain::FlyState own_jump(const terrain::Marker3D& m, int n, const terrain::GroundField& field) {
+    const std::vector<float>& heights = field.heights;
+    const int fn = field.layout.n;
+    const float sp = field.layout.spacing;
     terrain::FlyState s;
     s.x = m.X;
     // 8.3 with the tuned distances (spec 1,200 and 350; README).
@@ -322,13 +325,13 @@ terrain::FlyState own_jump(const terrain::Marker3D& m, int n, const std::vector<
         s.heading_deg = 180.0f;
     }
     // ground_clamp: the largest of the four heights around the point.
-    const float top = static_cast<float>(n - 1);
-    const float u = std::clamp(s.x / 16.0f + static_cast<float>(n / 2), 0.0f, top);
-    const float v = std::clamp(s.z / 16.0f + static_cast<float>(n / 2), 0.0f, top);
-    const int i = std::min(static_cast<int>(std::floor(u)), n - 2);
-    const int j = std::min(static_cast<int>(std::floor(v)), n - 2);
+    const float top = static_cast<float>(fn - 1);
+    const float u = std::clamp(s.x / sp + static_cast<float>(fn / 2), 0.0f, top);
+    const float v = std::clamp(s.z / sp + static_cast<float>(fn / 2), 0.0f, top);
+    const int i = std::min(static_cast<int>(std::floor(u)), fn - 2);
+    const int j = std::min(static_cast<int>(std::floor(v)), fn - 2);
     const auto at = [&](int x, int y) {
-        return heights[static_cast<std::size_t>(y) * static_cast<std::size_t>(n) + static_cast<std::size_t>(x)];
+        return heights[static_cast<std::size_t>(y) * static_cast<std::size_t>(fn) + static_cast<std::size_t>(x)];
     };
     const float g = std::max(std::max(at(i, j), at(i + 1, j)), std::max(at(i, j + 1), at(i + 1, j + 1)));
     s.y = std::max(m.top + 150.0f, g + 100.0f);
@@ -582,8 +585,7 @@ void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& /*opt
             const godot::String want_name = (is_site(m[i].rec.kind) ? "t" : "s") + godot::String::num_int64(m[i].rec.id);
             const float X = 16.0f * static_cast<float>(cells[i][0] - n / 2);
             const float Z = 16.0f * static_cast<float>(cells[i][1] - n / 2);
-            const float Y = scene.heights[static_cast<std::size_t>(cells[i][1]) * static_cast<std::size_t>(n) +
-                                          static_cast<std::size_t>(cells[i][0])];
+            const float Y = terrain::field_at_cell(scene.field, cells[i][0], cells[i][1]);  // V3D-06 T44, T46
             if (node == nullptr || node->get_name() != godot::StringName(want_name)) {
                 ++bad_place;
                 continue;
@@ -597,7 +599,7 @@ void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& /*opt
                           node->get_visibility_range_fade_mode() == godot::GeometryInstance3D::VISIBILITY_RANGE_FADE_SELF)
                              ? 0u
                              : 1u;
-            const terrain::MeshData want = terrain::build_marker_mesh(m[i], layout, scene.heights);
+            const terrain::MeshData want = terrain::build_marker_mesh(m[i], scene.field.layout, scene.field.heights);
             const godot::Ref<godot::Mesh> mesh = node->get_mesh();
             if (mesh.is_null() || mesh->get_surface_count() < 1) {
                 ++bad_mesh;
@@ -651,7 +653,7 @@ void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& /*opt
             const terrain::Marker3D& big = m[order.front()];
             check_point(preview, c, "300 m above the largest settlement", big.X, big.top + 300.0f, big.Z, true, shown, hidden);
         }
-        const float g = scene.heights[static_cast<std::size_t>(n / 2) * static_cast<std::size_t>(n) + static_cast<std::size_t>(n / 2)];
+        const float g = terrain::field_at_cell(scene.field, n / 2, n / 2);
         check_point(preview, c, "3 km above the centre", 0.0f, g + 3000.0f, 0.0f, true, shown, hidden);
         check_point(preview, c, "30 km south of the map", 0.0f, 3000.0f, 8.0f * static_cast<float>(n) + 30000.0f, true,
                     shown, hidden);
@@ -745,9 +747,9 @@ void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& /*opt
         const godot::String at = preview.at_marker_option();
         if (at.is_empty()) {
             TerrainChecker::info("largest settlement " + godot::String::num_int64(m[order.front()].rec.id));
-            const terrain::FlyState first = own_jump(m[order[0]], n, scene.heights);
-            const terrain::FlyState second = own_jump(m[order[order.size() > 1 ? 1 : 0]], n, scene.heights);
-            const terrain::FlyState last = own_jump(m[order.back()], n, scene.heights);
+            const terrain::FlyState first = own_jump(m[order[0]], n, scene.field);
+            const terrain::FlyState second = own_jump(m[order[order.size() > 1 ? 1 : 0]], n, scene.field);
+            const terrain::FlyState last = own_jump(m[order.back()], n, scene.field);
             bool ok = preview.jump_position() == -1;
             ok = ok && preview.jump_marker(1) && same_view(preview.fly_state(), first);
             ok = ok && preview.jump_marker(1) && same_view(preview.fly_state(), second);
@@ -765,7 +767,7 @@ void run_marker_checks(TerrainPreview& preview, const TerrainCheckOptions& /*opt
             const bool by_id = at.begins_with("settlement:");
             c.check(!by_id || at == "settlement:" + godot::String::num_int64(want.rec.id),
                     "T37 " + at + " names the largest settlement");
-            c.check(same_view(preview.start_state(), own_jump(want, n, scene.heights)),
+            c.check(same_view(preview.start_state(), own_jump(want, n, scene.field)),
                     "T37 --at-marker " + at + ": the start is the jump view of order entry 1");
         }
     }

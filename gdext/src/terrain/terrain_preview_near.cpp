@@ -64,6 +64,16 @@ void compute_slot(NearSlot& s) {
     }
     const auto t1 = std::chrono::steady_clock::now();
     s.usec = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count());
+    if (s.boulders != nullptr) {
+        // V3D-06 11: the cell's boulders on the same task.
+        const auto boulders = terrain::near_boulders(*s.boulders, i, j);
+        for (std::size_t k = 0; k < boulders.size(); ++k) {
+            s.boulder_counts[k] = static_cast<std::uint32_t>(boulders[k].size());
+            s.boulder_buffers[k] = terrain::boulder_buffer(boulders[k]);
+        }
+        const auto t2 = std::chrono::steady_clock::now();
+        s.boulder_usec = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
+    }
 }
 
 // 4.1: the near tier's visibility range of a kind and LOD.
@@ -104,10 +114,20 @@ void TerrainPreview::near_open() {
     if (veg_radius_ <= 0.0) {
         return;  // --veg-radius 0: the far tier only
     }
+    if (boulders_on_) {
+        // V3D-06 11: a sibling of NearVegetation; key T does not hide it.
+        boulders_root_ = memnew(godot::Node3D);
+        boulders_root_->set_name("NearBoulders");
+        add_child(boulders_root_);
+        build_boulder_meshes();
+    }
     terrain::NearParams params;
     params.radius = veg_radius_;
     params.max_in_flight = veg_threads_ > 0 ? veg_threads_ : 2;
-    near_ = std::make_unique<terrain::NearCells>(terrain::build_near_grid(*scene_.layout, scene_.heights), params);
+    near_ = std::make_unique<terrain::NearCells>(
+        terrain::build_near_grid(*scene_.layout, scene_.heights, &scene_.field,
+                                 boulders_on_ ? terrain::NEAR_BOX_BELOW_BOULDERS : terrain::NEAR_BOX_BELOW),
+        params);
 }
 
 void TerrainPreview::near_close() {
@@ -122,6 +142,14 @@ void TerrainPreview::near_close() {
     }
     near_results_.clear();
     near_nodes_.clear();
+    boulder_nodes_.clear();
+    if (boulders_root_ != nullptr) {
+        if (!exiting_ && boulders_root_->get_parent() == this) {
+            remove_child(boulders_root_);
+            boulders_root_->queue_free();
+        }
+        boulders_root_ = nullptr;
+    }
     if (near_root_ != nullptr) {
         // Inside the tree's own exit the children go with the tree.
         if (!exiting_ && near_root_->get_parent() == this) {
@@ -149,6 +177,19 @@ void TerrainPreview::finish_slot(NearSlot& slot) {
             result.counts[k] = slot.counts[k];
             n += slot.counts[k];
         }
+        std::uint64_t nb = 0;
+        for (std::size_t k = 0; k < result.boulder_buffers.size(); ++k) {
+            result.boulder_buffers[k] = std::move(slot.boulder_buffers[k]);
+            result.boulder_counts[k] = slot.boulder_counts[k];
+            nb += slot.boulder_counts[k];
+        }
+        if (slot.boulders != nullptr) {
+            boulder_usec_sum_ += slot.boulder_usec;
+            ++boulder_cells_;
+            boulder_count_ += nb;
+            boulder_cell_max_ = std::max(boulder_cell_max_, nb);
+        }
+        n += nb;  // 11: boulders count toward max_attach_instances
         near_results_[q] = std::move(result);
         near_->computed(q, n);
         compute_usec_sum_ += slot.usec;
@@ -214,6 +255,7 @@ void TerrainPreview::near_frame() {
         fill.inputs = &veg_inputs_;
         fill.m = near_->grid().m;
         fill.tint_mode = tier_colours_ ? 1 : 0;
+        fill.boulders = boulders_on_ ? &boulder_inputs_ : nullptr;
         if (veg_threads_ == 0) {
             // --veg-threads 0: on the main thread, at most 2 cells a frame.
             compute_slot(fill);
@@ -283,18 +325,64 @@ void TerrainPreview::near_attach(int q, NearResult& result) {
             nodes.push_back(node);
         }
     }
+    if (boulders_root_ == nullptr) {
+        return;
+    }
+    // V3D-06 11: per shape with boulders and LOD, b<q>s<shape>l<lod>.
+    std::vector<godot::MultiMeshInstance3D*>& rocks = boulder_nodes_[q];
+    for (int shape = 0; shape < terrain::BOULDER_SHAPES; ++shape) {
+        const auto k = static_cast<std::size_t>(shape);
+        const std::uint32_t n = result.boulder_counts[k];
+        if (n == 0) {
+            continue;
+        }
+        godot::PackedFloat32Array buffer;
+        buffer.resize(static_cast<int64_t>(result.boulder_buffers[k].size()));
+        std::memcpy(buffer.ptrw(), result.boulder_buffers[k].data(), result.boulder_buffers[k].size() * sizeof(float));
+        for (int lod = 0; lod < 2; ++lod) {
+            godot::Ref<godot::MultiMesh> mm;
+            mm.instantiate();
+            mm->set_transform_format(godot::MultiMesh::TRANSFORM_3D);
+            mm->set_use_colors(true);
+            mm->set_mesh(boulder_meshes_[k][static_cast<std::size_t>(lod)]);
+            mm->set_instance_count(static_cast<int32_t>(n));
+            mm->set_buffer(buffer);
+            mm->set_custom_aabb(aabb);
+            godot::MultiMeshInstance3D* node = memnew(godot::MultiMeshInstance3D);
+            node->set_name("b" + godot::String::num_int64(q) + "s" + godot::String::num_int64(shape) + "l" +
+                           godot::String::num_int64(lod));
+            node->set_multimesh(mm);
+            node->set_cast_shadows_setting(godot::GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+            node->set_custom_aabb(aabb);
+            node->set_visibility_range_begin(lod == 0 ? 0.0f : terrain::BOULDER_LOD0_END);
+            node->set_visibility_range_end(lod == 0 ? terrain::BOULDER_LOD0_END : terrain::BOULDER_LOD1_END);
+            node->set_visibility_range_end_margin(lod == 0 ? 0.0f : terrain::BOULDER_FADE);
+            node->set_visibility_range_fade_mode(lod == 0 ? godot::GeometryInstance3D::VISIBILITY_RANGE_FADE_DISABLED
+                                                          : godot::GeometryInstance3D::VISIBILITY_RANGE_FADE_SELF);
+            node->set_layer_mask(1);
+            boulders_root_->add_child(node);
+            rocks.push_back(node);
+        }
+    }
 }
 
 void TerrainPreview::near_free_nodes(int q) {
     const auto it = near_nodes_.find(q);
-    if (it == near_nodes_.end()) {
-        return;
+    if (it != near_nodes_.end()) {
+        for (godot::MultiMeshInstance3D* node : it->second) {
+            near_root_->remove_child(node);
+            node->queue_free();
+        }
+        near_nodes_.erase(it);
     }
-    for (godot::MultiMeshInstance3D* node : it->second) {
-        near_root_->remove_child(node);
-        node->queue_free();
+    const auto rocks = boulder_nodes_.find(q);
+    if (rocks != boulder_nodes_.end() && boulders_root_ != nullptr) {
+        for (godot::MultiMeshInstance3D* node : rocks->second) {
+            boulders_root_->remove_child(node);
+            node->queue_free();
+        }
+        boulder_nodes_.erase(rocks);
     }
-    near_nodes_.erase(it);
 }
 
 bool TerrainPreview::near_settled() const { return !near_ || near_->settled(); }
@@ -324,7 +412,7 @@ terrain::FlyState TerrainPreview::forest_start() const {
     const terrain::Vec2 w = terrain::cell_to_world(*scene_.layout, scene_.forest.x, scene_.forest.y);
     s.x = w.x;
     s.z = w.z;
-    s.y = terrain::forest_start_altitude(terrain::ground_clamp(*scene_.layout, scene_.heights, w.x, w.z));
+    s.y = terrain::forest_start_altitude(terrain::ground_top(scene_.field, w.x, w.z));
     s.heading_deg = scene_.forest.north ? 0.0f : 180.0f;
     s.pitch_deg = -8.0f;
     return s;
@@ -344,6 +432,13 @@ void TerrainPreview::print_tiers_line() {
                                    num(static_cast<std::uint64_t>(veg_radius_)), " m, ", settled, ", near cells ",
                                    num(k.filled), ", near instances ", num(k.instances), ", memory static ",
                                    to_godot(terrain::one_decimal(static_mb())), " MB");
+    if (boulders_on_) {
+        // V3D-06 13.3.
+        const std::uint64_t mean = boulder_cells_ > 0 ? boulder_usec_sum_ / boulder_cells_ : 0;
+        godot::UtilityFunctions::print("UNMAPPED-TERRAIN-BENCH: boulders: near ", num(boulder_count_), " in ",
+                                       num(boulder_cells_), " cells, per cell max ", num(boulder_cell_max_),
+                                       "; compute mean ", num(mean), " us");
+    }
 }
 
 void TerrainPreview::start_forest_flight(int index) {
@@ -430,7 +525,7 @@ void TerrainPreview::bench_phases(float dt) {
             fly_.x = s.x;
             const float along = std::min(forest_done_, forest_length_);
             fly_.z = scene_.forest.north ? s.z - along : s.z + along;
-            fly_.y = terrain::ground_clamp(*scene_.layout, scene_.heights, fly_.x, fly_.z) + 60.0f;
+            fly_.y = terrain::ground_top(scene_.field, fly_.x, fly_.z) + 60.0f;
             apply_camera();
             if (forest_done_ >= forest_length_) {
                 finish_forest_flight();

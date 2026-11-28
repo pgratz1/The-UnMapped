@@ -79,7 +79,11 @@ struct OwnBox {
     double x0 = 0, x1 = 0, z0 = 0, z1 = 0, bot = 0, top = 0;
 };
 
-std::vector<OwnBox> own_boxes(int n, const std::vector<float>& h) {
+// V3D-06 10: over the field's vertices of the same area (f = 1: V3D-03's).
+std::vector<OwnBox> own_boxes(int n, const terrain::GroundField& field, double below) {
+    const std::vector<float>& h = field.heights;
+    const int f = field.f;
+    const int fn = field.layout.n;
     const int m = n / 16;
     std::vector<OwnBox> out(static_cast<std::size_t>(m) * static_cast<std::size_t>(m));
     for (int j = 0; j < m; ++j) {
@@ -91,16 +95,16 @@ std::vector<OwnBox> own_boxes(int n, const std::vector<float>& h) {
             b.z1 = b.z0 + 256.0;
             double lo = 1e30;
             double hi = -1e30;
-            for (int y = 16 * j - 1; y <= 16 * j + 16; ++y) {
-                for (int x = 16 * i - 1; x <= 16 * i + 16; ++x) {
-                    const int cx = std::clamp(x, 0, n - 1);
-                    const int cy = std::clamp(y, 0, n - 1);
-                    const auto v = static_cast<double>(h[static_cast<std::size_t>(cy) * static_cast<std::size_t>(n) + static_cast<std::size_t>(cx)]);
+            for (int y = (16 * j - 1) * f; y <= (16 * j + 16) * f; ++y) {
+                for (int x = (16 * i - 1) * f; x <= (16 * i + 16) * f; ++x) {
+                    const int cx = std::clamp(x, 0, fn - 1);
+                    const int cy = std::clamp(y, 0, fn - 1);
+                    const auto v = static_cast<double>(h[static_cast<std::size_t>(cy) * static_cast<std::size_t>(fn) + static_cast<std::size_t>(cx)]);
                     lo = std::min(lo, v);
                     hi = std::max(hi, v);
                 }
             }
-            b.bot = lo - 2.0;
+            b.bot = lo - below;
             b.top = hi + 22.0;
         }
     }
@@ -161,6 +165,8 @@ std::map<int, std::array<std::vector<Key>, 5>> far_index(const TerrainPreview& p
         return out;
     }
     const int m = n / 16;
+    const terrain::Layout& fl = preview.scene().field.layout;
+    const double region_m = static_cast<double>(fl.region_size) * static_cast<double>(fl.spacing);
     const godot::TypedArray<godot::Vector2i> locations = data->call("get_region_locations");
     for (int64_t r = 0; r < locations.size(); ++r) {
         const godot::Vector2i loc = locations[r];
@@ -183,8 +189,8 @@ std::map<int, std::array<std::vector<Key>, 5>> far_index(const TerrainPreview& p
                 const godot::Array xforms = triple[0];
                 for (int64_t t = 0; t < xforms.size(); ++t) {
                     const godot::Transform3D xf = xforms[t];
-                    const double X = static_cast<double>(xf.origin.x) + 4096.0 * loc.x;
-                    const double Z = static_cast<double>(xf.origin.z) + 4096.0 * loc.y;
+                    const double X = static_cast<double>(xf.origin.x) + region_m * loc.x;
+                    const double Z = static_cast<double>(xf.origin.z) + region_m * loc.y;
                     const int cx = std::clamp(static_cast<int>(std::floor((X + 8.0 * n + 8.0) / 16.0)), 0, n - 1);
                     const int cz = std::clamp(static_cast<int>(std::floor((Z + 8.0 * n + 8.0) / 16.0)), 0, n - 1);
                     out[(cz / 16) * m + cx / 16][static_cast<std::size_t>(id)].push_back(key_of(X, Z));
@@ -218,7 +224,7 @@ public:
         const double N = n_;
         auto P = [N](double cx, double cy) { return std::pair<double, double>{16.0 * (cx - N / 2), 16.0 * (cy - N / 2)}; };
         points_ = {P(N / 2, N / 2), P(N / 2, N / 4), P(3 * N / 4, N / 4), P(N / 16, 15 * N / 16), P(N / 2, N / 2)};
-        boxes_ = own_boxes(n_, scene.heights);
+        boxes_ = own_boxes(n_, scene.field, preview.boulders_on() ? 4.0 : 2.0);
         tint_ = preview.tier_colours_option();
         threads_ = preview.veg_threads();
         far_ = far_index(preview, n_, far_totals_);
@@ -234,7 +240,7 @@ public:
         }
         s.x = static_cast<float>(x);
         s.z = static_cast<float>(z);
-        s.y = terrain::ground_clamp(*preview.scene().layout, preview.scene().heights, s.x, s.z) + 60.0f;
+        s.y = terrain::ground_top(preview.scene().field, s.x, s.z) + 60.0f;
         s.heading_deg = static_cast<float>(heading_);
         s.pitch_deg = -10.0f;
         preview.set_fly_state(s);
@@ -369,7 +375,7 @@ private:
             for (const double off : {128.0, -128.0}) {
                 const auto x = static_cast<float>(cur_.first + off);
                 const auto z = static_cast<float>(cur_.second);
-                const double y = static_cast<double>(terrain::ground_clamp(*scene.layout, scene.heights, x, z)) + 60.0;
+                const double y = static_cast<double>(terrain::ground_top(scene.field, x, z)) + 60.0;
                 keep = keep && own_d(boxes_[static_cast<std::size_t>(q)], static_cast<double>(x), y, static_cast<double>(z)) <= RH;
             }
             if (keep) {
@@ -592,6 +598,49 @@ private:
                 std::sort(want_keys.begin(), want_keys.end());
                 bad_partition += together == want_keys ? 0u : 1u;
             }
+        }
+        // V3D-06 T47: each filled cell's boulder nodes against near_boulders.
+        if (preview.boulders_on()) {
+            godot::Node3D* broot = preview.boulders_root();
+            std::size_t b_expected = 0;
+            std::size_t b_missing = 0;
+            std::size_t b_bad = 0;
+            std::uint64_t b_count = 0;
+            for (const int q : filled) {
+                const auto bs = terrain::near_boulders(preview.boulder_inputs(), q % m, q / m);
+                for (int shape = 0; shape < terrain::BOULDER_SHAPES; ++shape) {
+                    const auto& list = bs[static_cast<std::size_t>(shape)];
+                    if (list.empty()) {
+                        continue;
+                    }
+                    b_count += list.size();
+                    const std::vector<float> want_buf = terrain::boulder_buffer(list);
+                    for (int lod = 0; lod < 2; ++lod) {
+                        ++b_expected;
+                        const godot::String name = "b" + godot::String::num_int64(q) + "s" + godot::String::num_int64(shape) +
+                                                   "l" + godot::String::num_int64(lod);
+                        auto* node = broot != nullptr ? godot::Object::cast_to<godot::MultiMeshInstance3D>(
+                                                            broot->get_node_or_null(godot::NodePath(name)))
+                                                      : nullptr;
+                        if (node == nullptr || node->get_multimesh().is_null()) {
+                            ++b_missing;
+                            continue;
+                        }
+                        const godot::Ref<godot::MultiMesh> mm = node->get_multimesh();
+                        const godot::PackedFloat32Array got = mm->get_buffer();
+                        const bool ok = static_cast<std::size_t>(mm->get_instance_count()) == list.size() &&
+                                        static_cast<std::size_t>(got.size()) == want_buf.size() &&
+                                        std::memcmp(got.ptr(), want_buf.data(), want_buf.size() * sizeof(float)) == 0;
+                        b_bad += ok ? 0u : 1u;
+                    }
+                }
+            }
+            const int64_t b_children = broot != nullptr ? broot->get_child_count() : -1;
+            c_.check(broot != nullptr && b_missing == 0 && b_bad == 0 && b_children == static_cast<int64_t>(b_expected),
+                     "T47 at " + where + ": NearBoulders holds b<q>s<shape>l<lod> per filled cell, shape and LOD with the "
+                     "check's own boulders (" + num(b_count) + " boulders, " + num(b_expected) + " nodes, " +
+                     num(b_missing) + " missing, " + num(b_bad) + " differ, " + godot::String::num_int64(b_children) +
+                     " children)");
         }
         const int64_t children = root != nullptr ? root->get_child_count() : -1;
         c_.check(bad_missing == 0 && children == static_cast<int64_t>(nodes_expected),
