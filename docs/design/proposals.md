@@ -1662,3 +1662,27 @@ Status: decided by the lead. Calibration found that 29 to 31% of divine champion
 
 Status: decided by the lead. Integration defects: the divine growth factor applies to the growth term before the capacity cap (engine fixed); a creator god's cult spreads by camp, as any god's (the engine stood, spec 6.8 amended, in line with Paul's answer that cross-camp cults are rare); the pantheon has a finishing step in the final year that closes the cults of realms ended that year; a cult founded in a step spreads, is adopted or suppressed only from the next step; both history readers use one problem function. Readings P-R22 to P-R29 of the integration notes stand as built (P-R29: a ruler is not named from a deed once the realm has ended). Audit: A1 (in a quiet step divine growth uses the step's first year) is accepted as the reading of 7.1. Validation: goblin regions median 14 on seeds 100 to 199 against the guard of 12, no realm ended by the deep in 200 worlds against the floor of 1 in 200, and the option-set overshoots are reported and carried, not tuned. World critic: F1 (acts without echo) was checked against the cause table and is narrower than stated (see the lead note in the review); F1 to F10 are follow-ups for the next change that alters world bytes, the marker size (F10) for the viewer.
 
+### Schema 15: artifacts (P5-11)
+
+- Date: 2026-11-28
+- Raised by: spec writer (P5-11)
+- Design doc section: 5 (artifacts), 6 (tables), hard rule 7
+- Problem: artifacts need a row each, a kind, a maker and a chain of holders and places; design 6 lists no artifact table, and P5-00 6.1 plans `artifact` and `artifact_holding` with entity type 10.
+- Proposal: schema 14 to 15 with generator 0.31.0 (`docs/specs/p5-11-artifacts.md` 9). New tables after `faction` (40 tables): `artifact_kind` (an echo of the data kind `artifact`, as `monster_kind`: key, title, noun, class, battle, hunt and claim values), `artifact` (name, kind, home realm, maker kind, maker figure or god, maker realm and site, made year and event, occasion event, deep metal, status at the end) and `artifact_holding` (artifact, seq, from and to years, state kept, borne, hoarded, lost, buried or enshrined, holder type and id, the place for fixed-place states, opening and closing events; WITHOUT ROWID). `figure.role` gains 8 smith; entity type 10 `artifact` comes into use; event kinds 111 to 116. Readers refuse 14. For design 6: add `artifact` and `artifact_holding` to the table list.
+- Interim choice: the spec's text; the lead approves with the spec.
+- Status: open
+
+### History: P5-11 artifacts (readings)
+
+- Date: 2026-11-28
+- Raised by: spec writer (P5-11)
+- Design doc section: 2 (scope: "artifacts with lineages" deferred), 5 (artifacts, dwarves as forgers), 9 (ruler quest lines)
+- Problem: design 5 says artifacts are "made in response to conflicts" with "a maker, an occasion and a chain of holders and places", but not who the makers are, which events count as occasions, how artifacts move, whether they can be destroyed or what they do; design 2 defers "artifacts with lineages" while design 5 asks for a chain of holders.
+- Proposal (readings taken by the spec): (1) occasions are data (event kind and role): wars declared, sacks, conquests, disputed thrones, a hunt begun, a town overrun, a horror woken in the deep, and two acts of the gods (a champion raised, a cult founded), which read as conflict in the wide sense; (2) makers are named smiths (a new figure role) at a forge, preferably a dwarven hold with a deep mine, which forges also for allies and trade partners; casters at their towers; gods for their champions and temples; (3) a chain of holdings with six states, moved by the log's events (falls in battle, sacks, conquests, a hero slain, a monster slain, deaths and burials, a won war, a cult's flight), never destroyed, and lost things stay lost in history for the player to find; (4) small effects: a general's arms in the win chance, a hero's in the hunt, a home realm's strain toward the holder of its regalia or relic with the declaration citing the loss, a hunt motive against a hoarding monster; (5) design 2's "artifacts with lineages" is read as deferring lineages in play (inheritance rules, artifacts in the player's hands with their history acted on), not the history's record of holders.
+- Interim choice: as the spec; Paul's questions Q-P5-11-1 to 7 are in its section 21 with recommendations, and the build follows them meanwhile.
+- Status: open
+
+### P5-11 spec r1: lead rulings on its questions L-1 to L-11 (2026-11-28)
+
+Status: decided by the lead. All eleven are approved as the spec recommends: one schema bump to 15 (tables `artifact_kind`, `artifact`, `artifact_holding`, figure role 8 smith, entity type 10); the echo table `artifact_kind`; holdings of a moving holder carry no place; routine moves write no event and cite the triggering event in the holding; the artifacts subsystem runs last, in T3, T4, T6 and Q4; a general's artifacts act on the win chance only; a declaration of war cites the claim's event; the seat snapshot for capital moves within a step; the P5-08 follow-ups taken are the battle that cites a blessing or curse in force (critic F1) and the cool-down on a cult spreading back into a realm that suppressed it (F2), with the one-word name fix (F5), the rest left; event kinds 111 to 116; `raise_maker` beside `raise_divine`. Paul's questions Q-P5-11-1 to 7 are in `docs/questions-for-paul.md`; the build follows the recommendations meanwhile.
+
