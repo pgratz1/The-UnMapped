@@ -15,6 +15,8 @@ occasions = [
     { kind = "cult_founded", role = "civilization", chance_permille = 130, bearer = "site", classes = { arms = 0, armour = 0, regalia = 0, relic = 1000, staff = 1000 } },
     { kind = "tower_founded", role = "civilization", chance_permille = 120, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 0, relic = 0, staff = 1000 } },
     { kind = "book_written", role = "civilization", chance_permille = 40, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 0, relic = 0, staff = 1000 } },
+    { kind = "divine_bless", role = "civilization", chance_permille = 600, bearer = "realm", classes = { arms = 400, armour = 300, regalia = 300, relic = 0, staff = 0 }, god_camp = "evil" },
+    { kind = "cult_adopted", role = "civilization", chance_permille = 500, bearer = "site", classes = { arms = 0, armour = 0, regalia = 0, relic = 1000, staff = 0 }, god_camp = "evil" },
 ]
 forge_chance_permille = 2000
 realm_rest_years = 30
@@ -35,3 +37,7 @@ corrupt_years = 25
 corrupt_permille = 150
 corrupt_camp_permille = { good = 1000, neutral = 1000, evil = 600 }
 corrupt_warlike_permille = 500
+# P5-11 r3 4.3 (6.12): an evil god's arms borne by a general or hero may turn the bearer.
+corrupt_bearer_years = 10
+corrupt_bearer_permille = 300
+corrupt_sack_permille = 500

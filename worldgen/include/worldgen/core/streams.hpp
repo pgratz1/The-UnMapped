@@ -201,8 +201,10 @@ inline constexpr std::string_view hist_artifacts_raid = "hist.artifacts.raid";
 inline constexpr std::string_view hist_names_artifact = "hist.names.artifact";
 // P5-11 r2 3 (stream 128): corruption by an evil artifact (6.11).
 inline constexpr std::string_view hist_artifacts_corrupt = "hist.artifacts.corrupt";
+// P5-11 r3 3 (stream 129): corruption of a bearer (6.12).
+inline constexpr std::string_view hist_artifacts_corrupt_bearer = "hist.artifacts.corrupt_bearer";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 128> all_stream_names = {
+inline constexpr std::array<std::string_view, 129> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -331,6 +333,7 @@ inline constexpr std::array<std::string_view, 128> all_stream_names = {
     hist_artifacts_raid,
     hist_names_artifact,
     hist_artifacts_corrupt,
+    hist_artifacts_corrupt_bearer,
 };
 
 }  // namespace worldgen::streams

@@ -748,6 +748,7 @@ private:
         at.participants = participants;
         at.values = values;
         at.causes = causes;
+        at.relations = t_.relations;
         at.catalogue = &cat;
         if (std::optional<std::string> why = artifact_tables_problem(at)) {
             throw Corrupt{*why};

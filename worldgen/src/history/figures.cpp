@@ -393,6 +393,28 @@ void FiguresSubsystem::lift_corruption(std::int64_t c) {
     r.corrupt_artifact = 0;
 }
 
+void FiguresSubsystem::corrupt_bearer(StepContext& ctx, std::int64_t f, std::int64_t event) {
+    if (!figure_exists(f) || figure(f).status != ALIVE || (figure(f).role != GENERAL && figure(f).role != HERO_ROLE) ||
+        figure(f).bearer_corrupted) {
+        fail("history: figures: corrupt_bearer: figure " + int_text(f) + " cannot be corrupted by event " +
+             int_text(event));
+    }
+    Figure& x = figure(f);
+    x.bearer_corrupted = true;
+    if (x.role != HERO_ROLE) {
+        return;  // a general keeps serving its war
+    }
+    // An outlaw in the wilds: status 2 without host, its place the event's
+    // region (6.9: its death is `how` 2 there); no longer its realm's hero.
+    x.status = IN_EXILE;
+    x.host = 0;
+    x.host_region = ctx.event_region(event);
+    const auto ci = static_cast<std::size_t>(x.civ - 1);
+    if (x.civ >= 1 && ci < hero_.size() && hero_[ci] == f) {
+        hero_[ci] = 0;
+    }
+}
+
 std::int64_t FiguresSubsystem::split_bonus_permille(std::int64_t civ, std::int64_t year) const {
     const Line* l = line_if(civ);
     if (l == nullptr) {
@@ -1888,7 +1910,12 @@ std::int64_t FiguresSubsystem::deed_value(const StepContext& ctx, const Figure& 
         case 9: return f.exiled ? 1 : 0;
         case 10: return f.books;
         case 11: return f.blights;
-        case 12: return f.role == RULER ? f.tally.corrupted : 0;  // P5-11 r2 4.3
+        case 12: {  // P5-11 r2 4.3; r3: generals and heroes by bearer_corrupted
+            if (f.role == RULER) {
+                return f.tally.corrupted;
+            }
+            return (f.role == GENERAL || f.role == HERO_ROLE) && f.bearer_corrupted ? 1 : 0;
+        }
         default: return 0;
     }
 }

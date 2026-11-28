@@ -32,6 +32,7 @@
 namespace worldgen::history {
 
 class AllianceView;
+class DivineView;
 class FiguresSubsystem;
 class FigureView;
 class MonstersSubsystem;
@@ -56,6 +57,15 @@ public:
     // hoard_hunt_permille when monster hoards an artifact of civ (its home, or
     // kept by civ or borne by a figure of civ before the hoard), else 0.
     [[nodiscard]] virtual std::int64_t hoard_motive_permille(std::int64_t monster, std::int64_t civ) const = 0;
+    // r3 7.8: the figure's bearer_corrupted when it is a living general that
+    // bears its corrupting artifact now, else 0 (heroes: 0).
+    [[nodiscard]] virtual std::int64_t bearer_corruption(std::int64_t figure) const {
+        (void)figure;
+        return 0;
+    }
+    // r3 7.8: corrupt_sack_permille, the sack term of a corrupted general
+    // (read only when bearer_corruption is not 0).
+    [[nodiscard]] virtual std::int64_t corrupt_sack_permille() const { return 0; }
 };
 
 // The bound of 5 (H2).
@@ -77,12 +87,14 @@ struct ArtifactKindDef {
 };
 
 // 4.4: an occasion. bearer: 0 realm, 1 general, 2 figure, 3 site; classes in
-// the order arms, armour, regalia, relic, staff.
+// the order arms, armour, regalia, relic, staff; (r4 4.4a) god_camp: -1 any,
+// else the camp code 0 good, 1 neutral, 2 evil.
 struct ArtifactOccasion {
     std::string kind, role;
     std::int64_t chance_permille = 0;
     std::int64_t bearer = 0;
     std::array<std::int64_t, ARTIFACT_CLASS_COUNT> classes{};
+    std::int64_t god_camp = -1;
 
     friend bool operator==(const ArtifactOccasion&, const ArtifactOccasion&) = default;
 };
@@ -101,6 +113,9 @@ struct ArtifactsTuning {
     std::int64_t corrupt_years = 25, corrupt_permille = 150;
     std::array<std::int64_t, 3> corrupt_camp_permille{1000, 1000, 600};
     std::int64_t corrupt_warlike_permille = 500;
+    // r3 4.3 (6.12): the bearer's period and chance, and the sack term of a
+    // corrupted general (7.8).
+    std::int64_t corrupt_bearer_years = 10, corrupt_bearer_permille = 300, corrupt_sack_permille = 500;
 
     friend bool operator==(const ArtifactsTuning&, const ArtifactsTuning&) = default;
 };
@@ -119,6 +134,10 @@ struct ArtifactsStats {
     // r2 6.11: events 117 (and those warlike), corruptions lifted by a move
     // of the artifact, periods evaluated.
     std::int64_t corrupted = 0, corrupted_warlike = 0, lifted = 0, periods = 0;
+    // r3 6.12: events 118 by role, bearer periods evaluated, M15 take-ups;
+    // r4 6.13: events 117 by faith, faith periods evaluated.
+    std::int64_t generals_corrupted = 0, heroes_outlawed = 0, bearer_periods = 0, taken_up_by_heroes = 0;
+    std::int64_t corrupted_by_faith = 0, faith_periods = 0;
 };
 
 class ArtifactsSubsystem final : public Subsystem, public ArtifactView {
@@ -137,6 +156,8 @@ public:
     void set_figures(FiguresSubsystem* figures) noexcept { figures_ = figures; }
     void set_alliances(const AllianceView* alliances) noexcept { alliances_ = alliances; }
     void set_sites(const MonstersSubsystem* monsters) noexcept { sites_ = monsters; }
+    // r4 7.9: the pantheon's faith reads; without it no faith exposure.
+    void set_divine(const DivineView* divine) noexcept { divine_ = divine; }
 
     [[nodiscard]] std::span<const Step> steps() const override;  // T3, T4, T6, Q4
     void run(StepContext& context) override;
@@ -148,6 +169,8 @@ public:
     [[nodiscard]] std::int64_t claim_permille(std::int64_t home, std::int64_t who) const override;
     [[nodiscard]] std::int64_t claim_event(std::int64_t home, std::int64_t who) const override;
     [[nodiscard]] std::int64_t hoard_motive_permille(std::int64_t monster, std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t bearer_corruption(std::int64_t figure) const override;
+    [[nodiscard]] std::int64_t corrupt_sack_permille() const override { return tuning_.corrupt_sack_permille; }
 
     // The rows of tables artifact_kind, artifact and artifact_holding (9).
     [[nodiscard]] std::vector<db::ArtifactKindRow> artifact_kind_rows() const;
@@ -167,7 +190,8 @@ private:
         std::int64_t region = 0, settlement = 0, site = 0, x = 0, y = 0;
         std::int64_t event = 0, until_event = 0;
         // r2 5, 6.11: the periods of a kept holding evaluated so far (0 at its
-        // opening); used for holdings of state 1 of an evil artifact only.
+        // opening); used for holdings of state 1 of an evil artifact, and
+        // (r3 6.12) of state 2 of an evil artifact borne by a general or hero.
         std::int64_t periods = 0;
     };
     struct Artifact {
@@ -255,6 +279,7 @@ private:
     void on_realm_end(StepContext& context, std::int64_t e, std::int64_t c, std::int64_t k);
     void on_war_end(StepContext& context, std::int64_t e);
     void on_cult_suppressed(StepContext& context, std::int64_t e);
+    void on_hero_rose(StepContext& context, std::int64_t e);  // r3 M15
     void lose_with_realm(StepContext& context, std::int64_t e, std::int64_t c, std::int64_t a);
 
     // r2 6.11 (artifacts_corrupt.cpp): the corruption pass at the end of a
@@ -264,18 +289,34 @@ private:
     void corruption_draws(StepContext& context);
     // Returns false when c has no quiet-step budget left (its periods wait).
     bool corrupt_periods(StepContext& context, std::int64_t civ, std::int64_t artifact);
-    void corrupt(StepContext& context, std::int64_t civ, std::int64_t artifact, std::int64_t temper);
+    // r4 6.13: likewise for the faith exposure of c to the enshrined a.
+    bool faith_periods(StepContext& context, std::int64_t civ, std::int64_t artifact);
+    void corrupt(StepContext& context, std::int64_t civ, std::int64_t artifact, std::int64_t temper,
+                 std::int64_t faith_event);
     [[nodiscard]] bool evil(const Artifact& a) const;
+    [[nodiscard]] std::int64_t god_camp(std::int64_t god) const;  // -1 unknown
+    // r4 6.13: the faith exposure of c to the evil artifact a (enshrined at an
+    // open temple of c's faith whose god is a's): the faith's cult_adopted,
+    // else 0; `since` gets the faith's year.
+    [[nodiscard]] std::int64_t faith_exposure(std::int64_t civ, std::int64_t artifact, std::int64_t* since) const;
+    // r2 6.11 and r4 6.13: whether a exposes c now (kept, or by faith).
+    [[nodiscard]] bool exposes(std::int64_t civ, std::int64_t artifact) const;
+    // r3 6.12 (artifacts_corrupt.cpp): the bearers' draws.
+    void bearer_draws(StepContext& context);
+    void bearer_periods(StepContext& context, std::int64_t artifact);
+    void corrupt_bearer(StepContext& context, std::int64_t figure, std::int64_t civ, std::int64_t artifact,
+                        std::int64_t role);
     [[nodiscard]] std::int64_t civ_camp(const StepContext& context, std::int64_t civ) const;
 
     PeoplesSubsystem& peoples_;
     FiguresSubsystem* figures_ = nullptr;
     const AllianceView* alliances_ = nullptr;
     const MonstersSubsystem* sites_ = nullptr;
+    const DivineView* divine_ = nullptr;
     ArtifactsTuning tuning_;
     std::vector<ArtifactKindDef> kinds_;  // index kind id - 1
     bool prepared_ = false;
-    std::array<std::uint64_t, 7> keys_{};
+    std::array<std::uint64_t, 8> keys_{};
     std::vector<std::pair<std::int64_t, std::int64_t>> god_camps_;   // r2 6.11: (god id, camp), ascending
     std::vector<std::pair<std::int64_t, std::int64_t>> race_camps_;  // (race id, camp), ascending
     std::vector<CultureData> cultures_;  // ascending culture id
@@ -290,6 +331,10 @@ private:
     // The holder indexes (5): kept by civilization, borne by figure, hoarded
     // by monster, each holder id to its artifact ids ascending.
     std::map<std::int64_t, std::vector<std::int64_t>> kept_, borne_, hoarded_;
+    // r4 6.13: the faith exposures, (artifact, civ) to (origin year, periods).
+    std::map<std::pair<std::int64_t, std::int64_t>, std::pair<std::int64_t, std::int64_t>> exposures_;
+    // r3 5: per corrupted figure, its bearer_corrupted and the artifact.
+    std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> bearer_corrupt_;
     std::int64_t cursor_ = 1;
     ArtifactsStats stats_;
 };

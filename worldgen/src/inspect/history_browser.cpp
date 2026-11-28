@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 117> GROUPS = {{
+constexpr std::array<GroupRow, 118> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -171,6 +171,7 @@ constexpr std::array<GroupRow, 117> GROUPS = {{
     {"artifact_recovered", EventGroup::artifacts},
     {"artifact_buried", EventGroup::artifacts},
     {"artifact_corrupted", EventGroup::artifacts},  // r2 11.1: kind 117
+    {"bearer_corrupted", EventGroup::artifacts},    // r3 11.1: kind 118
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {

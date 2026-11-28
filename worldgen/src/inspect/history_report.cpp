@@ -210,34 +210,42 @@ std::vector<const db::FigureRow*> rulers_of(const history::HistoryTables& t, Id 
     return out;
 }
 
-// P5-11 r2 10 item 8: an event 117 (artifact_corrupted), read by the
-// catalogue's roles and value.
+// P5-11 r2 10 item 8: an event 117 (artifact_corrupted), or (r3 10 item 9)
+// an event 118 (bearer_corrupted, figure not 0, temper 0), read by the
+// catalogue's roles and values.
 struct Corruption {
-    Id event = 0, year = 0, artifact = 0, civ = 0, temper = 0;
+    Id event = 0, year = 0, artifact = 0, civ = 0, temper = 0, figure = 0;
 };
 
-// Every event 117, ascending id.
+// Every event 117 and 118, ascending id.
 std::vector<Corruption> corruptions(const HistoryView& v) {
     std::vector<Corruption> out;
     const history::KindDef* k = v.catalogue().find("artifact_corrupted");
-    const history::RoleDef* ra = k != nullptr ? k->find_role("artifact") : nullptr;
-    const history::RoleDef* rc = k != nullptr ? k->find_role("civilization") : nullptr;
-    if (ra == nullptr || rc == nullptr) {
-        return out;
-    }
-    const std::int64_t ts = k->value_seq("temper");
+    const history::KindDef* kb = v.catalogue().find("bearer_corrupted");
+    const auto seq_of = [](const history::KindDef* kind, std::string_view role) -> std::int64_t {
+        const history::RoleDef* r = kind != nullptr ? kind->find_role(role) : nullptr;
+        return r != nullptr ? r->seq : -1;
+    };
+    const std::int64_t ts = k != nullptr ? k->value_seq("temper") : 0;
     for (const HistoryView::Event& e : v.events()) {
-        if (e.row.kind != k->id) {
+        const bool ruler = k != nullptr && e.row.kind == k->id;
+        const bool bearer = kb != nullptr && e.row.kind == kb->id;
+        if (!ruler && !bearer) {
             continue;
         }
+        const history::KindDef* kind = ruler ? k : kb;
+        const std::int64_t sa = seq_of(kind, "artifact");
+        const std::int64_t sc = seq_of(kind, "civilization");
+        const std::int64_t sf = bearer ? seq_of(kind, "figure") : -1;
         Corruption c;
         c.event = e.row.id;
         c.year = e.row.year;
         for (const db::EventParticipantRow& p : e.participants) {
-            c.artifact = p.role == ra->seq ? p.entity_id : c.artifact;
-            c.civ = p.role == rc->seq ? p.entity_id : c.civ;
+            c.artifact = p.role == sa ? p.entity_id : c.artifact;
+            c.civ = p.role == sc ? p.entity_id : c.civ;
+            c.figure = p.role == sf ? p.entity_id : c.figure;
         }
-        if (ts >= 1 && static_cast<std::size_t>(ts) <= e.values.size()) {
+        if (ruler && ts >= 1 && static_cast<std::size_t>(ts) <= e.values.size()) {
             c.temper = e.values[static_cast<std::size_t>(ts - 1)];
         }
         out.push_back(c);
@@ -314,9 +322,19 @@ BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, con
     // the ruled row open at the event).
     if (f.role == 1) {
         for (const Corruption& x : corruptions(v)) {
-            if (x.civ == f.civ && v.ruler_at_event(x.civ, x.event) == f.id) {
+            if (x.figure == 0 && x.civ == f.civ && v.ruler_at_event(x.civ, x.event) == f.id) {
                 deed();
                 l.push_back(lit("corrupted to " + std::string(history::figure_temper_word(x.temper)) + " by "));
+                l.push_back(Segment{SegmentKind::entity, std::string(), 10, x.artifact});
+            }
+        }
+    }
+    // r3 10 item 9: a general's or hero's corruption.
+    if (f.role == 3 || f.role == 4) {
+        for (const Corruption& x : corruptions(v)) {
+            if (x.figure == f.id) {
+                deed();
+                l.push_back(lit("corrupted by "));
                 l.push_back(Segment{SegmentKind::entity, std::string(), 10, x.artifact});
             }
         }
@@ -835,6 +853,10 @@ BlockLine corrupted_line(const HistoryView& v, Id a) {
         }
         l.push_back(lit(std::string(first ? "" : "; ") + num(x.year) + " "));
         first = false;
+        if (x.figure != 0) {  // r3: "<year> f<id> <name> of c<id> <name> e<id>"
+            l.push_back(named(v, 6, x.figure));
+            l.push_back(lit(" of "));
+        }
         l.push_back(named(v, 3, x.civ));
         l.push_back(lit(" "));
         l.push_back(event_ref(x.event));
@@ -2641,13 +2663,19 @@ private:
         for (const auto& [key, value] : d_.stats) {
             changed = key == "artifacts_changed_hands" ? value : changed;
         }
+        std::int64_t rulers_turned = 0;
+        std::int64_t bearers_turned = 0;
+        for (const Corruption& x : corruptions(v_)) {  // r3 10 item 9
+            rulers_turned += x.figure == 0 ? 1 : 0;
+            bearers_turned += x.figure != 0 ? 1 : 0;
+        }
         line("artifacts: " + num(static_cast<std::int64_t>(t_.artifacts.size())) + " (kept " + num(by_state[1]) +
              ", borne " + num(by_state[2]) + ", hoarded " + num(by_state[3]) + ", lost " + num(by_state[4]) +
              ", buried " + num(by_state[5]) + ", enshrined " + num(by_state[6]) + "); made by smiths " +
              num(by_maker[1] + by_maker[2]) + " (for other realms " + num(by_maker[2]) + "), casters " +
              num(by_maker[3]) + ", gods " + num(by_maker[4]) + "; of deep iron " + num(deep) + "; changed hands " +
-             num(changed) + "; evil " + num(evil) + ", rulers corrupted " +
-             num(static_cast<std::int64_t>(corruptions(v_).size())));
+             num(changed) + "; evil " + num(evil) + ", rulers corrupted " + num(rulers_turned) +
+             ", bearers corrupted " + num(bearers_turned));
         std::vector<const db::ArtifactRow*> shown;
         for (const db::ArtifactRow& a : t_.artifacts) {
             shown.push_back(&a);

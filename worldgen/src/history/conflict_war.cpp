@@ -514,8 +514,19 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
         ConflictWar& war = wars_[i];  // r10 20.15 item 1: the people taken, before the toll
         war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], state.settlement(t).population);
     }
-    const std::int64_t sack_pm =
-        std::min<std::int64_t>(1000, checked_add(tuning_.sack_base, floor_div(checked_mul(h, tuning_.sack_hostility), 1000)));
+    // P5-11 r3 7.8: a side led by a corrupted general who bears the
+    // corrupting artifact sacks more often, and the sack cites him.
+    std::int64_t butcher = 0;
+    if (figures_ != nullptr && artifacts_ != nullptr) {
+        if (const std::int64_t g = figures_->general_of(w, x).figure; g != 0) {
+            butcher = artifacts_->bearer_corruption(g);
+        }
+    }
+    std::int64_t sack_sum = checked_add(tuning_.sack_base, floor_div(checked_mul(h, tuning_.sack_hostility), 1000));
+    if (butcher != 0) {
+        sack_sum = checked_add(sack_sum, artifacts_->corrupt_sack_permille());
+    }
+    const std::int64_t sack_pm = std::min<std::int64_t>(1000, sack_sum);
     const bool sack = chance_pm(ctx.draw(keys_[SACK], word(w), word(t), 0), sack_pm);
     std::int64_t ev = 0;
     if (sack) {
@@ -530,6 +541,10 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
         e.participants = {civ_role("attacker", x), civ_role("defender", y)};
         e.values = {dead, p - dead};
         e.causes = {siege_event};
+        if (butcher != 0 && butcher != siege_event) {
+            e.causes.push_back(butcher);
+            std::stable_sort(e.causes.begin(), e.causes.end());
+        }
         if (capital) {
             e.salience = tuning_.capital_sacked_salience;
         }

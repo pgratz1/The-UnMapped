@@ -67,6 +67,34 @@ void ArtifactsSubsystem::moves(StepContext& ctx, std::int64_t e, std::string_vie
         on_war_end(ctx, e);
     } else if (k == "cult_suppressed") {
         on_cult_suppressed(ctx, e);
+    } else if (k == "hero_rose") {
+        on_hero_rose(ctx, e);
+    }
+}
+
+// r3 M15: a newly risen hero takes up the smallest-id evil arms, then
+// armour, its realm keeps; only while corrupt_bearer_permille is above 0 (I2).
+void ArtifactsSubsystem::on_hero_rose(StepContext& ctx, std::int64_t e) {
+    if (tuning_.corrupt_bearer_permille <= 0) {
+        return;
+    }
+    const std::int64_t f = ctx.event_participant(e, "figure");
+    const std::int64_t c = ctx.event_participant(e, "civilization");
+    if (!figure_alive(f)) {
+        return;
+    }
+    for (const std::int64_t cls : {static_cast<std::int64_t>(ARMS), static_cast<std::int64_t>(ARMOUR)}) {
+        if (bears_class(f, cls)) {
+            continue;
+        }
+        for (const std::int64_t a : held_by(KEPT, c)) {  // a copy, ascending id
+            if (kind_of(artifact(a)).artifact_class == cls && evil(artifact(a))) {
+                move(a, ctx.event_year(e), e, holder(BORNE, FIGURE_TYPE, f));
+                stats_.quiet_moves += 1;
+                stats_.taken_up_by_heroes += 1;
+                break;
+            }
+        }
     }
 }
 

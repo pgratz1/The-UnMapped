@@ -12,9 +12,9 @@
 
 namespace worldgen::history::artifacts_detail {
 
-// The streams of 3 (121 to 126, and r2's 128), index into
+// The streams of 3 (121 to 126, r2's 128 and r3's 129), index into
 // ArtifactsSubsystem's keys.
-enum ArtifactStream : std::size_t { MAKE = 0, CLASS, KIND, TAKE, BURY, RAID, CORRUPT };
+enum ArtifactStream : std::size_t { MAKE = 0, CLASS, KIND, TAKE, BURY, RAID, CORRUPT, CORRUPT_BEARER };
 
 // Entity type codes of the holder columns (6.2).
 inline constexpr std::int64_t CIV_TYPE = static_cast<std::int64_t>(EntityType::civilization);

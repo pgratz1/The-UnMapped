@@ -2175,7 +2175,7 @@ StringGrammar artifact_noun_grammar() noexcept {
 constexpr std::array<std::string_view, 5> ARTIFACT_CLASSES = {"arms", "armour", "regalia", "relic", "staff"};
 
 // 4.4 artifacts_occasion_*: the first failing occasion of the check.
-enum class OccasionCheck : std::uint8_t { kind, role, bearer, classes };
+enum class OccasionCheck : std::uint8_t { kind, role, bearer, classes, god_camp };
 
 std::optional<std::string> check_occasions(const Record& r, OccasionCheck which) {
     const std::vector<Value>& list = r.get_array("occasions");
@@ -2209,6 +2209,18 @@ std::optional<std::string> check_occasions(const Record& r, OccasionCheck which)
                                                  [want](const history::RoleDef& d) { return d.type == want; });
                     if (!has) {
                         return at + "bearer " + bearer + " needs a " + (figure ? "figure" : "site") + " role in " + k;
+                    }
+                }
+                break;
+            }
+            case OccasionCheck::god_camp: {  // r4 4.4a
+                const std::string& camp = o.get_string("god_camp");
+                if (camp != "any" && kind != nullptr) {
+                    const bool has = std::any_of(kind->roles.begin(), kind->roles.end(), [](const history::RoleDef& d) {
+                        return d.type == history::EntityType::god;
+                    });
+                    if (!has) {
+                        return at + "god_camp " + camp + " needs a god role in " + k;
                     }
                 }
                 break;
@@ -2281,6 +2293,8 @@ Schema history_artifacts_schema() {
         Field::required("chance_permille", Type::integer(0, 1000)),
         Field::required("bearer", Type::enumeration({"realm", "general", "figure", "site"})),
         Field::required("classes", Type::record(Schema(std::move(classes)))),
+        // r4 4.4a: the dark gift's camp filter, absent = any.
+        Field::optional("god_camp", Type::enumeration({"any", "good", "neutral", "evil"}), Value::string("any")),
     });
     std::vector<Field> fields{
         Field::required("occasions", Type::array(Type::record(occasion), 0, 32)),
@@ -2305,6 +2319,10 @@ Schema history_artifacts_schema() {
                         Type::record(Schema(std::vector<Field>{i("good", 0, 1000), i("neutral", 0, 1000),
                                                                i("evil", 0, 1000)}))),
         i("corrupt_warlike_permille", 0, 1000),
+        // P5-11 r3 4.3: corruption of a bearer (6.12).
+        i("corrupt_bearer_years", 1, 10000),
+        i("corrupt_bearer_permille", 0, 1000),
+        i("corrupt_sack_permille", 0, 1000),
     };
     std::vector<Check> checks{
         Check{"artifacts_occasion_kind", [](const Record& r) { return check_occasions(r, OccasionCheck::kind); }},
@@ -2312,6 +2330,8 @@ Schema history_artifacts_schema() {
         Check{"artifacts_occasion_bearer", [](const Record& r) { return check_occasions(r, OccasionCheck::bearer); }},
         Check{"artifacts_occasion_classes",
               [](const Record& r) { return check_occasions(r, OccasionCheck::classes); }},
+        Check{"artifacts_occasion_god_camp",
+              [](const Record& r) { return check_occasions(r, OccasionCheck::god_camp); }},
     };
     return Schema(std::move(fields), std::move(checks));
 }

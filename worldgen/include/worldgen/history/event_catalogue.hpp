@@ -409,6 +409,7 @@ struct ArtifactTables {
     std::span<const db::EventParticipantRow> participants;
     std::span<const db::EventValueRow> values;
     std::span<const db::EventCauseRow> causes;
+    std::span<const db::RelationRow> relations;  // r4 9: the faith_of rows of 117 by faith
     const EventCatalogue* catalogue = nullptr;
 };
 [[nodiscard]] std::optional<std::string> artifact_tables_problem(const ArtifactTables& t);

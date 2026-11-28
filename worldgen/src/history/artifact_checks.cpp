@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>
@@ -308,6 +309,30 @@ std::optional<std::string> holding_rows_problem(const ArtifactTables& t, const L
     return std::nullopt;
 }
 
+// r4 9: a holding of state 6 at site s counts for 117's third check when s
+// is open at `year`, its origin_event names a faction k of the artifact's
+// god, and c has a faith_of row of k in force at `year`.
+bool faith_enshrined(const ArtifactTables& t, const Log& log, const db::ArtifactRow& art, std::int64_t s,
+                     std::int64_t c, std::int64_t year) {
+    if (!dense_has(t.sites, s)) {
+        return false;
+    }
+    const db::SiteRow& site = t.sites[static_cast<std::size_t>(s - 1)];
+    if (site.ended_year && *site.ended_year < year) {
+        return false;
+    }
+    const std::int64_t k = log.role(site.origin_event, "faction");
+    if (k == 0 || log.role(site.origin_event, "god") != art.god) {
+        return false;
+    }
+    constexpr auto faction_type = static_cast<std::int64_t>(EntityType::faction);
+    constexpr auto civ_type = static_cast<std::int64_t>(EntityType::civilization);
+    return std::any_of(t.relations.begin(), t.relations.end(), [&](const db::RelationRow& r) {
+        return r.kind == "faith_of" && r.a_type == faction_type && r.a_id == k && r.b_type == civ_type &&
+               r.b_id == c && r.since <= year && (!r.until || *r.until >= year);
+    });
+}
+
 // r2 9: the checks of kind 117 (artifact_corrupted), in their order, after
 // every check above. The artifact exists (the participant check).
 std::optional<std::string> one_corrupted_problem(const ArtifactTables& t, const Log& log, const db::EventRow& e) {
@@ -331,7 +356,10 @@ std::optional<std::string> one_corrupted_problem(const ArtifactTables& t, const 
                                      [](const db::ArtifactHoldingRow& h, std::int64_t x) { return h.artifact < x; });
     const db::ArtifactHoldingRow* kept = nullptr;
     for (auto it = lo; it != t.holdings.end() && it->artifact == a; ++it) {
-        if (it->state == 1 && it->holder == c && it->from_year <= e.year && (!it->to_year || *it->to_year >= e.year)) {
+        const bool in_year = it->from_year <= e.year && (!it->to_year || *it->to_year >= e.year);
+        const bool by_c = (it->state == 1 && it->holder == c) ||
+                          (it->state == 6 && faith_enshrined(t, log, art, it->site, c, e.year));  // r4
+        if (in_year && by_c) {
             kept = &*it;
         }
     }
@@ -344,12 +372,61 @@ std::optional<std::string> one_corrupted_problem(const ArtifactTables& t, const 
     return std::nullopt;
 }
 
+// r3 9: the checks of kind 118 (bearer_corrupted), in their order.
+std::optional<std::string> one_bearer_problem(const ArtifactTables& t, const Log& log, const db::EventRow& e,
+                                              std::set<std::int64_t>& named) {
+    const std::string at = "corrupt table 'event': row " + text(e.id) + ": ";
+    const std::int64_t role = log.value(e.id, "role");
+    const std::int64_t f = log.role(e.id, "figure");
+    const db::FigureRow* fig = dense_has(t.figures, f) ? &t.figures[static_cast<std::size_t>(f - 1)] : nullptr;
+    if ((role != 3 && role != 4) || fig == nullptr || fig->role != role) {
+        return at + "bearer_corrupted role " + text(role) + " is not the figure's";
+    }
+    const std::int64_t a = log.role(e.id, "artifact");
+    if (!dense_has(t.artifacts, a)) {
+        return at + "bearer_corrupted: ar" + text(a) + " is not of an evil god";
+    }
+    const db::ArtifactRow& art = t.artifacts[static_cast<std::size_t>(a - 1)];
+    const std::int64_t g = log.role(e.id, "god");
+    const auto god = std::find_if(t.gods.begin(), t.gods.end(), [g](const db::GodRow& x) { return x.id == g; });
+    if (g == 0 || g != art.god || god == t.gods.end() || god->camp != 2) {
+        return at + "bearer_corrupted: ar" + text(a) + " is not of an evil god";
+    }
+    const auto lo = std::lower_bound(t.holdings.begin(), t.holdings.end(), a,
+                                     [](const db::ArtifactHoldingRow& h, std::int64_t x) { return h.artifact < x; });
+    const db::ArtifactHoldingRow* borne = nullptr;
+    for (auto it = lo; it != t.holdings.end() && it->artifact == a; ++it) {
+        if (it->state == 2 && it->holder == f && it->from_year <= e.year && (!it->to_year || *it->to_year >= e.year)) {
+            borne = &*it;
+        }
+    }
+    if (borne == nullptr) {
+        return at + "bearer_corrupted: ar" + text(a) + " not borne by f" + text(f) + " in " + text(e.year);
+    }
+    if (fig->born > e.year || (fig->died && *fig->died < e.year) || !named.insert(f).second) {
+        return at + "bearer_corrupted: f" + text(f) + " dead or corrupted twice";
+    }
+    if (!log.caused_by(e.id, borne->event) || !log.caused_by(e.id, art.made_event)) {
+        return at + "bearer_corrupted: ar" + text(a) + " does not cite its holding and making";
+    }
+    return std::nullopt;
+}
+
 std::optional<std::string> corrupted_problem(const ArtifactTables& t, const Log& log) {
     for (const db::EventRow& e : t.events) {
         if (log.key(e.id) != "artifact_corrupted") {
             continue;
         }
         if (std::optional<std::string> why = one_corrupted_problem(t, log, e)) {
+            return why;
+        }
+    }
+    std::set<std::int64_t> named;  // r3: figures named by an earlier 118
+    for (const db::EventRow& e : t.events) {
+        if (log.key(e.id) != "bearer_corrupted") {
+            continue;
+        }
+        if (std::optional<std::string> why = one_bearer_problem(t, log, e, named)) {
             return why;
         }
     }

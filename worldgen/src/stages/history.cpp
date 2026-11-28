@@ -128,6 +128,7 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     artifacts.set_figures(&figures);
     artifacts.set_alliances(&alliances);
     artifacts.set_sites(&monsters);
+    artifacts.set_divine(&pantheon);  // P5-11 r4 7.9
     history::EngineConfig config;
     config.awakening = &awakening;
     config.subsystems = {&peoples,   &conflict,  &renaming, &monsters, &relations,

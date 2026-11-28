@@ -148,6 +148,7 @@ void PantheonSubsystem::endings(StepContext& ctx) {
         if (const auto f = faith_of_.find(c); f != faith_of_.end()) {
             const std::int64_t k = f->second.first;
             faith_of_.erase(f);
+            faith_since_.erase(c);
             ctx.state().close_relation(cult_key(k, c, "faith_of"), e);
         }
         for (const std::int64_t k : cults) {
@@ -430,6 +431,7 @@ void PantheonSubsystem::faiths(StepContext& ctx) {
                     temples_.push_back(Temple{s, k, capital, c, ev, true});
                 }
                 faith_of_[c] = {k, ev};
+                faith_since_[c] = ctx.event_year(ev);
                 latest_[{k, c}] = ev;
                 ctx.state().open_relation(cult_key(k, c, "faith_of"), ev);
                 add(g, c, tuning_.faith_points, ev, y);
@@ -535,6 +537,29 @@ void PantheonSubsystem::faiths(StepContext& ctx) {
         add(g, c, -tuning_.suppress_points, ev, y);
         stats_.suppressed += 1;
     }
+}
+
+// --- P5-11 r4 7.9: the faith reads of the artifacts ----------------------------------------------------
+
+DivineView::Faith PantheonSubsystem::faith(std::int64_t civ) const {
+    const auto f = faith_of_.find(civ);
+    if (f == faith_of_.end()) {
+        return {};
+    }
+    const auto since = faith_since_.find(civ);
+    return Faith{f->second.first, since != faith_since_.end() ? since->second : 0, f->second.second};
+}
+
+std::int64_t PantheonSubsystem::faction_god(std::int64_t faction) const {
+    if (faction < 1 || static_cast<std::size_t>(faction) > cults_.size()) {
+        return 0;
+    }
+    return cults_[static_cast<std::size_t>(faction - 1)].god;
+}
+
+std::int64_t PantheonSubsystem::temple_faction(std::int64_t site) const {
+    const auto it = std::find_if(temples_.begin(), temples_.end(), [site](const Temple& t) { return t.site == site; });
+    return it != temples_.end() ? it->cult : 0;
 }
 
 }  // namespace worldgen::history

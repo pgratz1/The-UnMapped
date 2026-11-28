@@ -36,15 +36,16 @@ namespace {
 
 constexpr std::array<Step, 4> STEPS = {Step::t3, Step::t4, Step::t6, Step::q4};
 
-constexpr std::array<std::string_view, 7> STREAM_NAMES = {
-    streams::hist_artifacts_make, streams::hist_artifacts_class, streams::hist_artifacts_kind,
-    streams::hist_artifacts_take, streams::hist_artifacts_bury,  streams::hist_artifacts_raid,
-    streams::hist_artifacts_corrupt,
+constexpr std::array<std::string_view, 8> STREAM_NAMES = {
+    streams::hist_artifacts_make, streams::hist_artifacts_class,   streams::hist_artifacts_kind,
+    streams::hist_artifacts_take, streams::hist_artifacts_bury,    streams::hist_artifacts_raid,
+    streams::hist_artifacts_corrupt, streams::hist_artifacts_corrupt_bearer,
 };
 
 constexpr std::array<std::string_view, ARTIFACT_CLASS_COUNT> CLASS_KEYS = {"arms", "armour", "regalia", "relic",
                                                                            "staff"};
 constexpr std::array<std::string_view, 4> BEARER_KEYS = {"realm", "general", "figure", "site"};
+constexpr std::array<std::string_view, 4> GOD_CAMP_KEYS = {"any", "good", "neutral", "evil"};  // r4 4.4a
 constexpr std::string_view TITLE_SLOT = "{title}";
 
 // Site kinds (P5-02 to P5-08).
@@ -90,6 +91,9 @@ ArtifactsTuning artifacts_tuning_from(const data::ContentSet& content) {
         for (std::size_t i = 0; i < ARTIFACT_CLASS_COUNT; ++i) {
             occ.classes[i] = w.get_int(CLASS_KEYS[i]);
         }
+        if (o.find("god_camp") != nullptr) {  // r4 4.4a: absent = any
+            occ.god_camp = key_index(o.get_string("god_camp"), GOD_CAMP_KEYS) - 1;
+        }
         t.occasions.push_back(std::move(occ));
     }
     t.forge_chance_permille = r.get_int("forge_chance_permille");
@@ -111,6 +115,9 @@ ArtifactsTuning artifacts_tuning_from(const data::ContentSet& content) {
     const data::Record& camp = r.get_record("corrupt_camp_permille");
     t.corrupt_camp_permille = {camp.get_int("good"), camp.get_int("neutral"), camp.get_int("evil")};
     t.corrupt_warlike_permille = r.get_int("corrupt_warlike_permille");
+    t.corrupt_bearer_years = r.get_int("corrupt_bearer_years");
+    t.corrupt_bearer_permille = r.get_int("corrupt_bearer_permille");
+    t.corrupt_sack_permille = r.get_int("corrupt_sack_permille");
     return t;
 }
 
@@ -378,6 +385,13 @@ bool ArtifactsSubsystem::try_make(StepContext& ctx, std::int64_t e, const Artifa
     }
     if (ctx.step() == Step::q4 && ctx.quiet_events_left(c) <= 0) {
         return false;
+    }
+    // r4 4.4a: the camp filter, before the draw (no draw when it fails).
+    if (o.god_camp >= 0) {
+        const std::int64_t g = first_of_type(ctx, e, ctx.event_kind(e), EntityType::god);
+        if (g == 0 || god_camp(g) != o.god_camp) {
+            return false;
+        }
     }
     const std::int64_t forge_civ = forge(c);
     const std::int64_t p = std::min<std::int64_t>(

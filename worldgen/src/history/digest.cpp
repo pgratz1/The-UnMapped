@@ -1865,6 +1865,56 @@ private:
         put("artifacts_corrupting", n_corrupting);
         put("wars_by_corrupted", wars_corrupted);
         put("corrupted_warlike", warlike);
+        // r3 10 item 9: corrupted bearers; r4 10 item 10: dark gifts, faith
+        // relics and rulers turned through their faith.
+        const Id bearer_kind = kind_id("bearer_corrupted");
+        const Id sacked_kind = kind_id("sacked");
+        const Id hero_rose_kind = kind_id("hero_rose");
+        const Id bless_kind = kind_id("divine_bless");
+        const Id adopted_kind = kind_id("cult_adopted");
+        std::vector<Id> bearers;  // the events 118, ascending
+        std::int64_t generals = 0, heroes = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind != bearer_kind) {
+                continue;
+            }
+            bearers.push_back(e.row.id);
+            generals += value_of(e, "role") == 3 ? 1 : 0;
+            heroes += value_of(e, "role") == 4 ? 1 : 0;
+        }
+        std::int64_t sacks_corrupted = 0, by_faith = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == sacked_kind) {
+                bool cites = false;
+                for (const Id c : e.causes) {
+                    cites = cites || std::binary_search(bearers.begin(), bearers.end(), c);
+                }
+                sacks_corrupted += cites ? 1 : 0;
+            } else if (e.row.kind == corrupted_kind) {
+                bool faith = false;
+                for (const Id c : e.causes) {
+                    faith = faith || kind(c) == adopted_kind;
+                }
+                by_faith += faith ? 1 : 0;
+            }
+        }
+        std::int64_t taken_up = 0;
+        for (const db::ArtifactHoldingRow& h : hold) {
+            taken_up += h.state == 2 && kind(h.event) == hero_rose_kind ? 1 : 0;
+        }
+        std::int64_t gifts = 0, relics = 0;
+        for (const db::ArtifactRow& a : arts) {
+            gifts += kind(a.occasion_event) == bless_kind ? 1 : 0;
+            relics += kind(a.occasion_event) == adopted_kind ? 1 : 0;
+        }
+        put("bearers_corrupted", static_cast<std::int64_t>(bearers.size()));
+        put("generals_corrupted", generals);
+        put("heroes_outlawed", heroes);
+        put("sacks_by_corrupted", sacks_corrupted);
+        put("evil_taken_up_by_heroes", taken_up);
+        put("artifacts_dark_gifts", gifts);
+        put("artifacts_faith_relics", relics);
+        put("rulers_corrupted_by_faith", by_faith);
     }
 
     // P5-08 10 item 8: appended at the end, in this order (full only).

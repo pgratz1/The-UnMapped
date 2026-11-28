@@ -276,3 +276,113 @@ For calibration: the limit is the pool, not the chance. Evil god-given artifacts
 relics enshrined at the god's temple (never kept); only arms and regalia given by an evil god and later taken into a
 realm's keeping (or kept from the first holding) are exposed. Raising `corrupt_permille` cannot reach CR0; L-13's
 floor or a wider "evil" (a new rule) is the lead's call.
+
+## Part M (r3 and r4; generator engineer, 2026-11-28, branch `p5/11-spec2`)
+
+Spec r4 4.3, 4.4a, 6.1, 6.12, 6.13, 7.8, 7.9, 8.5, 9 (118, 117 by faith), 10 items 9 and 10, 11.1; lead rulings
+L-18 to L-27 as recommended. Schema stays 15, generator stays 0.31.0.
+
+**Built.** Stream 129 `hist.artifacts.corrupt_bearer` (129 names). `history.artifacts` gains `corrupt_bearer_years`
+10, `corrupt_bearer_permille` 300, `corrupt_sack_permille` 500 (required, after `corrupt_warlike_permille`) and the
+occasion field `god_camp` (optional enum any/good/neutral/evil, default `any`) with the check
+`artifacts_occasion_god_camp` (last of the occasion checks). Shipped rows 13 (`divine_bless.civilization`, 600,
+realm, 400/300/300/0/0, evil) and 14 (`cult_adopted.civilization`, 500, site, relic 1000, evil) appended after
+`book_written`; the two cause words in `artifact_made`; template 118; epithets `the Butcher` (first general entry)
+and `the Forsworn` (first hero entry). The three data files are copied unchanged into `worldgen/tests/data/geo` and
+`geo-small`. Kind 118 in `event_catalogue.cpp` (artifact 1-1, figure 1-1, civilization 1-1, god 1-1; value `role`;
+region 1, settlement 0). `ArtifactView::bearer_corruption` and `corrupt_sack_permille()` (both with defaults 0);
+`DivineView::Faith`, `faith`, `faction_god`, `temple_faction` (defaults); `PantheonSubsystem` implements them
+(`faith_since_`, a new member beside `faith_of_`, holds the faith's year, set and erased with it);
+`stages/history.cpp` calls `artifacts.set_divine(&pantheon)`. `FiguresSubsystem::corrupt_bearer`,
+`Figure::bearer_corrupted`, deed 12 for roles 3 and 4. M15 is `on_hero_rose` in `artifacts_moves.cpp`. The rest is
+in `artifacts_corrupt.cpp`. Conflict's sack term and cause in `conflict_war.cpp` (`fall`). F28's allowance in
+`figure_tables_problem`; the 118 checks and 117's faith allowance in `artifact_checks.cpp`; `ArtifactTables`
+gains `relations` (both readers set it). Report, digest (eight stats), browser (118 in group 10), `schema.md`.
+
+**Order as built.** `ArtifactsSubsystem::run`: the log (for each event ascending: moves, M15 among them for
+`hero_rose`, then the making, with the `god_camp` filter after the Q4 budget test and before the stream-121 draw),
+the seats, then `corruption`:
+
+1. Nothing without the figures seam.
+2. Lifting (T3, T4, T6, Q4): c = 1 .. n alive ascending; a = `reign_brief(c).corrupt_artifact`; lift when a != 0
+   and a no longer exposes c (`exposes`: kept by c, or the faith exposure below). Then every entry of the exposure
+   map ((artifact, civ) order) whose realm has ended or whose faith exposure no longer holds is erased.
+3. Rulers' draws (T3, Q4): c ascending, alive, with a reign; a = 1 .. n ascending, evil only; when kept by c: r2's
+   `corrupt_periods` unchanged; else when `faith_exposure(c, a)`: `faith_periods`. A Q4 without budget stops c.
+   `faith_periods`: origin = max(open holding `from_year`, faith `since`); a missing entry or a changed origin
+   resets the entry to (origin, 0); for j = periods + 1, ...: t = origin + j x `corrupt_years`; t > Y stops; a
+   corruption in force sets periods = j with no draw; Q4 without budget stops c; p as r2;
+   u = pick(draw(key128, t, a, c, 1,000,000 + j), 1000); periods = j; u < p: event 117 with the third cause (the
+   faith's `cult_adopted`), causes ascending and distinct.
+4. Bearers' draws (T3, Q4, after 3): a = 1 .. n ascending, evil, open holding state 2; f the holder; skip unless
+   `brief(f)` alive with role 3 or 4 and f not in `bearer_corrupt_`; c = `brief(f).civ`; for j = periods + 1, ...:
+   t = from + j x `corrupt_bearer_years`; t > Y stops; Q4 and `quiet_events_left(c)` <= 0 stops this artifact
+   (periods unchanged); u = pick(draw(key129, t, a, f, j), 1000); periods = j; u < `corrupt_bearer_permille`:
+   append 118 (region `seat(c)`'s when c is alive and has a seat, else c's home region; settlement 0; causes the
+   holding's event and `made_event`), `bearer_corrupt_[f] = (e, a)`, `figures.corrupt_bearer`, next artifact.
+
+**Readings.**
+
+1. The faith exposure needs the temple open (`site_brief` kind 6, `open`) at the pass; `temple_faction(s)` is the
+   `Temple` row's cult (also for an ended temple; openness is read from the site). `faith(c).since` is the year of
+   the faith's `cult_adopted` (the `faith_of` row's `from_year`).
+2. M15 on `hero_rose` runs before the making of the same event (6.1: moves, then making), so a hero who takes up an
+   evil arm gets the event's own arms only in another class (else they are kept).
+3. A champion (role 6), casters and smiths are never tested; an outlaw (status 2) is skipped by
+   `bearer_corrupt_`, as every corrupted figure.
+4. `corrupt_bearer` is fatal unless status 1: a bearer in exile is not a case that occurs (claimants bear nothing).
+   The outlaw gets `host` 0 and `host_region` = the event's region, so `die` writes `how` 2 there (existing code);
+   `exiled` stays false (no `exiled` event; deed 9 untouched).
+5. `bearer_corruption(g)` is read live by conflict's `fall` through `figures.general_of(w, x)`; the sack cause is
+   appended to `{siege_event}` and sorted.
+6. Report: the count line prints `, bearers corrupted <b>` always (also 0); one list of 117 and 118 in event id
+   order feeds the artifact mark, the `corrupted:` line and the realm part (the realm of a 118 is its
+   `civilization` participant); the general's or hero's deed `corrupted by ar<id> <name>` follows r2's ruler deed.
+7. `evil_taken_up_by_heroes` counts holdings of state 2 whose event is a `hero_rose`; `artifacts_dark_gifts` and
+   `artifacts_faith_relics` count artifacts by their `occasion_event`'s kind; `rulers_corrupted_by_faith` counts
+   events 117 citing a `cult_adopted`.
+8. Reader check, 117 by faith: the state 6 holding counts when its site exists, `ended_year` is NULL or >= the
+   year, the site's `origin_event` has a `faction` participant k and a `god` participant equal to the artifact's
+   god, and a `faith_of` relation (faction k, civ c) has `since` <= year and `until` NULL or >= year. The god is
+   read from the origin event (both `cult_founded` and `cult_adopted` carry it), so no faction rows are needed.
+
+**What the test writer must mirror.** The order above; key offsets; the origin reset; the exposure map erased at
+every lifting (T4 and T6 too); M15 only when `corrupt_bearer_permille` > 0 and only evil kept arms, arms first;
+the bearer test skips the dead, roles other than 3 and 4, and figures already corrupted; the Q4 budget is checked
+per period before the draw. The `artifacts-small` fixture (tests) needs the r3 values of 4.6 (`corrupt_bearer_years`
+2, `corrupt_bearer_permille` 1000, `corrupt_sack_permille` 1000) and every hand-made `history.artifacts` record in
+`worldgen/tests/data/artifacts/` needs the three new required fields: not done here (test files).
+
+**For the auditor.** No reference is held across `ctx.append`: the bearer pass re-reads the holding by index; the
+faith pass re-finds its map entry with `at(key)` after each append (the map is not changed by the append, but the
+entry is re-read anyway). The exposure map is a `std::map` keyed (artifact, civ), erased in key order. Products
+`j x T` and `j x Tb` through `checked_mul`; the faith key is `checked_add(1,000,000, j)` with a fatal bound at j >=
+1,000,000. `temple_faction` is a linear search over `temples_` (no order assumed). The pantheon reads are const.
+I2 with `corrupt_bearer_permille` 0: M15 returns at once, stream 129 is drawn but no event follows, so
+`bearer_corruption` is 0 and the sack chance and causes are unchanged.
+
+**Reading 9 (a defect of r2's pass, fixed here).** In Q4 the figures run their lines through the quiet step's
+years before the artifacts' pass, so `reign_brief(c)` may name a reign that began after Y; an event 117 dated Y
+then names (by the deed) a ruler whose `office_from` is after its `start_event`, and both readers refuse the world
+(`office_from ... after the year of start_event`; 7 of 40 default worlds once the faith exposures and gifts raised
+the pool). The rulers' draws now skip c in Q4 when `reign_brief(c).start > Y`; its periods wait for the next pass
+(the keyed draw gives the same result there). The spec should say so in 6.11's Q4 paragraph (the reference must
+mirror it).
+
+**Measured** (1024, `game/data`, gcc seeds 0 to 39, clang 0 to 7): world files and both report levels
+byte-identical on the 8; no generate or report error; no `=?`. Evil artifacts 19 in 14 worlds; dark gifts 10 (row
+13, 9 worlds), faith relics 4 (row 14, 4 worlds); a realm exposed in 13 worlds (kept 13, by faith 2); events 117:
+48 in 12 worlds (kept 46 in 11, faith 2 in 1); evil arms borne by a general or hero: 2 worlds (both M1; no M5, no
+M15); events 118: 0; sacks citing a corruption 0; outlaws 0. Artifacts median 14, max 31; god-made 8.0%; wars
+median 25.5; standing settlements median 77. The bearer pool is the limit: an evil god's gifts go to its kin
+(goblins, orcs: few generals bear a gift, since M1 takes the smallest-id kept arms first, and few heroes rise:
+`hero_permille` 40 and 80). Forced (scratch data: rows 1 to 12 at 0, `realm_rest_years` 0, row 13 all arms at
+1000, bearer years 2, chance and sack 1000; seeds 8 to 27): 8 generals corrupted in 5 worlds, 4 sacks citing them;
+with `general_scale_permille` 0 and every race's `hero_permille` 1000: 9 M15 take-ups and 9 heroes outlawed in 5
+worlds (each died later `how` 2, `in exile`), both report levels pass the reader checks.
+
+I2: gcc seeds 9, 12, 23, 30 with a scratch root (rows 13 and 14 removed, `corrupt_bearer_permille` 0,
+`corrupt_permille` 0) against the same seeds built at 35c6581 (r2 logic, shipped data): every table equal but
+`event_kind`, `event_kind_role`, `event_kind_value` (kind 118) and `meta` (content hashes). With `corrupt_permille`
+150 kept, seeds 9, 12, 23 are equal likewise and seed 30 differs: the faith exposure (r4, not r3) corrupts a ruler
+there, as intended.

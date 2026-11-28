@@ -162,6 +162,13 @@ public:
                        std::int64_t event);
     // Ends the corruption in force on civ's reign (no event); the deed stays.
     void lift_corruption(std::int64_t civ);
+    // P5-11 r3 7.8 (for ArtifactsSubsystem only): the living general or hero
+    // `figure` is corrupted by its bearer_corrupted `event` (the deed
+    // `corrupted`); a hero becomes an outlaw (status 2, no host, its place
+    // the event's region) and is no longer its realm's hero. No event. Fatal
+    // unless the figure lives (status 1), has role 3 or 4 and was not
+    // corrupted before.
+    void corrupt_bearer(StepContext& context, std::int64_t figure, std::int64_t event);
 
     // The rows of tables figure and book (9.1, 9.3), ascending id.
     [[nodiscard]] std::vector<db::FigureRow> figure_rows() const;
@@ -191,6 +198,7 @@ private:
         std::size_t slew_kind = 0;  // the monster kind of slew_might (the last slain at a tie)
         std::int64_t books = 0, blights = 0;
         bool exiled = false, realm_fell = false, regnal_fallback = false;
+        bool bearer_corrupted = false;  // P5-11 r3 4.3: the deed `corrupted` of a general or hero
         // Places and offices.
         std::int64_t host = 0;           // an exile's host (0 the wilds)
         std::int64_t host_region = 0;    // the host's capital region at the exile

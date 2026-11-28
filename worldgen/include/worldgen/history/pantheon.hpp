@@ -61,6 +61,25 @@ public:
         (void)valour;
         return 0;
     }
+    // P5-11 r4 7.9: c's open faith_of (the faction, its from_year and its
+    // cult_adopted; all 0 none), a faction's god, and the faction whose
+    // cult_founded or cult_adopted opened temple `site` (0 when it is not a
+    // temple). Defaults for views that keep no cults.
+    struct Faith {
+        std::int64_t faction = 0, since = 0, event = 0;
+    };
+    [[nodiscard]] virtual Faith faith(std::int64_t civ) const {
+        (void)civ;
+        return {};
+    }
+    [[nodiscard]] virtual std::int64_t faction_god(std::int64_t faction) const {
+        (void)faction;
+        return 0;
+    }
+    [[nodiscard]] virtual std::int64_t temple_faction(std::int64_t site) const {
+        (void)site;
+        return 0;
+    }
 };
 
 // The bound of 5 (H2).
@@ -179,6 +198,10 @@ public:
     [[nodiscard]] std::int64_t force_permille(std::int64_t civ, std::int64_t year) const override;
     [[nodiscard]] bool shunned(std::int64_t region, std::int64_t year) const override;
     [[nodiscard]] std::int64_t force_act(std::int64_t civ, std::int64_t year, bool valour) const override;
+    // P5-11 r4 7.9.
+    [[nodiscard]] Faith faith(std::int64_t civ) const override;
+    [[nodiscard]] std::int64_t faction_god(std::int64_t faction) const override;
+    [[nodiscard]] std::int64_t temple_faction(std::int64_t site) const override;
 
     // The rows of table faction (9), ascending id.
     [[nodiscard]] std::vector<db::FactionRow> faction_rows() const;
@@ -326,6 +349,7 @@ private:
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cult_in_;  // (cult, civ) -> its opening event
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> latest_;   // (cult, civ) -> its latest cult event
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> faith_of_;  // civ -> (cult, cult_adopted)
+    std::map<std::int64_t, std::int64_t> faith_since_;  // P5-11 r4 7.9: civ -> the open faith_of's year
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> suppressed_;  // P5-11 12.2: (cult, civ) -> last year
     std::vector<std::pair<std::int64_t, std::int64_t>> ended_realms_;  // (civ, ending event) read this step
     std::int64_t pending_flare_ = 0;

@@ -420,6 +420,10 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{117, "artifact_corrupted", true, 1, 2,
                               {art(), civ(2, "civilization"), role(3, "god", EntityType::god, 1, 1)}, {"temper"}, 0,
                               {}});
+    // P5-11 r3 8.5: kind 118, a general or hero turned by the evil artifact it bears.
+    c.kinds.push_back(KindDef{118, "bearer_corrupted", true, 1, 0,
+                              {art(), fig(2, "figure"), civ(3, "civilization"), role(4, "god", EntityType::god, 1, 1)},
+                              {"role"}, 0, {}});
     return c;
 }
 
@@ -1475,6 +1479,7 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             at.participants = participants;
             at.values = values;
             at.causes = causes;
+            at.relations = relation_rows;
             at.catalogue = &v.catalogue_;
             if (std::optional<std::string> why = artifact_tables_problem(at)) {
                 view_fail(*why);
@@ -2926,6 +2931,13 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
         return &t.figures[static_cast<std::size_t>(id - 1)];
     };
     const auto n_settlements = static_cast<std::int64_t>(t.settlements.size());
+    // P5-11 r3 7.8 (F28): the figures named by a bearer_corrupted.
+    std::set<std::int64_t> outlaws;
+    for (const db::EventRow& e : t.events) {
+        if (kind_key(e.id) == "bearer_corrupted") {
+            outlaws.insert(participant(e.id, "figure"));
+        }
+    }
     // figure (F1 to F28).
     std::map<std::string, std::vector<std::int64_t>> by_name;  // earlier ids per name
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> last_reign;  // civ -> (reign_no, figure)
@@ -3014,7 +3026,9 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
             return at + "skill " + int_text(r.skill) + " outside 1 to 1000";
         }
         if (r.skill != 0 && r.role != 3 && r.role != 6) return at + "skill " + int_text(r.skill) + " of a " + word;
-        if (r.status == 2 && r.role != 2) return at + "in exile but not a claimant";
+        if (r.status == 2 && r.role != 2 && !(r.role == 4 && outlaws.count(r.id) != 0)) {
+            return at + "in exile but not a claimant";
+        }
     }
     // book (K1 to K6).
     const auto n_sites = static_cast<std::int64_t>(t.sites.size());
