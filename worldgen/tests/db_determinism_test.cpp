@@ -335,11 +335,11 @@ struct GoldenCase {
 };
 
 constexpr std::array<GoldenCase, 5> GOLDEN_CASES = {{
-    {"empty-phrase", 0, "The Unmapped", "59c40f775fb690eb43f0909f339e92b2f8fd0e1aec1095176d8f76592a52df68"},
-    {"empty-seed-0", 0, nullptr, "79e63dad2715ae4823d622c7d924d02d920d0e293c36995c6a114cb97b4b26e6"},
-    {"empty-seed-1", 1, nullptr, "c103fe500c578a3176fb4d33c69e8c192a1c171a4a74b2c2ca37cb165a0233a7"},
-    {"empty-seed-42", 42, nullptr, "a212144a3b42f6cdc72f9f93d32c85480605f8be784dc09bd573abacac6eb568"},
-    {"empty-seed-max", 18446744073709551615ULL, nullptr, "9cc8a7e6fc4ee8ffc5e985df5c205d127a0fb81c025a3438aebf19a683f0cf4a"},
+    {"empty-phrase", 0, "The Unmapped", "adf0a268556e95dbc8140beafcaf837fef63dba8ed0e9a326854bdcb88872dd2"},
+    {"empty-seed-0", 0, nullptr, "3e747031888c199f9a9357b6186f5d19dbb13503fb40a113f2f7a8cd2fcce0c1"},
+    {"empty-seed-1", 1, nullptr, "7666d45f5b91bf70e3fcdf679c33b3ae04ec092ec3d3ac51dc7a555d04873877"},
+    {"empty-seed-42", 42, nullptr, "001b3c90735a256ab8ca813fbb6762cd9865d2664f9f0fbc4017968eb16b106f"},
+    {"empty-seed-max", 18446744073709551615ULL, nullptr, "2b2de2635a4019995ebe7fb64117085d0c2e4d4ade43c297672cc71af0857ce4"},
 }};
 
 constexpr bool golden_pending() {

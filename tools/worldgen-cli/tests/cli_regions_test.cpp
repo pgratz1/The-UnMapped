@@ -257,7 +257,7 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
             "table settlement",   "table settlement_census", "table region_name",
             "table beast",        "table monster_kind",      "table beast_population", "table monster",
             "table site",         "table race_relation",     "table settlement_race",
-            "table book",         "table figure"};   // P5-06 9.1, 9.3   // chronology (P3-03) and
+            "table book",         "table figure",       "table faction"};   // P5-06 9.1, 9.3   // chronology (P3-03) and
                                                                                    // history (P3-04, P5-12, P5-02, P5-03)
         if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
