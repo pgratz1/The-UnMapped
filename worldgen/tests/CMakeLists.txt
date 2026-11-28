@@ -538,6 +538,23 @@ target_sources(worldgen-tests PRIVATE
     history/history_pantheon_report_test.cpp
     history/history_pantheon_golden_test.cpp
 )
+# Artifacts (spec P5-11 r1, generator 0.31.0, schema 15, report v12): the spec's arithmetic by hand
+# (history_artifacts_unit_test.cpp, runs before integration), the data of 4 on game/data, the invariants of 13 on
+# artifacts-small and shipped worlds with the timeline reads, determinism, I0 and resume, the reader checks of 9 on
+# corrupt copies, report v12 and the timeline reads on fixture H21 (h21-v12.toml, written by
+# reference/p5_11_h21_fixture.py), and the golden file golden/p5-11-artifacts.txt (fixture lines now, world lines at
+# integration). Names and the switch are in history/p5_11_api.hpp (UNMAPPED_P511_API at integration: until then the
+# cases that need 0.31.0 return at their start). Slow cases in the suite "artifacts-slow". The reference is
+# reference/p5_11_artifacts_reference.py.
+target_sources(worldgen-tests PRIVATE
+    history/history_artifacts_unit_test.cpp
+    history/history_artifacts_data_test.cpp
+    history/history_artifacts_property_a_test.cpp
+    history/history_artifacts_property_b_test.cpp
+    history/history_artifacts_reader_test.cpp
+    history/history_artifacts_report_test.cpp
+    history/history_artifacts_golden_test.cpp
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -704,6 +721,9 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD pantheon-property-b 80 "*history_pantheon_property_b_test.cpp"
     SHARD pantheon-property-c 80 "*history_pantheon_property_c_test.cpp"
     SHARD pantheon 40 "*history_pantheon_data_test.cpp,*history_pantheon_golden_test.cpp,*history_pantheon_reader_test.cpp,*history_pantheon_report_test.cpp,*history_pantheon_unit_test.cpp"
+    SHARD artifacts-property-a 80 "*history_artifacts_property_a_test.cpp"
+    SHARD artifacts-property-b 80 "*history_artifacts_property_b_test.cpp"
+    SHARD artifacts 40 "*history_artifacts_data_test.cpp,*history_artifacts_golden_test.cpp,*history_artifacts_reader_test.cpp,*history_artifacts_report_test.cpp,*history_artifacts_unit_test.cpp"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -728,5 +748,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-figures 300 "*-slow" "*history_figures_*"
     SLOW slow-depths 600 "*-slow" "*depths_*"
     SLOW slow-pantheon 600 "*-slow" "*pantheon_*"
+    SLOW slow-artifacts 600 "*-slow" "*history_artifacts_*"
     SLOW_REST slow-other 10 "*-slow"
 )
