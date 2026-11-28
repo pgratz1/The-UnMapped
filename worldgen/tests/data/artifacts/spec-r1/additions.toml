@@ -1,0 +1,64 @@
+# P5-11 r1: the additions of 4.2, 4.3 (history.figures, history.pantheon), 4.5 and 8.2 to definitions that exist at
+# 0.30.0 (fixture: the spec's listing, read by the references while the data root lacks them; each item is applied
+# only when the root does not have it yet). Not a data kind: read by p3_data_reference.py's 0.31.0 loader only.
+
+# 4.3: appended after the last field of history.figures; 4.3: appended to history.pantheon (12.2).
+[figures]
+smith_age_permille = 250
+smith_age_span_permille = 300
+
+[pantheon]
+cult_return_years = 400
+
+# 4.2: culture field artifact_forms, appended after profane_forms.
+[artifact_forms]
+dwarven = ["{root}", "The {title} of {root}", "{root}'s Rune-{title}"]
+elven = ["{root}", "The {title} of {root}", "The Silver {title} of {root}"]
+faerie = ["{root}", "The Moon-{title} of {root}", "The {title} of {root}"]
+goblin = ["{root}", "{root}'s {title}", "The Black {title} of {root}"]
+human = ["{root}", "The {title} of {root}", "{root}'s {title}"]
+orcish = ["{root}", "The Red {title} of {root}", "{root}'s {title}"]
+
+# 4.5: deeds appended to two pantheon gods.
+[deeds]
+craft = [{ kind = "artifact_made", role = "maker_realm", points = 20, who = "any", against = "" }]
+war = [{ kind = "artifact_taken", role = "taker", points = 10, who = "any", against = "" }]
+
+# 4.5: the act cause words gain two entries (appended to the {@causes:...} list of kinds 100 to 104), and the faerie
+# cult form changes.
+[words]
+after = "cult_suppressed=its faithful put down"
+added = ",artifact_made=a great work forged,artifact_taken=a treasure taken"
+faerie_old = "The Hidden Ring of {god}"
+faerie_new = "The Silver Ring of {god}"
+
+# 8.2: the report entries of kinds 111 to 116, appended after tower_abandoned.
+[[report]]
+kind = "artifact_made"
+salience = 45
+template = "{@causes:war_declared=the coming of war,sacked=the sack of a city,civ_conquered=a realm conquered,succession_disputed=a throne disputed,hero_rose=a hunt begun,settlement_overrun=a town overrun,deep_woken=a horror woken in the deep,divine_champion=a champion raised,cult_founded=a cult founded|In answer to |, }{maker:all}{god:titled}{maker_kind?| forged| forged| wrought| bestowed} {artifact}, {artifact:kind},{maker_kind?| for| for| for| upon} {civilization}{maker_kind?|| at the forges of ||}{maker_realm:all}."
+
+[[report]]
+kind = "artifact_taken"
+salience = 40
+template = "{@causes:fell_in_battle=the fall of its bearer,sacked=the sack of a city,settlement_captured=the taking of a city,civ_conquered=the fall of a realm,civ_ended=the end of a realm|After |, }{taker} took {artifact}, {artifact:kind}, from {from}."
+
+[[report]]
+kind = "artifact_lost"
+salience = 35
+template = "{@causes:fell_in_battle=the fall of its bearer,sacked=the sack of a city,civ_ended=the end of a realm|After |, }{artifact}, {artifact:kind}, was lost to {civilization} in {@region}."
+
+[[report]]
+kind = "artifact_hoarded"
+salience = 50
+template = "{@causes:hero_slain=the death of its bearer,monster_raid=a raid,hold_lost=the fall of a hold|After |, }{monster} carried {artifact}, {artifact:kind}, off from {civilization} to its hoard."
+
+[[report]]
+kind = "artifact_recovered"
+salience = 50
+template = "{@causes:monster_slain_by_hero=the slaying of its keeper,monster_slain=the slaying of its keeper,peace=a war won,war_won=a war won|After |, }{civilization} recovered {artifact}, {artifact:kind}{how?|, from the hoard of |, from }{monster:all}{from:all}."
+
+[[report]]
+kind = "artifact_buried"
+salience = 25
+template = "{artifact}, {artifact:kind}, was laid in the grave of {figure} of {civilization}."

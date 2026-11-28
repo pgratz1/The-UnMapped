@@ -1,0 +1,274 @@
+# P5-11 16 item 10: lines the v12 report of H21 (h21-v12.toml) must contain, `<level> <line>` or
+# `part-full <needle>\t<fragment>`; written by worldgen/tests/reference/p5_11_h21_fixture.py from the
+# reference's rows (never from C++ output).
+full artifacts: 72 (kept 29, borne 4, hoarded 10, lost 3, buried 13, enshrined 13); made by smiths 44 (for other realms 1), casters 0, gods 28; of deep iron 0; changed hands 27
+full   ar1 The Black Helm of Drugg, a helm: made 688 e45 by f6 Zigg-Skrak of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; buried with f5 Bubdrugg in r20 Synthetic ca since 719 e84
+full     held: 688 borne by f5 Bubdrugg e45; 719 buried with f5 Bubdrugg e84
+full   ar2 The Spear of Ieveithe, a spear: made 689 e51 by f7 Nomar of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1888 e825
+full     held: 689 kept by c1 The Realm of Mocaen e51; 1888 hoarded by m7 The Screamers of Gnizz-Gruz e825
+full   ar3 Budrank, a sword: made 695 e61 by f9 Grabdreet of c4 The Drax Mob for c4 The Drax Mob; in the hoard of m3 The Brood of Drut since 717 e80
+full     held: 695 borne by f8 Kigskab e61; 713 kept by c4 The Drax Mob e69; 717 hoarded by m3 The Brood of Drut e80
+full   ar4 The Silver Axe of Nonna, an axe: made 715 e73 by f11 Voman of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1889 e829
+full     held: 715 borne by f10 Nithaele e73; 1318 kept by c1 The Realm of Mocaen e414; 1889 hoarded by m7 The Screamers of Gnizz-Gruz e829
+full   ar5 Nuskotch, a helm: made 717 e81 by f13 Krikuz of c4 The Drax Mob for c4 The Drax Mob; buried with f12 Beenk-Zoz in r18 Synthetic bi since 733 e93
+full     held: 717 borne by f12 Beenk-Zoz e81; 733 buried with f12 Beenk-Zoz e93
+full   ar6 The Axe of Glorothae, an axe: made 808 e97 by f15 Onaell of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1897 e835
+full     held: 808 kept by c1 The Realm of Mocaen e97; 1897 hoarded by m7 The Screamers of Gnizz-Gruz e835
+full   ar7 The Black Chalice of Gozig, a chalice: made 814 e111 by g15 Buckwes at si13 The Pit of Buckwes for c3 The Warrens of Zozdrank; at si13 The Pit of Buckwes since 814 e111
+full     held: 814 at si13 The Pit of Buckwes e111
+full   ar8 Druzoz's Idol, an idol: made 818 e118 by g13 Beezsnub at si15 The Bone-House of Beezsnub for c4 The Drax Mob; at si15 The Bone-House of Beezsnub since 818 e118
+full     held: 818 at si15 The Bone-House of Beezsnub e118
+full   ar9 Missa, a sword: made 950 e138 by f20 Oreliend of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1917 e842
+full     held: 950 kept by c1 The Realm of Mocaen e138; 1917 hoarded by m7 The Screamers of Gnizz-Gruz e842
+full   ar10 Zax, a shield: made 950 e141 by g13 Beezsnub for c4 The Drax Mob; buried with f34 Grobag Chosen of Ruldmard in r18 Synthetic bi since 1140 e303
+full     held: 950 borne by f21 Slitch Chosen of Beezsnub e141; 967 kept by c4 The Drax Mob e173; 1101 borne by f34 Grobag Chosen of Ruldmard e219; 1140 buried with f34 Grobag Chosen of Ruldmard e303
+full   ar11 Rothosa, a spear: made 952 e147 by g14 Ruldmard for c1 The Realm of Mocaen; buried with f22 Renle Chosen of Ruldmard in r14 The Forsaken Wood since 1574 e645
+full     held: 952 borne by f22 Renle Chosen of Ruldmard e147; 1574 buried with f22 Renle Chosen of Ruldmard e645
+full   ar12 The Chalice of Feglae, a chalice: made 953 e151 by g14 Ruldmard at si18 The White Fane of Ruldmard for c1 The Realm of Mocaen; at si18 The White Fane of Ruldmard since 953 e151
+full     held: 953 at si18 The White Fane of Ruldmard e151
+full   ar13 The Black Spear of Neet, a spear: made 965 e168 by f24 Skozank of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; in the hoard of m1 Girndrai since 1113 e260
+full     held: 965 kept by c2 The Warrens of Zib-Dreegg e168; 1113 hoarded by m1 Girndrai e260
+full   ar14 Laendse, a hammer: made 1092 e182 by f26 Lemo of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1920 e847
+full     held: 1092 kept by c1 The Realm of Mocaen e182; 1920 hoarded by m7 The Screamers of Gnizz-Gruz e847
+full   ar15 Nug-Sneeg, a crown: made 1096 e191 by f29 Slizz-Grogg of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; kept by c15 The Bok Horde since 1952 e909
+full     held: 1096 kept by c2 The Warrens of Zib-Dreegg e191; 1859 kept by c14 The Grag'sharz Horde e767; 1952 kept by c15 The Bok Horde e909
+full   ar16 Slink-Gak's Axe, an axe: made 1101 e222 by g14 Ruldmard for c4 The Drax Mob; kept by c4 The Drax Mob since 1943 e888
+full     held: 1101 borne by f34 Grobag Chosen of Ruldmard e222; 1140 kept by c4 The Drax Mob e302; 1872 kept by c6 The Hold of Thirnbai e795; 1873 borne by f108 Khairingru Chosen of Ruldmard e803; 1923 kept by c4 The Drax Mob e854; 1928 borne by f116 Gnib-Gug e870; 1943 kept by c4 The Drax Mob e888
+full   ar17 Sleetdrat's Hauberk, a hauberk: made 1103 e228 by f35 Skagnatch of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; kept by c15 The Bok Horde since 1952 e910
+full     held: 1103 kept by c2 The Warrens of Zib-Dreegg e228; 1859 kept by c14 The Grag'sharz Horde e768; 1952 kept by c15 The Bok Horde e910
+full   ar18 Gug, a sceptre: made 1110 e252 by f36 Kuz of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; kept by c15 The Bok Horde since 1952 e911
+full     held: 1110 kept by c2 The Warrens of Zib-Dreegg e252; 1859 kept by c14 The Grag'sharz Horde e769; 1952 kept by c15 The Bok Horde e911
+full   ar19 Katch, a reliquary: made 1112 e256 by g2 Droxsloz at si23 The Bone-House of Droxsloz for c2 The Warrens of Zib-Dreegg; at si23 The Bone-House of Droxsloz since 1112 e256
+full     held: 1112 at si23 The Bone-House of Droxsloz e256
+full   ar20 Skreezsnug, a helm: made 1112 e258 by g7 Grol'kral for c2 The Warrens of Zib-Dreegg; buried with f37 Zark-Skrok Chosen of Grol'kral in r20 Synthetic ca since 1143 e315
+full     held: 1112 borne by f37 Zark-Skrok Chosen of Grol'kral e258; 1143 buried with f37 Zark-Skrok Chosen of Grol'kral e315
+full   ar21 Naik, a helm: made 1135 e294 by g11 Vose for c6 The Hold of Thirnbai; in the hoard of m13 Mossback Skruzzdruz since 1420 e522
+full     held: 1135 borne by f40 Burndou Chosen of Vose e294; 1186 hoarded by m6 Guxzazz of the Fells e389; 1371 kept by c6 The Hold of Thirnbai e431; 1420 hoarded by m13 Mossback Skruzzdruz e522
+full   ar22 Thilikha, a chalice: made 1136 e297 by g11 Vose at si28 The Deep Shrine of Vose for c6 The Hold of Thirnbai; at si28 The Deep Shrine of Vose since 1136 e297
+full     held: 1136 at si28 The Deep Shrine of Vose e297
+full   ar23 Gimmthird, a sword: made 1141 e309 by f42 Grommum of c7 Clan Goukba for c7 Clan Goukba; buried with f41 Gundtourk in r16 Synthetic bg since 1343 e416
+full     held: 1141 borne by f41 Gundtourk e309; 1343 buried with f41 Gundtourk e416
+full   ar24 The Spear of Brin, a spear: made 1146 e322 by g12 Maenni for c7 Clan Goukba; buried with f43 Himmkair Chosen of Maenni in r16 Synthetic bg since 1385 e462
+full     held: 1146 borne by f43 Himmkair Chosen of Maenni e322; 1385 buried with f43 Himmkair Chosen of Maenni e462
+full   ar25 Khouli, a chalice: made 1147 e326 by g12 Maenni at si30 The Deep Shrine of Maenni for c7 Clan Goukba; at si30 The Deep Shrine of Maenni since 1147 e326
+full     held: 1147 at si30 The Deep Shrine of Maenni e326
+full   ar26 Karnbaid, a sword: made 1176 e344 by f46 Kark of c7 Clan Goukba for c7 Clan Goukba; buried with f99 Geegronk in r20 Synthetic ca since 1882 e818
+full     held: 1176 kept by c7 Clan Goukba e344; 1178 kept by c2 The Warrens of Zib-Dreegg e368; 1755 borne by f95 Skrirk Chosen of Ruldmard e711; 1766 kept by c2 The Warrens of Zib-Dreegg e731; 1852 borne by f99 Geegronk e748; 1882 buried with f99 Geegronk e818
+full   ar27 Grairingod, a shield: made 1176 e345 by f47 Karintorin of c6 The Hold of Thirnbai for c6 The Hold of Thirnbai; in the hoard of m13 Mossback Skruzzdruz since 1426 e550
+full     held: 1176 kept by c6 The Hold of Thirnbai e345; 1426 hoarded by m13 Mossback Skruzzdruz e550
+full   ar28 Kard, an axe: made 1178 e357 by f49 Thrirdmoli of c6 The Hold of Thirnbai for c6 The Hold of Thirnbai; borne by f114 Barin of c6 The Hold of Thirnbai since 1925 e861
+full     held: 1178 borne by f48 Hirdba e357; 1431 kept by c6 The Hold of Thirnbai e559; 1925 borne by f114 Barin e861
+full   ar29 Groz-Gnax's Crown, a crown: made 1178 e369 by f50 Zeez-Greegg of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; kept by c15 The Bok Horde since 1952 e912
+full     held: 1178 kept by c2 The Warrens of Zib-Dreegg e369; 1859 kept by c14 The Grag'sharz Horde e766; 1952 kept by c15 The Bok Horde e912
+full   ar30 Thukbrairn's Rune-Idol, an idol: made 1186 e390 by g8 Drurinto at si33 The Deep Shrine of Drurinto for c9 The Hold of Tarin; at si33 The Deep Shrine of Drurinto since 1186 e390
+full     held: 1186 at si33 The Deep Shrine of Drurinto e390
+full   ar31 Nukdaili's Rune-Shield, a shield: made 1368 e421 by f54 Haimdruk of c6 The Hold of Thirnbai for c6 The Hold of Thirnbai; borne by f114 Barin of c6 The Hold of Thirnbai since 1925 e861
+full     held: 1368 kept by c6 The Hold of Thirnbai e421; 1925 borne by f114 Barin e861
+full   ar32 The Shield of Gund, a shield: made 1369 e426 by g11 Vose for c6 The Hold of Thirnbai; buried with f55 Donthad Chosen of Vose in r9 Synthetic j since 1624 e650
+full     held: 1369 borne by f55 Donthad Chosen of Vose e426; 1624 buried with f55 Donthad Chosen of Vose e650
+full   ar33 Snixskax's Crown, a crown: made 1384 e453 by f58 Drizz of c3 The Warrens of Zozdrank for c3 The Warrens of Zozdrank; kept by c10 The Skreesneek Horde since 1420 e532
+full     held: 1384 kept by c3 The Warrens of Zozdrank e453; 1420 kept by c10 The Skreesneek Horde e532
+full   ar34 Skox-Skrut, a hammer: made 1408 e475 by f62 Kreetburk of c3 The Warrens of Zozdrank for c3 The Warrens of Zozdrank; kept by c10 The Skreesneek Horde since 1416 e499
+full     held: 1408 kept by c3 The Warrens of Zozdrank e475; 1411 borne by f63 Zeetchzeek Chosen of Ruldmard e485; 1416 kept by c10 The Skreesneek Horde e499
+full   ar35 The Black Helm of Kreex, a helm: made 1411 e488 by g14 Ruldmard for c3 The Warrens of Zozdrank; lost in r3 Synthetic d since 1416 e500
+full     held: 1411 borne by f63 Zeetchzeek Chosen of Ruldmard e488; 1416 lost in r3 Synthetic d e500
+full   ar36 Thournthra, a sword: made 1417 e505 by f65 Thrirn of c6 The Hold of Thirnbai for c6 The Hold of Thirnbai; kept by c6 The Hold of Thirnbai since 1624 e647
+full     held: 1417 borne by f55 Donthad Chosen of Vose e505; 1624 kept by c6 The Hold of Thirnbai e647
+full   ar37 The Black Spear of Skosliz, a spear: made 1417 e509 by g14 Ruldmard for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1442 e582
+full     held: 1417 borne by f66 Drarkslirk Chosen of Ruldmard e509; 1442 kept by c10 The Skreesneek Horde e582
+full   ar38 The Black Sceptre of Gnoskrug, a sceptre: made 1420 e533 by f68 Gub of c10 The Skreesneek Horde for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1420 e533
+full     held: 1420 kept by c10 The Skreesneek Horde e533
+full   ar39 Keedrot's Ring, a ring: made 1422 e539 by f71 Sluggsnog of c10 The Skreesneek Horde for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1422 e539
+full     held: 1422 kept by c10 The Skreesneek Horde e539
+full   ar40 Grirk, an idol: made 1422 e540 by g7 Grol'kral at si37 The Bone-House of Grol'kral for c10 The Skreesneek Horde; at si37 The Bone-House of Grol'kral since 1422 e540
+full     held: 1422 at si37 The Bone-House of Grol'kral e540
+full   ar41 Gazz-Gnazz, a reliquary: made 1426 e551 by g1 Ithielell at si39 The Bone-House of Ithielell for c10 The Skreesneek Horde; at si40 The Secret Pit of Ithielell since 1427 e553
+full     held: 1426 at si39 The Bone-House of Ithielell e551; 1427 at si40 The Secret Pit of Ithielell e553
+full   ar42 Grimmgrurk, a ring: made 1431 e565 by f74 Grair of c9 The Hold of Tarin for c9 The Hold of Tarin; in the hoard of m2 Old Gritch since 1866 e777
+full     held: 1431 kept by c9 The Hold of Tarin e565; 1439 hoarded by m10 Ok'kum the Fat e581; 1454 kept by c9 The Hold of Tarin e617; 1866 hoarded by m2 Old Gritch e777
+full   ar43 The Black Hauberk of Grogob, a hauberk: made 1444 e589 by f76 Slizug of c10 The Skreesneek Horde for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1485 e632
+full     held: 1444 kept by c10 The Skreesneek Horde e589; 1451 borne by f77 Slidrizz Chosen of Ruldmard e605; 1485 kept by c10 The Skreesneek Horde e632
+full   ar44 Nitgigg, a spear: made 1451 e611 by g14 Ruldmard for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1485 e632
+full     held: 1451 borne by f77 Slidrizz Chosen of Ruldmard e611; 1485 kept by c10 The Skreesneek Horde e632
+full   ar45 The Black Crown of Skraz, a crown: made 1451 e612 by f78 Gigg-Gnok of c10 The Skreesneek Horde for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1451 e612
+full     held: 1451 kept by c10 The Skreesneek Horde e612
+full   ar46 The Black Reliquary of Zix, a reliquary: made 1455 e620 by g9 Grox-Gneenk at si42 The Bone-House of Grox-Gneenk for c10 The Skreesneek Horde; at si42 The Bone-House of Grox-Gneenk since 1455 e620
+full     held: 1455 at si42 The Bone-House of Grox-Gneenk e620
+full   ar47 The Moon-Hammer of Fashee, a hammer: made 1482 e630 by f81 Fyly of c11 The Circle of Loo for c11 The Circle of Loo; kept by c11 The Circle of Loo since 1482 e630
+full     held: 1482 kept by c11 The Circle of Loo e630
+full   ar48 The Black Ring of Skeebgeex, a ring: made 1675 e664 by f85 Gabik of c4 The Drax Mob for c4 The Drax Mob; kept by c4 The Drax Mob since 1929 e877
+full     held: 1675 kept by c4 The Drax Mob e664; 1872 kept by c6 The Hold of Thirnbai e796; 1929 kept by c4 The Drax Mob e877
+full   ar49 Bizbotch, a sceptre: made 1712 e681 by f88 Skig-Nonk of c10 The Skreesneek Horde for c10 The Skreesneek Horde; kept by c10 The Skreesneek Horde since 1712 e681
+full     held: 1712 kept by c10 The Skreesneek Horde e681
+full   ar50 Greezib's Helm, a helm: made 1719 e685 by f90 Slizzskruk of c4 The Drax Mob for c4 The Drax Mob; lost in the ruin of s5 Skatchzirk since 1872 e797
+full     held: 1719 kept by c4 The Drax Mob e685; 1872 lost in s5 Skatchzirk e797
+full   ar51 Gimdal's Shield, a shield: made 1749 e699 by f93 Stin of c13 The Gurdsul League for c13 The Gurdsul League; lost in r24 The End of Skitskrot since 1751 e704
+full     held: 1749 borne by f92 Rard e699; 1751 lost in r24 The End of Skitskrot e704
+full   ar52 The Black Shield of Bok, a shield: made 1755 e720 by g14 Ruldmard for c2 The Warrens of Zib-Dreegg; buried with f95 Skrirk Chosen of Ruldmard in r20 Synthetic ca since 1766 e732
+full     held: 1755 borne by f95 Skrirk Chosen of Ruldmard e720; 1766 buried with f95 Skrirk Chosen of Ruldmard e732
+full   ar53 Dack's Sword, a sword: made 1755 e721 by f96 Bruck of c13 The Gurdsul League for c13 The Gurdsul League; kept by c13 The Gurdsul League since 1755 e721
+full     held: 1755 kept by c13 The Gurdsul League e721
+full   ar54 Slozz's Shield, a shield: made 1852 e749 by f100 Beez of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; buried with f99 Geegronk in r20 Synthetic ca since 1882 e819
+full     held: 1852 borne by f99 Geegronk e749; 1882 buried with f99 Geegronk e819
+full   ar55 The Red Hammer of Uuz'kuum, a hammer: made 1857 e759 by g14 Ruldmard for c14 The Grag'sharz Horde; buried with f101 Krom Chosen of Ruldmard in r24 The End of Skitskrot since 1889 e827
+full     held: 1857 borne by f101 Krom Chosen of Ruldmard e759; 1889 buried with f101 Krom Chosen of Ruldmard e827
+full   ar56 The Red Crown of Aald'krak, a crown: made 1859 e770 by f103 Kaak of c14 The Grag'sharz Horde for c14 The Grag'sharz Horde; kept by c15 The Bok Horde since 1952 e913
+full     held: 1859 kept by c14 The Grag'sharz Horde e770; 1952 kept by c15 The Bok Horde e913
+full   ar57 Kaazshal, a chalice: made 1861 e773 by g2 Droxsloz at si46 The Blood-Hall of Droxsloz for c14 The Grag'sharz Horde; at si46 The Blood-Hall of Droxsloz since 1861 e773
+full     held: 1861 at si46 The Blood-Hall of Droxsloz e773
+full   ar58 Kasniz, a hauberk: made 1867 e779 by f105 Kuk of c4 The Drax Mob for c4 The Drax Mob; kept by c4 The Drax Mob since 1929 e878
+full     held: 1867 kept by c4 The Drax Mob e779; 1872 kept by c6 The Hold of Thirnbai e798; 1929 kept by c4 The Drax Mob e878
+full   ar59 The Black Hauberk of Bogg, a hauberk: made 1872 e799 by f107 Droxnib of c4 The Drax Mob for c4 The Drax Mob; buried with f116 Gnib-Gug in r18 Synthetic bi since 1943 e889
+full     held: 1872 kept by c4 The Drax Mob e799; 1928 borne by f116 Gnib-Gug e870; 1943 buried with f116 Gnib-Gug e889
+full   ar60 The Hauberk of Gudinmaird, a hauberk: made 1873 e804 by g14 Ruldmard for c6 The Hold of Thirnbai; kept by c4 The Drax Mob since 1923 e855
+full     held: 1873 borne by f108 Khairingru Chosen of Ruldmard e804; 1923 kept by c4 The Drax Mob e855
+full   ar61 The Sword of Thikdoudin, a sword: made 1917 e843 by f110 Mulibrud of c6 The Hold of Thirnbai at si34 The Delvings of Brourin Deep for c1 The Realm of Mocaen; borne by f109 Sieminn of c1 The Realm of Mocaen since 1917 e843
+full     held: 1917 borne by f109 Sieminn e843
+full   ar62 The Black Axe of Drig, an axe: made 1922 e851 by f112 Keeb of c4 The Drax Mob for c4 The Drax Mob; kept by c4 The Drax Mob since 1922 e851
+full     held: 1922 kept by c4 The Drax Mob e851
+full   ar63 The Black Shield of Driz-Drux, a shield: made 1924 e860 by g14 Ruldmard for c4 The Drax Mob; kept by c4 The Drax Mob since 1924 e860
+full     held: 1924 kept by c4 The Drax Mob e860
+full   ar64 The Helm of Thrairdi, a helm: made 1926 e867 by g9 Grox-Gneenk for c6 The Hold of Thirnbai; borne by f115 Thaim Chosen of Grox-Gneenk of c6 The Hold of Thirnbai since 1926 e867
+full     held: 1926 borne by f115 Thaim Chosen of Grox-Gneenk e867
+full   ar65 Ghozazurz, a ring: made 1940 e886 by f119 Kugrash of c14 The Grag'sharz Horde for c14 The Grag'sharz Horde; kept by c15 The Bok Horde since 1952 e914
+full     held: 1940 kept by c14 The Grag'sharz Horde e886; 1952 kept by c15 The Bok Horde e914
+full   ar66 The Red Shield of Urozurk, a shield: made 1945 e891 by f120 Shaag'daakh of c14 The Grag'sharz Horde for c14 The Grag'sharz Horde; kept by c15 The Bok Horde since 1952 e908
+full     held: 1945 kept by c14 The Grag'sharz Horde e891; 1952 kept by c15 The Bok Horde e908
+full   ar67 The Crown of Reck, a crown: made 1949 e899 by f123 Rord of c13 The Gurdsul League for c13 The Gurdsul League; kept by c13 The Gurdsul League since 1949 e899
+full     held: 1949 kept by c13 The Gurdsul League e899
+full   ar68 The Red Ring of Ugo, a ring: made 1952 e915 by f125 Graal of c15 The Bok Horde for c15 The Bok Horde; kept by c15 The Bok Horde since 1952 e915
+full     held: 1952 kept by c15 The Bok Horde e915
+full   ar69 Uruzkragh, a reliquary: made 1954 e919 by g6 Kaaghaag at si48 The War-Fane of Kaaghaag for c15 The Bok Horde; at si48 The War-Fane of Kaaghaag since 1954 e919
+full     held: 1954 at si48 The War-Fane of Kaaghaag e919
+full   ar70 The Black Sceptre of Gneezz, a sceptre: made 1958 e926 by f128 Snaknuzz of c4 The Drax Mob for c4 The Drax Mob; kept by c4 The Drax Mob since 1958 e926
+full     held: 1958 kept by c4 The Drax Mob e926
+full   ar71 The Hauberk of Liewiasie, a hauberk: made 1985 e945 by f130 Teesholl of c11 The Circle of Loo for c11 The Circle of Loo; kept by c11 The Circle of Loo since 1985 e945
+full     held: 1985 kept by c11 The Circle of Loo e945
+full   ar72 The Idol of Miti, an idol: made 1997 e961 by g4 Whaetwia at si50 The Moon-Glade of Whaetwia for c11 The Circle of Loo; at si50 The Moon-Glade of Whaetwia since 1997 e961
+full     held: 1997 at si50 The Moon-Glade of Whaetwia e961
+summary artifacts: 72 (kept 29, borne 4, hoarded 10, lost 3, buried 13, enshrined 13); made by smiths 44 (for other realms 1), casters 0, gods 28; of deep iron 0; changed hands 27
+summary   ar16 Slink-Gak's Axe, an axe: made 1101 e222 by g14 Ruldmard for c4 The Drax Mob; kept by c4 The Drax Mob since 1943 e888
+summary   ar26 Karnbaid, a sword: made 1176 e344 by f46 Kark of c7 Clan Goukba for c7 Clan Goukba; buried with f99 Geegronk in r20 Synthetic ca since 1882 e818
+summary   ar10 Zax, a shield: made 950 e141 by g13 Beezsnub for c4 The Drax Mob; buried with f34 Grobag Chosen of Ruldmard in r18 Synthetic bi since 1140 e303
+summary   ar21 Naik, a helm: made 1135 e294 by g11 Vose for c6 The Hold of Thirnbai; in the hoard of m13 Mossback Skruzzdruz since 1420 e522
+summary   ar42 Grimmgrurk, a ring: made 1431 e565 by f74 Grair of c9 The Hold of Tarin for c9 The Hold of Tarin; in the hoard of m2 Old Gritch since 1866 e777
+summary   ar3 Budrank, a sword: made 695 e61 by f9 Grabdreet of c4 The Drax Mob for c4 The Drax Mob; in the hoard of m3 The Brood of Drut since 717 e80
+summary   ar4 The Silver Axe of Nonna, an axe: made 715 e73 by f11 Voman of c1 The Realm of Mocaen for c1 The Realm of Mocaen; in the hoard of m7 The Screamers of Gnizz-Gruz since 1889 e829
+summary   ar15 Nug-Sneeg, a crown: made 1096 e191 by f29 Slizz-Grogg of c2 The Warrens of Zib-Dreegg for c2 The Warrens of Zib-Dreegg; kept by c15 The Bok Horde since 1952 e909
+summary   and 64 more
+full   artifacts: made for it ar2 The Spear of Ieveithe e51, ar4 The Silver Axe of Nonna e73, ar6 The Axe of Glorothae e97, ar9 Missa e138 and 4 more; holds ar61 The Sword of Thikdoudin; taken from it ar2 The Spear of Ieveithe e825, ar4 The Silver Axe of Nonna e829, ar6 The Axe of Glorothae e835, ar9 Missa e842 and 1 more
+full   artifacts: made for it ar1 The Black Helm of Drugg e45, ar13 The Black Spear of Neet e168, ar15 Nug-Sneeg e191, ar17 Sleetdrat's Hauberk e228 and 6 more; holds ar15 Nug-Sneeg, ar17 Sleetdrat's Hauberk, ar18 Gug, ar26 Karnbaid and 2 more; taken from it ar13 The Black Spear of Neet e260, ar15 Nug-Sneeg e909, ar17 Sleetdrat's Hauberk e910, ar18 Gug e911 and 1 more
+full   artifacts: made for it ar7 The Black Chalice of Gozig e111, ar33 Snixskax's Crown e453, ar34 Skox-Skrut e475, ar35 The Black Helm of Kreex e488; holds ar33 Snixskax's Crown; taken from it ar33 Snixskax's Crown e532, ar34 Skox-Skrut e499
+full   artifacts: made for it ar3 Budrank e61, ar5 Nuskotch e81, ar8 Druzoz's Idol e118, ar10 Zax e141 and 8 more; holds ar16 Slink-Gak's Axe, ar48 The Black Ring of Skeebgeex, ar58 Kasniz, ar60 The Hauberk of Gudinmaird and 3 more; taken from it ar3 Budrank e80
+full   artifacts: made for it ar21 Naik e294, ar22 Thilikha e297, ar27 Grairingod e345, ar28 Kard e357 and 5 more; holds ar28 Kard, ar31 Nukdaili's Rune-Shield, ar36 Thournthra, ar64 The Helm of Thrairdi; taken from it ar21 Naik e522, ar27 Grairingod e550, ar60 The Hauberk of Gudinmaird e855
+full   artifacts: made for it ar23 Gimmthird e309, ar24 The Spear of Brin e322, ar25 Khouli e326, ar26 Karnbaid e344; holds ar23 Gimmthird, ar24 The Spear of Brin, ar26 Karnbaid
+full   artifacts: made for it ar30 Thukbrairn's Rune-Idol e390, ar42 Grimmgrurk e565; taken from it ar42 Grimmgrurk e777
+full   artifacts: made for it ar37 The Black Spear of Skosliz e509, ar38 The Black Sceptre of Gnoskrug e533, ar39 Keedrot's Ring e539, ar40 Grirk e540 and 6 more; holds ar33 Snixskax's Crown, ar34 Skox-Skrut, ar37 The Black Spear of Skosliz, ar38 The Black Sceptre of Gnoskrug and 5 more
+full   artifacts: made for it ar47 The Moon-Hammer of Fashee e630, ar71 The Hauberk of Liewiasie e945, ar72 The Idol of Miti e961; holds ar47 The Moon-Hammer of Fashee, ar71 The Hauberk of Liewiasie
+full   artifacts: made for it ar51 Gimdal's Shield e699, ar53 Dack's Sword e721, ar67 The Crown of Reck e899; holds ar53 Dack's Sword, ar67 The Crown of Reck
+full   artifacts: made for it ar55 The Red Hammer of Uuz'kuum e759, ar56 The Red Crown of Aald'krak e770, ar57 Kaazshal e773, ar65 Ghozazurz e886 and 1 more; holds ar15 Nug-Sneeg, ar17 Sleetdrat's Hauberk, ar18 Gug, ar29 Groz-Gnax's Crown and 3 more; taken from it ar56 The Red Crown of Aald'krak e913, ar65 Ghozazurz e914, ar66 The Red Shield of Urozurk e908
+full   artifacts: made for it ar68 The Red Ring of Ugo e915, ar69 Uruzkragh e919; holds ar15 Nug-Sneeg, ar17 Sleetdrat's Hauberk, ar18 Gug, ar29 Groz-Gnax's Crown and 4 more
+part-full f5 Bubdrugg	; bore ar1
+part-full f6 Zigg-Skrak	; made ar1
+part-full f7 Nomar	; made ar2
+part-full f8 Kigskab	; bore ar3
+part-full f9 Grabdreet	; made ar3
+part-full f10 Nithaele	; bore ar4
+part-full f11 Voman	; made ar4
+part-full f12 Beenk-Zoz	; bore ar5
+part-full f13 Krikuz	; made ar5
+part-full f15 Onaell	; made ar6
+part-full f20 Oreliend	; made ar9
+part-full f21 Slitch Chosen of Beezsnub	; bore ar10
+part-full f22 Renle Chosen of Ruldmard	; bore ar11
+part-full f24 Skozank	; made ar13
+part-full f26 Lemo	; made ar14
+part-full f29 Slizz-Grogg	; made ar15
+part-full f34 Grobag Chosen of Ruldmard	; bore ar10, ar16
+part-full f35 Skagnatch	; made ar17
+part-full f36 Kuz	; made ar18
+part-full f37 Zark-Skrok Chosen of Grol'kral	; bore ar20
+part-full f40 Burndou Chosen of Vose	; bore ar21
+part-full f41 Gundtourk	; bore ar23
+part-full f42 Grommum	; made ar23
+part-full f43 Himmkair Chosen of Maenni	; bore ar24
+part-full f46 Kark	; made ar26
+part-full f47 Karintorin	; made ar27
+part-full f48 Hirdba	; bore ar28
+part-full f49 Thrirdmoli	; made ar28
+part-full f50 Zeez-Greegg	; made ar29
+part-full f54 Haimdruk	; made ar31
+part-full f55 Donthad Chosen of Vose	; bore ar32, ar36
+part-full f58 Drizz	; made ar33
+part-full f62 Kreetburk	; made ar34
+part-full f63 Zeetchzeek Chosen of Ruldmard	; bore ar34, ar35
+part-full f65 Thrirn	; made ar36
+part-full f66 Drarkslirk Chosen of Ruldmard	; bore ar37
+part-full f68 Gub	; made ar38
+part-full f71 Sluggsnog	; made ar39
+part-full f74 Grair	; made ar42
+part-full f76 Slizug	; made ar43
+part-full f77 Slidrizz Chosen of Ruldmard	; bore ar43, ar44
+part-full f78 Gigg-Gnok	; made ar45
+part-full f81 Fyly	; made ar47
+part-full f85 Gabik	; made ar48
+part-full f88 Skig-Nonk	; made ar49
+part-full f90 Slizzskruk	; made ar50
+part-full f92 Rard	; bore ar51
+part-full f93 Stin	; made ar51
+part-full f95 Skrirk Chosen of Ruldmard	; bore ar26, ar52
+part-full f96 Bruck	; made ar53
+part-full f99 Geegronk	; bore ar26, ar54
+part-full f100 Beez	; made ar54
+part-full f101 Krom Chosen of Ruldmard	; bore ar55
+part-full f103 Kaak	; made ar56
+part-full f105 Kuk	; made ar58
+part-full f107 Droxnib	; made ar59
+part-full f108 Khairingru Chosen of Ruldmard	; bore ar16, ar60
+part-full f109 Sieminn	; bore ar61
+part-full f110 Mulibrud	; made ar61
+part-full f112 Keeb	; made ar62
+part-full f114 Barin	; bore ar28, ar31
+part-full f115 Thaim Chosen of Grox-Gneenk	; bore ar64
+part-full f116 Gnib-Gug	; bore ar16, ar59
+part-full f119 Kugrash	; made ar65
+part-full f120 Shaag'daakh	; made ar66
+part-full f123 Rord	; made ar67
+part-full f125 Graal	; made ar68
+part-full f128 Snaknuzz	; made ar70
+part-full f130 Teesholl	; made ar71
+part-full m1 Girndrai	, hoard ar13
+part-full m2 Old Gritch	, hoard ar42
+part-full m3 The Brood of Drut	, hoard ar3
+part-full m7 The Screamers of Gnizz-Gruz	, hoard ar2, ar4, ar6, ar9, ar14
+part-full m13 Mossback Skruzzdruz	, hoard ar21, ar27
+full artifacts_made = 72
+full artifacts_smiths = 44
+full artifacts_commissioned = 1
+full artifacts_casters = 0
+full artifacts_gods = 28
+full artifacts_deep = 0
+full artifacts_arms = 22
+full artifacts_armour = 22
+full artifacts_regalia = 15
+full artifacts_relic = 13
+full artifacts_staff = 0
+full artifacts_taken = 19
+full artifacts_lost = 3
+full artifacts_hoarded = 12
+full artifacts_recovered = 4
+full artifacts_buried = 13
+full artifact_holdings = 145
+full artifacts_changed_hands = 27
+full artifacts_lost_at_end = 32
+full artifacts_held_by_others = 1
+full smiths = 44
+full wars_citing_artifacts = 0
+full battles_with_artifacts = 30
+full battles_under_acts = 31
+full sentence In answer to a hunt begun, Zigg-Skrak forged the Black Helm of Drugg, a helm, for the Warrens of Zib-Dreegg.
+full sentence After the sack of a city, the Warrens of Zib-Dreegg took Karnbaid, a sword, from Clan Goukba.
+full sentence After the fall of its bearer, the Black Helm of Kreex, a helm, was lost to the Warrens of Zozdrank in Synthetic d.
+full sentence After a raid, the Brood of Drut carried Budrank, a sword, off from the Drax Mob to its hoard.
+full sentence After the slaying of its keeper, the Hold of Thirnbai recovered Naik, a helm, from the hoard of Guxzazz of the Fells.
+full sentence The Black Helm of Drugg, a helm, was laid in the grave of Bubdrugg of the Warrens of Zib-Dreegg.

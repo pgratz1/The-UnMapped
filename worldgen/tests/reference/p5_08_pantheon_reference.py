@@ -490,6 +490,8 @@ class Pantheon:
         self._last_phase = None
         self.first_flare = False
         self.log = []              # (year, what, ...) for the checks (not state)
+        self.suppressed_years = {}   # P5-11 12.2: (k, c) -> years of k's cult_suppressed with civilization c
+        self.returns_barred = 0      # P5-11 10 item 6: cult_returns_barred (not in rows)
 
     # --- helpers
     def god(self, g):
@@ -584,6 +586,14 @@ class Pantheon:
     def force_permille(self, civ, year):
         t = self.t
         return force_sum(self.effects.get(civ, ()), year, t["valour_permille"], t["defeat_permille"])
+
+    def force_act(self, civ, year, valour):
+        """P5-11 12.1: DivineView::force_act: the largest event id among the acts of kind 100 with effect 2 (valour)
+        or of kind 101 with effect 3 (defeat) on civ whose effect is in force at year; 0 none."""
+        want = "valour" if valour else "defeat"
+        es = [x["event"] for x in self.effects.get(civ, ()) if x["kind"] == want and
+              x["start"] <= year < x["start"] + x["years"]]
+        return max(es) if es else 0
 
     def shunned(self, region, year):
         for s in self.sites():
@@ -1053,6 +1063,9 @@ class Pantheon:
                         break
                 if link is None:
                     continue
+                if self.return_barred(k, a):   # P5-11 12.2: no candidate within cult_return_years of a suppression
+                    self.returns_barred += 1
+                    continue
                 if quiet and w.quiet_events_left(a) <= 0:
                     continue
                 p = spread_permille(t["cult_spread_permille"], self.affinity(g, a), w.years if quiet else None)
@@ -1157,8 +1170,17 @@ class Pantheon:
                 continue
             w.monsters.end_site(s["id"], e, ending, year=w.events[e - 1]["year"])
 
+    def return_barred(self, k, a):
+        """P5-11 12.2: a cult_suppressed of k with civilization a in the years Y - cult_return_years < y <= Y (Y the
+        step's year; a quiet step's start)."""
+        if not _pcr().FLAGS.get("p511", False):
+            return False
+        Y, R = self.w.year, self.t.get("cult_return_years", 0)
+        return any(Y - R < y <= Y for y in self.suppressed_years.get((k, a), ()))
+
     def suppress(self, k, c, g, cult):
         w, t = self.w, self.t
+        self.suppressed_years.setdefault((k, c), []).append(w.year)
         others = [key for key in self.cult_in_keys(k) if key[3] != c]
         hidden, place = False, None
         if not others:
@@ -2437,7 +2459,7 @@ def reader_problems(rows):
                                                                 7: "sanctum"}[s[2]]))
     for f in rows.get("figure", []):
         pre = "corrupt table 'figure': row %d: " % f[0]
-        if not 1 <= f[3] <= 7:
+        if not 1 <= f[3] <= (8 if _pcr().FLAGS.get("artifacts", False) else 7):   # P5-11 9: role 8 smith
             out.append(pre + "role %d" % f[3])
         if f[3] == CHAMPION and (x.kind(f[9]) != "divine_champion" or x.one(f[9], "figure") != f[0]):
             out.append(pre + "a champion's start_event %d" % f[9])

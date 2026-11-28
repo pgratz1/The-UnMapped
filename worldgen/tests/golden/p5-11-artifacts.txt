@@ -1,0 +1,995 @@
+# P5-11 16: golden values of the artifacts (generator 0.31.0, schema 15), written by
+# worldgen/tests/reference/p5_11_artifacts_reference.py golden (the test writer's reference, never from C++ output).
+# Lines: case <name> <seed> <size> <data>; table <name> <sha256 of the P0-04 8 encoding>; stat <key> <value>.
+# Fixture cases (size 0: a conflict stress geography with artifacts-small, 4.6) also list path <path> for every path
+# of 6 the run shows. World lines (artifacts-small at 512 seeds 0 to 9, shipped 42 at 1024) are added at integration
+# with --inputs. cult_returns_barred is the replay's (A-R14): compared for fixture cases only.
+case artifacts-small-stress-0 0 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 3d8d9be13ef14eaebe869726ae5b7300153e487dee18849e86833c11d51cc562
+table artifact_holding c87f1777597460e280ad6574130ea00fffdce02f16f1f71f17ac2a0e858cd81a
+table figure 2e48c195c728f38cbc35aa54953040986d006739b8b54d49a99506fd7b6c06df
+table event c620b0ae574a0d6ff7a50ed9965defee5792bc1a576a8fdf93a9fe86c5a30f44
+table event_cause d934157028ec6c77d0497274871f739d5110cd2076d8714b03efca7ef2be1d3c
+stat artifacts_made 46
+stat artifacts_smiths 25
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 21
+stat artifacts_deep 0
+stat artifacts_arms 14
+stat artifacts_armour 13
+stat artifacts_regalia 8
+stat artifacts_relic 11
+stat artifacts_staff 0
+stat artifacts_taken 5
+stat artifacts_lost 3
+stat artifacts_hoarded 15
+stat artifacts_recovered 1
+stat artifacts_buried 1
+stat artifact_holdings 86
+stat artifacts_changed_hands 20
+stat artifacts_lost_at_end 26
+stat artifacts_held_by_others 2
+stat smiths 25
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 25
+stat battles_under_acts 8
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-1 1 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact bae84fbcc347ade5e019f08c28bda0786377349b44ec77834b3fc1b8ca4bfbc2
+table artifact_holding b87f1ce24f63a28a51c493a4cceb0382ce03ffddfe6d1e569e5803750ff320f3
+table figure ac145a5988ef00d9a712ce3375475f940dd22c3202a4fee3eb036386bf9b345b
+table event d949192dc5657538e739830a324282942a9d61f989bad0ed5e7c85e5b3dc5b1b
+table event_cause f8a4b4f7532d6e0ac4001356346c5fe00616e9defe093dda91a18e096402778c
+stat artifacts_made 80
+stat artifacts_smiths 45
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 35
+stat artifacts_deep 0
+stat artifacts_arms 26
+stat artifacts_armour 16
+stat artifacts_regalia 26
+stat artifacts_relic 12
+stat artifacts_staff 0
+stat artifacts_taken 11
+stat artifacts_lost 13
+stat artifacts_hoarded 5
+stat artifacts_recovered 4
+stat artifacts_buried 11
+stat artifact_holdings 161
+stat artifacts_changed_hands 26
+stat artifacts_lost_at_end 29
+stat artifacts_held_by_others 7
+stat smiths 45
+stat wars_citing_artifacts 1
+stat battles_with_artifacts 101
+stat battles_under_acts 124
+stat cult_returns_barred 2946
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain_by_hero hoarded>kept
+path move peace kept>kept
+path occasion cult_founded
+path occasion divine_champion
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-2 2 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact c2e1e505ea1e5e855a869a425ceb206e8f56cb8dee9606fc40e58b195e793ac8
+table artifact_holding 9c3f6f39d870d05c2ffc512db8ff934b57ffcc726f143a35826f06182045ffae
+table figure 808a55c0006609f13943d7f55df34312ce9fa97911210c1bbca209539ddda24d
+table event 7c0d7200512acb11bacebc7136a7c7637b76435ddba4ac44d82ac7bc0d7dae78
+table event_cause 4ac8d5fd8ce4b953f7c45c0d26248920caadf865f5cb6bf3f1e87934506c5ded
+stat artifacts_made 39
+stat artifacts_smiths 21
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 18
+stat artifacts_deep 0
+stat artifacts_arms 20
+stat artifacts_armour 10
+stat artifacts_regalia 1
+stat artifacts_relic 8
+stat artifacts_staff 0
+stat artifacts_taken 12
+stat artifacts_lost 8
+stat artifacts_hoarded 2
+stat artifacts_recovered 5
+stat artifacts_buried 9
+stat artifact_holdings 87
+stat artifacts_changed_hands 18
+stat artifacts_lost_at_end 25
+stat artifacts_held_by_others 5
+stat smiths 21
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 38
+stat battles_under_acts 19
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move monster_raid kept>hoarded
+path move sacked kept>kept
+path move sacked kept>lost
+path move war_won kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion war_declared
+case artifacts-small-stress-3 3 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 13e56eb22d2373219ad69963e0f6630c2faa801c948d95dacf13b1ff1c8031c3
+table artifact_holding 224baf24ec6721c975d8d4b040bd0186067ea22c1545608fb0800dbe53184867
+table figure cc001dd3493d9e2eb15882464919b72d2e304ee1ecb5c1f1d5bfb0aca6b054e4
+table event 8539416569c183857bd82a16077521a3de579da836b82849e34e05fed8f1609d
+table event_cause fc525d3f745858f88c90fa7e466862c07c4e7980e568cac4efef5dbb49e7cc41
+stat artifacts_made 13
+stat artifacts_smiths 9
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 4
+stat artifacts_deep 0
+stat artifacts_arms 5
+stat artifacts_armour 0
+stat artifacts_regalia 4
+stat artifacts_relic 4
+stat artifacts_staff 0
+stat artifacts_taken 0
+stat artifacts_lost 0
+stat artifacts_hoarded 9
+stat artifacts_recovered 6
+stat artifacts_buried 1
+stat artifact_holdings 31
+stat artifacts_changed_hands 3
+stat artifacts_lost_at_end 5
+stat artifacts_held_by_others 0
+stat smiths 9
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 0
+stat battles_under_acts 0
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_made
+path artifact_recovered
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move figure_died borne>buried
+path move figure_died borne>kept quiet
+path move hero_slain borne>hoarded
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>kept
+path occasion cult_founded
+path occasion hero_rose
+path occasion settlement_overrun
+path occasion succession_disputed
+case artifacts-small-stress-5 5 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 0472de4414b99ff2496b7ff75ad15fbcd7809489aa70696e3b6a9fc55582b89e
+table artifact_holding 5b4739ff6677f22355ec3b8e94608f2507306a1d3fc4df5e68778c04842d34c2
+table figure 773d950b45a337b1410e500c96f3dc7c1e7b3059286c490d9f44b174aa5c2837
+table event f7af0f5a7212aa62a28b1b5bdffe2247f6a779f14c06a3620ec5a4178037f469
+table event_cause 759564cff0f42a4c488d5388a9a06cb1ddf47fa92aeee35c71457bbec8e8b13d
+stat artifacts_made 84
+stat artifacts_smiths 48
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 36
+stat artifacts_deep 0
+stat artifacts_arms 34
+stat artifacts_armour 17
+stat artifacts_regalia 20
+stat artifacts_relic 13
+stat artifacts_staff 0
+stat artifacts_taken 35
+stat artifacts_lost 9
+stat artifacts_hoarded 31
+stat artifacts_recovered 20
+stat artifacts_buried 17
+stat artifact_holdings 251
+stat artifacts_changed_hands 45
+stat artifacts_lost_at_end 49
+stat artifacts_held_by_others 0
+stat smiths 48
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 83
+stat battles_under_acts 39
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-6 6 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 81a6e684e77bf2a94ca75828acc98bc6898b6a1581c35d9f6433312f9579d2e4
+table artifact_holding 19457d453c37db9fa1632742dae060ad3ec2a9aa4bc87f960a0eb70981d48174
+table figure 7bd1e3f8b7b6df5cf1d566ac5049fe98bb560b74c6eff6592464d0e9de6e0950
+table event 832a11ea3a87792b7b654c4052e56ea4bde31368fbaedc0e0ee80073166511b9
+table event_cause a6a8c1495142f59adbe43601e67d09ffc3fcede9c1a5034ef9fa8f990e31e5ae
+stat artifacts_made 72
+stat artifacts_smiths 44
+stat artifacts_commissioned 1
+stat artifacts_casters 0
+stat artifacts_gods 28
+stat artifacts_deep 0
+stat artifacts_arms 22
+stat artifacts_armour 22
+stat artifacts_regalia 15
+stat artifacts_relic 13
+stat artifacts_staff 0
+stat artifacts_taken 19
+stat artifacts_lost 3
+stat artifacts_hoarded 12
+stat artifacts_recovered 4
+stat artifacts_buried 13
+stat artifact_holdings 145
+stat artifacts_changed_hands 27
+stat artifacts_lost_at_end 32
+stat artifacts_held_by_others 1
+stat smiths 44
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 30
+stat battles_under_acts 31
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 2
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>enshrined quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>kept
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-7 7 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 4e4ab1d695595ccdb44e176cc2612a35ad05dafc4213cbcaf030c1ff746b9eda
+table artifact_holding 72bed3428de5e9c4a2b32ea304680b949376ff2fad754cab5866bf6bd6b80ef5
+table figure 838f4226fe97012c567401c207436b4fbdc77d9459d45e90cfdd74ad2df219a0
+table event 01bd04901cd666911813fdad3125512beaa59b450a767367b9526012f0b361e5
+table event_cause 0eb36abe1fdef942d58489d5679d653d4a43290fa9d1f1acae563938107f9a58
+stat artifacts_made 211
+stat artifacts_smiths 152
+stat artifacts_commissioned 11
+stat artifacts_casters 2
+stat artifacts_gods 57
+stat artifacts_deep 0
+stat artifacts_arms 72
+stat artifacts_armour 37
+stat artifacts_regalia 80
+stat artifacts_relic 20
+stat artifacts_staff 2
+stat artifacts_taken 81
+stat artifacts_lost 30
+stat artifacts_hoarded 84
+stat artifacts_recovered 50
+stat artifacts_buried 40
+stat artifact_holdings 579
+stat artifacts_changed_hands 132
+stat artifacts_lost_at_end 141
+stat artifacts_held_by_others 3
+stat smiths 152
+stat wars_citing_artifacts 3
+stat battles_with_artifacts 136
+stat battles_under_acts 124
+stat cult_returns_barred 999
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path class staff
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 2
+path maker 3
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>enshrined quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move hold_lost kept>hoarded
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>borne
+path move monster_slain_by_hero hoarded>kept
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path move war_won kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion deep_woken
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-9 9 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact eb05c524c538d555cbed0553607a23c4da570d53d9746b87a85a77b6a2d9ae33
+table artifact_holding 8d3ddc60ba30efe7a3796270bbb11e3691a7e406937ced8c6484ddbfe7e9e3f6
+table figure 1dd6352c9f4199d4c0d79ecb0f4b3939b836f77c7744292d0ddf1f59001d6441
+table event 2ce89825b0437634da6b7f140b82bd6001eeae3c9fa2e066a9dc11aab057251a
+table event_cause 61fd3dc222d82878ccdb03eb77663dbe2b4500b2d8e22e79acb64e5eee4bbb0e
+stat artifacts_made 36
+stat artifacts_smiths 23
+stat artifacts_commissioned 1
+stat artifacts_casters 0
+stat artifacts_gods 13
+stat artifacts_deep 0
+stat artifacts_arms 18
+stat artifacts_armour 5
+stat artifacts_regalia 9
+stat artifacts_relic 4
+stat artifacts_staff 0
+stat artifacts_taken 3
+stat artifacts_lost 2
+stat artifacts_hoarded 3
+stat artifacts_recovered 0
+stat artifacts_buried 10
+stat artifact_holdings 72
+stat artifacts_changed_hands 8
+stat artifacts_lost_at_end 16
+stat artifacts_held_by_others 0
+stat smiths 23
+stat wars_citing_artifacts 1
+stat battles_with_artifacts 33
+stat battles_under_acts 8
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 2
+path maker 4
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_raid kept>hoarded
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-12 12 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 903dd2fa5903533494bb7c165ee29f98ac63d340b107753c59d1e70da907a635
+table artifact_holding 5b50401a506b72324dc56b2289c8260ecd090b57d061aefcfad787acc3a3bd83
+table figure cfcb46a365d142228655f234d4d8a7354802c48e1c6ea545b6542d3c9e9cca59
+table event 784aa751edf3da301f89253fdf169404cfb6274c9364ddcf61565e6c0a9f754d
+table event_cause 15a42ba5d70565c45ee738cb1f7756e3aa005ff2d17c9eeba832adee69ffe07b
+stat artifacts_made 82
+stat artifacts_smiths 42
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 40
+stat artifacts_deep 0
+stat artifacts_arms 43
+stat artifacts_armour 13
+stat artifacts_regalia 12
+stat artifacts_relic 14
+stat artifacts_staff 0
+stat artifacts_taken 23
+stat artifacts_lost 19
+stat artifacts_hoarded 0
+stat artifacts_recovered 1
+stat artifacts_buried 21
+stat artifact_holdings 189
+stat artifacts_changed_hands 35
+stat artifacts_lost_at_end 52
+stat artifacts_held_by_others 6
+stat smiths 42
+stat wars_citing_artifacts 2
+stat battles_with_artifacts 115
+stat battles_under_acts 155
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-13 13 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact ef6f3af86bb80a2f3ffad25c8d7f5048c57a91c2d75deb14b57af9d1214a0629
+table artifact_holding 6bd9a513df580aeb14ca05f6811a77c2c580321d6c9d1273527ae1c9642e4c3b
+table figure d66a43862ebc044762483d1b7a96d5b58aea2e5d47d37c5e97a15480e3d20a23
+table event 350dcad829bd48eb2f83150923852003680193b8da79eaaf82990d40b7b601ea
+table event_cause 67ceab5c6a3f20c795c0bc7affc9976c8f8d710c990e2b25d44d46af6cfc81d2
+stat artifacts_made 173
+stat artifacts_smiths 134
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 39
+stat artifacts_deep 0
+stat artifacts_arms 47
+stat artifacts_armour 24
+stat artifacts_regalia 92
+stat artifacts_relic 10
+stat artifacts_staff 0
+stat artifacts_taken 37
+stat artifacts_lost 6
+stat artifacts_hoarded 30
+stat artifacts_recovered 13
+stat artifacts_buried 24
+stat artifact_holdings 334
+stat artifacts_changed_hands 62
+stat artifacts_lost_at_end 59
+stat artifacts_held_by_others 4
+stat smiths 134
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 83
+stat battles_under_acts 64
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>enshrined quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>kept
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path move war_won kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-small-stress-14 14 0 artifacts-small
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact ea8cf226409b7f71bf51703f98c8fe7c12c6bb6cc439579eea3dc3c136faae10
+table artifact_holding 7b94d2ef4daa0f8e8a3a72fb9976864c97cf9a17e98146136ff9454e423f3b21
+table figure ee44ffe3258772ef0a8197f2d6140339be14b45edd5b4b188817958a0e6d1741
+table event b3b7d151f67e4338b0bbad5aaa93e86aa5926919186825a9f0f21be874968665
+table event_cause 86424fbdcbdba70fa90863e20003f4dffb43e0104ca4f22b1f4f429c31f2c140
+stat artifacts_made 142
+stat artifacts_smiths 84
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 58
+stat artifacts_deep 0
+stat artifacts_arms 66
+stat artifacts_armour 43
+stat artifacts_regalia 15
+stat artifacts_relic 18
+stat artifacts_staff 0
+stat artifacts_taken 46
+stat artifacts_lost 28
+stat artifacts_hoarded 21
+stat artifacts_recovered 10
+stat artifacts_buried 17
+stat artifact_holdings 350
+stat artifacts_changed_hands 74
+stat artifacts_lost_at_end 79
+stat artifacts_held_by_others 22
+stat smiths 84
+stat wars_citing_artifacts 2
+stat battles_with_artifacts 154
+stat battles_under_acts 119
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>kept
+path move peace kept>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path move war_won kept>kept
+path move war_won kept>kept quiet
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+path quiet-step move
+case artifacts-deep-0 0 0 artifacts-deep
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 6edc14d22f43986616a33bced32d3b88bc1bd8bffa36a26caa3819d0da112c9c
+table artifact_holding a795b725f3b6f8f3951667cd1005ec73d356b22d990175cfa39e7861dc95632f
+table figure 68bc97466497a4c36c6d3aaa0b330200dd74603094a8ab8bcd8bfb8e0cdb551b
+table event 619982805ddeda1c5fe3eb50bdcd5042659fe9d0be42c0732b5314597a56a0f9
+table event_cause fd2ba12d92bf7f79ba1405e0bfef002680318592bc7aad0495cb38b45bb5d4cb
+stat artifacts_made 49
+stat artifacts_smiths 34
+stat artifacts_commissioned 14
+stat artifacts_casters 0
+stat artifacts_gods 15
+stat artifacts_deep 17
+stat artifacts_arms 24
+stat artifacts_armour 9
+stat artifacts_regalia 10
+stat artifacts_relic 6
+stat artifacts_staff 0
+stat artifacts_taken 2
+stat artifacts_lost 2
+stat artifacts_hoarded 26
+stat artifacts_recovered 8
+stat artifacts_buried 8
+stat artifact_holdings 114
+stat artifacts_changed_hands 23
+stat artifacts_lost_at_end 29
+stat artifacts_held_by_others 0
+stat smiths 34
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 16
+stat battles_under_acts 15
+stat cult_returns_barred 0
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path deep
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 2
+path maker 4
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move hold_lost kept>hoarded
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>borne
+path move monster_slain_by_hero hoarded>kept
+path occasion cult_founded
+path occasion deep_woken
+path occasion divine_champion
+path occasion hero_rose
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-deep-6 6 0 artifacts-deep
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact fd95b6ac06ee88c0194f5befac0e99c53ad9ac7b809913b9bec259293c31aebe
+table artifact_holding 9e326e784e13a4550460f2d3d8c1614300c3e13783e7354861fa1ebde0d6618c
+table figure 025baacf9d5e783de0d986bc3c7411b0b23550b6e9f1488566482cc83b2c17ce
+table event 9bd9f38df50bf3f64fc1d0590572d1c0bb42e5dad93837cc0844f0acc40f1ee0
+table event_cause 938a8ef4a0a17205948049e6c8e6316fc2009e3026b8b04cb9d3c23fc6c47f04
+stat artifacts_made 47
+stat artifacts_smiths 30
+stat artifacts_commissioned 0
+stat artifacts_casters 0
+stat artifacts_gods 17
+stat artifacts_deep 0
+stat artifacts_arms 14
+stat artifacts_armour 7
+stat artifacts_regalia 18
+stat artifacts_relic 8
+stat artifacts_staff 0
+stat artifacts_taken 16
+stat artifacts_lost 1
+stat artifacts_hoarded 0
+stat artifacts_recovered 0
+stat artifacts_buried 5
+stat artifact_holdings 87
+stat artifacts_changed_hands 17
+stat artifacts_lost_at_end 11
+stat artifacts_held_by_others 0
+stat smiths 30
+stat wars_citing_artifacts 0
+stat battles_with_artifacts 37
+stat battles_under_acts 21
+stat cult_returns_barred 16
+path artifact_buried
+path artifact_lost
+path artifact_made
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path class armour
+path class arms
+path class regalia
+path class relic
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 4
+path move civ_conquered kept>kept
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move sacked kept>kept
+path move settlement_captured kept>kept
+path occasion civ_conquered
+path occasion cult_founded
+path occasion divine_champion
+path occasion hero_rose
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+case artifacts-deep-13 13 0 artifacts-deep
+table artifact_kind 21e977bb570c30675c8daa086cd942cff5c3b1d80b9e7621e284e0c8a3eae12d
+table artifact 5043708b09f249076b3fc18eaf0c11394e47d3f7a2727a352c5e27788b1d4868
+table artifact_holding a8d9cc00104511e0329926734060bd2ccf7192d50d1174e08cd657b46cfc00b2
+table figure 8a55972c8b149961e7d4b388b27b8393d2126fe8ff1c011f9fe666195279254d
+table event 0318883a0f651473dd5cae5b4fa00da59581577188ab39c7e915ea0e54454b53
+table event_cause d42244f32103666a5b3beb9f9028d81d322dff026728d281b7cfaf0af041aa12
+stat artifacts_made 178
+stat artifacts_smiths 137
+stat artifacts_commissioned 3
+stat artifacts_casters 0
+stat artifacts_gods 41
+stat artifacts_deep 19
+stat artifacts_arms 53
+stat artifacts_armour 34
+stat artifacts_regalia 73
+stat artifacts_relic 18
+stat artifacts_staff 0
+stat artifacts_taken 15
+stat artifacts_lost 5
+stat artifacts_hoarded 61
+stat artifacts_recovered 12
+stat artifacts_buried 29
+stat artifact_holdings 359
+stat artifacts_changed_hands 67
+stat artifacts_lost_at_end 101
+stat artifacts_held_by_others 1
+stat smiths 137
+stat wars_citing_artifacts 1
+stat battles_with_artifacts 103
+stat battles_under_acts 82
+stat cult_returns_barred 2469
+path artifact_buried
+path artifact_hoarded
+path artifact_lost
+path artifact_made
+path artifact_recovered
+path artifact_taken
+path battle cites act
+path battle cites artifact
+path claim cited
+path class armour
+path class arms
+path class regalia
+path class relic
+path deep
+path first borne
+path first enshrined
+path first kept
+path maker 1
+path maker 2
+path maker 4
+path move cult_suppressed enshrined>enshrined quiet
+path move cult_suppressed enshrined>kept quiet
+path move fell_in_battle borne>kept
+path move fell_in_battle borne>lost
+path move figure_died borne>buried
+path move figure_died borne>buried quiet
+path move figure_died borne>kept quiet
+path move general_appointed kept>borne quiet
+path move hero_slain borne>hoarded
+path move hold_lost kept>hoarded
+path move monster_died hoarded>lost quiet
+path move monster_raid kept>hoarded
+path move monster_slain hoarded>kept
+path move monster_slain_by_hero hoarded>borne
+path move monster_slain_by_hero hoarded>kept
+path move sacked kept>kept
+path move sacked kept>lost
+path move settlement_captured kept>kept
+path move war_won kept>kept quiet
+path occasion civ_conquered
+path occasion cult_founded
+path occasion deep_woken
+path occasion divine_champion
+path occasion hero_rose
+path occasion sacked
+path occasion settlement_overrun
+path occasion succession_disputed
+path occasion war_declared
+path quiet-step move

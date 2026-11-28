@@ -99,6 +99,9 @@ STREAMS_023 = dict(STREAMS, monster="hist.names.monster", site="hist.names.site"
 # P5-06 6.11 (generator 0.27.0): kind person (P3-02 4.5's reserved kind, after site) with its stream; its forms are the
 # culture's person_forms (with_forms(D, "person", F)).
 STREAMS_023["person"] = "hist.names.person"
+# P5-11 6.6 (generator 0.31.0): kind artifact after person, stream hist.names.artifact; its forms are the culture's
+# artifact_forms with {title} replaced by the kind's title (with_forms(D, "artifact", F)).
+STREAMS_023["artifact"] = "hist.names.artifact"
 KINDS_023 = ("god", "civilization", "settlement", "monster", "site")
 
 

@@ -59,7 +59,9 @@ KIND_ID = {k: i for i, k in KINDS}
 FIGURE_KIND_KEYS = tuple(k for _i, k in KINDS)
 CIV, SETTLEMENT, REGION, FIGURE, MONSTER, SITE = 3, 4, 5, 6, 8, 9
 RULER, CLAIMANT, GENERAL, HERO, CASTER = 1, 2, 3, 4, 5                  # 9.1 role
-ROLE_WORDS = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster", 6: "champion", 7: "prophet"}
+ROLE_WORDS = {1: "ruler", 2: "claimant", 3: "general", 4: "hero", 5: "caster", 6: "champion", 7: "prophet",
+              8: "smith"}   # 8: P5-11 9 (generator 0.31.0)
+SMITH = 8
 CHAMPION, PROPHET = 6, 7                                                # P5-08 9: figure.role 6 and 7
 
 
@@ -604,6 +606,40 @@ class Figures:
             self.champion_to_war(fid, c, event)
         return f
 
+    def raise_maker(self, fid, c, event):
+        """P5-11 7.3: the smith (role 8) with id fid of realm c, entering now with smith_age_* (P5-06 6.9), its
+        start_event the artifact_made; no epithet."""
+        t = self.t
+        if fid != self.next_figure_id():
+            _pcr().fatal("history: figures: raise_maker: figure %d is not the next id" % fid)
+        f = self.non_ruler(SMITH, c, t["smith_age_permille"], t["smith_age_span_permille"])
+        f["start_event"] = event
+        self.log.append((self.w.year, "smith", c, fid, event))
+        return f
+
+    def brief(self, fid):
+        """P5-11 7.3: FigureView::brief (role, civ, alive, death_region, death_settlement); all 0 for no figure."""
+        if not self.figure_exists(fid):
+            return dict(role=0, civ=0, alive=False, death_region=0, death_settlement=0)
+        f = self.fig(fid)
+        return dict(role=f["role"], civ=f["civ"], alive=self.alive(fid), death_region=f["death_region"],
+                    death_settlement=f["death_settlement"])
+
+    def caster_site(self, fid):
+        """P5-11 7.3: the open kind 4 site whose master is the caster, or whose last master it was when it has died
+        (master_of: the last caster whose tower the site is); 0 none."""
+        if not self.figure_exists(fid):
+            return 0
+        f = self.fig(fid)
+        sid = f.get("tower", 0)
+        if f["role"] != CASTER or not sid:
+            return 0
+        s = self.w.monsters.site(sid)
+        if s["kind"] != 4 or s["ending"] != 0:
+            return 0
+        m = self.master_of(sid)
+        return sid if m is not None and m["id"] == fid else 0
+
     def champion_to_war(self, ch, c, event):
         """P5-08 7.5 (lead ruling PN5, second): at its raising the champion commands the first open war (ascending
         id, attacker side then defender) where c is a principal and the side has no general (causes: the war and the
@@ -779,6 +815,8 @@ class Figures:
             return w.events[f["start_event"] - 1]["region"], 0
         if f["role"] == CASTER and f["tower"]:
             return w.monsters.site(f["tower"])["region"], 0
+        if f["role"] == SMITH:   # P5-11 6.4: a smith dies at the region of its start event
+            return w.events[f["start_event"] - 1]["region"], 0
         if cv["ended_year"] is None:
             cap = w.stl(cv["capital"])
             return cap["region"], (cap["id"] if f["role"] == RULER else 0)
@@ -1517,6 +1555,8 @@ class Figures:
         for f in order:
             if f["role"] in (CHAMPION, PROPHET) and p508_on():
                 continue   # P5-08 6.5: 6.10's epithets skip champions and prophets
+            if f["role"] == SMITH:
+                continue   # P5-11 6.4, 7.3: a smith has no epithet
             text, how = epithet_of(ROLE_WORDS[f["role"]], self.deed_values(f), self.slayer_text(f),
                                    self.t["epithets"], borne, self.t["epithet_repeat_max"])
             f["epithet"] = text

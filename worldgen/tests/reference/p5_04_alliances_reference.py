@@ -1655,6 +1655,19 @@ class Alliances:
                 out[y if x == c else x] = 0 if rec.get("origin") else rec["event"]
         return sorted(out.items())
 
+    def forge_site(self, c):
+        """P5-11 7.4: AllianceView::forge_site(c): the open mine of c with the largest mine_depth, then the smallest
+        id; 0 none."""
+        m = self.w.monsters
+        best = None
+        for (cc, _R), (sid, _ts) in sorted(self.mines.items(), key=lambda kv: kv[1][0]):
+            if cc != c:
+                continue
+            d = m.deep.mine_depth(sid) if m is not None and getattr(m, "deep", None) is not None else 0
+            if best is None or d > best[0]:
+                best = (d, sid)
+        return best[1] if best is not None else 0
+
     def sellers(self):
         return {c for (c, _R) in self.mines}
 

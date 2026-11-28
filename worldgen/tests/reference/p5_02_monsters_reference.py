@@ -832,14 +832,17 @@ class Monsters:
                     if u["owner_civ"] == c and u["status"] in (1, 2) and w.visible(u)
                     and u["region"] in hops and hops[u["region"]] <= t["hunt_hops"])
             hero = self.hero_of(c)   # P5-06 7.7: (figure, hunt_permille, might_permille); (0, 0, 0) none
-            S = H * self.prowess(civ["race"]) // 1000 * (1000 + hero[2]) // 1000
+            av = getattr(w, "artifacts", None)   # P5-11 7.2: the hero's borne hunt and the hoard's motive
+            hp = av.hunt_permille(hero[0]) if av is not None and hero[0] else 0
+            mot = av.hoard_motive_permille(m["id"], c) if av is not None else 0
+            S = H * self.prowess(civ["race"]) // 1000 * (1000 + hero[2] + hp) // 1000
             if S == 0:
                 continue
             p_h = t["hunt_permille"]
             if p503():   # P5-03 9.3 (reading H1: R_c counts the raids with Y - year <= hunt_memory_years)
                 R = sum(1 for yr in m["raid_years"].get(c, []) if Y - yr <= t["hunt_memory_years"])
-                p_h = min(t["hunt_max_permille"] + hero[1], t["hunt_permille"] + (max(1, R) - 1) *
-                          t["hunt_raid_permille"] + hero[1])
+                p_h = min(t["hunt_max_permille"] + hero[1] + mot, t["hunt_permille"] + (max(1, R) - 1) *
+                          t["hunt_raid_permille"] + hero[1] + mot)
             elif hero[0]:
                 p_h = p_h + hero[1]
             if not chance_pm(w.draw("hist.monsters.hunt", m["id"], c, 0), p_h):

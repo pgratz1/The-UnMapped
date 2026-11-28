@@ -175,6 +175,11 @@ FLAGS = dict(
     pantheon=False,     # P5-08 5 to 7: the pantheon subsystem after the figures (p5_08_pantheon_reference.Pantheon),
                         # its DivineView on peoples and conflict, the interventions of T5, the third tension source
     p508=False,         # P5-08 12: the follow-ups in monsters (12.2 to 12.4, 12.7), alliances (12.5), figures (12.6)
+    # P5-11 (generator 0.31.0)
+    artifacts=False,    # P5-11 5 to 7: the artifacts subsystem last (p5_11_artifacts_reference.Artifacts), its
+                        # ArtifactView read by conflict (the win factor, the strain factor, the declaration's cause, the
+                        # battle_led cause) and the monsters (hunts), schema 15
+    p511=False,         # P5-11 12.1 (battles cite the acts in force) and 12.2 (a cult does not spread straight back)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -191,8 +196,9 @@ FLAGS_027 = ("figures", "riders")   # P5-06 (generator 0.27.0)
 FLAGS_028 = ("p504a",)               # P5-04a (generator 0.28.0)
 FLAGS_029 = ("deep", "a1_units")    # P5-07 (generator 0.29.0)
 FLAGS_030 = ("pantheon", "p508")    # P5-08 (generator 0.30.0)
+FLAGS_031 = ("artifacts", "p511")   # P5-11 (generator 0.31.0)
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0", "0.31.0")
 VERSION_EXPLICIT = False   # P5-07 12 item 3: --version given; check-world otherwise reads the world's version
 
 
@@ -206,6 +212,8 @@ def overrun_kinds():
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
+    if k in FLAGS_031:
+        return i >= 15
     if k in FLAGS_030:
         return i >= 14
     if k in FLAGS_029:
@@ -608,6 +616,9 @@ class Data(pp.Data):
         self.figures = hist.get("figures")       # P5-06 4.4 (0.27.0); an older root has none
         self.pantheon = hist.get("pantheon")     # P5-08 4.2 (0.30.0); an older root has none
         self.gods = (pdr.load_root(root, kinds=("god",))["god"] if pdr.at_least("0.30.0") else [])   # P5-08 4.1
+        self.artifacts = hist.get("artifacts")   # P5-11 4.3 (0.31.0); an older root has none
+        self.artifact_kinds = (pdr.load_root(root, kinds=("artifact",))["artifact"] if pdr.at_least("0.31.0")
+                               else [])         # P5-11 4.1, canonical id order
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -657,6 +668,8 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d.figures = copy.deepcopy(getattr(dat, "figures", None))
     d.pantheon = copy.deepcopy(getattr(dat, "pantheon", None))
     d.gods = copy.deepcopy(getattr(dat, "gods", []))
+    d.artifacts = copy.deepcopy(getattr(dat, "artifacts", None))
+    d.artifact_kinds = copy.deepcopy(getattr(dat, "artifact_kinds", []))
     return d
 
 
@@ -881,6 +894,12 @@ class World(pp.World):
             import p5_08_pantheon_reference as p508
             self.pantheon = p508.Pantheon(self, dat, inp)
             self.divine = self.pantheon
+        # P5-11: the artifacts subsystem, installed last (p5_11_artifacts_reference.Artifacts); its ArtifactView read
+        # by conflict and the monsters (7.1, 7.2); None: no view (every read 0)
+        self.artifacts = None
+        if conflict and FLAGS["artifacts"]:
+            import p5_11_artifacts_reference as p511
+            self.artifacts = p511.Artifacts(self, dat, inp)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -900,6 +919,8 @@ class World(pp.World):
         self.begin()                         # T3
         if self.figures is not None:
             self.figures.t3()                # T3: figures (P5-06 6.1: the only subsystem of T3)
+        if self.artifacts is not None:
+            self.artifacts.step()            # T3: artifacts (P5-11 6.1: last)
         self.t4()                            # T4
         if self.monsters is not None:
             self.monsters.t4()               # T4: monsters (same step, after peoples)
@@ -909,6 +930,8 @@ class World(pp.World):
             self.figures.t4()                # T4: figures (after relations; alliances has no T4)
         if self.pantheon is not None:
             self.pantheon.t4()               # T4: pantheon (P5-08 6.12 item 3: last)
+        if self.artifacts is not None:
+            self.artifacts.step()            # T4: artifacts (P5-11 6.1: last)
         self.begin()                         # T5
         if self.pantheon is not None:
             self.pantheon.t5()               # T5: the interventions (P5-08 6.3, 7.6)
@@ -927,6 +950,8 @@ class World(pp.World):
             self.figures.t6()                # T6: figures (after alliances)
         if self.pantheon is not None:
             self.pantheon.t6()               # T6: pantheon, the finish (P5-08 6.10, integration E3)
+        if self.artifacts is not None:
+            self.artifacts.step()            # T6: artifacts (P5-11 6.1: last)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -960,6 +985,8 @@ class World(pp.World):
             self.figures.q4()               # Q4: figures (after alliances)
         if self.pantheon is not None:
             self.pantheon.q4()              # Q4: pantheon (after figures)
+        if self.artifacts is not None:
+            self.artifacts.step()           # Q4: artifacts (P5-11 6.1: last)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -1695,6 +1722,8 @@ class World(pp.World):
                         rate = rate * self.figures.allied_strain_permille(a) // 1000
                 if self.figures is not None:       # P5-06 7.2: the attacker's temper, normalized by race
                     rate = rate * self.figures.strain_permille(a) // 1000
+                if self.artifacts is not None:     # P5-11 7.2: a's claim toward b, after the temper factor
+                    rate = rate * (1000 + self.artifacts.claim_permille(a, b)) // 1000
                 v = self.strain.get((a, b), 0) + rate * years * permille * I // 1000
                 v = min(v, t["strain_max"] * 1000)
                 if v > (1 << 40):
@@ -1813,6 +1842,8 @@ class World(pp.World):
         lp = self.last_peace.get((min(a, b), max(a, b)))
         if lp is not None:
             causes.add(lp[1])
+        if self.artifacts is not None and self.artifacts.claim_permille(a, b) > 0:
+            causes.add(self.artifacts.claim_event(a, b))   # P5-11 7.2: the declaration cites the claim's event
         e = self.append("war_declared", region=goal, participants=(("attacker", CIV, a), ("defender", CIV, b)),
                         causes=tuple(sorted(causes)))
         pk = sym_key(a, b, "peace")
@@ -2191,8 +2222,11 @@ class World(pp.World):
         if self.figures is not None:        # P5-06 7.6: the generals' skill in the win chance only
             gx, gy = self.figures.general_of(w, x), self.figures.general_of(w, y)
         if gx is not None and (gx[0] or gy[0]):
-            A1 = A * (1000 + gx[1]) // 1000
-            D2 = D * dv // 1000 * (1000 + gy[1]) // 1000
+            av = self.artifacts
+            bx = av.battle_permille(gx[0]) if av is not None and gx[0] else 0   # P5-11 7.2: the general's arms
+            by = av.battle_permille(gy[0]) if av is not None and gy[0] else 0
+            A1 = A * (1000 + gx[1] + bx) // 1000
+            D2 = D * dv // 1000 * (1000 + gy[1] + by) // 1000
             p = A1 * 1000 // (A1 + D2) if A1 + D2 > 0 else 500
         else:
             p = self.battle_p(A, D, dv)
@@ -2202,11 +2236,17 @@ class World(pp.World):
         bcauses = tuple(sorted({w, arms_c})) if arms_c else (w,)
         if arms_c:
             self.cited_arms.add(arms_c)
+        if FLAGS["p511"] and getattr(self, "pantheon", None) is not None:   # P5-11 12.1: the acts in force
+            acts = {self.pantheon.force_act(W, self.year, True), self.pantheon.force_act(L, self.year, False)} - {0}
+            bcauses = tuple(sorted(set(bcauses) | acts))
         dead_w, dead_l = self.battle_tolls(FW, FL, w)
         some_ally = allied and (any(f > 0 for _z, f in fx[1]) or any(f > 0 for _z, f in fy[1]))
         if gx is not None and (gx[0] or gy[0]):
             fw, fl = ((fx, fy) if xwin else (fy, fx)) if allied else ((0, []), (0, []))
             gw, gl = (gx, gy) if xwin else (gy, gx)
+            if self.artifacts is not None and gw[0] and self.artifacts.battle_artifact(gw[0]):
+                # P5-11 7.2, 12.1: a battle_led also cites the winner's general's artifact
+                bcauses = tuple(sorted(set(bcauses) | {self.artifacts.battle_artifact(gw[0])}))
             e = self.append("battle_led", region=r,
                             participants=(("winner", CIV, W), ("loser", CIV, L)) +
                             tuple(("winner_ally", CIV, z) for z, f in fw[1] if f > 0) +
@@ -2814,6 +2854,10 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
         res["book"] = w.figures.book_rows()
     elif pe.RENDER_R27:
         res["figure"], res["book"] = [], []
+    if pe.RENDER_R31:   # schema 15 (P5-11 9): artifact_kind always, artifact and artifact_holding at the end
+        import p5_11_artifacts_reference as p511
+        res["artifact_kind"] = p511.artifact_kind_rows(dat)
+        res["artifact"], res["artifact_holding"] = (w.artifacts.rows() if w.artifacts is not None else ([], []))
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
@@ -7639,7 +7683,7 @@ def cmd_check_world(argv):
         # P5-07 12 item 3: without --version the world's own generator version selects the rules
         use_version(meta["generator_version"])
         dat = data(opt(argv, "--data", "game/data"))
-    want_schema = "14" if FLAGS["pantheon"] else "13" if FLAGS["deep"] else "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
+    want_schema = "15" if FLAGS["artifacts"] else "14" if FLAGS["pantheon"] else "13" if FLAGS["deep"] else "12" if FLAGS["figures"] else "11" if FLAGS["alliances"] else "10" if FLAGS["relations"] else "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-03 16.1: 10
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))

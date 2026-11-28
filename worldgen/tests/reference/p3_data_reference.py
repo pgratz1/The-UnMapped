@@ -4037,6 +4037,154 @@ KINDS_030["history"] = ("history", dict(
     monsters=_H029["monsters"] + _FOLLOW["monsters"], alliances=_H029["alliances"] + _FOLLOW["alliances"],
     figures=_H029["figures"] + _FOLLOW["figures"]))
 
+
+# ---------------------------------------------------------------------------
+# P5-11 (generator 0.31.0, docs/specs/p5-11-artifacts.md r1): the data kind artifact (4.1), the culture field
+# artifact_forms (4.2), the tuning history.artifacts (4.3, 4.4), history.figures.smith_age_permille and
+# smith_age_span_permille, history.pantheon.cult_return_years (4.3, 12.2), the deeds and cause words of 4.5, the faerie
+# form of 4.5 and the report entries 111 to 116 (8.2). The engineer writes game/data and both fixture roots; until
+# then a 0.30.0 root on disk is read at 0.31.0 with the test writer's fixture files of the spec's listing
+# (worldgen/tests/data/artifacts/spec-r1/, ARTIFACTS_SPEC_DIR) filled in, item by item and only where the root lacks
+# the item (FALLBACK_031_USED). No value of 4 is written in this module: they are read from those TOML files.
+# ---------------------------------------------------------------------------
+ARTIFACTS_SPEC_DIR = os.path.join(REPO, "worldgen", "tests", "data", "artifacts", "spec-r1")
+ARTIFACT_CLASSES_031 = ("arms", "armour", "regalia", "relic", "staff")   # 4.1: codes 1 to 5 in this order
+ARTIFACT_031 = (("class", STR), ("title", STR), ("noun", STR), ("weight", INT), ("battle_permille", INT),
+                ("hunt_permille", INT), ("claim_permille", INT))
+OCCASION_031 = REC((("kind", STR), ("role", STR), ("chance_permille", INT), ("bearer", STR),
+                    ("classes", REC(tuple((c, INT) for c in ARTIFACT_CLASSES_031)))))
+# 4.3 in order: (name, low, high, start); the starts are the code defaults but for occasions (empty)
+ARTIFACTS_FIELDS_031 = (("forge_chance_permille", 0, 4000), ("realm_rest_years", 0, 10000), ("world_max", 0, 1000),
+                        ("deep_metal_depth", 1, 3), ("deep_metal_permille", 0, 500), ("force_max_permille", 0, 1000),
+                        ("hunt_max_permille", 0, 2000), ("claim_max_permille", 0, 4000), ("burial_permille", 0, 1000),
+                        ("battle_take_permille", 0, 1000), ("sack_take_permille", 0, 1000),
+                        ("capture_take_permille", 0, 1000), ("raid_take_permille", 0, 1000),
+                        ("hoard_hunt_permille", 0, 1000))
+ARTIFACTS_SCHEMA_031 = (("occasions", ARR(OCCASION_031)),) + tuple((n, INT) for n, _lo, _hi in ARTIFACTS_FIELDS_031)
+FIGURES_FIELDS_031 = (("smith_age_permille", 0, 1000), ("smith_age_span_permille", 0, 1000))
+PANTHEON_FIELDS_031 = (("cult_return_years", 0, 10000),)
+FALLBACK_031_USED = set()
+
+
+def artifacts_spec_additions():
+    with open(os.path.join(ARTIFACTS_SPEC_DIR, "additions.toml"), "rb") as f:
+        return tomllib.load(f)
+
+
+def artifacts_spec_history():
+    with open(os.path.join(ARTIFACTS_SPEC_DIR, "history", "artifacts.toml"), "rb") as f:
+        return tomllib.load(f)["history"]["artifacts"]
+
+
+def artifacts_code_defaults_031(starts):
+    """4.3: a tuning built in code: occasions empty, the others their starts (inert)."""
+    return dict(starts, occasions=[])
+
+
+def history_031(defs):
+    """The 0.31.0 additions on a 0.30.0 history definition set (fills only what is absent; returns True if any)."""
+    used = False
+    add = None
+    if "artifacts" not in defs and any(k in defs for k in ("chronology", "report")):
+        defs["artifacts"] = artifacts_spec_history()
+        used = True
+    for did, fields in (("figures", FIGURES_FIELDS_031), ("pantheon", PANTHEON_FIELDS_031)):
+        d = defs.get(did)
+        if d is not None and any(n not in d for n, _lo, _hi in fields):
+            add = add or artifacts_spec_additions()
+            defs[did] = dict(d, **{n: add[did][n] for n, _lo, _hi in fields if n not in d})
+            used = True
+    rp = defs.get("report")
+    if rp is not None and not any(e["kind"] == "artifact_made" for e in rp["events"]):
+        add = add or artifacts_spec_additions()
+        evs = []
+        for e in rp["events"]:
+            e = dict(e)
+            if e["kind"] in ("divine_bless", "divine_curse", "divine_champion", "divine_monster", "divine_mark") and \
+                    "artifact_made=" not in e["template"] and add["words"]["after"] in e["template"]:
+                e["template"] = e["template"].replace(add["words"]["after"], add["words"]["after"] + add["words"]["added"])
+            evs.append(e)
+        evs += [dict(kind=x["kind"], salience=x["salience"], template=x["template"]) for x in add["report"]]
+        defs["report"] = dict(rp, events=evs)
+        used = True
+    return used
+
+
+def culture_031(defs):
+    """4.2 artifact_forms appended after profane_forms; 4.5 the faerie cult form (fills only what is absent)."""
+    used = False
+    add = None
+    for did in list(defs):
+        nm = defs[did].get("naming")
+        if nm is None or "artifact_forms" in nm:
+            continue
+        add = add or artifacts_spec_additions()
+        if did not in add["artifact_forms"]:
+            continue
+        nm = dict(nm, artifact_forms=list(add["artifact_forms"][did]))
+        if did == "faerie":
+            nm["cult_forms"] = [add["words"]["faerie_new"] if f == add["words"]["faerie_old"] else f
+                                for f in nm["cult_forms"]]
+        defs[did] = dict(defs[did], naming=nm)
+        used = True
+    return used
+
+
+def god_031(defs):
+    """4.5: the deeds appended to craft and war (fills only what is absent)."""
+    used = False
+    add = None
+    for did in list(defs):
+        if any(d["kind"] in ("artifact_made", "artifact_taken") for d in defs[did].get("deeds", [])):
+            continue
+        add = add or artifacts_spec_additions()
+        if did in add["deeds"]:
+            defs[did] = dict(defs[did], deeds=list(defs[did]["deeds"]) + [dict(d) for d in add["deeds"][did]])
+            used = True
+    return used
+
+
+def artifact_messages(did, d):
+    """4.1 checks of one artifact definition, in order: grammars artifact_word and artifact_noun, the ranges, the class
+    checks artifact_battle_class and artifact_hunt_class."""
+    out = []
+    if d["class"] not in ARTIFACT_CLASSES_031:
+        out.append("class '%s' is not one of arms, armour, regalia, relic, staff" % d["class"])
+    t = d["title"]
+    if not (1 <= len(t) <= 16 and "A" <= t[0] <= "Z" and all(c.isascii() and (c.isalpha() or c == "-") for c in t)):
+        out.append("title '%s' is not an artifact_word" % t)
+    n = d["noun"]
+    if not (1 <= len(n) <= 16 and all(c == " " or ("a" <= c <= "z") for c in n) and "  " not in n
+            and n[0] != " " and n[-1] != " "):
+        out.append("noun '%s' is not an artifact_noun" % n)
+    for f, lo, hi in (("weight", 1, 1000), ("battle_permille", 0, 500), ("hunt_permille", 0, 1000),
+                      ("claim_permille", 0, 1000)):
+        if not lo <= d[f] <= hi:
+            out.append("%s %d outside [%d, %d]" % (f, d[f], lo, hi))
+    if d["battle_permille"] > 0 and d["class"] not in ("arms", "armour"):
+        out.append("battle_permille needs arms or armour")
+    if d["hunt_permille"] > 0 and d["class"] in ("regalia", "relic"):
+        out.append("hunt_permille needs arms, armour or staff")
+    return out
+
+
+def artifact_form_ok(s):
+    """4.2 grammar artifact_form: name_form's with {root} exactly once and {title} at most once; at most 48 bytes."""
+    if not 1 <= len(s) <= 48 or s.count("{root}") != 1 or s.count("{title}") > 1:
+        return False
+    rest = s.replace("{root}", "").replace("{title}", "")
+    return "{" not in rest and "}" not in rest
+
+
+KINDS_031 = dict(KINDS_030)
+KINDS_031["artifact"] = ("artifacts", ARTIFACT_031)
+KINDS_031["culture"] = ("cultures", (("race", STR), ("name", STR), ("naming", REC(
+    CULTURE_NAMING_030[1] + (("artifact_forms", ARR(STR)),)))))
+_H030 = KINDS_030["history"][1]
+KINDS_031["history"] = ("history", dict(
+    _H030, artifacts=ARTIFACTS_SCHEMA_031, figures=_H030["figures"] + tuple((n, INT) for n, _l, _h in FIGURES_FIELDS_031),
+    pantheon=_H030["pantheon"] + tuple((n, INT) for n, _l, _h in PANTHEON_FIELDS_031)))
+
 def book_title_ok(s):
     """4.2 grammar book_title: ASCII letters, single spaces, ' and -, starting with an upper-case letter; at most
     48 bytes (string(48, book_title))."""
@@ -4200,7 +4348,7 @@ def pre_027(path, kind):
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0", "0.24.0", "0.25.0",
-            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0")
+            "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0", "0.31.0")
 
 
 def at_least(v):
@@ -4210,8 +4358,10 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
-    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0") else ("culture", "history", "race")
-    if v == "0.30.0":   # P5-08: the 0.29.0 files with the listings of 4 and 8.2 filled in (load_root, history_030)
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v in ("0.23.0", "0.24.0", "0.25.0", "0.26.0", "0.27.0", "0.28.0", "0.29.0", "0.30.0", "0.31.0") else ("culture", "history", "race")
+    if v == "0.31.0":   # P5-11: the 0.30.0 files with the fixture listing of 4 and 8.2 filled in (load_root, history_031)
+        KINDS, SPEC_FILES = KINDS_031, SPEC_FILES_027
+    elif v == "0.30.0":   # P5-08: the 0.29.0 files with the listings of 4 and 8.2 filled in (load_root, history_030)
         KINDS, SPEC_FILES = KINDS_030, SPEC_FILES_027
     elif v == "0.29.0":   # P5-07: the 0.28.0 files with the listings of 4 and 8.2 filled in (load_root)
         KINDS, SPEC_FILES = KINDS_029, SPEC_FILES_027
@@ -4371,7 +4521,7 @@ def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     # P5-07 adds to the history and monster files only; a 0.28.0 directory is read at 0.29.0 with the listings filled in
     # (load_root), so 0.29.0 and 0.28.0 count as the same files of every kind
-    a, b = ("0.28.0" if x in ("0.29.0", "0.30.0") else x for x in (a, b))   # P5-08 likewise (history_030)
+    a, b = ("0.28.0" if x in ("0.29.0", "0.30.0", "0.31.0") else x for x in (a, b))   # P5-08, P5-11 likewise
     if kind in ("race", "culture", "beast", "monster"):   # P5-04a changes the history files (and dragon's values)
         a, b = ("0.27.0" if x == "0.28.0" else x for x in (a, b))
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
@@ -4525,7 +4675,12 @@ def load_root(root, kinds=None, from_spec=False):
     content = {}
     for kind in kinds:
         files = read_kind_files(root, kind, from_spec)
-        if files is None and kind == "god" and DATA_VERSION == "0.30.0":
+        if files is None and kind == "artifact" and DATA_VERSION == "0.31.0":
+            # P5-11 4.1: a root without game/data/artifacts is read with the test writer's fixture files of the spec's
+            # listing (FALLBACK_031_USED); a root with the directory is read as it is (also an empty one)
+            FALLBACK_031_USED.add(os.path.join(root, "artifacts"))
+            files = read_dir_files(os.path.join(ARTIFACTS_SPEC_DIR, "artifacts"), "artifacts")
+        if files is None and kind == "god" and DATA_VERSION in ("0.30.0", "0.31.0"):
             # P5-08 4.1: the nine shipped gods (the engineer writes game/data/gods and both fixture roots); a root
             # without the directory is read with the spec's listing (FALLBACK_030_USED)
             FALLBACK_030_USED.add(os.path.join(root, "gods"))
@@ -4552,20 +4707,26 @@ def load_root(root, kinds=None, from_spec=False):
         if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
             # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
             defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
-        if DATA_VERSION in ("0.28.0", "0.29.0", "0.30.0") and kind == "history":
+        if DATA_VERSION in ("0.28.0", "0.29.0", "0.30.0", "0.31.0") and kind == "history":
             # P5-04a: a root without the 0.28.0 fields (the 0.27.0 data on disk before integration) is read with the
             # shipped values of 14 filled in; recorded in FALLBACK_028_USED (the C++ loader refuses such a root)
             for did, new in NEW_FIELDS_028.items():
                 if did in defs and any(n not in defs[did] for n, _, _, _ in new):
                     FALLBACK_028_USED.add(os.path.join(root, "history", did))
                     defs[did] = dict(defs[did], **{n: v for n, _, _, v in new if n not in defs[did]})
-        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "history" and history_029(defs):
+        if DATA_VERSION in ("0.29.0", "0.30.0", "0.31.0") and kind == "history" and history_029(defs):
             FALLBACK_029_USED.add(os.path.join(root, "history"))
-        if DATA_VERSION == "0.30.0" and kind == "history" and history_030(defs):
+        if DATA_VERSION in ("0.30.0", "0.31.0") and kind == "history" and history_030(defs):
             FALLBACK_030_USED.add(os.path.join(root, "history"))
-        if DATA_VERSION == "0.30.0" and kind == "culture" and culture_030(defs):
+        if DATA_VERSION in ("0.30.0", "0.31.0") and kind == "culture" and culture_030(defs):
             FALLBACK_030_USED.add(os.path.join(root, "cultures"))
-        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "race":
+        if DATA_VERSION == "0.31.0" and kind == "history" and history_031(defs):
+            FALLBACK_031_USED.add(os.path.join(root, "history"))
+        if DATA_VERSION == "0.31.0" and kind == "culture" and culture_031(defs):
+            FALLBACK_031_USED.add(os.path.join(root, "cultures"))
+        if DATA_VERSION == "0.31.0" and kind == "god" and god_031(defs):
+            FALLBACK_031_USED.add(os.path.join(root, "gods"))
+        if DATA_VERSION in ("0.29.0", "0.30.0", "0.31.0") and kind == "race":
             # r2 4.5: delving_permille is optional (absent counts 0). The shipped root before the engineer's data
             # (no deep_years in its monsters.toml) is read with 4.5's shipped values; the fixture roots leave it out (0)
             shipped = os.path.normpath(os.path.abspath(root)).endswith(os.path.join("game", "data")) and \
@@ -4576,7 +4737,7 @@ def load_root(root, kinds=None, from_spec=False):
                     if shipped and v:
                         FALLBACK_029_USED.add(os.path.join(root, "races", did))
                     defs[did] = dict(defs[did], delving_permille=v)
-        if DATA_VERSION in ("0.29.0", "0.30.0") and kind == "monster" and not any(k in defs for k in DEEP_IDS_029) and defs:
+        if DATA_VERSION in ("0.29.0", "0.30.0", "0.31.0") and kind == "monster" and not any(k in defs for k in DEEP_IDS_029) and defs:
             FALLBACK_029_USED.add(os.path.join(root, "monsters"))
             for k in DEEP_IDS_029:
                 defs[k] = copy.deepcopy(DEEP_KINDS_029[k])

@@ -1,0 +1,10 @@
+# P5-11 r1 4.1 (fixture: the spec's shipped listing, read by the references while the data root has no
+# artifacts directory; the shipped and calibrated files are game/data/artifacts/).
+[artifact.ring]
+class = "regalia"
+title = "Ring"
+noun = "ring"
+weight = 200
+battle_permille = 0
+hunt_permille = 0
+claim_permille = 300
