@@ -48,8 +48,11 @@ inline constexpr std::string_view HISTORY_REPORT_HEADER_V8 = "# worldgen history
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V9 = "# worldgen history v9";
 // P5-07 10 (generator 0.29.0): format v10, the one written.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V10 = "# worldgen history v10";
-// P5-08 10 (generator 0.30.0): format v11, the one written.
+// P5-08 10 (generator 0.30.0): format v11; no longer written from
+// generator 0.31.0.
 inline constexpr std::string_view HISTORY_REPORT_HEADER_V11 = "# worldgen history v11";
+// P5-11 10 (generator 0.31.0): format v12, the one written.
+inline constexpr std::string_view HISTORY_REPORT_HEADER_V12 = "# worldgen history v12";
 
 enum class HistoryLevel : std::uint8_t { summary = 1, full = 2 };
 
@@ -118,13 +121,19 @@ using BlockLine = std::vector<Segment>;
 [[nodiscard]] std::vector<BlockLine> cult_block(const history::HistoryView& view, const history::HistoryTables& tables,
                                                 std::int64_t faction);
 
+// P5-11 11.1: the lines of artifact `artifact` for the browser: its
+// [artifacts] line (without the two leading spaces) and its "  held: ..."
+// line of the full level. FatalError "artifact_block: no artifact <a>".
+[[nodiscard]] std::vector<BlockLine> artifact_block(const history::HistoryView& view,
+                                                    const history::HistoryTables& tables, std::int64_t artifact);
+
 // The report form of a line (before the report's trailing-space rule):
 // literal as is; text escape_history_text(text); entity
 // escape_history_text(name) + " (" + tag + ")", or the tag alone when the
 // name is empty; event "e<id>"; sentence escape_history_text(render_event);
 // tagged tag + " " + escape_history_text(name) (also when the name is empty).
 // The tag is the report's prefix of the type ("ra", "g", "c", "s", "rg",
-// "f", "fa", "m", "si"; "?" otherwise) and the id.
+// "f", "fa", "m", "si", "ar"; "?" otherwise) and the id.
 [[nodiscard]] std::string block_line_report_text(const history::HistoryView& view, const BlockLine& line);
 
 // The display form: the same without escapes and without " (<tag>)". An
@@ -135,8 +144,8 @@ using BlockLine = std::vector<Segment>;
 // one untagged link over the whole text (so B4's transform adds nothing).
 [[nodiscard]] history::LinkedText block_line_display(const history::HistoryView& view, const BlockLine& line);
 
-// The report's tag of an entity: prefix and id ("c3", "rg4"; "?<id>" for a
-// type code outside 1 to 9).
+// The report's tag of an entity: prefix and id ("c3", "rg4", "ar2"; "?<id>"
+// for a type code outside 1 to 10).
 [[nodiscard]] std::string history_entity_tag(std::int64_t type, std::int64_t id);
 
 // --- The digest the report prints with (P4-05 4.3) ---------------------------

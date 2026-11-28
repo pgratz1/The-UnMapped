@@ -88,6 +88,7 @@ add_library(worldgen STATIC
     src/history/pantheon_cults.cpp
     src/history/artifacts.cpp
     src/history/artifacts_moves.cpp
+    src/history/artifact_checks.cpp
     src/history/engine.cpp
     src/history/event_catalogue.cpp
     src/history/inputs.cpp

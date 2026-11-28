@@ -30,7 +30,8 @@ enum class MarkerType : std::uint8_t {
     ruin = 4,
     standing = 5,
     site = 6 /*P5-04 11.3, P5-06 11.4: mines (kind 3) and towers (kind 4)*/,
-    figure = 7 /*reserved*/
+    figure = 7 /*reserved*/,
+    artifact = 8 /*P5-11 11.1: an artifact in states 3 to 6*/
 };
 // The symbol of an event place (3.4); the enumerator order is the priority.
 enum class EventSymbol : std::uint8_t { plain = 0, plague = 1, battle = 2, siege = 3, sack = 4 };
@@ -43,6 +44,7 @@ struct MarkerOptions {
     // P5-08 11.1: shrines (kind 5), and temples with sanctums (kinds 6, 7).
     bool shrines = true;
     bool temples = true;
+    bool artifacts = true;  // P5-11 11.1
 };
 
 struct SettlementMarker {
@@ -86,6 +88,22 @@ inline constexpr std::uint8_t GLYPH_SANCTUM = 23;
 inline constexpr Rgb MARKER_SHRINE{215, 180, 40};
 inline constexpr Rgb MARKER_TEMPLE{225, 215, 190};
 inline constexpr Rgb MARKER_SANCTUM{120, 20, 40};
+// P5-11 11.1: an artifact of Timeline::artifacts_placed(Y) at its place at
+// Y (a hoard at its keeper's lair, a lost, buried or enshrined artifact at
+// its holding's cell); settlement the place's settlement (0 none).
+struct ArtifactMarker {
+    std::int64_t artifact = 0, x = 0, y = 0, state = 0, settlement = 0, site = 0;
+    friend bool operator==(const ArtifactMarker&, const ArtifactMarker&) = default;
+};
+inline constexpr std::uint8_t GLYPH_ARTIFACT = 24;
+inline constexpr Rgb MARKER_ARTIFACT{70, 200, 220};
+// P5-11 11.1 (part D reading): the glyph is drawn one glyph cell above its
+// cell when the place has a settlement, so that the settlement or ruin
+// glyph stays visible, else at its cell.
+[[nodiscard]] std::array<std::int64_t, 2> artifact_glyph_offset(const ArtifactMarker& artifact) noexcept;
+// P5-11 11.1: "kept", "borne", "hoarded", "lost", "buried", "enshrined" for
+// states 1 to 6, anything else empty.
+[[nodiscard]] std::string_view artifact_state_word(std::int64_t state) noexcept;
 // The mine glyph is drawn one glyph cell (7 cells) to the upper right of
 // the site's cell, so that a town does not hide its own mine; a library's
 // one glyph cell to the upper left of its settlement; a tower in the wild
@@ -112,6 +130,7 @@ struct YearMarkers {
     std::vector<SettlementMarker> settlements;  // ascending settlement id (3.1)
     std::vector<PlaceMarker> places;            // ascending smallest event id (3.4)
     std::vector<PassMarker> passes;             // ascending pass id (3.5)
+    std::vector<ArtifactMarker> artifacts;      // ascending artifact id (P5-11 11.1)
     friend bool operator==(const YearMarkers&, const YearMarkers&) = default;
 };
 

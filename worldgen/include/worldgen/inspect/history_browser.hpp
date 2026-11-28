@@ -37,15 +37,16 @@ enum class EventGroup : std::uint8_t {
     peoples = 6,
     alliances = 7,
     figures = 8,
-    gods = 9  // P5-08 11.1: kinds 100 to 108
+    gods = 9,       // P5-08 11.1: kinds 100 to 108
+    artifacts = 10  // P5-11 11.1: kinds 111 to 116
 };
-inline constexpr std::uint32_t ALL_GROUPS = 0x3FF;
+inline constexpr std::uint32_t ALL_GROUPS = 0x7FF;
 
 // The group of a kind key, compared as bytes; other for a key 4.4 does not
 // name. P5-02's kinds 44 to 55 are in monsters (section 9).
 [[nodiscard]] EventGroup event_group(std::string_view kind_key) noexcept;
 // "realms", "settlements", "war", "calamity", "other", "monsters",
-// "peoples", "alliances", "figures", "gods".
+// "peoples", "alliances", "figures", "gods", "artifacts".
 [[nodiscard]] std::string_view event_group_word(EventGroup group) noexcept;
 
 // --- The browser index (4.5) ------------------------------------------------
@@ -145,6 +146,10 @@ public:
                                                              std::int64_t god) const;
     [[nodiscard]] std::vector<history::LinkedText> cult_block(const history::LoadedHistory& history,
                                                               std::int64_t faction) const;
+    // P5-11 11.1: block_line_display of artifact_block (its [artifacts] line
+    // and its held: line). FatalError "browser: no artifact <a>".
+    [[nodiscard]] std::vector<history::LinkedText> artifact_block(const history::LoadedHistory& history,
+                                                                  std::int64_t artifact) const;
     // "<span>  <sentence>[ (<note>)]", unescaped; span "<year>" or
     // "<year>-<end_year>". FatalError "browser: no event <e>".
     [[nodiscard]] std::string row_text(const history::LoadedHistory& history, std::int64_t event) const;
@@ -152,7 +157,8 @@ public:
     // folded only): civilizations by id, settlements by id, then regions by
     // id (name at E, geographic name, then its region_name rows by ascending
     // from_year; the first that matches), then (P5-06 11.3) figures by id
-    // (display name). One match per (type, id), at most
+    // (display name), then (P5-11 11.1) artifacts by id (name). One match
+    // per (type, id), at most
     // `limit`; none for an empty query.
     [[nodiscard]] std::vector<NameMatch> search(const history::LoadedHistory& history, std::string_view query,
                                                 std::size_t limit) const;

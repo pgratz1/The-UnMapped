@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <compare>
 #include <cstddef>
 #include <limits>
 #include <map>
@@ -452,6 +453,9 @@ struct Kinds {
     Id battle_led = 0, succession_disputed = 0, exiled = 0, fell_in_battle = 0;
     // P5-08 12.1: the deep's kinds pinned in the summary set, and the aid.
     Id deep_woken = 0, deep_sealed = 0, warren_sealed = 0, hold_lost = 0, ally_aided_hold = 0;
+    // P5-11 8.3: the artifact kinds and the events they are companions of.
+    Id artifact_taken = 0, artifact_lost = 0, artifact_hoarded = 0, artifact_recovered = 0, artifact_buried = 0;
+    Id hero_slain = 0, monster_slain = 0, monster_slain_by_hero = 0;
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -520,6 +524,14 @@ struct Kinds {
         warren_sealed = id("warren_sealed");
         hold_lost = id("hold_lost");
         ally_aided_hold = id("ally_aided_hold");
+        artifact_taken = id("artifact_taken");  // P5-11 8.3
+        artifact_lost = id("artifact_lost");
+        artifact_hoarded = id("artifact_hoarded");
+        artifact_recovered = id("artifact_recovered");
+        artifact_buried = id("artifact_buried");
+        hero_slain = id("hero_slain");
+        monster_slain = id("monster_slain");
+        monster_slain_by_hero = id("monster_slain_by_hero");
     }
     // P5-08 12.1: the kinds of the deep in F.
     [[nodiscard]] bool deep_pinned(Id k) const noexcept {
@@ -1239,6 +1251,18 @@ private:
         }
         // r21 26.5 item 1: every renaming e caused.
         add_effects(e, [this](Id x) { return x == kinds_.region_renamed; });
+        // P5-11 8.3: the artifacts a fall, a death, a lost hold, a slaying or
+        // a won war moved (not followed further).
+        if (k == kinds_.fell_in_battle || k == kinds_.sacked || k == kinds_.settlement_captured ||
+            k == kinds_.civ_conquered || k == kinds_.civ_ended) {
+            add_effects(e, [this](Id x) { return x == kinds_.artifact_taken || x == kinds_.artifact_lost; });
+        }
+        if (k == kinds_.hero_slain || k == kinds_.hold_lost) {
+            add_effects(e, [this](Id x) { return x == kinds_.artifact_hoarded; });
+        }
+        if (k == kinds_.monster_slain || k == kinds_.monster_slain_by_hero || k == kinds_.peace || k == kinds_.war_won) {
+            add_effects(e, [this](Id x) { return x == kinds_.artifact_recovered; });
+        }
         // P5-08 12.1 item 1: the aid citing an outcome of a waking.
         if (k == kinds_.deep_sealed || k == kinds_.warren_sealed || k == kinds_.hold_lost) {
             add_effects(e, [this](Id x) { return x == kinds_.ally_aided_hold; });
@@ -1299,6 +1323,11 @@ private:
         // P5-06 8.2, 10.3 (reading): a disputed succession and an exile are
         // in the summary as companions only.
         if (k == kinds_.succession_disputed || k == kinds_.exiled) {
+            return false;
+        }
+        // P5-11 8.2: a taking and a loss are in the summary as companions
+        // only, a burial not at all.
+        if (k == kinds_.artifact_taken || k == kinds_.artifact_lost || k == kinds_.artifact_buried) {
             return false;
         }
         if (k == kinds_.settlement_mixed &&
@@ -1650,6 +1679,246 @@ private:
         followup_stats();   // P5-04a 12.6
         deep_stats();       // P5-07 10 item 7
         pantheon_stats();   // P5-08 10 item 8
+        artifact_stats();   // P5-11 10 item 6
+    }
+
+    // P5-11 10 item 6: appended at the end, in this order (full only).
+    void artifact_stats() {
+        const std::vector<db::ArtifactRow>& arts = t_.artifacts;
+        const std::vector<db::ArtifactHoldingRow>& hold = t_.artifact_holdings;
+        std::array<std::int64_t, 5> by_maker{};  // index maker_kind
+        std::array<std::int64_t, 6> by_class{};  // index class
+        std::int64_t deep = 0;
+        for (const db::ArtifactRow& a : arts) {
+            if (a.maker_kind >= 1 && a.maker_kind <= 4) {
+                ++by_maker[static_cast<std::size_t>(a.maker_kind)];
+            }
+            deep += a.deep == 1 ? 1 : 0;
+            const db::ArtifactKindRow* k = a.kind >= 1 && static_cast<std::size_t>(a.kind) <= t_.artifact_kinds.size()
+                                               ? &t_.artifact_kinds[static_cast<std::size_t>(a.kind - 1)]
+                                               : nullptr;
+            if (k != nullptr && k->artifact_class >= 1 && k->artifact_class <= 5) {
+                ++by_class[static_cast<std::size_t>(k->artifact_class)];
+            }
+        }
+        // The open holding of each artifact (index id - 1); holdings are in
+        // (artifact, seq) order, so the last row of each artifact is open.
+        std::vector<const db::ArtifactHoldingRow*> open(arts.size(), nullptr);
+        for (const db::ArtifactHoldingRow& h : hold) {
+            if (h.artifact >= 1 && static_cast<std::size_t>(h.artifact) <= open.size()) {
+                open[static_cast<std::size_t>(h.artifact - 1)] = &h;
+            }
+        }
+        const auto figure_civ = [this](Id f) -> Id {
+            return f >= 1 && static_cast<std::size_t>(f) <= t_.figures.size()
+                       ? t_.figures[static_cast<std::size_t>(f - 1)].civ
+                       : 0;
+        };
+        const auto alive = [this](Id c) {
+            const auto it = std::lower_bound(t_.civilizations.begin(), t_.civilizations.end(), c,
+                                             [](const db::CivilizationRow& r, Id x) { return r.id < x; });
+            return it != t_.civilizations.end() && it->id == c && !it->ended_year;
+        };
+        std::int64_t at_end_lost = 0, by_others = 0;
+        for (std::size_t i = 0; i < arts.size(); ++i) {
+            const db::ArtifactHoldingRow* h = open[i];
+            if (h == nullptr) {
+                continue;
+            }
+            bool lost = h->state >= 3 && h->state <= 5;
+            if (h->state == 6 && h->holder >= 1 && static_cast<std::size_t>(h->holder) <= t_.sites.size()) {
+                const db::SiteRow& x = t_.sites[static_cast<std::size_t>(h->holder - 1)];
+                lost = x.kind == 7 || x.ended_year.has_value();
+            }
+            at_end_lost += lost ? 1 : 0;
+            const Id home = arts[i].civ;
+            const bool other = (h->state == 1 && h->holder != home) || (h->state == 2 && figure_civ(h->holder) != home);
+            by_others += alive(home) && other ? 1 : 0;
+        }
+        // Events of kinds 112 to 115 by artifact, and the counts by kind.
+        const std::array<Id, 5> moves = {kinds_.artifact_taken, kinds_.artifact_lost, kinds_.artifact_hoarded,
+                                         kinds_.artifact_recovered, kinds_.artifact_buried};
+        std::array<std::int64_t, 5> n_moves{};
+        std::vector<std::uint8_t> changed(arts.size(), 0);
+        for (const HistoryView::Event& e : events_) {
+            for (std::size_t i = 0; i < moves.size(); ++i) {
+                if (e.row.kind != moves[i]) {
+                    continue;
+                }
+                ++n_moves[i];
+                const Id a = role_entity(e, "artifact");
+                if (i < 4 && a >= 1 && static_cast<std::size_t>(a) <= changed.size()) {
+                    changed[static_cast<std::size_t>(a - 1)] = 1;
+                }
+            }
+        }
+        std::int64_t n_changed = 0;
+        for (const std::uint8_t c : changed) {
+            n_changed += c;
+        }
+        std::int64_t smiths = 0;
+        for (const db::FigureRow& f : t_.figures) {
+            smiths += f.role == 8 ? 1 : 0;
+        }
+        // 7.2 (reading): a war citing an artifact has a cause that opened a
+        // holding of an artifact of the attacker's home kept by the defender
+        // or borne by a figure of the defender.
+        struct Claim {
+            Id event = 0, home = 0, holder = 0;
+            auto operator<=>(const Claim&) const = default;
+        };
+        std::vector<Claim> claims;
+        for (const db::ArtifactHoldingRow& h : hold) {
+            if (h.artifact < 1 || static_cast<std::size_t>(h.artifact) > arts.size() || (h.state != 1 && h.state != 2)) {
+                continue;
+            }
+            const Id holder = h.state == 1 ? h.holder : figure_civ(h.holder);
+            claims.push_back(Claim{h.event, arts[static_cast<std::size_t>(h.artifact - 1)].civ, holder});
+        }
+        std::stable_sort(claims.begin(), claims.end());
+        const Id artifact_made = kind_id("artifact_made");
+        const Id bless = kind_id("divine_bless"), curse = kind_id("divine_curse");
+        std::int64_t wars = 0, battles = 0, under_acts = 0;
+        for (const HistoryView::Event& e : events_) {
+            const Id k = e.row.kind;
+            if (k == kinds_.war_declared) {
+                const Id a = role_entity(e, "attacker"), b = role_entity(e, "defender");
+                bool cites = false;
+                for (const Id c : e.causes) {
+                    cites = cites || std::binary_search(claims.begin(), claims.end(), Claim{c, a, b});
+                }
+                wars += cites ? 1 : 0;
+            }
+            if (kinds_.battle_kind(k)) {
+                bool artifact = false, act = false;
+                for (const Id c : e.causes) {
+                    artifact = artifact || kind(c) == artifact_made;
+                    act = act || kind(c) == bless || kind(c) == curse;
+                }
+                battles += (k == kinds_.battle_led && artifact) ? 1 : 0;
+                under_acts += act ? 1 : 0;
+            }
+        }
+        put("artifacts_made", static_cast<std::int64_t>(arts.size()));
+        put("artifacts_smiths", by_maker[1] + by_maker[2]);
+        put("artifacts_commissioned", by_maker[2]);
+        put("artifacts_casters", by_maker[3]);
+        put("artifacts_gods", by_maker[4]);
+        put("artifacts_deep", deep);
+        put("artifacts_arms", by_class[1]);
+        put("artifacts_armour", by_class[2]);
+        put("artifacts_regalia", by_class[3]);
+        put("artifacts_relic", by_class[4]);
+        put("artifacts_staff", by_class[5]);
+        put("artifacts_taken", n_moves[0]);
+        put("artifacts_lost", n_moves[1]);
+        put("artifacts_hoarded", n_moves[2]);
+        put("artifacts_recovered", n_moves[3]);
+        put("artifacts_buried", n_moves[4]);
+        put("artifact_holdings", static_cast<std::int64_t>(hold.size()));
+        put("artifacts_changed_hands", n_changed);
+        put("artifacts_lost_at_end", at_end_lost);
+        put("artifacts_held_by_others", by_others);
+        put("smiths", smiths);
+        put("wars_citing_artifacts", wars);
+        put("battles_with_artifacts", battles);
+        put("battles_under_acts", under_acts);
+        put("cult_returns_barred", cult_returns_barred());
+    }
+
+    // P5-11 12.2, rebuilt from the log (reading, P5-11 part D): the (cult k,
+    // realm a, step Y) with a cult_suppressed of k by a in (Y -
+    // CULT_RETURN_YEARS, Y], k present at Y (founded before Y, neither
+    // hidden nor ended by Y), a alive at Y without a cult_in row of k in
+    // force, and an alliance or trade partner of a in force at Y that has
+    // one. Steps: every year of a phase that is not quiet, and the first
+    // year of each quiet phase. Visibility is not stored and not tested.
+    [[nodiscard]] std::int64_t cult_returns_barred() const {
+        const Id suppressed = kind_id("cult_suppressed");
+        std::vector<std::pair<std::pair<Id, Id>, std::int64_t>> bars;  // ((cult, realm), year)
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == suppressed) {
+                bars.push_back({{role_entity(e, "faction"), role_entity(e, "civilization")}, e.row.year});
+            }
+        }
+        if (bars.empty()) {
+            return 0;
+        }
+        std::stable_sort(bars.begin(), bars.end());
+        std::vector<std::int64_t> steps;
+        for (const db::PhaseRow& p : t_.phases) {
+            if (p.kind == 2) {
+                steps.push_back(p.start_year);
+                continue;
+            }
+            for (std::int64_t y = p.start_year; y <= p.end_year; ++y) {
+                steps.push_back(y);
+            }
+        }
+        std::stable_sort(steps.begin(), steps.end());
+        steps.erase(std::unique(steps.begin(), steps.end()), steps.end());
+        const auto in_force = [](const db::RelationRow& r, std::int64_t y) {
+            return r.since <= y && (!r.until || *r.until > y);
+        };
+        std::vector<const db::RelationRow*> cult_rows, links;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind == "cult_in" && r.a_type == 7 && r.b_type == 3) {
+                cult_rows.push_back(&r);
+            } else if ((r.kind == "alliance" || r.kind == "trade") && r.a_type == 3 && r.b_type == 3) {
+                links.push_back(&r);
+            }
+        }
+        const auto cult_in = [&](Id k, Id c, std::int64_t y) {
+            for (const db::RelationRow* r : cult_rows) {
+                if (r->a_id == k && r->b_id == c && in_force(*r, y)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        std::int64_t n = 0;
+        std::size_t i = 0;
+        while (i < bars.size()) {
+            const auto [k, a] = bars[i].first;
+            std::vector<std::int64_t> years;
+            for (; i < bars.size() && bars[i].first == std::make_pair(k, a); ++i) {
+                years.push_back(bars[i].second);
+            }
+            if (k < 1 || static_cast<std::size_t>(k) > t_.factions.size()) {
+                continue;
+            }
+            const db::FactionRow& f = t_.factions[static_cast<std::size_t>(k - 1)];
+            std::int64_t hidden_from = std::numeric_limits<std::int64_t>::max();
+            for (const HistoryView::Event& e : events_) {
+                if (e.row.kind == suppressed && role_entity(e, "faction") == k && value_of(e, "hidden") == 1) {
+                    hidden_from = std::min(hidden_from, e.row.year);
+                }
+            }
+            const auto first = std::lower_bound(steps.begin(), steps.end(), years.front());
+            for (auto it = first; it != steps.end() && *it < years.back() + CULT_RETURN_YEARS; ++it) {
+                const std::int64_t y = *it;
+                const auto s = std::upper_bound(years.begin(), years.end(), y);  // the last bar at or before y
+                if (s == years.begin() || *(s - 1) + CULT_RETURN_YEARS <= y) {
+                    continue;
+                }
+                const bool present = f.founded_year < y && y < hidden_from && (!f.ended_year || *f.ended_year > y);
+                const auto civ = std::lower_bound(t_.civilizations.begin(), t_.civilizations.end(), a,
+                                                  [](const db::CivilizationRow& r, Id x) { return r.id < x; });
+                const bool alive = civ != t_.civilizations.end() && civ->id == a && civ->founded_year <= y &&
+                                   (!civ->ended_year || *civ->ended_year > y);
+                if (!present || !alive || cult_in(k, a, y)) {
+                    continue;
+                }
+                bool from = false;
+                for (const db::RelationRow* r : links) {
+                    if ((r->a_id == a || r->b_id == a) && in_force(*r, y)) {
+                        from = from || cult_in(k, r->a_id == a ? r->b_id : r->a_id, y);
+                    }
+                }
+                n += from ? 1 : 0;
+            }
+        }
+        return n;
     }
 
     // P5-08 10 item 8: appended at the end, in this order (full only).

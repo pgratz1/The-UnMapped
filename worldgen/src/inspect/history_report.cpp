@@ -1,7 +1,8 @@
 // The history report, format "# worldgen history v10" (spec P3-07 section 6
 // with amendments 21 to 26; P5-02 12, generator 0.23.0; P5-03 17; P5-03a 9,
 // generator 0.25.0; P5-04 10, generator 0.26.0; P5-06 10, generator 0.27.0;
-// P5-04a 12 and 21.5, generator 0.28.0; P5-07 10, generator 0.29.0).
+// P5-04a 12 and 21.5, generator 0.28.0; P5-07 10, generator 0.29.0; P5-08 10,
+// generator 0.30.0; P5-11 10, generator 0.31.0: format v12).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -51,7 +52,7 @@ std::string event_span(const db::EventRow& e) {
     return e.end_year == e.year ? num(e.year) : span_of(e.year, e.end_year);
 }
 
-constexpr std::array<std::string_view, 9> PREFIX = {"ra", "g", "c", "s", "rg", "f", "fa", "m", "si"};
+constexpr std::array<std::string_view, 10> PREFIX = {"ra", "g", "c", "s", "rg", "f", "fa", "m", "si", "ar"};  // P5-11: ar
 constexpr std::array<std::string_view, 3> CAMP = {"good", "neutral", "evil"};
 
 template <std::size_t N>
@@ -263,6 +264,27 @@ BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, con
     if (g.blight) {
         deed();
         l.push_back(lit("a blight"));
+    }
+    // P5-11 10 item 4 (full): every artifact it bore, and a smith's making.
+    if (reign_number) {
+        std::vector<Id> bore;
+        for (const db::ArtifactHoldingRow& h : t.artifact_holdings) {  // (artifact, seq) order
+            if (h.state == 2 && h.holder == f.id && (bore.empty() || bore.back() != h.artifact)) {
+                bore.push_back(h.artifact);
+            }
+        }
+        for (std::size_t k = 0; k < bore.size(); ++k) {
+            l.push_back(lit(k == 0 ? "; bore " : ", "));
+            l.push_back(Segment{SegmentKind::entity, std::string(), 10, bore[k]});
+        }
+        if (f.role == 8) {
+            for (const db::ArtifactRow& a : t.artifacts) {
+                if (a.maker == f.id && (a.maker_kind == 1 || a.maker_kind == 2)) {
+                    l.push_back(lit("; made "));
+                    l.push_back(Segment{SegmentKind::entity, std::string(), 10, a.id});
+                }
+            }
+        }
     }
     const std::string when = f.died ? num(*f.died) + " " : std::string();
     switch (f.status) {
@@ -635,6 +657,184 @@ BlockLine realm_deep_line(const HistoryView& v, Id c) {
     return first ? BlockLine{} : l;
 }
 
+// --- P5-11 10: artifacts as block lines -------------------------------------------
+
+constexpr std::array<std::string_view, 6> HELD_WORDS = {"kept by", "borne by", "hoarded by",
+                                                        "lost in", "buried with", "at"};
+
+// The artifact row of id a, or nullptr (ids 1, 2, ..., checked by the readers).
+const db::ArtifactRow* find_artifact(const history::HistoryTables& t, Id a) {
+    return a >= 1 && static_cast<std::uint64_t>(a) <= t.artifacts.size() ? &t.artifacts[static_cast<std::size_t>(a - 1)]
+                                                                          : nullptr;
+}
+
+// The holdings of artifact a in seq order (rows in (artifact, seq) order).
+std::span<const db::ArtifactHoldingRow> holdings_of(const history::HistoryTables& t, Id a) {
+    const auto lo = std::lower_bound(t.artifact_holdings.begin(), t.artifact_holdings.end(), a,
+                                     [](const db::ArtifactHoldingRow& h, Id x) { return h.artifact < x; });
+    auto hi = lo;
+    while (hi != t.artifact_holdings.end() && hi->artifact == a) {
+        ++hi;
+    }
+    return {lo, hi};
+}
+
+// The open holding of artifact a (its last), or nullptr.
+const db::ArtifactHoldingRow* open_holding(const history::HistoryTables& t, Id a) {
+    const std::span<const db::ArtifactHoldingRow> h = holdings_of(t, a);
+    return h.empty() ? nullptr : &h.back();
+}
+
+Id figure_civ(const history::HistoryTables& t, Id f) {
+    const db::FigureRow* r = find_figure(t, f);
+    return r != nullptr ? r->civ : 0;
+}
+
+// "<tag> <name>" of an entity; a region by its name at E.
+Segment holder_ref(const HistoryView& v, const history::HistoryTables& t, Id type, Id id) {
+    if (type == static_cast<Id>(EntityType::region)) {
+        const std::string* n = v.region_name_at_year(id, t.end_year);
+        return tagged_ref(type, id, n != nullptr ? *n : std::string());
+    }
+    return named(v, type, id);
+}
+
+// 10 item 2: "ar<id> <name>, <kind form>: made <year> e<id> by <maker>[ at
+// si<id> <name>] for c<id> <name>; <present> since <year> e<id>".
+BlockLine artifact_line(const HistoryView& v, const history::HistoryTables& t, const db::ArtifactRow& a) {
+    const std::string* form = v.artifact_kind_text(a.id);
+    BlockLine l{tagged_ref(10, a.id, a.name), lit(", ")};
+    l.push_back(form != nullptr ? txt(*form) : lit("?"));
+    l.push_back(lit(": made " + num(a.made_year) + " "));
+    l.push_back(event_ref(a.made_event));
+    l.push_back(lit(" by "));
+    if (a.maker_kind == 4) {
+        l.push_back(named(v, 2, a.god));
+    } else {
+        l.push_back(named(v, 6, a.maker));
+        l.push_back(lit(" of "));
+        l.push_back(named(v, 3, a.maker_civ));
+    }
+    if (a.maker_site != 0) {
+        l.push_back(lit(" at "));
+        l.push_back(named(v, 9, a.maker_site));
+    }
+    l.push_back(lit(" for "));
+    l.push_back(named(v, 3, a.civ));
+    const db::ArtifactHoldingRow* h = open_holding(t, a.id);
+    if (h == nullptr) {
+        return l;
+    }
+    switch (h->state) {
+        case 1:
+            l.push_back(lit("; kept by "));
+            l.push_back(named(v, 3, h->holder));
+            break;
+        case 2:
+            l.push_back(lit("; borne by "));
+            l.push_back(named(v, 6, h->holder));
+            l.push_back(lit(" of "));
+            l.push_back(named(v, 3, figure_civ(t, h->holder)));
+            break;
+        case 3:
+            l.push_back(lit("; in the hoard of "));
+            l.push_back(named(v, 8, h->holder));
+            break;
+        case 4:
+            l.push_back(lit(h->holder_type == 4 ? "; lost in the ruin of " : "; lost in "));
+            l.push_back(holder_ref(v, t, h->holder_type, h->holder));
+            break;
+        case 5:
+            l.push_back(lit("; buried with "));
+            l.push_back(named(v, 6, h->holder));
+            l.push_back(lit(" in "));
+            l.push_back(holder_ref(v, t, 5, h->region));
+            break;
+        default:
+            l.push_back(lit("; at "));
+            l.push_back(named(v, 9, h->holder));
+            break;
+    }
+    l.push_back(lit(" since " + num(h->from_year) + " "));
+    l.push_back(event_ref(h->event));
+    return l;
+}
+
+// 10 item 2 (full): "held: <from> <state words> <ref> e<id>[; ...]".
+BlockLine held_line(const HistoryView& v, const history::HistoryTables& t, Id a) {
+    BlockLine l{lit("held: ")};
+    bool first = true;
+    for (const db::ArtifactHoldingRow& h : holdings_of(t, a)) {
+        l.push_back(lit(std::string(first ? "" : "; ") + num(h.from_year) + " " +
+                        std::string(word(HELD_WORDS, h.state, 1)) + " "));
+        first = false;
+        l.push_back(holder_ref(v, t, h.holder_type, h.holder));
+        l.push_back(lit(" "));
+        l.push_back(event_ref(h.event));
+    }
+    return l;
+}
+
+// 10 item 3: "  artifacts: made for it ar<id> <name> e<id>[, ...]; holds
+// ar<id> <name>[, ...]; taken from it ar<id> <name> e<id>[, ...]"; empty when
+// every part is. Holds: kept by c or borne by a figure of c at E, or for an
+// ended realm in a holding that was in force in its last year.
+BlockLine realm_artifacts_line(const HistoryView& v, const history::HistoryTables& t, const db::CivilizationRow& c) {
+    struct Item {
+        Id artifact = 0, event = 0;
+    };
+    std::array<std::vector<Item>, 3> parts;
+    for (const db::ArtifactRow& a : t.artifacts) {
+        if (a.civ == c.id) {
+            parts[0].push_back(Item{a.id, a.made_event});
+        }
+        const std::span<const db::ArtifactHoldingRow> hs = holdings_of(t, a.id);
+        bool holds = false;
+        for (const db::ArtifactHoldingRow& h : hs) {
+            const bool ours = (h.state == 1 && h.holder == c.id) || (h.state == 2 && figure_civ(t, h.holder) == c.id);
+            const bool open = !h.to_year;
+            const bool at_end = c.ended_year ? (h.from_year <= *c.ended_year && (open || *h.to_year >= *c.ended_year))
+                                             : open;
+            holds = holds || (ours && at_end);
+        }
+        if (holds) {
+            parts[1].push_back(Item{a.id, 0});
+        }
+        if (a.civ == c.id && !hs.empty()) {
+            const db::ArtifactHoldingRow& h = hs.back();
+            const bool other = (h.state == 1 && h.holder != c.id) ||
+                               (h.state == 2 && figure_civ(t, h.holder) != c.id) || h.state == 3;
+            if (other) {
+                parts[2].push_back(Item{a.id, h.event});
+            }
+        }
+    }
+    BlockLine l{lit("  artifacts: ")};
+    bool first = true;
+    static constexpr std::array<std::string_view, 3> HEADS = {"made for it ", "holds ", "taken from it "};
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        if (parts[i].empty()) {
+            continue;
+        }
+        l.push_back(lit(std::string(first ? "" : "; ") + std::string(HEADS[i])));
+        first = false;
+        for (std::size_t k = 0; k < parts[i].size() && k < REALM_PART_MAX; ++k) {
+            if (k > 0) {
+                l.push_back(lit(", "));
+            }
+            l.push_back(named(v, 10, parts[i][k].artifact));
+            if (i != 1) {
+                l.push_back(lit(" "));
+                l.push_back(event_ref(parts[i][k].event));
+            }
+        }
+        if (parts[i].size() > REALM_PART_MAX) {
+            l.push_back(lit(" and " + num(static_cast<std::int64_t>(parts[i].size() - REALM_PART_MAX)) + " more"));
+        }
+    }
+    return first ? BlockLine{} : l;
+}
+
 // The lines of one civilization's block (6.6 with 24.5, 25.3 to 25.5), the
 // report's former Report::civilization written as segments.
 class BlockBuilder {
@@ -721,7 +921,8 @@ public:
         // P5-08 10 item 4, 12.1 item 2: gods, faith and the deep; at summary
         // not with more than SUMMARY_LINES_CIVS civilizations.
         if (!summary || static_cast<std::int64_t>(t_.civilizations.size()) <= history::SUMMARY_LINES_CIVS) {
-            for (BlockLine l : {realm_gods_line(v_, c.id), realm_faith_line(v_, t_, c.id), realm_deep_line(v_, c.id)}) {
+            for (BlockLine l : {realm_gods_line(v_, c.id), realm_faith_line(v_, t_, c.id), realm_deep_line(v_, c.id),
+                                realm_artifacts_line(v_, t_, c)}) {  // P5-11 10 item 3
                 if (!l.empty()) {
                     add(std::move(l));
                 }
@@ -868,7 +1069,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level), with_chronicle_(with_chronicle) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V11));  // P5-08 10 item 1
+        line(std::string(HISTORY_REPORT_HEADER_V12));  // P5-11 10 item 1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -892,6 +1093,7 @@ public:
         figures();    // P5-06 10.2
         pantheon();   // P5-08 10 item 2
         cults();      // P5-08 10 item 3
+        artifacts();  // P5-11 10 item 2
         stats();
         return std::move(out_);
     }
@@ -1393,6 +1595,15 @@ private:
                             ", hoard " + num(m->hoard);
             if (m->died) {
                 l += ", ended " + num(*m->died) + " e" + num(m->death_event);
+            }
+            // P5-11 10 item 5: what it hoards at E.
+            bool first_hoard = true;
+            for (const db::ArtifactRow& a : t_.artifacts) {
+                const db::ArtifactHoldingRow* h = open_holding(t_, a.id);
+                if (h != nullptr && h->state == 3 && h->holder == m->id) {
+                    l += (first_hoard ? ", hoard ar" : ", ar") + num(a.id);
+                    first_hoard = false;
+                }
             }
             line(std::move(l));
         }
@@ -2144,10 +2355,10 @@ private:
 
     void figures() {
         line("[figures]");
-        std::array<std::int64_t, 8> by_role{};
+        std::array<std::int64_t, 9> by_role{};
         std::int64_t alive = 0;
         for (const db::FigureRow& f : t_.figures) {
-            if (f.role >= 1 && f.role <= 7) {  // P5-08 10 item 7
+            if (f.role >= 1 && f.role <= 8) {  // P5-08 10 item 7; P5-11 10 item 4: smiths
                 ++by_role[static_cast<std::size_t>(f.role)];
             }
             alive += (f.status == 1 || f.status == 2) ? 1 : 0;
@@ -2155,7 +2366,7 @@ private:
         const auto n = static_cast<std::int64_t>(t_.figures.size());
         line("figures: " + num(n) + "; rulers " + num(by_role[1]) + ", claimants " + num(by_role[2]) + ", generals " +
              num(by_role[3]) + ", heroes " + num(by_role[4]) + ", casters " + num(by_role[5]) + ", champions " +
-             num(by_role[6]) + ", prophets " + num(by_role[7]) + "; alive at the end " +
+             num(by_role[6]) + ", prophets " + num(by_role[7]) + ", smiths " + num(by_role[8]) + "; alive at the end " +
              num(alive));
         const bool full = level_ == HistoryLevel::full;
         if (!full && static_cast<std::int64_t>(t_.civilizations.size()) > history::SUMMARY_LINES_CIVS) {
@@ -2321,6 +2532,60 @@ private:
         }
     }
 
+    // --- [artifacts] (P5-11 10 item 2) --------------------------------------
+
+    void artifacts() {
+        line("[artifacts]");
+        std::array<std::int64_t, 7> by_state{};
+        std::array<std::int64_t, 5> by_maker{};
+        std::int64_t deep = 0;
+        for (const db::ArtifactRow& a : t_.artifacts) {
+            if (a.status >= 1 && a.status <= 6) {
+                ++by_state[static_cast<std::size_t>(a.status)];
+            }
+            if (a.maker_kind >= 1 && a.maker_kind <= 4) {
+                ++by_maker[static_cast<std::size_t>(a.maker_kind)];
+            }
+            deep += a.deep == 1 ? 1 : 0;
+        }
+        std::int64_t changed = 0;
+        for (const auto& [key, value] : d_.stats) {
+            changed = key == "artifacts_changed_hands" ? value : changed;
+        }
+        line("artifacts: " + num(static_cast<std::int64_t>(t_.artifacts.size())) + " (kept " + num(by_state[1]) +
+             ", borne " + num(by_state[2]) + ", hoarded " + num(by_state[3]) + ", lost " + num(by_state[4]) +
+             ", buried " + num(by_state[5]) + ", enshrined " + num(by_state[6]) + "); made by smiths " +
+             num(by_maker[1] + by_maker[2]) + " (for other realms " + num(by_maker[2]) + "), casters " +
+             num(by_maker[3]) + ", gods " + num(by_maker[4]) + "; of deep iron " + num(deep) + "; changed hands " +
+             num(changed));
+        std::vector<const db::ArtifactRow*> shown;
+        for (const db::ArtifactRow& a : t_.artifacts) {
+            shown.push_back(&a);
+        }
+        const bool full = level_ == HistoryLevel::full;
+        std::int64_t more = 0;
+        if (!full) {
+            std::stable_sort(shown.begin(), shown.end(), [this](const db::ArtifactRow* a, const db::ArtifactRow* b) {
+                const std::size_t na = holdings_of(t_, a->id).size();
+                const std::size_t nb = holdings_of(t_, b->id).size();
+                return na != nb ? na > nb : a->id < b->id;
+            });
+            if (shown.size() > history::SUMMARY_ARTIFACTS_MAX) {
+                more = static_cast<std::int64_t>(shown.size() - history::SUMMARY_ARTIFACTS_MAX);
+                shown.resize(history::SUMMARY_ARTIFACTS_MAX);
+            }
+        }
+        for (const db::ArtifactRow* a : shown) {
+            line("  " + block_line_report_text(v_, artifact_line(v_, t_, *a)));
+            if (full) {
+                line("    " + block_line_report_text(v_, held_line(v_, t_, a->id)));
+            }
+        }
+        if (more > 0) {
+            line("  and " + num(more) + " more");
+        }
+    }
+
     void stats() {
         line("[stats]");
         for (const auto& [key, value] : d_.stats) {
@@ -2434,6 +2699,19 @@ std::vector<BlockLine> cult_block(const HistoryView& view, const history::Histor
         }
     }
     throw FatalError("cult_block: no cult " + num(faction));
+}
+
+std::vector<BlockLine> artifact_block(const HistoryView& view, const history::HistoryTables& tables,
+                                      std::int64_t artifact) {
+    const db::ArtifactRow* a = find_artifact(tables, artifact);
+    if (a == nullptr || a->id != artifact) {
+        throw FatalError("artifact_block: no artifact " + num(artifact));
+    }
+    BlockLine held{lit("  ")};
+    for (Segment& g : held_line(view, tables, artifact)) {
+        held.push_back(std::move(g));
+    }
+    return {artifact_line(view, tables, *a), std::move(held)};
 }
 
 std::string block_line_report_text(const HistoryView& view, const BlockLine& line) {

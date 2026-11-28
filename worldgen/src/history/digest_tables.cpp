@@ -220,6 +220,21 @@ void read_history_rows(HistoryTables& t, const inspect::HistoryTables& h) {
         t.factions.push_back(db::FactionRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5), i64(r, 6),
                                             i64(r, 7), i64(r, 8), opt(r, 9), i64(r, 10), i64(r, 11), i64(r, 12)});
     }
+    // Schema 15 (P5-11 9).
+    for (const Row& r : h.rows[24]) {
+        t.artifact_kinds.push_back(
+            db::ArtifactKindRow{i64(r, 0), r[1].bytes, r[2].bytes, r[3].bytes, i64(r, 4), i64(r, 5), i64(r, 6), i64(r, 7)});
+    }
+    for (const Row& r : h.rows[25]) {
+        t.artifacts.push_back(db::ArtifactRow{i64(r, 0), r[1].bytes, i64(r, 2), i64(r, 3), i64(r, 4), i64(r, 5),
+                                              i64(r, 6), i64(r, 7), i64(r, 8), i64(r, 9), i64(r, 10), i64(r, 11),
+                                              i64(r, 12), i64(r, 13)});
+    }
+    for (const Row& r : h.rows[26]) {
+        t.artifact_holdings.push_back(db::ArtifactHoldingRow{i64(r, 0), i64(r, 1), i64(r, 2), opt(r, 3), i64(r, 4),
+                                                             i64(r, 5), i64(r, 6), i64(r, 7), i64(r, 8), i64(r, 9),
+                                                             i64(r, 10), i64(r, 11), i64(r, 12), i64(r, 13)});
+    }
 }
 
 // --- The checks of 5.3 ------------------------------------------------------
@@ -716,6 +731,27 @@ private:
         if (std::optional<std::string> why = pantheon_tables_problem(pt)) {
             throw Corrupt{*why};
         }
+        // P5-11 9 (schema 15), after P5-08's checks.
+        ArtifactTables at;
+        at.kinds = t_.artifact_kinds;
+        at.artifacts = t_.artifacts;
+        at.holdings = t_.artifact_holdings;
+        at.figures = t_.figures;
+        at.gods = t_.gods;
+        at.monsters = t_.monsters;
+        at.sites = t_.sites;
+        at.settlements = t_.settlements;
+        at.civ_ids = civ_ids;
+        at.region_ids = region_ids;
+        at.map_size = map_size_;
+        at.events = events;
+        at.participants = participants;
+        at.values = values;
+        at.causes = causes;
+        at.catalogue = &cat;
+        if (std::optional<std::string> why = artifact_tables_problem(at)) {
+            throw Corrupt{*why};
+        }
     }
 
     void gods_and_races() const {
@@ -870,7 +906,12 @@ std::optional<std::string> history_reads_disagree(const HistoryView& view, const
         !std::equal(view.beast_rows().begin(), view.beast_rows().end(), t.beasts.begin(), t.beasts.end()) ||
         // Schema 12: the report names figures and books of the tables by the view.
         !std::equal(view.figure_rows().begin(), view.figure_rows().end(), t.figures.begin(), t.figures.end()) ||
-        !std::equal(view.book_rows().begin(), view.book_rows().end(), t.books.begin(), t.books.end())) {
+        !std::equal(view.book_rows().begin(), view.book_rows().end(), t.books.begin(), t.books.end()) ||
+        // Schema 15: the report names artifacts of the tables by the view.
+        !std::equal(view.artifact_rows().begin(), view.artifact_rows().end(), t.artifacts.begin(),
+                    t.artifacts.end()) ||
+        !std::equal(view.artifact_kind_rows().begin(), view.artifact_kind_rows().end(), t.artifact_kinds.begin(),
+                    t.artifact_kinds.end())) {
         return std::string("corrupt table 'event': the file changed while it was read");
     }
     // P5-03: the report and the timeline name the races of the tables'

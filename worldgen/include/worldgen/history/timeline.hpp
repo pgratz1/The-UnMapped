@@ -62,6 +62,17 @@ struct MonsterState {
     friend bool operator==(const MonsterState&, const MonsterState&) = default;
 };
 
+// P5-11 11.1: an artifact at a year: its holding with the largest seq whose
+// from_year <= Y (state 0 before its making). For state 3 the place is the
+// lair of the monster at Y (Timeline::monster_at); for states 1 and 2 every
+// place field is 0 (shown through the holder); for 4 to 6 the holding's own
+// place. since and event: the holding's from_year and event.
+struct ArtifactPlace {
+    std::int64_t state = 0, holder_type = 0, holder = 0, region = 0, settlement = 0, site = 0, x = 0, y = 0, since = 0,
+                 event = 0;
+    friend bool operator==(const ArtifactPlace&, const ArtifactPlace&) = default;
+};
+
 // P5-03 18 (P4-01 r5): a race pair's disposition at a year, and a race's
 // share and standing in a settlement.
 struct RaceRelationState {
@@ -189,6 +200,15 @@ public:
     [[nodiscard]] std::int64_t cult_status_at(std::int64_t faction, std::int64_t year) const;
     [[nodiscard]] std::int64_t divine_effect_at(std::int64_t civ, std::int64_t year) const;
     [[nodiscard]] std::size_t faction_count() const noexcept { return factions_.size(); }
+    // P5-11 11.1: an artifact at Y (ArtifactPlace); the artifacts whose
+    // holding at Y has that holder (type and id), ascending; the artifacts in
+    // states 3 to 6 at Y, ascending. FatalError "timeline: no artifact <a>"
+    // for an id the world does not have, and the year check.
+    [[nodiscard]] ArtifactPlace artifact_at(std::int64_t artifact, std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> artifacts_held(std::int64_t holder_type, std::int64_t holder,
+                                                           std::int64_t year) const;
+    [[nodiscard]] std::vector<std::int64_t> artifacts_placed(std::int64_t year) const;
+    [[nodiscard]] std::size_t artifact_count() const noexcept { return artifact_rows_.size(); }
     [[nodiscard]] std::optional<std::int64_t> previous_event_year(std::int64_t year) const;
     [[nodiscard]] std::optional<std::int64_t> next_event_year(std::int64_t year) const;
 
@@ -302,6 +322,13 @@ private:
     // until exclusive, bit) in event order.
     std::vector<db::FactionRow> factions_;
     std::vector<std::int64_t> faction_hidden_;
+    // P5-11 11.1: the artifact rows (index id - 1) and their holdings in
+    // (artifact, seq) order, artifact a's at holding_offsets_[a - 1] ..
+    // holding_offsets_[a] - 1.
+    std::vector<db::ArtifactRow> artifact_rows_;
+    std::vector<db::ArtifactHoldingRow> artifact_holdings_;
+    std::vector<std::size_t> holding_offsets_;
+    [[nodiscard]] ArtifactPlace artifact_place(std::size_t index, std::int64_t year) const;
     std::vector<std::vector<std::tuple<std::int64_t, std::int64_t, std::int64_t>>> divine_effects_;
     std::vector<std::int64_t> figure_exiled_;
     std::vector<std::vector<std::int64_t>> figure_events_;

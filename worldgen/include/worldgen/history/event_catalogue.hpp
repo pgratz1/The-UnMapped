@@ -386,6 +386,33 @@ struct PantheonTables {
 };
 [[nodiscard]] std::optional<std::string> pantheon_tables_problem(const PantheonTables& t);
 
+// P5-11 9 (schema 15): the first problem of the tables artifact_kind,
+// artifact and artifact_holding, of the figures of role 8 and of the events
+// of kinds 111 to 116 and their artifact participants, in the order of 9's
+// reader checks, or std::nullopt. Called by both readers after their
+// pantheon checks, so both give the same first error (both defer the
+// participants of entity type 10 to it). Spans in primary-key order as read;
+// civ_ids and region_ids ascending; map_size 0 skips the cell check.
+struct ArtifactTables {
+    std::span<const db::ArtifactKindRow> kinds;
+    std::span<const db::ArtifactRow> artifacts;
+    std::span<const db::ArtifactHoldingRow> holdings;
+    std::span<const db::FigureRow> figures;
+    std::span<const db::GodRow> gods;
+    std::span<const db::MonsterRow> monsters;
+    std::span<const db::SiteRow> sites;
+    std::span<const db::SettlementRow> settlements;
+    std::span<const std::int64_t> civ_ids;
+    std::span<const std::int64_t> region_ids;
+    std::int64_t map_size = 0;
+    std::span<const db::EventRow> events;
+    std::span<const db::EventParticipantRow> participants;
+    std::span<const db::EventValueRow> values;
+    std::span<const db::EventCauseRow> causes;
+    const EventCatalogue* catalogue = nullptr;
+};
+[[nodiscard]] std::optional<std::string> artifact_tables_problem(const ArtifactTables& t);
+
 // P5-06 9.4: the role words ruler, claimant, general, hero, caster (roles 1
 // to 5), "?" otherwise; the temper words steady, warlike, peaceable,
 // grasping, just (0 to 4).

@@ -1194,16 +1194,16 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
                 k = x.id == r.kind ? &x : k;
             }
             if (k == nullptr) {
-                view_fail("corrupt table 'artifact': row " + int_text(r.id) + ": kind " + int_text(r.kind) +
-                          " is not a row of artifact_kind");
+                continue;  // reported by artifact_tables_problem below
             }
             const char first = k->noun.empty() ? ' ' : k->noun.front();
             const bool vowel = first == 'a' || first == 'e' || first == 'i' || first == 'o' || first == 'u';
             v.artifact_kind_texts_.emplace_back(r.id, std::string(vowel ? "an " : "a ") + k->noun +
                                                           (r.deep == 1 ? " of deep iron" : ""));
         }
-        if (!ascending(v.artifacts_)) {
-            view_fail("corrupt table 'artifact': ids do not ascend");
+        if (!ascending(v.artifacts_) || !ascending(v.artifact_kind_texts_)) {
+            v.artifacts_.clear();  // artifact_tables_problem reports the row
+            v.artifact_kind_texts_.clear();
         }
         if (!ascending(v.factions_) || !ascending(v.god_titles_)) {
             v.factions_.clear();  // the pantheon checks report the row
@@ -1273,7 +1273,8 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             // checked by pantheon_tables_problem, so both readers give the
             // same first error.
             if (*type != EntityType::monster && *type != EntityType::site && *type != EntityType::figure &&
-                *type != EntityType::god && *type != EntityType::faction && v.name(*type, r.entity_id) == nullptr) {
+                *type != EntityType::god && *type != EntityType::faction && *type != EntityType::artifact &&
+                v.name(*type, r.entity_id) == nullptr) {
                 view_fail(at + std::string(entity_type_key(*type)) + " " + int_text(r.entity_id) + " does not exist");
             }
             e.participants.push_back(r);
@@ -1449,6 +1450,29 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             pt.values = values;
             pt.catalogue = &v.catalogue_;
             if (std::optional<std::string> why = pantheon_tables_problem(pt)) {
+                view_fail(*why);
+            }
+            // P5-11 9 (schema 15), after P5-08's checks.
+            const std::vector<db::ArtifactHoldingRow> holdings =
+                read(db::read_artifact_holding_rows(world), db::ARTIFACT_HOLDING_TABLE);
+            ArtifactTables at;
+            at.kinds = v.artifact_kind_rows_;
+            at.artifacts = v.artifact_rows_;
+            at.holdings = holdings;
+            at.figures = v.figure_rows_;
+            at.gods = v.god_rows_;
+            at.monsters = v.monster_rows_;
+            at.sites = v.site_rows_;
+            at.settlements = settlement_rows;
+            at.civ_ids = civ_ids;
+            at.region_ids = region_ids;
+            at.map_size = map_size;
+            at.events = event_rows;
+            at.participants = participants;
+            at.values = values;
+            at.causes = causes;
+            at.catalogue = &v.catalogue_;
+            if (std::optional<std::string> why = artifact_tables_problem(at)) {
                 view_fail(*why);
             }
             for (const db::RelationRow& r : relation_rows) {

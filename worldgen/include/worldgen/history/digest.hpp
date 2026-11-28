@@ -70,6 +70,8 @@ inline constexpr std::size_t SUMMARY_FIGURES_MAX = 6;
 // P5-08 10 items 2, 3 (format v11): the gods and cults listed at summary.
 inline constexpr std::size_t SUMMARY_GODS_MAX = 8;
 inline constexpr std::size_t SUMMARY_CULTS_MAX = 6;
+// P5-11 10 item 2 (format v12): the artifacts listed in [artifacts] at summary.
+inline constexpr std::size_t SUMMARY_ARTIFACTS_MAX = 8;
 // P5-06 25.2: a calamity is major when it ended a settlement or took at
 // least this share (per mille) of its realm's people; at most this many
 // major calamities are in the summary set always.
@@ -79,6 +81,10 @@ inline constexpr std::size_t SUMMARY_CALAMITY_MAJOR_MAX = 8;
 // the ruling one has at least this share (the shipped mixed_min_permille;
 // the report reads the world only).
 inline constexpr std::int64_t MIXED_SHARE_MIN = 100;
+// P5-11 12.2 (part D reading): the report reads the world only, so the
+// stat cult_returns_barred is rebuilt with the shipped
+// history.pantheon.cult_return_years.
+inline constexpr std::int64_t CULT_RETURN_YEARS = 400;
 // P5-03 17.4: a [stats] value printed as "-" (ruins_oldest_year with no ruin).
 inline constexpr std::int64_t STAT_NONE = std::numeric_limits<std::int64_t>::min();
 // 25.7 item 4: the [stats] keys printed at summary, in section 9's order.
@@ -136,6 +142,10 @@ struct HistoryTables {
     std::vector<db::BookRow> books;
     // Schema 14 (P5-08 9): table faction.
     std::vector<db::FactionRow> factions;
+    // Schema 15 (P5-11 9): tables artifact_kind, artifact, artifact_holding.
+    std::vector<db::ArtifactKindRow> artifact_kinds;
+    std::vector<db::ArtifactRow> artifacts;
+    std::vector<db::ArtifactHoldingRow> artifact_holdings;
     std::int64_t event_rows = 0;
     std::int64_t cause_rows = 0;
 };

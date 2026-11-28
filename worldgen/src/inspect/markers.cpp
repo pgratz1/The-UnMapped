@@ -496,6 +496,15 @@ void MarkerIndex::markers_at(const history::LoadedHistory& history, const histor
                          [](const SiteMarker& a, const SiteMarker& b) { return a.site < b.site; });
     }
 
+    // P5-11 11.1: the artifacts in states 3 to 6, ascending id.
+    out.artifacts.clear();
+    if (options.artifacts) {
+        for (const std::int64_t id : history.timeline.artifacts_placed(year)) {
+            const history::ArtifactPlace p = history.timeline.artifact_at(id, year);
+            out.artifacts.push_back(ArtifactMarker{id, p.x, p.y, p.state, p.settlement, p.site});
+        }
+    }
+
     // 3.5: passes, ascending id.
     out.passes.clear();
     if (options.passes) {
@@ -814,6 +823,23 @@ Glyph sanctum_glyph() {
     return std::move(g).take();
 }
 
+// P5-11 11.1: the artifact, a four-pointed star: fill where |dx| + |dy| <= 1,
+// ink at the tips (0, -2), (0, 2), (-2, 0), (2, 0); then the halo rule.
+Glyph artifact_glyph() {
+    GlyphGrid g(3);
+    g.set(0, 0, GLYPH_FILL);
+    g.set(0, -1, GLYPH_FILL);
+    g.set(0, 1, GLYPH_FILL);
+    g.set(-1, 0, GLYPH_FILL);
+    g.set(1, 0, GLYPH_FILL);
+    g.set(0, -2, GLYPH_INK);
+    g.set(0, 2, GLYPH_INK);
+    g.set(-2, 0, GLYPH_INK);
+    g.set(2, 0, GLYPH_INK);
+    g.halo();
+    return std::move(g).take();
+}
+
 std::string key_text(GlyphKey key) {
     return "base " + num(key.base) + (key.declining ? " declining" : "") + (key.capital ? " capital" : "");
 }
@@ -838,6 +864,9 @@ Glyph marker_glyph(GlyphKey key) {
     }
     if (key.base == GLYPH_SANCTUM && !key.declining && !key.capital) {
         return sanctum_glyph();
+    }
+    if (key.base == GLYPH_ARTIFACT && !key.declining && !key.capital) {
+        return artifact_glyph();  // P5-11 11.1
     }
     if (key.declining || key.capital || (key.base < 8 || key.base > 11)) {
         throw FatalError("marker_glyph: no glyph for " + key_text(key));
@@ -904,6 +933,23 @@ std::string_view shrine_word(bool profane) noexcept {
     return profane ? "cursed by" : "holy to";
 }
 
+std::array<std::int64_t, 2> artifact_glyph_offset(const ArtifactMarker& artifact) noexcept {
+    return artifact.settlement != 0 ? std::array<std::int64_t, 2>{0, -SITE_GLYPH_OFFSET}
+                                    : std::array<std::int64_t, 2>{0, 0};
+}
+
+std::string_view artifact_state_word(std::int64_t state) noexcept {
+    switch (state) {
+        case 1: return "kept";
+        case 2: return "borne";
+        case 3: return "hoarded";
+        case 4: return "lost";
+        case 5: return "buried";
+        case 6: return "enshrined";
+        default: return {};
+    }
+}
+
 // --- Drawing (section 6) ---------------------------------------------------------
 
 namespace {
@@ -942,10 +988,13 @@ private:
         if (key.base >= GLYPH_SHRINE && key.base <= GLYPH_SANCTUM && !key.declining && !key.capital) {
             return 26U + static_cast<std::size_t>(key.base - GLYPH_SHRINE);  // P5-08 11.1
         }
+        if (key.base == GLYPH_ARTIFACT && !key.declining && !key.capital) {
+            return 29U;  // P5-11 11.1
+        }
         (void)marker_glyph(key);  // throws its FatalError
         draw_fatal("no glyph for base " + num(key.base));
     }
-    std::array<std::optional<Glyph>, 29> glyphs_;
+    std::array<std::optional<Glyph>, 30> glyphs_;
 };
 
 class Canvas {
@@ -1075,6 +1124,11 @@ void draw_markers(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_
             }
             canvas.draw(glyphs.get(glyph_of(m)), m.x, m.y, fill);
         }
+    }
+    // (7) P5-11 11.1: the artifacts, above everything else.
+    for (const ArtifactMarker& a : markers.artifacts) {
+        const std::array<std::int64_t, 2> d = artifact_glyph_offset(a);
+        canvas.draw(glyphs.get(GlyphKey{GLYPH_ARTIFACT, false, false}), a.x + d[0], a.y + d[1], MARKER_ARTIFACT);
     }
 }
 

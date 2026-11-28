@@ -39,7 +39,7 @@ struct GroupRow {
 };
 
 // 4.4, by key; P5-02's kinds 44 to 55 in group monsters (section 9).
-constexpr std::array<GroupRow, 110> GROUPS = {{
+constexpr std::array<GroupRow, 116> GROUPS = {{
     {"awakening", EventGroup::realms},
     {"civ_founded", EventGroup::realms},
     {"civ_seceded", EventGroup::realms},
@@ -163,6 +163,13 @@ constexpr std::array<GroupRow, 110> GROUPS = {{
     {"cult_suppressed", EventGroup::gods},
     {"tower_taken_up", EventGroup::figures},
     {"tower_abandoned", EventGroup::figures},
+    // P5-11 11.1: kinds 111 to 116 in the new group artifacts (code 10).
+    {"artifact_made", EventGroup::artifacts},
+    {"artifact_taken", EventGroup::artifacts},
+    {"artifact_lost", EventGroup::artifacts},
+    {"artifact_hoarded", EventGroup::artifacts},
+    {"artifact_recovered", EventGroup::artifacts},
+    {"artifact_buried", EventGroup::artifacts},
 }};
 
 std::string span_text(std::int64_t year, std::int64_t end_year) {
@@ -220,6 +227,7 @@ std::string_view event_group_word(EventGroup group) noexcept {
         case EventGroup::alliances: return "alliances";
         case EventGroup::figures: return "figures";
         case EventGroup::gods: return "gods";
+        case EventGroup::artifacts: return "artifacts";
     }
     return "other";
 }
@@ -482,6 +490,19 @@ std::vector<history::LinkedText> BrowserIndex::cult_block(const LoadedHistory& h
     return out;
 }
 
+std::vector<history::LinkedText> BrowserIndex::artifact_block(const LoadedHistory& history,
+                                                              std::int64_t artifact) const {
+    check_history(history);
+    if (artifact < 1 || static_cast<std::uint64_t>(artifact) > history.tables.artifacts.size()) {
+        browser_fatal("no artifact " + num(artifact));
+    }
+    std::vector<history::LinkedText> out;
+    for (const BlockLine& line : inspect::artifact_block(history.view, history.tables, artifact)) {
+        out.push_back(block_line_display(history.view, line));
+    }
+    return out;
+}
+
 std::string BrowserIndex::row_text(const LoadedHistory& history, std::int64_t event) const {
     check_history(history);
     const EventEntry& e = entry(event);
@@ -546,6 +567,12 @@ std::vector<NameMatch> BrowserIndex::search(const LoadedHistory& history, std::s
     // P5-06 11.3: figures by display name, after the regions.
     for (const FigureEntry& f : figures_) {
         if (matches(f.display_name, q) && add(EntityType::figure, f.id, f.display_name)) {
+            return out;
+        }
+    }
+    // P5-11 11.1: artifacts by name, after the figures.
+    for (const db::ArtifactRow& a : view.artifact_rows()) {
+        if (matches(a.name, q) && add(EntityType::artifact, a.id, a.name)) {
             return out;
         }
     }

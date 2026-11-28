@@ -585,7 +585,99 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             }
         }
     }
+    // P5-11 11.1: the artifacts and their holdings.
+    t.artifact_rows_ = tables.artifacts;
+    t.artifact_holdings_ = tables.artifact_holdings;
+    t.holding_offsets_.assign(t.artifact_rows_.size() + 1, 0);
+    {
+        std::size_t h = 0;
+        for (std::size_t i = 0; i < t.artifact_rows_.size(); ++i) {
+            if (t.artifact_rows_[i].id != static_cast<std::int64_t>(i) + 1) {
+                timeline_fatal("artifact " + num(t.artifact_rows_[i].id) + " out of order");
+            }
+            t.holding_offsets_[i] = h;
+            while (h < t.artifact_holdings_.size() && t.artifact_holdings_[h].artifact == t.artifact_rows_[i].id) {
+                ++h;
+            }
+        }
+        if (h != t.artifact_holdings_.size()) {
+            timeline_fatal("artifact holdings out of order");
+        }
+        t.holding_offsets_[t.artifact_rows_.size()] = h;
+    }
     return t;
+}
+
+// --- Artifacts (P5-11 11.1) ------------------------------------------------------------
+
+ArtifactPlace Timeline::artifact_place(std::size_t index, std::int64_t year) const {
+    ArtifactPlace out;
+    const db::ArtifactHoldingRow* at = nullptr;
+    for (std::size_t k = holding_offsets_[index]; k < holding_offsets_[index + 1]; ++k) {
+        if (artifact_holdings_[k].from_year <= year) {
+            at = &artifact_holdings_[k];
+        }
+    }
+    if (at == nullptr) {
+        return out;
+    }
+    out.state = at->state;
+    out.holder_type = at->holder_type;
+    out.holder = at->holder;
+    out.since = at->from_year;
+    out.event = at->event;
+    if (at->state == 3) {
+        const MonsterState m = monster_at(at->holder, year);
+        const std::optional<std::size_t> s = index_of(m.lair_site, sites_.size());
+        if (s) {
+            const db::SiteRow& x = sites_[*s];
+            out.region = x.region;
+            out.settlement = x.settlement;
+            out.site = x.id;
+            out.x = x.x;
+            out.y = x.y;
+        }
+    } else if (at->state >= 4) {
+        out.region = at->region;
+        out.settlement = at->settlement;
+        out.site = at->site;
+        out.x = at->x;
+        out.y = at->y;
+    }
+    return out;
+}
+
+ArtifactPlace Timeline::artifact_at(std::int64_t artifact, std::int64_t year) const {
+    require_year(year);
+    const std::optional<std::size_t> i = index_of(artifact, artifact_rows_.size());
+    if (!i) {
+        timeline_fatal("no artifact " + num(artifact));
+    }
+    return artifact_place(*i, year);
+}
+
+std::vector<std::int64_t> Timeline::artifacts_held(std::int64_t holder_type, std::int64_t holder,
+                                                   std::int64_t year) const {
+    require_year(year);
+    std::vector<std::int64_t> out;
+    for (std::size_t i = 0; i < artifact_rows_.size(); ++i) {
+        const ArtifactPlace p = artifact_place(i, year);
+        if (p.state != 0 && p.holder_type == holder_type && p.holder == holder) {
+            out.push_back(artifact_rows_[i].id);
+        }
+    }
+    return out;
+}
+
+std::vector<std::int64_t> Timeline::artifacts_placed(std::int64_t year) const {
+    require_year(year);
+    std::vector<std::int64_t> out;
+    for (std::size_t i = 0; i < artifact_rows_.size(); ++i) {
+        if (artifact_place(i, year).state >= 3) {
+            out.push_back(artifact_rows_[i].id);
+        }
+    }
+    return out;
 }
 
 // --- Cults and the divine effects (P5-08 11.1) --------------------------------------
