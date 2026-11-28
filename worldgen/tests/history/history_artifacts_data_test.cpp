@@ -2,7 +2,7 @@
 // artifact (4.1: fifteen definitions in canonical id order with the table's class, title and noun; the numeric fields
 // within their bounds and the class checks, whose values 15.2 may calibrate), its checks and grammars through an added
 // definition file; the culture field artifact_forms (4.2: 1 to 8 forms, {root} once, {title} at most once); the tuning
-// history.artifacts (4.3: the fifteen fields in order and their bounds; the ten shipped occasions' kind, role and bearer
+// history.artifacts (4.3: the fifteen fields in order and their bounds; the twelve shipped occasions' kind, role and bearer
 // of 4.4; absence; the occasion checks artifacts_occasion_* through an edited file); history.figures'
 // smith_age_permille and smith_age_span_permille and history.pantheon.cult_return_years (appended last); the deeds and
 // cause words of 4.5 and the faerie form; the report entries 111 to 116 (8.2). The data root is copied to a scratch
@@ -182,7 +182,7 @@ TEST_CASE("P5-11 4.2: artifact_forms of every culture") {
     }
 }
 
-TEST_CASE("P5-11 4.3, 4.4: history.artifacts: the fields in order, bounds and the ten shipped occasions") {
+TEST_CASE("P5-11 4.3, 4.4: history.artifacts: the fields in order, bounds and the twelve shipped occasions") {
     P511_REQUIRE_INTEGRATED();
     const wd::Record& r = history_def("artifacts").record;
     static const char* const names[15] = {"occasions", "forge_chance_permille", "realm_rest_years", "world_max",
@@ -202,7 +202,8 @@ TEST_CASE("P5-11 4.3, 4.4: history.artifacts: the fields in order, bounds and th
     struct O {
         const char *kind, *role, *bearer;
     };
-    static const O want[10] = {{"war_declared", "defender", "general"},
+    // The spec's ten, then the two of calibration (lead ruling 2026-11-28: tower_founded and book_written for staffs).
+    static const O want[12] = {{"war_declared", "defender", "general"},
                                {"war_declared", "attacker", "general"},
                                {"sacked", "defender", "realm"},
                                {"civ_conquered", "conqueror", "realm"},
@@ -211,10 +212,12 @@ TEST_CASE("P5-11 4.3, 4.4: history.artifacts: the fields in order, bounds and th
                                {"settlement_overrun", "civilization", "realm"},
                                {"deep_woken", "civilization", "realm"},
                                {"divine_champion", "civilization", "figure"},
-                               {"cult_founded", "civilization", "site"}};
+                               {"cult_founded", "civilization", "site"},
+                               {"tower_founded", "civilization", "realm"},
+                               {"book_written", "civilization", "realm"}};
     const auto& occ = r.get_array("occasions");
-    REQUIRE(occ.size() == 10U);
-    for (std::size_t i = 0; i < 10U; ++i) {
+    REQUIRE(occ.size() == 12U);
+    for (std::size_t i = 0; i < 12U; ++i) {
         const wd::Record& o = occ[i].as_record();
         CAPTURE(i);
         CHECK(o.get_string("kind") == want[i].kind);

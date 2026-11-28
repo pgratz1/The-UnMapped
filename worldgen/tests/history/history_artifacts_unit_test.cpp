@@ -49,14 +49,17 @@ TEST_CASE("P5-11 6.3: class weights, relic and staff zeroed") {
     CHECK(s == 0);
 }
 
-TEST_CASE("P5-11 6.4: the forge (own mine, a partner by depth then id, none)") {
+TEST_CASE("P5-11 6.4: the forge (own mine at any depth, a partner by depth then id, none)") {
+    // The realms with an open mine and its depth (absent: none); lead ruling 2026-11-28 on finding S4.
     const std::map<std::int64_t, std::int64_t> depth = {{1, 0}, {2, 1}, {3, 3}, {4, 3}, {5, 0}, {6, 2}};
     CHECK(p511_f::forge_of(2, depth, {3, 4}) == 2);
-    CHECK(p511_f::forge_of(1, depth, {6, 4, 3}) == 3);
-    CHECK(p511_f::forge_of(1, depth, {2, 6}) == 6);
-    CHECK(p511_f::forge_of(1, depth, {5}) == 0);
-    CHECK(p511_f::forge_of(5, depth, {}) == 0);
-    CHECK(p511_f::forge_of(7, depth, {1, 5}) == 0);   // unknown realm: depth 0
+    CHECK(p511_f::forge_of(1, depth, {3}) == 1);   // an undeepened mine is a forge
+    CHECK(p511_f::forge_of(8, depth, {6, 4, 3}) == 3);
+    CHECK(p511_f::forge_of(8, depth, {2, 6}) == 6);
+    CHECK(p511_f::forge_of(8, depth, {5}) == 5);
+    CHECK(p511_f::forge_of(8, depth, {5, 1}) == 1);
+    CHECK(p511_f::forge_of(7, depth, {8}) == 0);
+    CHECK(p511_f::forge_of(8, depth, {}) == 0);
 }
 
 TEST_CASE("P5-11 6.3: eligibility (no draw when it fails)") {
@@ -109,8 +112,8 @@ TEST_CASE("P5-11 3, 8.1, 10 item 6: the spec's listing in the adapter") {
     for (std::size_t i = 0; i < p511api::new_kinds().size(); ++i) {
         CHECK(p511api::new_kinds()[i].first == 111 + static_cast<std::int64_t>(i));
     }
-    CHECK(p511api::stats_keys().size() == 25U);
-    CHECK(p511api::stats_keys().back() == "cult_returns_barred");
+    CHECK(p511api::stats_keys().size() == 24U);
+    CHECK(p511api::stats_keys().back() == "battles_under_acts");
     CHECK(p511_check::is_quiet_move_key("figure_died"));
     CHECK_FALSE(p511_check::is_quiet_move_key("sacked"));
     CHECK(p511_check::move_states_ok("hero_slain", p511api::BORNE, p511api::HOARDED));

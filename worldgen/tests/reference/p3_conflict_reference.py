@@ -554,6 +554,7 @@ KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_027})
 KIND_ID.update({k["key"]: k["id"] for k in pe.KINDS_029})
 KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_029})
 KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_030})   # P5-08: kinds 100 to 110
+KEY_OF.update({k["id"]: k["key"] for k in pe.KINDS_031})   # P5-11: kinds 111 to 116
 K = KIND_ID
 # r19 23.2 / P3-07 r14 23 item 1: wherever a rule, invariant, statistic or report reads a claim, kinds 20 and 39
 # are read alike; a cession of invariants (13), (17), the units and the companions is kind 29 or 40. Kinds 39 and
@@ -3708,8 +3709,13 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             # P5-04a 9.2: a battle also cites at most one arms_sold (the first battle its winner won after a sale)
             decl = [x for x in cs if kind[x] == K["war_declared"]]
             arms = [x for x in cs if KEY_OF[kind[x]] == "arms_sold"]
+            # P5-11 7.2, 12.1 (0.31.0): a battle_led also cites its winner's borne artifact (an artifact_made), and
+            # every battle the acts in force (divine_bless, divine_curse; checked by P5-11 13 item 8)
+            extra = [x for x in cs if FLAGS["p511"] and (
+                KEY_OF[kind[x]] in ("divine_bless", "divine_curse") or
+                (key == "battle_led" and KEY_OF[kind[x]] == "artifact_made"))]
             c.true("%s 11 e%d caused by its declaration" % (label, e[0]), len(decl) == 1 and len(arms) <= 1 and
-                   len(cs) == 1 + len(arms) and (not arms or FLAGS["p504a"]))
+                   len(cs) == 1 + len(arms) + len(extra) and (not arms or FLAGS["p504a"]))
         if key in ("claim", "claim_settlements"):
             cs = causes.get(e[0], [])
             # 8.3 item 4: a colony of the same step is no claim cause, unless it is the region's

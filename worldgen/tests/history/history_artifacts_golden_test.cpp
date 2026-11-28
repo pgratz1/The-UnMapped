@@ -8,7 +8,7 @@
 //
 // Format (the reference's GOLDEN_HEADER): `case <name> <seed> <size> <data>`, then `table <name> <sha256>`,
 // `stat <key> <value>` and (fixture cases) `path <path>` lines of that case; `#` lines are comments. The stat
-// cult_returns_barred is the replay's (not in rows): compared only for fixture cases.
+// cult_returns_barred was dropped by the lead (2026-11-28).
 
 #include <doctest/doctest.h>
 
@@ -95,11 +95,7 @@ void check_world_case(const GCase& c) {
         for (const auto& r : w.base.rows(name)) rows.push_back(r);
         CHECK(engine_test::table_hash(columns(name), rows) == hash);
     }
-    std::vector<std::pair<std::string, std::int64_t>> want;
-    for (const auto& kv : c.stats) {
-        if (kv.first != "cult_returns_barred") want.push_back(kv);
-    }
-    CHECK(p511_check::stats(w) == want);
+    CHECK(p511_check::stats(w) == c.stats);
 }
 
 std::vector<std::string> promised_paths(const fs::path& file) {

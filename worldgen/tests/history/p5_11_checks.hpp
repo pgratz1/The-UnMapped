@@ -40,18 +40,16 @@ inline std::vector<std::int64_t> class_weights(std::vector<std::int64_t> w, bool
     if (!caster_with_tower) w.at(4) = 0;
     return w;
 }
-// 6.4 forge(c): c when depth(c) >= 1; else the partner (ascending) with the largest depth >= 1, then the smaller id.
+// 6.4 forge(c) (lead ruling 2026-11-28 on finding S4): `depth` holds the realms with an open mine (any depth, 0 for a
+// mine never deepened). c when it has one; else the partner (ascending) with the largest depth, then the smaller id.
 inline std::int64_t forge_of(std::int64_t c, const std::map<std::int64_t, std::int64_t>& depth,
                              std::vector<std::int64_t> partners) {
-    const auto d = [&](std::int64_t x) {
-        const auto it = depth.find(x);
-        return it == depth.end() ? std::int64_t{0} : it->second;
-    };
-    if (d(c) >= 1) return c;
+    if (depth.count(c) != 0) return c;
     std::sort(partners.begin(), partners.end());
     std::int64_t best = 0;
     for (const std::int64_t p : partners) {
-        if (d(p) >= 1 && (best == 0 || d(p) > d(best))) best = p;
+        const auto it = depth.find(p);
+        if (it != depth.end() && (best == 0 || it->second > depth.at(best))) best = p;
     }
     return best;
 }
@@ -234,13 +232,13 @@ inline std::int64_t mine_depth_at(const World& w, std::int64_t sid, std::int64_t
     }
     return d;
 }
-// The forges of c at event x (reference reading A-R19): mines of founder c opened before x with depth >= 1, open
+// The forges of c at event x (reference reading A-R19): mines of founder c opened before x at any depth, open
 // after x (strict) or ended in x's year or later (lenient: the alliances' closing step may follow the making).
 inline std::vector<std::int64_t> forges_at(const World& w, std::int64_t c, std::int64_t x, bool lenient) {
     std::vector<std::int64_t> out;
     const std::int64_t y = w.year(x);
     for (const auto& [sid, s] : w.base.site) {
-        if (I(*s, 2) != p511api::SITE_MINE || I(*s, 7) != c || I(*s, 10) >= x || mine_depth_at(w, sid, x) < 1) continue;
+        if (I(*s, 2) != p511api::SITE_MINE || I(*s, 7) != c || I(*s, 10) >= x) continue;
         const bool open = I(*s, 12) == 0 || I(*s, 12) > x || (lenient && !null_at(*s, 11) && I(*s, 11) >= y);
         if (open) out.push_back(sid);
     }
@@ -497,7 +495,7 @@ inline std::vector<std::string> violations(const World& w, const Tuning& t) {
     return out;
 }
 
-// 10 item 6 from rows (cult_returns_barred is not in rows: left out, reference reading A-R14).
+// 10 item 6 from rows (cult_returns_barred dropped by the lead, reference reading A-R14).
 inline std::vector<std::pair<std::string, std::int64_t>> stats(const World& w) {
     using namespace p511api;
     std::vector<std::pair<std::string, std::int64_t>> st;
@@ -530,7 +528,7 @@ inline std::vector<std::pair<std::string, std::int64_t>> stats(const World& w) {
         const auto cs = w.causes(e);
         for (const auto& [aid, ap] : w.art) {
             const Row* h = w.holding_at_event(aid, e);
-            if (I(*ap, 3) != a_ || h == nullptr || I(*w.kind.at(I(*ap, 2)), 7) <= 0) continue;
+            if (I(*ap, 3) != a_ || h == nullptr) continue;   // spec 10 item 6 (lead ruling on part D)
             if (std::find(cs.begin(), cs.end(), I(*h, 12)) == cs.end()) continue;
             if ((I(*h, 4) == KEPT && I(*h, 6) == b_) || (I(*h, 4) == BORNE && w.fig_civ(I(*h, 6)) == b_)) {
                 ++wars;

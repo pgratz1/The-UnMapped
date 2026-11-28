@@ -125,7 +125,7 @@ TEST_CASE("P5-11 9: the artifact rows") {
     refused_prefix("A9", "UPDATE artifact SET maker_civ = maker_civ + 1 WHERE id = " + a + ";", pa);
     refused_prefix("A10", "UPDATE artifact SET occasion_event = 1 WHERE id = " + a + ";", pa);
     refused_prefix("A11", "UPDATE artifact SET status = (status % 6) + 1 WHERE id = " + a + ";", pa);
-    refused_prefix("A12", "UPDATE artifact SET id = id + 100 WHERE id = " + a + ";", "corrupt table '");
+    refused_prefix("A12", "UPDATE artifact SET id = id + 1000000 WHERE id = " + a + ";", "corrupt table '");
 }
 
 TEST_CASE("P5-11 9: the artifact_holding rows") {

@@ -36,7 +36,7 @@
 #include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/markers.hpp"
 
-// #define UNMAPPED_P511_API 1
+#define UNMAPPED_P511_API 1
 
 namespace p511api {
 
@@ -84,7 +84,7 @@ inline const std::vector<std::pair<std::int64_t, std::string>>& new_kinds() {
         {114, "artifact_hoarded"}, {115, "artifact_recovered"}, {116, "artifact_buried"}};
     return v;
 }
-// 10 item 6, in this order (cult_returns_barred last: not in rows, reading A-R14 of the reference).
+// 10 item 6, in this order (cult_returns_barred dropped by the lead, 2026-11-28; reading A-R14 of the reference).
 inline const std::vector<std::string>& stats_keys() {
     static const std::vector<std::string> v = {
         "artifacts_made",      "artifacts_smiths",       "artifacts_commissioned", "artifacts_casters",
@@ -92,8 +92,7 @@ inline const std::vector<std::string>& stats_keys() {
         "artifacts_regalia",   "artifacts_relic",        "artifacts_staff",        "artifacts_taken",
         "artifacts_lost",      "artifacts_hoarded",      "artifacts_recovered",    "artifacts_buried",
         "artifact_holdings",   "artifacts_changed_hands", "artifacts_lost_at_end", "artifacts_held_by_others",
-        "smiths",              "wars_citing_artifacts",  "battles_with_artifacts", "battles_under_acts",
-        "cult_returns_barred"};
+        "smiths",              "wars_citing_artifacts",  "battles_with_artifacts", "battles_under_acts"};
     return v;
 }
 

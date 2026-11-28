@@ -83,8 +83,8 @@ STATS_KEYS = ("artifacts_made", "artifacts_smiths", "artifacts_commissioned", "a
               "artifacts_staff", "artifacts_taken", "artifacts_lost", "artifacts_hoarded", "artifacts_recovered",
               "artifacts_buried", "artifact_holdings", "artifacts_changed_hands", "artifacts_lost_at_end",
               "artifacts_held_by_others", "smiths", "wars_citing_artifacts", "battles_with_artifacts",
-              "battles_under_acts", "cult_returns_barred")   # 10 item 6, in this order
-REPLAY_STATS = ("cult_returns_barred",)   # not in rows (A-R14)
+              "battles_under_acts")   # 10 item 6, in this order (cult_returns_barred dropped: lead ruling, A-R14)
+REPLAY_STATS = ()   # none since the lead dropped cult_returns_barred (A-R14)
 MOVE_KEYS = ("general_appointed", "figure_died", "fell_in_battle", "hero_slain", "monster_slain_by_hero",
              "monster_slain", "monster_died", "monster_raid", "hold_lost", "sacked", "settlement_captured",
              "civ_conquered", "civ_ended", "peace", "war_won", "cult_suppressed")   # 6.7 M1 to M14
@@ -111,8 +111,12 @@ A-R5 (6.3, 6.7 M2) "visible" is P3-04 6.2's visibility (an entity created in an 
      realm lying low, which the spec does not define here).
 A-R6 (8.1 kind 111) The role `site` names the maker site (artifact.maker_site) when it is not 0.
 A-R7 (7.1) battle_artifact's "contributor" is a borne artifact whose kind's battle_permille is above 0.
-A-R8 (6.7 M12) A seat that stands but whose owner is c itself or has ended is treated as t = 0 (lost at c's home
-     region's seed cell); 6.7 names only "another's".
+A-R8 (6.7 M12) A seat that stands but whose owner is c itself, none or an ended realm is treated as a ruin: lost in
+     t (holder type 4, the settlement's place), as the engine does (integration; 6.7 names only "another's"; the
+     test writer's first reading, t = 0, is withdrawn).
+A-R21 (6.7 M10, M13; integration, the engine's readings) M10 takes only for a living captor (as M9; no draw
+     otherwise); M13 moves nothing when the winner has ended. M6 for a monster with no lair: lost on the field of
+     the event's region.
 A-R9 (8.1 kind 115) artifact_recovered names a figure only for how 1 by monster_slain_by_hero (the hero, whether it
      took the artifact up or its realm did); a recovery by a won war (how 2) names none.
 A-R10 (7.2) The declaration's claim cause is added wherever a war_declared is written (T2 and a flare-up's forced
@@ -121,10 +125,11 @@ A-R11 (12.2) The bar is tested after 6.8's link test and before the quiet budget
      candidate" counts a realm with a partner in the cult, whatever the budget.
 A-R12 (10 item 2) A `held:` entry is `<from> <state words> <tag><id> <name> e<id>` with the holder's tag (c, f, m, r,
      s, si) and its name; region names as at E.
-A-R13 (10 item 3) "holds ... at its end": for an ended realm the holdings opened before its ending event and closed at
-     or after it; for a living realm the holdings open at E.
-A-R14 (10 item 6) cult_returns_barred is not in rows (no event): a report of a stored world cannot print it unless
-     the world stores it (as P5-08's renewals_capped, its finding F3); the C++ stats leave it out.
+A-R13 (10 item 3) "holds ... at its end": for an ended realm a holding in force in its ended year (from_year <=
+     ended_year, and open or to_year >= ended_year; the engine's reading 6 of part D, taken at integration: the test
+     writer's first reading by event ids is withdrawn); for a living realm the holdings open at E.
+A-R14 (10 item 6) cult_returns_barred is not in rows (no event): the lead dropped the stat (2026-11-28); the return
+     bar of 12.2 stays and is checked by invariant 8.
 A-R15 (10 item 6) wars_citing_artifacts: a war_declared that cites the event of a holding of an artifact whose home
      is the attacker and which the defender keeps or one of its figures bears at the declaration.
      battles_with_artifacts: a battle_led with an artifact_made cause; battles_under_acts: a battle of the four kinds
@@ -133,8 +138,12 @@ A-R16 (11.1) artifact_at for state 3 gives the monster's lair at the year (the s
      origin_year <= year): its region, site and cell; settlement 0.
 A-R17 (6.7 M13) "borne by a living figure of civilization l": the figure's civ column; the recovery's figure role is
      empty (A-R9).
-A-R19 (6.4, P5-07 9) forge(c) tests forge_depth(c) >= 1, read as written: P5-07 gives an open mine never deepened
-     the depth 0, so such a mine is no forge (6.4's parenthesis "an open mine" would make it one; finding S4).
+A-R19 (6.4, P5-07 9) forge(c): a realm with an open mine at any depth is a forge (lead ruling 2026-11-28 on finding
+     S4: 6.4's formula forge_depth(c) >= 1 is corrected to "has an open mine"); among partners the largest
+     forge_depth, then the smaller id. The deep test (forge_depth(F) >= deep_metal_depth) is unchanged.
+A-R20 (8.1) An artifact event that names a settlement takes that settlement's region (lead ruling 2026-11-28; the
+     engineers' reading 3): an artifact_made at a mine or library whose cell lies across a border, an
+     artifact_hoarded how 2 and 3 (the raided or lost seat's region, not the lair's).
 A-R18 (7.1, 13 item 7) claim_event is the largest holding `event` among the contributing artifacts; a holding opened
      by a quiet move has the triggering event (a sack, a conquest), which the declaration then cites.
 """
@@ -181,14 +190,15 @@ def class_weights(classes, has_god, caster_with_tower):
 
 
 def forge_of(c, depth, partners):
-    """6.4 forge(c): c when depth(c) >= 1; else the partner (ascending) with the largest depth >= 1, then the smaller
-    id; else 0."""
-    if depth(c) >= 1:
+    """6.4 forge(c) (lead ruling 2026-11-28, reading A-R19): depth(x) is None when x has no open mine, else the
+    forge_depth of its open mines (0 for a mine never deepened). c when c has an open mine; else the partner
+    (ascending) with an open mine of the largest depth, then the smaller id; else 0."""
+    if depth(c) is not None:
         return c
     best = 0
     for p in sorted(partners):
         d = depth(p)
-        if d >= 1 and (best == 0 or d > depth(best)):
+        if d is not None and (best == 0 or d > depth(best)):
             best = p
     return best
 
@@ -344,7 +354,9 @@ class Artifacts:
         return [p for p, _e in al.partners(c)] if al is not None else []
 
     def forge(self, c):
-        return forge_of(c, self.forge_depth, self.partners(c))
+        al = self.w.alliances
+        return forge_of(c, lambda x: self.forge_depth(x) if al is not None and al.forged(x) else None,
+                        self.partners(c))
 
     def caster_site(self, f):
         fv = self.w.figures
@@ -433,6 +445,8 @@ class Artifacts:
         w = self.w
         if quiet and w.quiet_events_left(charged) <= 0:
             return trigger
+        if settlement:   # lead ruling 2026-11-28 (reading A-R20): an artifact event naming a settlement takes its region
+            region = w.stl(settlement)["region"]
         return w.append(key, region=region, settlement=settlement, participants=participants, values=values,
                         causes=(trigger,))
 
@@ -540,7 +554,10 @@ class Artifacts:
             m = P("monster")
             for a in self.held(HOARDED, m):
                 sid = self.lair_of(m)
-                self.move(a, LOST, SITE, sid, self.p_site(sid, False), e)
+                if sid:
+                    self.move(a, LOST, SITE, sid, self.p_site(sid, False), e)
+                else:   # A-R21
+                    self.move(a, LOST, REGION, ev["region"], self.p_region(ev["region"]), e)
                 self.log.append((w.year, "M6", a["id"], sid, e))
         elif k == "monster_raid":   # M7
             m, c = P("monster"), P("civilization")
@@ -584,7 +601,8 @@ class Artifacts:
             t = ev["settlement"]
             if t and t == self.seat.get(d, 0):
                 for a in self.held(KEPT, d):
-                    if pp.chance_pm(self.D("hist.artifacts.take", e, a["id"], 0), self.t["capture_take_permille"]):
+                    if self.civ_alive(xx) and pp.chance_pm(self.D("hist.artifacts.take", e, a["id"], 0),
+                                                           self.t["capture_take_permille"]):   # A-R21
                         y = self.emit("artifact_taken", xx, quiet, e, ev["region"], ev["settlement"],
                                       (A + (a["id"],), ("taker", CIV, xx), ("from", CIV, d)), (3,))
                         self.move(a, KEPT, CIV, xx, self.p_none(), y)
@@ -606,7 +624,7 @@ class Artifacts:
         elif k in ("peace", "war_won"):   # M13
             wn, ls = P("winner"), P("loser")
             fv = w.figures
-            for a in list(self.arts):
+            for a in (list(self.arts) if wn and ls and self.civ_alive(wn) else ()):   # A-R21
                 if a["civ"] != wn:
                     continue
                 o = a["h"][-1]
@@ -647,13 +665,19 @@ class Artifacts:
             self.log.append((w.year, "M12 ruin", a["id"], t, y))
             return
         o = w.stl(t)["owner_civ"] if t else 0
-        if t and o != c and self.civ_alive(o):
+        if t and o and o != c and self.civ_alive(o):
             y = self.emit("artifact_taken", o, quiet, e, ev["region"], ev["settlement"],
                           (A + (a["id"],), ("taker", CIV, o), ("from", CIV, c)), (4,))
             self.move(a, KEPT, CIV, o, self.p_none(), y)
             self.log.append((w.year, "M12 owner", a["id"], o, y))
             return
-        r = w.civ(c)["home_region"]   # t = 0 (reading A-R8: also a standing seat of c itself or of an ended owner)
+        if t:   # reading A-R8 (the engine's): a standing seat with no living other owner keeps it as a ruin would
+            pl = self.p_ruin(t)
+            y = self.emit("artifact_lost", c, quiet, e, pl[0], t, (A + (a["id"],), ("civilization", CIV, c)))
+            self.move(a, LOST, SETTLEMENT, t, pl, y)
+            self.log.append((w.year, "M12 seat", a["id"], t, y))
+            return
+        r = w.civ(c)["home_region"]   # t = 0
         pl = self.p_region(r)
         y = self.emit("artifact_lost", c, quiet, e, r, 0, (A + (a["id"],), ("civilization", CIV, c)))
         self.move(a, LOST, REGION, r, pl, y)
@@ -723,6 +747,8 @@ class Artifacts:
         if msite:
             ms = w.monsters.site(msite)
             region, settlement = ms["region"], ms["settlement"]
+            if settlement:   # reading A-R20: the settlement's region
+                region = w.stl(settlement)["region"]
         else:
             region, settlement = self.capital_region(c), 0
         parts = [("artifact", ARTIFACT, a_id), ("civilization", CIV, c)]
@@ -908,7 +934,7 @@ class R:
 
 def mine_depth_at(r, sid, x):
     """P5-07 9 from rows: the largest value depth of the delving_deepened of site sid before event x, 0 when none (an
-    undeepened mine has depth 0: no forge, reading A-R19)."""
+    undeepened mine has depth 0; it is still a forge, reading A-R19)."""
     d = 0
     for e in r.of("delving_deepened"):
         if e < x and r.one(e, "site") == sid:
@@ -918,13 +944,13 @@ def mine_depth_at(r, sid, x):
 
 def open_mines_at(r, c, x, lenient=False):
     """The forges of c at event x: its mines (site kind 3, founder c) open at x (opened before it, not ended before it)
-    with a depth of at least 1 (6.4's forge_depth(c) >= 1, reading A-R19). A mine whose settlement or region changed
+    at any depth (reading A-R19, the lead's ruling on S4). A mine whose settlement or region changed
     hands is closed by the alliances' next step with the change's event as ending_event, so between the change and
     that step the rows may still show it open: a forge the replay no longer counts (rows check only)."""
     out = []
     y = r.year(x)
     for s in r.site.values():
-        if s[2] != MINE or s[7] != c or s[10] >= x or mine_depth_at(r, s[0], x) < 1:
+        if s[2] != MINE or s[7] != c or s[10] >= x:
             continue
         # strict: ended after x; lenient: ended in x's year or later (the closing step may follow the making)
         if s[12] == 0 or s[12] > x or (lenient and s[11] is not None and s[11] >= y):
@@ -1257,8 +1283,8 @@ def reader_problems(res):
     return out
 
 
-def stats_of_tables(res, cult_returns_barred=0):
-    """10 item 6 (cult_returns_barred is the replay's, A-R14)."""
+def stats_of_tables(res, _unused=0):
+    """10 item 6 (cult_returns_barred dropped by the lead, A-R14)."""
     r = R(res)
     arts = list(r.arts.values())
     ev = {k: r.of(k) for k in KINDS.values()}
@@ -1276,13 +1302,12 @@ def stats_of_tables(res, cult_returns_barred=0):
                                   (st == BORNE and r.fig.get(h[6], (0,) * 7)[6] != a[3])):
             others += 1
     wars = 0
-    kc = {k[0]: k[7] for k in r.kinds.values()}
-    for e in r.of("war_declared"):
+    for e in r.of("war_declared"):   # spec 10 item 6 (lead ruling on part D; A-R15)
         a_, b_ = r.one(e, "attacker"), r.one(e, "defender")
         cs = set(r.cause_list(e))
         for aid, a in r.arts.items():
             h = r.holding_at_event(aid, e)
-            if a[3] == a_ and h is not None and h[12] in cs and kc.get(a[2], 0) > 0 and (
+            if a[3] == a_ and h is not None and h[12] in cs and (
                     (h[4] == KEPT and h[6] == b_) or (h[4] == BORNE and r.fig.get(h[6], (0,) * 7)[6] == b_)):
                 wars += 1
                 break
@@ -1303,8 +1328,7 @@ def stats_of_tables(res, cult_returns_barred=0):
            ("battles_with_artifacts", sum(1 for e in r.of("battle_led")
                                           if any(r.key(x) == "artifact_made" for x in r.cause_list(e)))),
            ("battles_under_acts", sum(1 for k in BATTLE_KEYS for e in r.of(k)
-                                      if any(r.key(x) in ("divine_bless", "divine_curse") for x in r.cause_list(e)))),
-           ("cult_returns_barred", cult_returns_barred)]
+                                      if any(r.key(x) in ("divine_bless", "divine_curse") for x in r.cause_list(e))))]
     assert tuple(k for k, _ in st) == STATS_KEYS
     return st
 
@@ -1318,7 +1342,7 @@ def _ref(r, ht, hd, E):
     if ht == MONSTER:
         return "m%d %s" % (hd, r.mon[hd][1])
     if ht == REGION:
-        return "r%d %s" % (hd, r.region_name_at_end(hd, E))
+        return "rg%d %s" % (hd, r.region_name_at_end(hd, E))   # rg<id> (lead ruling; spec 10 item 2)
     if ht == SETTLEMENT:
         return "s%d %s" % (hd, r.stl[hd][1])
     return "si%d %s" % (hd, r.site[hd][1])
@@ -1335,12 +1359,12 @@ def present_text(r, h, E):
         return "in the hoard of m%d %s" % (hd, r.mon[hd][1])
     if st == LOST:
         if ht == REGION:
-            return "lost in r%d %s" % (hd, r.region_name_at_end(hd, E))
+            return "lost in rg%d %s" % (hd, r.region_name_at_end(hd, E))
         if ht == SETTLEMENT:
             return "lost in the ruin of s%d %s" % (hd, r.stl[hd][1])
         return "lost in si%d %s" % (hd, r.site[hd][1])
     if st == BURIED:
-        return "buried with f%d %s in r%d %s" % (hd, r.fig_name(hd), h[7], r.region_name_at_end(h[7], E))
+        return "buried with f%d %s in rg%d %s" % (hd, r.fig_name(hd), h[7], r.region_name_at_end(h[7], E))
     return "at si%d %s" % (hd, r.site[hd][1])
 
 
@@ -1406,12 +1430,11 @@ def realm_line(res, c):
     cv = r.civ[c]
     holds = []
     for a in sorted(r.arts.values()):
-        if cv[8] is None:
-            h = r.open_holding(a[0])
-        else:
-            x = cv[9]
-            h = next((h for h in r.hold[a[0]] if h[12] < x and (h[13] == 0 or h[13] >= x)), None)
-        if h is not None and ((h[4] == KEPT and h[6] == c) or (h[4] == BORNE and r.fig[h[6]][6] == c)):
+        # reading A-R13 (the engine's, integration): at E, or for an ended realm a holding in force in its ended year
+        # (from_year <= ended_year <= to_year, or open)
+        y = cv[8]
+        hs = [h for h in r.hold[a[0]] if (h[3] is None if y is None else (h[2] <= y and (h[3] is None or h[3] >= y)))]
+        if any((h[4] == KEPT and h[6] == c) or (h[4] == BORNE and r.fig[h[6]][6] == c) for h in hs):
             holds.append(a)
     taken = []
     for a in made:
@@ -1667,12 +1690,15 @@ def check_units(c):
          class_weights(dict(arms=1, armour=2, regalia=3, relic=4, staff=5), True, False), [1, 2, 3, 4, 0])
     c.eq("6.3 W both kept", class_weights(dict(arms=0, armour=0, regalia=0, relic=1000, staff=0), True, True),
          [0, 0, 0, 1000, 0])
-    dep = {1: 0, 2: 1, 3: 3, 4: 3, 5: 0, 6: 2}.get
+    dep = {1: 0, 2: 1, 3: 3, 4: 3, 5: 0, 6: 2}.get   # absent: no open mine
     c.eq("6.4 own mine", forge_of(2, dep, [3, 4]), 2)
-    c.eq("6.4 partner by depth, then the smaller id", forge_of(1, dep, [6, 4, 3]), 3)
-    c.eq("6.4 partner by depth", forge_of(1, dep, [2, 6]), 6)
-    c.eq("6.4 no forge", forge_of(1, dep, [5]), 0)
-    c.eq("6.4 no partners", forge_of(5, dep, []), 0)
+    c.eq("6.4 own undeepened mine", forge_of(1, dep, [3]), 1)
+    c.eq("6.4 partner by depth, then the smaller id", forge_of(8, dep, [6, 4, 3]), 3)
+    c.eq("6.4 partner by depth", forge_of(8, dep, [2, 6]), 6)
+    c.eq("6.4 partner with an undeepened mine", forge_of(8, dep, [5]), 5)
+    c.eq("6.4 two undeepened partners: the smaller id", forge_of(8, dep, [5, 1]), 1)
+    c.eq("6.4 no forge", forge_of(7, dep, [8]), 0)
+    c.eq("6.4 no partners", forge_of(8, dep, []), 0)
     c.ok("6.3 eligible", eligible(True, True, 100, 50, 50, 3, 40, False, 0))
     c.ok("6.3 rest: Y - last < rest", not eligible(True, True, 100, 51, 50, 3, 40, False, 0))
     c.ok("6.3 never made", eligible(True, True, 0, NEVER, 10000, 0, 40, False, 0))
@@ -1760,7 +1786,8 @@ def check_data(c):
           "occasions[4]: bearer site needs a site role in sacked", "occasions[5]: the class weights are all 0"])
     c.ok("4.3 figures smith fields", all(n in h["figures"] for n, _l, _h in pdr.FIGURES_FIELDS_031))
     c.eq("4.3 figures smith fields last", list(h["figures"])[-2:], ["smith_age_permille", "smith_age_span_permille"])
-    c.eq("4.3 pantheon cult_return_years last", list(h["pantheon"])[-1], "cult_return_years")
+    c.eq("4.3 pantheon cult_return_years last", [k for k, v in h["pantheon"].items() if not isinstance(v, dict)][-1],
+         "cult_return_years")   # the last scalar field (a sub-table such as `creator` follows it in TOML)
     gods = dict(dat["god"])
     c.ok("4.5 craft deed", any(d["kind"] == "artifact_made" and d["role"] == "maker_realm" and d["points"] == 20 and
                                d["who"] == "any" for d in gods["craft"]["deeds"]))
@@ -1980,7 +2007,7 @@ GOLDEN_HEADER = """\
 # Lines: case <name> <seed> <size> <data>; table <name> <sha256 of the P0-04 8 encoding>; stat <key> <value>.
 # Fixture cases (size 0: a conflict stress geography with artifacts-small, 4.6) also list path <path> for every path
 # of 6 the run shows. World lines (artifacts-small at 512 seeds 0 to 9, shipped 42 at 1024) are added at integration
-# with --inputs. cult_returns_barred is the replay's (A-R14): compared for fixture cases only.
+# with --inputs.
 """
 GOLDEN_TABLES = ("artifact_kind", "artifact", "artifact_holding", "figure", "event", "event_cause")
 
