@@ -116,7 +116,7 @@ TEST_CASE("U13 place_vegetation") {
     CHECK(same(a, b));
     const Placement c = place(w, 43, DEFAULT_INSTANCE_CAP);
     CHECK_FALSE(same(a, c));
-    // No instance on an excluded cell; each within 6 m of its cell's vertex
+    // No instance on an excluded cell; each less than 8 m on each axis from its cell's vertex
     // and inside the map.
     const int n = 512;
     std::size_t bad = 0;
@@ -132,7 +132,7 @@ TEST_CASE("U13 place_vegetation") {
             const std::uint8_t t = w.cells.type[k];
             const bool excluded = t < 1 || t > 10 || w.cells.painted[k] > 0 || w.cells.rock[k] >= 128 ||
                                   w.cells.snow[k] >= 128 || w.water[k] != 0 || w.elevation[k] <= 0;
-            const bool near = i.x - v.x >= -6.0f && i.x - v.x < 6.0f && i.z - v.z >= -6.0f && i.z - v.z < 6.0f;
+            const bool near = i.x - v.x > -8.0f && i.x - v.x < 8.0f && i.z - v.z > -8.0f && i.z - v.z < 8.0f;
             const bool in_map = i.x >= -8.0f * static_cast<float>(n) && i.x <= 8.0f * static_cast<float>(n) - 16.0f && i.z >= -8.0f * static_cast<float>(n) && i.z <= 8.0f * static_cast<float>(n) - 16.0f;
             bad += (excluded || !near || !in_map) ? 1 : 0;
         }
@@ -204,8 +204,8 @@ std::vector<Cand> own_candidates(const World& w, std::uint64_t seed) {
                 const std::uint64_t count = (e[j] >> 8) + ((hc & 0xFF) < (e[j] & 0xFF) ? 1 : 0);
                 for (std::uint64_t k = 0; k < count; ++k) {
                     const std::uint64_t h = own_mix(hb + 64 * j + 1 + k);
-                    const float X = 16.0f * static_cast<float>(x - n / 2) + static_cast<float>(3 * (h & 0x3FF)) / 256.0f - 6.0f;
-                    const float Z = 16.0f * static_cast<float>(y - n / 2) + static_cast<float>(3 * ((h >> 10) & 0x3FF)) / 256.0f - 6.0f;
+                    const float X = 16.0f * static_cast<float>(x - n / 2) + static_cast<float>(2 * (own_mix(h ^ 0x6A09E667F3BCC909ull) >> 54) + 1) / 128.0f - 8.0f;
+                    const float Z = 16.0f * static_cast<float>(y - n / 2) + static_cast<float>(2 * (own_mix(h ^ 0xBB67AE8584CAA73Bull) >> 54) + 1) / 128.0f - 8.0f;
                     if (X < -8.0f * static_cast<float>(n) || X > 8.0f * static_cast<float>(n) - 16.0f || Z < -8.0f * static_cast<float>(n) || Z > 8.0f * static_cast<float>(n) - 16.0f) {
                         continue;
                     }
@@ -318,4 +318,94 @@ TEST_CASE("U13 the forest densities of 6.3 (Paul, 2026-11-27)") {
     }
     CHECK(VEGETATION_KINDS_INFO[2].lod0_range == 1000.0f);
     CHECK(DEFAULT_INSTANCE_CAP == 2000000);
+}
+
+namespace {
+
+double correlation(const std::vector<double>& a, const std::vector<double>& b) {
+    const double n = static_cast<double>(a.size());
+    double sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        sa += a[i];
+        sb += b[i];
+        saa += a[i] * a[i];
+        sbb += b[i] * b[i];
+        sab += a[i] * b[i];
+    }
+    const double cov = sab / n - (sa / n) * (sb / n);
+    const double va = saa / n - (sa / n) * (sa / n);
+    const double vb = sbb / n - (sb / n) * (sb / n);
+    return cov / std::sqrt(va * vb);
+}
+
+}  // namespace
+
+TEST_CASE("U13 instances spread evenly and independently over their cell (Paul, 2026-11-27)") {
+    // Offsets from the cell's vertex fill the whole 16 m cell: a 4 x 4
+    // histogram of (dx, dz) is even, and dx is uncorrelated with dz, with
+    // the next slot in the same cell and with the neighbouring cells. The
+    // old jitter of [-6, 6) left the outer bins at half their share.
+    const World w = flat_world(2, 255);
+    const int n = 512;
+    const Placement p = place(w, 42, MAX_INSTANCE_CAP);
+    std::array<std::size_t, 16> bins{};
+    std::size_t total = 0;
+    std::vector<double> dxs, dzs;
+    constexpr float NONE = 1000.0f;
+    std::vector<float> first_dx(static_cast<std::size_t>(n) * n, NONE), first_dz(first_dx.size(), NONE),
+        second_dx(first_dx.size(), NONE);
+    for (std::size_t j = 0; j < p.kinds.size(); ++j) {
+        for (const Instance& i : p.kinds[j]) {
+            const CellHit hit = world_to_cell(w.layout, i.x, i.z);
+            REQUIRE(hit.inside);
+            const Vec2 v = cell_to_world(w.layout, hit.x, hit.y);
+            const float dx = i.x - v.x;
+            const float dz = i.z - v.z;
+            REQUIRE(dx > -8.0f);
+            REQUIRE(dx < 8.0f);
+            REQUIRE(dz > -8.0f);
+            REQUIRE(dz < 8.0f);
+            if (hit.x < 1 || hit.x > n - 2 || hit.y < 1 || hit.y > n - 2) {
+                continue;  // edge cells lose the instances jittered off the map
+            }
+            ++bins[static_cast<std::size_t>(static_cast<int>((dz + 8.0f) / 4.0f) * 4 + static_cast<int>((dx + 8.0f) / 4.0f))];
+            ++total;
+            dxs.push_back(static_cast<double>(dx));
+            dzs.push_back(static_cast<double>(dz));
+            if (j == 0) {  // broadleaf: two or three a cell
+                const std::size_t k = static_cast<std::size_t>(hit.y) * n + static_cast<std::size_t>(hit.x);
+                if (first_dx[k] == NONE) {
+                    first_dx[k] = dx;
+                    first_dz[k] = dz;
+                } else if (second_dx[k] == NONE) {
+                    second_dx[k] = dx;
+                }
+            }
+        }
+    }
+    REQUIRE(total > 1000000);
+    for (std::size_t b = 0; b < bins.size(); ++b) {
+        CAPTURE(b);
+        CHECK(std::abs(static_cast<double>(bins[b]) * 16.0 / static_cast<double>(total) - 1.0) < 0.02);
+    }
+    CHECK(std::abs(correlation(dxs, dzs)) < 0.01);
+    std::vector<double> a, b, c, d, e, f;
+    for (int y = 1; y < n - 2; ++y) {
+        for (int x = 1; x < n - 2; ++x) {
+            const std::size_t k = static_cast<std::size_t>(y) * n + static_cast<std::size_t>(x);
+            if (first_dx[k] == NONE || first_dx[k + 1] == NONE || first_dz[k + n] == NONE || second_dx[k] == NONE) {
+                continue;
+            }
+            a.push_back(static_cast<double>(first_dx[k]));
+            b.push_back(static_cast<double>(first_dx[k + 1]));  // east neighbour
+            c.push_back(static_cast<double>(first_dz[k]));
+            d.push_back(static_cast<double>(first_dz[k + n]));  // south neighbour
+            e.push_back(static_cast<double>(first_dx[k]));
+            f.push_back(static_cast<double>(second_dx[k]));     // next slot
+        }
+    }
+    REQUIRE(a.size() > 200000);
+    CHECK(std::abs(correlation(a, b)) < 0.01);
+    CHECK(std::abs(correlation(c, d)) < 0.01);
+    CHECK(std::abs(correlation(e, f)) < 0.01);
 }

@@ -292,8 +292,8 @@ std::vector<Cand> own_candidates(const Own& o, std::uint64_t seed) {
                 const std::uint64_t count = (e[j] >> 8) + ((hc & 0xFF) < (e[j] & 0xFF) ? 1 : 0);
                 for (std::uint64_t k = 0; k < count; ++k) {
                     const std::uint64_t h = own_mix(hb + 64 * j + 1 + k);
-                    const float X = 16.0f * static_cast<float>(x - n / 2) + static_cast<float>(3 * (h & 0x3FF)) / 256.0f - 6.0f;
-                    const float Z = 16.0f * static_cast<float>(y - n / 2) + static_cast<float>(3 * ((h >> 10) & 0x3FF)) / 256.0f - 6.0f;
+                    const float X = 16.0f * static_cast<float>(x - n / 2) + static_cast<float>(2 * (own_mix(h ^ 0x6A09E667F3BCC909ull) >> 54) + 1) / 128.0f - 8.0f;
+                    const float Z = 16.0f * static_cast<float>(y - n / 2) + static_cast<float>(2 * (own_mix(h ^ 0xBB67AE8584CAA73Bull) >> 54) + 1) / 128.0f - 8.0f;
                     if (X < lo || X > hi || Z < lo || Z > hi) {
                         continue;
                     }
@@ -584,12 +584,12 @@ void run_ground_checks(TerrainPreview& preview, const TerrainCheckOptions& optio
                     continue;
                 }
                 const terrain::Vec2 v = terrain::cell_to_world(*scene.layout, hit.x, hit.y);
-                far += (std::abs(in.x - v.x) <= 6.0f && std::abs(in.z - v.z) <= 6.0f) ? 0u : 1u;
+                far += (std::abs(in.x - v.x) < 8.0f && std::abs(in.z - v.z) < 8.0f) ? 0u : 1u;
                 on_excluded += excluded(o, o.at(hit.x, hit.y)) ? 1u : 0u;
             }
         }
         c.check(on_excluded == 0 && far == 0, "T13 no instance on an excluded cell (" + num(on_excluded) +
-                                                  ") or more than 6 m from its vertex (" + num(far) + ")");
+                                                  ") or 8 m or more from its vertex (" + num(far) + ")");
         std::vector<Cand> cands = own_candidates(o, scene.seed);
         const std::uint64_t cap = preview.instance_cap();
         const std::uint64_t S = cands.size();

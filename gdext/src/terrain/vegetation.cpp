@@ -59,6 +59,10 @@ std::uint64_t mix64(std::uint64_t z) noexcept {
 
 std::uint64_t scatter_key(std::uint64_t seed) noexcept { return mix64(seed ^ 0x7633642D73636174ull); }
 
+float cell_jitter(std::uint64_t draw) noexcept {
+    return static_cast<float>(2 * (draw >> 54) + 1) / 128.0f - 8.0f;
+}
+
 namespace {
 
 struct Candidate {
@@ -115,8 +119,8 @@ Placement place_vegetation(const Layout& layout, std::span<const float> heights,
                 const VegetationKindInfo& info = VEGETATION_KINDS_INFO[j];
                 for (std::uint64_t k = 0; k < count; ++k) {
                     const std::uint64_t h = mix64(hb + 64 * j + 1 + k);
-                    const float jx = static_cast<float>(3 * (h & 0x3FF)) / 256.0f - 6.0f;
-                    const float jz = static_cast<float>(3 * ((h >> 10) & 0x3FF)) / 256.0f - 6.0f;
+                    const float jx = cell_jitter(mix64(h ^ JITTER_KEY_X));
+                    const float jz = cell_jitter(mix64(h ^ JITTER_KEY_Z));
                     const float X = 16.0f * static_cast<float>(x - n / 2) + jx;
                     const float Z = 16.0f * static_cast<float>(y - n / 2) + jz;
                     if (X < lo || X > hi || Z < lo || Z > hi) {

@@ -55,6 +55,17 @@ extern const std::array<VegetationDensity, 11> VEGETATION_DENSITY;
 [[nodiscard]] std::uint64_t mix64(std::uint64_t z) noexcept;
 [[nodiscard]] std::uint64_t scatter_key(std::uint64_t seed) noexcept;
 
+// An instance's offset from its cell's vertex, one axis (Paul, 2026-11-27;
+// replaces 6.4's jx, jz in [-6, 6) from bits 0 to 19 of h, which left a
+// 4 m empty lane between cells, so trees stood in rows 16 m apart). Each
+// axis has its own keyed draw, mix64(h ^ JITTER_KEY_X) and
+// mix64(h ^ JITTER_KEY_Z); its top 10 bits k give (2k + 1) / 128 - 8 m:
+// 1024 steps of 1/64 m covering the whole cell, [-7.992, 7.992], so the
+// nearest vertex is still the instance's own cell.
+inline constexpr std::uint64_t JITTER_KEY_X = 0x6A09E667F3BCC909ull;
+inline constexpr std::uint64_t JITTER_KEY_Z = 0xBB67AE8584CAA73Bull;
+[[nodiscard]] float cell_jitter(std::uint64_t draw) noexcept;
+
 struct Instance {
     float x = 0.0f;
     float y = 0.0f;
