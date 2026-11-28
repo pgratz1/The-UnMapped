@@ -307,3 +307,45 @@ Rerun (`linux-gcc-release`, the files only): `history_pantheon_golden_test`, `hi
 `history_report_v3_test`, `history_report_fixtures_test`, `conflict_engineer_test` (its line 388 of part 2's list,
 explained by item 2), `history_conflict_order_test`, `_golden_test`, `_property_test` all pass. Still failing, not
 these causes (part 2's item 5): `history_monsters_golden_test.cpp` 392, 466 (`ymrach` in the kinds seen), 496 (sites).
+
+## Part 3b: the mechanical rest (test writer, Sonnet, 2026-11-27, `p5/08-int`)
+
+No file under `worldgen/src`, `worldgen/include`, `tools/worldgen-cli/src` or `game/data` changed. Fast suite on `linux-gcc-release`
+went from 20 failing entries to 6 (all four expected-failing entries below plus two unresolved, see "Open"); the slow suite from
+4 failing entries to 0 after the witness changes (rerun of the four, see below). Rounds: fast 4 (1, 3, 5 and a partial), slow 2.
+
+### What was stale and how each value was derived
+
+Test side (expected values from the spec or from a reference, never from engine output):
+- `history_engine_state_test`: the test kind is event kind 111 (110 kinds before it).
+- `history_alliances_p504a_unit_test` 8.5: a choice of up to nine words loads (P5-08 12.3 ruling, `event_catalogue.cpp`); ten is refused.
+- `history_chronology_golden_test`: the seed-42 `gods` item holds the six creators and then the nine of the pantheon (value from the golden file, `p3_chronology_reference.py`).
+- `history_monsters_data_test`: culture `naming` has 22 fields (17 + the five cult forms of P5-08 6.7).
+- `data_history_kinds_test`/`_settings_test`: `add_pantheon_files` in the hand-made file sets, eleven `history` ids (`pantheon`), the unknown-id message, and `report_event.template` is `string(2048)` from 0.30.0 (the kinds 100 to 104 cause words of P5-08 8.2; `kinds_history.cpp`).
+- `history_report_blocks_test`: `generator_version = 0.30.0`.
+- `history_figures_*`: the `[figures]` count line carries `champions` and `prophets` (P5-08 10 item 7, `p3_report_reference.py` line 1202); the 0.27.0 data sets in `history_figures_unit_test` gain the cult forms and the four 0.30.0 fields.
+- `history_monsters_golden_test`: `ymrach` in `kinds_seen` (golden file line 1335); a `divine_monster` names its monster in role 2 (P5-08 8.1); zero-content worlds may hold site kinds 5 and above (pantheon marks).
+- `browser_unit_test`: group `gods` (kinds 100 to 108), kinds 109 and 110 in `figures`, `ALL_GROUPS` 0x3FF (P5-08 11.1); `browser_support.hpp` dumps ten groups.
+- `markers_property_test`: shrine, temple and sanctum fills (215,180,40), (225,215,190), (120,20,40) from `p4_markers_reference.py`.
+- `history_depths_reader_test`: `telling` of kinds 93 and 98 is 0 to 8; `history_depths_report_test`: header v11, the H19 sentences taken from the reference's text of the fixture (`p3_report_reference.py report`; the outcome e41 comes before the aids e42, e43), `[stats]` located by key because P5-08 appends keys, `ALL_GROUPS` 0x3FF.
+- `h19-v10.toml`: `telling` of kinds 93 and 98 recomputed as `(site or settlement + 4 (depth - 1)) mod 9` (spec 12.3, reading P-R23; 12 events), and `p5_07_h19_fixture.py` changed the same way (the script cannot run today: `p3_data_reference` refuses `cult_forms` in the shipped cultures; the TOML was edited by a script that applies the same formula).
+- `p5_07_checks.hpp` (12.4): the outcome cites the waking only; each aid follows its outcome and cites waking and outcome; the first take cites the waking only. `p5_04a_checks.hpp`: tower ending 7 (`tower_abandoned`, P5-08 12.6); `p5_06_figures_checks.hpp`: a champion (role 6) may be the slayer or the fallen hero, a book may be at a tower its author took up (`tower_taken_up`); `p5_03_relations_checks.hpp`: `hold_lost` is a displacing event at an arrival's origin (P5-07 6.6; found on `--monster-pressure high` seed 2 at 1024, e587 cites hold_lost e586); `p5_04_alliances_checks.hpp` 13: a mine whose region was won and lost inside its opening year leaves no row of its founder, the ending event being the event that gave the region away (alliances-small seed 5, mine si21, 4593; the reference check mirrors it). The last one is an inference from the rows, not from a spec sentence: the lead should confirm it.
+- `inspect_hashes_test`: 37 tables (faction), indexes 18, 19, 22, 44 schema rows, `DDL_FACTION`, the digest index of `pair`.
+- `history_report_worlds_test` (slow): seed 0 at 1024 c1 holds the battles led e162 of 3197 and e247 of 3867 (the golden's report text).
+- Witnesses (the pantheon moved every draw; each searched by script over CLI worlds, the rule of the test): `history_depths_property_a_test` 512 seed 9 -> seed 10 (an aid; also 34, 38, 41, 55); 1024 seed 5 (two aids), seed 36 (warren woken and sealed), the realm-lost witness (seed 72) dropped (none in seeds 0 to 140, covered by depths-small); `conflict_engineer_test` and `history_balance_golden_test` 1024 turbulent seed 3 -> seed 24 (region_ceded e374 of region 21 in 3407, colony e372; also 28, 33); `history_alliances_p504a_property_b_test` seeds 1, 2, 4, 8, 9 added (union reaches six refusal motives).
+
+Reference side (the references were wrong; goldens re-recorded by their commands):
+- `p5_07_depths_reference.py`: the stirred waking compared the flare's trigger with the mine's last deepening after the same tick had deepened it again; the trigger is the deepening that stirred (P5-08 12.2: "whose trigger is that deepening"). `p5-07-depths.txt` re-recorded; depths-small seeds 0, 4, 5 and all depths-forced lines now equal the engine (first differing row was event 227 of seed 0).
+- `p4_markers_reference.py`: `hold_lost` is a sack symbol at 0.30.0 too (it only said 0.29.0). `p4_browser_reference.py`: `select()` read `ALL_GROUPS` at import (0x3F), so the summary filter left out the gods group; the realm blocks lacked the `gods:`, `faith:` and `deep:` lines (added as tagged segments, after the allies lines). `p5_06_figures_reference.py`: ending 7, champions, taken-up towers. `p5_04_alliances_reference.py`: the mine rule above.
+- Goldens re-recorded: `p3-07-report.txt` (h19 only), `p4-01-timeline.txt`, `p4-04-markers.txt`, `p4-05-browser.txt`, `p5-07-depths.txt`. The `p5-04` and `p5-06` goldens were rerun and are unchanged byte for byte.
+
+### Expected to stay failing for validation (world-hash goldens; fast suite, `linux-gcc-release`)
+- `worldgen-tests-other`: `golden: empty-world hashes match the recorded values (12.4)` (`db_determinism_test`), `generate P1-00 10.1: --until none and every thread count give the P0 empty world` (`stages_pipeline_test`).
+- `worldgen-cli-tests-other`: `cli 9, 12.6: golden world hashes from p0-worlds.txt`, `cli 9: the golden cases are deterministic and distinct`, `cli 12.4: test-pattern world`, `cli P1-00 10.1: --until none writes the P0 empty world, byte for byte`, `cli P1-00 10.1: --threads accepts 1 to 256 ...`, `cli P1-00 10.1, D10, X3: --threads never changes the output ...`, `cli P0-03 7.6, amendment 17: ... a nonexistent data root is an input error` (the last four compare the empty world's hash).
+- `worldgen-cli-tests-regions`: `cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and the golden layer and tables` (until hashes). `worldgen-cli-tests-history-settings`: `cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in content_hash and generator_version`.
+- `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` untouched.
+
+### Open
+- Nothing of the above is unresolved in the fast suite except these two ones, which I closed by a judgment the lead should check: the mine rule (13) and the dropped realm-lost witness. `history_alliances_p504a_property_b_test` needed more seeds (a coverage test, union of six motives).
+- `h19-v10.toml` and `p5_07_h19_fixture.py` disagree if the script is rerun once `p3_data_reference` accepts the cult forms: rerun it then and compare.
+- Hold lost to the deep before the first deepening is not a case here; the browser reference's `deep:` line handling follows the report text parser (`tagged_line`), which assumes entity names without a `;` or `,` inside.
