@@ -29,7 +29,7 @@ TEST_SUITE("history") {
 TEST_CASE("P5-04a 16 items 2 to 5: alliances-small at 0.28.0: every motive, grievance, spurning reason and betrayal") {
     P504A_REQUIRE_INTEGRATED();
     std::map<std::string, std::set<std::int64_t>> cov;
-    for (const std::uint64_t seed : {3U, 5U, 6U, 7U, 10U, 0U}) {
+    for (const std::uint64_t seed : {3U, 5U, 6U, 7U, 10U, 0U, 1U, 2U, 4U, 8U, 9U}) {   // P5-08: seeds 1, 2, 4, 8, 9 added (the pantheon moved the draws and four motives remained in the first six)
         const std::string path = p506run::generated(seed, 512, alliances_small(), "al-small-028");
         check_world(path, alliances_small(), "alliances-small seed " + std::to_string(seed));
         const db::WorldReader r = chrono_test::open_world(path);

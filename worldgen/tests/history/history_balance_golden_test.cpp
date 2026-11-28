@@ -111,7 +111,10 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 3, a colony founded in the step of a cession passes to the winner") {
+// P5-08 (generator 0.30.0, integration part 3b): seed 3 has none any more; of the 1024 turbulent seeds 0 to 39, seeds
+// 24, 28 and 33 have one each (searched by this test's rule on CLI worlds); seed 24's is region_ceded e374 of
+// region 21 in 3407 (colony e372).
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 24, a colony founded in the step of a cession passes to the winner") {
     // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration; the first
     // round's 1024 seed 36 case, e310, no longer occurs with the second round's rules, and no 1024 default world
     // of seeds 0 to 160 has one): the reference (p3_conflict_reference.py check-world, table for table on this
@@ -137,11 +140,11 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 3, a colony founded i
     // to 30, seed 12 has two (region_ceded e1986 of region 9 in 5108, colony e1984, s127; e2403 of region 9 in 5308,
     // colony e2401, s134) and seed 24 one (e1356 of region 14 in 5109, colony e1354, s95) (C++ worlds, searched by
     // this test's rule).
-    static dbtest::TempDir dir("balance-golden-1024-turbulent-3");
+    static dbtest::TempDir dir("balance-golden-1024-turbulent-24");
     chrono_api::Params hp;
     hp.intensity = "turbulent";
-    const std::string path = dir.file("turbulent-3-1024.db");
-    REQUIRE(worldgen::generate_world(chrono_test::world_params(3, 1024, hp, shipped()), shipped(), path,
+    const std::string path = dir.file("turbulent-24-1024.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(24, 1024, hp, shipped()), shipped(), path,
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     const db::WorldReader r = open_world(path);

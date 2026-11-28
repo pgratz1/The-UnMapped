@@ -502,7 +502,15 @@ inline std::vector<std::string> violations(const World& w, const Geo& g, const D
         const Row* cen = r.census_at(st, y0);
         if (lost_same_year && r.census_at(st, y0 - 1) != nullptr) cen = r.census_at(st, y0 - 1);
         const bool held = r.holder_at(R, y0) == c || (lost_same_year && r.holder_at(R, y0 - 1) == c);
-        if ((cen != nullptr && at(*cen, 2) != c) || !held) {
+        // P5-08 (integration part 3b): a region (and its colony) won and lost within the opening year leaves no row of
+        // the founder at all: the mine's ending event is then the very event that gave the region to its taker
+        bool lost_to_row = false;
+        if (lost_same_year) {
+            for (const Row& rc : w.rows.t.region_control) {
+                lost_to_row = lost_to_row || (at(rc, 0) == R && at(rc, 1) == y0 && at(rc, 4) == at(m, 12) && at(rc, 3) != c);
+            }
+        }
+        if (!lost_to_row && ((cen != nullptr && at(*cen, 2) != c) || !held)) {
             out.push_back("13: mine si" + s(id) + ": town or region not its founder's at " + s(y0));
         }
         if (g.ore.count(R) == 0U || g.ore.at(R) < d.ore_min) out.push_back("13: mine si" + s(id) + ": no ore");

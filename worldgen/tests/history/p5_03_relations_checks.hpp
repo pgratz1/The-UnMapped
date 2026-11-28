@@ -460,7 +460,7 @@ inline std::vector<std::string> violations(const World& w, const Options& o = {}
         const std::vector<std::int64_t> cs = x.cause_list(e);
         static const std::set<std::string> displacing = {"settlement_abandoned", "settlement_abandoned_to", "sacked",
                                                          "settlement_overrun", "settlement_captured",
-                                                         "people_expelled"};
+                                                         "people_expelled", "hold_lost"};   // P5-07 6.6: a hold lost to the deep ruins its settlement
         // P5-03a 7.3: the record's cause (the displacing event at the origin) and, when it is an abandonment (kind
         // 16 or 31), that abandonment's own causes too, ascending, without repeats
         std::vector<std::int64_t> rec;

@@ -1102,7 +1102,11 @@ def invariant_violations(w, t, races):
             cen = w.census_at(s_, y0 - 1) or cen
             pop = cen[5] if cen is not None else pop
         held = w.holder_at(R, y0) == c or (lost_same_year and w.holder_at(R, y0 - 1) == c)
-        if (cen is not None and cen[2] != c) or not held:
+        # P5-08 (integration part 3b): a region won and lost within its opening year leaves no row of the founder: the mine's
+        # ending event is then the event that gave the region to its taker
+        lost_to_row = lost_same_year and any(r_[0] == R and r_[1] == y0 and r_[4] == x[12] and r_[3] != c
+                                             for r_ in w.t["region_control"])
+        if not lost_to_row and ((cen is not None and cen[2] != c) or not held):
             out.append("13: mine si%d: s%d or r%d not of c%d at %d" % (sid, s_, R, c, y0))
         # reading (integration): the population at the opening is not in the rows (P3-04 6.7 writes a census row
         # only at a change of owner, kind or status and at a phase's end; civs4-seed-7-1024 si35: s105's last row

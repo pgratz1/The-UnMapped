@@ -89,20 +89,24 @@ TEST_CASE("P5-07 integration witnesses at 512 (shipped): seed 78 a warren woken 
 
 TEST_SUITE("depths-slow" * doctest::skip()) {
 
-TEST_CASE("P5-07 integration witnesses at 1024 (shipped): seed 5 two aids at one waking and a warren sealed, seed 72 a "
-          "realm ended by the deep") {
+// 0.30.0 (integration part 3b): the pantheon moved every draw, so the witnesses were searched again over the shipped
+// 1024 worlds, seeds 0 to 140 (CLI worlds, default settings): seed 5 has two aids at one waking, seed 36 a warren
+// woken and sealed. No world of 0 to 140 has a realm ended by the deep (validation measured 1 in 100 at 0.29.0 and 0
+// in the second sample: Q-P5-07-5); that path is witnessed by the depths-small worlds of the fast suite, so the
+// 1024 witness of it (seed 72 at 0.29.0) is dropped.
+TEST_CASE("P5-07 integration witnesses at 1024 (shipped): seed 5 two aids at one waking, seed 36 a warren woken and "
+          "sealed") {
     P507_REQUIRE_INTEGRATED();
     const std::string w5 = p503run::world_path(5, 1024);
     check_world(w5, conflict_test::shipped(), "seed 5 at 1024");
     const std::set<std::string> p5 = paths_of(rows_of(w5, conflict_test::shipped()));
     CHECK(p5.count("two aids") == 1U);
-    CHECK(p5.count("warren woken") == 1U);
-    CHECK(p5.count("warren sealed") == 1U);
-    const std::string w72 = p503run::world_path(72, 1024);
-    check_world(w72, conflict_test::shipped(), "seed 72 at 1024");
-    const std::set<std::string> p72 = paths_of(rows_of(w72, conflict_test::shipped()));
-    CHECK(p72.count("realm lost") == 1U);
-    CHECK(p72.count("aid") == 1U);
+    CHECK(p5.count("aid") == 1U);
+    const std::string w36 = p503run::world_path(36, 1024);
+    check_world(w36, conflict_test::shipped(), "seed 36 at 1024");
+    const std::set<std::string> p36 = paths_of(rows_of(w36, conflict_test::shipped()));
+    CHECK(p36.count("warren woken") == 1U);
+    CHECK(p36.count("warren sealed") == 1U);
 }
 
 TEST_CASE("P5-07 13, 16 item 13: the invariants at 1024, seeds 0 to 19 (shipped)") {
