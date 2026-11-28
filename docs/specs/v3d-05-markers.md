@@ -1,6 +1,6 @@
 # V3D-05 Markers for settlements and sites
 
-Status: **r1, 2026-11-28, interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 16 (Q-V3D-05-1 to 4); each is a constant or one function, so it reverses cheaply. Fifth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2, V3D-03 r2 and V3D-04 r2 ("V3D-0n m" refers to their sections). Art stays generated placeholders; no asset file is added.
+Status: **r2, 2026-11-28, as built; interim: built on the recommendations, pending Paul's review.** Paul is away overnight and authorised building this stage on the recommendations of section 16 (Q-V3D-05-1 to 4); each is a constant or one function, so it reverses cheaply. r2 records what was built where it departs from r1 (two tuned jump constants, a label declutter, the ruin ring radius, the HUD cut) and adds Q-V3D-05-5 to 8 and an open list (16). Fifth stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`), on top of V3D-01 r3, V3D-02 r2, V3D-03 r2 and V3D-04 r2 ("V3D-0n m" refers to their sections). Art stays generated placeholders; no asset file is added.
 
 **No world change.** The stage reads `world.db` through `worldgen`'s public API and writes nothing to it or to the source tree. `GENERATOR_VERSION`, the schema, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/`, `game/data/` or `extern/` changes. No new dependency. **Vegetation, ground and look are unchanged bit for bit** (Q-V3D-05-1). Owner: viewer engineer.
 
@@ -17,7 +17,7 @@ The preview shows land only. This stage shows where the world's settlements, rui
 | markers (plain C++, no Godot types) | new `gdext/src/terrain/markers3d.hpp`, `.cpp` | records from the library (3), placement (4), meshes (5), beacons (6), labels (7), HUD text, jump order, option parsing (8); section 9 |
 | scene | `terrain_preview.hpp`, `.cpp`, new `terrain_preview_markers.cpp` | nodes, frame update, keys, options, status, bench (10, 8, 13) |
 | check | new `terrain_check_markers.cpp`; `terrain_check.cmake` | T31 to T40 (12.2) |
-| unit tests | new `gdext/tests/markers3d_test.cpp` | U40 to U51 (12.1) |
+| unit tests | new `gdext/tests/markers3d_test.cpp` | U40 to U52 (12.1) |
 | docs | `gdext/README.md`, "Terrain preview" | options, keys, HUD, status, checks, screenshots, bench |
 
 `markers3d.cpp` joins `unmapped_terrain_core` (which already links `worldgen::worldgen`), `terrain_preview_markers.cpp` and `terrain_check_markers.cpp` join `unmapped_gdext`, `markers3d_test.cpp` joins `gdext-terrain-tests`. The 2D viewer's files are not touched.
@@ -111,8 +111,8 @@ Half-diagonal ≤ 6.4 m and jitter ≤ 0.94 m, so houses 16 m apart never overla
 | settlement 1 to 3 | H houses (box + gable, no gable when roofless); capital: slot 0 is a hall, box 12 × 12 × 10 in `HOUSE_WALL` + pyramid 13 × 6 in the roof colour | 16 (2e + 1) across, 4 to 10 high (hall 16) | `MODEL_FAR` 8,000 |
 | settlement 4 city | as above, plus a wall: square of half-side S = 16 e + 12, thickness 2, height 6, `WALL_STONE` (150, 144, 135): north, east, west boxes of length 2S + 2, south in two boxes leaving a 10 m gate at the centre (5 boxes) | up to 2S + 2 | 8,000 |
 | settlement 5 fortress | as 4 with wall height 8, and slot 0 a keep: box 10 × 10 × 16 (capital 12 × 12 × 20) in `WALL_STONE` + pyramid 11 × 5 (13 × 6) in the roof colour | | 8,000 |
-| ruin | ceil(H/2) stubs on the first slots: box w × d × (1 + 0.5 · bits 14–15) in `RUIN_STONE`, no roof; a broken ring: 8 tangential segments at radius R = 16 e + 10, segment m centred at (R sin 45m°, −R cos 45m°), length 2R sin 22.5° · 0.85, thickness 2, height 2; segments m ∈ {0, 2, 3, 5, 7} only | 2R + 2 | 8,000 |
-| old ruin | ceil(H/4) stubs at half height; ring segments m ∈ {0, 3, 5} at height 1; `OLD_RUIN_STONE` | 2R + 2 | `OLD_RUIN_FAR` 3,000 |
+| ruin | ceil(H/2) stubs on the first slots: box w × d × (1 + 0.5 · bits 14–15) in `RUIN_STONE`, no roof; a broken ring: 8 tangential segments at radius R = 16 e + 10, segment m centred at (R sin 45m°, −R cos 45m°), length 2R sin 22.5° · 0.85, thickness 2, height 2; segments m ∈ {0, 2, 3, 5, 7} only; here e is the extent of the stub slots (the first ceil(H/2) slots), not of the town's H houses | 2R + 2 | 8,000 |
+| old ruin | ceil(H/4) stubs at half height; ring segments m ∈ {0, 3, 5} at height 1, e over the ceil(H/4) stub slots; `OLD_RUIN_STONE` | 2R + 2 | `OLD_RUIN_FAR` 3,000 |
 | lair | mound ellipsoid radii (10, 6, 10) in `LAIR_ROCK`; mouth box 6 × 2 (z) × 4 at (0, 8.5), `LAIR_MOUTH` (12, 10, 10) | 20 × 6 | 8,000 |
 | outpost | palisade: four boxes on a 22 m square, thickness 1, height 4, `WOOD` (112, 82, 52); watchtower box 4 × 4 × 9 at (−9, −9) + pyramid 5 × 2.5 in the founder colour | 23 × 11.5 | 8,000 |
 | mine | pit box 8 × 8 × 0.4 `LAIR_MOUTH`; headframe: posts 0.8 × 0.8 × 10 at (±4, 0) in `WOOD`, beam 9.6 × 0.8 × 0.8 at 10 m in the founder colour; spoil heap ellipsoid radii (7, 3.5, 7) at (12, 0), (96, 92, 86) | 27 × 10.8 | 8,000 |
@@ -154,7 +154,17 @@ shown = first LABEL_MAX of C                                                LABE
 sorted by (d_i, i), at most LABEL_KEEP
 ```
 
-The slack and keep stop two labels swapping at the edge from flickering. A label: text `<name>\n<kind_word>`; `billboard` enabled, `fixed_size` true, `no_depth_test` true (a label behind a hill still shows: 12 nearest only), `font_size` 20, `outline_size` 6, outline black, `modulate` white (ruins (200, 200, 200), old ruins (170, 170, 170)), `offset` (0, 24) px above B, `pixel_size` chosen so that capitals are 14 to 18 px high at 1600 × 900 (W26). At most 16 labels of about 150 × 40 px cover under 7% of the screen.
+The slack and keep stop two labels swapping at the edge from flickering. A label: text `<name>\n<kind_word>`; `billboard` enabled, `fixed_size` true, `no_depth_test` true (a label behind a hill still shows: 12 nearest only), `font_size` 20, `outline_size` 6, outline black, `modulate` white (ruins (200, 200, 200), old ruins (170, 170, 170)), `offset` (0, 24) px above B, `pixel_size` chosen so that capitals are 14 to 18 px high at 1600 × 900 (W26; built: 0.0017, capitals 14 to 15 px). At most 16 labels of about 150 × 40 px cover under 7% of the screen.
+
+**Declutter (r2, built beyond r1).** After `select_labels`, when `LABEL_DECLUTTER` (true; false switches it off), each shown label i gets a screen box (`label_box`): its point B_i is projected with the camera (`is_position_behind`; when behind, the box is off screen); with a = `pixel_angle` (6), em = `font_size` · `pixel_size` / a and offset = 24 · `pixel_size` / a pixels; chars = the longer line of `<name>\n<kind_word>` counted in UTF-8 characters (bytes not of the form 10xxxxxx);
+
+```
+w = chars * LABEL_CHAR_EM * em            LABEL_CHAR_EM = 0.55
+h = 2 * LABEL_LINE_EM * em                LABEL_LINE_EM = 1.25
+centre (x, y) = (sx, sy - offset)
+```
+
+`declutter_labels` walks the boxes in shown order (nearest first); box j (on screen) is hidden when some earlier box i that is on screen and drawn has ox > 0, oy > 0 and ox · oy > 0.5 · min(w_i h_i, w_j h_j), where ox, oy are the overlaps of the two boxes in x and y. A hidden or off-screen box hides nothing; an off-screen box is never hidden. A hidden label's node is not visible; the selection itself (and so the `previous` of the next frame) is unchanged. Reason: a mine or library and its own settlement, 112 m apart, always printed one label over the other.
 
 ## 8. HUD, keys, options, status
 
@@ -185,11 +195,11 @@ Refusals (exit 1, the text on stderr, as V3D-04 T29): `--year <v>: a whole numbe
 | failed | `markers: none, the history could not be read` |
 | `--no-markers` | `markers off (--no-markers)` |
 
-D: `<int> m` below 1,000 m (rounded down), else `<one_decimal(km)> km`. Bearing from the camera to the record: θ = atan2(dx, −dz) in degrees from north, sector floor((θ + 22.5) / 45) mod 8 of N, NE, E, SE, S, SW, W, NW (float, HUD only). The line is cut to 200 bytes at a UTF-8 character boundary, with `...` added when cut. Ties in "nearest" go to the smaller index.
+D: `<int> m` below 1,000 m (rounded down), else `<one_decimal(km)> km`. Bearing from the camera to the record: θ = atan2(dx, −dz) in degrees from north, sector floor((θ + 22.5) / 45) mod 8 of N, NE, E, SE, S, SW, W, NW (float, HUD only). The line is cut at a UTF-8 character boundary so that it is at most `HUD_LINE_MAX` 200 bytes including the `...` added when cut (`cut_utf8`: keep at most 197 bytes, back to a boundary, then `...`). Ties in "nearest" go to the smaller index. The key line and line 3 are shown with `--no-markers` too, so a `--no-markers` picture differs from V3D-04's in the HUD text only.
 
 ### 8.3 Jump order and view
 
-`jump_order`: the `settlement` records (standing only), population descending, ties the smaller settlement id. `jump_view(marker)`: camera X = anchor X, Z = anchor Z + `JUMP_DIST` 1,200 m (south of it), heading 0; when Z + 1,200 > 8N − 16, Z = anchor Z − 1,200 and heading 180. Altitude A = max(top + `JUMP_ABOVE` 350, `ground_clamp(X, Z)` + 100). Pitch = −atan2(A − top, 1,200) in degrees, clamped to [−89, 89]. Speed unchanged.
+`jump_order`: the `settlement` records (standing only), population descending, ties the smaller settlement id. `jump_view(marker)`: camera X = anchor X, Z = anchor Z + `JUMP_DIST` (south of it), heading 0; when anchor Z + `JUMP_DIST` > 8N − 16, Z = anchor Z − `JUMP_DIST` and heading 180. Altitude A = max(top + `JUMP_ABOVE`, `ground_clamp(X, Z)` + 100). Pitch = −atan2(A − top, `JUMP_DIST`) in degrees, clamped to [−89, 89]. Speed unchanged. Built (r2, tuned): `JUMP_DIST` 500 m, `JUMP_ABOVE` 150 m (r1: 1,200 and 350; from 1.2 km a city showed as a few pixels; from 500 m, pitch about −17°, a city reads as roofs inside its wall).
 
 ### 8.4 Status lines
 
@@ -209,11 +219,13 @@ Loaded: `markers: <s> settlements (<c> capitals), <r> ruins (<o> old), <l> lairs
 | `HOUSE_SLOTS` (289), `int house_count(int kind, std::int64_t population)` | 5 |
 | `float pixel_angle(float fov_deg, int viewport_h)`; `std::array<float, 12> beacon_transform(const Marker3D&, float cx, float cy, float cz, float a)` | 6; basis columns then origin, Godot's `Transform3D` order |
 | `std::vector<std::size_t> select_labels(std::span<const Marker3D>, float cx, float cy, float cz, std::span<const std::size_t> previous)` | 7 |
+| `struct LabelBox { float x, y, w, h; bool on_screen; }`; `LabelBox label_box(const MarkerRecord&, float sx, float sy, float em_px, float offset_px, bool on_screen)`; `std::vector<bool> declutter_labels(std::span<const LabelBox>)`; `std::string label_text(const MarkerRecord&)`; `std::uint32_t label_modulate(MarkerKind)` | 7 (declutter, r2) |
+| `std::string cut_utf8(const std::string&, std::size_t max)` | 8.2 |
 | `std::optional<std::size_t> nearest_marker(std::span<const Marker3D>, float X, float Z)`; `std::string markers_hud_line(...)`; `std::string bearing_word(float dx, float dz)`; `std::string distance_text(float m)` | 8.2 |
 | `std::vector<std::size_t> jump_order(std::span<const Marker3D>)`; `FlyState jump_view(const Marker3D&, const Layout&, std::span<const float> heights)` | 8.3 |
 | `std::optional<std::size_t> find_marker(std::span<const Marker3D>, std::span<const std::size_t> order, std::string_view v)` | 8.1 |
 | `std::optional<std::int64_t> parse_year(std::string_view)`; `std::string markers_status_line(const MarkerLoad&)` | 8.1, 8.4 |
-| constants of sections 4 to 8 | `MARKER_CLEAR_CELLS` 4, `SINK` 0.5, `HOUSE_KEY`, `MIN_HOUSES`, colours, `MODEL_FAR` 8,000, `OLD_RUIN_FAR` 3,000, `MODEL_FADE_MARGIN` 500, beacon table, `LABEL_RANGE` 6,000, `LABEL_SLACK` 500, `LABEL_MAX` 12, `LABEL_KEEP` 16, `HUD_TEXT_RADIUS` 2,000, `JUMP_DIST` 1,200, `JUMP_ABOVE` 350 |
+| constants of sections 4 to 8 | `MARKER_CLEAR_CELLS` 4, `SINK` 0.5, `HOUSE_KEY`, `MIN_HOUSES`, colours, `MODEL_FAR` 8,000, `OLD_RUIN_FAR` 3,000, `MODEL_FADE_MARGIN` 500, beacon table, `LABEL_RANGE` 6,000, `LABEL_SLACK` 500, `LABEL_MAX` 12, `LABEL_KEEP` 16, `LABEL_LIFT` 2, `LABEL_DECLUTTER` true, `LABEL_CHAR_EM` 0.55, `LABEL_LINE_EM` 1.25, `HUD_TEXT_RADIUS` 2,000, `HUD_LINE_MAX` 200, `JUMP_DIST` 500, `JUMP_ABOVE` 150 (r2) |
 
 ## 10. Scene side
 
@@ -226,7 +238,7 @@ In `open_world`, after the vegetation and before `place_start`: unless `--no-mar
 | `Markers/Beacons` | one `MultiMeshInstance3D`: the beacon quad, `use_colors`, instance count = beacon records; material unshaded, cull disabled, vertex colour as albedo; `custom_aabb` the map's box up to 30 km |
 | `Markers/Labels` | 16 `Label3D` nodes `l0` to `l15`, hidden unless shown |
 
-Each frame (when `Markers` is visible): every beacon's transform from `beacon_transform` with the current camera and viewport, set as one buffer; `select_labels` with last frame's result, labels filled in shown order (`l0` the nearest). The HUD line every frame. A world without history, a failure or `--no-markers` builds no `Markers` node. Opening another world or key G drops and rebuilds it (key G keeps M's state).
+Each frame (when `Markers` is visible): every beacon's transform from `beacon_transform` with the current camera and viewport, set as one buffer; `select_labels` with last frame's result, labels filled in shown order (`l0` the nearest), a label hidden by the declutter (7) left not visible. The HUD line every frame. A world without history, a failure or `--no-markers` builds no `Markers` node. Opening another world or key G drops and rebuilds it (key G keeps M's state).
 
 ## 11. Invariants
 
@@ -258,18 +270,19 @@ Fixtures: hand-made `MarkerRecord` lists and hand-made height grids (flat at 100
 | U48 | `find_marker`: `settlement:3`, `site:7`, `rank:1`, `rank:0` and `rank:` beyond the list (none), exact name, case-folded name, a name with a byte ≥ 0x80, no match |
 | U49 | `parse_year`: `0`, `6000`; refused `-1`, `x`, `1.5`, empty, `+3` |
 | U50 | `markers_status_line` for loaded (with and without clamping), none, failed; the text forms of 3.2 for every kind from a hand-made record (the library-facing words: `settlement_kind_word`, `settlement_status_word`, `mine_depth_word`) |
-| U51 | the constants of section 9 |
+| U51 | the constants of section 9 (`JUMP_DIST` 500, `JUMP_ABOVE` 150) |
+| U52 | (r2) `label_box`: w, h and centre from 7's formulas, UTF-8 characters counted once; `declutter_labels`: a box shifted a quarter width over a nearer one is hidden, three quarters is drawn, an off-screen box neither hides nor is hidden, a hidden box hides nothing |
 
 ### 12.2 Terrain check (`gdext-terrain-check`; additions)
 
-The check world `w512` (seed 49, 512) is now generated with every stage (no `--until regions`), so it carries a history; `w1024` stays geography only and is the no-history case. W25 below: the layers of `w512` are the same bytes either way, so T1 to T30 are unaffected. Expected cost: the history of a 512 world (a few seconds; record it) plus four short runs, about 15 s; the timeout stays 300 s. New runs on `w512`: `--year 3000`, `--no-markers`, `--at-marker rank:1`, `--at-marker settlement:<the largest settlement's id>`, `--at-marker nowhere`. The check keeps its own copy of sections 4, 6, 7 and 8.3, and collects its own expected records from `MarkerIndex` and `Timeline` (section 3 steps 1 to 6).
+The check world `w512` (seed 49, 512) is now generated with every stage (no `--until regions`), so it carries a history; `w1024` stays geography only and is the no-history case. W25 below: the layers of `w512` are the same bytes either way, so T1 to T30 are unaffected. Expected cost: the history of a 512 world (a few seconds; record it) plus four short runs, about 15 s; the timeout stays 300 s. New runs on `w512`: `--year 3000`, `--no-markers`, `--at-marker rank:1`, `--at-marker settlement:<the largest settlement's id>`, `--at-marker nowhere`. Measured (r2): the check takes 37.5 s in `linux-gcc-release` (31.9 s before) and 68.3 s in `linux-gcc-debug`. The check keeps its own copy of sections 4, 6, 7 and 8.3, and collects its own expected records from `MarkerIndex` and `Timeline` (section 3 steps 1 to 6).
 
 | Id | Check |
 | --- | --- |
 | T31 | the preview's records equal the check's own at E (kind, id, cell, settlement kind, population, capital, declining, colour, name), in order; counts per kind equal; content assert that `w512` has at least one standing settlement, one capital and one ruin (lairs, outposts, mines, towers: counted, an info line when none) |
 | T32 | `Markers/Models` holds exactly one `MeshInstance3D` per record with its name, at its model cell by the check's own rule, Y equal to the height buffer exactly; mesh arrays equal `build_marker_mesh` (an info line when the renderer keeps no arrays, as T28); visibility ranges as 5 |
 | T33 | `Markers/Beacons`: instance count and colours per record; at three camera points (300 m above the largest settlement, 3 km above the centre, 30 km south of the map) every transform equal to the check's own 6 within 1e-4 relative |
-| T34 | labels at the same points and along a 40-frame path: the shown set and order equal the check's own selection; text, `billboard`, `fixed_size`, `no_depth_test`, `font_size`, `outline_size`, `modulate`; hidden labels not visible |
+| T34 | labels at the same points and along a 40-frame path: the shown set and order equal the check's own selection, and the drawn ones its own copy of the declutter (7); text, `billboard`, `fixed_size`, `no_depth_test`, `font_size`, `outline_size`, `modulate`; hidden labels not visible |
 | T35 | the status line and the HUD line of 8 in each run; `--year 3000` (content assert 3000 ≤ E): records equal the check's own at 3000; with a `--year` above E the clamped records and the note |
 | T36 | key M hides `Markers` and sets the HUD line, M again restores; records and meshes untouched |
 | T37 | key N from the start gives `jump_view` of order entry 1, N again entry 2, Shift+N back to 1, Shift+N at 1 wraps to the last; `--at-marker rank:1` and `settlement:<id>` start at the same view; `--at-marker nowhere` the default start and its status line |
@@ -298,6 +311,8 @@ X $OUT/seed42-1024.db --bench;  X $OUT/seed42-2048.db --bench;  X $OUT/seed42-20
 
 R, L and the mine, tower and outpost ids are chosen by the engineer from `worldgen-cli report --db $OUT/seed42-1024.db --history --level full` and recorded in the README; a kind the world lacks is noted.
 
+As built (r2): not taken: `v3d05-city-off-1024`, `v3d05-air-y3000-1024` (V5 rests on T31 and T35) and the 2048 `--no-markers` bench. The ruin, lair, outpost, mine and tower were not judged up close (V2 and V3 not judged or partly met). The README records the verdicts.
+
 | Id | Good means |
 | --- | --- |
 | V1 | `v3d05-city-*`: a cluster of houses with roofs in the civilization's colour (the same as `territory-markers.png` at that place), a wall for a city or fortress, a hall or keep for a capital; nothing else differs from `-off` but the beacon and label |
@@ -313,7 +328,7 @@ R, L and the mine, tower and outpost ids are chosen by the engineer from `worldg
 | Id | Look for |
 | --- | --- |
 | G23 | M hides and shows every model, beacon and label; the HUD line follows |
-| G24 | N and Shift+N tour the settlements largest first; each lands 1.2 km south, looking at the place |
+| G24 | N and Shift+N tour the settlements largest first; each lands 500 m south, looking at the place |
 | G25 | flying over a region at 200 m/s and with Shift: labels do not flicker; the HUD's nearest marker and bearing follow |
 | G26 | houses on steep ground are sunk on the uphill side, never floating |
 | G27 | colours match the 2D viewer's territory colours for the same civilizations |
@@ -329,19 +344,21 @@ UNMAPPED-TERRAIN-BENCH: markers: history <ms> ms, records <ms> ms, meshes <ms> m
 
 Drawn, after the view line: `UNMAPPED-TERRAIN-BENCH: markers per frame over the view: mean <us> us, max <us> us` (beacons, labels and the HUD line). The README records both at 1024 and 2048 with the view line against `--no-markers`.
 
+Measured (r2; seed 42, year 6000, under Xvfb): at 1024, history 6.5 ms, 116 markers: 80 settlements (10 capitals), 20 ruins of which 9 old, 1 lair, 6 outposts, 0 mines, 9 towers; 107 beacons; marker work per frame mean 26 us, max 85 us. At 2048, history 11.9 ms; per frame mean 30 us, max 66 us. In the bench line `<r>` counts ruins that are not old (11 at 1024) and `<o>` the old ones; the status line's `<r> ruins (<o> old)` counts both in `<r>` (20).
+
 ## 14. Determinism, CI, to verify
 
 Determinism: the records come from worldgen's integer API in a defined order (3.1); placement, house slots and the house hash are integers; the meshes, beacons, labels, bearing and HUD distances use floating point (`std::sin`, `std::cos`, `std::atan2`, rendering only), are compared with tolerances and never hashed. No unordered container; ties broken by record index. Name matching compares bytes.
 
-CI: no workflow change; `gdext-linux` and `gdext-windows` run U40 to U51 and the longer `gdext-terrain-check` (about 15 s more). The `build` jobs, `world-hashes.sh` and `compare-gdext-hashes` are unaffected.
+CI: no workflow change; `gdext-linux` and `gdext-windows` run U40 to U52 and the longer `gdext-terrain-check` (5.6 s more in release, 12.2). The `build` jobs, `world-hashes.sh` and `compare-gdext-hashes` are unaffected. MSVC and CI results are pending (run 46114777774).
 
-| Id | Assumed | If false |
-| --- | --- | --- |
-| W25 | the layers of seed 49 at 512 are the same bytes with and without the history stages (they write tables only); verify with `hash --detail` | keep `w512` geography only and add a full `h512` for T31 to T38 (with its own `biome.png` and `map.png`) |
-| W26 | `Label3D` with `fixed_size` keeps a constant screen size; a `pixel_size` gives 14 to 18 px capitals at 1600 × 900 | `fixed_size` false and the scale set per frame from d · a |
-| W27 | `MultiMesh::set_buffer` each frame for a few hundred instances costs well under 0.5 ms | update the beacons every fourth frame |
-| W28 | a model's base at the vertex height stays under Terrain3D's coarser far LODs closely enough by 8 km | raise `SINK` to 1.5 m |
-| W29 | `load_history` of a 1024 world takes under about 2 s, so the preview may load it on the main thread | load on a `WorkerThreadPool` task and add the markers when done (as the near tier) |
+| Id | Assumed | If false | r2 |
+| --- | --- | --- | --- |
+| W25 | the layers of seed 49 at 512 are the same bytes with and without the history stages (they write tables only); verify with `hash --detail` | keep `w512` geography only and add a full `h512` for T31 to T38 (with its own `biome.png` and `map.png`) | holds: the same layer lines from `hash --detail` with and without; the full world generates in 1.8 s |
+| W26 | `Label3D` with `fixed_size` keeps a constant screen size; a `pixel_size` gives 14 to 18 px capitals at 1600 × 900 | `fixed_size` false and the scale set per frame from d · a | holds: `pixel_size` 0.0017, capitals 14 to 15 px |
+| W27 | `MultiMesh::set_buffer` each frame for a few hundred instances costs well under 0.5 ms | update the beacons every fourth frame | holds: marker work per frame mean 26 to 30 us, max 85 us |
+| W28 | a model's base at the vertex height stays under Terrain3D's coarser far LODs closely enough by 8 km | raise `SINK` to 1.5 m | not judged |
+| W29 | `load_history` of a 1024 world takes under about 2 s, so the preview may load it on the main thread | load on a `WorkerThreadPool` task and add the markers when done (as the near tier) | holds: 6.5 ms at 1024, 11.9 ms at 2048 |
 
 ## 15. API gaps (for the lead)
 
@@ -358,9 +375,21 @@ CI: no workflow change; `gdext-linux` and `gdext-windows` run U40 to U51 and the
 | Q-V3D-05-2 | Names as 3D labels (12 nearest within 6 km, seen through hills) or in the HUD only | 3D labels | `LABEL_MAX` 0 |
 | Q-V3D-05-3 | N tours settlements by population (largest first) or by distance from the camera | population: a fixed tour, which a distance order is not after each jump | `jump_order` |
 | Q-V3D-05-4 | Beacons on ruins and sites too (shorter ranges, none on old ruins) or on standing settlements only | on all but old ruins | the ranges in 6 |
+| Q-V3D-05-5 (r2) | A library or mine whose 7-cell offset from its settlement falls in the sea stands in the sea (the Library of Eded at Aleldford, seed 42 at 1024): keep the 2D offset as it is, or move the model | move such a model to the nearest land cell within the offset ring; a viewer-side rule only (the 2D glyph and the world file unchanged) | not built; 4 step 1 as r1 |
+| Q-V3D-05-6 (r2) | The mine beacon's dark grey `MARKER_MINE` (60, 60, 60) is near-invisible against forest | a lighter or warmer colour | not built; one constant |
+| Q-V3D-05-7 (r2) | Houses 4 to 6 m high are small next to 11 to 15 m trees, and towns in forest are partly hidden by them (ties to Q-V3D-05-1) | a clearing in a later change that restates V3D-03's partition checks | nothing to undo now |
+| Q-V3D-05-8 (r2) | Accept the tuned `JUMP_DIST` 500 and `JUMP_ABOVE` 150 (8.3) and the label declutter (7) | accept | r1's 1,200 and 350; `LABEL_DECLUTTER` false |
+
+### Open after r2
+
+1. Q-V3D-05-5 to 8 above.
+2. Seen by the lead in the screenshots: distant labels on the horizon still overlap one another side by side (three town names running together; the declutter's half-area rule lets a partial overlap through); beacons lean at the screen edges; a label can sit under the HUD's bottom status lines.
+3. MSVC and CI pending (run 46114777774); keys M, N and Shift+N not tried by hand (G23, G24); the 3D marker text restates the 2D viewer's and leaves out the seal year and warren text (15 items 1 and 2).
+4. Not taken or not judged: the screenshots and bench of 12.3's note; W28.
 
 No `proposals.md` entry: the stage reads only what the library already gives, and changes neither the design nor the world file.
 
 ## Revision notes
 
 - r1 (2026-11-28): first draft, built on its recommendations while Paul is away; his review decides Q-V3D-05-1 to 4.
+- r2 (2026-11-28): as built, still interim. `JUMP_DIST` 500 m and `JUMP_ABOVE` 150 m (8.3, 9, U51, G24); the label declutter with `LABEL_DECLUTTER`, `label_box` and `declutter_labels` (7, 9, 10, T34, new U52); the ruin ring's e over the stub slots (5); the 200-byte HUD cut includes the `...`, and `--no-markers` pictures differ from V3D-04's in HUD text (8.2); W25 to W29 marked (14); measurements (12.2, 13); screenshots not taken (12.3); Q-V3D-05-5 to 8 and the open list (16).
