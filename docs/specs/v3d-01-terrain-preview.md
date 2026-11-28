@@ -1,6 +1,6 @@
 # V3D-01 Terrain preview
 
-Status: **r1, 2026-11-27, approved by Paul on 2026-11-27** with all six recommendations of section 14 accepted. First stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`). Design doc section 7 ("Terrain approach: Terrain3D first, with a test"; "Fixed world" and threading, 648), section 10 (engine and terrain rows, 890 to 897), section 11 ("Later: a 3D heightmap preview", 950) and section 13 (row P6, 1117). Paul's decision of 2026-11-27: **plain preview first**, the `elevation` and `biome` layers loaded into Terrain3D and flown over. Builds on the viewer as built (`gdext/README.md`: `WorldFile`, the run copy `<build>/game/`, `gdext-headless-check`).
+Status: **r2, 2026-11-27, as built.** r1 was approved by Paul on 2026-11-27 with all six recommendations of section 14 accepted; r2 records where the build differs from r1 and the findings of section 13 (revision notes at the end). First stage of the 3D terrain viewer track (`docs/handoff-3d-terrain-viewer.md`). Design doc section 7 ("Terrain approach: Terrain3D first, with a test"; "Fixed world" and threading, 648), section 10 (engine and terrain rows, 890 to 897), section 11 ("Later: a 3D heightmap preview", 950) and section 13 (row P6, 1117). Paul's decision of 2026-11-27: **plain preview first**, the `elevation` and `biome` layers loaded into Terrain3D and flown over. Builds on the viewer as built (`gdext/README.md`: `WorldFile`, the run copy `<build>/game/`, `gdext-headless-check`).
 
 **No world change.** The stage reads `world.db` and writes nothing to it or anywhere else in the source tree. `GENERATOR_VERSION`, the schema version, every golden file, `world-hashes.sh` and its cases are unchanged; nothing under `worldgen/`, `tools/worldgen-cli/` or `game/data/` changes. Floating point is allowed throughout this stage: nothing it computes reaches a world file. Owner: viewer engineer; build engineer for sections 3 and 11.
 
@@ -47,9 +47,11 @@ Read from the world, all through `WorldFile` (no SQL in the extension):
 
 **Recommendation: (a).** It is the only option that keeps both rules "vendored in `extern/`" and "no generated or binary files in the source tree", and it adds no build system. If V13 shows that Terrain3D v1.1.0 does not compile against godot-cpp 10.0.0 without edits, the engineer stops and reports the errors. Paul then chooses (Q-V3D-01-1) between a second godot-cpp vendored at Terrain3D's submodule commit for this target only, and option (c). Vendored files are never edited.
 
+**As built (r2).** V13 was false: 16 errors in 9 files, all from godot-cpp API changes. Paul decided on 2026-11-27 (`proposals.md`, "Terrain3D is pinned with Godot and godot-cpp as three versions"): godot-cpp stays at 10.0.0; Terrain3D is built by our CMake with the project's compatibility header `extern/terrain3d-compat/terrain3d_compat.hpp` force-included into every Terrain3D source, and **one** vendored line is edited (`extern/terrain3d/src/terrain_3d.cpp:647`, `String text = region_loc;` to `String text = String(region_loc);`), kept as the patch `extern/terrain3d-compat/terrain3d-godot-cpp-10.patch` and listed in `extern/README.md`. Godot, godot-cpp and Terrain3D are one pin of three versions, changed together. If an update needs more than 8 edited vendored lines, or any edit that changes behaviour, the build switches to the release's prebuilt libraries fetched once into the tools folder with pinned digests (like the Godot editor), not to a second godot-cpp. The rule "vendored files are never edited" above holds with that one exception.
+
 ### 3.2 What is vendored
 
-`extern/terrain3d/` holds the files of the GitHub tag archive of `v1.1.0-stable`, kept byte-identical, minus what the runtime does not need:
+`extern/terrain3d/` holds the files of the GitHub tag archive of `v1.1.0-stable`, kept byte-identical (r2: except the one line of 3.1), minus what the runtime does not need. The project's own `extern/terrain3d-compat/` (the header and the patch, not from the archive) sits beside it:
 
 | Kept | Removed |
 | --- | --- |
@@ -60,7 +62,7 @@ Read from the world, all through `WorldFile` (no SQL in the extension):
 ### 3.3 CMake
 
 - New cache option **`UNMAPPED_BUILD_TERRAIN3D`, default OFF.** Configure fails with `UNMAPPED_BUILD_TERRAIN3D needs UNMAPPED_BUILD_GDEXT=ON` if it is on without the extension. It is separate from `UNMAPPED_BUILD_GDEXT` so that a 2D-viewer build does not compile Terrain3D. With it off, the build is exactly as today, apart from section 3.4's lock and the new `TerrainPreview` sources.
-- Target `unmapped_terrain3d` (alias `unmapped::terrain3d`): a SHARED library from an explicit list of `extern/terrain3d/src/*.cpp`, defined in the block `TERRAIN3D CONFIGURATION` of `extern/CMakeLists.txt` (the one place for its defines and options). It is C++17 and links `unmapped::godot-cpp`; each extension statically links its own copy, which is normal for GDExtensions. It calls `unmapped_vendored_target()`, so warnings are suppressed and the project's floating-point flags apply. Its symbol visibility, defines and include directories come from what `SConstruct` sets (V13). The editor documentation data that `SConstruct` may generate is left out (V13).
+- Target `unmapped_terrain3d` (alias `unmapped::terrain3d`): a SHARED library from an explicit list of `extern/terrain3d/src/*.cpp`, defined in the block `TERRAIN3D CONFIGURATION` of `extern/CMakeLists.txt` (the one place for its defines and options). It is C++17 and links `unmapped::godot-cpp`; each extension statically links its own copy, which is normal for GDExtensions. It calls `unmapped_vendored_target()`, so warnings are suppressed and the project's floating-point flags apply. Its symbol visibility, defines and include directories come from what `SConstruct` sets (V13). The editor documentation data that `SConstruct` may generate is left out (V13). As built: 15 sources, include directory `src/`, no defines of its own, hidden visibility, and the compatibility header force-included (`-include` on GCC and Clang, `/FI` on MSVC).
 - Output: `<build>/game/addons/terrain_3d/bin/libterrain3d.so` (Windows `terrain3d.dll`, no import library), every configuration to that one folder, PDB outside the run copy (as `unmapped_gdext`).
 - `unmapped_gdext` does not link `unmapped_terrain3d`. It reaches Terrain3D only through Godot's `ClassDB` (`ClassDB::class_exists`, `ClassDB::instantiate`, `Object::set`, `get`, `call`). If V15 finds a supported C++ way to link the classes, it is not used in this stage.
 
@@ -129,7 +131,7 @@ Godot's +X is east, −Z is north and +Y is up, so the 2D map seen from above wi
 
 Region location (i, j) covers X ∈ [4096 i, 4096 i + 4096), and N/2 = 256 · N/512 cells puts the map's first vertex at the corner of region (−N/512, −N/512). All locations lie within Terrain3D's ±16 grid (V5). The regions cover the map exactly: no vertex in a region lies outside the map, so there is no fill rule. Outside the regions Terrain3D draws nothing (V8) and the sea plane (5.4) shows.
 
-Refusals (status label): `This world has no elevation layer, so there is no terrain to show.`, `elevation is <type>, expected i16.`, `elevation is <W>x<H>; the 3D preview needs a square map of 512, 1024 or 2048 cells.`, and for any other layer used, `<layer> is <W>x<H>, expected <N>x<N>; <layer> not used.` (that layer is then treated as absent).
+Refusals (status label): `This world has no elevation layer, so there is no terrain to show.`, `elevation is <type>, expected i16.`, `elevation is <W>x<H>; the 3D preview needs a square map of 512, 1024 or 2048 cells.`, and for any other layer used, `<layer> is <W>x<H>, expected <N>x<N>; <layer> not used.` (that layer is then treated as absent). As built (r2) an optional layer is also not used, with a note, when its type is wrong (`<layer> is <type>, expected <type>; <layer> not used.`) or it cannot be read (`<layer>: <code>: <message>; <layer> not used.`). A world file that cannot be opened, or whose `elevation` cannot be read, shows `<path>: <code>: <message>` (`WorldFile`'s error code and message).
 
 ### 5.2 Heights
 
@@ -156,7 +158,7 @@ colour(x, y) = rgb of the biome_records() row with id = biome(x, y), alpha A_NEU
 control(x, y) = 0.0f    (bit pattern 0: base texture 0, no overlay, blend 0, no autoshader, no hole, navigation off)
 ```
 
-`A_NEUTRAL` = 128 in this reading: the colour map's alpha value that leaves roughness unchanged (V7). Colour image: `FORMAT_RGBA8`, N x N, no mipmaps. Control image: `FORMAT_RF`, N x N, all 0.0f.
+`A_NEUTRAL` = 128 in this reading: the colour map's alpha value that leaves roughness unchanged (V7; as built, the shader's wetness is 1 − 2a, so 128 gives −0.004, neutral to the eye). Colour image: `FORMAT_RGBA8`, N x N, no mipmaps. Control image: `FORMAT_RF`, N x N, all 0.0f.
 
 Texture asset 0: a `Terrain3DTextureAsset` with a 64 x 64 `FORMAT_RGBA8` albedo of (255, 255, 255, 0) with mipmaps (alpha is height in Terrain3D's packing) and a 64 x 64 normal map of (128, 128, 255, 230) with mipmaps (flat; alpha roughness about 0.9). Both are built in code, and no file is written. V7 checks the packing and that the colour map multiplies the albedo; its fallback is Terrain3D's colour-map display mode.
 
@@ -166,13 +168,13 @@ Between vertices the shader filters the colour map linearly, so biome edges blen
 
 **Choice: an opaque sea plane at Y = 0 and lakes drawn flat at their surface (5.2). Rivers are not drawn.**
 
-- Sea. A `MeshInstance3D` with a `PlaneMesh` of side 48N m (three map sides), centred on the origin at Y = 0. Its `StandardMaterial3D` is unshaded off, roughness 0.2, and albedo the colour of the `biome_records()` row whose key is `ocean` (else 0x183878, the shipped value). The sea bed exists in the height map but is hidden. An opaque plane is the simplest surface that is true at the cell level (sea level is 0 m by definition of the layer), and it costs no transparency sorting. A plane wider than the map makes the world read as land in a sea, which it is, since the ocean is one connected body touching the map edge (P1-02 invariant 8). Q-V3D-01-3 offers a translucent sea.
+- Sea. A `MeshInstance3D` with a `PlaneMesh` of side 48N m (three map sides), centred on the origin at Y = 0. Its `StandardMaterial3D` is unshaded off, roughness 0.2, and albedo the colour of the `biome_records()` row whose key is `ocean` (else 0x183878, the shipped value). As built (r2), the sky's `ground_bottom_color` and `ground_horizon_color` (`ProceduralSkyMaterial`) are also set to that colour, so the sky below the horizon reads as sea beyond the plane. The plane's edge still shows as a change of tone, and from high altitude the plane does not fill the view below the horizon; V3D-02 fixes both. The sea bed exists in the height map but is hidden. An opaque plane is the simplest surface that is true at the cell level (sea level is 0 m by definition of the layer), and it costs no transparency sorting. A plane wider than the map makes the world read as land in a sea, which it is, since the ocean is one connected body touching the map edge (P1-02 invariant 8). Q-V3D-01-3 offers a translucent sea.
 - Lakes. A lake's surface is h = (e + d)/10, flat over each lake, and coloured by the `lake` biome (the `biome` layer has the lake code exactly on lake cells, P1-04). This costs one more layer read and no mesh. The lake bed is not shown.
 - Rivers are narrower than a cell (P1-02, design 7). Carving them is a later stage, and nothing marks them here.
 
 ## 6. `terrain_data.hpp` (C++ only, no Godot types)
 
-Namespace `unmapped::terrain`. It includes only `<cstdint>`, `<span>`, `<string>`, `<vector>` and worldgen's public headers.
+Namespace `unmapped::terrain`. It includes only standard headers (as built: `<cstddef>`, `<cstdint>`, `<functional>`, `<optional>`, `<span>`, `<string>`, `<vector>`) and worldgen's public headers (`worldgen/inspect/geography.hpp`).
 
 | Name | Contract |
 | --- | --- |
@@ -186,8 +188,15 @@ Namespace `unmapped::terrain`. It includes only `<cstdint>`, `<span>`, `<string>
 | `CellHit world_to_cell(const Layout&, float X, float Z)` | `{x, y, inside}`: x = floor(X/16 + n/2 + 0.5), the same for y; `inside` iff both are in [0, n) |
 | `float ground_clamp(const Layout&, std::span<const float> h, float X, float Z)` | u = X/16 + n/2 and v likewise, clamped to [0, n − 1]; i = min(floor(u), n − 2), j likewise; the max of h at (i, j), (i+1, j), (i, j+1), (i+1, j+1). This is the maximum, not an interpolation, because Terrain3D's triangles can lie above a bilinear surface on steep cells |
 | `float sample_bilinear(const Layout&, std::span<const float> h, float X, float Z)` | the same i, j, with fu = u − i, fv = v − j; standard bilinear; HUD only |
+| `std::size_t unknown_biome_cells(std::span<const std::uint8_t> biome, std::span<const BiomeRecord>)` | r2: the number of cells whose code has no record (the magenta note of section 7) |
+| `struct HudWorld { const Layout* layout; spans heights, elevation, water_depth, biome, region; std::function<std::string(std::int64_t)> biome_name, region_name; }` | r2: what the HUD reads; a span is empty when its layer is absent |
+| `std::string hud_line(const HudWorld&, float X, float Y, float Z, float speed, int fps)` | r2: the first HUD line of 8.4 |
+| `constexpr const char* HUD_KEYS` | r2: the key line of 8.4 |
+| `std::string one_decimal(double)` | r2: one decimal, no negative zero (`12.5`, `-0.1`, `0.0`); the HUD and the bench lines |
 
-`fly_state.hpp` (namespace `unmapped::terrain`): `struct FlyState { float x, y, z, heading_deg, pitch_deg; int speed_index; }`, `struct FlyInput { int forward, right, up; bool boost; float yaw_deg, pitch_deg; }` (each axis −1, 0 or 1; yaw and pitch are deltas), and `void step(FlyState&, const FlyInput&, float dt, const std::function<float(float, float)>& ground, float bound)`. Its rules are in 8.2.
+`build_heights` and `build_colours` throw `std::invalid_argument` when a non-empty span is not n² long.
+
+`fly_state.hpp` (namespace `unmapped::terrain`): `struct FlyState { float x, y, z, heading_deg, pitch_deg; int speed_index; }`, `struct FlyInput { int forward, right, up; bool boost; float yaw_deg, pitch_deg; }` (each axis −1, 0 or 1; yaw and pitch are deltas), and `void step(FlyState&, const FlyInput&, float dt, const std::function<float(float, float)>& ground, float bound)`. Its rules are in 8.2. As built (r2) also: the constants `SPEEDS`, `DEFAULT_SPEED_INDEX` 4, `BOOST` 4, `MAX_ALTITUDE` 30000, `GROUND_MARGIN` 2; `float speed_of(const FlyState&, bool boost)` (m/s); `void speed_step(FlyState&, int delta)` (one step down for delta < 0, up for delta > 0, saturating at 0 and 7); `Rotation camera_rotation(const FlyState&)` (radians, (P, −H, 0), 8.2).
 
 ## 7. `TerrainPreview` (scene logic)
 
@@ -196,11 +205,12 @@ On `_ready`, and on each world opened:
 1. `WorldFile::open`. Read `elevation`, then `water_depth`, `biome` and `region` if present (5.1 refusals). Build `Layout`, the heights and the colours (section 6).
 2. Make the three images (5.2, 5.3) by copying the buffers into `PackedByteArray`s, little-endian floats for RF.
 3. If `ClassDB::class_exists("Terrain3D")` and not `--no-terrain3d`: instantiate `Terrain3D` and cast it to `Node3D` (V15). Set `vertex_spacing` = 16.0 (V1), `region_size` = 256 (V2), collision disabled (V9), background outside regions none (V8) and no data directory (V11). Give it a `Terrain3DAssets` holding texture asset 0 (5.3, V7). Add it as a child, call `set_camera(camera)` (V10), then call `get_data()` → `import_images([height, control, colour], Vector3(origin, 0, origin), 0.0, 1.0)` (V3, V4).
+   As built (r2), in this order: `set("vertex_spacing", 16.0)`; `set("free_editor_textures", false)` (keeps the textures built in code); a `Terrain3DAssets` with `set_texture_asset(0, asset)` and `set("assets", ...)`; `add_child`; then, since they exist only once the node is in the tree, `set("collision_mode", 0)` (Disabled) and `material.set("world_background", 0)` (None); `set_camera`; `import_images`. `region_size` is not set: 256 is the default (V2).
    Otherwise the status reads `Terrain3D is not in this build (configure with -DUNMAPPED_BUILD_TERRAIN3D=ON): showing the sea plane only.`, and steps 4 and 5 still run.
 4. Size the sea plane (5.4). Place the camera (8.3), with near 1.0 m and far 48N m.
-5. Notes in the status label, one per line: `no biome layer: terrain drawn grey`, `no water_depth layer: lakes drawn at their beds`, `<k> cells of unknown biome drawn magenta`.
+5. Notes in the status label, one per line: `no biome layer: terrain drawn grey`, `no water_depth layer: lakes drawn at their beds`, `<k> cells of unknown biome drawn magenta`, then the "not used" notes of 5.1.
 
-The previous world's Terrain3D node is freed before a new one is made. Nothing is saved: the preview never calls a Terrain3D save method.
+The previous world's Terrain3D node is freed before a new one is made (as built: `remove_child`, then `queue_free`). Nothing is saved: the preview never calls a Terrain3D save method.
 
 **Scene** `game/viewer3d/terrain_preview.tscn` (layout only):
 
@@ -295,8 +305,9 @@ Checks (`terrain_check.cpp`; the check has its own copy of the formulas of 5.1 t
 | T6 | `present`: one `Terrain3D` child; its region locations are exactly the (N/256)² locations of 5.1; `get_height` at the 4 corners, the centre, the highest and lowest cell and 25 cells of a fixed pattern ((37k mod N, 61k mod N) for k = 1 to 25) equals the buffer within 0.001 m; the colour read back at the same points equals the buffer within 1/255 (V12). This is what proves orientation, centring and the offset and scale semantics |
 | T7 | `absent` (missing class or `--no-terrain3d`): no Terrain3D node, the status text of section 7, and the sea plane and camera present, while T1 to T4 still pass |
 | T8 | 300 frames of scripted `FlyInput` (forward with yaw, then a dive into the highest cell) leave the camera above `ground_clamp` + 2 every frame |
+| T6 (reopen, r2) | `present`: `open_world` on the same path again leaves exactly one `Terrain3D` child, and `get_height` at the centre cell equals the buffer within 0.001 m (V16) |
 
-If V12 finds that Terrain3D cannot run headless, T6 becomes an information line (`UNMAPPED-TERRAIN-CHECK: T6 skipped: <reason>`), and the GPU checklist's item G3 becomes required before merge.
+If V12 finds that Terrain3D cannot run headless, T6 becomes an information line (`UNMAPPED-TERRAIN-CHECK: T6 skipped: <reason>`), and the GPU checklist's item G3 becomes required before merge. As built, V12 holds: T6 runs in CI. The check takes about 13 s.
 
 ### 9.3 By hand on a GPU (Paul or the engineer, Linux; Windows the same in Git Bash)
 
@@ -334,11 +345,11 @@ UNMAPPED-TERRAIN-BENCH: memory static <MB> MB, video <MB> MB, regions <k>
 UNMAPPED-TERRAIN-BENCH: flight <s> s at 1000 m/s: frames <n>, mean <ms>, max <ms>, over 11.1 ms <a>, over 16.7 ms <b>, over 33.3 ms <c>
 ```
 
-- `import` is the time of `import_images`, and `first frame` runs from the end of the import to the next `frame_post_draw`.
-- Memory comes from `Performance` `MEMORY_STATIC` and `RENDER_VIDEO_MEM_USED`, read after the first frame.
+- `import` is the time of `import_images`, and `first frame` runs from the end of the import to the next `frame_post_draw`. As built, headless (where nothing is drawn) it runs to the next `process_frame` instead.
+- Memory comes from `Performance` `MEMORY_STATIC` and `RENDER_VIDEO_MEM_USED`, read after the first frame. As built, video memory is `RenderingServer::get_rendering_info`: the larger of `RENDERING_INFO_VIDEO_MEM_USED` and the sum of `RENDERING_INFO_TEXTURE_MEM_USED` and `RENDERING_INFO_BUFFER_MEM_USED`. With the NVIDIA Vulkan driver all three read 0, so the line shows `video 0.0 MB` there (V17 unmeasured).
 - The flight runs from the start position heading north at pitch −10 and 1000 m/s, for 16N / 1000 s, with vsync off.
 
-The engineer records the figures for 512, 1024 and 2048 (release preset, the machine named) in `gdext/README.md`. They are inputs to the later fly-across test, not a gate.
+The engineer records the figures for 512, 1024 and 2048 (release preset, the machine named) in `gdext/README.md`. They are inputs to the later fly-across test, not a gate. Recorded 2026-11-27 (RTX 4090 Laptop GPU, Vulkan): import 4.6 / 22 / 86 ms, static memory 65.5 / 84.6 / 160.7 MB, flight mean 0.3 to 0.4 ms per frame at 512 / 1024 / 2048.
 
 ## 11. CI (item 7)
 
@@ -346,6 +357,7 @@ The engineer records the figures for 512, 1024 and 2048 (release preset, the mac
 - The ccache key of `gdext-linux` gains the hash of `extern/terrain3d/`.
 - The seven `build` jobs, `determinism-lint` and `compare-hashes` are unchanged: they never turn the extension on.
 - On failure, `gdext-*` also upload `<build>/gdext/terrain-check/`.
+- As built (r2): the workflow changes are made; neither job has yet passed with them, and MSVC has not yet compiled Terrain3D or the compatibility header (open after r2, section 13).
 
 ## 12. Invariants
 
@@ -358,30 +370,32 @@ The engineer records the figures for 512, 1024 and 2048 (release preset, the mac
 
 ## 13. To verify against Terrain3D's source (engineer, before building on it)
 
-Each item gives the reading this spec assumes and what to do if it is false. The engineer reports the findings in the first hand-back, and the spec's next revision records them.
+Each item gives the reading this spec assumes and what to do if it is false. The engineer reports the findings in the first hand-back, and the spec's next revision records them. r2 records them in the column "Found".
 
-| Id | Assumed | If false |
-| --- | --- | --- |
-| V1 | `vertex_spacing` accepts 16.0 | use the largest power of two s ≤ the maximum (8, then 4), k = 16/s vertices per cell, bilinear heights and nearest colours, R stays 256 (centring still holds for s ≥ 4: N/(32 s) is whole); 2048 at s = 4 is 32 x 32 regions, the grid's limit, and about 800 MB; report to Paul |
-| V2 | `region_size` is settable to 256 in code before data is added (property or `change_region_size`) | 256 is the default, so leave it |
-| V3 | `import_images(images, global_position, offset, scale)` takes `global_position` in world metres (not vertices), splits an N x N image over aligned regions, accepts RF, RF, RGBA8, and is the identity with offset 0 and scale 1 | divide the position by s if it is in vertices; else build each `Terrain3DRegion` from 256 x 256 crops (`set_map`, height, control, colour) and `add_region`, then `update_maps` once |
-| V4 | pixel p of region location l is at world (256 l + p) · s with no half-pixel shift, and the vertex shows the pixel's value | adjust `origin` by the shift found; T6 proves the result |
-| V5 | region locations run −16 to 15 on each axis | 5.1 needs only −4 to 3 |
-| V6 | a control value of 0.0f means texture 0, no autoshader, no hole | set the bits the source requires; still one constant for every cell |
-| V7 | a texture asset needs an albedo (alpha = height) and a normal (alpha = roughness) of one size and format with mipmaps; the shader multiplies albedo by the colour map's RGB; the colour map is read as sRGB; alpha 128 is neutral roughness; the setter is `set_texture_asset` or its 1.1 name | match the source's packing; if the colour map is linear, convert sRGB to linear in `build_colours` (T3 then compares after the same conversion); if no plain multiply exists, use the material's colour-map display mode with lighting |
-| V8 | the material can show nothing outside regions (world background none) | keep its flat background if it is at height 0, under the sea plane |
-| V9 | collision can be disabled by a property | leave the default if it costs nothing measurable; record it in the bench |
-| V10 | a camera made in a scene and passed to `set_camera` drives LOD | find the node by the camera's path instead |
-| V11 | without a data directory nothing is written to disk and no error is raised | point it at a temporary folder under the build root, never the repository, and never save |
-| V12 | the class instantiates under `--headless`, and `get_height(Vector3)` and a colour reader work there | section 9.2's fallback |
-| V13 | `src/*.cpp` compile with our CMake against godot-cpp 10.0.0 as C++17, with only the defines and flags `SConstruct` sets; shaders are C++ string includes, not a generated step; documentation data is optional | reproduce any generated step as a CMake custom command in the build tree; on API errors stop and ask Paul (Q-V3D-01-1) |
-| V14 | `terrain.gdextension`'s entry symbol and `[icons]`/`[dependencies]` sections, and every `res://addons/terrain_3d/` path the C++ loads at run time | vendor and link exactly those files (3.2, 3.4) |
-| V15 | `Terrain3D` derives from `Node3D`; its data object is reached by `get_data()` or property `data` | adapt the calls; a non-Node3D class would end option (a)'s plan and needs Paul |
-| V16 | adding the node in code after `_ready` works, including a second world replacing the first | build the node once and clear its data between worlds |
-| V17 | GPU memory grows with the regions in use, not with all 1,024 slots | record it in the bench |
-| V18 | license file name and tag commit SHA of `v1.1.0-stable` | record what is found in `extern/README.md` |
+| Id | Assumed | If false | Found (r2) |
+| --- | --- | --- | --- |
+| V1 | `vertex_spacing` accepts 16.0 | use the largest power of two s ≤ the maximum (8, then 4), k = 16/s vertices per cell, bilinear heights and nearest colours, R stays 256 (centring still holds for s ≥ 4: N/(32 s) is whole); 2048 at s = 4 is 32 x 32 regions, the grid's limit, and about 800 MB; report to Paul | confirmed |
+| V2 | `region_size` is settable to 256 in code before data is added (property or `change_region_size`) | 256 is the default, so leave it | not set; left at the default 256 |
+| V3 | `import_images(images, global_position, offset, scale)` takes `global_position` in world metres (not vertices), splits an N x N image over aligned regions, accepts RF, RF, RGBA8, and is the identity with offset 0 and scale 1 | divide the position by s if it is in vertices; else build each `Terrain3DRegion` from 256 x 256 crops (`set_map`, height, control, colour) and `add_region`, then `update_maps` once | confirmed (T6); with offset 0 and scale 1 the height image is not even copied (`Terrain3DData::import_images`) |
+| V4 | pixel p of region location l is at world (256 l + p) · s with no half-pixel shift, and the vertex shows the pixel's value | adjust `origin` by the shift found; T6 proves the result | confirmed (T6) |
+| V5 | region locations run −16 to 15 on each axis | 5.1 needs only −4 to 3 | confirmed |
+| V6 | a control value of 0.0f means texture 0, no autoshader, no hole | set the bits the source requires; still one constant for every cell | confirmed: base bits 27–31, overlay 22–26, blend 14–21, UV rotation 10–13, UV scale 7–9, hole 2, navigation 1, autoshader 0 (`terrain_3d_util.h`) |
+| V7 | a texture asset needs an albedo (alpha = height) and a normal (alpha = roughness) of one size and format with mipmaps; the shader multiplies albedo by the colour map's RGB; the colour map is read as sRGB; alpha 128 is neutral roughness; the setter is `set_texture_asset` or its 1.1 name | match the source's packing; if the colour map is linear, convert sRGB to linear in `build_colours` (T3 then compares after the same conversion); if no plain multiply exists, use the material's colour-map display mode with lighting | confirmed: the setter is `Terrain3DAssets::set_texture_asset(id, asset)`; the colour map is sampled `source_color` (sRGB) and multiplies albedo (`pbr_views.glsl`: `ALBEDO = mat.albedo_height.rgb * color_map.rgb`); alpha a gives wetness 1 − 2a, so 128 is near neutral |
+| V8 | the material can show nothing outside regions (world background none) | keep its flat background if it is at height 0, under the sea plane | confirmed (`world_background` 0, set on the material after `add_child`) |
+| V9 | collision can be disabled by a property | leave the default if it costs nothing measurable; record it in the bench | confirmed, but `collision_mode` is settable only after `add_child` |
+| V10 | a camera made in a scene and passed to `set_camera` drives LOD | find the node by the camera's path instead | confirmed |
+| V11 | without a data directory nothing is written to disk and no error is raised | point it at a temporary folder under the build root, never the repository, and never save | confirmed; `free_editor_textures` is set false so the textures built in code are kept |
+| V12 | the class instantiates under `--headless`, and `get_height(Vector3)` and a colour reader work there | section 9.2's fallback | confirmed: Terrain3D works headless, `get_height` and `get_color` answer, T6 runs in CI |
+| V13 | `src/*.cpp` compile with our CMake against godot-cpp 10.0.0 as C++17, with only the defines and flags `SConstruct` sets; shaders are C++ string includes, not a generated step; documentation data is optional | reproduce any generated step as a CMake custom command in the build tree; on API errors stop and ask Paul (Q-V3D-01-1) | **false**: 16 errors from godot-cpp API changes; Paul's decision of 3.1 (compatibility header and one edited line). Shaders are string includes and documentation is optional, as assumed |
+| V14 | `terrain.gdextension`'s entry symbol and `[icons]`/`[dependencies]` sections, and every `res://addons/terrain_3d/` path the C++ loads at run time | vendor and link exactly those files (3.2, 3.4) | entry symbol `terrain_3d_init`; the only run-time `res://` path is the ocean material `extras/shaders/M_ocean.tres`, loaded only when Terrain3D's own ocean is on, which the preview never does, so nothing is vendored for it |
+| V15 | `Terrain3D` derives from `Node3D`; its data object is reached by `get_data()` or property `data` | adapt the calls; a non-Node3D class would end option (a)'s plan and needs Paul | confirmed (`get_data()`) |
+| V16 | adding the node in code after `_ready` works, including a second world replacing the first | build the node once and clear its data between worlds | confirmed (T6 reopen) |
+| V17 | GPU memory grows with the regions in use, not with all 1,024 slots | record it in the bench | **not measured**: the rendering server reports 0 MB with the NVIDIA Vulkan driver (section 10) |
+| V18 | license file name and tag commit SHA of `v1.1.0-stable` | record what is found in `extern/README.md` | `LICENSE.txt` (MIT); commit `629bbd65526bbdc3d1aa371840c7028055c30b02` |
 
-Godot itself: naming a scene after `--path` runs that scene instead of the main scene. If that is wrong, the 2D `ViewerScreen` takes a first user argument `--terrain` and calls `change_scene_to_file("res://viewer3d/terrain_preview.tscn")`. That one line is the only 2D change allowed.
+Godot itself: naming a scene after `--path` runs that scene instead of the main scene. If that is wrong, the 2D `ViewerScreen` takes a first user argument `--terrain` and calls `change_scene_to_file("res://viewer3d/terrain_preview.tscn")`. That one line is the only 2D change allowed. Found: it works; the 2D viewer is unchanged.
+
+**Open after r2.** (1) The Windows (MSVC) build of the header and of Terrain3D, and the CI jobs `gdext-linux` and `gdext-windows` with the option on, have not passed yet. (2) The sea plane does not fill the view from high altitude and its edge shows as a change of tone (5.4); V3D-02 fixes it.
 
 ## 14. Questions for Paul (decided 2026-11-27: Paul accepts all six recommendations)
 
@@ -397,3 +411,4 @@ Godot itself: naming a scene after `--path` runs that scene instead of the main 
 ## Revision notes
 
 - r1 (2026-11-27): first draft. Approved by Paul the same day; Q-V3D-01-1 to 6 decided as recommended (status line and section 14 heading only).
+- r2 (2026-11-27): as built. 3.1 to 3.3: Terrain3D does not compile unchanged; the force-included compatibility header, the one edited vendored line (`terrain_3d.cpp:647`) and its patch file, the three-version pin and the 8-line limit (Paul's decision). 5.1: "not used" notes for a wrong type or an unreadable layer; `<path>: <code>: <message>` for a failed open. 5.3: the wetness reading of the colour map's alpha. 5.4: the sky's ground colour set to the sea's. 6: the helpers `unknown_biome_cells`, `HudWorld`, `hud_line`, `HUD_KEYS`, `one_decimal`, `speed_of`, `speed_step`, `camera_rotation` and the constants. 7: the order of the Terrain3D calls, `free_editor_textures` false, `region_size` not set. 9.2: the T6 reopen check. 10: headless first frame, video memory from `RenderingServer::get_rendering_info`, the recorded figures. 13: each V item confirmed, false or not measured. Open after it: Windows and CI not yet passed; the sea plane (fixed by V3D-02).
