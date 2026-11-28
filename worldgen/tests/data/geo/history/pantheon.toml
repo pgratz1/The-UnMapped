@@ -25,7 +25,7 @@ profane_years = 300
 champion_epithet = "Chosen of {god}"
 cult_found_permille = 400
 cult_fear_permille = 700
-cult_spread_permille = 20
+cult_spread_permille = 6
 affinity_permille = { same = 1000, near = 500, opposed = 100 }
 adopt_regard = 50
 adopt_permille = 15
@@ -38,7 +38,7 @@ suppress_points = 120
 hide_permille = 800
 sanctum_hops = 3
 # P5-11 12.2 (generator 0.31.0): a suppressed cult does not spread back into the realm for these years.
-cult_return_years = 400
+cult_return_years = 1500
 
 [history.pantheon.creator]
 favour = { bless = 400, champion = 450, mark = 150 }

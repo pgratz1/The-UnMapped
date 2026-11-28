@@ -3,28 +3,30 @@
 # the caps of the effects and the chances of the moves (6.7).
 [history.artifacts]
 occasions = [
-    { kind = "war_declared", role = "defender", chance_permille = 60, bearer = "general", classes = { arms = 500, armour = 300, regalia = 0, relic = 0, staff = 200 } },
-    { kind = "war_declared", role = "attacker", chance_permille = 30, bearer = "general", classes = { arms = 600, armour = 300, regalia = 0, relic = 0, staff = 100 } },
-    { kind = "sacked", role = "defender", chance_permille = 100, bearer = "realm", classes = { arms = 600, armour = 200, regalia = 0, relic = 0, staff = 200 } },
-    { kind = "civ_conquered", role = "conqueror", chance_permille = 200, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 0 } },
-    { kind = "succession_disputed", role = "civilization", chance_permille = 120, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 0 } },
-    { kind = "hero_rose", role = "civilization", chance_permille = 150, bearer = "figure", classes = { arms = 700, armour = 300, regalia = 0, relic = 0, staff = 0 } },
-    { kind = "settlement_overrun", role = "civilization", chance_permille = 150, bearer = "realm", classes = { arms = 700, armour = 0, regalia = 0, relic = 0, staff = 300 } },
-    { kind = "deep_woken", role = "civilization", chance_permille = 400, bearer = "realm", classes = { arms = 600, armour = 0, regalia = 0, relic = 0, staff = 400 } },
-    { kind = "divine_champion", role = "civilization", chance_permille = 500, bearer = "figure", classes = { arms = 600, armour = 400, regalia = 0, relic = 0, staff = 0 } },
-    { kind = "cult_founded", role = "civilization", chance_permille = 300, bearer = "site", classes = { arms = 0, armour = 0, regalia = 0, relic = 1000, staff = 0 } },
+    { kind = "war_declared", role = "defender", chance_permille = 180, bearer = "general", classes = { arms = 500, armour = 300, regalia = 0, relic = 0, staff = 150 } },
+    { kind = "war_declared", role = "attacker", chance_permille = 100, bearer = "general", classes = { arms = 600, armour = 300, regalia = 0, relic = 0, staff = 150 } },
+    { kind = "sacked", role = "defender", chance_permille = 160, bearer = "realm", classes = { arms = 600, armour = 200, regalia = 0, relic = 0, staff = 300 } },
+    { kind = "civ_conquered", role = "conqueror", chance_permille = 320, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 1000 } },
+    { kind = "succession_disputed", role = "civilization", chance_permille = 60, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 1000 } },
+    { kind = "hero_rose", role = "civilization", chance_permille = 240, bearer = "figure", classes = { arms = 600, armour = 300, regalia = 0, relic = 0, staff = 1000 } },
+    { kind = "settlement_overrun", role = "civilization", chance_permille = 240, bearer = "realm", classes = { arms = 700, armour = 0, regalia = 0, relic = 0, staff = 300 } },
+    { kind = "deep_woken", role = "civilization", chance_permille = 640, bearer = "realm", classes = { arms = 600, armour = 0, regalia = 0, relic = 0, staff = 500 } },
+    { kind = "divine_champion", role = "civilization", chance_permille = 800, bearer = "figure", classes = { arms = 600, armour = 400, regalia = 0, relic = 0, staff = 1000 } },
+    { kind = "cult_founded", role = "civilization", chance_permille = 130, bearer = "site", classes = { arms = 0, armour = 0, regalia = 0, relic = 1000, staff = 1000 } },
+    { kind = "tower_founded", role = "civilization", chance_permille = 120, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 0, relic = 0, staff = 1000 } },
+    { kind = "book_written", role = "civilization", chance_permille = 40, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 0, relic = 0, staff = 1000 } },
 ]
 forge_chance_permille = 2000
-realm_rest_years = 50
+realm_rest_years = 30
 world_max = 40
 deep_metal_depth = 3
 deep_metal_permille = 30
 force_max_permille = 150
 hunt_max_permille = 200
 claim_max_permille = 1000
-burial_permille = 300
-battle_take_permille = 500
-sack_take_permille = 700
-capture_take_permille = 500
-raid_take_permille = 30
+burial_permille = 150
+battle_take_permille = 850
+sack_take_permille = 1000
+capture_take_permille = 1000
+raid_take_permille = 800
 hoard_hunt_permille = 50
