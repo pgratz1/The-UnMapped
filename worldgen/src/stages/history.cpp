@@ -9,6 +9,7 @@
 #include "worldgen/core/error.hpp"
 #include "worldgen/db/schema.hpp"
 #include "worldgen/history/alliances.hpp"
+#include "worldgen/history/artifacts.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/figures.hpp"
@@ -30,14 +31,18 @@ void check_monster_participants(const HistoryResult& r) {
     const auto sites = static_cast<std::int64_t>(r.sites.size());
     const auto figures = static_cast<std::int64_t>(r.figures.size());  // P5-06 8.5
     const auto factions = static_cast<std::int64_t>(r.factions.size());  // P5-08 8.1
+    const auto artifacts = static_cast<std::int64_t>(r.artifacts.size());  // P5-11 8.1
     for (const db::EventParticipantRow& p : r.event_participants) {
         const bool monster = p.entity_type == static_cast<std::int64_t>(history::EntityType::monster);
         const bool site = p.entity_type == static_cast<std::int64_t>(history::EntityType::site);
         const bool figure = p.entity_type == static_cast<std::int64_t>(history::EntityType::figure);
         const bool faction = p.entity_type == static_cast<std::int64_t>(history::EntityType::faction);
-        const std::int64_t n = monster ? monsters : (site ? sites : (figure ? figures : factions));
-        if ((monster || site || figure || faction) && (p.entity_id < 1 || p.entity_id > n)) {
-            const char* what = monster ? "monster " : (site ? "site " : (figure ? "figure " : "faction "));
+        const bool artifact = p.entity_type == static_cast<std::int64_t>(history::EntityType::artifact);
+        const std::int64_t n =
+            monster ? monsters : (site ? sites : (figure ? figures : (faction ? factions : artifacts)));
+        if ((monster || site || figure || faction || artifact) && (p.entity_id < 1 || p.entity_id > n)) {
+            const char* what = monster ? "monster "
+                                       : (site ? "site " : (figure ? "figure " : (faction ? "faction " : "artifact ")));
             const db::EventRow& e = r.events[static_cast<std::size_t>(p.event - 1)];
             for (const db::EventKindRow& row : r.event_kinds) {
                 if (row.id == e.kind) {
@@ -115,9 +120,18 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     pantheon.set_conflict(&conflict);
     peoples.set_divine(&pantheon);
     conflict.set_divine(&pantheon);
+    // P5-11 6.10 item 3: the artifacts run last; they are conflict's and the
+    // monsters' artifact view.
+    history::ArtifactsSubsystem artifacts(peoples, content);
+    conflict.set_artifacts(&artifacts);
+    monsters.set_artifacts(&artifacts);
+    artifacts.set_figures(&figures);
+    artifacts.set_alliances(&alliances);
+    artifacts.set_sites(&monsters);
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples, &conflict, &renaming, &monsters, &relations, &alliances, &figures, &pantheon};
+    config.subsystems = {&peoples,   &conflict,  &renaming, &monsters, &relations,
+                         &alliances, &figures,   &pantheon, &artifacts};
     config.tension = {&conflict, &monsters, &pantheon};
     config.interventions = &pantheon;
     config.applier = &pantheon;
@@ -136,6 +150,9 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     result.figures = figures.figure_rows();  // P5-06 9.1, 9.3
     result.books = figures.book_rows();
     result.factions = pantheon.faction_rows();  // P5-08 9
+    result.artifact_kinds = artifacts.artifact_kind_rows();  // P5-11 9
+    result.artifacts = artifacts.artifact_rows();
+    result.artifact_holdings = artifacts.artifact_holding_rows();
     check_monster_participants(result);  // P5-02 10.4, P5-06 8.5
     return result;
 }
@@ -168,6 +185,10 @@ void write_history_result(StageContext& context, const HistoryResult& r) {
     for (const db::FigureRow& row : r.figures) context.write_figure(row);
     for (const db::BookRow& row : r.books) context.write_book(row);
     for (const db::FactionRow& row : r.factions) context.write_faction(row);  // schema 14 (P5-08 9)
+    // schema 15 (P5-11 9)
+    for (const db::ArtifactKindRow& row : r.artifact_kinds) context.write_artifact_kind(row);
+    for (const db::ArtifactRow& row : r.artifacts) context.write_artifact(row);
+    for (const db::ArtifactHoldingRow& row : r.artifact_holdings) context.write_artifact_holding(row);
 }
 
 void run_history(StageContext& context) {
