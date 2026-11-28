@@ -349,3 +349,8 @@ Reference side (the references were wrong; goldens re-recorded by their commands
 - Nothing of the above is unresolved in the fast suite except these two ones, which I closed by a judgment the lead should check: the mine rule (13) and the dropped realm-lost witness. `history_alliances_p504a_property_b_test` needed more seeds (a coverage test, union of six motives).
 - `h19-v10.toml` and `p5_07_h19_fixture.py` disagree if the script is rerun once `p3_data_reference` accepts the cult forms: rerun it then and compare.
 - Hold lost to the deep before the first deepening is not a case here; the browser reference's `deep:` line handling follows the report text parser (`tagged_line`), which assumes entity names without a `;` or `,` inside.
+
+### Other presets and wall times (`ctest`, four entries at a time, a six-core machine)
+- `linux-clang-release`: fast suite 58 of 62 entries green; the four failing are the world-hash entries above. `linux-gcc-debug`: the same four (and nothing else); `worldgen-tests-other` takes 367 s there.
+- Slow suite (`linux-gcc-release`, `ctest -L slow -j 4`; all 23 entries green after the changes above; the four that failed the first time were rerun, `-slow-depths` by its witness case alone): `-slow-relations` 997 s, `-slow-pantheon` 810 s, `-slow-alliances` 769 s, `-slow-figures` 710 s, `-slow-depths` 707 s (814 s in the rerun).
+- Fast suite: no entry above 110 s on `linux-gcc-release`.
