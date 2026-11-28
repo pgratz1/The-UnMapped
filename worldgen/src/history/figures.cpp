@@ -65,9 +65,9 @@ constexpr std::array<std::string_view, 15> STREAM_NAMES = {
 };
 
 constexpr std::array<std::string_view, TEMPERS> TEMPER_KEYS = {"steady", "warlike", "peaceable", "grasping", "just"};
-constexpr std::array<std::string_view, 12> DEED_KEYS = {
-    "founded_years", "wars_won",       "conquests",        "betrayals",  "realm_fell", "reign_permille",
-    "battles_won",   "battles_unbeaten", "slew_might",     "exiled",     "books",      "blights"};
+constexpr std::array<std::string_view, 13> DEED_KEYS = {
+    "founded_years", "wars_won",         "conquests",  "betrayals", "realm_fell", "reign_permille", "battles_won",
+    "battles_unbeaten", "slew_might", "exiled",    "books",     "blights",    "corrupted"};
 constexpr std::array<std::string_view, 5> ROLE_KEYS = {"ruler", "claimant", "general", "hero", "caster"};
 constexpr std::string_view ROOT_SLOT = "{root}";
 constexpr std::string_view SLAYER = "{slayer}";
@@ -329,24 +329,68 @@ std::int64_t FiguresSubsystem::strain_permille(std::int64_t civ) const {
     if (l == nullptr) {
         return 1000;
     }
-    const auto t = static_cast<std::size_t>(l->reign.temper);
+    const auto t = static_cast<std::size_t>(tau(*l));
     return floor_div(checked_mul(tuning_.temper_strain_permille[t], 1000),
                      std::max<std::int64_t>(1, race(l->race).mean_strain));
 }
 
 std::int64_t FiguresSubsystem::allied_strain_permille(std::int64_t civ) const {
     const Line* l = line_if(civ);
-    return l == nullptr ? 1000 : tuning_.temper_allied_permille[static_cast<std::size_t>(l->reign.temper)];
+    return l == nullptr ? 1000 : tuning_.temper_allied_permille[static_cast<std::size_t>(tau(*l))];
 }
 
 std::int64_t FiguresSubsystem::spoils_permille(std::int64_t civ) const {
     const Line* l = line_if(civ);
-    return l == nullptr ? 0 : tuning_.temper_spoils_permille[static_cast<std::size_t>(l->reign.temper)];
+    return l == nullptr ? 0 : tuning_.temper_spoils_permille[static_cast<std::size_t>(tau(*l))];
 }
 
 std::int64_t FiguresSubsystem::temper(std::int64_t civ) const {
     const Line* l = line_if(civ);
-    return l == nullptr ? -1 : l->reign.temper;
+    return l == nullptr ? -1 : tau(*l);
+}
+
+// P5-11 r2 7.7: the one place the corrupted temper enters.
+std::int64_t FiguresSubsystem::tau(const Line& l) noexcept {
+    return l.reign.corrupt_temper >= 0 ? l.reign.corrupt_temper : l.reign.temper;
+}
+
+FigureView::ReignBrief FiguresSubsystem::reign_brief(std::int64_t civ) const {
+    const Line* l = line_if(civ);
+    if (l == nullptr) {
+        return {};
+    }
+    return ReignBrief{l->reign.number, l->reign.start, l->reign.figure, l->reign.corrupt_event,
+                      l->reign.corrupt_artifact};
+}
+
+void FiguresSubsystem::corrupt_reign(StepContext& ctx, std::int64_t c, std::int64_t artifact, std::int64_t temper,
+                                     std::int64_t event) {
+    const Line* l = line_if(c);
+    if (l == nullptr || ctx.state().civ(c).ended_year || l->reign.corrupt_event != 0 ||
+        (temper != 1 && temper != 3)) {
+        fail("history: figures: corrupt_reign: civilization " + int_text(c) + " cannot be corrupted by event " +
+             int_text(event));
+    }
+    // 6.4 rule 3 (with artifact_corrupted): an unnamed reign is named by the deed.
+    if (l->reign.figure == 0 && tuning_.name_rulers) {
+        const std::int64_t f = name_reign(ctx, c, event);
+        ctx.state().open_relation(figure_civ_key(f, c, "ruled"), event);
+    }
+    Line& lw = line(c);
+    lw.reign.corrupt_temper = temper;
+    lw.reign.corrupt_event = event;
+    lw.reign.corrupt_artifact = artifact;
+    tally_of(c).corrupted = 1;  // was_corrupted, with the reign's other tallies
+}
+
+void FiguresSubsystem::lift_corruption(std::int64_t c) {
+    if (c < 1 || static_cast<std::size_t>(c) > lines_.size()) {
+        return;
+    }
+    Reign& r = lines_[static_cast<std::size_t>(c - 1)].reign;
+    r.corrupt_temper = -1;
+    r.corrupt_event = 0;
+    r.corrupt_artifact = 0;
 }
 
 std::int64_t FiguresSubsystem::split_bonus_permille(std::int64_t civ, std::int64_t year) const {
@@ -1844,6 +1888,7 @@ std::int64_t FiguresSubsystem::deed_value(const StepContext& ctx, const Figure& 
         case 9: return f.exiled ? 1 : 0;
         case 10: return f.books;
         case 11: return f.blights;
+        case 12: return f.role == RULER ? f.tally.corrupted : 0;  // P5-11 r2 4.3
         default: return 0;
     }
 }

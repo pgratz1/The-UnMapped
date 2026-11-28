@@ -193,3 +193,86 @@ Sample event lines (chronicle, refs cut):
 engine's `PantheonStats` counter is removed (nothing read it); reading 5 above no longer applies. Reading 4's
 definition of `wars_citing_artifacts` is written into spec 10 item 6; readings 2 (`rg<id>`) and 8 (the marker one glyph
 cell above a settlement) stand and are written into spec 10 item 2 and 11.1.
+
+## Part I (r2 corruption; generator engineer, 2026-11-28, branch `p5/11-spec2`)
+
+Spec r2 6.11, 7.7, 8.4, 9 (kind 117), 10 item 8; lead rulings L-12 to L-17 as recommended. Schema stays 15,
+generator stays 0.31.0 (the stage is not merged).
+
+**Built.** Stream 128 `hist.artifacts.corrupt` (`core/streams.hpp`, 128 names). `history.artifacts` gains
+`corrupt_years` 25, `corrupt_permille` 150, `corrupt_camp_permille` {good 1000, neutral 1000, evil 600},
+`corrupt_warlike_permille` 500 (schema in `src/data/kinds_history.cpp`, `ArtifactsTuning`, shipped data); the deed
+enum of `history.figures` gains `corrupted` (index 12) and the shipped epithets gain entry 3
+`{ruler, corrupted, 1, 0, "the Dark"}`; `report.toml` gains template 117. The three files are copied unchanged into
+`worldgen/tests/data/geo` and `geo-small` (both still equal to `game/data` for them). Kind 117 in
+`event_catalogue.cpp` (roles artifact, civilization, god 1-1; value `temper`). `FigureView::ReignBrief` and
+`reign_brief` (default `{}`); `FiguresSubsystem::reign_brief`, `corrupt_reign`, `lift_corruption`, the reign fields
+`corrupt_temper` (-1), `corrupt_event`, `corrupt_artifact`, `Tally::corrupted` (was_corrupted, moved to the figure
+with the reign's tallies), the private `tau(const Line&)` read by `strain_permille`, `allied_strain_permille`,
+`spoils_permille` and `temper`. The pass is `src/history/artifacts_corrupt.cpp`; `Holding::periods`. Conflict
+(`conflict.cpp`, the one `war_declared` append; the spec names `conflict_war.cpp`) cites
+`reign_brief(a).corrupt_event`. Reader checks of 117 at the end of `artifact_tables_problem` (`artifact_checks.cpp`).
+Report: the `[artifacts]` count line, `; evil[, corrupted <n>]` on an artifact line (so also in the browser's
+`artifact_block`), the full `    corrupted: ...` line after `held:`, the realm part `corrupted by`, the ruler deed
+`corrupted to <temper word> by ar<id> <name>`, five stats (digest). Browser: 117 in group 10. `schema.md`: row 117.
+
+**Order of the pass as built** (the reference mirrors it). `ArtifactsSubsystem::run`: read the log (moves, makings),
+refresh the seats, then `corruption`:
+
+1. Nothing when no figures seam is set.
+2. Lifting (every step T3, T4, T6, Q4): c = 1 .. civ count ascending, alive only (not ended; hidden realms count);
+   a = `reign_brief(c).corrupt_artifact`; when a != 0 and a's open holding is not (state 1, holder c),
+   `lift_corruption(c)`.
+3. Draws (T3 and Q4 only): c ascending, alive, `reign_brief(c).number` != 0; the ids kept by c ascending (a copy
+   of the index taken before the loop); evil ones only; for j = periods + 1, ... while t = from + j * T <= Y:
+   corrupted now -> periods = j, next j; Q4 and `quiet_events_left(c)` <= 0 -> stop c (all its artifacts, periods
+   unchanged); p = `corrupt_permille` * camp factor div 1000; u = pick(draw(key, t, a, c, j), 1000); periods = j;
+   u < p -> temper 1 when u < p * warlike div 1000, else 3; append 117 (year Y, region and settlement of `seat(c)`,
+   else home region and 0; causes holding event and `made_event` ascending, distinct); `corrupt_reign`, which names
+   an unnamed reign by the deed (ruled row opened by the event 117) when `name_rulers`.
+
+**Readings.**
+
+1. `D_at(t_j)` is `history::draw(key, word(t_j), word(a), word(c), word(j))` called directly: `StepContext::draw_at`
+   refuses a year before the step, and t_j is often before Y (a period that fell in a quiet step's (Y, Z] or between
+   T3 passes is evaluated later). Same hash as `draw_at` would give.
+2. "Alive" in both passes is `civ_alive` (not ended), as the spec writes; no visibility test (an artifact is never
+   kept by a realm created in the step).
+3. God and race camps come from `HistoryInputs::gods` and `races` (chronology wrote every god), so no pantheon seam.
+4. The lifting count and the periods evaluated are in `ArtifactsStats` only (`lifted`, `periods`, `corrupted`,
+   `corrupted_warlike`).
+5. The digest's `rulers_by_deed` (6.4 rule 3) is unchanged: it never counted P5-07's or P5-08's naming kinds either;
+   adding 117 would be a stat change the spec does not state.
+6. Report deed placement: after `a blight`, before `; bore` (both levels, as the other deeds). The count line's
+   `; evil <v>, rulers corrupted <r>` is printed always (also 0).
+7. The reader check "kept by c in year": the last holding of state 1 by c with from <= year <= to (or open) is the
+   one whose event must be cited.
+
+**For the auditor.** `artifacts_corrupt.cpp` holds no reference across `ctx.append`: the holding is re-read by
+index (`artifact(a).holdings[hi]`) after each append; the pass moves nothing, so the index is stable. Products
+`corrupt_permille x camp` (<= 10^6), `p x warlike` (<= 10^6) and `j x T` through `checked_mul`. Order: civilizations
+ascending, `held_by(KEPT, c)` copied (ascending), periods ascending. `tau()` is the only place the override enters.
+I1: with `corrupt_permille` 0, p = 0 and u < 0 never holds, so no event, no naming, no lift (nothing corrupted); the
+draws are still made but are pure. Resume: `periods` lives in the holdings, rebuilt by the replay.
+
+**Measured** (1024, `game/data`, gcc seeds 0 to 39, clang 0 to 7): world files and both report levels
+byte-identical on the 8; no generate or report error; no `=?`. Wars median 25.5, artifacts median 14. Evil artifacts:
+5 of 41 god-given (in 4 worlds: 9, 12, 23, 30); a kept evil holding in 2 worlds only (12 from 5715, 23 from 5971;
+the others are enshrined at a temple, state 6, which corrupts no one). **No `artifact_corrupted` in the 40 worlds**:
+not a defect but the pool (CR0 far below L-13's 25 worlds): seed 12 has 11 periods at p = 90 (goblins, camp evil:
+150 x 600 / 1000), seed 23 one period. Check with `corrupt_permille` 1000 (a scratch copy of `game/data`, seeds 12
+and 23): 5 events in seed 12 (tempers 3, 1, 3, 3, 3; one war cites a corruption; `the Dark` on two rulers, the third
+keeps no epithet by `epithet_repeat_max`, a fourth keeps `the Faithless`), 1 in seed 23 (in force at E), every
+reader check passed (both report levels ran). Samples (forced run):
+
+```
+5765 e1722 artifact_corrupted/50: Driz, a spear of Kraalzo the Red Banner, turned the heart of the Warrens of Geeb-Kreek under Greegkink the Dark. [causes e1622, e1644]
+5815 e1798 artifact_corrupted/50: Driz, a spear of Kraalzo the Red Banner, turned the heart of the Warrens of Geeb-Kreek under Neenk the Dark.
+5996 e1547 artifact_corrupted/50: Dreekat, an axe of Drognob the Burner of Halls, turned the heart of the Krazz-Beenk Horde under Grutch the Dark.
+5943 e1968 war_declared/70: The Warrens of Geeb-Kreek under Snirk the Faithless declared war on the Gnotkit Mob over the Thorned Grove. (Claimed since 5836.) [causes e1964, e1967]
+```
+
+For calibration: the limit is the pool, not the chance. Evil god-given artifacts are about 0.12 a world and most are
+relics enshrined at the god's temple (never kept); only arms and regalia given by an evil god and later taken into a
+realm's keeping (or kept from the first holding) are exposed. Raising `corrupt_permille` cannot reach CR0; L-13's
+floor or a wider "evil" (a new rule) is the lead's call.

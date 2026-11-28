@@ -96,6 +96,11 @@ struct ArtifactsTuning {
     std::int64_t force_max_permille = 150, hunt_max_permille = 200, claim_max_permille = 1000;
     std::int64_t burial_permille = 300, battle_take_permille = 500, sack_take_permille = 700;
     std::int64_t capture_take_permille = 500, raid_take_permille = 30, hoard_hunt_permille = 50;
+    // r2 4.3 (6.11): the period, the chance, its factor by the keeping
+    // realm's camp (good, neutral, evil) and the warlike share.
+    std::int64_t corrupt_years = 25, corrupt_permille = 150;
+    std::array<std::int64_t, 3> corrupt_camp_permille{1000, 1000, 600};
+    std::int64_t corrupt_warlike_permille = 500;
 
     friend bool operator==(const ArtifactsTuning&, const ArtifactsTuning&) = default;
 };
@@ -111,6 +116,9 @@ struct ArtifactsStats {
     std::int64_t made = 0, smiths = 0, commissioned = 0, casters = 0, gods = 0, deep = 0;
     std::array<std::int64_t, ARTIFACT_CLASS_COUNT> by_class{};
     std::int64_t taken = 0, lost = 0, hoarded = 0, recovered = 0, buried = 0, quiet_moves = 0;
+    // r2 6.11: events 117 (and those warlike), corruptions lifted by a move
+    // of the artifact, periods evaluated.
+    std::int64_t corrupted = 0, corrupted_warlike = 0, lifted = 0, periods = 0;
 };
 
 class ArtifactsSubsystem final : public Subsystem, public ArtifactView {
@@ -158,6 +166,9 @@ private:
         std::int64_t state = KEPT, holder_type = 0, holder = 0;
         std::int64_t region = 0, settlement = 0, site = 0, x = 0, y = 0;
         std::int64_t event = 0, until_event = 0;
+        // r2 5, 6.11: the periods of a kept holding evaluated so far (0 at its
+        // opening); used for holdings of state 1 of an evil artifact only.
+        std::int64_t periods = 0;
     };
     struct Artifact {
         std::int64_t id = 0;
@@ -246,6 +257,17 @@ private:
     void on_cult_suppressed(StepContext& context, std::int64_t e);
     void lose_with_realm(StepContext& context, std::int64_t e, std::int64_t c, std::int64_t a);
 
+    // r2 6.11 (artifacts_corrupt.cpp): the corruption pass at the end of a
+    // step, its lifting part, its draws, and whether an artifact is evil.
+    void corruption(StepContext& context);
+    void lift_corruptions(const StepContext& context);
+    void corruption_draws(StepContext& context);
+    // Returns false when c has no quiet-step budget left (its periods wait).
+    bool corrupt_periods(StepContext& context, std::int64_t civ, std::int64_t artifact);
+    void corrupt(StepContext& context, std::int64_t civ, std::int64_t artifact, std::int64_t temper);
+    [[nodiscard]] bool evil(const Artifact& a) const;
+    [[nodiscard]] std::int64_t civ_camp(const StepContext& context, std::int64_t civ) const;
+
     PeoplesSubsystem& peoples_;
     FiguresSubsystem* figures_ = nullptr;
     const AllianceView* alliances_ = nullptr;
@@ -253,7 +275,9 @@ private:
     ArtifactsTuning tuning_;
     std::vector<ArtifactKindDef> kinds_;  // index kind id - 1
     bool prepared_ = false;
-    std::array<std::uint64_t, 6> keys_{};
+    std::array<std::uint64_t, 7> keys_{};
+    std::vector<std::pair<std::int64_t, std::int64_t>> god_camps_;   // r2 6.11: (god id, camp), ascending
+    std::vector<std::pair<std::int64_t, std::int64_t>> race_camps_;  // (race id, camp), ascending
     std::vector<CultureData> cultures_;  // ascending culture id
     std::vector<std::pair<std::int64_t, std::int64_t>> region_seeds_;  // per region (index id - 1): (seed_x, seed_y)
     std::vector<Artifact> artifacts_;     // index id - 1

@@ -38,7 +38,7 @@ enum class EventGroup : std::uint8_t {
     alliances = 7,
     figures = 8,
     gods = 9,       // P5-08 11.1: kinds 100 to 108
-    artifacts = 10  // P5-11 11.1: kinds 111 to 116
+    artifacts = 10  // P5-11 11.1: kinds 111 to 117
 };
 inline constexpr std::uint32_t ALL_GROUPS = 0x7FF;
 

@@ -1683,6 +1683,14 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
             e.causes.erase(std::unique(e.causes.begin(), e.causes.end()), e.causes.end());
         }
     }
+    // P5-11 r2 7.7: a corrupted attacker's declaration cites the corruption.
+    if (figures_ != nullptr) {
+        if (const std::int64_t turned = figures_->reign_brief(a).corrupt_event; turned != 0) {
+            e.causes.push_back(turned);
+            std::stable_sort(e.causes.begin(), e.causes.end());
+            e.causes.erase(std::unique(e.causes.begin(), e.causes.end()), e.causes.end());
+        }
+    }
     const std::int64_t ev = ctx.append(e);
     const RelationKey peace = symmetric_relation(a, b, "peace");
     if (state.relations().count(peace) != 0) {

@@ -1697,7 +1697,7 @@ Schema history_figures_schema() {
         Field::required("role", Type::enumeration({"ruler", "claimant", "general", "hero", "caster"})),
         Field::required("deed", Type::enumeration({"founded_years", "wars_won", "conquests", "betrayals", "realm_fell",
                                                    "reign_permille", "battles_won", "battles_unbeaten", "slew_might",
-                                                   "exiled", "books", "blights"})),
+                                                   "exiled", "books", "blights", "corrupted"})),
         i("min", 1, 100000),
         i("substantial", 0, 100000),
         Field::required("text", Type::string(24, epithet_text_grammar())),
@@ -2298,6 +2298,13 @@ Schema history_artifacts_schema() {
         i("capture_take_permille", 0, 1000),
         i("raid_take_permille", 0, 1000),
         i("hoard_hunt_permille", 0, 1000),
+        // P5-11 r2 4.3: corruption by an evil artifact (6.11).
+        i("corrupt_years", 1, 10000),
+        i("corrupt_permille", 0, 1000),
+        Field::required("corrupt_camp_permille",
+                        Type::record(Schema(std::vector<Field>{i("good", 0, 1000), i("neutral", 0, 1000),
+                                                               i("evil", 0, 1000)}))),
+        i("corrupt_warlike_permille", 0, 1000),
     };
     std::vector<Check> checks{
         Check{"artifacts_occasion_kind", [](const Record& r) { return check_occasions(r, OccasionCheck::kind); }},

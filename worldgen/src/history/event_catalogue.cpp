@@ -416,6 +416,10 @@ EventCatalogue build_compiled() {
                               {"how"}, 0, {}});
     c.kinds.push_back(KindDef{116, "artifact_buried", true, 1, 2,
                               {art(), fig(2, "figure"), civ(3, "civilization")}, {}, 0, {}});
+    // P5-11 r2 8.4: kind 117, a ruler turned by an evil artifact its realm keeps.
+    c.kinds.push_back(KindDef{117, "artifact_corrupted", true, 1, 2,
+                              {art(), civ(2, "civilization"), role(3, "god", EntityType::god, 1, 1)}, {"temper"}, 0,
+                              {}});
     return c;
 }
 

@@ -30,3 +30,8 @@ sack_take_permille = 1000
 capture_take_permille = 1000
 raid_take_permille = 800
 hoard_hunt_permille = 50
+# P5-11 r2 4.3 (6.11): an evil god's artifact kept by a realm may turn its ruler.
+corrupt_years = 25
+corrupt_permille = 150
+corrupt_camp_permille = { good = 1000, neutral = 1000, evil = 600 }
+corrupt_warlike_permille = 500

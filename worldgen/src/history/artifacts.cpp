@@ -36,9 +36,10 @@ namespace {
 
 constexpr std::array<Step, 4> STEPS = {Step::t3, Step::t4, Step::t6, Step::q4};
 
-constexpr std::array<std::string_view, 6> STREAM_NAMES = {
+constexpr std::array<std::string_view, 7> STREAM_NAMES = {
     streams::hist_artifacts_make, streams::hist_artifacts_class, streams::hist_artifacts_kind,
     streams::hist_artifacts_take, streams::hist_artifacts_bury,  streams::hist_artifacts_raid,
+    streams::hist_artifacts_corrupt,
 };
 
 constexpr std::array<std::string_view, ARTIFACT_CLASS_COUNT> CLASS_KEYS = {"arms", "armour", "regalia", "relic",
@@ -105,6 +106,11 @@ ArtifactsTuning artifacts_tuning_from(const data::ContentSet& content) {
     t.capture_take_permille = r.get_int("capture_take_permille");
     t.raid_take_permille = r.get_int("raid_take_permille");
     t.hoard_hunt_permille = r.get_int("hoard_hunt_permille");
+    t.corrupt_years = r.get_int("corrupt_years");
+    t.corrupt_permille = r.get_int("corrupt_permille");
+    const data::Record& camp = r.get_record("corrupt_camp_permille");
+    t.corrupt_camp_permille = {camp.get_int("good"), camp.get_int("neutral"), camp.get_int("evil")};
+    t.corrupt_warlike_permille = r.get_int("corrupt_warlike_permille");
     return t;
 }
 
@@ -162,6 +168,15 @@ void ArtifactsSubsystem::prepare(const StepContext& ctx) {
     for (const db::RegionRow& r : in.regions) {  // id order (GeoView checks ids 1, 2, ...)
         region_seeds_.emplace_back(r.seed_x, r.seed_y);
     }
+    // r2 6.11: the camps of the gods and of the races.
+    for (const db::GodRow& g : in.gods) {
+        god_camps_.emplace_back(g.id, g.camp);
+    }
+    std::stable_sort(god_camps_.begin(), god_camps_.end());
+    for (const db::RaceRow& r : in.races) {
+        race_camps_.emplace_back(r.id, r.camp);
+    }
+    std::stable_sort(race_camps_.begin(), race_camps_.end());
     prepared_ = true;
 }
 
@@ -239,6 +254,7 @@ void ArtifactsSubsystem::run(StepContext& ctx) {
     }
     read_log(ctx);
     refresh_seats(ctx);
+    corruption(ctx);  // r2 6.1: after the seats
 }
 
 // 6.1: for each event of the log, in ascending id, its moves, then its making.

@@ -22,7 +22,8 @@ public:
     // 7.3: added to the grant of a share of spoils (0 with no reign; may be negative).
     [[nodiscard]] virtual std::int64_t spoils_permille(std::int64_t civ) const = 0;
     // P5-04a 2: the temper code of civ's current reign (0 steady, 1 warlike,
-    // 2 peaceable, 3 grasping, 4 just); -1 with no reign.
+    // 2 peaceable, 3 grasping, 4 just); -1 with no reign. P5-11 r2 7.7: the
+    // effective temper (a corruption's while it is in force).
     [[nodiscard]] virtual std::int64_t temper(std::int64_t civ) const {
         (void)civ;
         return -1;
@@ -75,6 +76,16 @@ public:
     [[nodiscard]] virtual std::int64_t caster_site(std::int64_t figure) const {
         (void)figure;
         return 0;
+    }
+    // P5-11 r2 7.7: civ's current reign (number 0: no reign) and the
+    // corruption in force on it (corrupt_* 0: none). A default for views
+    // that keep no reigns.
+    struct ReignBrief {
+        std::int64_t number = 0, start = 0, figure = 0, corrupt_event = 0, corrupt_artifact = 0;
+    };
+    [[nodiscard]] virtual ReignBrief reign_brief(std::int64_t civ) const {
+        (void)civ;
+        return {};
     }
 };
 

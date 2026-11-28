@@ -1823,6 +1823,48 @@ private:
         put("wars_citing_artifacts", wars);
         put("battles_with_artifacts", battles);
         put("battles_under_acts", under_acts);
+        // r2 10 item 8: evil artifacts and the rulers they turned.
+        const Id corrupted_kind = kind_id("artifact_corrupted");
+        std::int64_t evil = 0;
+        for (const db::ArtifactRow& a : arts) {
+            const auto g = std::lower_bound(t_.gods.begin(), t_.gods.end(), a.god,
+                                            [](const db::GodRow& r, Id x) { return r.id < x; });
+            evil += a.god != 0 && g != t_.gods.end() && g->id == a.god && g->camp == 2 ? 1 : 0;
+        }
+        std::vector<Id> turned;  // the events 117, ascending
+        std::vector<std::uint8_t> corrupting(arts.size(), 0);
+        std::int64_t warlike = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind != corrupted_kind) {
+                continue;
+            }
+            turned.push_back(e.row.id);
+            warlike += value_of(e, "temper") == 1 ? 1 : 0;
+            const Id a = role_entity(e, "artifact");
+            if (a >= 1 && static_cast<std::size_t>(a) <= corrupting.size()) {
+                corrupting[static_cast<std::size_t>(a - 1)] = 1;
+            }
+        }
+        std::int64_t n_corrupting = 0;
+        for (const std::uint8_t c : corrupting) {
+            n_corrupting += c;
+        }
+        std::int64_t wars_corrupted = 0;
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind != kinds_.war_declared) {
+                continue;
+            }
+            bool cites = false;
+            for (const Id c : e.causes) {
+                cites = cites || std::binary_search(turned.begin(), turned.end(), c);
+            }
+            wars_corrupted += cites ? 1 : 0;
+        }
+        put("artifacts_evil", evil);
+        put("rulers_corrupted", static_cast<std::int64_t>(turned.size()));
+        put("artifacts_corrupting", n_corrupting);
+        put("wars_by_corrupted", wars_corrupted);
+        put("corrupted_warlike", warlike);
     }
 
     // P5-08 10 item 8: appended at the end, in this order (full only).

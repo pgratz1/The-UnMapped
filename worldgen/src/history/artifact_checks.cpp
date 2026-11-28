@@ -308,6 +308,54 @@ std::optional<std::string> holding_rows_problem(const ArtifactTables& t, const L
     return std::nullopt;
 }
 
+// r2 9: the checks of kind 117 (artifact_corrupted), in their order, after
+// every check above. The artifact exists (the participant check).
+std::optional<std::string> one_corrupted_problem(const ArtifactTables& t, const Log& log, const db::EventRow& e) {
+    const std::string at = "corrupt table 'event': row " + text(e.id) + ": ";
+    const std::int64_t temper = log.value(e.id, "temper");
+    if (temper != 1 && temper != 3) {
+        return at + "artifact_corrupted temper " + text(temper) + " is not 1 or 3";
+    }
+    const std::int64_t a = log.role(e.id, "artifact");
+    const std::int64_t c = log.role(e.id, "civilization");
+    if (!dense_has(t.artifacts, a)) {
+        return at + "artifact_corrupted: ar" + text(a) + " is not of an evil god";
+    }
+    const db::ArtifactRow& art = t.artifacts[static_cast<std::size_t>(a - 1)];
+    const std::int64_t g = log.role(e.id, "god");
+    const auto god = std::find_if(t.gods.begin(), t.gods.end(), [g](const db::GodRow& x) { return x.id == g; });
+    if (g == 0 || g != art.god || god == t.gods.end() || god->camp != 2) {
+        return at + "artifact_corrupted: ar" + text(a) + " is not of an evil god";
+    }
+    const auto lo = std::lower_bound(t.holdings.begin(), t.holdings.end(), a,
+                                     [](const db::ArtifactHoldingRow& h, std::int64_t x) { return h.artifact < x; });
+    const db::ArtifactHoldingRow* kept = nullptr;
+    for (auto it = lo; it != t.holdings.end() && it->artifact == a; ++it) {
+        if (it->state == 1 && it->holder == c && it->from_year <= e.year && (!it->to_year || *it->to_year >= e.year)) {
+            kept = &*it;
+        }
+    }
+    if (kept == nullptr) {
+        return at + "artifact_corrupted: ar" + text(a) + " not kept by c" + text(c) + " in " + text(e.year);
+    }
+    if (!log.caused_by(e.id, kept->event) || !log.caused_by(e.id, art.made_event)) {
+        return at + "artifact_corrupted: ar" + text(a) + " does not cite its holding and making";
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> corrupted_problem(const ArtifactTables& t, const Log& log) {
+    for (const db::EventRow& e : t.events) {
+        if (log.key(e.id) != "artifact_corrupted") {
+            continue;
+        }
+        if (std::optional<std::string> why = one_corrupted_problem(t, log, e)) {
+            return why;
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<std::string> event_problem(const ArtifactTables& t, const Log& log) {
     for (const db::FigureRow& f : t.figures) {
         if (f.role == 8 && !(log.key(f.start_event) == "artifact_made" && log.role(f.start_event, "maker") == f.id)) {
@@ -361,7 +409,7 @@ std::optional<std::string> event_problem(const ArtifactTables& t, const Log& log
                    text(p.entity_id) + " does not exist";
         }
     }
-    return std::nullopt;
+    return corrupted_problem(t, log);
 }
 
 }  // namespace

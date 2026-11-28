@@ -41,6 +41,7 @@ regnal_max = 9
 epithets = [
   { role = "ruler", deed = "conquests", min = 1, substantial = 2, text = "the Conqueror" },
   { role = "ruler", deed = "betrayals", min = 1, substantial = 1, text = "the Faithless" },
+  { role = "ruler", deed = "corrupted", min = 1, substantial = 0, text = "the Dark" },
   { role = "ruler", deed = "realm_fell", min = 1, substantial = 0, text = "the Last" },
   { role = "ruler", deed = "wars_won", min = 2, substantial = 4, text = "the Victorious" },
   { role = "ruler", deed = "reign_permille", min = 1400, substantial = 1480, text = "the Old" },

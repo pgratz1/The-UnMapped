@@ -120,4 +120,6 @@ events = [
   { kind = "artifact_hoarded", salience = 50, template = "{@causes:hero_slain=the death of its bearer,monster_raid=a raid,hold_lost=the fall of a hold|After |, }{monster} carried {artifact}, {artifact:kind}, off from {civilization} to its hoard." },
   { kind = "artifact_recovered", salience = 50, template = "{@causes:monster_slain_by_hero=the slaying of its keeper,monster_slain=the slaying of its keeper,peace=a war won,war_won=a war won|After |, }{civilization} recovered {artifact}, {artifact:kind}{how?|, from the hoard of |, from }{monster:all}{from:all}." },
   { kind = "artifact_buried", salience = 25, template = "{artifact}, {artifact:kind}, was laid in the grave of {figure} of {civilization}." },
+  # P5-11 r2 8.4: kind 117.
+  { kind = "artifact_corrupted", salience = 50, template = "{artifact}, {artifact:kind} of {god:titled}, turned the heart of {civilization}{civilization:under}{temper?|| to war|| to greed}." },
 ]

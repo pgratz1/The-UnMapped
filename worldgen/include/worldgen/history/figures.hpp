@@ -48,7 +48,7 @@ inline constexpr std::size_t TEMPERS = 5;
 // One entry of history.figures.epithets (4.4, 6.10).
 struct EpithetRule {
     std::int64_t role = 1;   // 1 ruler ... 5 caster
-    std::int64_t deed = 0;   // index into the deed enum of 6.10 (0 founded_years ... 11 blights)
+    std::int64_t deed = 0;   // index into the deed enum of 6.10 (0 founded_years ... 11 blights, 12 corrupted)
     std::int64_t min = 1;
     std::int64_t substantial = 0;
     std::string text;        // an epithet or {slayer}
@@ -152,6 +152,16 @@ public:
     // role 8 (smith: smith ages, no epithet) for civ, start_event `event`
     // (its artifact_made), with its name and life.
     void raise_maker(StepContext& context, std::int64_t figure, std::int64_t civ, std::int64_t event);
+    // P5-11 r2 7.7 (for ArtifactsSubsystem only).
+    [[nodiscard]] ReignBrief reign_brief(std::int64_t civ) const override;
+    // The reign of civ is corrupted by `artifact` to `temper` (1 or 3) with
+    // its artifact_corrupted `event`; an unnamed reign is named by the deed
+    // (6.4 rule 3) when name_rulers is true. Fatal when civ has no reign, has
+    // ended or is corrupted already, or temper is not 1 or 3.
+    void corrupt_reign(StepContext& context, std::int64_t civ, std::int64_t artifact, std::int64_t temper,
+                       std::int64_t event);
+    // Ends the corruption in force on civ's reign (no event); the deed stays.
+    void lift_corruption(std::int64_t civ);
 
     // The rows of tables figure and book (9.1, 9.3), ascending id.
     [[nodiscard]] std::vector<db::FigureRow> figure_rows() const;
@@ -165,6 +175,7 @@ public:
 private:
     struct Tally {
         std::int64_t wars_declared = 0, wars_won = 0, conquests = 0, betrayals = 0;
+        std::int64_t corrupted = 0;  // P5-11 r2 7.7: was_corrupted (0 or 1), the deed `corrupted`
     };
     struct Figure {
         std::int64_t id = 0;
@@ -192,6 +203,8 @@ private:
     struct Reign {
         std::int64_t number = 0, start = 0, end = 0, temper = 0, age = 0, figure = 0;
         Tally tally;
+        // P5-11 r2 7.7: the corruption in force (temper -1: none).
+        std::int64_t corrupt_temper = -1, corrupt_event = 0, corrupt_artifact = 0;
     };
     struct Line {
         bool has = false;
@@ -243,6 +256,8 @@ private:
     [[nodiscard]] const Line* line_if(std::int64_t civ) const;
     [[nodiscard]] bool alive_visible(const StepContext& context, std::int64_t civ) const;
     [[nodiscard]] Tally& tally_of(std::int64_t civ);
+    // P5-11 r2 7.7: the effective temper of a line's reign.
+    [[nodiscard]] static std::int64_t tau(const Line& line) noexcept;
 
     // 6.2.
     void read_log(StepContext& context);

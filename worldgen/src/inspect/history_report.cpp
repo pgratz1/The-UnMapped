@@ -210,6 +210,51 @@ std::vector<const db::FigureRow*> rulers_of(const history::HistoryTables& t, Id 
     return out;
 }
 
+// P5-11 r2 10 item 8: an event 117 (artifact_corrupted), read by the
+// catalogue's roles and value.
+struct Corruption {
+    Id event = 0, year = 0, artifact = 0, civ = 0, temper = 0;
+};
+
+// Every event 117, ascending id.
+std::vector<Corruption> corruptions(const HistoryView& v) {
+    std::vector<Corruption> out;
+    const history::KindDef* k = v.catalogue().find("artifact_corrupted");
+    const history::RoleDef* ra = k != nullptr ? k->find_role("artifact") : nullptr;
+    const history::RoleDef* rc = k != nullptr ? k->find_role("civilization") : nullptr;
+    if (ra == nullptr || rc == nullptr) {
+        return out;
+    }
+    const std::int64_t ts = k->value_seq("temper");
+    for (const HistoryView::Event& e : v.events()) {
+        if (e.row.kind != k->id) {
+            continue;
+        }
+        Corruption c;
+        c.event = e.row.id;
+        c.year = e.row.year;
+        for (const db::EventParticipantRow& p : e.participants) {
+            c.artifact = p.role == ra->seq ? p.entity_id : c.artifact;
+            c.civ = p.role == rc->seq ? p.entity_id : c.civ;
+        }
+        if (ts >= 1 && static_cast<std::size_t>(ts) <= e.values.size()) {
+            c.temper = e.values[static_cast<std::size_t>(ts - 1)];
+        }
+        out.push_back(c);
+    }
+    return out;
+}
+
+// 6.11: an artifact is evil when its god is of camp 2.
+bool evil_artifact(const history::HistoryTables& t, const db::ArtifactRow& a) {
+    if (a.god == 0) {
+        return false;
+    }
+    const auto g = std::lower_bound(t.gods.begin(), t.gods.end(), a.god,
+                                    [](const db::GodRow& r, Id x) { return r.id < x; });
+    return g != t.gods.end() && g->id == a.god && g->camp == 2;
+}
+
 // P5-06 10.2: a figure's line of [figures], without its two leading spaces.
 // P5-04a 21.5 item 4 (L-3): `reign_number` false (the summary's [figures])
 // leaves out "reign <n>".
@@ -264,6 +309,17 @@ BlockLine figure_line(const HistoryView& v, const history::HistoryTables& t, con
     if (g.blight) {
         deed();
         l.push_back(lit("a blight"));
+    }
+    // r2 10 item 8: the corruptions of its reign (it is the recorded ruler of
+    // the ruled row open at the event).
+    if (f.role == 1) {
+        for (const Corruption& x : corruptions(v)) {
+            if (x.civ == f.civ && v.ruler_at_event(x.civ, x.event) == f.id) {
+                deed();
+                l.push_back(lit("corrupted to " + std::string(history::figure_temper_word(x.temper)) + " by "));
+                l.push_back(Segment{SegmentKind::entity, std::string(), 10, x.artifact});
+            }
+        }
     }
     // P5-11 10 item 4 (full): every artifact it bore, and a smith's making.
     if (reign_number) {
@@ -757,7 +813,33 @@ BlockLine artifact_line(const HistoryView& v, const history::HistoryTables& t, c
     }
     l.push_back(lit(" since " + num(h->from_year) + " "));
     l.push_back(event_ref(h->event));
+    // r2 10 item 8: "; evil[, corrupted <n>]".
+    if (evil_artifact(t, a)) {
+        std::int64_t n = 0;
+        for (const Corruption& x : corruptions(v)) {
+            n += x.artifact == a.id ? 1 : 0;
+        }
+        l.push_back(lit(n > 0 ? "; evil, corrupted " + num(n) : std::string("; evil")));
+    }
     return l;
+}
+
+// r2 10 item 8 (full): "corrupted: <year> c<id> <name> e<id>[; ...]"; empty
+// when the artifact turned no one.
+BlockLine corrupted_line(const HistoryView& v, Id a) {
+    BlockLine l{lit("corrupted: ")};
+    bool first = true;
+    for (const Corruption& x : corruptions(v)) {
+        if (x.artifact != a) {
+            continue;
+        }
+        l.push_back(lit(std::string(first ? "" : "; ") + num(x.year) + " "));
+        first = false;
+        l.push_back(named(v, 3, x.civ));
+        l.push_back(lit(" "));
+        l.push_back(event_ref(x.event));
+    }
+    return first ? BlockLine{} : l;
 }
 
 // 10 item 2 (full): "held: <from> <state words> <ref> e<id>[; ...]".
@@ -783,7 +865,12 @@ BlockLine realm_artifacts_line(const HistoryView& v, const history::HistoryTable
     struct Item {
         Id artifact = 0, event = 0;
     };
-    std::array<std::vector<Item>, 3> parts;
+    std::array<std::vector<Item>, 4> parts;
+    for (const Corruption& x : corruptions(v)) {  // r2 10 item 8: corrupted by
+        if (x.civ == c.id) {
+            parts[3].push_back(Item{x.artifact, x.event});
+        }
+    }
     for (const db::ArtifactRow& a : t.artifacts) {
         if (a.civ == c.id) {
             parts[0].push_back(Item{a.id, a.made_event});
@@ -811,7 +898,8 @@ BlockLine realm_artifacts_line(const HistoryView& v, const history::HistoryTable
     }
     BlockLine l{lit("  artifacts: ")};
     bool first = true;
-    static constexpr std::array<std::string_view, 3> HEADS = {"made for it ", "holds ", "taken from it "};
+    static constexpr std::array<std::string_view, 4> HEADS = {"made for it ", "holds ", "taken from it ",
+                                                              "corrupted by "};
     for (std::size_t i = 0; i < parts.size(); ++i) {
         if (parts[i].empty()) {
             continue;
@@ -2538,7 +2626,7 @@ private:
         line("[artifacts]");
         std::array<std::int64_t, 7> by_state{};
         std::array<std::int64_t, 5> by_maker{};
-        std::int64_t deep = 0;
+        std::int64_t deep = 0, evil = 0;
         for (const db::ArtifactRow& a : t_.artifacts) {
             if (a.status >= 1 && a.status <= 6) {
                 ++by_state[static_cast<std::size_t>(a.status)];
@@ -2547,6 +2635,7 @@ private:
                 ++by_maker[static_cast<std::size_t>(a.maker_kind)];
             }
             deep += a.deep == 1 ? 1 : 0;
+            evil += evil_artifact(t_, a) ? 1 : 0;
         }
         std::int64_t changed = 0;
         for (const auto& [key, value] : d_.stats) {
@@ -2557,7 +2646,8 @@ private:
              ", buried " + num(by_state[5]) + ", enshrined " + num(by_state[6]) + "); made by smiths " +
              num(by_maker[1] + by_maker[2]) + " (for other realms " + num(by_maker[2]) + "), casters " +
              num(by_maker[3]) + ", gods " + num(by_maker[4]) + "; of deep iron " + num(deep) + "; changed hands " +
-             num(changed));
+             num(changed) + "; evil " + num(evil) + ", rulers corrupted " +
+             num(static_cast<std::int64_t>(corruptions(v_).size())));
         std::vector<const db::ArtifactRow*> shown;
         for (const db::ArtifactRow& a : t_.artifacts) {
             shown.push_back(&a);
@@ -2579,6 +2669,9 @@ private:
             line("  " + block_line_report_text(v_, artifact_line(v_, t_, *a)));
             if (full) {
                 line("    " + block_line_report_text(v_, held_line(v_, t_, a->id)));
+                if (const BlockLine c = corrupted_line(v_, a->id); !c.empty()) {
+                    line("    " + block_line_report_text(v_, c));
+                }
             }
         }
         if (more > 0) {
