@@ -4,6 +4,7 @@
 // in kinds.cpp.
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
@@ -1129,6 +1130,8 @@ Schema culture_naming_schema() {
         Field::required("sanctum_forms", god_forms()),
         Field::required("sacred_forms", god_forms()),
         Field::required("profane_forms", god_forms()),
+        // P5-11 4.2 (generator 0.31.0).
+        Field::required("artifact_forms", Type::array(Type::string(48, artifact_form_string_grammar()), 1, 8)),
     });
 }
 
@@ -1743,6 +1746,9 @@ Schema history_figures_schema() {
         i("hero_return_years", 1, 100000),
         // P5-08 12.6 (generator 0.30.0).
         i("tower_lapse_years", 0, 10000),
+        // P5-11 4.3 (generator 0.31.0): a smith's age at entry.
+        i("smith_age_permille", 0, 1000),
+        i("smith_age_span_permille", 0, 1000),
     };
     std::vector<Check> checks{
         Check{"figures_skill_ordered",
@@ -2066,6 +2072,7 @@ Schema history_pantheon_schema() {
         i("hide_permille", 0, 1000),
         i("sanctum_hops", 0, 8),
         Field::required("creator", Type::record(Schema(god_act_fields(), god_act_checks()))),
+        i("cult_return_years", 0, 10000),  // P5-11 12.2 (generator 0.31.0)
     };
     std::vector<Check> checks{
         Check{"pantheon_flare_above_act",
@@ -2084,6 +2091,220 @@ Schema history_pantheon_schema() {
                   }
                   return std::nullopt;
               }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+// --- artifact and history.artifacts (P5-11 4.1 to 4.4) --------------------------------
+
+namespace {
+
+constexpr std::string_view TITLE_PLACEHOLDER = "{title}";
+
+// 4.2 artifact_form: name_form's grammar with {root} exactly once and
+// {title} at most once.
+bool is_valid_artifact_form(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    std::size_t roots = 0;
+    std::size_t titles = 0;
+    std::size_t i = 0;
+    while (i < text.size()) {
+        const char c = text[i];
+        if (c == '{') {
+            if (text.substr(i, ROOT_PLACEHOLDER.size()) == ROOT_PLACEHOLDER) {
+                ++roots;
+                i += ROOT_PLACEHOLDER.size();
+                continue;
+            }
+            if (text.substr(i, TITLE_PLACEHOLDER.size()) == TITLE_PLACEHOLDER) {
+                ++titles;
+                i += TITLE_PLACEHOLDER.size();
+                continue;
+            }
+            return false;
+        }
+        if (c == ' ') {
+            if (i + 1 < text.size() && text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!is_ascii_letter(c) && !is_separator(c)) {
+            return false;
+        }
+        ++i;
+    }
+    return roots == 1 && titles <= 1;
+}
+
+// 4.1 artifact_word: ASCII letters and -, starting with an upper-case letter.
+bool is_valid_artifact_word(std::string_view text) noexcept {
+    if (text.empty() || !(text.front() >= 'A' && text.front() <= 'Z')) {
+        return false;
+    }
+    return std::all_of(text.begin(), text.end(), [](char c) { return is_ascii_letter(c) || c == '-'; });
+}
+
+// 4.1 artifact_noun: lower-case ASCII letters and single spaces.
+bool is_valid_artifact_noun(std::string_view text) noexcept {
+    if (text.empty() || text.front() == ' ' || text.back() == ' ') {
+        return false;
+    }
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == ' ') {
+            if (text[i + 1] == ' ') {
+                return false;
+            }
+        } else if (!(c >= 'a' && c <= 'z')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+StringGrammar artifact_word_grammar() noexcept {
+    return StringGrammar{"an artifact word (ASCII letters and -, starting with an upper-case letter)",
+                         &is_valid_artifact_word};
+}
+
+StringGrammar artifact_noun_grammar() noexcept {
+    return StringGrammar{"an artifact noun (lower-case letters and single spaces)", &is_valid_artifact_noun};
+}
+
+constexpr std::array<std::string_view, 5> ARTIFACT_CLASSES = {"arms", "armour", "regalia", "relic", "staff"};
+
+// 4.4 artifacts_occasion_*: the first failing occasion of the check.
+enum class OccasionCheck : std::uint8_t { kind, role, bearer, classes };
+
+std::optional<std::string> check_occasions(const Record& r, OccasionCheck which) {
+    const std::vector<Value>& list = r.get_array("occasions");
+    const history::EventCatalogue& catalogue = history::compiled_event_catalogue();
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        const Record& o = list[i].as_record();
+        const std::string at = "occasions[" + uint_text(i) + "]: ";
+        const std::string& k = o.get_string("kind");
+        const history::KindDef* kind = catalogue.find(k);
+        const std::string& role = o.get_string("role");
+        const std::string& bearer = o.get_string("bearer");
+        switch (which) {
+            case OccasionCheck::kind:
+                if (kind == nullptr) {
+                    return at + "kind " + k + " is unknown";
+                }
+                break;
+            case OccasionCheck::role:
+                if (kind != nullptr && !civ_role_of(*kind, role)) {
+                    return at + "role " + role + " of " + k + " is not a civilization role";
+                }
+                break;
+            case OccasionCheck::bearer: {
+                if (bearer == "general" && k != "war_declared") {
+                    return at + "bearer general needs war_declared";
+                }
+                const bool figure = bearer == "figure";
+                if (kind != nullptr && (figure || bearer == "site")) {
+                    const history::EntityType want = figure ? history::EntityType::figure : history::EntityType::site;
+                    const bool has = std::any_of(kind->roles.begin(), kind->roles.end(),
+                                                 [want](const history::RoleDef& d) { return d.type == want; });
+                    if (!has) {
+                        return at + "bearer " + bearer + " needs a " + (figure ? "figure" : "site") + " role in " + k;
+                    }
+                }
+                break;
+            }
+            case OccasionCheck::classes: {
+                const Record& w = o.get_record("classes");
+                bool any = false;
+                for (const std::string_view c : ARTIFACT_CLASSES) {
+                    any = any || w.get_int(c) != 0;
+                }
+                if (!any) {
+                    return at + "class weights must not all be 0";
+                }
+                break;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+}  // namespace
+
+StringGrammar artifact_form_string_grammar() noexcept {
+    return StringGrammar{"an artifact form (letters, spaces, ' and -, with exactly one {root} and at most one {title})",
+                         &is_valid_artifact_form};
+}
+
+Schema artifact_schema() {
+    std::vector<Field> fields{
+        Field::required("class", Type::enumeration({"arms", "armour", "regalia", "relic", "staff"})),
+        Field::required("title", Type::string(16, artifact_word_grammar())),
+        Field::required("noun", Type::string(16, artifact_noun_grammar())),
+        Field::required("weight", Type::integer(1, 1000)),
+        Field::required("battle_permille", Type::integer(0, 500)),
+        Field::required("hunt_permille", Type::integer(0, 1000)),
+        Field::required("claim_permille", Type::integer(0, 1000)),
+    };
+    std::vector<Check> checks{
+        Check{"artifact_battle_class",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::string& c = r.get_string("class");
+                  if (r.get_int("battle_permille") > 0 && c != "arms" && c != "armour") {
+                      return std::string("battle_permille needs arms or armour");
+                  }
+                  return std::nullopt;
+              }},
+        Check{"artifact_hunt_class",
+              [](const Record& r) -> std::optional<std::string> {
+                  const std::string& c = r.get_string("class");
+                  if (r.get_int("hunt_permille") > 0 && (c == "regalia" || c == "relic")) {
+                      return std::string("hunt_permille must be 0 for regalia and relics");
+                  }
+                  return std::nullopt;
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+Schema history_artifacts_schema() {
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    std::vector<Field> classes;
+    for (const std::string_view c : ARTIFACT_CLASSES) {
+        classes.push_back(Field::required(std::string(c), Type::integer(0, 1000)));
+    }
+    const Schema occasion(std::vector<Field>{
+        Field::required("kind", Type::string(32)),
+        Field::required("role", Type::string(32)),
+        Field::required("chance_permille", Type::integer(0, 1000)),
+        Field::required("bearer", Type::enumeration({"realm", "general", "figure", "site"})),
+        Field::required("classes", Type::record(Schema(std::move(classes)))),
+    });
+    std::vector<Field> fields{
+        Field::required("occasions", Type::array(Type::record(occasion), 0, 32)),
+        i("forge_chance_permille", 0, 4000),
+        i("realm_rest_years", 0, 10000),
+        i("world_max", 0, 1000),
+        i("deep_metal_depth", 1, 3),
+        i("deep_metal_permille", 0, 500),
+        i("force_max_permille", 0, 1000),
+        i("hunt_max_permille", 0, 2000),
+        i("claim_max_permille", 0, 4000),
+        i("burial_permille", 0, 1000),
+        i("battle_take_permille", 0, 1000),
+        i("sack_take_permille", 0, 1000),
+        i("capture_take_permille", 0, 1000),
+        i("raid_take_permille", 0, 1000),
+        i("hoard_hunt_permille", 0, 1000),
+    };
+    std::vector<Check> checks{
+        Check{"artifacts_occasion_kind", [](const Record& r) { return check_occasions(r, OccasionCheck::kind); }},
+        Check{"artifacts_occasion_role", [](const Record& r) { return check_occasions(r, OccasionCheck::role); }},
+        Check{"artifacts_occasion_bearer", [](const Record& r) { return check_occasions(r, OccasionCheck::bearer); }},
+        Check{"artifacts_occasion_classes",
+              [](const Record& r) { return check_occasions(r, OccasionCheck::classes); }},
     };
     return Schema(std::move(fields), std::move(checks));
 }

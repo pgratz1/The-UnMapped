@@ -191,8 +191,16 @@ inline constexpr std::string_view hist_pantheon_suppress = "hist.pantheon.suppre
 inline constexpr std::string_view hist_pantheon_hide = "hist.pantheon.hide";
 inline constexpr std::string_view hist_deep_stir = "hist.deep.stir";
 inline constexpr std::string_view hist_deep_warren_stir = "hist.deep.warren_stir";
+// P5-11 3 (generator 0.31.0): the artifacts and their names.
+inline constexpr std::string_view hist_artifacts_make = "hist.artifacts.make";
+inline constexpr std::string_view hist_artifacts_class = "hist.artifacts.class";
+inline constexpr std::string_view hist_artifacts_kind = "hist.artifacts.kind";
+inline constexpr std::string_view hist_artifacts_take = "hist.artifacts.take";
+inline constexpr std::string_view hist_artifacts_bury = "hist.artifacts.bury";
+inline constexpr std::string_view hist_artifacts_raid = "hist.artifacts.raid";
+inline constexpr std::string_view hist_names_artifact = "hist.names.artifact";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 120> all_stream_names = {
+inline constexpr std::array<std::string_view, 127> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -313,6 +321,13 @@ inline constexpr std::array<std::string_view, 120> all_stream_names = {
     hist_pantheon_hide,
     hist_deep_stir,
     hist_deep_warren_stir,
+    hist_artifacts_make,
+    hist_artifacts_class,
+    hist_artifacts_kind,
+    hist_artifacts_take,
+    hist_artifacts_bury,
+    hist_artifacts_raid,
+    hist_names_artifact,
 };
 
 }  // namespace worldgen::streams

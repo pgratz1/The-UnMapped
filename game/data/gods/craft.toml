@@ -15,4 +15,5 @@ deeds = [
     { kind = "arms_sold", role = "seller", points = 10, who = "any", against = "" },
     { kind = "deep_sealed", role = "civilization", points = 30, who = "any", against = "" },
     { kind = "deep_woken", role = "civilization", points = -40, who = "any", against = "" },
+    { kind = "artifact_made", role = "maker_realm", points = 20, who = "any", against = "" },
 ]

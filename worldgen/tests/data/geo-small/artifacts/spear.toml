@@ -1,0 +1,9 @@
+# P5-11 4.1 (generator 0.31.0): a kind of artifact.
+[artifact.spear]
+class = "arms"
+title = "Spear"
+noun = "spear"
+weight = 250
+battle_permille = 40
+hunt_permille = 80
+claim_permille = 100

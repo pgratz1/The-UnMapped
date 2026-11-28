@@ -620,6 +620,7 @@ KindRegistry builtin_kinds() {
     Kind history = Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
                                         {
                                             IdSchema{std::string(HISTORY_ALLIANCES_ID), history_alliances_schema()},
+                                            IdSchema{std::string(HISTORY_ARTIFACTS_ID), history_artifacts_schema()},
                                             IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
                                             IdSchema{std::string(HISTORY_CONFLICT_ID), history_conflict_schema()},
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
@@ -649,6 +650,9 @@ KindRegistry builtin_kinds() {
     // P5-08 4.1 (generator 0.30.0): kind god, required, open ids; its
     // directory may hold no definition.
     registry.add(Kind{std::string(GOD_KIND), std::string(GOD_DIRECTORY), true, god_schema()});
+    // P5-11 4.1 (generator 0.31.0): kind artifact, required, open ids; its
+    // directory may hold no definition.
+    registry.add(Kind{std::string(ARTIFACT_KIND), std::string(ARTIFACT_DIRECTORY), true, artifact_schema()});
     return registry;
 }
 

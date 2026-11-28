@@ -1,0 +1,30 @@
+# P5-11 4.3 (generator 0.31.0): the artifacts. What occasions a making (4.4),
+# the forge's factor, the rest between makings, the world's cap, deep metal,
+# the caps of the effects and the chances of the moves (6.7).
+[history.artifacts]
+occasions = [
+    { kind = "war_declared", role = "defender", chance_permille = 60, bearer = "general", classes = { arms = 500, armour = 300, regalia = 0, relic = 0, staff = 200 } },
+    { kind = "war_declared", role = "attacker", chance_permille = 30, bearer = "general", classes = { arms = 600, armour = 300, regalia = 0, relic = 0, staff = 100 } },
+    { kind = "sacked", role = "defender", chance_permille = 100, bearer = "realm", classes = { arms = 600, armour = 200, regalia = 0, relic = 0, staff = 200 } },
+    { kind = "civ_conquered", role = "conqueror", chance_permille = 200, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 0 } },
+    { kind = "succession_disputed", role = "civilization", chance_permille = 120, bearer = "realm", classes = { arms = 0, armour = 0, regalia = 1000, relic = 0, staff = 0 } },
+    { kind = "hero_rose", role = "civilization", chance_permille = 150, bearer = "figure", classes = { arms = 700, armour = 300, regalia = 0, relic = 0, staff = 0 } },
+    { kind = "settlement_overrun", role = "civilization", chance_permille = 150, bearer = "realm", classes = { arms = 700, armour = 0, regalia = 0, relic = 0, staff = 300 } },
+    { kind = "deep_woken", role = "civilization", chance_permille = 400, bearer = "realm", classes = { arms = 600, armour = 0, regalia = 0, relic = 0, staff = 400 } },
+    { kind = "divine_champion", role = "civilization", chance_permille = 500, bearer = "figure", classes = { arms = 600, armour = 400, regalia = 0, relic = 0, staff = 0 } },
+    { kind = "cult_founded", role = "civilization", chance_permille = 300, bearer = "site", classes = { arms = 0, armour = 0, regalia = 0, relic = 1000, staff = 0 } },
+]
+forge_chance_permille = 2000
+realm_rest_years = 50
+world_max = 40
+deep_metal_depth = 3
+deep_metal_permille = 30
+force_max_permille = 150
+hunt_max_permille = 200
+claim_max_permille = 1000
+burial_permille = 300
+battle_take_permille = 500
+sack_take_permille = 700
+capture_take_permille = 500
+raid_take_permille = 30
+hoard_hunt_permille = 50

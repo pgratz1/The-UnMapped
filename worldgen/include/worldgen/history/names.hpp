@@ -46,6 +46,10 @@ struct CultureNaming {
     std::vector<std::string> library_forms;
     std::vector<std::string> book_titles;
     std::int64_t regnal_permille = 0;
+    // P5-11 4.2 (generator 0.31.0): the artifact forms as stored ({title} at
+    // most once). The artifacts subsystem names with a copy whose forms have
+    // {title} replaced by the kind's title.
+    std::vector<std::string> artifact_forms;
 };
 
 // Reads the naming record of a culture (the value of its `naming` field,
@@ -61,9 +65,10 @@ enum class NameKind : std::uint8_t {
     monster,  // P5-02 9.1
     site,
     person,  // P5-06 6.11
+    artifact,  // P5-11 6.6
 };
 
-// "god", "civilization", "settlement", "monster", "site" or "person".
+// "god", "civilization", "settlement", "monster", "site", "person" or "artifact".
 [[nodiscard]] std::string_view name_kind_text(NameKind kind) noexcept;
 
 // The stream name of a kind: hist.names.<kind> (P3-02 4.5).

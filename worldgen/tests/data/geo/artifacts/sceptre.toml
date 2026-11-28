@@ -1,0 +1,9 @@
+# P5-11 4.1 (generator 0.31.0): a kind of artifact.
+[artifact.sceptre]
+class = "regalia"
+title = "Sceptre"
+noun = "sceptre"
+weight = 300
+battle_permille = 0
+hunt_permille = 0
+claim_permille = 400

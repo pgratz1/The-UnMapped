@@ -253,5 +253,10 @@ private:
 [[nodiscard]] Result<std::vector<BookRow>> read_book_rows(const WorldReader& world);
 // Schema 14 (P5-08 9): table faction, in primary-key order.
 [[nodiscard]] Result<std::vector<FactionRow>> read_faction_rows(const WorldReader& world);
+// Schema 15 (P5-11 9): tables artifact_kind, artifact, artifact_holding, in
+// primary-key order.
+[[nodiscard]] Result<std::vector<ArtifactKindRow>> read_artifact_kind_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<ArtifactRow>> read_artifact_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<ArtifactHoldingRow>> read_artifact_holding_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

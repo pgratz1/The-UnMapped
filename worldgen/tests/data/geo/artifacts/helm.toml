@@ -1,0 +1,9 @@
+# P5-11 4.1 (generator 0.31.0): a kind of artifact.
+[artifact.helm]
+class = "armour"
+title = "Helm"
+noun = "helm"
+weight = 300
+battle_permille = 30
+hunt_permille = 30
+claim_permille = 100

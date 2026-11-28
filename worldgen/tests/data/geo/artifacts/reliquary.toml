@@ -1,0 +1,9 @@
+# P5-11 4.1 (generator 0.31.0): a kind of artifact.
+[artifact.reliquary]
+class = "relic"
+title = "Reliquary"
+noun = "reliquary"
+weight = 400
+battle_permille = 0
+hunt_permille = 0
+claim_permille = 300

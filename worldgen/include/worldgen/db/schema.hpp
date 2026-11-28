@@ -25,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 14;
+inline constexpr std::int64_t SCHEMA_VERSION = 15;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -287,14 +287,37 @@ inline constexpr std::string_view DDL_FACTION =
     "status INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view FACTION_TABLE = "faction";
 
+// DDL of the tables of P5-11 9 (schema version 15), executed after faction:
+// the artifact kinds (one row per artifact definition), the artifacts
+// (ascending id) and their holdings ((artifact, seq) ascending; to_year NULL
+// for the open holding), written by the history stage, empty when it did not
+// run (artifact_kind is written whenever the history stage runs).
+inline constexpr std::string_view DDL_ARTIFACT_KIND =
+    "CREATE TABLE artifact_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, title TEXT NOT NULL, noun TEXT "
+    "NOT NULL, class INTEGER NOT NULL, battle_permille INTEGER NOT NULL, hunt_permille INTEGER NOT NULL, "
+    "claim_permille INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_ARTIFACT =
+    "CREATE TABLE artifact (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, civ INTEGER NOT NULL, "
+    "maker_kind INTEGER NOT NULL, maker INTEGER NOT NULL, god INTEGER NOT NULL, maker_civ INTEGER NOT NULL, "
+    "maker_site INTEGER NOT NULL, made_year INTEGER NOT NULL, made_event INTEGER NOT NULL, occasion_event INTEGER "
+    "NOT NULL, deep INTEGER NOT NULL, status INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_ARTIFACT_HOLDING =
+    "CREATE TABLE artifact_holding (artifact INTEGER NOT NULL, seq INTEGER NOT NULL, from_year INTEGER NOT NULL, "
+    "to_year INTEGER, state INTEGER NOT NULL, holder_type INTEGER NOT NULL, holder INTEGER NOT NULL, region INTEGER "
+    "NOT NULL, settlement INTEGER NOT NULL, site INTEGER NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, event "
+    "INTEGER NOT NULL, until_event INTEGER NOT NULL, PRIMARY KEY (artifact, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view ARTIFACT_KIND_TABLE = "artifact_kind";
+inline constexpr std::string_view ARTIFACT_TABLE = "artifact";
+inline constexpr std::string_view ARTIFACT_HOLDING_TABLE = "artifact_holding";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
 // schema 7: meta, layer, pass, biome, climate, region, region_border,
 // region_biome, race, race_biome, culture, god, age, then the thirteen
 // history tables of P3-04 9.1; schema 8: then region_name; schema 9: then
 // beast, monster_kind, beast_population, monster, site; schema 10: then
 // race_relation, settlement_race; schema 12: then figure, book; schema 14:
-// then faction).
-inline constexpr std::array<std::string_view, 37> DDL_STATEMENTS = {
+// then faction; schema 15: then artifact_kind, artifact, artifact_holding).
+inline constexpr std::array<std::string_view, 40> DDL_STATEMENTS = {
     DDL_META,           DDL_LAYER,           DDL_PASS,
     DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
     DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
@@ -307,7 +330,8 @@ inline constexpr std::array<std::string_view, 37> DDL_STATEMENTS = {
     DDL_BEAST,          DDL_MONSTER_KIND,    DDL_BEAST_POPULATION,
     DDL_MONSTER,        DDL_SITE,            DDL_RACE_RELATION,
     DDL_SETTLEMENT_RACE, DDL_FIGURE,         DDL_BOOK,
-    DDL_FACTION};
+    DDL_FACTION,        DDL_ARTIFACT_KIND,   DDL_ARTIFACT,
+    DDL_ARTIFACT_HOLDING};
 
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------

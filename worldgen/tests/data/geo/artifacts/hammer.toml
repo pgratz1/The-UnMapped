@@ -1,0 +1,9 @@
+# P5-11 4.1 (generator 0.31.0): a kind of artifact.
+[artifact.hammer]
+class = "arms"
+title = "Hammer"
+noun = "hammer"
+weight = 200
+battle_permille = 40
+hunt_permille = 60
+claim_permille = 100

@@ -157,6 +157,9 @@ public:
     void write_figure(const db::FigureRow& row);  // schema 12 (P5-06)
     void write_book(const db::BookRow& row);
     void write_faction(const db::FactionRow& row);  // schema 14 (P5-08)
+    void write_artifact_kind(const db::ArtifactKindRow& row);  // schema 15 (P5-11)
+    void write_artifact(const db::ArtifactRow& row);
+    void write_artifact_holding(const db::ArtifactHoldingRow& row);
 
 private:
     friend class detail::Pipeline;

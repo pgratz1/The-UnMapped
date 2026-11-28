@@ -475,6 +475,19 @@ inline constexpr std::string_view GOD_DIRECTORY = "gods";
 [[nodiscard]] StringGrammar god_form_string_grammar() noexcept;
 [[nodiscard]] StringGrammar creator_title_string_grammar() noexcept;
 
+// P5-11 4.1 to 4.3 (generator 0.31.0): kind artifact (artifacts/), required,
+// open ids, with the checks artifact_battle_class and artifact_hunt_class;
+// the culture field artifact_forms (grammar artifact_form); definition
+// history.artifacts with the checks artifacts_occasion_kind,
+// artifacts_occasion_role, artifacts_occasion_bearer and
+// artifacts_occasion_classes.
+inline constexpr std::string_view ARTIFACT_KIND = "artifact";
+inline constexpr std::string_view ARTIFACT_DIRECTORY = "artifacts";
+inline constexpr std::string_view HISTORY_ARTIFACTS_ID = "artifacts";
+[[nodiscard]] Schema artifact_schema();
+[[nodiscard]] Schema history_artifacts_schema();
+[[nodiscard]] StringGrammar artifact_form_string_grammar() noexcept;
+
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);
 // awakening_share fx(0, 1); lifespan_years int(1, 10000); generation_years

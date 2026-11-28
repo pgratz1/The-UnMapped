@@ -58,3 +58,6 @@ tower_spacing_permille = 30
 hero_return_years = 100
 # P5-08 12.6 (generator 0.30.0): a tower without a master lapses after these years (0: never).
 tower_lapse_years = 200
+# P5-11 4.3 (generator 0.31.0): a smith's age at entry, per mille of lifespan.
+smith_age_permille = 250
+smith_age_span_permille = 300

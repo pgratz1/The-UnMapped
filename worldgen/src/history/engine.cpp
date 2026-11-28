@@ -367,7 +367,8 @@ public:
             case EntityType::figure:
             case EntityType::faction:
             case EntityType::monster:
-            case EntityType::site: return false;
+            case EntityType::site:
+            case EntityType::artifact: return false;
         }
         return false;
     }
@@ -377,7 +378,7 @@ public:
     // P5-06 8.5: nor any figure.
     [[nodiscard]] bool participant_exists(EntityType type, std::int64_t id) const noexcept {
         if (type == EntityType::monster || type == EntityType::site || type == EntityType::figure ||
-            type == EntityType::faction) {  // P5-08 8.1: factions are checked by the stage
+            type == EntityType::faction || type == EntityType::artifact) {  // P5-08 8.1, P5-11 8.1: by the stage
             return id >= 1;
         }
         return entity_exists(type, id);

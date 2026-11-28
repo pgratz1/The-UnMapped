@@ -396,6 +396,26 @@ EventCatalogue build_compiled() {
                               {fig(1, "figure"), civ(2, "civilization"), site_role(3, "site")}, {}, 0, {}});
     c.kinds.push_back(KindDef{110, "tower_abandoned", true, 1, 2,
                               {site_role(1, "site"), civ(2, "civilization"), fig(3, "figure")}, {}, 0, {}});
+    // P5-11 8.1 (generator 0.31.0): kinds 111 to 116, the artifacts.
+    const auto art = [] { return role(1, "artifact", EntityType::artifact, 1, 1); };
+    const auto mon_opt = [](std::int64_t seq) { return role(seq, "monster", EntityType::monster, 0, 1); };
+    c.kinds.push_back(KindDef{111, "artifact_made", true, 1, 2,
+                              {art(), civ(2, "civilization"), fig(3, "maker", 0, 1),
+                               role(4, "god", EntityType::god, 0, 1), civ(5, "maker_realm", 0, 1),
+                               site_role(6, "site", 0, 1)},
+                              {"maker_kind", "deep"}, 0, {}});
+    c.kinds.push_back(KindDef{112, "artifact_taken", true, 1, 2,
+                              {art(), civ(2, "taker"), civ(3, "from"), fig(4, "figure", 0, 1)}, {"how"}, 0, {}});
+    c.kinds.push_back(KindDef{113, "artifact_lost", true, 1, 2,
+                              {art(), civ(2, "civilization"), fig(3, "figure", 0, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{114, "artifact_hoarded", true, 1, 2,
+                              {art(), mon(2), civ(3, "civilization"), fig(4, "figure", 0, 1)}, {"how"}, 0, {}});
+    c.kinds.push_back(KindDef{115, "artifact_recovered", true, 1, 0,
+                              {art(), civ(2, "civilization"), fig(3, "figure", 0, 1), mon_opt(4),
+                               civ(5, "from", 0, 1)},
+                              {"how"}, 0, {}});
+    c.kinds.push_back(KindDef{116, "artifact_buried", true, 1, 2,
+                              {art(), fig(2, "figure"), civ(3, "civilization")}, {}, 0, {}});
     return c;
 }
 
@@ -714,8 +734,8 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if ((out.form == Form::plural || out.form == Form::adjective) && r->type != EntityType::race) {
         return "form '" + std::string(*form) + "' needs a race role" + where;
     }
-    if (out.form == Form::kind && r->type != EntityType::monster) {
-        return "form 'kind' needs a monster role" + where;
+    if (out.form == Form::kind && r->type != EntityType::monster && r->type != EntityType::artifact) {
+        return "form 'kind' needs a monster or artifact role" + where;  // P5-11 7.6
     }
     if (out.form == Form::raid && r->type != EntityType::monster) {
         return "form 'raid' needs a monster role" + where;
@@ -730,8 +750,9 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if (out.form == Form::under && r->type != EntityType::figure && r->type != EntityType::civilization) {
         return "form 'under' needs a figure or civilization role" + where;
     }
+    // P5-11 7.6: titled, like all, renders nothing for a role with no participant.
     if (r->min_count == 0 && out.form != Form::all && out.form != Form::with && out.form != Form::against &&
-        out.form != Form::under) {
+        out.form != Form::under && out.form != Form::titled) {
         return "role '" + r->role + "' may have no participant" + where;
     }
     return std::nullopt;
@@ -823,12 +844,13 @@ std::string_view entity_type_key(EntityType type) noexcept {
         case EntityType::faction: return "faction";
         case EntityType::monster: return "monster";
         case EntityType::site: return "site";
+        case EntityType::artifact: return "artifact";
     }
     return "";
 }
 
 std::optional<EntityType> entity_type_from_code(std::int64_t code) noexcept {
-    if (code < 1 || code > 9) {
+    if (code < 1 || code > 10) {
         return std::nullopt;
     }
     return static_cast<EntityType>(code);
@@ -1162,6 +1184,27 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::FactionRow& r : v.faction_rows_) {
             v.factions_.emplace_back(r.id, r.name);
         }
+        // P5-11 9 (schema 15): artifacts by name, and the form kind of each.
+        v.artifact_kind_rows_ = read(db::read_artifact_kind_rows(world), db::ARTIFACT_KIND_TABLE);
+        v.artifact_rows_ = read(db::read_artifact_rows(world), db::ARTIFACT_TABLE);
+        for (const db::ArtifactRow& r : v.artifact_rows_) {
+            v.artifacts_.emplace_back(r.id, r.name);
+            const db::ArtifactKindRow* k = nullptr;
+            for (const db::ArtifactKindRow& x : v.artifact_kind_rows_) {
+                k = x.id == r.kind ? &x : k;
+            }
+            if (k == nullptr) {
+                view_fail("corrupt table 'artifact': row " + int_text(r.id) + ": kind " + int_text(r.kind) +
+                          " is not a row of artifact_kind");
+            }
+            const char first = k->noun.empty() ? ' ' : k->noun.front();
+            const bool vowel = first == 'a' || first == 'e' || first == 'i' || first == 'o' || first == 'u';
+            v.artifact_kind_texts_.emplace_back(r.id, std::string(vowel ? "an " : "a ") + k->noun +
+                                                          (r.deep == 1 ? " of deep iron" : ""));
+        }
+        if (!ascending(v.artifacts_)) {
+            view_fail("corrupt table 'artifact': ids do not ascend");
+        }
         if (!ascending(v.factions_) || !ascending(v.god_titles_)) {
             v.factions_.clear();  // the pantheon checks report the row
             v.god_titles_.clear();
@@ -1473,12 +1516,17 @@ const std::string* HistoryView::name(EntityType type, std::int64_t id) const noe
         case EntityType::site: return find_by_id(sites_, id);
         case EntityType::figure: return find_by_id(figures_, id);  // P5-06 7.9: the display name
         case EntityType::faction: return find_by_id(factions_, id);  // P5-08 9: faction.name
+        case EntityType::artifact: return find_by_id(artifacts_, id);  // P5-11 7.6: artifact.name
     }
     return nullptr;
 }
 
 const std::string* HistoryView::god_title(std::int64_t id) const noexcept {
     return find_by_id(god_titles_, id);
+}
+
+const std::string* HistoryView::artifact_kind_text(std::int64_t artifact) const noexcept {
+    return find_by_id(artifact_kind_texts_, artifact);
 }
 
 std::int64_t HistoryView::ruler_at_event(std::int64_t civ, std::int64_t event) const noexcept {
@@ -2737,6 +2785,7 @@ std::string_view figure_role_word(std::int64_t role) noexcept {
         case 5: return "caster";
         case 6: return "champion";  // P5-08 9
         case 7: return "prophet";
+        case 8: return "smith";  // P5-11 9
         default: return "?";
     }
 }
@@ -2861,7 +2910,7 @@ std::optional<std::string> figure_tables_problem(const FigureTables& t) {
         }
         if (!is_entity_name(r.name)) return at + "name is not a name";
         if (!is_epithet_text(r.epithet)) return at + "epithet is not an epithet";
-        if (r.role < 1 || r.role > 7) return at + "role " + int_text(r.role) + " outside 1 to 7";  // P5-08 9
+        if (r.role < 1 || r.role > 8) return at + "role " + int_text(r.role) + " outside 1 to 8";  // P5-11 9: 8 smith
         const db::RaceRow* race = nullptr;
         for (const db::RaceRow& x : t.races) {
             race = x.id == r.race ? &x : race;
@@ -3404,7 +3453,8 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
         if (form == Form::plural) {
             s = view.race_plural(p.entity_id);
         } else if (form == Form::kind) {
-            s = view.monster_noun(p.entity_id);  // P5-02 10.3
+            // P5-02 10.3; P5-11 7.6: an artifact's "a|an <noun>[ of deep iron]".
+            s = type == EntityType::artifact ? view.artifact_kind_text(p.entity_id) : view.monster_noun(p.entity_id);
         } else if (form == Form::raid) {
             s = view.monster_raid_phrase(p.entity_id, event_id);  // P5-03 9.5
         } else if (form == Form::adjective) {
@@ -3564,6 +3614,9 @@ LinkedText render_event_linked(const HistoryView& view, std::int64_t event_id) {
                         out += ",";
                     }
                 } else {
+                    if (ps.empty() && t.form == Form::titled) {
+                        break;  // P5-11 7.6: an empty titled role renders nothing
+                    }
                     if (ps.empty()) {
                         fail(at + "no participant with role '" + t.text + "'");
                     }

@@ -46,6 +46,10 @@ struct HistoryKeys {
     std::int64_t figure = 0;
     std::int64_t book = 0;
     std::int64_t faction = 0;  // schema 14 (P5-08)
+    // schema 15 (P5-11)
+    std::int64_t artifact_kind = 0;
+    std::int64_t artifact = 0;
+    Pair artifact_holding{0, 0};
 };
 
 struct WriterState {

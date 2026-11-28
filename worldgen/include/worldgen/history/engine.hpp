@@ -397,6 +397,10 @@ struct HistoryResult {
     std::vector<db::BookRow> books;
     // P5-08 9 (schema 14): the pantheon subsystem's cults.
     std::vector<db::FactionRow> factions;
+    // P5-11 9 (schema 15): the artifacts subsystem's kinds, artifacts and holdings.
+    std::vector<db::ArtifactKindRow> artifact_kinds;
+    std::vector<db::ArtifactRow> artifacts;
+    std::vector<db::ArtifactHoldingRow> artifact_holdings;
 
     friend bool operator==(const HistoryResult&, const HistoryResult&) = default;
 };

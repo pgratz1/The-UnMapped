@@ -16,4 +16,5 @@ deeds = [
     { kind = "war_won", role = "winner", points = 25, who = "any", against = "" },
     { kind = "ally_refused", role = "ally", points = -30, who = "any", against = "" },
     { kind = "ally_withdrew", role = "ally", points = -30, who = "any", against = "" },
+    { kind = "artifact_taken", role = "taker", points = 10, who = "any", against = "" },
 ]

@@ -601,4 +601,62 @@ Result<std::vector<FactionRow>> read_faction_rows(const WorldReader& world) {
     });
 }
 
+// Schema 15 (P5-11 9).
+Result<std::vector<ArtifactKindRow>> read_artifact_kind_rows(const WorldReader& world) {
+    return read_rows<ArtifactKindRow>(world, ARTIFACT_KIND_TABLE, [](Columns& c) {
+        ArtifactKindRow r;
+        r.id = c.integer();
+        r.key = c.text();
+        r.title = c.text();
+        r.noun = c.text();
+        r.artifact_class = c.integer();
+        r.battle_permille = c.integer();
+        r.hunt_permille = c.integer();
+        r.claim_permille = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<ArtifactRow>> read_artifact_rows(const WorldReader& world) {
+    return read_rows<ArtifactRow>(world, ARTIFACT_TABLE, [](Columns& c) {
+        ArtifactRow r;
+        r.id = c.integer();
+        r.name = c.text();
+        r.kind = c.integer();
+        r.civ = c.integer();
+        r.maker_kind = c.integer();
+        r.maker = c.integer();
+        r.god = c.integer();
+        r.maker_civ = c.integer();
+        r.maker_site = c.integer();
+        r.made_year = c.integer();
+        r.made_event = c.integer();
+        r.occasion_event = c.integer();
+        r.deep = c.integer();
+        r.status = c.integer();
+        return r;
+    });
+}
+
+Result<std::vector<ArtifactHoldingRow>> read_artifact_holding_rows(const WorldReader& world) {
+    return read_rows<ArtifactHoldingRow>(world, ARTIFACT_HOLDING_TABLE, [](Columns& c) {
+        ArtifactHoldingRow r;
+        r.artifact = c.integer();
+        r.seq = c.integer();
+        r.from_year = c.integer();
+        r.to_year = c.nullable_integer();
+        r.state = c.integer();
+        r.holder_type = c.integer();
+        r.holder = c.integer();
+        r.region = c.integer();
+        r.settlement = c.integer();
+        r.site = c.integer();
+        r.x = c.integer();
+        r.y = c.integer();
+        r.event = c.integer();
+        r.until_event = c.integer();
+        return r;
+    });
+}
+
 }  // namespace worldgen::db

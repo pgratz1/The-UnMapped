@@ -37,6 +37,8 @@ rival_faith_points = 40
 suppress_points = 120
 hide_permille = 800
 sanctum_hops = 3
+# P5-11 12.2 (generator 0.31.0): a suppressed cult does not spread back into the realm for these years.
+cult_return_years = 400
 
 [history.pantheon.creator]
 favour = { bless = 400, champion = 450, mark = 150 }

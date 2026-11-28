@@ -1188,6 +1188,68 @@ void StageWriter::write_faction(const FactionRow& row) {
     state_->history_keys.faction = row.id;
 }
 
+// Schema 15 (P5-11 9).
+void StageWriter::write_artifact_kind(const ArtifactKindRow& row) {
+    require_open(state_, "write_artifact_kind");
+    require_next_id("write_artifact_kind", "artifact_kind", row.id, state_->history_keys.artifact_kind);
+    const std::int64_t ints[4] = {row.artifact_class, row.battle_permille, row.hunt_permille, row.claim_permille};
+    insert_row(state_->db.get(),
+               "INSERT INTO artifact_kind (id, key, title, noun, class, battle_permille, hunt_permille, "
+               "claim_permille) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+               5, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.title);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.noun);
+                   return rc;
+               },
+               "artifact_kind row " + format_i64(row.id));
+    state_->history_keys.artifact_kind = row.id;
+}
+
+void StageWriter::write_artifact(const ArtifactRow& row) {
+    require_open(state_, "write_artifact");
+    require_next_id("write_artifact", "artifact", row.id, state_->history_keys.artifact);
+    const std::int64_t ints[12] = {row.kind,      row.civ,       row.maker_kind, row.maker,
+                                   row.god,       row.maker_civ, row.maker_site, row.made_year,
+                                   row.made_event, row.occasion_event, row.deep, row.status};
+    insert_row(state_->db.get(),
+               "INSERT INTO artifact (id, name, kind, civ, maker_kind, maker, god, maker_civ, maker_site, made_year, "
+               "made_event, occasion_event, deep, status) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, "
+               "?13, ?14)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   return rc;
+               },
+               "artifact row " + format_i64(row.id));
+    state_->history_keys.artifact = row.id;
+}
+
+void StageWriter::write_artifact_holding(const ArtifactHoldingRow& row) {
+    require_open(state_, "write_artifact_holding");
+    const std::pair<std::int64_t, std::int64_t> key{row.artifact, row.seq};
+    require_next_pair("write_artifact_holding", key, state_->history_keys.artifact_holding);
+    const std::int64_t ints[10] = {row.state, row.holder_type, row.holder, row.region,     row.settlement,
+                                   row.site,  row.x,           row.y,      row.event,      row.until_event};
+    insert_row(state_->db.get(),
+               "INSERT INTO artifact_holding (artifact, seq, from_year, to_year, state, holder_type, holder, region, "
+               "settlement, site, x, y, event, until_event) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, "
+               "?13, ?14)",
+               5, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.artifact);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.seq);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(3, row.from_year);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 4, row.to_year);
+                   return rc;
+               },
+               "artifact_holding row " + key_text(key));
+    state_->history_keys.artifact_holding = key;
+}
+
 void StageWriter::write_region_name(const RegionNameRow& row) {
     require_open(state_, "write_region_name");
     const std::pair<std::int64_t, std::int64_t> key{row.region, row.from_year};

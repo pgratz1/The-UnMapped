@@ -35,13 +35,14 @@ enum class EntityType : std::int64_t {
     faction = 7,
     monster = 8,
     site = 9,
+    artifact = 10,  // P5-11 9 (schema 15)
 };
 
 // The name of a code: "race", "god", "civilization", "settlement",
-// "region", "figure", "faction", "monster", "site".
+// "region", "figure", "faction", "monster", "site", "artifact".
 [[nodiscard]] std::string_view entity_type_key(EntityType type) noexcept;
 
-// The type of code `code`, or std::nullopt when it is not 1 to 9.
+// The type of code `code`, or std::nullopt when it is not 1 to 10.
 [[nodiscard]] std::optional<EntityType> entity_type_from_code(std::int64_t code) noexcept;
 
 // One role of a kind (P3-04 8.2): seq 1, 2, ...; max_count 0 = unbounded.
@@ -226,6 +227,13 @@ public:
     [[nodiscard]] std::span<const db::FactionRow> faction_rows() const noexcept { return faction_rows_; }
     [[nodiscard]] const std::string* god_title(std::int64_t id) const noexcept;
 
+    // P5-11 9 (schema 15): the artifact_kind and artifact rows as read; the
+    // text of the form kind of an artifact ("a|an <noun>[ of deep iron]",
+    // 7.6), nullptr when the artifact does not exist.
+    [[nodiscard]] std::span<const db::ArtifactKindRow> artifact_kind_rows() const noexcept { return artifact_kind_rows_; }
+    [[nodiscard]] std::span<const db::ArtifactRow> artifact_rows() const noexcept { return artifact_rows_; }
+    [[nodiscard]] const std::string* artifact_kind_text(std::int64_t artifact) const noexcept;
+
 private:
     struct MonsterNames {
         std::string name;
@@ -277,6 +285,11 @@ private:
     std::vector<std::pair<std::int64_t, std::string>> god_titles_;  // ascending id
     std::vector<db::FactionRow> faction_rows_;
     std::vector<std::pair<std::int64_t, std::string>> factions_;     // ascending id
+    // P5-11 (schema 15).
+    std::vector<db::ArtifactKindRow> artifact_kind_rows_;
+    std::vector<db::ArtifactRow> artifact_rows_;
+    std::vector<std::pair<std::int64_t, std::string>> artifacts_;            // ascending id
+    std::vector<std::pair<std::int64_t, std::string>> artifact_kind_texts_;  // ascending artifact id
 };
 
 // P3-07 r21 26.6: the first problem of the region_name rows (primary-key

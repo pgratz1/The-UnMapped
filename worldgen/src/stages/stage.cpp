@@ -267,6 +267,18 @@ void StageContext::write_faction(const db::FactionRow& row) {
     state_->stage.write_faction(row);
 }
 
+void StageContext::write_artifact_kind(const db::ArtifactKindRow& row) {
+    state_->stage.write_artifact_kind(row);
+}
+
+void StageContext::write_artifact(const db::ArtifactRow& row) {
+    state_->stage.write_artifact(row);
+}
+
+void StageContext::write_artifact_holding(const db::ArtifactHoldingRow& row) {
+    state_->stage.write_artifact_holding(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

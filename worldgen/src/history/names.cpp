@@ -388,6 +388,9 @@ CultureNaming culture_naming_from(const data::Record& naming) {
         out.book_titles = string_list(naming, "book_titles");
         out.regnal_permille = naming.get_int("regnal_permille");
     }
+    if (naming.find("artifact_forms") != nullptr) {  // P5-11 4.2: required by the loader
+        out.artifact_forms = string_list(naming, "artifact_forms");
+    }
     return out;
 }
 
@@ -405,6 +408,8 @@ std::string_view name_kind_text(NameKind kind) noexcept {
             return "site";
         case NameKind::person:
             return "person";
+        case NameKind::artifact:
+            return "artifact";
     }
     return "settlement";  // unreachable for a valid enumerator
 }
@@ -423,6 +428,8 @@ std::string_view name_stream(NameKind kind) noexcept {
             return streams::hist_names_site;
         case NameKind::person:
             return streams::hist_names_person;  // P5-06 6.11
+        case NameKind::artifact:
+            return streams::hist_names_artifact;  // P5-11 6.6
     }
     return streams::hist_names_settlement;  // unreachable for a valid enumerator
 }
@@ -441,6 +448,8 @@ const std::vector<std::string>& name_forms(const CultureNaming& naming, NameKind
             return naming.site_forms;
         case NameKind::person:
             return naming.person_forms;
+        case NameKind::artifact:
+            return naming.artifact_forms;
     }
     return naming.settlement_forms;  // unreachable for a valid enumerator
 }

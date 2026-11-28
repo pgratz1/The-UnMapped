@@ -534,6 +534,40 @@ struct FactionRow {
     friend bool operator==(const FactionRow&, const FactionRow&) = default;
 };
 
+// The rows of the tables of P5-11 9 (schema 15).
+struct ArtifactKindRow {
+    std::int64_t id = 0;
+    std::string key, title, noun;
+    std::int64_t artifact_class = 1;  // column class: 1 arms, 2 armour, 3 regalia, 4 relic, 5 staff
+    std::int64_t battle_permille = 0, hunt_permille = 0, claim_permille = 0;
+
+    friend bool operator==(const ArtifactKindRow&, const ArtifactKindRow&) = default;
+};
+
+struct ArtifactRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t kind = 0, civ = 0;
+    std::int64_t maker_kind = 1;  // 1 smith, 2 smith of another realm's forge, 3 caster, 4 god
+    std::int64_t maker = 0, god = 0, maker_civ = 0, maker_site = 0;
+    std::int64_t made_year = 0, made_event = 0, occasion_event = 0;
+    std::int64_t deep = 0;
+    std::int64_t status = 1;  // the open holding's state
+
+    friend bool operator==(const ArtifactRow&, const ArtifactRow&) = default;
+};
+
+struct ArtifactHoldingRow {
+    std::int64_t artifact = 0, seq = 0, from_year = 0;
+    std::optional<std::int64_t> to_year;  // NULL for the open holding
+    std::int64_t state = 1;  // 1 kept, 2 borne, 3 hoarded, 4 lost, 5 buried, 6 enshrined
+    std::int64_t holder_type = 0, holder = 0;
+    std::int64_t region = 0, settlement = 0, site = 0, x = 0, y = 0;
+    std::int64_t event = 0, until_event = 0;
+
+    friend bool operator==(const ArtifactHoldingRow&, const ArtifactHoldingRow&) = default;
+};
+
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
 // while open.
 struct RelationRow {
@@ -656,6 +690,11 @@ public:
     void write_book(const BookRow& row);
     // Table faction (P5-08, schema 14): rows in ascending id.
     void write_faction(const FactionRow& row);
+    // The tables of P5-11 (schema 15): artifact_kind and artifact in
+    // ascending id, artifact_holding in ascending (artifact, seq).
+    void write_artifact_kind(const ArtifactKindRow& row);
+    void write_artifact(const ArtifactRow& row);
+    void write_artifact_holding(const ArtifactHoldingRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.
